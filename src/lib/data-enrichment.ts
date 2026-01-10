@@ -148,7 +148,13 @@ export function enrichPowers(
         id: libraryItem.id,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        parts: libraryItem.parts || [],
+        parts: (libraryItem.parts || []).map(part => ({
+          id: String(part.id || ''),
+          name: part.name || '',
+          op_1_lvl: part.op_1_lvl,
+          op_2_lvl: part.op_2_lvl,
+          op_3_lvl: part.op_3_lvl,
+        })),
         innate,
         libraryItem,
         // Additional display fields can be calculated/derived here
@@ -185,7 +191,13 @@ export function enrichTechniques(
         id: libraryItem.id,
         name: libraryItem.name,
         description: libraryItem.description || '',
-        parts: libraryItem.parts || [],
+        parts: (libraryItem.parts || []).map(part => ({
+          id: String(part.id || ''),
+          name: part.name || '',
+          op_1_lvl: part.op_1_lvl,
+          op_2_lvl: part.op_2_lvl,
+          op_3_lvl: part.op_3_lvl,
+        })),
         libraryItem,
         // Additional display fields can be calculated/derived here
       };

@@ -52,25 +52,30 @@ export function PowersStep() {
   
   // Transform user powers to display items
   const availablePowers = useMemo((): DisplayItem[] => {
-    return userPowers.map(power => transformPower({
-      id: power.docId,
-      name: power.name,
-      description: power.description,
-      parts: power.parts,
-      damage: power.damage ? `${power.damage.dice}d${power.damage.sides}${power.damage.bonus ? `+${power.damage.bonus}` : ''} ${power.damage.type || ''}` : undefined,
-    }));
+    return userPowers.map(power => {
+      const firstDamage = power.damage?.[0];
+      return transformPower({
+        id: power.docId,
+        name: power.name,
+        description: power.description,
+        parts: power.parts?.map(p => String(p.name || p.id)) || [],
+        damage: firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined,
+      });
+    });
   }, [userPowers]);
   
   // Transform user techniques to display items
   const availableTechniques = useMemo((): DisplayItem[] => {
-    return userTechniques.map(tech => transformTechnique({
-      id: tech.docId,
-      name: tech.name,
-      description: tech.description,
-      parts: tech.parts,
-      weaponType: tech.weaponType,
-      damage: tech.damage ? `${tech.damage.dice}d${tech.damage.sides}${tech.damage.bonus ? `+${tech.damage.bonus}` : ''} ${tech.damage.type || ''}` : undefined,
-    }));
+    return userTechniques.map(tech => {
+      const firstDamage = tech.damage?.[0];
+      return transformTechnique({
+        id: tech.docId,
+        name: tech.name,
+        description: tech.description,
+        parts: tech.parts?.map(p => String(p.name || p.id)) || [],
+        damage: firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined,
+      });
+    });
   }, [userTechniques]);
   
   // Display items for selected powers/techniques

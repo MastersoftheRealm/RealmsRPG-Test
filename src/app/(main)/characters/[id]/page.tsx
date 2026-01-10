@@ -184,12 +184,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
     
     // Calculate ability points: 6 base + level
     const totalAbilityPoints = 6 + level;
-    const baseAbilities = character.ancestry?.abilities || {};
     const currentAbilities = character.abilities || {};
-    const spentAbilityPoints = Object.entries(currentAbilities).reduce((sum, [key, val]) => {
-      const base = (baseAbilities as Record<string, number>)[key] || 0;
-      return sum + Math.max(0, (val || 0) - base);
-    }, 0);
+    const spentAbilityPoints = Object.values(currentAbilities).reduce((sum, val) => sum + (val || 0), 0);
     const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
     
     // Calculate health/energy points: vitality + level
@@ -208,7 +204,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     }, 0);
     // Defense skills cost 2 per point
     const defenseSkills = character.defenseSkills || {};
-    const spentDefensePoints = Object.values(defenseSkills).reduce((sum, val) => sum + ((val as number) * 2), 0);
+    const spentDefensePoints = Object.values(defenseSkills).reduce((sum: number, val) => sum + ((val as number) * 2), 0);
     const skillPointsRemaining = totalSkillPoints - spentSkillPoints - spentDefensePoints;
     
     // Calculate feat slots: 1 archetype feat per 4 levels, 1 character feat per 4 levels

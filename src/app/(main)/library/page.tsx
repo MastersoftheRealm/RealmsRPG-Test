@@ -213,7 +213,7 @@ function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
         stats,
         details,
         badges: [],
-        sourceData: power,
+        sourceData: power as unknown as Record<string, unknown>,
       } as DisplayItem;
     });
   }, [powers, partsDb]);
@@ -271,7 +271,7 @@ function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) 
           name: tech.name,
           description: tech.description,
           parts: tech.parts || [],
-          damage: tech.damage,
+          damage: tech.damage?.[0],
           weapon: tech.weapon,
         },
         partsDb
@@ -304,7 +304,7 @@ function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) 
         stats,
         details,
         badges: display.weaponName !== 'Unarmed' ? [{ label: display.weaponName, variant: 'default' as const }] : [],
-        sourceData: tech,
+        sourceData: tech as unknown as Record<string, unknown>,
       } as DisplayItem;
     });
   }, [techniques, partsDb]);

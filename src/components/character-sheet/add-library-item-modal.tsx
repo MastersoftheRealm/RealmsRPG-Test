@@ -113,7 +113,13 @@ export function AddLibraryItemModal({
         id: p.id,
         name: p.name,
         description: p.description || '',
-        parts: p.parts || [],
+        parts: (p.parts || []).map(part => ({
+          id: String(part.id || ''),
+          name: part.name || '',
+          op_1_lvl: part.op_1_lvl,
+          op_2_lvl: part.op_2_lvl,
+          op_3_lvl: part.op_3_lvl,
+        })),
         cost: 0, // Will be calculated
         level: 1,
       }));
@@ -123,7 +129,13 @@ export function AddLibraryItemModal({
         id: t.id,
         name: t.name,
         description: t.description || '',
-        parts: t.parts || [],
+        parts: (t.parts || []).map(part => ({
+          id: String(part.id || ''),
+          name: part.name || '',
+          op_1_lvl: part.op_1_lvl,
+          op_2_lvl: part.op_2_lvl,
+          op_3_lvl: part.op_3_lvl,
+        })),
         cost: 0, // Will be calculated
       }));
       onAdd(techniques);

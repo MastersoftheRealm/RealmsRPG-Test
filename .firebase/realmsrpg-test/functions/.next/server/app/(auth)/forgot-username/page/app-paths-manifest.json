@@ -1,0 +1,3 @@
+{
+  "/(auth)/forgot-username/page": "app/(auth)/forgot-username/page.js"
+}

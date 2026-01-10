@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
+3:"$Sreact.suspense"
+0:{"buildId":"I6hQ7gQGvDxp8c8qv5G2d","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8","children":[["$","h1",null,{"className":"text-3xl font-bold text-gray-900 mb-4 text-center","children":"Core Rulebook Alpha"}],["$","p",null,{"className":"text-center text-gray-600 mb-6","children":"Scroll through or use Ctrl+F to find the desired rule or reference you're looking for! Enjoy playing!"}],["$","div",null,{"className":"bg-white rounded-xl shadow-lg overflow-hidden","children":["$","iframe",null,{"src":"https://docs.google.com/document/d/e/2PACX-1vR2In0Fvu9axM9bb85Ne2rSp5SEfBd3kA34a3IHtcR5fIJ4spxCVgWezaNtejtyaGGmLtG-WTTKbgbE/pub?embedded=true","className":"w-full border-0","style":{"height":"800px"},"allowFullScreen":true,"title":"Realms RPG Core Rulebook"}]}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
+4:null

@@ -1,0 +1,11 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/src/app/(auth)/forgot-password/page": [
+      "static/media/07454f8ad8aaac57-s.p.fc65572f.woff2",
+      "static/media/f141b5b7abe57afc-s.p.0de3c900.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}
