@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, Auth } from 'firebase/auth';
 import { doc, setDoc, Firestore } from 'firebase/firestore';
 
-import { waitForFirebase, auth as firebaseAuth, db as firebaseDb } from '@/lib/firebase/client';
+import { waitForFirebase, auth as firebaseAuth, db as firebaseDb, browserPopupRedirectResolver as popupResolver } from '@/lib/firebase/client';
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Button } from '@/components/ui';
@@ -79,7 +79,9 @@ export default function LoginPage() {
 
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      provider.setCustomParameters({ prompt: 'select_account' });
+      
+      const result = await signInWithPopup(auth, provider, popupResolver);
       const user = result.user;
       
       // Match vanilla site behavior: create username from email
@@ -88,8 +90,15 @@ export default function LoginPage() {
       await setDoc(doc(db, 'users', user.uid), { username }, { merge: true });
       
       router.push('/characters');
-    } catch (err) {
-      setError(getAuthErrorMessage(err));
+    } catch (err: any) {
+      console.error('Google sign-in error:', err);
+      if (err.code === 'auth/popup-blocked') {
+        setError('Popup was blocked. Please allow popups for this site and try again.');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        return;
+      } else {
+        setError(getAuthErrorMessage(err));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -188,7 +197,7 @@ export default function LoginPage() {
 }
 
 function getAuthErrorMessage(error: unknown): string {
-  const firebaseError = error as { code?: string };
+  const firebaseError = error as { code?: string; message?: string };
   
   switch (firebaseError.code) {
     case 'auth/user-not-found':
@@ -201,7 +210,12 @@ function getAuthErrorMessage(error: unknown): string {
       return 'Network error. Please check your connection.';
     case 'auth/popup-closed-by-user':
       return 'Sign-in popup was closed. Please try again.';
+    case 'auth/popup-blocked':
+      return 'Popup was blocked. Please allow popups and try again.';
+    case 'auth/unauthorized-domain':
+      return 'This domain is not authorized. Please contact support.';
     default:
-      return 'An error occurred during sign in. Please try again.';
+      console.error('Auth error:', firebaseError);
+      return firebaseError.message || 'An error occurred during sign in. Please try again.';
   }
 }

@@ -9,7 +9,7 @@
  */
 
 import { initializeApp, getApps, FirebaseApp, FirebaseOptions } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { getAuth, Auth, browserPopupRedirectResolver } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getDatabase, Database } from 'firebase/database';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
@@ -18,7 +18,7 @@ import { getFunctions, Functions } from 'firebase/functions';
 // Fallback config for local development (when not using Firebase Hosting)
 const localConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'realmsrpg-test.firebaseapp.com',
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
@@ -60,6 +60,12 @@ async function initializeFirebaseClient() {
   } else {
     // Fetch config and initialize
     const config = await fetchFirebaseConfig();
+    
+    // Ensure authDomain is set for popup auth
+    if (!config.authDomain) {
+      config.authDomain = 'realmsrpg-test.firebaseapp.com';
+    }
+    
     app = initializeApp(config);
   }
   
@@ -90,5 +96,5 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export { app, auth, db, rtdb, storage, functions };
+export { app, auth, db, rtdb, storage, functions, browserPopupRedirectResolver };
 export { initializeFirebaseClient };
