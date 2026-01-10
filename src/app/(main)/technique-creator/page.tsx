@@ -1,0 +1,846 @@
+/**
+ * Technique Creator Page
+ * ======================
+ * Tool for creating custom martial techniques using the technique parts system.
+ * 
+ * Features:
+ * - Select technique parts from RTDB database
+ * - Configure option levels for each part
+ * - Calculate stamina and training point costs
+ * - Save to user's library via Cloud Functions
+ */
+
+'use client';
+
+import { useState, useMemo, useCallback } from 'react';
+import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, Crosshair, FolderOpen } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ProtectedRoute } from '@/components/layout';
+import { useTechniqueParts, useUserTechniques, type TechniquePart } from '@/hooks';
+import { useAuthStore } from '@/stores';
+import { functions } from '@/lib/firebase/client';
+import { httpsCallable } from 'firebase/functions';
+import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
+import { NumberStepper } from '@/components/creator/number-stepper';
+import {
+  calculateTechniqueCosts,
+  computeTechniqueActionTypeFromSelection,
+  formatTechniqueDamage,
+  type TechniquePartPayload,
+} from '@/lib/calculators';
+
+// =============================================================================
+// Types
+// =============================================================================
+
+interface SelectedPart {
+  part: TechniquePart;
+  op_1_lvl: number;
+  op_2_lvl: number;
+  op_3_lvl: number;
+  selectedCategory: string;
+}
+
+interface DamageConfig {
+  amount: number;
+  size: number;
+  type: string;
+}
+
+interface WeaponConfig {
+  id: number;
+  name: string;
+}
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const ACTION_OPTIONS = [
+  { value: 'basic', label: 'Basic Action' },
+  { value: 'quick', label: 'Quick Action' },
+  { value: 'free', label: 'Free Action' },
+  { value: 'long3', label: 'Long Action (3 AP)' },
+  { value: 'long4', label: 'Long Action (4 AP)' },
+];
+
+const DAMAGE_TYPES = [
+  'none', 'physical', 'slashing', 'piercing', 'bludgeoning'
+];
+
+const DIE_SIZES = [4, 6, 8, 10, 12];
+
+const WEAPON_OPTIONS = [
+  { id: 0, name: 'Unarmed' },
+  { id: 1, name: 'Any Melee' },
+  { id: 2, name: 'Any Ranged' },
+  { id: 3, name: 'Sword' },
+  { id: 4, name: 'Axe' },
+  { id: 5, name: 'Spear' },
+  { id: 6, name: 'Bow' },
+  { id: 7, name: 'Crossbow' },
+];
+
+// =============================================================================
+// Subcomponents
+// =============================================================================
+
+function PartCard({
+  selectedPart,
+  index,
+  onRemove,
+  onUpdate,
+  allParts,
+}: {
+  selectedPart: SelectedPart;
+  index: number;
+  onRemove: () => void;
+  onUpdate: (updates: Partial<SelectedPart>) => void;
+  allParts: TechniquePart[];
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const { part } = selectedPart;
+
+  // Get categories from all parts
+  const categories = useMemo(() => {
+    const cats = new Set(allParts.map((p) => p.category));
+    return ['any', ...Array.from(cats).sort()];
+  }, [allParts]);
+
+  // Filter parts by selected category
+  const filteredParts = useMemo(() => {
+    const cat = selectedPart.selectedCategory;
+    if (!cat || cat === 'any') return allParts.sort((a, b) => a.name.localeCompare(b.name));
+    return allParts.filter((p) => p.category === cat).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allParts, selectedPart.selectedCategory]);
+
+  // Check which options have content
+  const hasOption = (n: 1 | 2 | 3) => {
+    const desc = part[`op_${n}_desc` as keyof TechniquePart] as string | undefined;
+    const en = part[`op_${n}_en` as keyof TechniquePart] as number | undefined;
+    const tp = part[`op_${n}_tp` as keyof TechniquePart] as number | undefined;
+    return (desc && desc.trim() !== '') || (en !== undefined && en !== 0) || (tp !== undefined && tp !== 0);
+  };
+
+  // Calculate part's individual contribution
+  const partStam =
+    (part.base_stam || 0) +
+    (part.op_1_en || 0) * selectedPart.op_1_lvl +
+    (part.op_2_en || 0) * selectedPart.op_2_lvl +
+    (part.op_3_en || 0) * selectedPart.op_3_lvl;
+
+  const partTP =
+    (part.base_tp || 0) +
+    (part.op_1_tp || 0) * selectedPart.op_1_lvl +
+    (part.op_2_tp || 0) * selectedPart.op_2_lvl +
+    (part.op_3_tp || 0) * selectedPart.op_3_lvl;
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="bg-gray-50 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
+          <span className="font-medium text-gray-900">{part.name}</span>
+          <span className="text-sm text-gray-500">
+            Stam: {partStam.toFixed(1)} | TP: {Math.floor(partTP)}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="text-gray-400 hover:text-red-500"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Expanded Content */}
+      {expanded && (
+        <div className="px-4 py-4 space-y-4">
+          {/* Category and Part Selection */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                value={selectedPart.selectedCategory}
+                onChange={(e) => onUpdate({ selectedCategory: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat === 'any' ? 'All Categories' : cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Part
+              </label>
+              <select
+                value={filteredParts.findIndex((p) => p.id === part.id)}
+                onChange={(e) => {
+                  const idx = parseInt(e.target.value);
+                  const newPart = filteredParts[idx];
+                  if (newPart) {
+                    onUpdate({
+                      part: newPart,
+                      op_1_lvl: 0,
+                      op_2_lvl: 0,
+                      op_3_lvl: 0,
+                    });
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                {filteredParts.map((p, idx) => (
+                  <option key={p.id} value={idx}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Description */}
+          <p className="text-sm text-gray-600">{part.description}</p>
+
+          {/* Base Values */}
+          <div className="flex gap-4 text-sm">
+            <span className="text-gray-600">
+              Base Stamina: <strong>{part.base_stam}</strong>
+            </span>
+            <span className="text-gray-600">
+              Base TP: <strong>{part.base_tp}</strong>
+            </span>
+          </div>
+
+          {/* Options */}
+          {(hasOption(1) || hasOption(2) || hasOption(3)) && (
+            <div className="space-y-3 pt-2 border-t border-gray-100">
+              {hasOption(1) && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">
+                      Option 1:{' '}
+                      <span className="text-gray-500">
+                        Stam {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP{' '}
+                        {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
+                      </span>
+                    </span>
+                    <NumberStepper
+                      value={selectedPart.op_1_lvl}
+                      onChange={(v) => onUpdate({ op_1_lvl: v })}
+                      label="Level:"
+                      variant="technique"
+                    />
+                  </div>
+                  {part.op_1_desc && (
+                    <p className="text-sm text-gray-600">{part.op_1_desc}</p>
+                  )}
+                </div>
+              )}
+
+              {hasOption(2) && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">
+                      Option 2:{' '}
+                      <span className="text-gray-500">
+                        Stam {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP{' '}
+                        {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
+                      </span>
+                    </span>
+                    <NumberStepper
+                      value={selectedPart.op_2_lvl}
+                      onChange={(v) => onUpdate({ op_2_lvl: v })}
+                      label="Level:"
+                      variant="technique"
+                    />
+                  </div>
+                  {part.op_2_desc && (
+                    <p className="text-sm text-gray-600">{part.op_2_desc}</p>
+                  )}
+                </div>
+              )}
+
+              {hasOption(3) && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">
+                      Option 3:{' '}
+                      <span className="text-gray-500">
+                        Stam {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP{' '}
+                        {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
+                      </span>
+                    </span>
+                    <NumberStepper
+                      value={selectedPart.op_3_lvl}
+                      onChange={(v) => onUpdate({ op_3_lvl: v })}
+                      label="Level:"
+                      variant="technique"
+                    />
+                  </div>
+                  {part.op_3_desc && (
+                    <p className="text-sm text-gray-600">{part.op_3_desc}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+function TechniqueCreatorContent() {
+  const { user } = useAuthStore();
+  
+  // State
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
+  const [actionType, setActionType] = useState('basic');
+  const [isReaction, setIsReaction] = useState(false);
+  const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
+  const [weapon, setWeapon] = useState<WeaponConfig>(WEAPON_OPTIONS[0]);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showLoadModal, setShowLoadModal] = useState(false);
+
+  // Fetch technique parts
+  const { data: techniqueParts = [], isLoading, error } = useTechniqueParts();
+  
+  // Fetch user's saved techniques for loading
+  const { data: userTechniques, isLoading: loadingUserTechniques, error: userTechniquesError } = useUserTechniques();
+
+  // Convert selected parts to payload format for calculator
+  const partsPayload: TechniquePartPayload[] = useMemo(
+    () =>
+      selectedParts.map((sp) => ({
+        id: Number(sp.part.id),
+        name: sp.part.name,
+        part: sp.part,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+      })),
+    [selectedParts]
+  );
+
+  // Calculate costs - using technique parts as the database
+  const costs = useMemo(
+    () => calculateTechniqueCosts(partsPayload, techniqueParts),
+    [partsPayload, techniqueParts]
+  );
+
+  // Derived display values
+  const actionTypeDisplay = useMemo(
+    () => computeTechniqueActionTypeFromSelection(actionType, isReaction),
+    [actionType, isReaction]
+  );
+
+  const damageDisplay = useMemo(
+    () => formatTechniqueDamage(damage.type !== 'none' && damage.amount > 0 ? damage : undefined),
+    [damage]
+  );
+
+  // Actions
+  const addPart = useCallback(() => {
+    if (techniqueParts.length === 0) return;
+    setSelectedParts((prev) => [
+      ...prev,
+      {
+        part: techniqueParts[0],
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        selectedCategory: 'any',
+      },
+    ]);
+  }, [techniqueParts]);
+
+  const removePart = useCallback((index: number) => {
+    setSelectedParts((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const updatePart = useCallback((index: number, updates: Partial<SelectedPart>) => {
+    setSelectedParts((prev) =>
+      prev.map((sp, i) => (i === index ? { ...sp, ...updates } : sp))
+    );
+  }, []);
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      setSaveMessage({ type: 'error', text: 'Please enter a technique name' });
+      return;
+    }
+    if (!user) {
+      setSaveMessage({ type: 'error', text: 'You must be logged in to save' });
+      return;
+    }
+
+    setSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const saveTechniqueToLibrary = httpsCallable(functions, 'saveTechniqueToLibrary');
+      
+      // Format parts for saving
+      const partsToSave = selectedParts.map((sp) => ({
+        id: Number(sp.part.id),
+        name: sp.part.name,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+      }));
+
+      // Format damage
+      const damageToSave =
+        damage.type !== 'none' && damage.amount > 0
+          ? { amount: damage.amount, size: damage.size, type: damage.type }
+          : null;
+
+      await saveTechniqueToLibrary({
+        techniqueName: name.trim(),
+        techniqueDescription: description.trim(),
+        parts: partsToSave,
+        damage: damageToSave,
+        weapon: weapon.id > 0 ? weapon : null,
+      });
+
+      setSaveMessage({ type: 'success', text: 'Technique saved successfully!' });
+      
+      // Reset form after short delay
+      setTimeout(() => {
+        setName('');
+        setDescription('');
+        setSelectedParts([]);
+        setDamage({ amount: 0, size: 6, type: 'none' });
+        setWeapon(WEAPON_OPTIONS[0]);
+        setSaveMessage(null);
+      }, 2000);
+    } catch (err) {
+      console.error('Error saving technique:', err);
+      setSaveMessage({
+        type: 'error',
+        text: `Failed to save: ${(err as Error).message}`,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    setName('');
+    setDescription('');
+    setSelectedParts([]);
+    setActionType('basic');
+    setIsReaction(false);
+    setDamage({ amount: 0, size: 6, type: 'none' });
+    setWeapon(WEAPON_OPTIONS[0]);
+    setSaveMessage(null);
+  };
+
+  // Load a technique from the library
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleLoadTechnique = useCallback((technique: any) => {
+    // Set name and description
+    setName(technique.name || '');
+    setDescription(technique.description || '');
+    
+    // Load parts
+    const savedParts = (technique.parts || technique.techniqueParts || []) as Array<{
+      id?: number | string;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+    }>;
+    
+    const loadedParts: SelectedPart[] = [];
+    for (const savedPart of savedParts) {
+      const matchedPart = techniqueParts.find(
+        (p) => p.id === String(savedPart.id) || p.name === savedPart.name
+      );
+      
+      if (matchedPart) {
+        loadedParts.push({
+          part: matchedPart,
+          op_1_lvl: savedPart.op_1_lvl || 0,
+          op_2_lvl: savedPart.op_2_lvl || 0,
+          op_3_lvl: savedPart.op_3_lvl || 0,
+          selectedCategory: matchedPart.category || 'any',
+        });
+      }
+    }
+    setSelectedParts(loadedParts);
+    
+    // Load weapon
+    if (technique.weapon) {
+      const weaponMatch = WEAPON_OPTIONS.find(
+        (w) => w.id === technique.weapon.id || w.name === technique.weapon.name
+      );
+      if (weaponMatch) {
+        setWeapon(weaponMatch);
+      }
+    }
+    
+    // Load damage
+    if (technique.damage) {
+      const dmg = technique.damage;
+      setDamage({
+        amount: dmg.amount || dmg.dice || 0,
+        size: dmg.size || dmg.sides || 6,
+        type: dmg.type || 'none',
+      });
+    } else {
+      setDamage({ amount: 0, size: 6, type: 'none' });
+    }
+    
+    setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
+    setTimeout(() => setSaveMessage(null), 2000);
+  }, [techniqueParts]);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-red-700">Failed to load technique parts: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+            <Swords className="w-8 h-8 text-red-600" />
+            Technique Creator
+          </h1>
+          <p className="text-gray-600">
+            Design custom martial techniques by combining technique parts. Each part contributes to the total
+            stamina cost and training point requirements.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowLoadModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+        >
+          <FolderOpen className="w-5 h-5" />
+          Load from Library
+        </button>
+      </div>
+
+      {/* Load from Library Modal */}
+      <LoadFromLibraryModal
+        isOpen={showLoadModal}
+        onClose={() => setShowLoadModal(false)}
+        onSelect={handleLoadTechnique}
+        items={userTechniques}
+        isLoading={loadingUserTechniques}
+        error={userTechniquesError}
+        itemType="technique"
+        title="Load Technique from Library"
+      />
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Editor */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Name & Description */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Technique Name *
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter technique name..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe what your technique does..."
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Weapon & Action Type */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Combat Configuration</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Weapon Type
+                </label>
+                <select
+                  value={weapon.id}
+                  onChange={(e) => {
+                    const selected = WEAPON_OPTIONS.find(w => w.id === parseInt(e.target.value));
+                    if (selected) setWeapon(selected);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  {WEAPON_OPTIONS.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Action Type
+                </label>
+                <select
+                  value={actionType}
+                  onChange={(e) => setActionType(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  {ACTION_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isReaction}
+                  onChange={(e) => setIsReaction(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm">Can be used as a Reaction</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Technique Parts */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">
+                Technique Parts ({selectedParts.length})
+              </h3>
+              <button
+                type="button"
+                onClick={addPart}
+                className="flex items-center gap-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Part
+              </button>
+            </div>
+
+            {selectedParts.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>No parts added yet. Click &quot;Add Part&quot; to begin building your technique.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {selectedParts.map((sp, idx) => (
+                  <PartCard
+                    key={idx}
+                    selectedPart={sp}
+                    index={idx}
+                    onRemove={() => removePart(idx)}
+                    onUpdate={(updates) => updatePart(idx, updates)}
+                    allParts={techniqueParts}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Additional Damage */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Damage (Optional)</h3>
+            <div className="flex flex-wrap items-center gap-4">
+              <NumberStepper
+                value={damage.amount}
+                onChange={(v) => setDamage((d) => ({ ...d, amount: v }))}
+                label="Dice:"
+                min={0}
+                max={20}
+                variant="technique"
+              />
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-lg">d</span>
+                <select
+                  value={damage.size}
+                  onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
+                  className="px-3 py-2 border border-gray-300 rounded-lg"
+                >
+                  {DIE_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <select
+                value={damage.type}
+                onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
+                className="px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                {DAMAGE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type === 'none' ? 'No additional damage' : type.charAt(0).toUpperCase() + type.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {damage.type !== 'none' && damage.amount > 0 && (
+              <p className="mt-2 text-sm text-gray-600">
+                Additional Damage: <strong>{damage.amount}d{damage.size} {damage.type}</strong>
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar - Cost Summary */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Technique Summary</h3>
+
+            {/* Cost Display */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-red-50 rounded-lg p-4 text-center">
+                <Zap className="w-6 h-6 mx-auto text-red-600 mb-1" />
+                <div className="text-3xl font-bold text-red-600">{costs.totalEnergy}</div>
+                <div className="text-xs text-red-600">Stamina Cost</div>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-4 text-center">
+                <Target className="w-6 h-6 mx-auto text-purple-600 mb-1" />
+                <div className="text-3xl font-bold text-purple-600">{costs.totalTP}</div>
+                <div className="text-xs text-purple-600">Training Points</div>
+              </div>
+            </div>
+
+            {/* Derived Stats */}
+            <div className="space-y-2 text-sm mb-6">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Action:</span>
+                <span className="font-medium">{actionTypeDisplay}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Weapon:</span>
+                <span className="font-medium">{weapon.name}</span>
+              </div>
+              {damageDisplay && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Damage:</span>
+                  <span className="font-medium">{damageDisplay}</span>
+                </div>
+              )}
+            </div>
+
+            {/* TP Sources */}
+            {costs.tpSources.length > 0 && (
+              <div className="border-t border-gray-100 pt-4 mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">TP Breakdown</h4>
+                <ul className="text-xs text-gray-600 space-y-1">
+                  {costs.tpSources.map((src, i) => (
+                    <li key={i}>• {src}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Save Message */}
+            {saveMessage && (
+              <div
+                className={cn(
+                  'mb-4 p-3 rounded-lg text-sm',
+                  saveMessage.type === 'success'
+                    ? 'bg-green-50 text-green-700'
+                    : 'bg-red-50 text-red-700'
+                )}
+              >
+                {saveMessage.text}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving || !name.trim()}
+                className={cn(
+                  'w-full py-3 rounded-xl font-bold transition-colors',
+                  saving || !name.trim()
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                )}
+              >
+                {saving ? 'Saving...' : 'Save to Library'}
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="w-full py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function TechniqueCreatorPage() {
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <TechniqueCreatorContent />
+      </div>
+    </ProtectedRoute>
+  );
+}

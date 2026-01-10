@@ -1,0 +1,848 @@
+/**
+ * Character Sheet Page
+ * ====================
+ * Dynamic route for viewing/editing individual characters
+ */
+
+'use client';
+
+import { use, useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase/client';
+import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems } from '@/hooks';
+import { cn } from '@/lib/utils';
+import { enrichCharacterData } from '@/lib/data-enrichment';
+import {
+  SheetHeader,
+  AbilitiesSection,
+  SkillsSection,
+  ArchetypeSection,
+  LibrarySection,
+  RollLog,
+  RollProvider,
+  AddLibraryItemModal,
+  AddFeatModal,
+  AddSkillModal,
+  AddSubSkillModal,
+  LevelUpModal,
+} from '@/components/character-sheet';
+import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
+import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+
+type AddModalType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null;
+type FeatModalType = 'archetype' | 'character' | null;
+type SkillModalType = 'skill' | 'subskill' | null;
+
+interface PageParams {
+  params: Promise<{ id: string }>;
+}
+
+// Calculate stats from character data
+function calculateStats(character: Character) {
+  const abilities = character.abilities || {
+    strength: 0,
+    vitality: 0,
+    agility: 0,
+    acuity: 0,
+    intelligence: 0,
+    charisma: 0,
+  };
+  
+  const defenseVals: DefenseSkills = character.defenseSkills 
+    ? { ...DEFAULT_DEFENSE_SKILLS, ...character.defenseSkills }
+    : DEFAULT_DEFENSE_SKILLS;
+  
+  // Calculate defenses
+  const defenseBonuses = {
+    might: (abilities.strength || 0) + (defenseVals.might || 0),
+    fortitude: (abilities.vitality || 0) + (defenseVals.fortitude || 0),
+    reflex: (abilities.agility || 0) + (defenseVals.reflex || 0),
+    discernment: (abilities.acuity || 0) + (defenseVals.discernment || 0),
+    mentalFortitude: (abilities.intelligence || 0) + (defenseVals.mentalFortitude || 0),
+    resolve: (abilities.charisma || 0) + (defenseVals.resolve || 0),
+  };
+  
+  const defenseScores = Object.entries(defenseBonuses).reduce((acc, [key, val]) => {
+    acc[key] = 10 + val;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Speed = 6 + ceil(agility / 2)
+  const speedBase = character.speedBase ?? 6;
+  const speed = speedBase + Math.ceil((abilities.agility || 0) / 2);
+  
+  // Evasion = 10 + agility
+  const evasionBase = character.evasionBase ?? 10;
+  const evasion = evasionBase + (abilities.agility || 0);
+  
+  // Calculate armor from equipped armor items
+  const armorItems = (character.equipment?.armor || []) as Item[];
+  const armor = armorItems
+    .filter(item => item.equipped)
+    .reduce((sum, item) => sum + (item.armor || 0), 0);
+  
+  // Max Health = 8 + (vitality * level) + healthPoints
+  const level = character.level || 1;
+  const vitality = abilities.vitality || 0;
+  const healthPoints = character.healthPoints || 0;
+  const maxHealth = vitality < 0 
+    ? 8 + vitality + healthPoints 
+    : 8 + (vitality * level) + healthPoints;
+  
+  // Max Energy = (powerAbility * level) + energyPoints
+  const powerAbil = character.pow_abil?.toLowerCase() as AbilityName | undefined;
+  const powerAbilityValue = powerAbil ? (abilities[powerAbil] || 0) : 0;
+  const energyPoints = character.energyPoints || 0;
+  const maxEnergy = (powerAbilityValue * level) + energyPoints;
+  
+  // Terminal = maxHealth / 4 rounded up
+  const terminal = Math.ceil(maxHealth / 4);
+  
+  return {
+    maxHealth,
+    maxEnergy,
+    terminal,
+    speed,
+    evasion,
+    armor,
+    defenseBonuses,
+    defenseScores,
+  };
+}
+
+export default function CharacterSheetPage({ params }: PageParams) {
+  const { id } = use(params);
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  
+  const [character, setCharacter] = useState<Character | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [addModalType, setAddModalType] = useState<AddModalType>(null);
+  const [featModalType, setFeatModalType] = useState<FeatModalType>(null);
+  const [skillModalType, setSkillModalType] = useState<SkillModalType>(null);
+  const [uploadingPortrait, setUploadingPortrait] = useState(false);
+  
+  // Fetch user's library for data enrichment
+  const { data: userPowers = [] } = useUserPowers();
+  const { data: userTechniques = [] } = useUserTechniques();
+  const { data: userItems = [] } = useUserItems();
+  
+  // Enrich character data with full library objects
+  const enrichedData = useMemo(() => {
+    if (!character) return null;
+    return enrichCharacterData(character, userPowers, userTechniques, userItems);
+  }, [character, userPowers, userTechniques, userItems]);
+  
+  // Load character data
+  useEffect(() => {
+    async function loadCharacter() {
+      if (!user || authLoading) return;
+      
+      try {
+        setLoading(true);
+        const docRef = doc(db, 'users', user.uid, 'character', id);
+        const snapshot = await getDoc(docRef);
+        
+        if (!snapshot.exists()) {
+          setError('Character not found');
+          return;
+        }
+        
+        const data = snapshot.data() as Omit<Character, 'id'>;
+        setCharacter({ id: snapshot.id, ...data });
+      } catch (err) {
+        console.error('Error loading character:', err);
+        setError('Failed to load character');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadCharacter();
+  }, [id, user, authLoading]);
+  
+  // Calculate stats
+  const calculatedStats = useMemo(() => {
+    if (!character) return null;
+    return calculateStats(character);
+  }, [character]);
+  
+  // Calculate if character has unapplied points (for notification dot)
+  const hasUnappliedPoints = useMemo(() => {
+    if (!character) return false;
+    
+    const level = character.level || 1;
+    const xp = character.experience ?? 0;
+    const canLevelUp = xp >= (level * 4);
+    
+    // Calculate ability points: 6 base + level
+    const totalAbilityPoints = 6 + level;
+    const baseAbilities = character.ancestry?.abilities || {};
+    const currentAbilities = character.abilities || {};
+    const spentAbilityPoints = Object.entries(currentAbilities).reduce((sum, [key, val]) => {
+      const base = (baseAbilities as Record<string, number>)[key] || 0;
+      return sum + Math.max(0, (val || 0) - base);
+    }, 0);
+    const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
+    
+    // Calculate health/energy points: vitality + level
+    const vitality = currentAbilities.vitality || 0;
+    const totalHEPoints = vitality + level;
+    const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
+    const hePointsRemaining = totalHEPoints - spentHEPoints;
+    
+    // Calculate skill points: 12 + (4 * level)
+    const totalSkillPoints = 12 + (4 * level);
+    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string }>;
+    const spentSkillPoints = skills.reduce((sum, skill) => {
+      let cost = skill.skill_val || 0;
+      if (skill.prof && !skill.baseSkill) cost += 1;
+      return sum + cost;
+    }, 0);
+    // Defense skills cost 2 per point
+    const defenseSkills = character.defenseSkills || {};
+    const spentDefensePoints = Object.values(defenseSkills).reduce((sum, val) => sum + ((val as number) * 2), 0);
+    const skillPointsRemaining = totalSkillPoints - spentSkillPoints - spentDefensePoints;
+    
+    // Calculate feat slots: 1 archetype feat per 4 levels, 1 character feat per 4 levels
+    const archetypeFeatSlots = Math.floor(level / 4) + 1;
+    const characterFeatSlots = Math.floor(level / 4) + 1;
+    const usedArchetypeFeats = (character.archetypeFeats || []).length;
+    const usedCharacterFeats = (character.feats || []).length;
+    const archetypeFeatsRemaining = archetypeFeatSlots - usedArchetypeFeats;
+    const characterFeatsRemaining = characterFeatSlots - usedCharacterFeats;
+    
+    return (
+      canLevelUp ||
+      abilityPointsRemaining > 0 ||
+      hePointsRemaining > 0 ||
+      skillPointsRemaining > 0 ||
+      archetypeFeatsRemaining > 0 ||
+      characterFeatsRemaining > 0
+    );
+  }, [character]);
+  
+  // Auto-save with debounce
+  const { hasUnsavedChanges, isSaving, lastSaved, saveNow } = useAutoSave({
+    data: character,
+    onSave: async (data) => {
+      if (!user || !data) return;
+      setSaving(true);
+      try {
+        const docRef = doc(db, 'users', user.uid, 'character', id);
+        await updateDoc(docRef, {
+          ...data,
+          updatedAt: Timestamp.now(),
+        });
+      } finally {
+        setSaving(false);
+      }
+    },
+    delay: 2000,
+    enabled: isEditMode,
+    onSaveStart: () => setSaving(true),
+    onSaveComplete: () => setSaving(false),
+    onSaveError: (err) => {
+      console.error('Auto-save failed:', err);
+      setSaving(false);
+    },
+  });
+  
+  // Save when leaving edit mode
+  const handleToggleEditMode = useCallback(async () => {
+    if (isEditMode && hasUnsavedChanges) {
+      await saveNow();
+    }
+    setIsEditMode(!isEditMode);
+  }, [isEditMode, hasUnsavedChanges, saveNow]);
+  
+  // Update handlers
+  const handleHealthChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      health: { ...prev.health, current: value, max: prev.health?.max || 0 }
+    } : null);
+  }, [character]);
+  
+  const handleEnergyChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      energy: { ...prev.energy, current: value, max: prev.energy?.max || 0 }
+    } : null);
+  }, [character]);
+  
+  // Portrait upload handler
+  const handlePortraitChange = useCallback(async (file: File) => {
+    if (!character || !user || !storage) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB');
+      return;
+    }
+    
+    try {
+      setUploadingPortrait(true);
+      setError(null);
+      
+      // Create a unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `portraits/${user.uid}/${character.id}.${fileExt}`;
+      const storageRef = ref(storage, fileName);
+      
+      // Upload the file
+      await uploadBytes(storageRef, file, {
+        contentType: file.type,
+      });
+      
+      // Get the download URL
+      const downloadUrl = await getDownloadURL(storageRef);
+      
+      // Update the character with the new portrait URL
+      setCharacter(prev => prev ? { ...prev, portrait: downloadUrl } : null);
+      
+      // Also update in Firestore immediately
+      const charRef = doc(db, 'users', user.uid, 'characters', character.id);
+      await updateDoc(charRef, { portrait: downloadUrl, updatedAt: Timestamp.now() });
+      
+    } catch (err) {
+      console.error('Portrait upload error:', err);
+      setError('Failed to upload portrait');
+    } finally {
+      setUploadingPortrait(false);
+    }
+  }, [character, user]);
+  
+  const handleAbilityChange = useCallback((ability: AbilityName, value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      abilities: { ...prev.abilities, [ability]: value }
+    } : null);
+  }, [character]);
+  
+  // Long rest handler
+  const handleLongRest = useCallback(() => {
+    if (!character || !calculatedStats) return;
+    
+    if (confirm('Take a long rest? This will restore all health and energy to maximum.')) {
+      setCharacter(prev => prev ? {
+        ...prev,
+        health: { current: calculatedStats.maxHealth, max: calculatedStats.maxHealth },
+        energy: { current: calculatedStats.maxEnergy, max: calculatedStats.maxEnergy }
+      } : null);
+    }
+  }, [character, calculatedStats]);
+  
+  // Level up handler
+  const handleLevelUp = useCallback((newLevel: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      level: newLevel
+    } : null);
+  }, [character]);
+  
+  // Get existing item IDs for the modal
+  const existingIds = useMemo(() => {
+    if (!character) return new Set<string>();
+    const ids = new Set<string>();
+    
+    character.powers?.forEach(p => ids.add(String(p.id || '')));
+    character.techniques?.forEach(t => ids.add(String(t.id || '')));
+    (character.equipment?.weapons as Item[] || []).forEach(w => ids.add(String(w.id || '')));
+    (character.equipment?.armor as Item[] || []).forEach(a => ids.add(String(a.id || '')));
+    (character.equipment?.items as Item[] || []).forEach(e => ids.add(String(e.id || '')));
+    
+    return ids;
+  }, [character]);
+  
+  // Add power handler
+  const handleAddPowers = useCallback((powers: CharacterPower[]) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      powers: [...(prev.powers || []), ...powers]
+    } : null);
+  }, [character]);
+  
+  // Remove power handler
+  const handleRemovePower = useCallback((powerId: string | number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      powers: (prev.powers || []).filter(p => p.id !== powerId && String(p.id) !== String(powerId))
+    } : null);
+  }, [character]);
+  
+  // Add technique handler
+  const handleAddTechniques = useCallback((techniques: CharacterTechnique[]) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      techniques: [...(prev.techniques || []), ...techniques]
+    } : null);
+  }, [character]);
+  
+  // Remove technique handler
+  const handleRemoveTechnique = useCallback((techId: string | number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      techniques: (prev.techniques || []).filter(t => t.id !== techId && String(t.id) !== String(techId))
+    } : null);
+  }, [character]);
+  
+  // Add weapon handler
+  const handleAddWeapons = useCallback((items: Item[]) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        weapons: [...((prev.equipment?.weapons as Item[]) || []), ...items]
+      }
+    } : null);
+  }, [character]);
+  
+  // Remove weapon handler
+  const handleRemoveWeapon = useCallback((itemId: string | number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        weapons: ((prev.equipment?.weapons as Item[]) || []).filter(w => w.id !== itemId && String(w.id) !== String(itemId))
+      }
+    } : null);
+  }, [character]);
+  
+  // Toggle equip weapon handler
+  const handleToggleEquipWeapon = useCallback((itemId: string | number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        weapons: ((prev.equipment?.weapons as Item[]) || []).map(w => 
+          (w.id === itemId || String(w.id) === String(itemId)) ? { ...w, equipped: !w.equipped } : w
+        )
+      }
+    } : null);
+  }, [character]);
+  
+  // Add armor handler
+  const handleAddArmor = useCallback((items: Item[]) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        armor: [...((prev.equipment?.armor as Item[]) || []), ...items]
+      }
+    } : null);
+  }, [character]);
+  
+  // Remove armor handler
+  const handleRemoveArmor = useCallback((itemId: string | number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        armor: ((prev.equipment?.armor as Item[]) || []).filter(a => a.id !== itemId && String(a.id) !== String(itemId))
+      }
+    } : null);
+  }, [character]);
+  
+  // Toggle equip armor handler
+  const handleToggleEquipArmor = useCallback((itemId: string | number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        armor: ((prev.equipment?.armor as Item[]) || []).map(a => 
+          (a.id === itemId || String(a.id) === String(itemId)) ? { ...a, equipped: !a.equipped } : a
+        )
+      }
+    } : null);
+  }, [character]);
+  
+  // Add equipment handler
+  const handleAddEquipment = useCallback((items: Item[]) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        items: [...((prev.equipment?.items as Item[]) || []), ...items]
+      }
+    } : null);
+  }, [character]);
+  
+  // Remove equipment handler
+  const handleRemoveEquipment = useCallback((itemId: string | number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        items: ((prev.equipment?.items as Item[]) || []).filter(e => e.id !== itemId && String(e.id) !== String(itemId))
+      }
+    } : null);
+  }, [character]);
+  
+  // Currency change handler
+  const handleCurrencyChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      currency: value
+    } : null);
+  }, [character]);
+  
+  // Add feats handler
+  const handleAddFeats = useCallback((feats: { id: string; name: string; description?: string; effect?: string; max_uses?: number }[], type: 'archetype' | 'character') => {
+    if (!character) return;
+    const newFeats: CharacterFeat[] = feats.map(f => ({
+      id: f.id,
+      name: f.name,
+      description: f.description || f.effect || '',
+      maxUses: f.max_uses,
+      currentUses: f.max_uses,
+    }));
+    
+    if (type === 'archetype') {
+      setCharacter(prev => prev ? {
+        ...prev,
+        archetypeFeats: [...(prev.archetypeFeats || []), ...newFeats]
+      } : null);
+    } else {
+      setCharacter(prev => prev ? {
+        ...prev,
+        feats: [...(prev.feats || []), ...newFeats]
+      } : null);
+    }
+    setFeatModalType(null);
+  }, [character]);
+  
+  // Add skills handler
+  const handleAddSkills = useCallback((newSkills: { id: string; name: string; ability?: string[]; base_skill?: string | null }[]) => {
+    if (!character) return;
+    const skillsToAdd = newSkills.map(s => ({
+      id: s.id,
+      name: s.name,
+      category: s.ability?.[0] || 'other',
+      skill_val: 0,
+      prof: false,
+      baseSkill: s.base_skill || undefined,
+    }));
+    
+    // Skills are stored as array of objects at runtime, but typed as Record
+    // Cast to handle the type mismatch
+    setCharacter(prev => {
+      if (!prev) return null;
+      const currentSkills = (prev.skills || []) as unknown as typeof skillsToAdd;
+      return {
+        ...prev,
+        skills: [...currentSkills, ...skillsToAdd] as unknown as typeof prev.skills
+      };
+    });
+    setSkillModalType(null);
+  }, [character]);
+  
+  // Handle modal item add based on type
+  const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique[] | Item[]) => {
+    if (!addModalType) return;
+    
+    switch (addModalType) {
+      case 'power':
+        handleAddPowers(items as CharacterPower[]);
+        break;
+      case 'technique':
+        handleAddTechniques(items as CharacterTechnique[]);
+        break;
+      case 'weapon':
+        handleAddWeapons(items as Item[]);
+        break;
+      case 'armor':
+        handleAddArmor(items as Item[]);
+        break;
+      case 'equipment':
+        handleAddEquipment(items as Item[]);
+        break;
+    }
+  }, [addModalType, handleAddPowers, handleAddTechniques, handleAddWeapons, handleAddArmor, handleAddEquipment]);
+  
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [authLoading, user, router]);
+  
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading character...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || !character) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {error || 'Character not found'}
+          </h1>
+          <Link
+            href="/characters"
+            className="text-primary-600 hover:text-primary-700"
+          >
+            ← Back to Characters
+          </Link>
+        </div>
+      </div>
+    );
+  }
+  
+  const skills = (character.skills || []) as Array<{
+    id: string;
+    name: string;
+    category?: string;
+    skill_val: number;
+    prof?: boolean;
+    baseSkill?: string;
+  }>;
+  
+  return (
+    <RollProvider>
+      <div className="min-h-screen bg-gray-50 pb-8">
+        {/* Action Bar */}
+        <div className="sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+            <Link
+              href="/characters"
+              className="text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            >
+              ← Characters
+            </Link>
+            
+            <div className="flex items-center gap-2">
+              {(saving || isSaving) && (
+                <span className="text-sm text-gray-500">Saving...</span>
+              )}
+              {hasUnsavedChanges && !saving && !isSaving && (
+                <span className="text-sm text-amber-600">Unsaved changes</span>
+              )}
+              {lastSaved && !hasUnsavedChanges && !saving && (
+                <span className="text-sm text-green-600">Saved</span>
+              )}
+              
+              <button
+                onClick={() => setShowLevelUpModal(true)}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+              >
+                ⬆️ Level Up
+              </button>
+              
+              <button
+                onClick={handleLongRest}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+              >
+                😴 Recover
+              </button>
+              
+              <button
+                onClick={handleToggleEditMode}
+                className={cn(
+                  'relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                  isEditMode
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                )}
+              >
+                {isEditMode ? '✓ Done' : '🖉 Edit'}
+                {/* Notification dot for unapplied points */}
+                {hasUnappliedPoints && !isEditMode && (
+                  <span 
+                    className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"
+                    title="You have unspent points!"
+                  />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Character Sheet Content */}
+        <div className="max-w-7xl mx-auto px-4 pt-4">
+          {calculatedStats && (
+            <>
+              <SheetHeader
+                character={character}
+                calculatedStats={calculatedStats}
+                isEditMode={isEditMode}
+                onHealthChange={handleHealthChange}
+                onEnergyChange={handleEnergyChange}
+                onPortraitChange={handlePortraitChange}
+                isUploadingPortrait={uploadingPortrait}
+              />
+              
+              <AbilitiesSection
+              abilities={character.abilities}
+              archetypeAbility={character.archetype?.ability as AbilityName}
+              martialAbility={character.mart_abil}
+              powerAbility={character.pow_abil}
+              isEditMode={isEditMode}
+              onAbilityChange={handleAbilityChange}
+            />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-1">
+                <SkillsSection
+                  skills={skills}
+                  abilities={character.abilities}
+                  isEditMode={isEditMode}
+                  onAddSkill={() => setSkillModalType('skill')}
+                  onAddSubSkill={() => setSkillModalType('subskill')}
+                />
+              </div>
+              
+              <div className="lg:col-span-1">
+                <ArchetypeSection
+                  character={character}
+                  isEditMode={isEditMode}
+                  onAddArchetypeFeat={() => setFeatModalType('archetype')}
+                  onAddCharacterFeat={() => setFeatModalType('character')}
+                />
+              </div>
+              
+              <div className="lg:col-span-1">
+                <LibrarySection
+                  powers={enrichedData?.powers || character.powers || []}
+                  techniques={enrichedData?.techniques || character.techniques || []}
+                  weapons={enrichedData?.weapons || (character.equipment?.weapons || []) as Item[]}
+                  armor={enrichedData?.armor || (character.equipment?.armor || []) as Item[]}
+                  equipment={enrichedData?.equipment || (character.equipment?.items || []) as Item[]}
+                  currency={character.currency}
+                  innateEnergy={character.innateEnergy}
+                  isEditMode={isEditMode}
+                  onAddPower={() => setAddModalType('power')}
+                  onRemovePower={handleRemovePower}
+                  onAddTechnique={() => setAddModalType('technique')}
+                  onRemoveTechnique={handleRemoveTechnique}
+                  onAddWeapon={() => setAddModalType('weapon')}
+                  onRemoveWeapon={handleRemoveWeapon}
+                  onToggleEquipWeapon={handleToggleEquipWeapon}
+                  onAddArmor={() => setAddModalType('armor')}
+                  onRemoveArmor={handleRemoveArmor}
+                  onToggleEquipArmor={handleToggleEquipArmor}
+                  onAddEquipment={() => setAddModalType('equipment')}
+                  onRemoveEquipment={handleRemoveEquipment}
+                  onCurrencyChange={handleCurrencyChange}
+                  // Notes tab props
+                  weight={character.weight}
+                  height={character.height}
+                  appearance={character.appearance}
+                  archetypeDesc={character.archetypeDesc}
+                  notes={character.notes}
+                  abilities={character.abilities}
+                  onWeightChange={(v) => setCharacter(prev => prev ? { ...prev, weight: v } : null)}
+                  onHeightChange={(v) => setCharacter(prev => prev ? { ...prev, height: v } : null)}
+                  onAppearanceChange={(v) => setCharacter(prev => prev ? { ...prev, appearance: v } : null)}
+                  onArchetypeDescChange={(v) => setCharacter(prev => prev ? { ...prev, archetypeDesc: v } : null)}
+                  onNotesChange={(v) => setCharacter(prev => prev ? { ...prev, notes: v } : null)}
+                  // Proficiencies tab props
+                  level={character.level}
+                  archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      
+      {/* Fixed Roll Log */}
+      <RollLog />
+      
+      {/* Add Item Modal */}
+      {addModalType && (
+        <AddLibraryItemModal
+          isOpen={!!addModalType}
+          onClose={() => setAddModalType(null)}
+          itemType={addModalType}
+          existingIds={existingIds}
+          onAdd={handleModalAdd}
+        />
+      )}
+      
+      {/* Add Feat Modal */}
+      {character && featModalType && (
+        <AddFeatModal
+          isOpen={!!featModalType}
+          onClose={() => setFeatModalType(null)}
+          featType={featModalType}
+          character={character}
+          existingFeatIds={[
+            ...(character.archetypeFeats || []).map(f => f.id || f.name),
+            ...(character.feats || []).map(f => f.id || f.name),
+          ]}
+          onAdd={(feats) => handleAddFeats(feats, featModalType)}
+        />
+      )}
+      
+      {/* Add Skill Modal */}
+      {character && skillModalType === 'skill' && (
+        <AddSkillModal
+          isOpen={true}
+          onClose={() => setSkillModalType(null)}
+          existingSkillNames={skills.map(s => s.name)}
+          onAdd={handleAddSkills}
+        />
+      )}
+      
+      {/* Add Sub-Skill Modal */}
+      {character && skillModalType === 'subskill' && (
+        <AddSubSkillModal
+          isOpen={true}
+          onClose={() => setSkillModalType(null)}
+          characterSkills={skills.map(s => ({ name: s.name, prof: s.prof || false }))}
+          existingSkillNames={skills.map(s => s.name)}
+          onAdd={handleAddSkills}
+        />
+      )}
+      
+      {/* Level Up Modal */}
+      {character && (
+        <LevelUpModal
+          isOpen={showLevelUpModal}
+          onClose={() => setShowLevelUpModal(false)}
+          character={character}
+          onConfirm={handleLevelUp}
+        />
+      )}
+    </div>
+    </RollProvider>
+  );
+}

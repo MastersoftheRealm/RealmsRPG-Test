@@ -1,26 +1,194 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* RealmsRPG Design System - Tailwind v4 Theme */
+@theme {
+  /* Primary Blues */
+  --color-primary-darkest: #001f3f;
+  --color-primary-dark: #053357;
+  --color-primary: #0a4a7a;
+  --color-primary-light: #1a5c94;
+  --color-primary-lighter: #1a73e8;
+  --color-primary-accent: #4a9eff;
+  
+  /* Accent Colors */
+  --color-accent-light: #e6f7ff;
+  --color-accent-medium: #b3e0ff;
+  --color-accent-chip: #d4edff;
+  --color-accent-dark: #0a4a7a;
+  
+  /* Status Colors */
+  --color-success: #28a745;
+  --color-success-hover: #218838;
+  --color-success-light: #d4edda;
+  
+  --color-danger: #dc3545;
+  --color-danger-hover: #c82333;
+  --color-danger-dark: #a71d2a;
+  --color-danger-light: #f8d7da;
+  
+  --color-warning: #ffc107;
+  --color-warning-hover: #e0a800;
+  --color-warning-light: #fff3cd;
+  
+  --color-info: #17a2b8;
+  --color-info-hover: #138496;
+  --color-info-light: #d1ecf1;
+  
+  /* Fonts */
+  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-display: "Nova Flat", system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #f8f9fa;
+    --foreground: #333333;
+    --card-bg: #ffffff;
+    --border: #dee2e6;
+  }
+  
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] antialiased;
+    font-family: var(--font-sans);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .container-main {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold 
+           bg-gradient-to-b from-primary-light to-primary text-white 
+           px-5 py-2.5 transition-all hover:shadow-lg 
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold
+           bg-gray-200 text-gray-800 px-5 py-2.5 transition-all hover:bg-gray-300
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold
+           bg-danger text-white px-5 py-2.5 transition-all hover:bg-danger-hover
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .card {
+    @apply bg-[var(--card-bg)] rounded-xl border border-[var(--border)] shadow-sm p-6;
+  }
+  
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-accent-chip text-primary-dark 
+           px-3 py-1 text-sm font-medium;
+  }
+  
+  .input-field {
+    @apply w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5
+           text-[var(--foreground)] placeholder:text-gray-400
+           focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-accent/20
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
 }
+
+/* Animations */
+@layer utilities {
+  /* Modal pop-in animation matching vanilla site */
+  @keyframes modal-pop {
+    0% {
+      transform: scale(0.97) translateY(24px);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-modal-pop {
+    animation: modal-pop 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Fade in animation */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.2s ease;
+  }
+  
+  /* Slide in from right (for toasts) */
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease;
+  }
+  
+  /* Slide up (for roll log, bottom panels) */
+  @keyframes slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.3s ease;
+  }
+  
+  /* Pulse animation for notifications */
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+  }
+  
+  .animate-pulse-dot {
+    animation: pulse-dot 2s infinite;
+  }
+  
+  /* Glow animation for level-up indicator */
+  @keyframes glow-green {
+    0%, 100% { box-shadow: 0 0 5px #22c55e, 0 0 10px #22c55e; }
+    50% { box-shadow: 0 0 15px #22c55e, 0 0 20px #22c55e; }
+  }
+  
+  .animate-glow-green {
+    animation: glow-green 1.5s ease-in-out infinite;
+  }
+  
+  /* Skeleton shimmer */
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  .animate-shimmer {
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  /* Hover lift effect for cards */
+  .hover-lift {
+    @apply transition-transform duration-200;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-0.5;
+  }
+  
+  /* Focus ring utility */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2;
+  }
+}
+

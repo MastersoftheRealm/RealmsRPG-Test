@@ -1,0 +1,94 @@
+﻿/**
+ * Firebase Client-Side Configuration
+ * ===================================
+ * Client-side Firebase initialization for use in React components.
+ * This file should only be imported in client components.
+ * 
+ * Uses Firebase Hosting's auto-generated config endpoint (/__/firebase/init.json)
+ * which automatically injects configuration from Google Cloud Secrets.
+ */
+
+import { initializeApp, getApps, FirebaseApp, FirebaseOptions } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getDatabase, Database } from 'firebase/database';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getFunctions, Functions } from 'firebase/functions';
+
+// Fallback config for local development (when not using Firebase Hosting)
+const localConfig: FirebaseOptions = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+};
+
+// Initialize Firebase (singleton pattern)
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let rtdb: Database;
+let storage: FirebaseStorage;
+let functions: Functions;
+let initPromise: Promise<void> | null = null;
+
+/**
+ * Fetch Firebase config from Firebase Hosting's auto-generated endpoint.
+ * This endpoint is automatically created when you deploy to Firebase Hosting
+ * and injects your Google Cloud Secrets.
+ */
+async function fetchFirebaseConfig(): Promise<FirebaseOptions> {
+  try {
+    const response = await fetch('/__/firebase/init.json');
+    if (!response.ok) {
+      throw new Error('Failed to fetch Firebase config from hosting');
+    }
+    return await response.json();
+  } catch (error) {
+    console.warn('Using local Firebase config (not deployed to Firebase Hosting):', error);
+    return localConfig;
+  }
+}
+
+async function initializeFirebaseClient() {
+  if (getApps().length > 0) {
+    // Already initialized
+    app = getApps()[0];
+  } else {
+    // Fetch config and initialize
+    const config = await fetchFirebaseConfig();
+    app = initializeApp(config);
+  }
+  
+  auth = getAuth(app);
+  db = getFirestore(app);
+  rtdb = getDatabase(app);
+  storage = getStorage(app);
+  functions = getFunctions(app);
+  
+  return { app, auth, db, rtdb, storage, functions };
+}
+
+/**
+ * Wait for Firebase to be initialized.
+ * This is necessary because we fetch the config asynchronously.
+ */
+export async function waitForFirebase(): Promise<void> {
+  if (!initPromise) {
+    initPromise = initializeFirebaseClient().then(() => {});
+  }
+  return initPromise;
+}
+
+// Auto-initialize on client side
+if (typeof window !== 'undefined') {
+  waitForFirebase().catch(err => {
+    console.error('Failed to initialize Firebase:', err);
+  });
+}
+
+export { app, auth, db, rtdb, storage, functions };
+export { initializeFirebaseClient };
