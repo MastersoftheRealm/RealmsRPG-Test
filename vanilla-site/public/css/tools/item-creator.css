@@ -1,0 +1,407 @@
+/* ==========================================================================
+   Item Creator Styles
+   Imports shared design system and creator base, then adds item-specific styles
+   ========================================================================== */
+
+/* Core Design System */
+@import url('../core/variables.css');
+@import url('../core/reset.css');
+@import url('../core/typography.css');
+@import url('../core/components.css');
+@import url('../core/creator-base.css');
+@import url('../core/chips.css');
+
+/* ==========================================================================
+   Item Creator Specific Styles
+   ========================================================================== */
+
+/* Page Title */
+.page-title {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-normal);
+    margin-top: var(--spacing-lg);
+    text-align: center;
+    color: var(--color-primary);
+}
+
+.centered-title {
+    text-align: center;
+}
+
+/* ==========================================================================
+   Main Layout
+   ========================================================================== */
+main {
+    max-width: var(--content-max-width, 1200px);
+    margin: 0 auto;
+    padding: var(--spacing-md) var(--spacing-lg);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* General Item Options Container */
+#generalItemOptionsContainer {
+    margin-top: var(--spacing-lg);
+    width: 100%;
+    padding: var(--spacing-sm);
+    background-color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Total Costs Panel */
+#totalCosts {
+    position: fixed;
+    top: calc(var(--header-height, 80px) + var(--spacing-lg));
+    left: var(--spacing-lg);
+    width: 160px;
+    padding: var(--spacing-sm);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 1001;
+    font-size: var(--font-size-xs);
+    transition: transform var(--transition-base);
+}
+
+#totalCosts h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-sm);
+    color: var(--color-primary);
+}
+
+#totalCosts p {
+    margin: var(--spacing-2xs) 0;
+    font-size: var(--font-size-xs);
+}
+
+#totalCosts.collapsed {
+    transform: translateX(-90%);
+}
+
+#totalCosts .toggle-arrow {
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform: translateY(-50%);
+    z-index: 1002;
+    font-weight: var(--font-weight-bold);
+}
+
+#totalCosts .toggle-arrow:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Item Properties Container */
+#itemPropertiesContainer {
+    margin-top: var(--spacing-lg);
+    width: 100%;
+    position: relative;
+}
+
+/* Legacy class mappings to new system */
+.item-property-section {
+    /* Extends .creator-section */
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.item-property-section h3 {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-lg);
+    margin: 0;
+    color: var(--color-primary);
+}
+
+.item-property-section p {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-xs);
+    margin: var(--spacing-2xs) 0;
+}
+
+.item-property-section h4 {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-sm);
+    margin: var(--spacing-sm) 0 var(--spacing-xs);
+    display: flex;
+    align-items: center;
+}
+
+.item-property-section .delete-button {
+    background-color: var(--color-danger);
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+.item-property-section .delete-button:hover {
+    background-color: var(--color-danger-hover);
+}
+
+.item-property-section select {
+    display: block;
+    margin: 0 auto var(--spacing-sm) auto;
+    padding: var(--spacing-2xs);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    font-family: var(--font-family-body);
+}
+
+/* ==========================================================================
+   Item Summary Panel
+   ========================================================================== */
+#itemSummary {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    position: relative;
+}
+
+#itemSummary h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-xl);
+    color: var(--color-primary);
+}
+
+.item-summary-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.item-summary-top p {
+    margin: var(--spacing-2xs) 0;
+    flex: 1 1 30%;
+}
+
+.item-summary-top input {
+    flex: 1 1 100%;
+    padding: var(--spacing-2xs);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    margin-bottom: var(--spacing-sm);
+}
+
+.item-summary-properties {
+    margin-top: var(--spacing-sm);
+}
+
+.item-summary-properties h4 {
+    margin: 0 0 var(--spacing-2xs) 0;
+}
+
+#summaryProperties {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+#summaryProperties div {
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-2xs);
+    box-shadow: var(--shadow-xs);
+    flex: 1 1 30%;
+}
+
+.item-summary-description {
+    margin-top: var(--spacing-sm);
+}
+
+.item-summary-description h4 {
+    margin: 0 0 var(--spacing-2xs) 0;
+}
+
+#itemDescription {
+    width: 100%;
+    height: 100px;
+    padding: var(--spacing-2xs);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    font-family: var(--font-family-body);
+    resize: vertical;
+}
+
+/* ==========================================================================
+   Item Specific: Ability Requirements
+   ========================================================================== */
+.ability-req-box {
+    width: 30%;
+    min-width: 200px;
+    margin: 0 var(--spacing-2xs);
+    padding: var(--spacing-2xs);
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+}
+
+.ability-req-box select {
+    margin-left: 0;
+    margin-right: 0;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    font-family: var(--font-family-body);
+}
+
+#abilityRequirementsList > div {
+    margin-top: 2px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-sm);
+    padding: 2px var(--spacing-2xs);
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+}
+
+#abilityRequirementsList button {
+    padding: 2px var(--spacing-2xs);
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-danger);
+    color: var(--color-white);
+    border: none;
+    cursor: pointer;
+}
+
+#abilityRequirementsList button:hover {
+    background-color: var(--color-danger-dark);
+}
+
+/* ==========================================================================
+   Item Main Container
+   ========================================================================== */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: var(--container-lg);
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   Page Navigation
+   ========================================================================== */
+.top-right-container {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+.add-to-library-button {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Button Size Variants
+   ========================================================================== */
+.small-button {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-xs);
+}
+
+.medium-button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+/* Button Color Variants */
+.blue-button {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.blue-button:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.red-button {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.red-button:hover {
+    background-color: var(--color-danger-hover);
+}
+
+/* Delete button styling */
+.delete-button {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.delete-button:hover {
+    background-color: var(--color-danger-hover);
+}
+
+/* Checkbox styling */
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+    gap: var(--spacing-sm);
+}
+
+.checkbox-container label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+}
+
+/* Load/Save Button Container */
+.load-save-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-sm);
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 768px) {
+    .item-summary-top {
+        flex-direction: column;
+    }
+    
+    .item-summary-top p {
+        flex: none;
+        width: 100%;
+    }
+    
+    .ability-req-box {
+        width: 100%;
+    }
+}

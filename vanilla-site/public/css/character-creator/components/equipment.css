@@ -1,0 +1,326 @@
+.equipment-resources {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-lg);
+  margin: var(--spacing-xl) 0;
+}
+
+.resource-box {
+  background: var(--bg-header);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.resource-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resource-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-light);
+}
+
+.equipment-section {
+  background: var(--bg-section);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.equipment-bonus-section {
+  background: var(--bg-section);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.equipment-bonus-section h3 {
+  font-family: 'Nova Flat', cursive;
+  font-size: 20px;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.equipment-bonus-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.equipment-bonus-list .skill-bonus-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-white);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.equipment-bonus-list .skill-bonus-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  grid-column: 1 / 2;
+  grid-row: 1;
+}
+
+.equipment-bonus-list .skill-fixed-ability {
+  font-size: 14px;
+  color: var(--text-secondary);
+  grid-column: 2 / 3;
+  grid-row: 1;
+  text-align: right;
+  padding: 6px 12px;
+  background: var(--light-gray);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.equipment-bonus-list .skill-bonus-value {
+  display: none;
+}
+
+.equipment-remove-btn {
+  grid-column: 3 / 4;
+  grid-row: 1;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.equipment-remove-btn:hover {
+  background: #c82333;
+}
+
+.equipment-table-container {
+  overflow-x: auto;
+  margin-top: var(--spacing-md);
+}
+
+.equipment-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-white);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.equipment-table thead {
+  background: var(--bg-header);
+}
+
+.equipment-table th {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-light);
+}
+
+.equipment-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.equipment-table tbody tr {
+  cursor: pointer;
+}
+
+.equipment-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.equipment-table tbody tr.selected-equipment {
+  background: rgba(0, 123, 255, 0.1);
+}
+
+.equipment-table tbody tr.expanded-equipment {
+  background: var(--bg-hover);
+}
+
+.equipment-details-row {
+  display: none;
+  background: var(--light-gray);
+}
+
+.equipment-details-row.show {
+  display: table-row;
+}
+
+.equipment-details-cell {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  background: var(--bg-hover);
+}
+
+.equipment-description {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  font-style: italic;
+  color: #000;
+}
+
+.equipment-properties-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.equipment-property-chip {
+  background: var(--light-gray);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  color: var(--gray);
+}
+
+.equipment-property-chip.proficiency-chip {
+  background: #e3f2fd;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.equipment-list-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--gray);
+  font-style: italic;
+}
+
+.equipment-list-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--gray);
+  font-style: italic;
+}
+
+.equipment-add-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.equipment-add-btn:hover {
+  background: var(--primary-light);
+}
+
+.equipment-add-btn.selected {
+  background: #28a745;
+}
+
+.equipment-add-btn.selected:hover {
+  background: #218838;
+}
+
+.equipment-add-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.expand-icon-equipment {
+  font-size: 0.8rem;
+  color: var(--gray);
+  margin-right: 8px;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.expanded-equipment .expand-icon-equipment {
+  transform: rotate(90deg);
+}
+
+.equipment-select-btn {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.equipment-select-btn:hover {
+  background: var(--primary-light);
+}
+
+.equipment-select-btn.selected {
+  background: var(--primary-light);
+}
+
+.equipment-select-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.equipment-property {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin: 2px;
+  font-size: 11px;
+  color: #555;
+}
+
+.equipment-damage {
+  font-weight: 600;
+  color: #d9534f;
+}
+
+.equipment-range {
+  color: #5bc0de;
+}
+
+@media (max-width: 768px) {
+  .equipment-resources {
+    grid-template-columns: 1fr;
+  }
+}

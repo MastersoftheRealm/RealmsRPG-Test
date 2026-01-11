@@ -1,0 +1,511 @@
+/* ==========================================================================
+   Login Page Styles
+   Imports shared design system for consistency
+   ========================================================================== */
+
+/* Core Design System */
+@import url('../core/variables.css');
+@import url('../core/reset.css');
+@import url('../core/typography.css');
+@import url('../core/components.css');
+
+/* Login Page Styles */
+.login-body {
+    background: var(--color-gray-300);
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.login-container {
+    position: relative;
+    width: 100vw;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 5%;
+    box-sizing: border-box;
+}
+
+/* Background */
+.background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.background-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Brand Section */
+.brand-section {
+    display: flex;
+    flex-direction: column;
+    max-width: 528px;
+    position: relative;
+    z-index: 2;
+    padding: 8px;
+    gap: 24px;
+}
+
+.brand-logo {
+    width: 528px;
+    height: 200px;
+}
+
+.brand-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.brand-description {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 104px 0 104px;
+}
+
+.tagline,
+.description {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-xl);
+    line-height: var(--line-height-normal);
+    color: var(--color-gray-800);
+    margin: 0;
+    text-align: left;
+}
+
+/* Decorative D20 Elements - Updated positioning to avoid overlaps */
+.d20-element {
+    position: absolute;
+    z-index: 1;
+}
+
+.d20-element img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.d20-top-right {
+    top: 10%;
+    right: 8%;
+    width: 120px;
+    height: 117px;
+}
+
+.d20-left-small {
+    top: 20%;
+    left: 2%;
+    width: 88px;
+    height: 89px;
+}
+
+.d20-bottom-left {
+    bottom: 35%;
+    left: 2%;
+    width: 152px;
+    height: 158px;
+}
+
+.d20-bottom-center {
+    bottom: 15%;
+    left: 25%;
+    width: 160px;
+    height: 159px;
+}
+
+/* Sign In Buttons Section */
+.signin-buttons-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    width: 418px;
+    position: relative;
+    z-index: 2;
+}
+
+/* Sign In Button Base Styles */
+.signin-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    background: var(--color-gray-200);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-lg);
+    color: var(--color-primary-dark);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-all);
+    position: relative;
+}
+
+.signin-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.3);
+}
+
+.signin-button:active {
+    transform: translateY(0);
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Sign In Button with Logo */
+.signin-button-with-logo {
+    padding-left: 64px;
+}
+
+.signin-logo {
+    position: absolute;
+    left: 8px;
+    width: 64px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.signin-logo img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.signin-text {
+    flex: 1;
+    text-align: center;
+    line-height: 25px;
+}
+
+/* Username Sign In Button */
+.signin-username .signin-text {
+    padding: 16px 69px;
+}
+
+/* Google Sign In Button */
+.signin-google .signin-text {
+    padding: 16px 69px;
+}
+
+/* Apple Sign In Button */
+.signin-apple .signin-text {
+    padding: 16px 69px;
+}
+
+/* Or Divider */
+.or-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.or-divider img {
+    width: 15px;
+    height: 8px;
+    object-fit: contain;
+}
+
+/* Create Account Button */
+.create-account-button {
+    width: 100%;
+    height: 48px;
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
+    color: var(--color-white);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-all);
+    padding: var(--spacing-4) var(--spacing-8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: var(--line-height-normal);
+}
+
+.create-account-button:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.create-account-button:active {
+    transform: translateY(0);
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: center;
+}
+
+/* Force flex display when modal is shown */
+.modal[style*="display: block"],
+.modal[style*="display:block"] {
+    display: flex !important;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 30px;
+    border: none;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+.modal-content h2 {
+    text-align: center;
+    margin-bottom: var(--spacing-5);
+    color: var(--color-primary-dark);
+    font-family: var(--font-title);
+    font-weight: var(--font-weight-normal);
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.modal-content input {
+    padding: var(--spacing-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
+    font-family: var(--font-body);
+}
+
+.modal-content button {
+    padding: var(--spacing-3);
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-base);
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.modal-content button:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.modal-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    margin-top: var(--spacing-4);
+    text-align: center;
+}
+
+.modal-links a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-body);
+}
+
+.modal-links a:hover {
+    text-decoration: underline;
+}
+
+/* Footer - Updated to stick to bottom of viewport */
+.login-footer {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 40px;
+    background: #aaaaaa;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 9px 0;
+    box-sizing: border-box;
+    margin-top: auto; /* This ensures footer sticks to bottom */
+}
+
+.footer-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1440px;
+    height: 23px;
+    padding: 0 96px;
+    gap: 72px;
+    box-sizing: border-box;
+}
+
+.footer-link {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-normal);
+    color: var(--color-gray-800);
+    text-decoration: none;
+    text-align: center;
+    vertical-align: center;
+    transition: color var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-link:hover {
+    color: var(--color-gray-900);
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .d20-bottom-center {
+        left: 20%;
+    }
+}
+
+@media (max-width: 1200px) {
+    .login-container {
+        flex-direction: column;
+        justify-content: center;
+        gap: 40px;
+        padding: 40px 5%;
+        min-height: calc(100vh - 40px); /* Account for footer height */
+    }
+    
+    .brand-section {
+        text-align: center;
+        max-width: 100%;
+    }
+    
+    .brand-logo {
+        width: 100%;
+        max-width: 528px;
+        height: auto;
+    }
+    
+    .brand-description {
+        padding: 0 20px;
+    }
+    
+    /* Hide decorative dice on smaller screens to avoid overlaps */
+    .d20-element {
+        display: none;
+    }
+    
+    .footer-links {
+        width: 100%;
+        padding: 0 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .signin-buttons-section {
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .footer-links {
+        flex-wrap: wrap;
+        gap: 20px;
+        padding: 0 20px;
+        justify-content: center;
+    }
+    
+    .footer-link {
+        font-size: 14px;
+    }
+    
+    .tagline,
+    .description {
+        font-size: 20px;
+        line-height: 28px;
+    }
+    
+    .signin-button,
+    .create-account-button {
+        font-size: 16px;
+    }
+    
+    .signin-text {
+        padding: 12px 20px !important;
+    }
+    
+    .create-account-button {
+        padding: 12px 20px;
+    }
+    
+    .modal-content {
+        margin: 20% auto;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-links {
+        gap: 10px;
+    }
+    
+    .footer-link {
+        font-size: 12px;
+    }
+}

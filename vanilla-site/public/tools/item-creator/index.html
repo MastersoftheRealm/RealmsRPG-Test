@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/tools/item-creator.css">
+    <script type="module" src="/js/tools/item-creator/main.js" defer></script>
+</head>
+<body>
+    <header id="header"></header>
+    <main>
+        <div id="generalItemOptionsContainer">
+            <h3 class="centered-title">General Properties</h3>
+            <div class="option-container">
+                <div class="option-box range-box">
+                    <!-- Armament Type Dropdown -->
+                    <div style="margin-bottom: 10px;">
+                        <label for="armamentType"><strong>Armament Type:</strong></label>
+                        <select id="armamentType">
+                            <option value="Weapon" selected>Weapon</option>
+                            <option value="Armor">Armor</option>
+                            <option value="Shield">Shield</option>
+                        </select>
+                    </div>
+                    <!-- Damage Reduction control for Armor -->
+                    <div id="damageReductionContainer" style="display:none; margin-bottom:10px;">
+                        <label><strong>Damage Reduction:</strong></label>
+                        <span id="damageReductionValue">1</span>
+                        <button class="small-button blue-button" type="button" id="damageReductionIncrease">+</button>
+                        <button class="small-button blue-button" type="button" id="damageReductionDecrease">-</button>
+                        <span class="small-text" id="damageReductionCostSummary"></span>
+                    </div>
+                    <!-- Handedness -->
+                    <h4 id="handednessContainer">
+                        Handedness:
+                        <select id="handedness" onchange="changeHandedness(this.value)">
+                            <option value="One-Handed" selected>One-Handed</option>
+                            <option value="Two-Handed">Two-Handed</option>
+                        </select>
+                    </h4>
+                    <!-- Range moved below handedness -->
+                    <h4 id="rangeContainer">
+                        Range: <span id="rangeValue">Melee</span>
+                        <div class="button-container">
+                            <button class="small-button blue-button" onclick="changeRange(1)">+</button>
+                            <button class="small-button blue-button" onclick="changeRange(-1)">-</button>
+                        </div>
+                    </h4>
+                </div>
+                <!-- Remove the second (now empty) box -->
+                <div class="option-box ability-req-box">
+                    <h4>Ability Requirements</h4>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <select id="abilityRequirementType">
+                            <!-- Options will be dynamically populated by JS -->
+                        </select>
+                        <select id="abilityRequirementValue">
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                        <button class="small-button blue-button" id="addAbilityRequirementButton" type="button">Add</button>
+                    </div>
+                    <div id="abilityRequirementsList" style="margin-top: 5px;"></div>
+                    <!-- Agility Reduction control for Armor -->
+                    <div id="agilityReductionContainer" style="margin-top:10px; display:none;">
+                        <label><strong>Agility Reduction:</strong></label>
+                        <span id="agilityReductionValue">None</span>
+                        <button class="small-button blue-button" type="button" id="agilityReductionIncrease">+</button>
+                        <button class="small-button blue-button" type="button" id="agilityReductionDecrease">-</button>
+                    </div>
+                </div>
+                <div class="option-box damage-box" id="damageBox">
+                    <h4>Damage: 
+                        <input type="number" id="dieAmount1" min="1" max="99" value="" placeholder="Amount"> d 
+                        <select id="dieSize1">
+                            <option value="" selected disabled>Size</option>
+                            <option value="4">4</option>
+                            <option value="6">6</option>
+                            <option value="8">8</option>
+                            <option value="10">10</option>
+                            <option value="12">12</option>
+                        </select>
+                        <select id="damageType1" onchange="updateDamageType()">
+                            <option value="none" selected>No Damage</option>
+                            <option value="bludgeoning">Bludgeoning</option>
+                            <option value="piercing">Piercing</option>
+                            <option value="slashing">Slashing</option>
+                        </select>
+                        <button id="addDamageRowButton" class="medium-button blue-button" onclick="addDamageRow()">+</button>
+                    </h4>
+                    <div id="additionalDamageRow"></div>
+                </div>
+            </div>
+        </div>
+        <div class="button-row">
+            <button id="addShieldPropertyButton">Add Shield Property</button>
+            <button id="addItemPropertyButton">Add Weapon Property</button>
+            <button id="addArmorPropertyButton">Add Armor Property</button>
+        </div>
+        <div id="itemPropertiesContainer" class="item-properties-container"></div>
+        <div id="itemSummary">
+            <h3>Item Summary</h3>
+            <div class="item-summary-top">
+                <input type="text" id="itemName" placeholder="Item Name" style="flex: 1;">
+                <div class="load-save-button-container" style="display: flex; flex-direction: column;">
+                    <button id="add-to-library-button" class="add-to-library-button">Add to Library</button>
+                </div>
+                <p>Total IP: <span id="summaryIP">0</span></p>
+                <p>Training Points: <span id="summaryTP">0</span></p>
+                <p>Currency Points: <span id="summaryCurrency">0</span></p>
+                <p>Range: <span id="summaryRange">Melee</span></p>
+                <p id="summaryDamage" style="display: none;"></p>
+                <p>Rarity: <span id="summaryRarity">Common</span></p>
+                <p>Item Type: <span id="summaryType">Weapon</span></p>
+            </div>
+            <div class="item-summary-properties">
+                <h4>Item Properties:</h4>
+                <div id="summaryProperties"></div>
+            </div>
+            <div class="item-summary-proficiencies">
+                <h4>Proficiencies:</h4>
+                <div id="summaryProficiencies"></div>
+            </div>
+            <div class="item-summary-description">
+                <h4>Description:</h4>
+                <textarea id="itemDescription" placeholder="Item Description"></textarea>
+            </div>
+        </div>
+        <div id="totalCosts">
+            <h3>Total Item Costs</h3>
+            <p>Total IP: <span id="totalIP">0</span></p>
+            <p>Total TP: <span id="totalTP">0</span></p>
+            <p>Total Currency: <span id="totalCurrency">0</span></p>
+            <p>Rarity: <span id="totalRarity">Common</span></p>
+            <div class="toggle-arrow"><</div>
+        </div>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module">
+        import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+        async function loadHeaderFooter() {
+            const header = document.getElementById('header');
+            const footer = document.getElementById('footer');
+            if (header) {
+                header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+            }
+            if (footer) {
+                footer.innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+            }
+        }
+        loadHeaderFooter();
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const { auth, db } = await initializeFirebase();
+            handleAuthStateChange(auth, db);
+
+            // Ability Requirements logic
+            const abilityRequirements = [];
+            const abilityRequirementType = document.getElementById('abilityRequirementType');
+            const abilityRequirementValue = document.getElementById('abilityRequirementValue');
+            const addAbilityRequirementButton = document.getElementById('addAbilityRequirementButton');
+            const abilityRequirementsList = document.getElementById('abilityRequirementsList');
+
+            // Define the options for each armament type
+            const abilityOptions = {
+                Weapon: [
+                    { value: "Strength", label: "Strength" },
+                    { value: "Agility", label: "Agility" },
+                    { value: "Acuity", label: "Acuity" },
+                    { value: "Vitality", label: "Vitality (RM Apv. Req.)" },
+                    { value: "Intelligence", label: "Intelligence (RM Apv. Req.)" },
+                    { value: "Charisma", label: "Charisma (RM Apv. Req.)" }
+                ],
+                Shield: [
+                    { value: "Strength", label: "Strength" },
+                    { value: "Agility", label: "Agility" },
+                    { value: "Acuity", label: "Acuity" },
+                    { value: "Vitality", label: "Vitality (RM Apv. Req.)" },
+                    { value: "Intelligence", label: "Intelligence (RM Apv. Req.)" },
+                    { value: "Charisma", label: "Charisma (RM Apv. Req.)" }
+                ],
+                Armor: [
+                    { value: "Strength", label: "Strength" },
+                    { value: "Agility", label: "Agility (RM Apv. Req.)" },
+                    { value: "Vitality", label: "Vitality (RM Apv. Req.)" },
+                    { value: "Intelligence", label: "Intelligence (RM Apv. Req.)" },
+                    { value: "Charisma", label: "Charisma (RM Apv. Req.)" }
+                ]
+            };
+
+            function updateAbilityRequirementOptions(type) {
+                if (!abilityRequirementType) return;
+                abilityRequirementType.innerHTML = '';
+                (abilityOptions[type] || []).forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.label;
+                    abilityRequirementType.appendChild(option);
+                });
+            }
+
+            function renderAbilityRequirements() {
+                abilityRequirementsList.innerHTML = '';
+                abilityRequirements.forEach((req, idx) => {
+                    const div = document.createElement('div');
+                    div.style.display = 'flex';
+                    div.style.alignItems = 'center';
+                    div.style.gap = '5px';
+                    div.innerHTML = `
+                        <span>${req.type}: ${req.value}</span>
+                        <button class="small-button red-button" type="button" onclick="removeAbilityRequirement(${idx})">x</button>
+                    `;
+                    abilityRequirementsList.appendChild(div);
+                });
+            }
+            window.removeAbilityRequirement = function(idx) {
+                abilityRequirements.splice(idx, 1);
+                renderAbilityRequirements();
+                window.updateTotalCosts && window.updateTotalCosts();
+            };
+            if (addAbilityRequirementButton) {
+                addAbilityRequirementButton.addEventListener('click', () => {
+                    const type = abilityRequirementType.value;
+                    const value = abilityRequirementValue.value;
+                    if (!abilityRequirements.some(r => r.type === type)) {
+                        abilityRequirements.push({ type, value });
+                        renderAbilityRequirements();
+                        window.updateTotalCosts && window.updateTotalCosts();
+                    }
+                });
+            }
+            // Expose for use in itemCreator.js if needed
+            window.getAbilityRequirements = () => abilityRequirements;
+
+            // Armament Type logic
+            const armamentTypeSelect = document.getElementById('armamentType');
+            const handednessContainer = document.getElementById('handednessContainer');
+            const handednessSelect = document.getElementById('handedness');
+            const rangeContainer = document.getElementById('rangeContainer');
+            const rangeValue = document.getElementById('rangeValue');
+            const addWeaponBtn = document.getElementById('addItemPropertyButton');
+            const addArmorBtn = document.getElementById('addArmorPropertyButton');
+            const addShieldBtn = document.getElementById('addShieldPropertyButton');
+            const itemPropertiesContainer = document.getElementById('itemPropertiesContainer');
+
+            // Agility Reduction state
+            window.agilityReduction = 0;
+            const agilityReductionContainer = document.getElementById('agilityReductionContainer');
+            const agilityReductionValue = document.getElementById('agilityReductionValue');
+            const agilityReductionIncrease = document.getElementById('agilityReductionIncrease');
+            const agilityReductionDecrease = document.getElementById('agilityReductionDecrease');
+            function updateAgilityReductionDisplay() {
+                agilityReductionValue.textContent = window.agilityReduction > 0 ? window.agilityReduction : "None";
+            }
+            if (agilityReductionIncrease) {
+                agilityReductionIncrease.addEventListener('click', () => {
+                    window.agilityReduction = Math.min(10, (window.agilityReduction || 0) + 1);
+                    updateAgilityReductionDisplay();
+                    window.updateTotalCosts && window.updateTotalCosts();
+                });
+            }
+            if (agilityReductionDecrease) {
+                agilityReductionDecrease.addEventListener('click', () => {
+                    window.agilityReduction = Math.max(0, (window.agilityReduction || 0) - 1);
+                    updateAgilityReductionDisplay();
+                    window.updateTotalCosts && window.updateTotalCosts();
+                });
+            }
+            updateAgilityReductionDisplay();
+
+            function updateArmamentUI(type) {
+                // Clear all currently added properties regardless of type
+                if (window.clearAllItemProperties) window.clearAllItemProperties();
+                if (window.getAbilityRequirements) {
+                    // Reset ability requirements list
+                    const current = window.getAbilityRequirements();
+                    if (current && current.length) {
+                        current.splice(0, current.length);
+                        const list = document.getElementById('abilityRequirementsList');
+                        if (list) list.innerHTML = '';
+                    }
+                }
+                // Show/hide add property buttons
+                if (addWeaponBtn) addWeaponBtn.style.display = (type === 'Weapon') ? '' : 'none';
+                if (addArmorBtn) addArmorBtn.style.display = (type === 'Armor') ? '' : 'none';
+                if (addShieldBtn) addShieldBtn.style.display = (type === 'Shield') ? '' : 'none';
+
+                // Remove properties of other types
+                if (window && window.selectedItemProperties) {
+                    const keepType = type;
+                    let changed = false;
+                    for (let i = window.selectedItemProperties.length - 1; i >= 0; i--) {
+                        if (window.selectedItemProperties[i].property.type !== keepType) {
+                            window.selectedItemProperties.splice(i, 1);
+                            changed = true;
+                        }
+                    }
+                    if (changed && window.renderItemProperties) window.renderItemProperties();
+                    if (window.updateTotalCosts) window.updateTotalCosts();
+                }
+
+                // Hide/show handedness for Armor
+                if (handednessContainer && handednessSelect) {
+                    if (type === 'Armor') {
+                        handednessSelect.value = "One-Handed";
+                        handednessContainer.style.display = "none";
+                        if (window.changeHandedness) window.changeHandedness("One-Handed");
+                    } else {
+                        handednessContainer.style.display = "";
+                    }
+                }
+                // Hide/show range for Armor and Shield
+                if (rangeContainer && rangeValue) {
+                    if (type === 'Armor' || type === 'Shield') {
+                        rangeValue.textContent = "Melee";
+                        rangeContainer.style.display = "none";
+                        if (window.changeRange) window.changeRange(-9999); // force to 0
+                    } else {
+                        rangeContainer.style.display = "";
+                    }
+                }
+                // Update ability requirement options dynamically from loaded properties
+                if (window.updateAbilityRequirementDropdown) {
+                    window.updateAbilityRequirementDropdown(type);
+                }
+                // Hide/show damage box and set damage to none for Armor or Shield
+                const damageBox = document.getElementById('damageBox');
+                if (damageBox) {
+                    if (type === 'Armor' || type === 'Shield') {
+                        damageBox.style.display = 'none';
+                        // Set all damage fields to none/empty
+                        const dieAmount1 = document.getElementById('dieAmount1');
+                        const dieSize1 = document.getElementById('dieSize1');
+                        const damageType1 = document.getElementById('damageType1');
+                        if (dieAmount1) dieAmount1.value = '';
+                        if (dieSize1) dieSize1.value = '';
+                        if (damageType1) damageType1.value = 'none';
+                        const addDamageRowButton = document.getElementById('addDamageRowButton');
+                        const additionalDamageRow = document.getElementById('additionalDamageRow');
+                        if (addDamageRowButton) addDamageRowButton.style.display = 'none';
+                        if (additionalDamageRow) additionalDamageRow.innerHTML = '';
+                    } else {
+                        damageBox.style.display = '';
+                        const addDamageRowButton = document.getElementById('addDamageRowButton');
+                        if (addDamageRowButton) addDamageRowButton.style.display = '';
+                    }
+                }
+                // Show/hide agility reduction
+                if (agilityReductionContainer) {
+                    agilityReductionContainer.style.display = (type === 'Armor') ? '' : 'none';
+                    if (type !== 'Armor') {
+                        window.agilityReduction = 0;
+                        updateAgilityReductionDisplay();
+                    }
+                }
+            }
+
+            if (armamentTypeSelect) {
+                armamentTypeSelect.addEventListener('change', function() {
+                    updateArmamentUI(this.value);
+                });
+                // Initial UI update
+                updateArmamentUI(armamentTypeSelect.value);
+            }
+
+            // Expose for itemCreator.js
+            window.selectedArmamentType = () => armamentTypeSelect ? armamentTypeSelect.value : 'Weapon';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Creator - Realms: The Freeform Roleplaying Game</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/tools/creature-creator.css">
+    <script defer src="/__/firebase/11.3.0/firebase-app-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <script type="module" src="/js/tools/creature-creator/main.js" defer></script>
+    <style>
+        #armamentsContainer .armament-row {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+    <header id="header"></header>
+    <!-- Collapsible Details Box -->
+    <div id="creatureDetailsBox">
+        <h3>Creature Details</h3>
+        <p>Total Feat Points: <span id="detailsFeatPoints">0</span></p>
+        <p>Total Training Points: <span id="detailsTP">0</span></p>
+        <p>Skill Points: <span id="detailsSkillPoints">0</span></p>
+        <p>Currency: <span id="detailsCurrency">0</span></p>
+        <div class="toggle-arrow" id="creatureDetailsToggle">&lt;</div>
+    </div>
+    <main>
+        <div id="creatureCreatorContainer">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <h1 class="page-title">Creature Creator</h1>
+                <button id="instructionsBtn" class="medium-button blue-button" style="margin-left:16px;">Instructions</button>
+            </div>
+            <section id="basicMechanics" class="basic-mechanics-section">
+                <h2 class="mechanics-title">Basic Mechanics</h2>
+                <div class="mechanics-container">
+                    <!-- Level & Type -->
+                    <div class="mechanic-box" id="levelBox">
+                        <h3>Level & Type</h3>
+                        <label>
+                            Name:
+                            <input type="text" id="creatureName" placeholder="Creature Name">
+                        </label>
+                        <label>
+                            Level:
+                            <select id="creatureLevel">
+                                <option value="0.25">1/4</option>
+                                <option value="0.5">1/2</option>
+                                <option value="0.75">3/4</option>
+                                <!-- Integer levels 1-30 -->
+                                <option value="1" selected>1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                                <option value="24">24</option>
+                                <option value="25">25</option>
+                                <option value="26">26</option>
+                                <option value="27">27</option>
+                                <option value="28">28</option>
+                                <option value="29">29</option>
+                                <option value="30">30</option>
+                            </select>
+                        </label>
+                        <label>
+                            Type:
+                            <select id="creatureType">
+                                <option value="Beast">Beast</option>
+                                <option value="Undead">Undead</option>
+                                <option value="Construct">Construct</option>
+                                <option value="Elemental">Elemental</option>
+                                <option value="Fey">Fey</option>
+                                <option value="Fiend">Fiend</option>
+                                <option value="Celestial">Celestial</option>
+                                <option value="Dragon">Dragon</option>
+                                <option value="Humanoid">Humanoid</option>
+                                <option value="Plant">Plant</option>
+                                <option value="Ooze">Ooze</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </label>
+                        <!-- Remove Creature Type dropdown -->
+                        <!-- Add Archetype Proficiency allocation -->
+                        <div id="archetypeProficiencyBox" style="margin-top:10px;">
+                            <label style="font-weight:bold;">Archetype Proficiency:</label>
+                            <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+                                <label>
+                                    Power Proficiency:
+                                    <input type="number" id="powerProficiencyInput" min="0" value="2" style="width:50px;">
+                                </label>
+                                <label>
+                                    Martial Proficiency:
+                                    <input type="number" id="martialProficiencyInput" min="0" value="0" style="width:50px;">
+                                </label>
+                                <span id="archetypeProficiencyTotal" style="margin-left:10px;font-weight:bold;color:#007bff;"></span>
+                            </div>
+                            <div id="archetypeProficiencyError" style="color:red;font-size:13px;display:none;"></div>
+                        </div>
+                    </div>
+                    <!-- Resistances & Weaknesses -->
+                    <div class="mechanic-box" id="resistancesBox">
+                        <h3>Resistances & Weaknesses</h3>
+                        <div>
+                            <strong>Resistances</strong>
+                            <ul id="resistancesList"></ul>
+                            <select id="resistanceDropdown">
+                                <option value="" disabled selected>Add Resistance</option>
+                                <option value="Bludgeoning">Bludgeoning</option>
+                                <option value="Piercing">Piercing</option>
+                                <option value="Slashing">Slashing</option>
+                                <option value="Magic">Magic</option>
+                                <option value="Fire">Fire</option>
+                                <option value="Ice">Ice</option>
+                                <option value="Lightning">Lightning</option>
+                                <option value="Spiritual">Spiritual</option>
+                                <option value="Sonic">Sonic</option>
+                                <option value="Poison">Poison</option>
+                                <option value="Necrotic">Necrotic</option>
+                                <option value="Acid">Acid</option>
+                                <option value="Psychic">Psychic</option>
+                            </select>
+                            <button class="small-button blue-button" id="addResistanceBtn">Add</button>
+                        </div>
+                        <div>
+                            <strong>Weaknesses</strong>
+                            <ul id="weaknessesList"></ul>
+                            <select id="weaknessDropdown">
+                                <option value="" disabled selected>Add Weakness</option>
+                                <option value="Bludgeoning">Bludgeoning</option>
+                                <option value="Piercing">Piercing</option>
+                                <option value="Slashing">Slashing</option>
+                                <option value="Magic">Magic</option>
+                                <option value="Fire">Fire</option>
+                                <option value="Ice">Ice</option>
+                                <option value="Lightning">Lightning</option>
+                                <option value="Spiritual">Spiritual</option>
+                                <option value="Sonic">Sonic</option>
+                                <option value="Poison">Poison</option>
+                                <option value="Necrotic">Necrotic</option>
+                                <option value="Acid">Acid</option>
+                                <option value="Psychic">Psychic</option>
+                            </select>
+                            <button class="small-button blue-button" id="addWeaknessBtn">Add</button>
+                        </div>
+                        <div>
+                            <strong>Immunities</strong>
+                            <ul id="immunitiesList"></ul>
+                            <select id="immunityDropdown">
+                                <option value="" disabled selected>Add Immunity</option>
+                                <option value="Bludgeoning">Bludgeoning</option>
+                                <option value="Piercing">Piercing</option>
+                                <option value="Slashing">Slashing</option>
+                                <option value="Magic">Magic</option>
+                                <option value="Fire">Fire</option>
+                                <option value="Ice">Ice</option>
+                                <option value="Lightning">Lightning</option>
+                                <option value="Spiritual">Spiritual</option>
+                                <option value="Sonic">Sonic</option>
+                                <option value="Poison">Poison</option>
+                                <option value="Necrotic">Necrotic</option>
+                                <option value="Acid">Acid</option>
+                                <option value="Psychic">Psychic</option>
+                            </select>
+                            <button class="small-button blue-button" id="addImmunityBtn">Add</button>
+                        </div>
+                    </div>
+                    <!-- Senses & Movement (merged) -->
+                    <div class="mechanic-box" id="sensesMovementBox">
+                        <h3>Senses & Movement</h3>
+                        <div>
+                            <strong>Senses</strong>
+                            <ul id="sensesList"></ul>
+                            <select id="senseDropdown">
+                                <option value="" disabled selected>Add Sense</option>
+                                <option value="Darkvision">Darkvision (6 spaces)</option>
+                                <option value="Darkvision II">Darkvision II (12 spaces)</option>
+                                <option value="Darkvision III">Darkvision III (24 spaces)</option>
+                                <option value="Blindsense" title="Has Blindsense out to 3 spaces.">Blindsense (3 spaces)</option>
+                                <option value="Blindsense II" title="Has Blindsense out to 6 spaces.">Blindsense II (6 spaces)</option>
+                                <option value="Blindsense III" title="Has Blindsense out to 12 spaces.">Blindsense III (12 spaces)</option>
+                                <option value="Blindsense IV" title="Has Blindsense out to 24 spaces.">Blindsense IV (24 spaces)</option>
+                                <option value="Amphibious" title="Can breathe air and water.">Amphibious</option>
+                                <option value="All-Surface Climber" title="Can climb on difficult vertical and horizontal surfaces, even upside down, without needing to make a Climb Roll.">All-Surface Climber</option>
+                                <option value="Telepathy" title="This creature can communicate telepathically with creatures it is aware of within 12 spaces.">Telepathy (12 spaces)</option>
+                                <option value="Telepathy II" title="This creature can communicate telepathically with creatures it is aware of within 48 spaces.">Telepathy II (48 spaces)</option>
+                                <option value="Telepathically Intune" title="Can perceive content of all telepathic communication within 12 spaces.">Telepathically Intune (12 spaces)</option>
+                                <option value="Waterbreathing" title="This creature can only breathe underwater.">Waterbreathing</option>
+                                <option value="Unrestrained Movement" title="Ignores difficult terrain, the slowed condition, and any other effect that would slow its movement due to environmental effects.">Unrestrained Movement</option>
+                            </select>
+                            <button class="small-button blue-button" id="addSenseBtn">Add</button>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <strong>Movement</strong>
+                            <ul id="movementList"></ul>
+                            <select id="movementDropdown">
+                                <option value="" disabled selected>Add Movement Type</option>
+                                <option value="Fly Half">Flying (Half Speed)</option>
+                                <option value="Fly">Flying II (Full Speed)</option>
+                                <option value="Burrow" title="You can burrow with a speed equal to half of your regular speed.">Burrow (Half Speed)</option>
+                                <option value="Burrow II" title="You can burrow with a speed equal to your regular speed.">Burrow II (Full Speed)</option>
+                                <option value="Jump" title="Can long jump 3 spaces and high jump 2.">Jump (Long 3, High 2 spaces)</option>
+                                <option value="Jump II" title="Can long jump 4 spaces and high jump 3.">Jump II (Long 4, High 3 spaces)</option>
+                                <option value="Jump III" title="Can long jump 5 spaces and high jump 4.">Jump III (Long 5, High 4 spaces)</option>
+                                <option value="Speedy" title="Movement speed is increased by 2.">Speedy (+2 spaces)</option>
+                                <option value="Speedy II" title="Movement speed is increased by 4.">Speedy II (+4 spaces)</option>
+                                <option value="Speedy III" title="Movement speed is increased by 6.">Speedy III (+6 spaces)</option>
+                                <option value="Slow" title="Movement speed is decreased by 2.">Slow (-2 spaces)</option>
+                                <option value="Slow II" title="Movement speed is decreased by 4.">Slow II (-4 spaces)</option>
+                                <option value="Slow III" title="Movement speed is decreased by 6.">Slow III (-6 spaces)</option>
+                                <option value="Slow Walker" title="Ground Speed is 1/4 of your normal speed.">Slow Walker</option>
+                                <option value="Hover" title="Must end turn within 1 space of the ground, but need not touch it. Only applicable if the creature has a flying speed.">Hover</option>
+                            </select>
+                            <button class="small-button blue-button" id="addMovementBtn">Add</button>
+                        </div>
+                        <!-- Condition Immunity Section -->
+                        <div style="margin-top:10px;">
+                            <strong>Condition Immunity</strong>
+                            <ul id="conditionImmunityList"></ul>
+                            <select id="conditionImmunityDropdown">
+                                <option value="" disabled selected>Add Condition Immunity</option>
+                                <option value="Bleeding">Bleeding</option>
+                                <option value="Blinded">Blinded</option>
+                                <option value="Charmed">Charmed</option>
+                                <option value="Restrained">Restrained</option>
+                                <option value="Dazed">Dazed</option>
+                                <option value="Deafened">Deafened</option>
+                                <option value="Dying">Dying</option>
+                                <option value="Exhausted">Exhausted</option>
+                                <option value="Exposed">Exposed</option>
+                                <option value="Faint">Faint</option>
+                                <option value="Frightened">Frightened</option>
+                                <option value="Grappled">Grappled</option>
+                                <option value="Hidden">Hidden</option>
+                                <option value="Immobile">Immobile</option>
+                                <option value="Invisible">Invisible</option>
+                                <option value="Prone">Prone</option>
+                                <option value="Resilient">Resilient</option>
+                                <option value="Slowed">Slowed</option>
+                                <option value="Stunned">Stunned</option>
+                                <option value="Susceptible">Susceptible</option>
+                                <option value="Terminal">Terminal</option>
+                                <option value="Weakened">Weakened</option>
+                            </select>
+                            <button class="small-button blue-button" id="addConditionImmunityBtn">Add</button>
+                        </div>
+                    </div>
+                    <!-- Health & Energy -->
+                    <div class="mechanic-box" id="healthEnergyBox">
+                        <h3>Health & Energy</h3>
+                        <div style="margin-bottom:10px;">
+                            <strong>Hit-Energy Points:</strong>
+                            <span id="hitEnergyTotal">26</span>
+                        </div>
+                        <div style="margin-bottom:10px;">
+                            <label for="hitPointsInput"><strong>Hit Points:</strong></label>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <button type="button" id="decreaseHitPoints" class="small-button">-</button>
+                                <input type="number" id="hitPointsInput" min="0" style="width:60px;text-align:center;">
+                                <button type="button" id="increaseHitPoints" class="small-button">+</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="energyInput"><strong>Energy:</strong></label>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <button type="button" id="decreaseEnergy" class="small-button">-</button>
+                                <input type="number" id="energyInput" min="0" style="width:60px;text-align:center;">
+                                <button type="button" id="increaseEnergy" class="small-button">+</button>
+                            </div>
+                        </div>
+                        <!-- Languages Section -->
+                        <div id="languagesBox" style="margin-top:18px;">
+                            <h4 style="margin-bottom:4px;">Languages</h4>
+                            <ul id="languagesList" style="margin-bottom:6px;"></ul>
+                            <input type="text" id="languageInput" placeholder="Enter language" style="width:140px;">
+                            <button class="small-button blue-button" id="addLanguageBtn">Add</button>
+                        </div>
+                    </div>
+                    <!-- Skills Box -->
+                    <div class="mechanic-box" id="skillsBox">
+                        <h3>Skills</h3>
+                        <ul id="skillsList"></ul>
+                        <select id="skillsDropdown">
+                            <option value="" disabled selected>Add Skill</option>
+                            <!-- Skill options will be populated by JS -->
+                        </select>
+                        <button class="small-button blue-button" id="addSkillBtn">Add</button>
+                    </div>
+                </div>
+            </section>
+            <!-- Abilities Section -->
+            <section id="abilitiesSection" class="abilities-section" style="width:100%;padding:15px;background-color:#e6f7ff;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);margin-bottom:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+                    <h2 class="section-title" style="margin:0;padding:0;border:none;">Abilities</h2>
+                    <div id="creature-ability-points-box" style="display:flex;align-items:center;gap:0.5rem;">
+                        <span style="font-size:1rem;font-weight:600;">Ability Points:</span>
+                        <span id="remaining-points" style="font-size:1.3rem;font-weight:bold;color:#007bff;">7</span>
+                    </div>
+                </div>
+                <div class="ability-row" style="display:flex;justify-content:center;gap:1rem;">
+                    <div class="ability-box" style="display:flex;flex-direction:column;align-items:center;border:1px solid #ccc;border-radius:5px;padding:1rem;background-color:#f9f9f9;">
+                        <div class="ability-name" style="font-size:1.2rem;font-weight:bold;margin-bottom:0.5rem;">Strength</div>
+                        <select class="creature-ability-dropdown" id="creatureAbilityStrength">
+                            <option value="-4">-4</option>
+                            <option value="-3">-3</option>
+                            <option value="-2">-2</option>
+                            <option value="-1">-1</option>
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+                    <div class="ability-box" style="display:flex;flex-direction:column;align-items:center;border:1px solid #ccc;border-radius:5px;padding:1rem;background-color:#f9f9f9;">
+                        <div class="ability-name" style="font-size:1.2rem;font-weight:bold;margin-bottom:0.5rem;">Vitality</div>
+                        <select class="creature-ability-dropdown" id="creatureAbilityVitality">
+                            <option value="-4">-4</option>
+                            <option value="-3">-3</option>
+                            <option value="-2">-2</option>
+                            <option value="-1">-1</option>
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+                    <div class="ability-box" style="display:flex;flex-direction:column;align-items:center;border:1px solid #ccc;border-radius:5px;padding:1rem;background-color:#f9f9f9;">
+                        <div class="ability-name" style="font-size:1.2rem;font-weight:bold;margin-bottom:0.5rem;">Agility</div>
+                        <select class="creature-ability-dropdown" id="creatureAbilityAgility">
+                            <option value="-4">-4</option>
+                            <option value="-3">-3</option>
+                            <option value="-2">-2</option>
+                            <option value="-1">-1</option>
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+                    <div class="ability-box" style="display:flex;flex-direction:column;align-items:center;border:1px solid #ccc;border-radius:5px;padding:1rem;background-color:#f9f9f9;">
+                        <div class="ability-name" style="font-size:1.2rem;font-weight:bold;margin-bottom:0.5rem;">Acuity</div>
+                        <select class="creature-ability-dropdown" id="creatureAbilityAcuity">
+                            <option value="-4">-4</option>
+                            <option value="-3">-3</option>
+                            <option value="-2">-2</option>
+                            <option value="-1">-1</option>
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+                    <div class="ability-box" style="display:flex;flex-direction:column;align-items:center;border:1px solid #ccc;border-radius:5px;padding:1rem;background-color:#f9f9f9;">
+                        <div class="ability-name" style="font-size:1.2rem;font-weight:bold;margin-bottom:0.5rem;">Intelligence</div>
+                        <select class="creature-ability-dropdown" id="creatureAbilityIntelligence">
+                            <option value="-4">-4</option>
+                            <option value="-3">-3</option>
+                            <option value="-2">-2</option>
+                            <option value="-1">-1</option>
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+                    <div class="ability-box" style="display:flex;flex-direction:column;align-items:center;border:1px solid #ccc;border-radius:5px;padding:1rem;background-color:#f9f9f9;">
+                        <div class="ability-name" style="font-size:1.2rem;font-weight:bold;margin-bottom:0.5rem;">Charisma</div>
+                        <select class="creature-ability-dropdown" id="creatureAbilityCharisma">
+                            <option value="-4">-4</option>
+                            <option value="-3">-3</option>
+                            <option value="-2">-2</option>
+                            <option value="-1">-1</option>
+                            <option value="0" selected>0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            <!-- Defenses Section -->
+            <section id="defensesSection" class="abilities-section" style="width:100%;padding:15px;background-color:#e6f7ff;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);margin-bottom:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
+                    <h2 class="section-title" style="margin:0;padding:0;border:none;">Defenses</h2>
+                </div>
+                <div class="ability-row" style="display:flex;justify-content:center;gap:1rem;">
+                    <div class="ability-box">
+                        <div class="ability-name">Might</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="small-button defense-minus" data-defense="Might">-</button>
+                            <div id="defenseMight" class="defense-value" style="font-size:1.3rem;font-weight:bold;">10</div>
+                            <button type="button" class="small-button defense-plus" data-defense="Might">+</button>
+                        </div>
+                    </div>
+                    <div class="ability-box">
+                        <div class="ability-name">Fortitude</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="small-button defense-minus" data-defense="Fortitude">-</button>
+                            <div id="defenseFortitude" class="defense-value" style="font-size:1.3rem;font-weight:bold;">10</div>
+                            <button type="button" class="small-button defense-plus" data-defense="Fortitude">+</button>
+                        </div>
+                    </div>
+                    <div class="ability-box">
+                        <div class="ability-name">Reflex</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="small-button defense-minus" data-defense="Reflex">-</button>
+                            <div id="defenseReflex" class="defense-value" style="font-size:1.3rem;font-weight:bold;">10</div>
+                            <button type="button" class="small-button defense-plus" data-defense="Reflex">+</button>
+                        </div>
+                    </div>
+                    <div class="ability-box">
+                        <div class="ability-name">Discernment</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="small-button defense-minus" data-defense="Discernment">-</button>
+                            <div id="defenseDiscernment" class="defense-value" style="font-size:1.3rem;font-weight:bold;">10</div>
+                            <button type="button" class="small-button defense-plus" data-defense="Discernment">+</button>
+                        </div>
+                    </div>
+                    <div class="ability-box">
+                        <div class="ability-name">Mental Fortitude</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="small-button defense-minus" data-defense="Mental Fortitude">-</button>
+                            <div id="defenseMentalFortitude" class="defense-value" style="font-size:1.3rem;font-weight:bold;">10</div>
+                            <button type="button" class="small-button defense-plus" data-defense="Mental Fortitude">+</button>
+                        </div>
+                    </div>
+                    <div class="ability-box">
+                        <div class="ability-name">Resolve</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" class="small-button defense-minus" data-defense="Resolve">-</button>
+                            <div id="defenseResolve" class="defense-value" style="font-size:1.3rem;font-weight:bold;">10</div>
+                            <button type="button" class="small-button defense-plus" data-defense="Resolve">+</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Powers Section -->
+            <section id="powersSection" class="feats-section">
+                <h2>Powers</h2>
+                <div class="innate-info">
+                    Innate Powers: <span id="innatePowers">0</span> |
+                    Innate Energy: <span id="innateEnergy">0</span>
+                </div>
+                <div class="equipment-table-container">
+                    <table class="equipment-table" id="powers-table">
+                        <thead>
+                            <tr>
+                                <th>NAME</th>
+                                <th>ENERGY</th>
+                                <th>ACTION</th>
+                                <th>DURATION</th>
+                                <th>RANGE</th>
+                                <th>AREA</th>
+                                <th>DAMAGE</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="powers-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="addPowerBtn" class="medium-button blue-button">Add Power</button>
+            </section>
+
+            <!-- Techniques Section -->
+            <section id="techniquesSection" class="feats-section">
+                <h2>Techniques</h2>
+                <div class="equipment-table-container">
+                    <table class="equipment-table" id="techniques-table">
+                        <thead>
+                            <tr>
+                                <th>NAME</th>
+                                <th>ENERGY</th>
+                                <th>TP</th>
+                                <th>ACTION</th>
+                                <th>WEAPON</th>
+                                <th>DAMAGE</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="techniques-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="addTechniqueBtn" class="medium-button blue-button">Add Technique</button>
+            </section>
+            <section id="featsSection" class="feats-section">
+                <h2>Feats</h2>
+                <div id="featsContainer"></div>
+                <button id="addFeatBtn" class="medium-button blue-button">Add Feat</button>
+            </section>
+            <!-- Armaments Section (placeholder, like powers/techniques) -->
+            <section id="armamentsSection" class="feats-section">
+                <h2>Armaments</h2>
+                <div class="equipment-table-container">
+                    <table class="equipment-table" id="armaments-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>TP</th>
+                                <th>Currency</th>
+                                <th>Rarity</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="armaments-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <button id="addArmamentBtn" class="medium-button blue-button">Add Armament</button>
+            </section>
+            <!-- Creature Summary -->
+            <section id="creatureSummary" class="summary-section">
+                <h3>Creature Summary</h3>
+                <div>
+                    <strong>Name:</strong> <span id="summaryName"></span> |
+                    <strong>Level:</strong> <span id="summaryLevel"></span> |
+                    <strong>Type:</strong> <span id="summaryType"></span>
+                </div>
+                <div>
+                    <strong>Resistances:</strong> <span id="summaryResistances"></span> |
+                    <strong>Weaknesses:</strong> <span id="summaryWeaknesses"></span> |
+                    <strong>Immunities:</strong> <span id="summaryImmunities"></span>
+                </div>
+                <div>
+                    <strong>Senses:</strong> <span id="summarySenses"></span>
+                </div>
+                <div>
+                    <strong>Movement:</strong> <span id="summaryMovement"></span>
+                </div>
+                <div>
+                    <strong>Innate Powers:</strong> <span id="summaryInnatePowers">0</span> |
+                    <strong>Innate Energy:</strong> <span id="summaryInnateEnergy">0</span>
+                </div>
+                <!-- Power/Martial Proficiency summary -->
+                <div>
+                    <strong id="summaryProfLabel"></strong>
+                    <span id="summaryProfValue"></span>
+                </div>
+                <div>
+                    <strong>Skills:</strong> <span id="summarySkills"></span>
+                </div>
+                <div>
+                    <strong>Languages:</strong> <span id="summaryLanguages"></span>
+                </div>
+            </section>
+            <!-- Creature Description Box -->
+            <section id="creatureDescriptionSection" class="summary-section" style="margin-top:0;">
+                <h3>Description</h3>
+                <textarea id="creatureDescription" rows="4" style="width:100%;max-width:100%;min-width:200px;resize:vertical;" placeholder="Enter a description for your creature..."></textarea>
+            </section>
+        </div>
+    </main>
+    <footer id="footer"></footer>
+    <!-- Load Power Modal -->
+    <div id="loadPowerModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Select a Power</h2>
+            <div id="savedPowersList" class="power-list"></div>
+        </div>
+    </div>
+    <!-- Load Technique Modal -->
+    <div id="loadTechniqueModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Select a Technique</h2>
+            <div id="savedTechniquesList" class="power-list"></div>
+        </div>
+    </div>
+    <!-- Load Armament Modal -->
+    <div id="loadArmamentModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Select an Armament</h2>
+            <div id="savedArmamentsList" class="power-list"></div>
+        </div>
+    </div>
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:700px;">
+            <span class="close-button" id="closeInstructionsBtn" style="float:right;font-size:2rem;cursor:pointer;">&times;</span>
+            <h2>Creature Creator Instructions</h2>
+            <div style="max-height:60vh;overflow-y:auto;padding:8px 0;">
+                <h3>Overview</h3>
+                <p>
+                    The Creature Creator allows you to design custom creatures for Realms RPG, specifying their abilities, resistances, skills, powers, armaments, and more. Use this tool to build balanced, unique monsters or NPCs for your campaign.
+                </p>
+                <h3>Sections Explained</h3>
+                <ul>
+                    <li>
+                        <strong>Level & Type:</strong> Set the creature's name, level (1–30), and type (e.g., Beast, Undead). Choose "Martial" or "Power" for the creature's archetype, which affects feat points and innate powers.
+                    </li>
+                    <li>
+                        <strong>Resistances, Weaknesses, Immunities:</strong> Add or remove damage types the creature resists, is weak to, or is immune to. These affect feat point costs.
+                    </li>
+                    <li>
+                        <strong>Senses & Movement:</strong> Add special senses (like Darkvision) and movement types (like Flying). Higher-level senses/movement replace lower ones.
+                    </li>
+                    <li>
+                        <strong>Health & Energy:</strong> Allocate hit points and energy points. You have a pool of points to distribute based on level and abilities.
+                    </li>
+                    <li>
+                        <strong>Languages:</strong> Add languages the creature can speak or understand.
+                    </li>
+                    <li>
+                        <strong>Skills:</strong> Add skills and allocate skill points to improve them. Skill bonuses are calculated from relevant abilities and points spent.
+                    </li>
+                    <li>
+                        <strong>Abilities:</strong> Assign values to Strength, Vitality, Agility, Acuity, Intelligence, and Charisma. Each value has a point cost; you have a limited pool per level.
+                    </li>
+                    <li>
+                        <strong>Defenses:</strong> Spend skill points to increase defenses (Might, Fortitude, Reflex, etc.).
+                    </li>
+                    <li>
+                        <strong>Powers & Techniques:</strong> Add magical powers or martial techniques. You can import saved powers/techniques or create new ones.
+                    </li>
+                    <li>
+                        <strong>Feats:</strong> Add special abilities or traits from the feat list. Each feat costs feat points.
+                    </li>
+                    <li>
+                        <strong>Armaments:</strong> Add weapons, armor, or items. You can import from your library or create new ones.
+                    </li>
+                    <li>
+                        <strong>Summary:</strong> Shows a live summary of your creature, including all stats, skills, powers, armaments, and remaining currency.
+                    </li>
+                </ul>
+                <h3>Tips for Use</h3>
+                <ul>
+                    <li>Hover over dropdowns and options for tooltips and descriptions.</li>
+                    <li>Use the "Remove All" buttons to quickly clear a section.</li>
+                    <li>Currency is automatically calculated and reduced by the cost of armaments.</li>
+                    <li>Red numbers indicate you have overspent points in a category.</li>
+                    <li>Click "Add" buttons to include new traits, skills, feats, etc.</li>
+                    <li>Use the modals to import saved powers, techniques, or armaments from your library.</li>
+                </ul>
+                <h3>Best Practices</h3>
+                <ul>
+                    <li>Balance your creature by keeping an eye on remaining feat, skill, and ability points.</li>
+                    <li>Review the summary to ensure your creature is as intended before saving or exporting.</li>
+                    <li>Consult the Realms RPG rulebook for detailed explanations of abilities, feats, and powers.</li>
+                </ul>
+                <h3>Need Help?</h3>
+                <p>
+                    If you have questions or encounter issues, consult the official documentation or reach out to the Realms RPG community.
+                </p>
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        async function loadHeaderFooter() {
+            const header = document.getElementById('header');
+            const footer = document.getElementById('footer');
+            if (header) {
+                header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+            }
+            if (footer) {
+                footer.innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+            }
+        }
+        loadHeaderFooter();
+    </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('instructionsModal');
+    const btn = document.getElementById('instructionsBtn');
+    const closeBtn = document.getElementById('closeInstructionsBtn');
+    if (btn && modal && closeBtn) {
+        btn.onclick = () => { modal.style.display = 'block'; };
+        closeBtn.onclick = () => { modal.style.display = 'none'; };
+        window.onclick = function(event) {
+            if (event.target === modal) modal.style.display = 'none';
+        };
+    }
+
+    // Condition Immunity logic
+    const conditionImmunityList = document.getElementById('conditionImmunityList');
+    const conditionImmunityDropdown = document.getElementById('conditionImmunityDropdown');
+    const addConditionImmunityBtn = document.getElementById('addConditionImmunityBtn');
+    let conditionImmunities = [];
+
+    function updateConditionImmunityList() {
+        conditionImmunityList.innerHTML = '';
+        conditionImmunities.slice().sort().forEach((cond, idx) => {
+            const li = document.createElement('li');
+            li.textContent = cond;
+            const btn = document.createElement('button');
+            btn.textContent = '✕';
+            btn.className = 'small-button red-button';
+            btn.onclick = () => {
+                conditionImmunities.splice(idx, 1);
+                updateConditionImmunityList();
+            };
+            li.appendChild(btn);
+            conditionImmunityList.appendChild(li);
+        });
+    }
+    if (addConditionImmunityBtn && conditionImmunityDropdown) {
+        addConditionImmunityBtn.onclick = () => {
+            const val = conditionImmunityDropdown.value;
+            if (val && !conditionImmunities.includes(val)) {
+                conditionImmunities.push(val);
+                updateConditionImmunityList();
+            }
+        };
+    }
+    updateConditionImmunityList();
+});
+</script>
+</body>
+</html>

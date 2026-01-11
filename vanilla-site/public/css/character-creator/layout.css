@@ -1,0 +1,28 @@
+.creator-container {
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.content {
+  display: none;
+}
+
+.content.active {
+  display: block;
+}
+
+.placeholder-content {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+.placeholder-content h2 {
+  font-family: 'Nova Flat', cursive;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+}

@@ -1,0 +1,838 @@
+/* ==========================================================================
+   Creature Creator Styles
+   Imports shared design system and creator base, then adds creature-specific styles
+   ========================================================================== */
+
+/* Core Design System - fonts are imported via typography.css */
+@import url('../core/variables.css');
+@import url('../core/reset.css');
+@import url('../core/typography.css');
+@import url('../core/components.css');
+@import url('../core/creator-base.css');
+@import url('../core/chips.css');
+
+/* ==========================================================================
+   Page Layout and Global Body Styling  
+   ========================================================================== */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
+    background-color: var(--color-bg);
+    width: 100%;
+}
+
+/* ==========================================================================
+   Page Title and Basic Elements
+   ========================================================================== */
+.page-title {
+    font-family: var(--font-title);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-normal);
+    margin: var(--spacing-5) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+.centered-title {
+    text-align: center;
+}
+
+/* ==========================================================================
+   Main Layout
+   ========================================================================== */
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
+    background-color: var(--color-bg);
+    width: 100%;
+}
+
+/* ==========================================================================
+   Creature Summary Panel (collapsible sidebar)
+   ========================================================================== */
+#totalCosts,
+#creatureSummaryPanel,
+#creatureDetailsBox {
+    position: fixed;
+    top: calc(var(--header-height, 80px) + var(--spacing-lg));
+    left: var(--spacing-lg);
+    width: 180px;
+    padding: var(--spacing-sm);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 1001;
+    font-size: var(--font-size-xs);
+    transition: left 0.3s cubic-bezier(.4,0,.2,1), 
+                box-shadow 0.3s, 
+                background 0.3s,
+                opacity 0.3s;
+}
+
+#totalCosts h3,
+#creatureSummaryPanel h3,
+#creatureDetailsBox h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-primary);
+}
+
+#totalCosts p,
+#creatureSummaryPanel p,
+#creatureDetailsBox p {
+    margin: var(--spacing-2xs) 0;
+    font-size: var(--font-size-xs);
+}
+
+#totalCosts.collapsed,
+#creatureSummaryPanel.collapsed,
+#creatureDetailsBox.collapsed {
+    left: -160px;
+}
+
+#totalCosts.collapsed > *:not(.toggle-arrow),
+#creatureSummaryPanel.collapsed > *:not(.toggle-arrow),
+#creatureDetailsBox.collapsed > *:not(.toggle-arrow) {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#totalCosts .toggle-arrow,
+#creatureSummaryPanel .toggle-arrow,
+#creatureDetailsBox .toggle-arrow {
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform: translateY(-50%);
+    z-index: 1002;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xs);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    user-select: none;
+}
+
+#totalCosts .toggle-arrow:hover,
+#creatureSummaryPanel .toggle-arrow:hover,
+#creatureDetailsBox .toggle-arrow:hover {
+    background-color: var(--color-primary-hover);
+}
+
+#totalCosts.collapsed .toggle-arrow,
+#creatureSummaryPanel.collapsed .toggle-arrow,
+#creatureDetailsBox.collapsed .toggle-arrow {
+    right: -44px;
+}
+
+/* ==========================================================================
+   Creature Creator Container
+   ========================================================================== */
+#creatureCreatorContainer {
+    margin-top: 20px;
+    width: 75vw;
+    max-width: 1400px;
+    min-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ==========================================================================
+   Basic Mechanics Section
+   ========================================================================== */
+.basic-mechanics-section {
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-5);
+}
+
+.mechanics-title {
+    font-family: var(--font-title);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-normal);
+    margin: 0 0 var(--spacing-4) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+.mechanics-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.mechanic-box {
+    flex: 1;
+    min-width: 180px;
+    max-width: 300px;
+    padding: var(--spacing-sm);
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: visible;
+}
+
+.mechanic-box h3 {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--spacing-sm) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+.mechanic-box label,
+.mechanic-box select,
+.mechanic-box input {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    font-family: var(--font-family-body);
+    box-sizing: border-box;
+}
+
+/* Fix buttons in mechanic boxes to not overflow */
+.mechanic-box button {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1) var(--spacing-2);
+    white-space: nowrap;
+    min-width: auto;
+    width: auto;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mechanic-box ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-xs) 0;
+    width: 100%;
+}
+
+.mechanic-box ul li {
+    background: var(--color-white);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-2xs);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ==========================================================================
+   Abilities Section
+   ========================================================================== */
+.abilities-section {
+    width: 100%;
+    padding: 15px;
+    background-color: #e6f7ff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.ability-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.ability-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 1rem;
+    background-color: #f9f9f9;
+}
+
+.ability-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.creature-ability-dropdown {
+    font-size: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: 'Nunito', sans-serif;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 8px;
+    min-width: 70px;
+}
+
+#creature-ability-points-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    background: #f9f9f9;
+    border-radius: 6px;
+    padding: 4px 12px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.04);
+}
+
+#remaining-points {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+/* ==========================================================================
+   Feats Section
+   ========================================================================== */
+#featsSection {
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-5);
+}
+
+#featsSection h2 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-normal);
+    margin: 0 0 var(--spacing-3) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+#featsContainer .feat-row {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#featsContainer input,
+#featsContainer select {
+    font-size: 14px;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-family: 'Nunito', sans-serif;
+}
+
+/* ==========================================================================
+   Powers & Techniques Section
+   ========================================================================== */
+.powers-techniques-section {
+    width: 100%;
+    padding: var(--spacing-md);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-lg);
+    margin-top: 0;
+}
+
+.powers-techniques-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.powers-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+    margin-top: var(--spacing-2xs);
+}
+
+.powers-toggle-row label {
+    font-size: var(--font-size-base);
+    margin-right: var(--spacing-sm);
+}
+
+.innate-info {
+    margin-left: auto;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-base);
+}
+
+#powersTechniquesContainer > .power-technique-row {
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+#powersTechniquesContainer input,
+#powersTechniquesContainer select {
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    padding: 2px var(--spacing-2xs);
+}
+
+/* Power/Technique Items */
+.power-technique-item {
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-sm);
+    box-shadow: var(--shadow-xs);
+}
+
+.power-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: var(--font-weight-bold);
+}
+
+.power-details {
+    margin-top: var(--spacing-xs);
+    background: var(--color-accent-light);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm);
+}
+
+.power-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-base);
+}
+
+.power-table th,
+.power-table td {
+    border: none;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    text-align: left;
+}
+
+.toggle-details {
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: var(--font-size-lg);
+    user-select: none;
+    transition: color var(--transition-fast);
+}
+
+.toggle-details:hover {
+    text-decoration: underline;
+    color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   Powers Section (Individual)
+   ========================================================================== */
+#powersSection {
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-5);
+    margin-top: 0;
+}
+
+#powersSection h2 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-normal);
+    margin: 0 0 var(--spacing-3) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Techniques Section (Individual)
+   ========================================================================== */
+#techniquesSection {
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-5);
+    margin-top: 0;
+}
+
+#techniquesSection h2 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-normal);
+    margin: 0 0 var(--spacing-3) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Armaments Section
+   ========================================================================== */
+#armamentsSection {
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-5);
+    margin-top: 0;
+}
+
+#armamentsSection h2 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-normal);
+    margin: 0 0 var(--spacing-3) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+#armamentsContainer .armament-row {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+}
+
+#armamentsContainer .power-technique-item {
+    background: #f9f9f9;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.07);
+}
+
+#armamentsContainer input,
+#armamentsContainer select {
+    font-size: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    padding: 2px 6px;
+    font-family: 'Nunito', sans-serif;
+}
+
+#addArmamentBtn {
+    padding: 5px 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#addArmamentBtn:hover {
+    background-color: #0056b3;
+}
+
+/* ==========================================================================
+   Equipment Table Styles
+   ========================================================================== */
+.equipment-table-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    margin-bottom: 16px;
+}
+
+.equipment-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: visible;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.equipment-table th,
+.equipment-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.equipment-table th {
+    background: #e6f7ff;
+    font-weight: 600;
+    color: #333;
+}
+
+.equipment-table tr:hover {
+    background: #f9f9f9;
+}
+
+.expandable {
+    position: relative;
+}
+
+.expandable .expand-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: #666;
+    transition: transform 0.2s;
+    pointer-events: none;
+}
+
+.expandable.expanded .expand-icon {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+.library-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 16px;
+}
+
+.expanded .library-body {
+    max-height: 2000px;
+    padding: 16px;
+}
+
+/* ==========================================================================
+   Senses & Movement Box
+   ========================================================================== */
+#sensesMovementBox {
+    min-width: 220px;
+    max-width: 260px;
+    padding: var(--spacing-sm);
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#sensesMovementBox h3 {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-lg);
+    margin: 0 0 var(--spacing-sm) 0;
+    text-align: center;
+}
+
+#sensesMovementBox ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-xs) 0;
+    width: 100%;
+}
+
+#sensesMovementBox ul li {
+    background: var(--color-white);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-2xs);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ==========================================================================
+   Summary Section
+   ========================================================================== */
+.summary-section {
+    width: 100%;
+    padding: var(--spacing-4);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    font-size: var(--font-size-base);
+    min-height: 180px;
+    max-height: none;
+    overflow: visible;
+}
+
+.summary-section h2,
+.summary-section h3 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-primary);
+    margin: 0 0 var(--spacing-3) 0;
+}
+
+.summary-section h3 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-2xl);
+    margin: 0 0 var(--spacing-3) 0;
+    text-align: center;
+    color: var(--color-primary);
+}
+
+.summary-section div {
+    margin-bottom: 5px;
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 1200px) {
+    #creatureCreatorContainer {
+        width: 95vw;
+        min-width: unset;
+        max-width: 100vw;
+        padding: 10px;
+    }
+    
+    .mechanics-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .mechanic-box {
+        min-width: 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .ability-row {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .ability-box {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    #creature-ability-points-box {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    
+    .powers-toggle-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .innate-info {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .mechanic-box {
+        max-width: 100%;
+    }
+}
+
+/* ==========================================================================
+   Button Size Variants
+   ========================================================================== */
+.small-button {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-xs);
+}
+
+.medium-button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+/* Button Color Variants */
+.blue-button {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.blue-button:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.red-button {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.red-button:hover {
+    background-color: var(--color-danger-hover);
+}
+
+/* Delete button styling */
+.delete-button {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.delete-button:hover {
+    background-color: var(--color-danger-hover);
+}
+
+/* Checkbox styling */
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+    gap: var(--spacing-sm);
+}
+
+.checkbox-container label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+}
+
+/* Load/Save Button Container */
+.load-save-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-sm);
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}

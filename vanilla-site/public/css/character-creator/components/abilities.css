@@ -1,0 +1,107 @@
+.ability-points {
+  background: var(--bg-header);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) 20px;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.abilities-controls {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--spacing-sm);
+  background: var(--bg-header);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  text-align: center;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.abilities-controls .ability-name.selected-ability {
+  font-weight: bold;
+}
+
+.abilities-values {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--spacing-sm);
+  background: var(--bg-section);
+  padding: var(--spacing-sm);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  margin-bottom: var(--spacing-xl);
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-white);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.dec,
+.inc {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-sm);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dec {
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.inc {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.dec:hover,
+.inc:hover {
+  background: var(--primary-light);
+}
+
+.value {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 40px;
+  text-align: center;
+}
+
+.abilities-descriptions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-lg);
+}
+
+.desc {
+  background: var(--bg-section);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+}
+
+.desc h4 {
+  font-family: 'Nova Flat', cursive;
+  font-size: 18px;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.desc p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+}

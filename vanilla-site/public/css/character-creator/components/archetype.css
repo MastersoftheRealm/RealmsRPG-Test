@@ -1,0 +1,83 @@
+.archetypes {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-bottom: 20px;
+}
+
+.archetype-btn {
+  background: var(--primary-dark);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: 20px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  min-width: 160px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.archetype-btn:hover {
+  background: #003366;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.archetype-btn.selected,
+.archetype-btn.active {
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(10, 74, 122, 0.3);
+}
+
+.archetype-locked {
+  text-align: center;
+  margin-top: 20px;
+  padding: var(--spacing-md);
+  background: var(--bg-hover);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+}
+
+.archetype-locked h3 {
+  margin: 0 0 var(--spacing-sm);
+  color: var(--text-primary);
+}
+
+.archetype-locked p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.archetype-locked button {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: var(--spacing-sm);
+  transition: background 0.2s;
+}
+
+.archetype-locked button:hover {
+  background: var(--primary-light);
+}
+
+@media (max-width: 768px) {
+  .archetypes {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .archetype-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+}

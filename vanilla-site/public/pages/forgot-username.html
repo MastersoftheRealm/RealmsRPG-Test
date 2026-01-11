@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Forgot Username</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+      import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+      import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js";
+      import { AUTH_DOMAIN, RECAPTCHA_SITE_KEY } from "/js/core/environment.js";
+
+      document.addEventListener('DOMContentLoaded', function() {
+        // Fetch the Firebase config from the environment
+        fetch('/__/firebase/init.json').then(response => response.json()).then(firebaseConfig => {
+          // Update the authDomain from centralized environment config
+          firebaseConfig.authDomain = AUTH_DOMAIN;
+          const app = initializeApp(firebaseConfig);
+
+          // Initialize App Check with site key from environment config
+          initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+            isTokenAutoRefreshEnabled: true
+          });
+
+          const auth = getAuth(app);
+          const db = getFirestore(app);
+
+          onAuthStateChanged(auth, async (user) => {
+            const loginStatus = document.getElementById('loginStatus');
+            if (loginStatus) {
+              if (user) {
+                try {
+                  const userDoc = await getDoc(doc(db, 'users', user.uid));
+                  if (userDoc.exists()) {
+                    const username = userDoc.data().username;
+                    loginStatus.innerHTML = `<a href="/my-account.html" class="login-status-text">Logged in as ${username}</a>`;
+                    console.log('User is signed in:', user);
+                  } else {
+                    loginStatus.innerHTML = '<a href="/pages/login.html" class="login-status-text">Login</a>';
+                    console.log('No user document found');
+                  }
+                } catch (error) {
+                  if (error.code === 'permission-denied') {
+                    loginStatus.innerHTML = 'Permission denied';
+                    console.error('Permission denied:', error);
+                  } else {
+                    loginStatus.innerHTML = '<a href="/pages/login.html" class="login-status-text">Login</a>';
+                    console.error('Error fetching user document:', error);
+                  }
+                }
+              } else {
+                loginStatus.innerHTML = '<a href="/pages/login.html" class="login-status-text">Login</a>';
+                console.log('No user is signed in');
+              }
+            }
+          });
+        }).catch(error => {
+          console.error('Error fetching Firebase config:', error);
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header id="header"></header>
+    <main>
+      <h1>Forgot Username</h1>
+      <p>Please contact support to retrieve your username.</p>
+      <a href="mailto:RealmsRoleplayGame@gmail.com">Contact Support</a>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </main>
+    <footer id="footer"></footer>
+    <script>
+      async function loadHeaderFooter() {
+        document.getElementById('header').innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        document.getElementById('footer').innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+      }
+      loadHeaderFooter();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+button {
+  font-family: inherit;
+}
+
+#clear-progress-btn {
+  margin-left: auto;
+  background: #d9534f;
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+#clear-progress-btn:hover {
+  background: #c9302c;
+}
+
+#skills-continue {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#skills-continue:hover {
+  background: var(--primary-light);
+}
+
+.logo-footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}

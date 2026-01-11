@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encounter Tracker - Realms</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/tools/encounter-tracker.css">
+    <script type="module" src="/js/tools/encounter-tracker/main.js" defer></script>
+</head>
+<body>
+    <header id="header"></header>
+    <main>
+        <div class="tracker-container">
+            <div class="initiative-list"></div>
+            <div class="control-panel">
+                <button id="start-encounter" class="green-button">Start Encounter</button>
+                <button id="next-turn" class="blue-button" disabled>Next Turn</button>
+                <button id="clear-encounter" class="red-button">Clear Encounter</button>
+                <button id="reset-encounter" class="gray-button">Reset Encounter</button>
+                <label class="surprise-toggle">
+                    <input type="checkbox" id="apply-surprise"> Apply Surprise
+                </label>
+                <button id="sort-initiative" class="blue-button">Sort Initiative</button>
+                <button id="add-entry" class="green-button">Add Creature</button>
+            </div>
+            <div class="round-number">Round: <span id="round-number">0</span></div>
+            <div class="tooltip">
+                <h3>Encounter Tracker Instructions</h3>
+                <p><strong>Add/Remove Entries:</strong> Use the "Add Entry" button to add a new creature. Click the "X" on an entry to remove it.</p>
+                <p><strong>Conditions:</strong> Click the ↓ arrow on an entry to expand the conditions section. Select a condition from the dropdown to add it.</p>
+                <p><strong>Condition Controls:</strong>
+                    <ul>
+                        <li><strong>Left-click</strong> on a decaying condition (e.g., Bleeding) to increase its level.</li>
+                        <li><strong>Right-click</strong> on a decaying condition to decrease its level (removes at level 1).</li>
+                        <li><strong>Right-click</strong> on a base condition (e.g., Blinded) to remove it.</li>
+                    </ul>
+                </p>
+                <p><strong>Initiative & Turns:</strong> Enter initiative rolls and acuity scores, then click "Sort Initiative" or "Start Encounter". Use "Next Turn" to advance turns.</p>
+                <p><strong>Surprise:</strong> Check "Surprised" to place creatures at the end of the first round. They move to their normal initiative order after round 1.</p>
+                <p><strong>AP/HP:</strong> Adjust Action Points (AP) with +/- buttons. Enter current and max HP; enemies at 0 HP are highlighted red.</p>
+            </div>
+        </div>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module">
+        import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+        async function loadHeaderFooter() {
+            const header = document.getElementById('header');
+            const footer = document.getElementById('footer');
+            if (header) {
+                header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+            }
+            if (footer) {
+                footer.innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+            }
+        }
+        loadHeaderFooter();
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const { auth, db } = await initializeFirebase();
+            handleAuthStateChange(auth, db);
+        });
+    </script>
+</body>
+</html>

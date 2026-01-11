@@ -1,0 +1,174 @@
+.skill-points {
+  background: var(--bg-header);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) 20px;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.skills-bonus-section {
+  background: var(--bg-section);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.skills-bonus-section h3 {
+  font-family: 'Nova Flat', cursive;
+  font-size: 20px;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.skills-bonus-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.skill-bonus-item {
+  background: var(--bg-white);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.skill-bonus-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skill-bonus-item select.skill-ability-select,
+.skill-bonus-item .skill-fixed-ability {
+  flex: 0 0 110px;
+  width: 110px;
+  text-align: center;
+  padding: 4px 6px;
+}
+
+.skill-fixed-ability {
+  background: var(--bg-header);
+  border-radius: var(--spacing-xs);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.skill-bonus-value {
+  flex: 0 0 46px;
+  width: 46px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--primary-light);
+  font-size: 16px;
+  overflow: hidden;
+}
+
+.skill-bonus-item select.skill-ability-select {
+  margin: 0;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.skill-val-controls {
+  display: flex;
+  gap: 4px;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.skill-val-btn {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: 4px var(--spacing-sm);
+  border-radius: var(--spacing-xs);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.2s ease;
+}
+
+.skill-val-btn:hover {
+  background: var(--primary-dark);
+}
+
+.skill-val-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.skill-val-btn.inc.active {
+  background: lightblue;
+}
+
+.skill-remove-btn {
+  background: #d9534f;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: var(--spacing-xs);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.2s ease;
+  margin-left: 8px;
+}
+
+.skill-remove-btn:hover {
+  background: #c9302c;
+}
+
+.skill-remove-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .skills-bonus-list {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+  
+  .skill-bonus-item {
+    padding: var(--spacing-xs) 10px;
+    gap: 4px;
+  }
+  
+  .skill-bonus-item select.skill-ability-select,
+  .skill-bonus-item .skill-fixed-ability {
+    flex: 0 0 90px;
+    width: 90px;
+    font-size: 11px;
+  }
+  
+  .skill-bonus-value {
+    flex: 0 0 40px;
+    width: 40px;
+    font-size: 14px;
+  }
+  
+  .skill-val-btn {
+    padding: 3px var(--spacing-xs);
+    font-size: 11px;
+  }
+}

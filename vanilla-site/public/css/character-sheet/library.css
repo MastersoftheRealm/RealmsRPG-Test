@@ -1,0 +1,696 @@
+#library-section {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.tabs {
+    display: flex;
+    background: var(--bg-light);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.tab {
+    flex: 1;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.tab:hover {
+    background: rgba(26, 115, 232, 0.1);
+    color: var(--primary-blue);
+}
+
+.tab.active {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.tab-content {
+    padding: 20px;
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.feat, .technique, .power, .inventory-item {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.feat:hover, .technique:hover, .power:hover, .inventory-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateX(2px);
+}
+
+.feat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.feat-title {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--primary-dark);
+}
+
+.feat-category {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.feat-description {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.feat-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.uses {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-sm, 14px);
+    font-weight: 600;
+}
+
+.uses-separator {
+    color: var(--text-secondary);
+    margin: 0 2px;
+}
+
+.recovery-text {
+    font-size: var(--font-size-xs, 12px);
+    color: var(--text-secondary);
+    margin-left: 8px;
+    text-transform: uppercase;
+}
+
+.use-button {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--primary-blue);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.use-button:hover {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.use-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.toggle {
+    width: 50px;
+    height: 26px;
+    background-color: #ccc;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.toggle::after {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background-color: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.toggle.active {
+    background-color: var(--success-green);
+}
+
+.toggle.active::after {
+    left: 26px;
+}
+
+.category-divider {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 10px 16px;
+    margin: 20px -20px;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-divider:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #041f33 100%);
+}
+
+.category-arrow {
+    font-size: 12px;
+    transition: transform 0.3s;
+}
+
+.category-arrow.collapsed {
+    transform: rotate(-90deg);
+}
+
+.category-content {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.category-content.collapsed {
+    max-height: 0;
+}
+
+.library-table-header {
+    display: grid;
+    grid-template-columns: 1.4fr 2fr 0.9fr;
+    gap:12px;
+    padding:8px 14px;
+    background: var(--bg-medium);
+    border:1px solid var(--border-color);
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+    margin:0 0 10px 0;
+}
+.library-table-header.tech {
+    grid-template-columns: 1.4fr 1fr 1fr 0.8fr;
+}
+.library-table-header.power {
+    grid-template-columns: 1.4fr 1fr 1fr 0.8fr 0.9fr 0.9fr;
+}
+.collapsible-feat, .collapsible-tech {
+    border:1px solid var(--border-color);
+    background:#fff;
+    border-radius:8px;
+    margin-bottom:10px;
+    overflow:visible;
+    position: relative;
+}
+.collapsible-tech .expanded-body,
+.collapsible-feat .expanded-body {
+    overflow: hidden;
+}
+.collapsed-row {
+    display:grid;
+    align-items:center;
+    cursor:pointer;
+    padding:10px 14px;
+    gap:12px;
+    font-size:14px;
+}
+.collapsible-feat .collapsed-row {
+    grid-template-columns: 1.4fr 2fr 0.9fr;
+}
+.collapsible-tech .collapsed-row {
+    grid-template-columns: 1.4fr 1fr 1fr 0.8fr;
+}
+.collapsible-tech .collapsed-row.power-row {
+    grid-template-columns: 1.4fr 1fr 1fr 0.8fr 0.9fr 0.9fr;
+}
+.collapsed-row:hover {
+    background: var(--bg-light);
+}
+.expand-indicator {
+    font-size:12px;
+    opacity:.55;
+    margin-left:6px;
+}
+.energy-use-btn {
+    background: var(--primary-blue);
+    color:#fff;
+    border:none;
+    padding:6px 10px;
+    font-size:12px;
+    border-radius:6px;
+    cursor:pointer;
+}
+.energy-use-btn:hover { background: var(--primary-dark); }
+.uses-cell {
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:6px;
+    font-size:12px;
+}
+.uses-cell .use-button {
+    background:#eee;
+    border:1px solid var(--border-color);
+    width:24px;
+    height:24px;
+    border-radius:4px;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+}
+.uses-cell .use-button:hover { background:#ddd; }
+.expanded-body {
+    display:none;
+    padding:14px 18px 16px;
+    border-top:1px solid var(--border-color);
+    background: var(--bg-light);
+    font-size:13px;
+    line-height:1.5;
+}
+.collapsible-feat.open .expanded-body,
+.collapsible-tech.open .expanded-body {
+    display:block;
+}
+.truncated {
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.part-chip {
+    background:#f1f6fa;
+    border:1px solid var(--border-color);
+    padding:4px 8px;
+    font-size: var(--font-size-xs, 12px);
+    border-radius:14px;
+}
+.proficiency-chip {
+    background: var(--primary-blue);
+    color: #fff;
+    border-color: var(--primary-blue);
+    font-weight: 600;
+}
+.tech-detail-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+    gap:8px 16px;
+    margin:10px 0 12px;
+    font-size:12px;
+}
+.tech-detail-grid div label {
+    display:block;
+    font-weight:600;
+    font-size: var(--font-size-xs, 12px);
+    color: var(--text-secondary);
+    margin-bottom:2px;
+}
+.category-divider { /* keep existing category divider look if present */ }
+.proficiencies-section .library-table-header {
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 0;
+}
+.proficiency-chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 18px 0;
+}
+.part-chip,
+.proficiency-chip {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: var(--font-size-xs, 12px);
+  border-radius: 14px;
+  background: var(--bg-medium);
+  border: 1px solid var(--border-color);
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   LIBRARY - Section Headers with Add Buttons
+   ============================================ */
+
+.library-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  background: var(--bg-medium);
+  border-radius: 8px;
+}
+
+.library-section-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================
+   LIBRARY - Add Resource Buttons (green)
+   ============================================ */
+
+.resource-add-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.resource-add-btn:hover {
+  background: linear-gradient(135deg, #66bb6a 0%, #388e3c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.resource-add-btn:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   LIBRARY - Remove Resource Buttons (red)
+   ============================================ */
+
+.resource-remove-btn {
+  background: var(--error-color, #dc3545);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.resource-remove-btn:hover {
+  background: #c82333;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* ============================================
+   LIBRARY - Use Buttons (techniques/powers)
+   ============================================ */
+
+.resource-use-btn {
+  background: linear-gradient(135deg, var(--primary-blue, #1a73e8) 0%, var(--primary-dark, #053357) 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.resource-use-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #388ee7 0%, var(--primary-dark, #053357) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.resource-use-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Action button style (for CollapsibleRow use buttons) */
+.action-btn {
+  background: linear-gradient(135deg, var(--primary-blue, #1a73e8) 0%, var(--primary-dark, #053357) 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #388ee7 0%, var(--primary-dark, #053357) 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Action type badges */
+.action-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.action-badge.basic {
+  background: rgba(74, 144, 226, 0.15);
+  color: var(--primary-blue);
+}
+
+.action-badge.bonus {
+  background: rgba(76, 175, 80, 0.15);
+  color: #2e7d32;
+}
+
+.action-badge.reaction {
+  background: rgba(255, 152, 0, 0.15);
+  color: #e65100;
+}
+
+.action-badge.free {
+  background: rgba(156, 39, 176, 0.15);
+  color: #7b1fa2;
+}
+
+/* Edit mode visibility for resource controls */
+body:not(.edit-mode) .resource-add-btn {
+  display: none;
+}
+
+body:not(.edit-mode) .resource-remove-btn {
+  display: none;
+}
+
+/* ============================================
+   LIBRARY - Notes Tab
+   ============================================ */
+
+.notes-section {
+  margin-bottom: 20px;
+}
+
+.notes-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.notes-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.notes-textarea.notes-main {
+  min-height: 150px;
+}
+
+/* ============================================
+   LIBRARY - Collapsible Chips (Parts & Properties)
+   ============================================ */
+
+.collapsible-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  max-width: 100%;
+}
+
+.collapsible-chip:hover {
+  background: var(--primary-blue);
+  color: var(--bg-light, #f8fafc);
+  border-color: var(--primary-blue);
+}
+
+.collapsible-chip .chip-label {
+  white-space: nowrap;
+}
+
+.collapsible-chip .chip-expand-icon {
+  font-size: 8px;
+  transition: transform 0.2s;
+  opacity: 0.6;
+}
+
+.collapsible-chip.expanded .chip-expand-icon {
+  transform: rotate(180deg);
+}
+
+.collapsible-chip .chip-description {
+  display: none;
+  width: 100%;
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: left;
+}
+
+.collapsible-chip.expanded .chip-description {
+  display: block;
+}
+
+.collapsible-chip.expanded {
+  flex-basis: 100%;
+  background: var(--bg-medium);
+  border-color: var(--primary-blue);
+}
+
+/* Innate Power Sections */
+.powers-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin-top: 16px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.powers-section-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.powers-section-header:first-of-type {
+  margin-top: 0;
+}
+
+/* Innate checkbox styling */
+.innate-checkbox-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.innate-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-blue);
+}
+
+.innate-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Innate energy display in powers header */
+.innate-energy-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.innate-energy-current {
+  color: var(--primary-blue);
+}
+
+.innate-energy-separator {
+  color: var(--text-secondary);
+}
+
+.innate-energy-max {
+  color: var(--text-secondary);
+}

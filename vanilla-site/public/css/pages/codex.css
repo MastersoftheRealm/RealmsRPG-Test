@@ -1,0 +1,763 @@
+/* ==========================================================================
+   Codex Styles
+   Imports shared design system and adds codex-specific styles
+   ========================================================================== */
+
+/* Core Design System */
+@import url('../core/variables.css');
+@import url('../core/reset.css');
+@import url('../core/typography.css');
+@import url('../core/components.css');
+@import url('../core/chips.css');
+@import url('../core/listing-shared.css');
+
+/* ==========================================================================
+   Codex-Specific Variables
+   ========================================================================== */
+:root {
+    --codex-card-bg: #fafafa;
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+.container {
+    max-width: var(--container-lg);
+    margin: 0 auto;
+    padding: var(--spacing-md);
+}
+
+header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+header h1 {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-3xl);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+/* ==========================================================================
+   Search Bar
+   ========================================================================== */
+.search-bar {
+    margin-bottom: var(--spacing-md);
+}
+
+.search-bar input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-body);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(5, 51, 87, 0.1);
+}
+
+/* ==========================================================================
+   Search Bar
+   ========================================================================== */
+.search-bar {
+    margin-bottom: var(--spacing-md);
+}
+
+.search-bar input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-body);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(5, 51, 87, 0.1);
+}
+
+/* Filters, sort labels and shared listing controls are in core/listing-shared.css */
+
+/* ==========================================================================
+   Tabs
+   ========================================================================== */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
+    gap: var(--spacing-xs);
+}
+
+.tab-button {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-body);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.tab-button:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.tab-button.active,
+.tab-button:focus {
+    background-color: var(--color-primary-dark);
+    color: var(--color-white);
+    outline: none;
+    box-shadow: 0 2px 8px rgba(5, 51, 87, 0.15);
+}
+
+.tab-content {
+    display: none;
+}
+
+.active-tab {
+    display: block;
+}
+
+/* ==========================================================================
+   Feat Headers & List
+   ========================================================================== */
+.feat-headers {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--codex-card-bg);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-2xs);
+}
+
+/* Skills Headers */
+.skill-headers {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.skill-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.skill-headers .col:nth-child(2) {
+    justify-content: center;
+}
+
+.skill-headers .col:nth-child(3) {
+    justify-content: flex-end;
+}
+
+/* Species Headers */
+.species-headers {
+    grid-template-columns: 1.5fr 1fr 1fr 3.5fr;
+}
+
+/* Parts Headers */
+.part-headers {
+    grid-template-columns: 2fr 1fr 1fr 0.8fr 1.2fr;
+}
+
+/* Properties Headers */
+.property-headers {
+    grid-template-columns: 1.5fr 1fr 1fr;
+}
+
+/* Equipment Headers */
+.equipment-headers {
+    grid-template-columns: 1.5fr 3fr 1fr 1fr 1fr;
+}
+
+.feat-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.feat-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.feat-headers .col:nth-child(6) {
+    justify-content: flex-end;
+}
+
+.sort-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.feat-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.feat-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+.feat-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.feat-card {
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+}
+
+.feat-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.feat-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    align-items: center;
+    position: relative;
+}
+
+.skill-header {
+    grid-template-columns: 1fr 1fr 1fr;
+    padding-right: 40px;
+}
+
+.skill-header .col:nth-child(1) {
+    text-align: left;
+}
+
+.skill-header .col:nth-child(2) {
+    text-align: center;
+}
+
+.skill-header .col:nth-child(3) {
+    text-align: right;
+}
+
+.species-header {
+    grid-template-columns: 1.5fr 1fr 1fr 3.5fr;
+}
+
+.species-header .col:nth-child(4) {
+    white-space: normal;
+}
+
+.part-header {
+    grid-template-columns: 2fr 1fr 1fr 0.8fr 1.2fr;
+}
+
+.property-header {
+    grid-template-columns: 1.5fr 1fr 1fr;
+}
+
+.equipment-header {
+    grid-template-columns: 1.5fr 3fr 1fr 1fr 1fr;
+}
+
+.equipment-header .col:nth-child(2) {
+    white-space: normal;
+}
+
+.feat-header .col {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.feat-header .col:nth-child(n+2) {
+    text-align: center;
+}
+
+.expand-icon {
+    position: absolute;
+    right: var(--spacing-sm);
+    font-size: var(--font-size-lg);
+    color: var(--color-gray-700);
+    transition: transform var(--transition-fast);
+}
+
+.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.feat-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-base), padding var(--transition-base);
+    padding: 0 var(--spacing-md);
+}
+
+.expanded .feat-body {
+    max-height: 1000px;
+    padding: var(--spacing-md);
+}
+
+.feat-description {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    font-style: italic;
+}
+
+.feat-type-chip {
+    background: var(--color-success);
+    color: var(--color-white);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    display: inline-block;
+    margin-bottom: var(--spacing-md);
+}
+
+.feat-type-chip.state-feat {
+    background: var(--color-danger);
+    color: var(--color-white);
+}
+
+.requirements .req-field {
+    display: flex;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-base);
+}
+
+.requirements .req-field label {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-700);
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.requirements .req-field span {
+    flex: 1;
+}
+
+.no-results {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-gray-700);
+    font-style: italic;
+}
+
+.feat-type-options,
+.skill-type-options {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.feat-type-options input[type="checkbox"],
+.skill-type-options input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+}
+
+.feat-type-options label,
+.skill-type-options label {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+}
+
+/* ==========================================================================
+   Skills Headers & List
+   ========================================================================== */
+.skill-headers {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--codex-card-bg);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.skill-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.skill-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.skill-headers .col:nth-child(3) {
+    justify-content: flex-end;
+}
+
+.skill-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.skill-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+.skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.skill-card {
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+}
+
+.skill-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.skill-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    padding-right: var(--spacing-2xl);
+    cursor: pointer;
+    align-items: center;
+    position: relative;
+}
+
+.skill-header .col {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.skill-header .col:nth-child(1) { text-align: left; }
+.skill-header .col:nth-child(2) { text-align: center; }
+.skill-header .col:nth-child(3) { text-align: right; }
+
+.skill-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-base), padding var(--transition-base);
+    padding: 0 var(--spacing-md);
+}
+
+.expanded .skill-body {
+    max-height: 1000px;
+    padding: var(--spacing-md);
+}
+
+.skill-description,
+.skill-success,
+.skill-failure {
+    margin-bottom: var(--spacing-sm);
+}
+
+.ds-calc-chip {
+    background: var(--color-primary);
+    color: var(--color-white);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: var(--spacing-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.ds-calc-chip:hover {
+    background: var(--color-primary-dark);
+}
+
+.ds-calc-content {
+    display: none;
+    padding: var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.ds-calc-content.expanded {
+    display: block;
+}
+
+/* ==========================================================================
+   Species Headers & List
+   ========================================================================== */
+.species-headers {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 3.5fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--codex-card-bg);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.species-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.species-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.species-headers .col:nth-child(4) {
+    justify-content: flex-end;
+}
+
+.species-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.species-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+.species-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.species-card {
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+}
+
+.species-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.species-header {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 3.5fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    align-items: center;
+    position: relative;
+}
+
+.species-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-base), padding var(--transition-base);
+    padding: 0 var(--spacing-md);
+}
+
+.expanded .species-body {
+    max-height: 2000px;
+    padding: var(--spacing-md);
+}
+
+/* ==========================================================================
+   Parts Headers & List
+   ========================================================================== */
+.part-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.part-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.part-headers .col:nth-child(5) {
+    justify-content: flex-end;
+}
+
+.part-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.part-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Properties Headers & List
+   ========================================================================== */
+.property-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.property-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.property-headers .col:nth-child(3) {
+    justify-content: flex-end;
+}
+
+.property-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.property-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Equipment Headers & List
+   ========================================================================== */
+.equipment-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.equipment-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.equipment-headers .col:nth-child(5) {
+    justify-content: flex-end;
+}
+
+.equipment-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.equipment-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 992px) {
+    .feat-headers,
+    .feat-header {
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+    }
+    
+    .feat-headers .col:nth-child(5),
+    .feat-headers .col:nth-child(6),
+    .feat-header .col:nth-child(5),
+    .feat-header .col:nth-child(6) {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        flex: 1 1 100%;
+    }
+    
+    .feat-headers,
+    .feat-header {
+        grid-template-columns: 2fr 1fr 1fr;
+    }
+    
+    .feat-headers .col:nth-child(4),
+    .feat-header .col:nth-child(4) {
+        display: none;
+    }
+    
+    .tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        flex: 1 1 auto;
+        min-width: 100px;
+    }
+    
+    .skill-headers,
+    .skill-header {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .skill-headers .col:nth-child(3),
+    .skill-header .col:nth-child(3) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: var(--spacing-xs);
+    }
+    
+    .feat-headers,
+    .feat-header {
+        grid-template-columns: 1fr;
+        text-align: left;
+    }
+    
+    .feat-header .col:nth-child(n+2) {
+        display: none;
+    }
+    
+    .requirements .req-field {
+        flex-direction: column;
+    }
+    
+    .requirements .req-field label {
+        width: 100%;
+        margin-bottom: var(--spacing-2xs);
+    }
+}

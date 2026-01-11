@@ -1,0 +1,74 @@
+.ancestry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-xl);
+  justify-items: center;
+  margin-top: var(--spacing-2xl);
+}
+
+.species-card {
+  position: relative;
+  width: 180px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.species-img {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto var(--spacing-sm);
+  border-radius: var(--radius-full);
+  background-size: cover;
+  background-position: center;
+  border: 4px solid var(--border-light);
+  transition: border 0.2s ease;
+}
+
+.species-card:hover .species-img {
+  border-color: var(--border-primary);
+}
+
+.species-card.selected .species-img {
+  border-color: var(--primary);
+  border-width: 6px;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+}
+
+.species-name {
+  font-family: 'Nova Flat', cursive;
+  font-size: 20px;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.species-name.selected {
+  font-weight: 700;
+  color: var(--primary);
+  text-shadow: 0 0 1px rgba(26, 115, 232, 0.5);
+}
+
+.species-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.species-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--primary);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.4);
+}

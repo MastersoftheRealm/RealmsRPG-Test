@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Creator - Realms: The Freeform Roleplaying Game</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/character-creator/character-creator.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&family=Nova+Flat:wght@400&display=swap" rel="stylesheet">
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/11.3.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/11.3.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-performance-compat.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+</head>
+<body>
+    <header id="header"></header>
+
+    <main>
+        <div class="creator-container">
+            <div class="tab-bar">
+                <div class="tab active" data-tab="archetype">1. Archetype</div>
+                <div class="tab" data-tab="species">2. Species</div>
+                <div class="tab" data-tab="ancestry">3. Ancestry</div>
+                <div class="tab" data-tab="abilities">4. Abilities</div>
+                <div class="tab" data-tab="skills">5. Skills</div>
+                <div class="tab" data-tab="feats">6. Feats</div>
+                <div class="tab" data-tab="equipment">7. Equipment</div>
+                <div class="tab" data-tab="powers">8. Powers & Techniques</div> <!-- NEW -->
+                <div class="tab" data-tab="finalize">9. Finalize</div> <!-- NEW TAB -->
+                <button id="clear-progress-btn" style="margin-left: auto; background: #d9534f; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px;">Restart Character</button>
+            </div>
+
+            <!-- Archetype Tab -->
+            <div id="content-archetype" class="content active">
+                <h1>Choose Your Archetype</h1>
+                <!-- NEW: species warning -->
+                <div id="species-warning" style="display:none;margin:12px 0;padding:10px;border-left:4px solid #ff9800;background:#fff8e1;border-radius:6px;">
+                    <strong>First, choose a species!</strong>
+                    <button id="go-to-species-btn" class="small-button blue-button" style="margin-left:8px;">Go to Species</button>
+                </div>
+                <p class="description">
+                    Thrilling! Now you must pick your Power Ability. These reflect your character's physical combat style and approach to challenges as well as your connection to supernatural, magical, or extraordinary abilities.
+                </p>
+
+                <div class="archetypes">
+                    <button class="archetype-btn" id="power">Power</button>
+                    <button class="archetype-btn" id="powered-martial">Powered-Martial</button>
+                    <button class="archetype-btn" id="martial">Martial</button>
+                </div>
+
+                <!-- Power Dropdown -->
+                <div id="dropdown-power" class="dropdown">
+                    <ul>
+                        <li>Strength</li>
+                        <li>Vitality</li>
+                        <li>Agility</li>
+                        <li>Acuity</li>
+                        <li>Intelligence</li>
+                        <li>Charisma</li>
+                    </ul>
+                    <div class="dropdown-confirm">
+                        <button id="confirm-power" disabled>Confirm Archetype</button>
+                    </div>
+                </div>
+
+                <!-- Martial Dropdown -->
+                <div id="dropdown-martial" class="dropdown">
+                    <ul>
+                        <li>Strength</li>
+                        <li>Vitality</li>
+                        <li>Agility</li>
+                        <li>Acuity</li>
+                        <li>Intelligence</li>
+                        <li>Charisma</li>
+                    </ul>
+                    <div class="dropdown-confirm">
+                        <button id="confirm-martial" disabled>Confirm Archetype</button>
+                    </div>
+                </div>
+
+                <!-- Powered-Martial Dropdown -->
+                <div id="dropdown-powered-martial" class="dropdown powered-martial">
+                    <div class="column">
+                        <h3>Power</h3>
+                        <ul>
+                            <li>Strength</li>
+                            <li>Vitality</li>
+                            <li>Agility</li>
+                            <li>Acuity</li>
+                            <li>Intelligence</li>
+                            <li>Charisma</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3>Martial</h3>
+                        <ul>
+                            <li>Strength</li>
+                            <li>Vitality</li>
+                            <li>Agility</li>
+                            <li>Acuity</li>
+                            <li>Intelligence</li>
+                            <li>Charisma</li>
+                        </ul>
+                    </div>
+                    <div class="dropdown-confirm">
+                        <button id="confirm-powered-martial" disabled>Confirm Archetype</button>
+                    </div>
+                </div>
+
+                <div class="archetype-locked" id="archetype-locked" style="display: none;">
+                    <h3>Archetype: <span id="locked-archetype"></span></h3>
+                    <p>Ability: <span id="locked-ability"></span></p>
+                    <button id="change-archetype">Choose a Different Archetype</button>
+                </div>
+            </div>
+
+            <!-- Species Tab (formerly Ancestry) -->
+            <div id="content-species" class="content">
+                <h1>Choose Your Species</h1>
+                <p class="description">
+                    Your character’s Species and Ancestry define their genetic predispositions and inherent qualities. 
+                    The Species represents a broad classification, while Ancestry delves into the specific traits and attributes passed down through generations.
+                </p>
+
+                <!-- ==== PART 1 – Species grid + modal ==== -->
+                <div id="species-part-1">
+                    <div class="ancestry-grid" id="ancestry-grid"><!-- filled by JS --></div>
+
+                    <!-- Modal (hidden by default) -->
+                    <div id="ancestry-modal" class="modal hidden">
+                        <div class="modal-content">
+                            <span class="modal-close">×</span>
+
+                            <div class="modal-header">
+                                <div class="modal-info">
+                                    <h2 class="modal-species-name"></h2>
+                                    <p id="modal-species-description" class="truncated-description"></p>
+                                    <button id="show-more-desc" class="show-more-btn">Show More</button>
+                                    <div class="modal-stats">
+                                        <div><strong>Average Height:</strong> <span class="stat-height"></span></div>
+                                        <div><strong>Average Weight:</strong> <span class="stat-weight"></span></div>
+                                        <div><strong>Species Type:</strong> <span class="stat-type"></span></div>
+                                    </div>
+                                    <div class="modal-stats">
+                                        <div><strong>Skills:</strong> <span class="stat-skills"></span></div>
+                                        <div><strong>Adulthood:</strong> <span class="stat-adulthood"></span></div>
+                                        <div><strong>Languages:</strong> <span class="stat-languages"></span></div>
+                                    </div>
+                                    <div class="modal-stats">
+                                        <div><strong>Max Age:</strong> <span class="stat-maxage"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal-section">
+                                <h4>Species Traits</h4>
+                                <div class="traits-grid" id="species-traits"></div>
+                            </div>
+
+                            <div class="modal-section">
+                                <h4>Ancestry Traits</h4>
+                                <div class="traits-grid" id="ancestry-traits"></div>
+                            </div>
+
+                            <div class="modal-section">
+                                <h4>Characteristics</h4>
+                                <div class="traits-grid" id="characteristics"></div>
+                            </div>
+
+                            <div class="modal-actions">
+                                <button class="modal-choose">Choose Me!</button>
+                                <button class="modal-nah">Nah</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ancestry Tab (new, for trait selection) -->
+            <div id="content-ancestry" class="content">
+                <h1>Customize Ancestry</h1>
+                <p class="description">
+                    You gain all species traits, one ancestry trait (or two if you pick a flaw) and a characteristic.
+                </p>
+
+                <!-- NEW: Warning shown when no species is selected -->
+                <div id="ancestry-warning" style="display:none;margin:12px 0;padding:12px;border-left:4px solid #ff9800;background:#fff8e1;border-radius:6px;">
+                    <strong>First, choose a species!</strong>
+                    <button id="go-to-species-from-ancestry" class="small-button blue-button" style="margin-left:8px;">Go to Species</button>
+                </div>
+
+                <!-- NEW: Main ancestry content wrapper (hidden until species selected) -->
+                <div id="ancestry-main">
+                    <!-- Species Details -->
+                    <div class="species-details-section">
+                        <div class="species-header">
+                            <div class="species-img-large" id="selected-species-img"></div>
+                            <div class="species-info">
+                                <h2 id="selected-species-name"></h2>
+                                <p id="selected-species-description"></p>
+                                <div class="species-stats">
+                                    <div class="stat-item"><strong>Average Height:</strong> <span id="selected-stat-height"></span></div>
+                                    <div class="stat-item"><strong>Average Weight:</strong> <span id="selected-stat-weight"></span></div>
+                                    <div class="stat-item"><strong>Species Type:</strong> <span id="selected-stat-type"></span></div>
+                                    <div class="stat-item"><strong>Skills:</strong> <span id="selected-stat-skills"></span></div>
+                                    <div class="stat-item"><strong>Adulthood:</strong> <span id="selected-stat-adulthood"></span></div>
+                                    <div class="stat-item"><strong>Languages:</strong> <span id="selected-stat-languages"></span></div>
+                                    <div class="stat-item"><strong>Max Age:</strong> <span id="selected-stat-maxage"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ancestry-trait-section">
+                        <div class="section-header" data-section="species">
+                            <h3>Species Traits <span class="section-note">(You gain all of these!)</span></h3>
+                            <span class="toggle-arrow">▼</span>
+                        </div>
+                        <div class="section-body" id="species-section-body"></div>
+                    </div>
+
+                    <div class="ancestry-trait-section">
+                        <div class="section-header" data-section="ancestry">
+                            <h3>Ancestry Trait <span class="section-note">(Choose one; or two if you choose a flaw!)</span></h3>
+                            <span class="toggle-arrow">▼</span>
+                        </div>
+                        <div class="section-body" id="ancestry-section-body"></div>
+                        <div class="trait-definition" id="ancestry-definition"></div>
+                    </div>
+
+                    <div class="ancestry-trait-section">
+                        <div class="section-header" data-section="characteristic">
+                            <h3>Characteristic <span class="section-note">(Choose one)</span></h3>
+                            <span class="toggle-arrow">▼</span>
+                        </div>
+                        <div class="section-body" id="characteristic-section-body"></div>
+                        <div class="trait-definition" id="characteristic-definition"></div>
+                    </div>
+
+                    <div class="ancestry-trait-section">
+                        <div class="section-header" data-section="flaw">
+                            <h3>Flaws <span class="section-note">(Optionally choose one)</span></h3>
+                            <span class="toggle-arrow">▼</span>
+                        </div>
+                        <div class="section-body" id="flaw-section-body"></div>
+                    </div>
+
+                    <div class="ancestry-actions">
+                        <button id="ancestry-continue">Continue to Abilities</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abilities Tab -->
+            <div id="content-abilities" class="content">
+                <h1>CHOOSE YOUR ABILITIES</h1>
+                <p class="description">These Abilities form the foundation of your character's physical and mental capabilities and will influence their role in Combat, exploration, and interactions.</p>
+
+                <div class="ability-points">Ability Points: <span id="ability-points">7</span></div>
+
+                <div class="abilities-controls">
+                    <div class="ability-name">STRENGTH</div>
+                    <div class="ability-name">VITALITY</div>
+                    <div class="ability-name">AGILITY</div>
+                    <div class="ability-name">ACUITY</div>
+                    <div class="ability-name">INTELLIGENCE</div>
+                    <div class="ability-name">CHARISMA</div>
+                </div>
+
+                <div class="abilities-values">
+                    <div class="control">
+                        <button class="dec">-</button>
+                        <span class="value">0</span>
+                        <button class="inc">+</button>
+                    </div>
+                    <div class="control">
+                        <button class="dec">-</button>
+                        <span class="value">0</span>
+                        <button class="inc">+</button>
+                    </div>
+                    <div class="control">
+                        <button class="dec">-</button>
+                        <span class="value">0</span>
+                        <button class="inc">+</button>
+                    </div>
+                    <div class="control">
+                        <button class="dec">-</button>
+                        <span class="value">0</span>
+                        <button class="inc">+</button>
+                    </div>
+                    <div class="control">
+                        <button class="dec">-</button>
+                        <span class="value">0</span>
+                        <button class="inc">+</button>
+                    </div>
+                    <div class="control">
+                        <button class="dec">-</button>
+                        <span class="value">0</span>
+                        <button class="inc">+</button>
+                    </div>
+                </div>
+
+                <div class="abilities-descriptions">
+                    <div class="desc">
+                        <h4>Strength</h4>
+                        <p>Measures your physical power, affecting melee combat, carrying capacity, and athletic feats like climbing or breaking objects.</p>
+                    </div>
+                    <div class="desc">
+                        <h4>Vitality</h4>
+                        <p>Represents endurance and health, influencing resistance to poisons, diseases, and fatigue, as well as overall stamina.</p>
+                    </div>
+                    <div class="desc">
+                        <h4>Agility</h4>
+                        <p>Determines speed, reflexes, and coordination, used for dodging attacks, acrobatics, and precise movements.</p>
+                    </div>
+                    <div class="desc">
+                        <h4>Acuity</h4>
+                        <p>Reflects perception and awareness, aiding in spotting hidden dangers, understanding motives, and sensing the environment.</p>
+                    </div>
+                    <div class="desc">
+                        <h4>Intelligence</h4>
+                        <p>Gauges knowledge, reasoning, and learning ability, crucial for problem-solving, crafting, and arcane spellcasting.</p>
+                    </div>
+                    <div class="desc">
+                        <h4>Charisma</h4>
+                        <p>Indicates presence, persuasion, and leadership, affecting social interactions, intimidation, and commanding allies.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills Tab -->
+            <div id="content-skills" class="content">
+                <h1>CHOOSE YOUR SKILLS</h1>
+                
+                <!-- NEW: Warning shown when no species is selected -->
+                <div id="skills-warning" style="display:none;margin:12px 0;padding:12px;border-left:4px solid #ff9800;background:#fff8e1;border-radius:6px;">
+                    <strong>First, choose a species!</strong>
+                    <button id="go-to-species-from-skills" style="margin-left:8px;background:#1a73e8;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:14px;">Go to Species</button>
+                </div>
+
+                <!-- NEW: Main skills content wrapper (hidden until species selected) -->
+                <div id="skills-main">
+                    <div class="description">
+                        <p id="skills-description">Now you can choose your skills. Picking a new skill grants you proficiency, while allocating more points to a skill you have increases its bonus!</p>
+                        <button id="open-codex-skills">Open Codex in New Tab</button>
+                    </div>
+
+                    <div class="skill-points">Skill Points: <span id="skill-points">5</span></div>
+
+                    <!-- Skills Bonus Section -->
+                    <div class="skills-bonus-section">
+                        <h3>Your Skills</h3>
+                        <div id="skills-bonus-list" class="skills-bonus-list">
+                            <p class="no-skills-message">No skills selected yet</p>
+                        </div>
+                    </div>
+
+                    <div class="feats-section">
+                        <div class="section-header" data-section="skills">
+                            <h3>Skills</h3>
+                            <span class="toggle-arrow">▼</span>
+                        </div>
+                        <div class="section-body" id="skills-body">
+                            <input type="text" id="skills-search" class="search-input" placeholder="Search skills...">
+                            <div class="feats-list" id="skills-list">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Defenses Section (moved here, after Skills) -->
+                    <div class="defenses-section" style="margin-top: 32px;">
+                        <h3>Defenses</h3>
+                        <p class="description" style="font-size: 0.9em; margin-bottom: 16px;">
+                            Increase your defenses by spending 2 skill points per increase. Your defense bonus equals your ability modifier plus any increases.
+                        </p>
+                        
+                        <div class="abilities-controls">
+                            <div class="ability-name">MIGHT</div>
+                            <div class="ability-name">FORTITUDE</div>
+                            <div class="ability-name">REFLEX</div>
+                            <div class="ability-name">DISCERNMENT</div>
+                            <div class="ability-name">MENTAL FORTITUDE</div>
+                            <div class="ability-name">RESOLVE</div>
+                        </div>
+
+                        <div class="abilities-values">
+                            <div class="defense-control" data-defense="might">
+                                <button class="dec">-</button>
+                                <span class="value defense-value" data-defense="might">0</span>
+                                <button class="inc">+</button>
+                            </div>
+                            <div class="defense-control" data-defense="fortitude">
+                                <button class="dec">-</button>
+                                <span class="value defense-value" data-defense="fortitude">0</span>
+                                <button class="inc">+</button>
+                            </div>
+                            <div class="defense-control" data-defense="reflex">
+                                <button class="dec">-</button>
+                                <span class="value defense-value" data-defense="reflex">0</span>
+                                <button class="inc">+</button>
+                            </div>
+                            <div class="defense-control" data-defense="discernment">
+                                <button class="dec">-</button>
+                                <span class="value defense-value" data-defense="discernment">0</span>
+                                <button class="inc">+</button>
+                            </div>
+                            <div class="defense-control" data-defense="mentalFortitude">
+                                <button class="dec">-</button>
+                                <span class="value defense-value" data-defense="mentalFortitude">0</span>
+                                <button class="inc">+</button>
+                            </div>
+                            <div class="defense-control" data-defense="resolve">
+                                <button class="dec">-</button>
+                                <span class="value defense-value" data-defense="resolve">0</span>
+                                <button class="inc">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ancestry-actions">
+                        <button id="skills-continue">Continue to Feats</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feats Tab -->
+            <div id="content-feats" class="content">
+                <h1>CHOOSE YOUR FEATS</h1>
+                <div class="description">
+                    <p id="feats-description">Based on your Archetype, choose Feats that best fit your character idea.</p>
+                    <button id="open-codex">Open Codex in New Tab</button>
+                </div>
+
+                <div class="feats-section">
+                    <div class="section-header" data-section="archetype">
+                        <h3>Archetype Feats</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="archetype-feats-body">
+                        <input type="text" id="archetype-search" class="search-input" placeholder="Search feats...">
+                        <div class="feats-list" id="archetype-feats-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feats-section">
+                    <div class="section-header" data-section="character">
+                        <h3>Character Feats</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="character-feats-body">
+                        <input type="text" id="character-search" class="search-input" placeholder="Search feats...">
+                        <div class="feats-list" id="character-feats-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ancestry-actions">
+                    <button id="feats-continue">Continue to Equipment</button>
+                </div>
+            </div>
+
+            <!-- Equipment Tab -->
+            <div id="content-equipment" class="content">
+                <h1>EQUIP YOUR HERO</h1>
+                <p class="description">
+                    Choose weapons, armor, tools, and magical items to prepare for adventure.
+                </p>
+
+                <div class="equipment-resources">
+                    <div class="resource-box">
+                        <div class="resource-label">Training Points</div>
+                        <div class="resource-value" id="training-points">22</div>
+                    </div>
+                    <div class="resource-box">
+                        <div class="resource-label">Currency</div>
+                        <div class="resource-value" id="currency">200</div>
+                    </div>
+                    <div class="resource-box">
+                        <div class="resource-label">Armament Proficiency Max</div>
+                        <div class="resource-value" id="armament-max">4</div>
+                    </div>
+                </div>
+
+                <!-- NEW: Proficiencies Section -->
+                <div class="equipment-section">
+                    <div class="section-header" data-section="equipment-proficiencies">
+                        <h3>Proficiencies</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="equipment-proficiencies-body">
+                        <div id="equipment-proficiencies-list" class="equipment-properties-list">
+                            <p class="no-skills-message">No proficiencies from selected equipment</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Equipment Bonus Section moved here -->
+                <div class="equipment-bonus-section">
+                    <h3>Your Equipment</h3>
+                    <div id="equipment-bonus-list" class="equipment-bonus-list">
+                        <p class="no-skills-message">No equipment selected yet</p>
+                    </div>
+                </div>
+
+                <!-- Weapons Section -->
+                <div class="equipment-section">
+                    <div class="section-header" data-section="weapons">
+                        <h3>Weapons</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="weapons-body">
+                        <input type="text" id="weapons-search" class="search-input" placeholder="Search weapons...">
+                        <div class="equipment-table-container">
+                            <table class="equipment-table" id="weapons-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Damage</th>
+                                        <th>Range</th>
+                                        <th>Properties</th>
+                                        <th>TP</th>
+                                        <th>Currency</th>
+                                        <th>Rarity</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="weapons-list">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Armor Section -->
+                <div class="equipment-section">
+                    <div class="section-header" data-section="armor">
+                        <h3>Armor</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="armor-body">
+                        <input type="text" id="armor-search" class="search-input" placeholder="Search armor...">
+                        <div class="equipment-table-container">
+                            <table class="equipment-table" id="armor-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Damage Reduction</th>
+                                        <th>Properties</th>
+                                        <th>TP</th>
+                                        <th>Currency</th>
+                                        <th>Rarity</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="armor-list">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="equipment-section">
+                    <div class="section-header" data-section="equipment">
+                        <h3>General Equipment</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="equipment-body">
+                        <input type="text" id="equipment-search" class="search-input" placeholder="Search equipment...">
+                        <div class="feats-list" id="equipment-list">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Powers & Techniques Tab (NEW) -->
+            <div id="content-powers" class="content">
+                <h1>POWERS & TECHNIQUES</h1>
+                <p class="description">
+                    Choose powers and techniques from your library to use with your character.
+                </p>
+
+                <div class="equipment-resources">
+                    <div class="resource-box">
+                        <div class="resource-label">Training Points</div>
+                        <div class="resource-value" id="powers-training-points">22</div>
+                    </div>
+                    <div class="resource-box">
+                        <div class="resource-label">Innate Energy Maximum</div>
+                        <div class="resource-value" id="innate-energy-max">0</div>
+                    </div>
+                </div>
+
+                <!-- NEW: Proficiencies Section -->
+                <div class="equipment-section">
+                    <div class="section-header" data-section="powers-proficiencies">
+                        <h3>Proficiencies</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="powers-proficiencies-body">
+                        <div id="powers-proficiencies-list" class="equipment-properties-list">
+                            <p class="no-skills-message">No proficiencies from selected powers/techniques</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="equipment-bonus-section">
+                    <h3>Your Powers & Techniques</h3>
+                    <div id="powers-techniques-bonus-list" class="equipment-bonus-list">
+                        <p class="no-skills-message">No powers or techniques selected yet</p>
+                    </div>
+                </div>
+
+                <!-- Powers Section -->
+                <div class="equipment-section">
+                    <div class="section-header" data-section="powers">
+                        <h3>Powers</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="powers-body">
+                        <input type="text" id="powers-search" class="search-input" placeholder="Search powers...">
+                        <div class="equipment-table-container">
+                            <table class="equipment-table" id="powers-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Energy</th>
+                                        <th>TP</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="powers-list">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Techniques Section -->
+                <div class="equipment-section">
+                    <div class="section-header" data-section="techniques">
+                        <h3>Techniques</h3>
+                        <span class="toggle-arrow">▼</span>
+                    </div>
+                    <div class="section-body" id="techniques-body">
+                        <input type="text" id="techniques-search" class="search-input" placeholder="Search techniques...">
+                        <div class="equipment-table-container">
+                            <table class="equipment-table" id="techniques-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Energy</th>
+                                        <th>TP</th>
+                                        <th>Weapon</th>
+                                        <th>Damage</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="techniques-list">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finalize Tab -->
+            <div id="content-finalize" class="content">
+                <h1>Finalize Your Character</h1>
+                <div class="finalize-form">
+                    <div class="finalize-fields">
+                        <label for="finalize-name"><strong>Name:</strong></label>
+                        <input type="text" id="finalize-name" placeholder="Character Name">
+                        <label for="finalize-height"><strong>Height (cm):</strong></label>
+                        <input type="number" id="finalize-height" min="50" max="300" placeholder="Height in cm">
+                        <label for="finalize-weight"><strong>Weight (kg):</strong></label>
+                        <input type="number" id="finalize-weight" min="20" max="300" placeholder="Weight in kg">
+                        <!-- NEW: Size dropdown -->
+                        <label for="finalize-size"><strong>Size:</strong></label>
+                        <select id="finalize-size">
+                            <option value="" disabled selected>Select species first</option>
+                        </select>
+                        <label for="finalize-appearance"><strong>Appearance Description:</strong></label>
+                        <textarea id="finalize-appearance" rows="2" placeholder="Describe your character's appearance"></textarea>
+                        <label for="finalize-archetype-desc"><strong>Archetype Description:</strong></label>
+                        <textarea id="finalize-archetype-desc" rows="2" placeholder="Describe your archetype"></textarea>
+                        <label for="finalize-notes"><strong>Notes:</strong></label>
+                        <textarea id="finalize-notes" rows="2" placeholder="Any notes about your character"></textarea>
+
+                        <!-- NEW: Size dropdown -->
+                        <label for="finalize-size"><strong>Size:</strong></label>
+                        <select id="finalize-size">
+                            <option value="" disabled selected>Select species first</option>
+                        </select>
+                    </div>
+                    <div class="finalize-health-energy" style="display:flex;flex-direction:row;justify-content:center;align-items:center;gap:32px;padding:32px 0;">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <label for="finalize-health" style="font-size:1.1em;"><strong>Health</strong></label>
+        <div style="margin-top:10px;">
+            <button type="button" id="finalize-dec-health" class="small-button">-</button>
+            <input type="number" id="finalize-health" min="0" style="width:60px;text-align:center;" readonly>
+            <button type="button" id="finalize-inc-health" class="small-button">+</button>
+        </div>
+        <span id="finalize-health-base" style="margin-top:8px;color:#888;"></span>
+    </div>
+    <div style="flex:0 0 180px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <h3 style="margin-bottom:8px;">Health-Energy Points</h3>
+        <span style="font-size:2em;font-weight:700;color:#1a73e8;" id="finalize-hep-remaining">18</span>
+        <span style="color:#888;">Points to Allot</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+        <label for="finalize-energy" style="font-size:1.1em;"><strong>Energy</strong></label>
+        <div style="margin-top:10px;">
+            <button type="button" id="finalize-dec-energy" class="small-button">-</button>
+            <input type="number" id="finalize-energy" min="0" style="width:60px;text-align:center;" readonly>
+            <button type="button" id="finalize-inc-energy" class="small-button">+</button>
+        </div>
+        <span id="finalize-energy-base" style="margin-top:8px;color:#888;"></span>
+    </div>
+</div>
+                </div>
+                
+                <!-- NEW: Complete Character Button -->
+                <div style="display: flex; justify-content: flex-end; margin-top: 32px;">
+                    <button id="complete-character-btn" class="medium-button blue-button" style="padding: 12px 32px; font-size: 1.1em;">
+                        Complete Character
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="footer"></footer>
+
+    <!-- NEW: Validation Modal -->
+    <div id="validation-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-button" id="close-validation-modal">&times;</span>
+            <h2 id="validation-title">Character Validation</h2>
+            <div id="validation-results" style="margin: 20px 0;"></div>
+            <button id="validation-ok-btn" class="medium-button blue-button" style="margin-top: 16px;">Got it!</button>
+        </div>
+    </div>
+
+    <script type="module" src="/js/character-creator/main.js"></script>
+</body>
+</html>

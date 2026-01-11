@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Register</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <script type="module">
+      import { initializeFirebase, handleAuthStateChange, registerUser } from '/js/core/auth.js';
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        const { auth, db } = await initializeFirebase();
+        handleAuthStateChange(auth, db);
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const username = document.getElementById('username').value;
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          const confirmPassword = document.getElementById('confirm-password').value;
+          const errorContainer = document.getElementById('error-container');
+          errorContainer.innerHTML = '';
+
+          // Validate input fields
+          if (!username || !email || !password || !confirmPassword) {
+            errorContainer.innerHTML = 'All fields are required.';
+            return;
+          }
+
+          if (password !== confirmPassword) {
+            errorContainer.innerHTML = 'Passwords do not match.';
+            return;
+          }
+
+          const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+          if (!passwordRegex.test(password)) {
+            errorContainer.innerHTML = 'Password must be at least 6 characters long and contain at least one letter and one number.';
+            return;
+          }
+
+          try {
+            await registerUser(auth, db, username, email, password);
+            alert('User registered successfully');
+            window.location.href = '/index.html';
+          } catch (error) {
+            console.error('Error registering user:', error);
+            if (error.code === 'auth/weak-password') {
+              errorContainer.innerHTML = 'Password must be at least 6 characters';
+            } else if (error.code === 'auth/invalid-email') {
+              errorContainer.innerHTML = 'Email must be in proper format';
+            } else if (error.code === 'auth/email-already-in-use') {
+              errorContainer.innerHTML = 'Email is already in use';
+            } else if (error.code === 'permission-denied') {
+              errorContainer.innerHTML = 'Missing or insufficient permissions';
+            } else {
+              errorContainer.innerHTML = 'Error registering user';
+            }
+          }
+        });
+
+        document.querySelector('.white').addEventListener('click', async (e) => {
+          e.preventDefault();
+          const provider = new GoogleAuthProvider();
+          try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+            const email = user.email;
+            const username = email.split('@')[0].substring(0, 5);
+            await setDoc(doc(db, 'users', user.uid), { username });
+            await setDoc(doc(db, 'usernames', username), { uid: user.uid });
+            alert('User signed in with Google successfully');
+            window.location.href = '/index.html';
+          } catch (error) {
+            console.error('Error signing in with Google:', error);
+            if (error.code === 'auth/account-exists-with-different-credential') {
+              alert('An account already exists with the same email address but different sign-in credentials. Please use a different sign-in method.');
+            } else if (error.code === 'auth/popup-closed-by-user') {
+              alert('The popup has been closed by the user before finalizing the operation.');
+            } else if (error.code === 'auth/cancelled-popup-request') {
+              alert('The popup request was cancelled. Please try again.');
+            } else {
+              alert('Error signing in with Google');
+            }
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header id="header"></header>
+    <main class="register-page">
+      <h1>Register</h1>
+      <form id="register-form">
+        <input type="text" id="username" placeholder="Username" required style="border-radius: 5px;">
+        <input type="email" id="email" placeholder="Email" required style="border-radius: 5px;">
+        <input type="password" id="password" placeholder="Password" required style="border-radius: 5px;">
+        <input type="password" id="confirm-password" placeholder="Confirm Password" required style="border-radius: 5px;">
+        <button type="submit" style="border-radius: 5px;">Register</button>
+        <button class="white" style="border-radius: 5px;">Sign in with Google</button>
+      </form>
+      <div id="error-container" style="color: red; text-align: center;"></div>
+      <a href="login.html">Login</a>
+      <a href="forgot-password.html">Forgot Password?</a>
+      <a href="terms.html">Terms and Conditions</a>
+    </main>
+    <footer id="footer"></footer>
+    <script>
+      async function loadHeaderFooter() {
+        const header = document.getElementById('header');
+        const footer = document.getElementById('footer');
+        if (header) {
+          header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        }
+        if (footer) {
+          footer.innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+        }
+      }
+      loadHeaderFooter();
+    </script>
+  </body>
+</html>

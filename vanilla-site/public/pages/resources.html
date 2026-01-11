@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resources - Realms</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+</head>
+<body>
+    <header id="header"></header>
+    <main style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+        <h1 style="text-align: center; margin-bottom: 20px;">Resources</h1>
+        <p style="text-align: center; margin-bottom: 40px;">Welcome to the Resources page. Here you can find various tools, downloads, and references to enhance your Realms RPG experience. More resources will be added over time!</p>
+        
+        <section style="margin-bottom: 40px;">
+            <h2>Printable Character Sheet</h2>
+            <p>Download the official Realms Character Sheet Alpha for easy character creation and tracking during gameplay.</p>
+            <a href="/Realms Character Sheet Alpha.pdf" download style="display: inline-block; padding: 10px 20px; background-color: #053357; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">Click here to download</a>
+        </section>
+        
+        <!-- Placeholder for future resources -->
+        <section style="margin-bottom: 40px;">
+            <h2>Coming Soon</h2>
+            <ul>
+                <li>Quick Reference Guides</li>
+                <li>Adventure Modules</li>
+                <li>Community Creations</li>
+            </ul>
+        </section>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module">
+      import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+      async function loadHeaderFooter() {
+        const header = document.getElementById('header');
+        const footer = document.getElementById('footer');
+        if (header) {
+          header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        }
+        if (footer) {
+          footer.innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+        }
+      }
+      loadHeaderFooter();
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        const { auth, db } = await initializeFirebase();
+        handleAuthStateChange(auth, db);
+      });
+    </script>
+</body>
+</html>

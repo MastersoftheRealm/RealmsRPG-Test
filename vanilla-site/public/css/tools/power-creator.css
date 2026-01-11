@@ -1,0 +1,812 @@
+/* ==========================================================================
+   Power Creator Styles
+   Imports shared design system and creator base, then adds power-specific styles
+   ========================================================================== */
+
+/* Core Design System */
+@import url('../core/variables.css');
+@import url('../core/reset.css');
+@import url('../core/typography.css');
+@import url('../core/components.css');
+@import url('../core/creator-base.css');
+@import url('../core/chips.css');
+
+/* ==========================================================================
+   Power Creator Specific Styles
+   ========================================================================== */
+
+/* Page Title */
+.page-title {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-normal);
+    margin-top: var(--spacing-lg);
+    text-align: center;
+    color: var(--color-primary);
+}
+
+.centered-title {
+    text-align: center;
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-xl);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+/* ==========================================================================
+   Main Layout
+   ========================================================================== */
+main {
+    max-width: var(--content-max-width, 1200px);
+    margin: 0 auto;
+    padding: var(--spacing-md) var(--spacing-lg);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Option Container - Flexbox layout for basic mechanics */
+.option-container {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--spacing-md);
+    align-items: stretch;
+    justify-content: center;
+    margin: var(--spacing-md) 0;
+}
+
+.option-box {
+    flex: 1 1 auto;
+    min-width: 150px;
+    max-width: 250px;
+    padding: var(--spacing-sm);
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+}
+
+.option-box h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2xs);
+}
+
+.option-box select {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    padding-right: var(--spacing-lg);
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    background: var(--color-white);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    min-width: 60px;
+}
+
+.range-button-container,
+.area-effect-button-container {
+    display: inline-flex;
+    gap: var(--spacing-2xs);
+    margin-left: var(--spacing-xs);
+}
+
+.small-button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: var(--font-size-base);
+    line-height: 1;
+    border-radius: var(--radius-sm);
+}
+
+/* Area of Effect Container */
+.area-effect-container {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border-light);
+    font-size: var(--font-size-sm);
+}
+
+.area-effect-container label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    margin-top: var(--spacing-xs);
+    cursor: pointer;
+}
+
+/* General Power Options Container */
+#generalPowerOptionsContainer {
+    margin-top: var(--spacing-lg);
+    width: 100%;
+    padding: var(--spacing-sm);
+    background-color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Total Costs Panel */
+#totalCosts {
+    position: fixed;
+    top: calc(var(--header-height, 80px) + var(--spacing-lg));
+    left: var(--spacing-lg);
+    width: 160px;
+    padding: var(--spacing-sm);
+    background-color: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 1001;
+    font-size: var(--font-size-xs);
+    transition: transform var(--transition-base);
+}
+
+#totalCosts h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-sm);
+    color: var(--color-primary);
+}
+
+#totalCosts p {
+    margin: var(--spacing-2xs) 0;
+    font-size: var(--font-size-xs);
+}
+
+#totalCosts.collapsed {
+    transform: translateX(-90%);
+}
+
+#totalCosts .toggle-arrow {
+    position: absolute;
+    top: 50%;
+    right: -18px;
+    width: 20px;
+    height: 20px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform: translateY(-50%);
+    z-index: 1002;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xs);
+}
+
+#totalCosts .toggle-arrow:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Power Parts Container */
+#powerPartsContainer {
+    margin-top: var(--spacing-lg);
+    width: 100%;
+    position: relative;
+}
+
+/* Add Power Part Button */
+#addPowerPartButton {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Legacy class mappings to new system */
+.power-part-section {
+    /* Extends .creator-section */
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.power-part-section h3 {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-lg);
+    margin: 0;
+    color: var(--color-primary);
+}
+
+.power-part-section p {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-sm);
+    margin: var(--spacing-2xs) 0;
+}
+
+.power-part-section h4 {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-sm);
+    margin: var(--spacing-sm) 0 var(--spacing-xs);
+    display: flex;
+    align-items: center;
+}
+
+.power-part-section .delete-button {
+    background-color: var(--color-danger);
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+.power-part-section .delete-button:hover {
+    background-color: var(--color-danger-dark);
+}
+
+.power-part-section select {
+    display: block;
+    margin: 0 auto var(--spacing-sm) auto;
+    padding: var(--spacing-2xs);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    font-family: var(--font-family-body);
+}
+
+/* ==========================================================================
+   Power Summary Panel
+   ========================================================================== */
+#powerSummary {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: #e6f7ff; /* Light blue for readability */
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    position: relative;
+}
+
+#powerSummary h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-xl);
+    color: var(--color-primary);
+}
+
+.power-summary-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+    position: relative;
+}
+
+.power-summary-top p {
+    margin: var(--spacing-2xs) 0;
+    flex: 1 1 30%;
+    font-size: var(--font-size-sm);
+}
+
+.power-summary-top input {
+    flex: 1 1 100%;
+    padding: var(--spacing-2xs);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    margin-bottom: var(--spacing-sm);
+}
+
+.power-summary-parts {
+    margin-top: var(--spacing-sm);
+}
+
+.power-summary-parts h4 {
+    margin: 0 0 var(--spacing-2xs) 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+}
+
+#summaryParts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+#summaryParts div {
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-2xs);
+    box-shadow: var(--shadow-xs);
+    flex: 1 1 30%;
+    margin-bottom: var(--spacing-2xs);
+}
+
+#summaryParts div h4,
+#summaryParts div p,
+#summaryProficiencies p {
+    margin-bottom: var(--spacing-2xs);
+}
+
+.power-summary-description {
+    margin-top: var(--spacing-sm);
+}
+
+.power-summary-description h4 {
+    margin: 0 0 var(--spacing-2xs) 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+}
+
+#powerDescription {
+    width: 100%;
+    height: 100px;
+    padding: var(--spacing-2xs);
+    font-size: var(--font-size-base);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    font-family: var(--font-family-body);
+    resize: vertical;
+}
+
+/* ==========================================================================
+   Duration Controls
+   ========================================================================== */
+.linger-container {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.duration-type-container {
+    display: flex;
+    align-items: center;
+    margin-top: var(--spacing-sm);
+    gap: var(--spacing-sm);
+}
+
+.duration-type-container select {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    font-family: var(--font-family-body);
+}
+
+.duration-type-container select:disabled {
+    background-color: var(--color-gray-200);
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Page Navigation
+   ========================================================================== */
+.top-right-container {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+.switch-page-button {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.add-to-library-button {
+    margin-bottom: var(--spacing-2xs);
+}
+
+/* ==========================================================================
+   Advanced Mechanics Section
+   ========================================================================== */
+.advanced-mechanics {
+    display: none;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+}
+
+#generalPowerOptionsContainer.show-advanced .advanced-mechanics {
+    display: block;
+}
+
+.advanced-mechanics h4 {
+    margin: var(--spacing-2xs) 0;
+    font-family: var(--font-family-body);
+    font-weight: var(--font-weight-bold);
+}
+
+.advanced-toggle {
+    margin-top: var(--spacing-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-weight: var(--font-weight-bold);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    background: var(--color-accent-light);
+    color: var(--color-primary);
+    border-radius: var(--radius-sm);
+    user-select: none;
+    transition: background-color var(--transition-fast);
+}
+
+.advanced-toggle:hover {
+    background: var(--color-accent-medium);
+}
+
+.advanced-toggle .arrow {
+    transition: transform var(--transition-fast);
+    font-size: var(--font-size-sm);
+}
+
+#generalPowerOptionsContainer.show-advanced .advanced-toggle .arrow {
+    transform: rotate(180deg);
+}
+
+.advanced-mechanics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.adv-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.adv-group h4 {
+    margin: 0 0 var(--spacing-2xs) 0;
+}
+
+.adv-group .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+}
+
+/* ==========================================================================
+   Power Mechanic Chips
+   ========================================================================== */
+.chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-xs);
+    line-height: 1.3;
+    border: 1px solid transparent;
+    user-select: none;
+    cursor: pointer;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 280px;
+    transition: opacity var(--transition-fast);
+}
+
+.chip-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.chip-name {
+    white-space: nowrap;
+}
+
+.chip:hover {
+    opacity: 0.85;
+}
+
+/* Chip category colors */
+.chip.action {
+    background: #e7f0ff;
+    color: #0b5ed7;
+    border-color: #bcd4ff;
+}
+
+.chip.activation {
+    background: #e6fffa;
+    color: #0f766e;
+    border-color: #b3f0e7;
+}
+
+.chip.area {
+    background: #eafbe7;
+    color: #166534;
+    border-color: #c7efc1;
+}
+
+.chip.duration {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-color: #e3d0ff;
+}
+
+.chip.target {
+    background: #fff4e5;
+    color: #9a3412;
+    border-color: #ffd8a8;
+}
+
+.chip.special {
+    background: #fffbe6;
+    color: #854d0e;
+    border-color: #ffe58f;
+}
+
+.chip.restriction {
+    background: #ffe5e5;
+    color: #b91c1c;
+    border-color: #ffb3b3;
+}
+
+.chip-description {
+    margin-top: var(--spacing-2xs);
+    padding: var(--spacing-2xs);
+    border-radius: 1px;
+    font-size: var(--font-size-xs);
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
+}
+
+/* Chip add button - inherits chip color, not blue */
+.chip-add-button {
+    margin-left: var(--spacing-2xs);
+    padding: 2px 6px;
+    font-size: var(--font-size-xs);
+    background-color: rgba(0, 0, 0, 0.1);
+    color: inherit;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.chip-add-button:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.chip-description button {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: inherit;
+    border: 1px solid currentColor;
+    padding: 1px 4px;
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-xs);
+}
+
+.chip-description .option-box {
+    background-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    padding: var(--spacing-2xs) 0;
+}
+
+.chip-description .option-container {
+    border-top: 1px solid currentColor;
+    margin-top: var(--spacing-2xs);
+    padding-top: var(--spacing-2xs);
+}
+
+.chip-description label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   Added Advanced Parts Section
+   ========================================================================== */
+.added-advanced-parts {
+    margin-bottom: var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+}
+
+.added-advanced-parts h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-family: var(--font-family-body);
+    font-weight: var(--font-weight-bold);
+}
+
+.added-advanced-parts .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+}
+
+.added-advanced-parts .chip {
+    position: relative;
+}
+
+.added-advanced-parts .chip .remove-advanced-part {
+    margin-left: var(--spacing-2xs);
+    padding: 2px 4px;
+    font-size: var(--font-size-base);
+    background-color: transparent;
+    color: inherit;
+    border: none;
+    cursor: pointer;
+}
+
+/* Inherit chip colors for added parts */
+.added-advanced-parts .chip.action { background: #e7f0ff; color: #0b5ed7; border-color: #bcd4ff; }
+.added-advanced-parts .chip.activation { background: #e6fffa; color: #0f766e; border-color: #b3f0e7; }
+.added-advanced-parts .chip.area { background: #eafbe7; color: #166534; border-color: #c7efc1; }
+.added-advanced-parts .chip.duration { background: #f3e8ff; color: #6b21a8; border-color: #e3d0ff; }
+.added-advanced-parts .chip.target { background: #fff4e5; color: #9a3412; border-color: #ffd8a8; }
+.added-advanced-parts .chip.special { background: #fffbe6; color: #854d0e; border-color: #ffe58f; }
+.added-advanced-parts .chip.restriction { background: #ffe5e5; color: #b91c1c; border-color: #ffb3b3; }
+
+.collapsed-added-chips {
+    display: none;
+    margin-left: var(--spacing-sm);
+}
+
+.collapsed-added-chips .chip {
+    font-size: var(--font-size-xs);
+    margin-right: var(--spacing-2xs);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 1000px) {
+    .advanced-mechanics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .advanced-mechanics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   Button Size Variants
+   ========================================================================== */
+.small-button {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-xs);
+}
+
+.medium-button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+/* Button Color Variants */
+.blue-button {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.blue-button:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.red-button {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.red-button:hover {
+    background-color: var(--color-danger-hover);
+}
+
+/* Delete button styling */
+.delete-button {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.delete-button:hover {
+    background-color: var(--color-danger-hover);
+}
+
+/* ==========================================================================
+   Checkbox Container Layout
+   ========================================================================== */
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+    gap: var(--spacing-sm);
+}
+
+.checkbox-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.left-column {
+    align-items: flex-start;
+}
+
+.right-column {
+    align-items: flex-end;
+}
+
+.checkbox-container label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-body);
+}
+
+/* ==========================================================================
+   Sustain Container
+   ========================================================================== */
+.sustain-container {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.sustain-container label {
+    margin-right: var(--spacing-xs);
+}
+
+.sustain-container select {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Area Effect Container
+   ========================================================================== */
+.area-effect-container {
+    margin-top: var(--spacing-sm);
+}
+
+.area-effect-container label {
+    margin-right: var(--spacing-xs);
+}
+
+.area-effect-container select {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-sm);
+}
+
+.area-effect-button-container,
+.range-button-container {
+    display: inline-flex;
+    margin-left: var(--spacing-sm);
+    gap: var(--spacing-2xs);
+}
+
+/* ==========================================================================
+   Load/Save Button Container
+   ========================================================================== */
+.load-save-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-sm);
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}

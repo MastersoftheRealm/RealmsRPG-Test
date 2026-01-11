@@ -1,0 +1,386 @@
+#archetype-column {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.archetype-section,
+.bonuses-section,
+.weapons-section,
+.armor-section {
+    margin-bottom: 20px;
+}
+
+.archetype-section:last-child,
+.bonuses-section:last-child,
+.weapons-section:last-child,
+.armor-section:last-child {
+    margin-bottom: 0;
+}
+
+.archetype-prof {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px;
+    gap: 12px;
+}
+
+.archetype-box {
+    background: linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-light) 100%);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    text-align: center;
+    flex: 1;
+    border: 2px solid var(--border-color);
+}
+
+.bonuses-section {
+    padding: 0;
+}
+
+.bonuses-subtitle {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    background: var(--bg-light);
+}
+
+.bonus-label {
+    text-align: left;
+    padding-left: 12px !important;
+    font-weight: 600;
+    font-size: var(--font-size-xs, 12px);
+}
+
+.bonus-button {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: var(--font-size-sm, 14px);
+    transition: all 0.2s;
+    min-width: 50px;
+}
+
+.bonus-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.bonus-button.unprof {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.damage-button {
+    background: linear-gradient(135deg, var(--danger-red) 0%, #c82333 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.damage-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.power-potency {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    padding: 14px;
+    text-align: center;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    margin: 16px;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    cursor: help;
+}
+
+.weapon-row,
+.armor-row {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.weapon-row:last-child,
+.armor-row:last-child {
+    border-bottom: none;
+}
+
+.weapon-name,
+.armor-name {
+    text-align: left;
+    padding-left: 12px !important;
+    font-weight: 600;
+}
+
+.unarmed-row {
+    background-color: rgba(108, 117, 125, 0.05);
+}
+
+.properties-row {
+    background-color: var(--bg-light) !important;
+    font-size: var(--font-size-xs, 12px);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.properties-row td {
+    text-align: left !important;
+    padding-left: 12px !important;
+}
+
+.weapons-table tbody tr:hover td,
+.armor-table tbody tr:hover td {
+    background-color: var(--bg-light);
+}
+
+.properties-row:hover td {
+    background-color: var(--bg-light) !important;
+}
+
+/* ============================================
+   PROFICIENCY EDITOR STYLES
+   ============================================ */
+
+.proficiency-editor {
+    padding: 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.prof-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.prof-points-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.prof-points-value {
+    font-size: 16px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.prof-points-value.has-points {
+    color: #4caf50;
+    border: 2px solid #4caf50;
+}
+
+.prof-points-value.no-points {
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+}
+
+.prof-points-value.over-budget {
+    color: var(--danger-red, #dc3545);
+    border: 2px solid var(--danger-red, #dc3545);
+}
+
+.prof-controls-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.prof-control-box {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: white;
+    padding: 8px 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-color);
+}
+
+.prof-box-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 50px;
+}
+
+.prof-box-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+}
+
+.prof-box-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1.2;
+}
+
+.prof-control-box .prof-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-blue);
+    background: white;
+    color: var(--primary-blue);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.prof-control-box .prof-btn:hover:not(:disabled) {
+    background: var(--primary-blue);
+    color: white;
+    transform: scale(1.1);
+}
+
+.prof-control-box .prof-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+/* Archetype Choices Section */
+.archetype-choices-section {
+    margin: 16px 0;
+    padding: 0 16px 16px;
+}
+
+.archetype-choices-info {
+    font-size: var(--font-size-xs, 12px);
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 12px;
+    font-style: italic;
+}
+
+.archetype-choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.archetype-choice-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-light);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.milestone-label {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--primary-dark);
+    min-width: 60px;
+}
+
+.choice-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.choice-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: var(--font-size-xs, 12px);
+    font-weight: 600;
+}
+
+.choice-btn:hover {
+    border-color: var(--primary-blue);
+    background: var(--bg-light);
+}
+
+.choice-btn.selected {
+    border-color: var(--primary-blue);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.choice-btn.selected .choice-icon,
+.choice-btn.selected .choice-text {
+    color: white;
+}
+
+.choice-icon {
+    font-size: 14px;
+}
+
+.choice-text {
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.archetype-choice-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 12px;
+    padding: 10px;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.summary-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+}
+
+.summary-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-dark);
+}

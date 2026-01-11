@@ -1,0 +1,99 @@
+.hidden {
+  display: none !important;
+}
+
+.open {
+  display: block !important;
+}
+
+.selected {
+  background: var(--bg-selected);
+  border-left: 4px solid var(--border-primary);
+}
+
+.selected-feat {
+  background: var(--bg-selected);
+  border-left: 4px solid var(--border-primary);
+}
+
+.species-skill {
+  border-left: 3px solid var(--primary-light);
+}
+
+.no-skills-message {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  grid-column: 1 / -1;
+  padding: 20px;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-mobile {
+    display: none !important;
+  }
+}
+
+/* NEW: Validation modal specific styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+/* Force flex display when modal is shown */
+.modal[style*="display: block"],
+.modal[style*="display:block"] {
+  display: flex !important;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  padding: 30px;
+  border: 1px solid #888;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: #000;
+}
+
+#validation-modal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+}
+
+#validation-modal ul li {
+  font-size: 1em;
+  line-height: 1.5;
+}

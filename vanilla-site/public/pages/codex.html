@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codex - Realms</title>
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="/css/layouts/main.css">
+  <link rel="stylesheet" href="/css/pages/codex.css">
+
+  <!-- Firebase CDN (global firebase object) -->
+  <script defer src="/__/firebase/11.3.0/firebase-app-compat.js"></script>
+  <script defer src="/__/firebase/11.3.0/firebase-database-compat.js"></script>
+  <script defer src="/__/firebase/11.3.0/firebase-app-check-compat.js"></script>
+  <script defer src="/__/firebase/init.js"></script>   <!-- remove ?useEmulator=true in prod -->
+
+  <!-- Your own script (non-module) -->
+  <script type="module" src="/js/pages/codex.js"></script>
+</head>
+
+<body>
+  <header id="header"></header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-button active" onclick="openTab(event, 'feats')">Feats</button>
+      <button class="tab-button" onclick="openTab(event, 'skills')">Skills</button>
+      <button class="tab-button" onclick="openTab(event, 'species')">Species</button>
+      <button class="tab-button" onclick="openTab(event, 'parts')">Power &<br>Technique Parts</button>
+      <button class="tab-button" onclick="openTab(event, 'properties')">Armament<br>Properties</button>
+      <button class="tab-button" onclick="openTab(event, 'equipment')">Equipment</button>
+    </div>
+    <div id="feats" class="tab-content active-tab">
+      <div class="search-bar">
+        <input type="text" id="search" placeholder="Search names, tags, descriptions...">
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="reqLevel">Required Level</label>
+          <select id="reqLevel">
+            <option value="">No limit</option>
+          </select>
+        </div>
+        <div class="filter-group multi">
+          <label>Ability Requirement</label>
+          <div class="input-group">
+            <select id="abilReqSelect">
+              <option value="">Choose ability</option>
+            </select>
+            <input type="number" id="abilReqValue" placeholder="Max value" min="0">
+            <button id="addAbilReq">Add</button>
+          </div>
+          <div id="abilReqChips" class="chips"></div>
+        </div>
+        <div class="filter-group multi">
+          <label for="categorySelect">Category</label>
+          <select id="categorySelect">
+            <option value="">Choose category</option>
+          </select>
+          <div id="categoryChips" class="chips"></div>
+        </div>
+        <div class="filter-group multi">
+          <label for="abilitySelect">Ability</label>
+          <select id="abilitySelect">
+            <option value="">Choose ability</option>
+          </select>
+          <div id="abilityChips" class="chips"></div>
+        </div>
+        <div class="filter-group multi" id="tagsFilterGroup">
+          <label for="tagSelect">Tags</label>
+          <div class="tag-controls">
+            <select id="tagSelect">
+              <option value="">Choose tag</option>
+            </select>
+            <div class="switch">
+              <input type="checkbox" id="tagModeSwitch">
+              <label for="tagModeSwitch">Any/All</label>
+            </div>
+          </div>
+          <div id="tagChips" class="chips"></div>
+        </div>
+        <div class="filter-group">
+          <label>Feat Type</label>
+          <div class="feat-type-options">
+            <input type="checkbox" id="showArchetype" checked>
+            <label for="showArchetype">Archetype</label>
+            <input type="checkbox" id="showCharacter" checked>
+            <label for="showCharacter">Character</label>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label for="stateFeatSelect">State Feats</label>
+          <select id="stateFeatSelect">
+            <option value="show">Show State Feats</option>
+            <option value="only">Show Only State Feats</option>
+            <option value="hide">Don't Show State Feats</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="feat-headers">
+        <div class="col" data-col="name">
+          NAME
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="lvl_req">
+          REQ. LEVEL
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">0-10</span>
+            <span class="sort desc" data-dir="desc">10-0</span>
+          </div>
+        </div>
+        <div class="col" data-col="category">
+          CATEGORY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="ability">
+          ABILITY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="recovery_period">
+          RECOVERY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">FULL PART</span>
+            <span class="sort desc" data-dir="desc">PART FULL</span>
+          </div>
+        </div>
+        <div class="col" data-col="uses_per_recovery">
+          USES
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">0-10</span>
+            <span class="sort desc" data-dir="desc">10-0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="featList" class="feat-list">
+        <div class="no-results">Loading feats...</div>
+      </div>
+    </div>
+    <div id="skills" class="tab-content">
+      <div class="search-bar">
+        <input type="text" id="skillSearch" placeholder="Search names, descriptions...">
+      </div>
+
+      <div class="filters">
+        <div class="filter-group multi">
+          <label>Ability</label>
+          <select id="skillAbilitySelect">
+            <option value="">Choose ability</option>
+          </select>
+          <div id="skillAbilityChips" class="chips"></div>
+        </div>
+        <div class="filter-group">
+          <label for="baseSkillSelect">Base Skill</label>
+          <select id="baseSkillSelect">
+            <option value="">Any</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Skill Type</label>
+          <div class="skill-type-options">
+            <input type="checkbox" id="showSubSkills" checked>
+            <label for="showSubSkills">Include Sub-Skills</label>
+            <input type="checkbox" id="subSkillsOnly">
+            <label for="subSkillsOnly">Sub-Skills Only</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-headers">
+        <div class="col" data-col="name">
+          NAME
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="ability">
+          ABILITIES
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="base_skill">
+          BASE SKILL
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="skillList" class="skill-list">
+        <div class="no-results">Loading skills...</div>
+      </div>
+    </div>
+    <div id="species" class="tab-content">
+      <div class="search-bar">
+        <input type="text" id="speciesSearch" placeholder="Search names, descriptions...">
+      </div>
+
+      <div class="filters">
+        <div class="filter-group multi">
+          <label>Type</label>
+          <select id="speciesTypeSelect">
+            <option value="">Choose type</option>
+          </select>
+          <div id="speciesTypeChips" class="chips"></div>
+        </div>
+        <div class="filter-group multi">
+          <label>Size</label>
+          <select id="speciesSizeSelect">
+            <option value="">Choose size</option>
+          </select>
+          <div id="speciesSizeChips" class="chips"></div>
+        </div>
+      </div>
+
+      <div class="species-headers">
+        <div class="col" data-col="name">
+          NAME
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="type">
+          TYPE
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="sizes">
+          SIZES
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="description">
+          DESCRIPTION
+        </div>
+      </div>
+
+      <div id="speciesList" class="species-list">
+        <div class="no-results">Loading species...</div>
+      </div>
+    </div>
+    <div id="parts" class="tab-content">
+      <div class="search-bar">
+        <input type="text" id="partSearch" placeholder="Search names, descriptions...">
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="partCategorySelect">Category</label>
+          <select id="partCategorySelect">
+            <option value="">Choose category</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="partTypeSelect">Type</label>
+          <select id="partTypeSelect">
+            <option value="">Choose type</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="part-headers">
+        <div class="col" data-col="name">
+          NAME
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="category">
+          CATEGORY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="type">
+          TYPE
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="base_en">
+          ENERGY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">0-10</span>
+            <span class="sort desc" data-dir="desc">10-0</span>
+          </div>
+        </div>
+        <div class="col" data-col="base_tp">
+          TRAINING POINTS
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">0-10</span>
+            <span class="sort desc" data-dir="desc">10-0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="partList" class="part-list">
+        <div class="no-results">Loading parts...</div>
+      </div>
+    </div>
+    <div id="properties" class="tab-content">
+      <div class="search-bar">
+        <input type="text" id="propertySearch" placeholder="Search names, descriptions...">
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="propertyTypeSelect">Type</label>
+          <select id="propertyTypeSelect">
+            <option value="">Choose type</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="property-headers">
+        <div class="col" data-col="name">
+          NAME
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="type">
+          TYPE
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="base_tp">
+          TRAINING POINTS
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">0-10</span>
+            <span class="sort desc" data-dir="desc">10-0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="propertyList" class="property-list">
+        <div class="no-results">Loading properties...</div>
+      </div>
+    </div>
+    <div id="equipment" class="tab-content">
+      <div class="search-bar">
+        <input type="text" id="equipmentSearch" placeholder="Search names, descriptions...">
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="equipmentCategorySelect">Category</label>
+          <select id="equipmentCategorySelect">
+            <option value="">Choose category</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="equipmentRaritySelect">Rarity</label>
+          <select id="equipmentRaritySelect">
+            <option value="">Choose rarity</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="equipment-headers">
+        <div class="col" data-col="name">
+          NAME
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="description">
+          DESCRIPTION
+        </div>
+        <div class="col" data-col="category">
+          CATEGORY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+        <div class="col" data-col="currency">
+          CURRENCY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">0-10</span>
+            <span class="sort desc" data-dir="desc">10-0</span>
+          </div>
+        </div>
+        <div class="col" data-col="rarity">
+          RARITY
+          <div class="sort-group">
+            <span class="sort asc" data-dir="asc">A-Z</span>
+            <span class="sort desc" data-dir="desc">Z-A</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="equipmentList" class="equipment-list">
+        <div class="no-results">Loading equipment...</div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="footer"></footer>
+
+  <!-- Load environment config first -->
+  <script type="module" src="/js/core/environment.js"></script>
+  
+  <!-- Header/Footer loader -->
+  <script>
+    async function loadHeaderFooter() {
+      const [h, f] = await Promise.all([
+        fetch('/partials/header.html').then(r => r.text()),
+        fetch('/partials/footer.html').then(r => r.text())
+      ]);
+      document.getElementById('header').innerHTML = h;
+      document.getElementById('footer').innerHTML = f;
+    }
+    loadHeaderFooter();
+    
+    // Initialize App Check to suppress warning (uses global RealmsEnv from environment.js)
+    if (typeof firebase !== 'undefined' && firebase.appCheck) {
+      const appCheck = firebase.appCheck();
+      const siteKey = window.RealmsEnv?.RECAPTCHA_SITE_KEY || '6Ld4CaAqAAAAAMXFsM-yr1eNlQGV2itSASCC7SmA';
+      appCheck.activate(siteKey, true);
+    }
+  </script>
+</body>
+</html>

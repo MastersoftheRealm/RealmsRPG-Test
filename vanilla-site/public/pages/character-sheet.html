@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Sheet - Realms</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/character-sheet/main.css">
+    <link rel="stylesheet" href="/css/character-sheet/header.css">
+    <link rel="stylesheet" href="/css/character-sheet/abilities.css">
+    <link rel="stylesheet" href="/css/character-sheet/skills.css">
+    <link rel="stylesheet" href="/css/character-sheet/archetype.css">
+    <link rel="stylesheet" href="/css/character-sheet/library.css">
+    <link rel="stylesheet" href="/css/character-sheet/modal.css">
+    <link rel="stylesheet" href="/css/character-sheet/roll-log.css">
+    
+    <!-- Environment config must load first to set window.RealmsEnv -->
+    <script type="module" src="/js/core/environment.js"></script>
+    
+    <script defer src="/__/firebase/11.3.0/firebase-app-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-app-check-compat.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+</head>
+<body>
+    <header id="header"></header>
+    
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading character...</p>
+    </div>
+    
+    <div class="character-sheet" id="character-sheet" style="display:none;">
+        <div class="sheet-actions">
+            <button class="action-button" id="toggle-edit-mode">
+                <span>🖉</span> Edit
+            </button>
+            <button class="action-button" id="long-rest">
+                <span>😴</span> Recover
+            </button>
+        </div>
+        
+        <div id="header-section"></div>
+        <div id="abilities-section"></div>
+        <div class="main-content">
+            <div id="skills-column"></div>
+            <div id="archetype-column"></div>
+            <div id="library-section"></div>
+        </div>
+    </div>
+
+    <footer id="footer"></footer>
+
+    <script type="module">
+        import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+        async function loadHeaderFooter() {
+            const header = document.getElementById('header');
+            const footer = document.getElementById('footer');
+            if (header) header.innerHTML = await fetch('/partials/header.html').then(r => r.text());
+            if (footer) footer.innerHTML = await fetch('/partials/footer.html').then(r => r.text());
+        }
+        loadHeaderFooter();
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const { auth, db } = await initializeFirebase();
+            handleAuthStateChange(auth, db);
+        });
+    </script>
+    
+    <script type="module" src="/js/character-sheet/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+/*
+ * Shared listing, filter, and sort styles for Codex & Library
+ * Keep these controls consistent across list-like pages.
+ */
+
+/* Filters container */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-group {
+    flex: 1 1 180px;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.tag-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.switch {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+    white-space: nowrap;
+}
+
+.switch input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    accent-color: var(--color-primary);
+}
+
+.filter-group.multi .input-group {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.filter-group.multi .input-group input {
+    width: 50px;
+    min-width: 40px;
+}
+
+.filter-group.multi .input-group button {
+    padding: var(--spacing-1) var(--spacing-2);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+}
+
+.filters label {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+    margin-bottom: var(--spacing-1);
+}
+
+.filters select,
+.filters input {
+    padding: var(--spacing-1) var(--spacing-2);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-body);
+    min-width: 80px;
+}
+
+/* ==========================================================================
+   Filter Chips
+   ========================================================================== */
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+    margin-top: var(--spacing-xs);
+}
+
+.chip {
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs);
+}
+
+.chip .remove {
+    cursor: pointer;
+    font-weight: var(--font-weight-bold);
+    transition: color var(--transition-fast);
+}
+
+.chip .remove:hover {
+    color: var(--color-danger);
+}
+
+/* Shared sort label style for headers */
+.listing-headers .sort,
+.feat-headers .sort,
+.skill-headers .sort,
+.library-headers .sort {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.listing-headers .sort:hover,
+.feat-headers .sort:hover,
+.skill-headers .sort:hover,
+.library-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+/* No results and light helper text */
+.no-results {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-gray-700);
+    font-style: italic;
+}
+
+/* Labels used in feat/skill option areas */
+.feat-type-options label,
+.skill-type-options label {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+}
+
+/* Expand icon shared color */
+.expand-icon {
+    color: var(--color-gray-700);
+    position: absolute;
+    right: var(--spacing-sm);
+    font-size: var(--font-size-lg);
+    transition: transform var(--transition-fast);
+}
+
+.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   Shared Card & Header Patterns
+   ========================================================================== */
+
+/* Generic listing headers for all tab types */
+.listing-headers,
+.feat-headers,
+.skill-headers,
+.species-headers,
+.part-headers,
+.property-headers,
+.equipment-headers,
+.creature-headers {
+    display: grid;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--color-gray-50, #fafafa);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--spacing-2xs);
+}
+
+/* Generic listing cards */
+.listing-list,
+.feat-list,
+.skill-list,
+.species-list,
+.part-list,
+.property-list,
+.equipment-list,
+.creature-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.listing-card,
+.feat-card,
+.skill-card,
+.species-card,
+.part-card,
+.property-card,
+.equipment-card,
+.creature-card {
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+}
+
+.listing-card:hover,
+.feat-card:hover,
+.skill-card:hover,
+.species-card:hover,
+.part-card:hover,
+.property-card:hover,
+.equipment-card:hover,
+.creature-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+/* Generic card headers */
+.listing-header,
+.feat-header,
+.skill-header,
+.species-header,
+.part-header,
+.property-header,
+.equipment-header,
+.creature-header {
+    display: grid;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    align-items: center;
+    position: relative;
+}
+
+.listing-header .col,
+.feat-header .col,
+.skill-header .col,
+.species-header .col,
+.part-header .col,
+.property-header .col,
+.equipment-header .col,
+.creature-header .col {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Generic card bodies */
+.listing-body,
+.feat-body,
+.skill-body,
+.species-body,
+.part-body,
+.property-body,
+.equipment-body,
+.creature-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-base), padding var(--transition-base);
+    padding: 0 var(--spacing-md);
+}
+
+.expanded .listing-body,
+.expanded .feat-body,
+.expanded .skill-body,
+.expanded .species-body,
+.expanded .part-body,
+.expanded .property-body,
+.expanded .equipment-body,
+.expanded .creature-body {
+    max-height: 2000px;
+    padding: var(--spacing-md);
+}
+
+/* Shared description blocks */
+.listing-description,
+.feat-description,
+.skill-description,
+.species-description,
+.part-description,
+.property-description,
+.equipment-description,
+.creature-description {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    font-style: italic;
+    color: var(--color-text);
+}
+
+/* ==========================================================================
+   Requirements & Details Sections
+   ========================================================================== */
+
+.requirements .req-field {
+    display: flex;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-base);
+}
+
+.requirements .req-field label {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-700);
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.requirements .req-field span {
+    flex: 1;
+}
+
+/* Type chips for various content */
+.type-chip,
+.feat-type-chip {
+    background: var(--color-success);
+    color: var(--color-white);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    display: inline-block;
+    margin-bottom: var(--spacing-md);
+}
+
+.type-chip.state-feat,
+.feat-type-chip.state-feat {
+    background: var(--color-danger);
+    color: var(--color-white);
+}

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/tools/technique-creator.css">
+    <script type="module" src="/js/tools/technique-creator/main.js" defer></script>
+</head>
+<body>
+    <header id="header"></header>
+    <main>
+        <div id="generalTechniqueOptionsContainer">
+            <h3 class="centered-title">Technique Mechanics</h3>
+            <div class="option-container" style="display: flex; flex-wrap: wrap;">
+                <div class="option-box action-type-box">
+                    <h4>Action Type:</h4>
+                    <select id="actionType" onchange="updateActionType()">
+                        <option value="basic">Basic Action</option>
+                        <option value="free">Free Action</option>
+                        <option value="quick">Quick Action</option>
+                        <option value="long3">Long Action (3 AP)</option>
+                        <option value="long4">Long Action (4 AP)</option>
+                    </select>
+                    <label><input type="checkbox" id="reactionCheckbox" onclick="updateActionType()"> Reaction</label>
+                    <div id="actionTypeDescription"></div>
+                </div>
+                <div class="option-box damage-box">
+                    <h4 style="display:block; width:100%;">Added Damage</h4>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="number" id="dieAmount1" min="1" max="99" value="" placeholder="Amount">
+                        <span>d</span>
+                        <select id="dieSize1">
+                            <option value="" selected disabled>Size</option>
+                            <option value="4">4</option>
+                            <option value="6">6</option>
+                            <option value="8">8</option>
+                            <option value="10">10</option>
+                            <option value="12">12</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- New Weapon Box -->
+                <div class="option-box weapon-box" style="min-width: 220px; margin-left: 16px;">
+                    <h4>Weapon:</h4>
+                    <select id="techniqueWeaponSelect" onchange="onTechniqueWeaponChange()">
+                        <option value="unarmed" selected>Unarmed Prowess</option>
+                        <!-- Weapon options will be populated dynamically -->
+                    </select>
+                    <div id="selectedWeaponInfo" style="margin-top: 8px; font-size: 0.95em;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="button-row">
+            <button id="addTechniquePartButton">Add Part</button>
+        </div>
+        <div id="techniquePartsContainer"></div>
+        <div id="techniqueSummary">
+            <h3>Technique Summary</h3>
+            <div class="technique-summary-top">
+                <input type="text" id="techniqueName" placeholder="Technique Name" style="flex: 1;">
+                <div class="load-save-button-container" style="display: flex; flex-direction: column;">
+                    <button id="loadTechniqueButton" class="add-to-library-button">Load Technique</button>
+                    <button id="saveTechniqueButton" class="add-to-library-button">Save Technique</button>
+                </div>
+                <p>Energy: <span id="summaryEnergy">0</span></p>
+                <p>Training Points: <span id="summaryTP">0</span></p>
+                <p>Action Type: <span id="summaryActionType">Basic Action</span></p>
+                <p id="summaryDamage" style="display: none;"></p>
+            </div>
+            <div class="technique-summary-parts">
+                <h4>Technique Parts:</h4>
+                <div id="summaryParts"></div>
+            </div>
+            <div class="technique-summary-proficiencies">
+                <h4>Proficiencies:</h4>
+                <div id="summaryProficiencies"></div>
+            </div>
+            <div class="technique-summary-description">
+                <h4>Description:</h4>
+                <textarea id="techniqueDescription" placeholder="Technique Description"></textarea>
+            </div>
+        </div>
+        <div id="loadTechniqueModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h3>Load Technique</h3>
+                <ul id="savedTechniquesList"></ul>
+            </div>
+        </div>
+        <div id="totalCosts">
+            <h3>Total Technique Costs</h3>
+            <p>Total Energy: <span id="totalEnergy">0</span></p>
+            <p>Total TP: <span id="totalTP">0</span></p>
+            <div class="toggle-arrow"><</div>
+        </div>
+        <!-- Weapon Library Modal -->
+        <div id="weaponLibraryModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeWeaponLibraryModal()">&times;</span>
+                <h3>Select Weapon from Library</h3>
+                <ul id="weaponLibraryList"></ul>
+            </div>
+        </div>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module">
+      import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+      async function loadHeaderFooter() {
+        const header = document.getElementById('header');
+        const footer = document.getElementById('footer');
+        if (header) {
+          header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        }
+        if (footer) {
+          footer.innerHTML = await fetch('/partials/footer.html').then (response => response.text());
+        }
+      }
+      loadHeaderFooter();
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        const { auth, db } = await initializeFirebase();
+        handleAuthStateChange(auth, db);
+      });
+    </script>
+</body>
+</html>
