@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // No custom headers needed - Firebase Auth popup handles COOP/COEP automatically
 };
 
 export default nextConfig;

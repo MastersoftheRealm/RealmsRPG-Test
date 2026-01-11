@@ -11,10 +11,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, Auth } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, Auth, browserPopupRedirectResolver } from 'firebase/auth';
 import { doc, setDoc, Firestore } from 'firebase/firestore';
 
-import { waitForFirebase, auth as firebaseAuth, db as firebaseDb, browserPopupRedirectResolver as popupResolver } from '@/lib/firebase/client';
+import { waitForFirebase, auth as firebaseAuth, db as firebaseDb } from '@/lib/firebase/client';
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Button } from '@/components/ui';
@@ -78,13 +78,13 @@ export default function LoginPage() {
     setError(null);
 
     try {
+      // Use browserPopupRedirectResolver explicitly for bundled environments (Next.js)
+      // This is required when Firebase Auth is bundled by a module bundler
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
+      const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
       
-      const result = await signInWithPopup(auth, provider, popupResolver);
+      // Create/update user document like vanilla site does
       const user = result.user;
-      
-      // Match vanilla site behavior: create username from email
       const email = user.email || '';
       const username = email.split('@')[0].substring(0, 5);
       await setDoc(doc(db, 'users', user.uid), { username }, { merge: true });
@@ -92,14 +92,10 @@ export default function LoginPage() {
       router.push('/characters');
     } catch (err: any) {
       console.error('Google sign-in error:', err);
-      if (err.code === 'auth/popup-blocked') {
-        setError('Popup was blocked. Please allow popups for this site and try again.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        return;
-      } else {
-        setError(getAuthErrorMessage(err));
-      }
-    } finally {
+      console.error('Error code:', err.code);
+      console.error('Error message:', err.message);
+      console.error('Error customData:', err.customData);
+      setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }
   };

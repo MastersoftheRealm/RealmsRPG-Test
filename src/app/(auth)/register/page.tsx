@@ -11,10 +11,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, Auth } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, Auth, browserPopupRedirectResolver } from 'firebase/auth';
 import { doc, setDoc, Firestore } from 'firebase/firestore';
 
-import { waitForFirebase, auth as firebaseAuth, db as firebaseDb, browserPopupRedirectResolver as popupResolver } from '@/lib/firebase/client';
+import { waitForFirebase, auth as firebaseAuth, db as firebaseDb } from '@/lib/firebase/client';
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Button } from '@/components/ui';
@@ -101,37 +101,29 @@ export default function RegisterPage() {
     setError(null);
 
     try {
+      // Use browserPopupRedirectResolver explicitly for bundled environments (Next.js)
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
+      const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
       
-      const result = await signInWithPopup(auth, provider, popupResolver);
-      
-      // Create user document if it does not exist (includes username for vanilla site compatibility)
-      await setDoc(doc(db, 'users', result.user.uid), {
-        username: result.user.displayName || result.user.email?.split('@')[0],
-        displayName: result.user.displayName,
-        email: result.user.email,
+      // Create user document
+      const user = result.user;
+      await setDoc(doc(db, 'users', user.uid), {
+        username: user.displayName || user.email?.split('@')[0],
+        displayName: user.displayName,
+        email: user.email,
         createdAt: new Date(),
       }, { merge: true });
-
-      // Create username mapping if displayName exists
-      if (result.user.displayName) {
-        await setDoc(doc(db, 'usernames', result.user.displayName), {
-          uid: result.user.uid,
+      
+      if (user.displayName) {
+        await setDoc(doc(db, 'usernames', user.displayName), {
+          uid: user.uid,
         }, { merge: true });
       }
-
+      
       router.push('/characters');
     } catch (err: any) {
       console.error('Google sign-in error:', err);
-      if (err.code === 'auth/popup-blocked') {
-        setError('Popup was blocked. Please allow popups for this site and try again.');
-      } else if (err.code === 'auth/cancelled-popup-request') {
-        return;
-      } else {
-        setError(getAuthErrorMessage(err));
-      }
-    } finally {
+      setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }
   };

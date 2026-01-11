@@ -1,9 +1,9 @@
 1:"$Sreact.fragment"
 2:I[47257,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"ClientPageRoot"]
-3:I[80787,["/_next/static/chunks/922b51cdd80f48ff.js","/_next/static/chunks/7aab97098b2adcd9.js","/_next/static/chunks/531bca7f0211b3e6.js","/_next/static/chunks/da436a1af84f3ba3.js","/_next/static/chunks/7d2717b0bd767d4d.js","/_next/static/chunks/01a0933eeb8c67f0.js","/_next/static/chunks/6062cfd208d6bd0d.js","/_next/static/chunks/8c4d51a2bd6b1bf7.js"],"default"]
+3:I[80787,["/_next/static/chunks/922b51cdd80f48ff.js","/_next/static/chunks/2e369236c8c657e0.js","/_next/static/chunks/531bca7f0211b3e6.js","/_next/static/chunks/da436a1af84f3ba3.js","/_next/static/chunks/7d2717b0bd767d4d.js","/_next/static/chunks/01a0933eeb8c67f0.js","/_next/static/chunks/6062cfd208d6bd0d.js","/_next/static/chunks/8c4d51a2bd6b1bf7.js"],"default"]
 6:I[97367,["/_next/static/chunks/ff1a16fafef87110.js","/_next/static/chunks/7340adf74ff47ec0.js"],"OutletBoundary"]
 7:"$Sreact.suspense"
-0:{"buildId":"TC_f_XEoKNvjcQPBmLz-O","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/_next/static/chunks/6062cfd208d6bd0d.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/8c4d51a2bd6b1bf7.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"wD1zj-fVZRbPxiSTMyqly","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/_next/static/chunks/6062cfd208d6bd0d.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/8c4d51a2bd6b1bf7.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
 4:{}
 5:{}
 8:null

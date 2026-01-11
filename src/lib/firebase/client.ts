@@ -14,6 +14,11 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getDatabase, Database } from 'firebase/database';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions } from 'firebase/functions';
+import { initializeAppCheck, ReCaptchaV3Provider, AppCheck } from 'firebase/app-check';
+
+// reCAPTCHA v3 Site Key for App Check (public key, safe to commit)
+// This is the same key used by the vanilla site
+const RECAPTCHA_SITE_KEY = '6LeYWjwsAAAAADrthFs113G-wKBopIXd07FIFfMm';
 
 // Fallback config for local development (when not using Firebase Hosting)
 const localConfig: FirebaseOptions = {
@@ -33,6 +38,7 @@ let db: Firestore;
 let rtdb: Database;
 let storage: FirebaseStorage;
 let functions: Functions;
+let appCheck: AppCheck;
 let initPromise: Promise<void> | null = null;
 
 /**
@@ -61,10 +67,12 @@ async function initializeFirebaseClient() {
     // Fetch config and initialize
     const config = await fetchFirebaseConfig();
     
-    // Ensure authDomain is set for popup auth
-    if (!config.authDomain) {
-      config.authDomain = 'realmsrpg-test.firebaseapp.com';
-    }
+    // ALWAYS override authDomain - this is critical for Google sign-in to work
+    // The vanilla site does this exact same thing in firebase-init.js
+    // The /__/firebase/init.json might return a different authDomain that doesn't work
+    config.authDomain = 'realmsrpg-test.firebaseapp.com';
+    
+    console.log('Firebase config:', JSON.stringify(config, null, 2));
     
     app = initializeApp(config);
   }
@@ -75,7 +83,18 @@ async function initializeFirebaseClient() {
   storage = getStorage(app);
   functions = getFunctions(app);
   
-  return { app, auth, db, rtdb, storage, functions };
+  // Initialize App Check with reCAPTCHA v3 (same as vanilla site)
+  try {
+    appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true
+    });
+  } catch (appCheckError) {
+    // App Check may already be initialized
+    console.debug('App Check initialization skipped:', appCheckError);
+  }
+  
+  return { app, auth, db, rtdb, storage, functions, appCheck };
 }
 
 /**
@@ -96,5 +115,5 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export { app, auth, db, rtdb, storage, functions, browserPopupRedirectResolver };
+export { app, auth, db, rtdb, storage, functions, appCheck, browserPopupRedirectResolver };
 export { initializeFirebaseClient };
