@@ -54,7 +54,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: 'powers', label: 'Powers', icon: <Wand2 className="w-4 h-4" />, createHref: '/power-creator', createLabel: 'Create Power' },
   { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" />, createHref: '/technique-creator', createLabel: 'Create Technique' },
-  { id: 'items', label: 'Items', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Item' },
+  { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armament' },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
 ];
 

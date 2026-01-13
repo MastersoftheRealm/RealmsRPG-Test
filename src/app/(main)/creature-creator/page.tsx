@@ -1314,50 +1314,78 @@ function CreatureCreatorContent() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-900">Skills</h3>
-              <span className={cn('text-sm font-medium', stats.skillRemaining < 0 ? 'text-red-600' : 'text-gray-500')}>
-                Remaining: {stats.skillRemaining}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={cn(
+                  'px-3 py-1 rounded-full text-sm font-medium',
+                  stats.skillRemaining < 0 
+                    ? 'bg-red-100 text-red-700' 
+                    : stats.skillRemaining === 0
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-gray-100 text-gray-600'
+                )}>
+                  {stats.skillRemaining} remaining
+                </span>
+              </div>
             </div>
+            
             {creature.skills.length === 0 ? (
-              <p className="text-sm text-gray-400 italic">No skills added</p>
+              <p className="text-sm text-gray-400 italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
             ) : (
-              <div className="space-y-2 mb-4">
+              <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 mb-4">
                 {creature.skills.map(skill => (
-                  <div key={skill.name} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                    <button
-                      onClick={() => removeSkill(skill.name)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
-                    <span className="font-medium flex-1">{skill.name}</span>
-                    <label className="flex items-center gap-1 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={skill.proficient}
-                        onChange={(e) => updateSkill(skill.name, { proficient: e.target.checked })}
+                  <div key={skill.name} className="flex items-center justify-between py-2.5 px-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => removeSkill(skill.name)}
+                        className="w-5 h-5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center text-sm font-medium transition-colors"
+                        title="Remove skill"
+                      >
+                        ×
+                      </button>
+                      <button
+                        onClick={() => updateSkill(skill.name, { proficient: !skill.proficient })}
+                        className={cn(
+                          'w-4 h-4 rounded-full border-2 transition-colors cursor-pointer',
+                          skill.proficient 
+                            ? 'bg-primary-600 border-primary-600' 
+                            : 'bg-white border-gray-300 hover:border-primary-400'
+                        )}
+                        title={skill.proficient ? 'Proficient (+1)' : 'Not proficient'}
                       />
-                      Prof
-                    </label>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => updateSkill(skill.name, { value: Math.max(0, skill.value - 1) })}
-                        className="w-6 h-6 bg-gray-200 rounded text-sm"
-                      >
-                        −
-                      </button>
-                      <span className="w-6 text-center">{skill.value}</span>
-                      <button
-                        onClick={() => updateSkill(skill.name, { value: skill.value + 1 })}
-                        className="w-6 h-6 bg-primary-600 text-white rounded text-sm"
-                      >
-                        +
-                      </button>
+                      <span className="font-medium text-gray-700">{skill.name}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => updateSkill(skill.name, { value: Math.max(0, skill.value - 1) })}
+                          disabled={skill.value <= 0}
+                          className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          −
+                        </button>
+                        <span className="w-8 text-center font-mono font-medium">{skill.value}</span>
+                        <button
+                          onClick={() => updateSkill(skill.name, { value: skill.value + 1 })}
+                          className="w-7 h-7 rounded bg-primary-600 text-white hover:bg-primary-700 flex items-center justify-center text-sm font-medium transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <span className={cn(
+                        'w-12 text-right font-bold',
+                        (skill.value + (skill.proficient ? 1 : 0)) > 0 
+                          ? 'text-green-600' 
+                          : 'text-gray-400'
+                      )}>
+                        +{skill.value + (skill.proficient ? 1 : 0)}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+            
             <AddItemDropdown
               options={SKILLS}
               selectedItems={creature.skills.map(s => s.name)}

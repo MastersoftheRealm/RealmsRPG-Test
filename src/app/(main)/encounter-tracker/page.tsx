@@ -34,12 +34,12 @@ interface Combatant {
 
 interface CombatantCondition {
   name: string;
-  level: number; // For decaying conditions
+  level: number; // For leveled conditions (conditions with stackable levels)
 }
 
 interface ConditionDef {
   name: string;
-  decaying: boolean;
+  leveled: boolean; // true = has levels that can be increased/decreased
   description: string;
 }
 
@@ -54,27 +54,27 @@ interface EncounterState {
 
 // Game-specific conditions from vanilla
 const CONDITION_OPTIONS: ConditionDef[] = [
-  { name: "Bleeding", decaying: true, description: "Bleeding creatures lose 1 Hit Point for each level of bleeding at the beginning of their turn. Any healing received reduces the bleeding condition by the amount healed." },
-  { name: "Blinded", decaying: false, description: "All targets are considered completely obscured to a blinded creature that relies on basic vision. Acuity Skill rolls that rely on sight automatically fail." },
-  { name: "Charmed", decaying: false, description: "Charmed creatures can't attack or perform harmful Actions against the creature that charmed them. All Charisma rolls and potencies against this target from the charmer gain +2." },
-  { name: "Dazed", decaying: false, description: "Dazed creatures cannot take Reactions." },
-  { name: "Deafened", decaying: false, description: "You cannot hear anything in the world around you. You have resistance to sonic damage. Acuity Skill rolls that rely on hearing automatically fail." },
-  { name: "Dying", decaying: false, description: "When your Hit Point total is reduced to zero or a negative value, you enter the dying condition. Each turn, at the beginning of your turn, you take 1d4 irreducible damage, doubling each turn." },
-  { name: "Exhausted", decaying: false, description: "Exhaustion reduces all bonuses and Evasion by an amount equal to its level. At level 10, the character dies." },
-  { name: "Exposed", decaying: true, description: "Exposed creatures decrease their Evasion by 1 for each level of Exposed." },
-  { name: "Faint", decaying: false, description: "You have -1 to Evasion, Might, Reflex, and on all D20 rolls requiring balance or poise." },
-  { name: "Frightened", decaying: false, description: "Frightened creatures have -2 on all scores and D20 rolls against the source of their fear." },
-  { name: "Grappled", decaying: false, description: "Grappled targets have -2 to attack rolls, are +2 to hit, and cannot take movement Actions." },
-  { name: "Hidden", decaying: false, description: "While hidden, you have a +2 bonus on attack rolls made against creatures unaware of your location." },
-  { name: "Immobile", decaying: false, description: "Immobile creatures cannot take Movement Actions, and their Speed is considered 0." },
-  { name: "Invisible", decaying: false, description: "You are considered completely obscured to all creatures relying on basic vision." },
-  { name: "Prone", decaying: false, description: "While prone, your movement speed is reduced by ½. You are +2 to hit by others and have -2 to hit others." },
-  { name: "Resilient", decaying: true, description: "Resilient creatures take 1 less damage each time they are damaged per Resilient level." },
-  { name: "Slowed", decaying: true, description: "Slowed creatures lose 1 or more movement speed depending on the level of Slowed." },
-  { name: "Stunned", decaying: true, description: "Stunned creatures lose 1 or more Action Points based on the level of Stun." },
-  { name: "Susceptible", decaying: true, description: "Susceptible creatures take 1 extra damage each time they are damaged per Susceptible level." },
-  { name: "Terminal", decaying: false, description: "Your current health is at or below ¼ of your maximum health, placing you in the Terminal Range." },
-  { name: "Weakened", decaying: true, description: "Weakened creatures decrease all D20 rolls by 1 or more depending on the level of Weakened." },
+  { name: "Bleeding", leveled: true, description: "Bleeding creatures lose 1 Hit Point for each level of bleeding at the beginning of their turn. Any healing received reduces the bleeding condition by the amount healed." },
+  { name: "Blinded", leveled: false, description: "All targets are considered completely obscured to a blinded creature that relies on basic vision. Acuity Skill rolls that rely on sight automatically fail." },
+  { name: "Charmed", leveled: false, description: "Charmed creatures can't attack or perform harmful Actions against the creature that charmed them. All Charisma rolls and potencies against this target from the charmer gain +2." },
+  { name: "Dazed", leveled: false, description: "Dazed creatures cannot take Reactions." },
+  { name: "Deafened", leveled: false, description: "You cannot hear anything in the world around you. You have resistance to sonic damage. Acuity Skill rolls that rely on hearing automatically fail." },
+  { name: "Dying", leveled: false, description: "When your Hit Point total is reduced to zero or a negative value, you enter the dying condition. Each turn, at the beginning of your turn, you take 1d4 irreducible damage, doubling each turn." },
+  { name: "Exhausted", leveled: true, description: "Exhaustion reduces all bonuses and Evasion by an amount equal to its level. At level 10, the character dies." },
+  { name: "Exposed", leveled: true, description: "Exposed creatures decrease their Evasion by 1 for each level of Exposed." },
+  { name: "Faint", leveled: false, description: "You have -1 to Evasion, Might, Reflex, and on all D20 rolls requiring balance or poise." },
+  { name: "Frightened", leveled: false, description: "Frightened creatures have -2 on all scores and D20 rolls against the source of their fear." },
+  { name: "Grappled", leveled: false, description: "Grappled targets have -2 to attack rolls, are +2 to hit, and cannot take movement Actions." },
+  { name: "Hidden", leveled: false, description: "While hidden, you have a +2 bonus on attack rolls made against creatures unaware of your location." },
+  { name: "Immobile", leveled: false, description: "Immobile creatures cannot take Movement Actions, and their Speed is considered 0." },
+  { name: "Invisible", leveled: false, description: "You are considered completely obscured to all creatures relying on basic vision." },
+  { name: "Prone", leveled: false, description: "While prone, your movement speed is reduced by ½. You are +2 to hit by others and have -2 to hit others." },
+  { name: "Resilient", leveled: true, description: "Resilient creatures take 1 less damage each time they are damaged per Resilient level." },
+  { name: "Slowed", leveled: true, description: "Slowed creatures lose 1 or more movement speed depending on the level of Slowed." },
+  { name: "Stunned", leveled: true, description: "Stunned creatures lose 1 or more Action Points based on the level of Stun." },
+  { name: "Susceptible", leveled: true, description: "Susceptible creatures take 1 extra damage each time they are damaged per Susceptible level." },
+  { name: "Terminal", leveled: false, description: "Your current health is at or below ¼ of your maximum health, placing you in the Terminal Range." },
+  { name: "Weakened", leveled: true, description: "Weakened creatures decrease all D20 rolls by 1 or more depending on the level of Weakened." },
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 function generateId(): string {
@@ -260,8 +260,8 @@ function EncounterTrackerContent() {
   // Add a condition to a combatant
   const addCondition = (id: string, conditionName: string) => {
     const condDef = CONDITION_OPTIONS.find(c => c.name === conditionName);
-    // Custom conditions are decaying by default
-    const isDecaying = condDef?.decaying ?? true;
+    // Custom conditions are leveled by default
+    const isLeveled = condDef?.leveled ?? true;
     
     setEncounter(prev => ({
       ...prev,
@@ -271,7 +271,7 @@ function EncounterTrackerContent() {
         if (c.conditions.some(cond => cond.name === conditionName)) return c;
         return {
           ...c,
-          conditions: [...c.conditions, { name: conditionName, level: isDecaying ? 1 : 0 }]
+          conditions: [...c.conditions, { name: conditionName, level: isLeveled ? 1 : 0 }]
         };
       }),
     }));
@@ -291,7 +291,7 @@ function EncounterTrackerContent() {
     }));
   };
 
-  // Increase/decrease condition level (for decaying conditions)
+  // Increase/decrease condition level (for leveled conditions)
   const updateConditionLevel = (id: string, conditionName: string, delta: number) => {
     setEncounter(prev => ({
       ...prev,
@@ -717,17 +717,17 @@ function EncounterTrackerContent() {
                   title={condition.description}
                   className={cn(
                     'px-2 py-1 text-xs rounded-full cursor-help',
-                    condition.decaying 
+                    condition.leveled 
                       ? 'bg-purple-100 text-purple-700' 
                       : 'bg-gray-100 text-gray-600'
                   )}
                 >
-                  {condition.name}{condition.decaying && ' ⬇'}
+                  {condition.name}{condition.leveled && ' ⬇'}
                 </span>
               ))}
             </div>
             <div className="mt-3 text-xs text-gray-500 space-y-1">
-              <p><span className="inline-block w-3 h-3 rounded-full bg-purple-100 mr-1"></span>Purple = Decaying (has levels)</p>
+              <p><span className="inline-block w-3 h-3 rounded-full bg-purple-100 mr-1"></span>Purple = Leveled (has levels)</p>
               <p><span className="inline-block w-3 h-3 rounded-full bg-indigo-100 mr-1"></span>Indigo = Custom condition</p>
               <p className="pt-1">Click name to ↑ level, × to ↓ level (removes at 0)</p>
             </div>
@@ -934,9 +934,9 @@ function CombatantCard({
             <div className="flex flex-wrap gap-1 mb-3">
               {combatant.conditions.map(cond => {
                 const condDef = CONDITION_OPTIONS.find(c => c.name === cond.name);
-                // Custom conditions (not in CONDITION_OPTIONS) are decaying by default
+                // Custom conditions (not in CONDITION_OPTIONS) are leveled by default
                 // We can tell by checking if level > 0
-                const isDecaying = condDef?.decaying ?? (cond.level > 0);
+                const isLeveled = condDef?.leveled ?? (cond.level > 0);
                 const isCustom = !condDef;
                 return (
                   <div
@@ -944,12 +944,12 @@ function CombatantCard({
                     className={cn(
                       'px-2 py-0.5 text-xs rounded-full flex items-center gap-1 select-none',
                       isCustom ? 'bg-indigo-100 text-indigo-800' :
-                      isDecaying ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'
+                      isLeveled ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'
                     )}
-                    title={condDef?.description ?? 'Custom condition (decaying). Left-click to increase, right-click to decrease level.'}
+                    title={condDef?.description ?? 'Custom condition (leveled). Left-click to increase, right-click to decrease level.'}
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      if (isDecaying) {
+                      if (isLeveled) {
                         onUpdateConditionLevel(cond.name, -1);
                       } else {
                         onRemoveCondition(cond.name);
@@ -957,15 +957,15 @@ function CombatantCard({
                     }}
                   >
                     <span 
-                      onClick={() => isDecaying && onUpdateConditionLevel(cond.name, 1)}
-                      className={cn(isDecaying && 'cursor-pointer hover:underline')}
+                      onClick={() => isLeveled && onUpdateConditionLevel(cond.name, 1)}
+                      className={cn(isLeveled && 'cursor-pointer hover:underline')}
                     >
-                      {cond.name}{isDecaying && ` (${cond.level})`}
+                      {cond.name}{isLeveled && ` (${cond.level})`}
                     </span>
                     <button
-                      onClick={() => isDecaying ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)}
+                      onClick={() => isLeveled ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)}
                       className="hover:text-red-600 font-bold"
-                      title={isDecaying ? 'Decrease level (removes at 0)' : 'Remove condition'}
+                      title={isLeveled ? 'Decrease level (removes at 0)' : 'Remove condition'}
                     >
                       ×
                     </button>
@@ -1042,7 +1042,7 @@ function CombatantCard({
                       value={cond.name}
                       disabled={combatant.conditions.some(c => c.name === cond.name)}
                     >
-                      {cond.name}{cond.decaying ? ' ⬇' : ''}
+                      {cond.name}{cond.leveled ? ' ⬇' : ''}
                     </option>
                   ))}
                 </select>
@@ -1073,7 +1073,7 @@ function CombatantCard({
                 </button>
               </div>
               <p className="text-xs text-gray-500">
-                Left-click to increase level, right-click or × to decrease/remove. Custom conditions are decaying.
+                Left-click to increase level, right-click or × to decrease/remove. Custom conditions are leveled.
               </p>
             </div>
           )}

@@ -216,6 +216,146 @@ export function computeActionTypeFromSelection(
 }
 
 // =============================================================================
+// Mechanic Part Assembly
+// =============================================================================
+
+export interface PowerMechanicContext {
+  actionTypeSelection?: string;
+  reaction?: boolean;
+  damageType?: string;
+  diceAmt?: number;
+  dieSize?: number;
+  partsDb?: PowerPart[];
+}
+
+/**
+ * Map damage type string to RTDB part ID
+ */
+function getDamagePartId(damageType: string): number | null {
+  switch (damageType) {
+    case 'magic':
+      return PART_IDS.MAGIC_DAMAGE;
+    case 'light':
+    case 'radiant':
+      return PART_IDS.LIGHT_DAMAGE;
+    case 'fire':
+    case 'cold':
+    case 'lightning':
+    case 'ice':
+    case 'acid':
+      return PART_IDS.ELEMENTAL_DAMAGE;
+    case 'poison':
+    case 'necrotic':
+      return PART_IDS.POISON_OR_NECROTIC_DAMAGE;
+    case 'sonic':
+      return PART_IDS.SONIC_DAMAGE;
+    case 'spiritual':
+      return PART_IDS.SPIRITUAL_DAMAGE;
+    case 'psychic':
+      return PART_IDS.PSYCHIC_DAMAGE;
+    case 'physical':
+    case 'bludgeoning':
+    case 'piercing':
+    case 'slashing':
+      return PART_IDS.PHYSICAL_DAMAGE;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Map damage type to part name
+ */
+function getDamagePartName(damageType: string): string {
+  switch (damageType) {
+    case 'magic':
+      return 'Magic Damage';
+    case 'light':
+    case 'radiant':
+      return 'Light Damage';
+    case 'fire':
+    case 'cold':
+    case 'lightning':
+    case 'ice':
+    case 'acid':
+      return 'Elemental Damage';
+    case 'poison':
+    case 'necrotic':
+      return 'Poison or Necrotic Damage';
+    case 'sonic':
+      return 'Sonic Damage';
+    case 'spiritual':
+      return 'Spiritual Damage';
+    case 'psychic':
+      return 'Psychic Damage';
+    case 'physical':
+    case 'bludgeoning':
+    case 'piercing':
+    case 'slashing':
+      return 'Physical Damage';
+    default:
+      return '';
+  }
+}
+
+/**
+ * Build mechanic part payloads based on current UI selections.
+ * Converts action type and damage selections into RTDB parts for cost calculation.
+ */
+export function buildPowerMechanicPartPayload(
+  ctx: PowerMechanicContext
+): Array<{ id: number; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean }> {
+  const {
+    actionTypeSelection = 'basic',
+    reaction = false,
+    damageType = 'none',
+    diceAmt = 0,
+    dieSize = 0,
+    partsDb = [],
+  } = ctx || {};
+
+  const payload: Array<{ id: number; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean }> = [];
+
+  function pushIf(partId: number, partName: string, op1 = 0, applyDuration = false): void {
+    // Try by ID first, then by name for backwards compatibility
+    let def = findByIdOrName(partsDb, { id: partId });
+    if (!def) def = findByIdOrName(partsDb, { name: partName });
+    // Only include mechanic parts
+    if (def && def.mechanic) {
+      payload.push({
+        id: Number(def.id),
+        name: def.name || partName,
+        op_1_lvl: op1,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration,
+      });
+    }
+  }
+
+  // Action / Reaction
+  if (reaction) pushIf(PART_IDS.POWER_REACTION, 'Power Reaction', 0);
+  if (actionTypeSelection === 'quick') pushIf(PART_IDS.POWER_QUICK_OR_FREE_ACTION, 'Power Quick or Free Action', 0);
+  else if (actionTypeSelection === 'free') pushIf(PART_IDS.POWER_QUICK_OR_FREE_ACTION, 'Power Quick or Free Action', 1);
+  else if (actionTypeSelection === 'long3') pushIf(PART_IDS.POWER_LONG_ACTION, 'Power Long Action', 0);
+  else if (actionTypeSelection === 'long4') pushIf(PART_IDS.POWER_LONG_ACTION, 'Power Long Action', 1);
+
+  // Damage
+  if (damageType !== 'none' && diceAmt > 0 && dieSize >= 4) {
+    const partId = getDamagePartId(damageType);
+    const partName = getDamagePartName(damageType);
+    if (partId && partName) {
+      // Power damage formula: opt1Level = floor((totalDamage - 4) / 2)
+      const totalDamage = diceAmt * dieSize;
+      const opt1Level = Math.max(0, Math.floor((totalDamage - 4) / 2));
+      pushIf(partId, partName, opt1Level);
+    }
+  }
+
+  return payload;
+}
+
+// =============================================================================
 // Range / Area / Duration Derivation
 // =============================================================================
 

@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
@@ -84,20 +84,31 @@ function PropertyCard({
   onRemove,
   onUpdate,
   allProperties,
+  armamentType,
 }: {
   selectedProperty: SelectedProperty;
   onRemove: () => void;
   onUpdate: (updates: Partial<SelectedProperty>) => void;
   allProperties: ItemProperty[];
+  armamentType: ArmamentType;
 }) {
   const [expanded, setExpanded] = useState(true);
   const { property } = selectedProperty;
 
-  // Filter to selectable (non-general) properties
-  const selectableProperties = useMemo(
-    () => allProperties.filter((p) => !isGeneralProperty(p)).sort((a, b) => a.name.localeCompare(b.name)),
-    [allProperties]
-  );
+  // Filter to selectable (non-general) properties that match the armament type
+  const selectableProperties = useMemo(() => {
+    const armamentTypeLower = armamentType.toLowerCase();
+    return allProperties
+      .filter((p) => {
+        // Exclude general properties
+        if (isGeneralProperty(p)) return false;
+        // Include properties that match the armament type or have no type specified
+        const propType = (p.type || '').toLowerCase();
+        if (!propType || propType === 'general') return true;
+        return propType === armamentTypeLower;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allProperties, armamentType]);
 
   // Calculate property's individual contribution
   const propTP =
@@ -218,6 +229,19 @@ function ItemCreatorContent() {
     error: userItemsError 
   } = useUserItems();
 
+  // When armament type changes, filter out incompatible properties
+  useEffect(() => {
+    const armamentTypeLower = armamentType.toLowerCase();
+    setSelectedProperties(prev => 
+      prev.filter(sp => {
+        const propType = (sp.property.type || '').toLowerCase();
+        // Keep properties with no type, general type, or matching type
+        if (!propType || propType === 'general') return true;
+        return propType === armamentTypeLower;
+      })
+    );
+  }, [armamentType]);
+
   // Range display string
   const rangeDisplay = useMemo(() => {
     if (rangeLevel === 0) return 'Melee';
@@ -272,7 +296,15 @@ function ItemCreatorContent() {
 
   // Actions
   const addProperty = useCallback(() => {
-    const selectableProps = itemProperties.filter((p) => !isGeneralProperty(p));
+    const armamentTypeLower = armamentType.toLowerCase();
+    const selectableProps = itemProperties.filter((p) => {
+      // Exclude general properties
+      if (isGeneralProperty(p)) return false;
+      // Include properties that match the armament type or have no type specified
+      const propType = (p.type || '').toLowerCase();
+      if (!propType || propType === 'general') return true;
+      return propType === armamentTypeLower;
+    });
     if (selectableProps.length === 0) return;
     
     // Find a property not already selected
@@ -287,7 +319,7 @@ function ItemCreatorContent() {
         op_1_lvl: 0,
       },
     ]);
-  }, [itemProperties, selectedProperties]);
+  }, [itemProperties, selectedProperties, armamentType]);
 
   const removeProperty = useCallback((index: number) => {
     setSelectedProperties((prev) => prev.filter((_, i) => i !== index));
@@ -686,6 +718,7 @@ function ItemCreatorContent() {
                     onRemove={() => removeProperty(idx)}
                     onUpdate={(updates) => updateProperty(idx, updates)}
                     allProperties={itemProperties}
+                    armamentType={armamentType}
                   />
                 ))}
               </div>

@@ -18,13 +18,14 @@ import { collection, addDoc, getDocs, query, where, doc, setDoc } from 'firebase
 import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
-import { useTechniqueParts, useUserTechniques, type TechniquePart } from '@/hooks';
+import { useTechniqueParts, useUserTechniques, useUserItems, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
+  buildMechanicPartPayload,
   formatTechniqueDamage,
   type TechniquePartPayload,
 } from '@/lib/calculators';
@@ -48,8 +49,10 @@ interface DamageConfig {
 }
 
 interface WeaponConfig {
-  id: number;
+  id: number | string;
   name: string;
+  tp?: number; // Training points for weapon scaling
+  isUserWeapon?: boolean; // Whether this is a user-created weapon
 }
 
 // =============================================================================
@@ -70,15 +73,11 @@ const DAMAGE_TYPES = [
 
 const DIE_SIZES = [4, 6, 8, 10, 12];
 
-const WEAPON_OPTIONS = [
-  { id: 0, name: 'Unarmed' },
-  { id: 1, name: 'Any Melee' },
-  { id: 2, name: 'Any Ranged' },
-  { id: 3, name: 'Sword' },
-  { id: 4, name: 'Axe' },
-  { id: 5, name: 'Spear' },
-  { id: 6, name: 'Bow' },
-  { id: 7, name: 'Crossbow' },
+// Default weapon options (always available)
+const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
+  { id: 0, name: 'Unarmed', tp: 0 },
+  { id: 'any-melee', name: 'Any Melee Weapon', tp: 1 },
+  { id: 'any-ranged', name: 'Any Ranged Weapon', tp: 1 },
 ];
 
 // =============================================================================
@@ -314,7 +313,7 @@ function TechniqueCreatorContent() {
   const [actionType, setActionType] = useState('basic');
   const [isReaction, setIsReaction] = useState(false);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
-  const [weapon, setWeapon] = useState<WeaponConfig>(WEAPON_OPTIONS[0]);
+  const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showLoadModal, setShowLoadModal] = useState(false);
@@ -325,10 +324,40 @@ function TechniqueCreatorContent() {
   // Fetch user's saved techniques for loading
   const { data: userTechniques, isLoading: loadingUserTechniques, error: userTechniquesError } = useUserTechniques();
 
+  // Fetch user's saved items (weapons)
+  const { data: userItems = [] } = useUserItems();
+
+  // Combine default weapons with user's saved weapons
+  const allWeaponOptions = useMemo(() => {
+    const userWeapons: WeaponConfig[] = userItems
+      .filter((item) => item.type === 'weapon')
+      .map((item) => ({
+        id: item.docId,
+        name: item.name,
+        tp: 1, // Default TP for user weapons; could calculate from properties
+        isUserWeapon: true,
+      }));
+    
+    return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
+  }, [userItems]);
+
+  // Build mechanic parts from action type, damage, and weapon selections
+  const mechanicParts = useMemo(
+    () => buildMechanicPartPayload({
+      actionTypeSelection: actionType,
+      reaction: isReaction,
+      diceAmt: damage.amount,
+      dieSize: damage.size,
+      weaponTP: weapon.tp ?? (weapon.id !== 0 ? 1 : 0), // Use weapon TP if available
+      partsDb: techniqueParts,
+    }),
+    [actionType, isReaction, damage, weapon, techniqueParts]
+  );
+
   // Convert selected parts to payload format for calculator
   const partsPayload: TechniquePartPayload[] = useMemo(
-    () =>
-      selectedParts.map((sp) => ({
+    () => [
+      ...selectedParts.map((sp) => ({
         id: Number(sp.part.id),
         name: sp.part.name,
         part: sp.part,
@@ -336,7 +365,10 @@ function TechniqueCreatorContent() {
         op_2_lvl: sp.op_2_lvl,
         op_3_lvl: sp.op_3_lvl,
       })),
-    [selectedParts]
+      // Auto-generated mechanic parts from action type / damage / weapon selections
+      ...mechanicParts,
+    ],
+    [selectedParts, mechanicParts]
   );
 
   // Calculate costs - using technique parts as the database
@@ -415,7 +447,7 @@ function TechniqueCreatorContent() {
         description: description.trim(),
         parts: partsToSave,
         damage: damageToSave,
-        weapon: weapon.id > 0 ? weapon : null,
+        weapon: Number(weapon.id) > 0 ? weapon : null,
         updatedAt: new Date(),
       };
 
@@ -441,7 +473,7 @@ function TechniqueCreatorContent() {
         setDescription('');
         setSelectedParts([]);
         setDamage({ amount: 0, size: 6, type: 'none' });
-        setWeapon(WEAPON_OPTIONS[0]);
+        setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
         setSaveMessage(null);
       }, 2000);
     } catch (err) {
@@ -462,7 +494,7 @@ function TechniqueCreatorContent() {
     setActionType('basic');
     setIsReaction(false);
     setDamage({ amount: 0, size: 6, type: 'none' });
-    setWeapon(WEAPON_OPTIONS[0]);
+    setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     setSaveMessage(null);
   };
 
@@ -502,8 +534,8 @@ function TechniqueCreatorContent() {
     
     // Load weapon
     if (technique.weapon) {
-      const weaponMatch = WEAPON_OPTIONS.find(
-        (w) => w.id === technique.weapon.id || w.name === technique.weapon.name
+      const weaponMatch = allWeaponOptions.find(
+        (w) => String(w.id) === String(technique.weapon.id) || w.name === technique.weapon.name
       );
       if (weaponMatch) {
         setWeapon(weaponMatch);
@@ -524,7 +556,7 @@ function TechniqueCreatorContent() {
     
     setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
     setTimeout(() => setSaveMessage(null), 2000);
-  }, [techniqueParts]);
+  }, [techniqueParts, allWeaponOptions]);
 
   if (isLoading) {
     return (
@@ -622,21 +654,37 @@ function TechniqueCreatorContent() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Weapon Type
+                  Weapon
                 </label>
                 <select
-                  value={weapon.id}
+                  value={String(weapon.id)}
                   onChange={(e) => {
-                    const selected = WEAPON_OPTIONS.find(w => w.id === parseInt(e.target.value));
+                    const selectedId = e.target.value;
+                    const selected = allWeaponOptions.find(w => String(w.id) === selectedId);
                     if (selected) setWeapon(selected);
                   }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 >
-                  {WEAPON_OPTIONS.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      {opt.name}
-                    </option>
-                  ))}
+                  {/* Default options */}
+                  <optgroup label="General">
+                    {DEFAULT_WEAPON_OPTIONS.map((opt) => (
+                      <option key={String(opt.id)} value={String(opt.id)}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {/* User's saved weapons */}
+                  {allWeaponOptions.filter(w => w.isUserWeapon).length > 0 && (
+                    <optgroup label="My Weapons">
+                      {allWeaponOptions
+                        .filter(w => w.isUserWeapon)
+                        .map((opt) => (
+                          <option key={String(opt.id)} value={String(opt.id)}>
+                            {opt.name}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
                 </select>
               </div>
               <div>

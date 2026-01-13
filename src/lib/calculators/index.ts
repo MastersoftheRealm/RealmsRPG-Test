@@ -8,11 +8,34 @@
 export { PART_IDS, PROPERTY_IDS, GENERAL_PROPERTY_IDS, GENERAL_PROPERTY_NAMES, findByIdOrName, findByIdOrNameValue, normalizeRef, normalizeRefsArray } from '@/lib/id-constants';
 export type { HasIdAndName } from '@/lib/id-constants';
 
+// Unified Mechanic Builder (shared by Power, Technique, and future Empowered Technique creators)
+export {
+  buildMechanicParts,
+  buildPowerMechanicParts,
+  buildTechniqueMechanicParts,
+  calculatePowerDamageLevel,
+  calculateTechniqueDamageLevel,
+  calculateSplitDiceLevel,
+  type CreatorType,
+  type MechanicPartResult,
+  type MechanicBuilderContext,
+  type ActionConfig,
+  type PowerDamageConfig,
+  type TechniqueDamageConfig,
+  type RangeConfig,
+  type AreaConfig,
+  type DurationConfig,
+  type WeaponConfig as MechanicWeaponConfig,
+  type LegacyPowerMechanicContext,
+  type LegacyTechniqueMechanicContext,
+} from './mechanic-builder';
+
 // Power Calculator
 export {
   calculatePowerCosts,
   computeActionType as computePowerActionType,
   computeActionTypeFromSelection as computePowerActionTypeFromSelection,
+  buildPowerMechanicPartPayload,
   deriveRange,
   deriveArea,
   deriveDuration,
@@ -24,6 +47,7 @@ export {
   type PowerDisplayData,
   type PartChipData,
   type PowerDocument,
+  type PowerMechanicContext,
 } from './power-calc';
 
 // Technique Calculator

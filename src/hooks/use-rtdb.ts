@@ -8,9 +8,18 @@
 'use client';
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { ref, get } from 'firebase/database';
-import { rtdb } from '@/lib/firebase/client';
+import { ref, get, Database } from 'firebase/database';
+import { rtdb, waitForFirebase } from '@/lib/firebase/client';
 import { useMemo } from 'react';
+
+// Helper to get RTDB with initialization wait
+async function getRTDB(): Promise<Database> {
+  await waitForFirebase();
+  if (!rtdb) {
+    throw new Error('RTDB not initialized after waitForFirebase');
+  }
+  return rtdb;
+}
 
 // =============================================================================
 // Types for RTDB Data
@@ -85,7 +94,7 @@ export interface ItemProperty {
   id: string;
   name: string;
   description: string;
-  type?: 'weapon' | 'armor' | 'general';
+  type?: 'weapon' | 'armor' | 'shield' | 'general';
   // Legacy fields
   tp_cost?: number;
   gold_cost?: number;
@@ -222,12 +231,10 @@ async function fetchRTDBData<T>(
   path: string,
   transform: (data: Record<string, unknown>) => T[]
 ): Promise<T[]> {
-  if (!rtdb) {
-    console.warn('[rtdb-hooks] RTDB not initialized');
-    return [];
-  }
+  // Wait for Firebase to be initialized
+  const database = await getRTDB();
   
-  const dbRef = ref(rtdb, path);
+  const dbRef = ref(database, path);
   const snapshot = await fetchWithRetry(() => get(dbRef));
   
   if (!snapshot.exists()) {

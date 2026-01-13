@@ -25,10 +25,13 @@ import { NumberStepper } from '@/components/creator/number-stepper';
 import {
   calculatePowerCosts,
   computePowerActionTypeFromSelection,
+  buildPowerMechanicParts,
   deriveRange,
   deriveArea,
   deriveDuration,
   type PowerPartPayload,
+  type AreaConfig,
+  type DurationConfig,
 } from '@/lib/calculators';
 
 // =============================================================================
@@ -48,6 +51,12 @@ interface DamageConfig {
   amount: number;
   size: number;
   type: string;
+  applyDuration?: boolean;
+}
+
+interface RangeConfig {
+  steps: number; // 0 = melee (1 space), 1+ = ranged
+  applyDuration?: boolean;
 }
 
 // =============================================================================
@@ -68,6 +77,24 @@ const DAMAGE_TYPES = [
 ];
 
 const DIE_SIZES = [4, 6, 8, 10, 12];
+
+const AREA_TYPES = [
+  { value: 'none', label: 'None (Single Target)' },
+  { value: 'sphere', label: 'Sphere' },
+  { value: 'cylinder', label: 'Cylinder' },
+  { value: 'cone', label: 'Cone' },
+  { value: 'line', label: 'Line' },
+  { value: 'trail', label: 'Trail (Space)' },
+];
+
+const DURATION_TYPES = [
+  { value: 'instant', label: 'Instant' },
+  { value: 'rounds', label: 'Rounds' },
+  { value: 'minutes', label: 'Minutes' },
+  { value: 'hours', label: 'Hours' },
+  { value: 'days', label: 'Days' },
+  { value: 'permanent', label: 'Permanent' },
+];
 
 // Advanced mechanics categories
 const ADVANCED_CATEGORIES = [
@@ -671,6 +698,19 @@ function PowerCreatorContent() {
   const [actionType, setActionType] = useState('basic');
   const [isReaction, setIsReaction] = useState(false);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
+  // Range state (0 = melee/1 space, 1+ = ranged increments)
+  const [range, setRange] = useState<RangeConfig>({ steps: 0, applyDuration: false });
+  // Area of effect state
+  const [area, setArea] = useState<AreaConfig>({ type: 'none', level: 1, applyDuration: false });
+  // Duration state
+  const [duration, setDuration] = useState<DurationConfig>({
+    type: 'instant',
+    value: 1,
+    focus: false,
+    noHarm: false,
+    endsOnActivation: false,
+    sustain: 0,
+  });
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showLoadModal, setShowLoadModal] = useState(false);
@@ -680,6 +720,38 @@ function PowerCreatorContent() {
   
   // Fetch user's saved powers for loading
   const { data: userPowers, isLoading: loadingUserPowers, error: userPowersError } = useUserPowers();
+
+  // Filter out mechanic parts for the "Add Part" dropdown
+  // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
+  // or the Advanced Mechanics section
+  const nonMechanicParts = useMemo(
+    () => powerParts.filter((p) => !p.mechanic),
+    [powerParts]
+  );
+
+  // Build mechanic parts using unified builder
+  const mechanicParts = useMemo(
+    () => buildPowerMechanicParts({
+      actionTypeSelection: actionType,
+      reaction: isReaction,
+      damageType: damage.type,
+      diceAmt: damage.amount,
+      dieSize: damage.size,
+      range: range.steps,
+      rangeApplyDuration: range.applyDuration,
+      areaType: area.type,
+      areaLevel: area.level,
+      areaApplyDuration: area.applyDuration,
+      durationType: duration.type,
+      durationValue: duration.value,
+      focus: duration.focus,
+      noHarm: duration.noHarm,
+      endsOnActivation: duration.endsOnActivation,
+      sustain: duration.sustain,
+      partsDb: powerParts,
+    }),
+    [actionType, isReaction, damage, range, area, duration, powerParts]
+  );
 
   // Convert selected parts to payload format for calculator
   const partsPayload: PowerPartPayload[] = useMemo(
@@ -700,8 +772,10 @@ function PowerCreatorContent() {
         op_3_lvl: ap.op_3_lvl,
         applyDuration: ap.applyDuration,
       })),
+      // Auto-generated mechanic parts from action type / damage selections
+      ...mechanicParts,
     ],
-    [selectedParts, selectedAdvancedParts]
+    [selectedParts, selectedAdvancedParts, mechanicParts]
   );
 
   // Calculate costs
@@ -722,11 +796,11 @@ function PowerCreatorContent() {
 
   // Actions
   const addPart = useCallback(() => {
-    if (powerParts.length === 0) return;
+    if (nonMechanicParts.length === 0) return;
     setSelectedParts((prev) => [
       ...prev,
       {
-        part: powerParts[0],
+        part: nonMechanicParts[0],
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,
@@ -734,7 +808,7 @@ function PowerCreatorContent() {
         selectedCategory: 'any',
       },
     ]);
-  }, [powerParts]);
+  }, [nonMechanicParts]);
 
   const removePart = useCallback((index: number) => {
     setSelectedParts((prev) => prev.filter((_, i) => i !== index));
@@ -814,6 +888,11 @@ function PowerCreatorContent() {
         description: description.trim(),
         parts: partsToSave,
         damage: damageToSave,
+        actionType,
+        isReaction,
+        range,
+        area,
+        duration,
         updatedAt: new Date(),
       };
 
@@ -839,7 +918,19 @@ function PowerCreatorContent() {
         setDescription('');
         setSelectedParts([]);
         setSelectedAdvancedParts([]);
+        setActionType('basic');
+        setIsReaction(false);
         setDamage({ amount: 0, size: 6, type: 'none' });
+        setRange({ steps: 0, applyDuration: false });
+        setArea({ type: 'none', level: 1, applyDuration: false });
+        setDuration({
+          type: 'instant',
+          value: 1,
+          focus: false,
+          noHarm: false,
+          endsOnActivation: false,
+          sustain: 0,
+        });
         setSaveMessage(null);
       }, 2000);
     } catch (err) {
@@ -861,6 +952,16 @@ function PowerCreatorContent() {
     setActionType('basic');
     setIsReaction(false);
     setDamage({ amount: 0, size: 6, type: 'none' });
+    setRange({ steps: 0, applyDuration: false });
+    setArea({ type: 'none', level: 1, applyDuration: false });
+    setDuration({
+      type: 'instant',
+      value: 1,
+      focus: false,
+      noHarm: false,
+      endsOnActivation: false,
+      sustain: 0,
+    });
     setSaveMessage(null);
   };
 
@@ -892,6 +993,12 @@ function PowerCreatorContent() {
       );
       
       if (matchedPart) {
+        // Skip parts that are handled by basic mechanics UI
+        // (these are now auto-generated from actionType, damage, range, area, duration)
+        if (EXCLUDED_PARTS.has(matchedPart.name)) {
+          continue;
+        }
+        
         const partData = {
           part: matchedPart,
           op_1_lvl: savedPart.op_1_lvl || 0,
@@ -903,7 +1010,8 @@ function PowerCreatorContent() {
         // Check if it's an advanced mechanic part
         if (savedPart.isAdvanced || (matchedPart.mechanic && ADVANCED_CATEGORIES.includes(matchedPart.category as typeof ADVANCED_CATEGORIES[number]))) {
           loadedAdvancedParts.push(partData);
-        } else {
+        } else if (!matchedPart.mechanic) {
+          // Only add non-mechanic parts to regular parts section
           loadedParts.push({
             ...partData,
             selectedCategory: matchedPart.category || 'any',
@@ -936,6 +1044,52 @@ function PowerCreatorContent() {
       });
     } else {
       setDamage({ amount: 0, size: 6, type: 'none' });
+    }
+    
+    // Load action type and reaction
+    setActionType(power.actionType || 'basic');
+    setIsReaction(power.isReaction || false);
+    
+    // Load range
+    if (power.range) {
+      setRange({
+        steps: power.range.steps || 0,
+        applyDuration: power.range.applyDuration || false,
+      });
+    } else {
+      setRange({ steps: 0, applyDuration: false });
+    }
+    
+    // Load area of effect
+    if (power.area) {
+      setArea({
+        type: power.area.type || 'none',
+        level: power.area.level || 1,
+        applyDuration: power.area.applyDuration || false,
+      });
+    } else {
+      setArea({ type: 'none', level: 1, applyDuration: false });
+    }
+    
+    // Load duration
+    if (power.duration) {
+      setDuration({
+        type: power.duration.type || 'instant',
+        value: power.duration.value || 1,
+        focus: power.duration.focus || false,
+        noHarm: power.duration.noHarm || false,
+        endsOnActivation: power.duration.endsOnActivation || false,
+        sustain: power.duration.sustain || 0,
+      });
+    } else {
+      setDuration({
+        type: 'instant',
+        value: 1,
+        focus: false,
+        noHarm: false,
+        endsOnActivation: false,
+        sustain: 0,
+      });
     }
     
     setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
@@ -1059,6 +1213,139 @@ function PowerCreatorContent() {
             </div>
           </div>
 
+          {/* Range */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Range</h3>
+            <div className="flex flex-wrap items-center gap-4">
+              <NumberStepper
+                value={range.steps}
+                onChange={(v) => setRange((r) => ({ ...r, steps: v }))}
+                label="Range Steps:"
+                min={0}
+                max={10}
+              />
+              <span className="text-sm text-gray-600">
+                {range.steps === 0 ? '(Melee / 1 Space)' : `(${range.steps * 6} spaces)`}
+              </span>
+              <label className="flex items-center gap-2 ml-4">
+                <input
+                  type="checkbox"
+                  checked={range.applyDuration || false}
+                  onChange={(e) => setRange((r) => ({ ...r, applyDuration: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm">Apply Duration</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Area of Effect */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Area of Effect</h3>
+            <div className="flex flex-wrap items-center gap-4">
+              <select
+                value={area.type}
+                onChange={(e) => setArea((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+              >
+                {AREA_TYPES.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {area.type !== 'none' && (
+                <>
+                  <NumberStepper
+                    value={area.level}
+                    onChange={(v) => setArea((a) => ({ ...a, level: v }))}
+                    label="Level:"
+                    min={1}
+                    max={10}
+                  />
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={area.applyDuration || false}
+                      onChange={(e) => setArea((a) => ({ ...a, applyDuration: e.target.checked }))}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">Apply Duration</span>
+                  </label>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Duration</h3>
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              <select
+                value={duration.type}
+                onChange={(e) => setDuration((d) => ({ ...d, type: e.target.value as DurationConfig['type'] }))}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+              >
+                {DURATION_TYPES.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {duration.type !== 'instant' && duration.type !== 'permanent' && (
+                <NumberStepper
+                  value={duration.value}
+                  onChange={(v) => setDuration((d) => ({ ...d, value: v }))}
+                  label="Value:"
+                  min={1}
+                  max={100}
+                />
+              )}
+            </div>
+            {/* Duration Modifiers */}
+            <div className="flex flex-wrap gap-4 pt-3 border-t border-gray-200">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={duration.focus || false}
+                  onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm">Focus (Maintain)</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={duration.noHarm || false}
+                  onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm">No Harm (End Early)</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={duration.endsOnActivation || false}
+                  onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
+                  className="rounded border-gray-300"
+                />
+                <span className="text-sm">Ends on Activation</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">Sustain:</span>
+                <select
+                  value={duration.sustain || 0}
+                  onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
+                  className="px-2 py-1 border border-gray-300 rounded text-sm"
+                >
+                  <option value={0}>None</option>
+                  <option value={1}>1 AP</option>
+                  <option value={2}>2 AP</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           {/* Power Parts */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
@@ -1089,7 +1376,7 @@ function PowerCreatorContent() {
                     index={idx}
                     onRemove={() => removePart(idx)}
                     onUpdate={(updates) => updatePart(idx, updates)}
-                    allParts={powerParts}
+                    allParts={nonMechanicParts}
                   />
                 ))}
               </div>

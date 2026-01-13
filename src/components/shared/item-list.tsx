@@ -279,19 +279,32 @@ export function ItemList({
                     <option key={opt.id} value={opt.field}>{opt.label}</option>
                   ))}
                 </select>
-                <button
-                  onClick={() => setSortState(prev => ({ 
-                    ...prev, 
-                    direction: prev.direction === 'asc' ? 'desc' : 'asc' 
-                  }))}
-                  className="p-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
-                  title={sortState.direction === 'asc' ? 'Sort Ascending' : 'Sort Descending'}
-                >
-                  {sortState.direction === 'asc' 
-                    ? <SortAsc className="w-4 h-4" />
-                    : <SortDesc className="w-4 h-4" />
-                  }
-                </button>
+                {(() => {
+                  const currentSort = sortOptions.find(opt => opt.field === sortState.field);
+                  const isString = currentSort?.type === 'string';
+                  const isAsc = sortState.direction === 'asc';
+                  
+                  // Direction labels based on type
+                  const ascLabel = isString ? 'A→Z' : '0→9';
+                  const descLabel = isString ? 'Z→A' : '9→0';
+                  
+                  return (
+                    <button
+                      onClick={() => setSortState(prev => ({ 
+                        ...prev, 
+                        direction: prev.direction === 'asc' ? 'desc' : 'asc' 
+                      }))}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+                      title={`Click to sort ${isAsc ? descLabel : ascLabel}`}
+                    >
+                      {isAsc 
+                        ? <SortAsc className="w-4 h-4" />
+                        : <SortDesc className="w-4 h-4" />
+                      }
+                      <span className="font-medium">{isAsc ? ascLabel : descLabel}</span>
+                    </button>
+                  );
+                })()}
               </div>
             )}
             
