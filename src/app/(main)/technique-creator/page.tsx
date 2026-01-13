@@ -6,14 +6,14 @@
  * Features:
  * - Select technique parts from RTDB database
  * - Configure option levels for each part
- * - Calculate stamina and training point costs
+ * - Calculate energy and training point costs
  * - Save to user's library via Cloud Functions
  */
 
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, Crosshair, FolderOpen } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { useTechniqueParts, useUserTechniques, type TechniquePart } from '@/hooks';
@@ -217,7 +217,7 @@ function PartCard({
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
             <span className="text-gray-600">
-              Base Stamina: <strong>{part.base_stam}</strong>
+              Base Energy: <strong>{part.base_stam}</strong>
             </span>
             <span className="text-gray-600">
               Base TP: <strong>{part.base_tp}</strong>
@@ -548,7 +548,7 @@ function TechniqueCreatorContent() {
           </h1>
           <p className="text-gray-600">
             Design custom martial techniques by combining technique parts. Each part contributes to the total
-            stamina cost and training point requirements.
+            energy cost and training point requirements.
           </p>
         </div>
         <button
@@ -752,7 +752,7 @@ function TechniqueCreatorContent() {
               <div className="bg-red-50 rounded-lg p-4 text-center">
                 <Zap className="w-6 h-6 mx-auto text-red-600 mb-1" />
                 <div className="text-3xl font-bold text-red-600">{costs.totalEnergy}</div>
-                <div className="text-xs text-red-600">Stamina Cost</div>
+                <div className="text-xs text-red-600">Energy Cost</div>
               </div>
               <div className="bg-purple-50 rounded-lg p-4 text-center">
                 <Target className="w-6 h-6 mx-auto text-purple-600 mb-1" />

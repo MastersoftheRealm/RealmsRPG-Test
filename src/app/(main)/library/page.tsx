@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -348,7 +348,8 @@ const ITEM_SORTS: SortOption[] = [
 
 function ItemsTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
   const { data: items, isLoading, error } = useUserItems();
-  const { data: properties } = useItemProperties();
+  // Properties loaded for future enrichment (property ID to name lookup)
+  useItemProperties();
   
   const displayItems = useMemo((): DisplayItem[] => {
     if (!items) return [];

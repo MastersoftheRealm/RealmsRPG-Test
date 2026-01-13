@@ -1,5 +1,5 @@
 /**
- * Item Creator Page
+ * Armament Creator Page
  * =================
  * Tool for creating custom items (weapons, armor, shields) using the property system.
  * 
@@ -14,7 +14,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Zap, Target, Info, Coins, FolderOpen } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
@@ -35,7 +35,7 @@ import {
 // Types
 // =============================================================================
 
-type ArmamentType = 'Weapon' | 'Armor' | 'Shield' | 'Accessory';
+type ArmamentType = 'Weapon' | 'Armor' | 'Shield';
 
 interface SelectedProperty {
   property: ItemProperty;
@@ -56,7 +56,6 @@ const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }
   { value: 'Weapon', label: 'Weapon', icon: Sword },
   { value: 'Armor', label: 'Armor', icon: Shield },
   { value: 'Shield', label: 'Shield', icon: Shield },
-  { value: 'Accessory', label: 'Accessory', icon: Target },
 ];
 
 const DAMAGE_TYPES = [
@@ -380,7 +379,6 @@ function ItemCreatorContent() {
       'weapon': 'Weapon',
       'armor': 'Armor',
       'shield': 'Shield',
-      'accessory': 'Accessory',
     };
     setArmamentType(typeMap[item.type?.toLowerCase()] || 'Weapon');
     
@@ -451,10 +449,10 @@ function ItemCreatorContent() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
             <Sword className="w-8 h-8 text-amber-600" />
-            Item Creator
+            Armament Creator
           </h1>
           <p className="text-gray-600">
-            Design custom weapons, armor, and accessories by combining item properties. 
+            Design custom weapons, armor, and shields by combining item properties. 
             Properties determine the item&apos;s rarity and cost.
           </p>
         </div>
@@ -701,7 +699,7 @@ function ItemCreatorContent() {
               <div className="bg-amber-50 rounded-lg p-4 text-center">
                 <Coins className="w-6 h-6 mx-auto text-amber-600 mb-1" />
                 <div className="text-2xl font-bold text-amber-600">{currencyCost.toLocaleString()}</div>
-                <div className="text-xs text-amber-600">Gold Cost</div>
+                <div className="text-xs text-amber-600">Currency Cost</div>
               </div>
               <div className="bg-purple-50 rounded-lg p-4 text-center">
                 <Target className="w-6 h-6 mx-auto text-purple-600 mb-1" />

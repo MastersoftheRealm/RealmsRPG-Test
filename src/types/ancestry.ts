@@ -38,5 +38,10 @@ export interface CharacterAncestry {
   name: string;
   size?: SizeCategory;
   speed?: number;
+  /** Selected ancestry traits (1-2 depending on flaw selection) */
   selectedTraits?: string[];
+  /** Selected flaw ID (grants an extra ancestry trait) */
+  selectedFlaw?: string | null;
+  /** Selected characteristic ID */
+  selectedCharacteristic?: string | null;
 }

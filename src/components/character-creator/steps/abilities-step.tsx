@@ -175,12 +175,7 @@ export function AbilitiesStep() {
                 <button
                   onClick={() => handleDecrease(ability)}
                   disabled={!canDecreaseAbility(value)}
-                  className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold transition-colors',
-                    canDecreaseAbility(value)
-                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                      : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                  )}
+                  className="btn-stepper btn-stepper-danger"
                 >
                   −
                 </button>
@@ -202,12 +197,7 @@ export function AbilitiesStep() {
                 <button
                   onClick={() => handleIncrease(ability)}
                   disabled={!canIncreaseAbility(value, remainingPoints, true)}
-                  className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold transition-colors',
-                    canIncreaseAbility(value, remainingPoints, true)
-                      ? 'bg-primary-600 hover:bg-primary-700 text-white'
-                      : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                  )}
+                  className="btn-stepper btn-stepper-success"
                 >
                   +
                 </button>
@@ -221,7 +211,7 @@ export function AbilitiesStep() {
       <div className="flex justify-between">
         <button
           onClick={prevStep}
-          className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+          className="btn-back"
         >
           ← Back
         </button>
@@ -229,12 +219,7 @@ export function AbilitiesStep() {
         <button
           onClick={nextStep}
           disabled={!canContinue}
-          className={cn(
-            'px-8 py-3 rounded-xl font-bold transition-colors',
-            canContinue
-              ? 'bg-primary-600 text-white hover:bg-primary-700'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          )}
+          className="btn-continue"
         >
           Continue →
         </button>

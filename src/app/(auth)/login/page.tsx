@@ -90,11 +90,12 @@ export default function LoginPage() {
       await setDoc(doc(db, 'users', user.uid), { username }, { merge: true });
       
       router.push('/characters');
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const authError = err as { code?: string; message?: string; customData?: unknown };
       console.error('Google sign-in error:', err);
-      console.error('Error code:', err.code);
-      console.error('Error message:', err.message);
-      console.error('Error customData:', err.customData);
+      console.error('Error code:', authError.code);
+      console.error('Error message:', authError.message);
+      console.error('Error customData:', authError.customData);
       setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }

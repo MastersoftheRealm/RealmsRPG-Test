@@ -121,7 +121,7 @@ export default function RegisterPage() {
       }
       
       router.push('/characters');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Google sign-in error:', err);
       setError(getAuthErrorMessage(err));
       setIsLoading(false);

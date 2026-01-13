@@ -112,7 +112,7 @@ export function ArchetypeStep() {
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Archetype</h1>
       <p className="text-gray-600 mb-6">
-        Your archetype defines your character's approach to combat and supernatural abilities.
+        Your archetype defines your character&apos;s approach to combat and supernatural abilities.
       </p>
       
       {/* Archetype Selection */}
@@ -225,12 +225,7 @@ export function ArchetypeStep() {
       <button
         onClick={handleConfirm}
         disabled={!canConfirm}
-        className={cn(
-          'w-full py-3 rounded-xl font-bold text-lg transition-colors',
-          canConfirm
-            ? 'bg-primary-600 text-white hover:bg-primary-700'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        )}
+        className="btn-continue w-full"
       >
         Confirm Archetype
       </button>

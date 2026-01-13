@@ -89,7 +89,7 @@ export function AddCharacterCard({ onClick }: AddCharacterCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary-400 hover:bg-primary-50 transition-colors min-h-[280px]"
+      className="group flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary-400 hover:bg-primary-50 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 min-h-[280px] cursor-pointer"
     >
       <div className="w-16 h-16 rounded-full bg-gray-200 group-hover:bg-primary-100 flex items-center justify-center transition-colors">
         <PlusIcon className="w-8 h-8 text-gray-400 group-hover:text-primary-600" />

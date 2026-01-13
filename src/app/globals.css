@@ -2,7 +2,19 @@
 
 /* RealmsRPG Design System - Tailwind v4 Theme */
 @theme {
-  /* Primary Blues */
+  /* Primary Color Scale (Blue) */
+  --color-primary-50: #e6f0f9;
+  --color-primary-100: #cce1f3;
+  --color-primary-200: #99c3e7;
+  --color-primary-300: #66a5db;
+  --color-primary-400: #3387cf;
+  --color-primary-500: #0a4a7a;
+  --color-primary-600: #0a4a7a;
+  --color-primary-700: #053357;
+  --color-primary-800: #042845;
+  --color-primary-900: #001f3f;
+  
+  /* Legacy primary aliases */
   --color-primary-darkest: #001f3f;
   --color-primary-dark: #053357;
   --color-primary: #0a4a7a;
@@ -189,6 +201,108 @@
   /* Focus ring utility */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2;
+  }
+}
+
+/* =============================================================================
+   PHASE 1 FIX: Button Visibility & Interactive Elements
+   ============================================================================= */
+
+@layer components {
+  /* Stepper buttons for +/- controls across all creators */
+  .btn-stepper {
+    @apply flex items-center justify-center w-10 h-10 rounded-full 
+           bg-primary-100 text-primary-700 font-bold text-xl
+           border-2 border-primary-200
+           hover:bg-primary-200 hover:border-primary-300 active:bg-primary-300
+           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200 disabled:cursor-not-allowed
+           transition-colors duration-150;
+  }
+
+  .btn-stepper-danger {
+    @apply bg-red-100 text-red-700 border-red-200
+           hover:bg-red-200 hover:border-red-300 active:bg-red-300
+           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200;
+  }
+
+  .btn-stepper-success {
+    @apply bg-green-100 text-green-700 border-green-200
+           hover:bg-green-200 hover:border-green-300 active:bg-green-300
+           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200;
+  }
+
+  /* Large prominent continue/action buttons */
+  .btn-continue {
+    @apply bg-primary-600 text-white font-bold px-8 py-3 rounded-xl
+           shadow-md border-2 border-primary-700
+           hover:bg-primary-700 hover:shadow-lg
+           active:bg-primary-800
+           disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none disabled:cursor-not-allowed
+           transition-all duration-150;
+  }
+
+  /* Secondary back/cancel buttons */
+  .btn-back {
+    @apply px-6 py-3 rounded-xl font-medium 
+           text-gray-600 bg-gray-100 border-2 border-gray-200
+           hover:bg-gray-200 hover:text-gray-800 hover:border-gray-300
+           transition-colors duration-150;
+  }
+
+  /* Interactive card hover effects */
+  .interactive-card {
+    @apply transition-all duration-200 cursor-pointer
+           hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5;
+  }
+
+  /* Selection card styling */
+  .selection-card {
+    @apply rounded-xl border-2 p-4 transition-all duration-200 cursor-pointer
+           bg-white border-gray-200
+           hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .selection-card--selected {
+    @apply border-primary-600 bg-primary-50 shadow-md;
+  }
+
+  /* Tab navigation styles for creator wizard */
+  .creator-tab {
+    @apply px-4 py-2 font-medium transition-colors rounded-lg text-sm;
+  }
+
+  .creator-tab--active {
+    @apply bg-primary-600 text-white shadow-md;
+  }
+
+  .creator-tab--completed {
+    @apply bg-green-100 text-green-700 hover:bg-green-200;
+  }
+
+  .creator-tab--upcoming {
+    @apply bg-white text-gray-600 hover:bg-gray-50;
+  }
+
+  .creator-tab--disabled {
+    @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  }
+
+  /* Trait/feature chips */
+  .trait-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium
+           bg-accent-chip text-primary-dark;
+  }
+
+  .trait-chip--flaw {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .trait-chip--selectable {
+    @apply cursor-pointer hover:bg-primary-200 transition-colors;
+  }
+
+  .trait-chip--selected {
+    @apply bg-primary-600 text-white;
   }
 }
 

@@ -2,6 +2,12 @@
  * Feats Step
  * ===========
  * Select character feats with real data from Firebase RTDB
+ * Phase 1 fix: Separate archetype feats vs character feats with proper limits
+ * 
+ * Feat Limits by Archetype:
+ * - Power: 1 archetype feat + 1 character feat
+ * - Powered-Martial: 2 archetype feats + 1 character feat
+ * - Martial: 3 archetype feats + 1 character feat
  */
 
 'use client';
@@ -10,23 +16,49 @@ import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBFeats, type RTDBFeat } from '@/hooks';
-import { calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import { getArchetypeFeatLimit } from '@/lib/game/formulas';
+import type { ArchetypeCategory } from '@/types';
+
+// Character feats are always 1 at level 1
+const CHARACTER_FEAT_LIMIT = 1;
+
+interface SelectedFeat {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'archetype' | 'character';
+}
 
 export function FeatsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: feats, isLoading } = useRTDBFeats();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [showArchetype, setShowArchetype] = useState(true);
-  const [showCharacter, setShowCharacter] = useState(true);
+  const [featTypeFilter, setFeatTypeFilter] = useState<'all' | 'archetype' | 'character'>('all');
   const [expandedFeat, setExpandedFeat] = useState<string | null>(null);
 
-  // Get max feats based on level
-  const maxFeats = calculateMaxCharacterFeats(draft.level || 1);
+  // Get archetype feat limit based on archetype type
+  const archetypeType = (draft.archetype?.type || 'power') as ArchetypeCategory;
+  const maxArchetypeFeats = getArchetypeFeatLimit(archetypeType);
+  const maxCharacterFeats = CHARACTER_FEAT_LIMIT;
   
-  // Get selected feat IDs from draft
-  const selectedFeatIds = useMemo(() => {
-    return draft.feats?.map(f => f.id) || [];
+  // Separate selected feats by type
+  const { selectedArchetypeFeats, selectedCharacterFeats } = useMemo(() => {
+    const archFeats: SelectedFeat[] = [];
+    const charFeats: SelectedFeat[] = [];
+    
+    draft.feats?.forEach(f => {
+      if (f.type === 'character') {
+        charFeats.push(f as SelectedFeat);
+      } else {
+        archFeats.push(f as SelectedFeat);
+      }
+    });
+    
+    return { 
+      selectedArchetypeFeats: archFeats, 
+      selectedCharacterFeats: charFeats 
+    };
   }, [draft.feats]);
 
   // Get unique categories
@@ -51,9 +83,9 @@ export function FeatsStep() {
         if (!matches) return false;
       }
       
-      // Type filter
-      if (!showArchetype && !feat.char_feat) return false;
-      if (!showCharacter && feat.char_feat) return false;
+      // Feat type filter
+      if (featTypeFilter === 'archetype' && feat.char_feat) return false;
+      if (featTypeFilter === 'character' && !feat.char_feat) return false;
       
       // Category filter
       if (categoryFilter && feat.category !== categoryFilter) return false;
@@ -63,10 +95,21 @@ export function FeatsStep() {
       
       return true;
     });
-  }, [feats, searchTerm, showArchetype, showCharacter, categoryFilter, draft.level]);
+  }, [feats, searchTerm, featTypeFilter, categoryFilter, draft.level]);
 
-  const toggleFeat = (feat: RTDBFeat) => {
-    const isSelected = selectedFeatIds.includes(feat.id);
+  // Separate filtered feats into archetype and character
+  const { archetypeFeats, characterFeats } = useMemo(() => {
+    const arch = filteredFeats.filter(f => !f.char_feat);
+    const char = filteredFeats.filter(f => f.char_feat);
+    return { archetypeFeats: arch, characterFeats: char };
+  }, [filteredFeats]);
+
+  const toggleFeat = (feat: RTDBFeat, isCharacterFeat: boolean) => {
+    const featType = isCharacterFeat ? 'character' : 'archetype';
+    const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
+    const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
+    
+    const isSelected = selectedList.some(f => f.id === feat.id);
     
     if (isSelected) {
       // Remove feat
@@ -74,9 +117,10 @@ export function FeatsStep() {
         feats: draft.feats?.filter(f => f.id !== feat.id) || []
       });
     } else {
-      // Add feat if not at max
-      if (selectedFeatIds.length >= maxFeats) return;
+      // Check if at max for this type
+      if (selectedList.length >= maxForType) return;
       
+      // Add feat
       updateDraft({
         feats: [
           ...(draft.feats || []),
@@ -84,7 +128,7 @@ export function FeatsStep() {
             id: feat.id,
             name: feat.name,
             description: feat.description,
-            type: feat.char_feat ? 'character' : 'archetype',
+            type: featType,
           }
         ]
       });
@@ -108,6 +152,86 @@ export function FeatsStep() {
     return { met: true };
   };
 
+  const renderFeatCard = (feat: RTDBFeat, isCharacterFeat: boolean) => {
+    const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
+    const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
+    
+    const isSelected = selectedList.some(f => f.id === feat.id);
+    const isExpanded = expandedFeat === feat.id;
+    const requirements = checkRequirements(feat);
+    const canSelect = selectedList.length < maxForType || isSelected;
+    
+    return (
+      <div
+        key={feat.id}
+        className={cn(
+          'bg-white rounded-lg border overflow-hidden transition-all',
+          isSelected ? 'border-primary-400 bg-primary-50' : 'border-gray-200',
+          !requirements.met && 'opacity-60'
+        )}
+      >
+        <div className="p-3 flex items-center gap-3">
+          <button
+            onClick={() => requirements.met && canSelect && toggleFeat(feat, isCharacterFeat)}
+            disabled={!requirements.met || !canSelect}
+            className={cn(
+              'w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+              isSelected
+                ? 'bg-primary-600 border-primary-600 text-white'
+                : requirements.met && canSelect
+                  ? 'border-gray-300 hover:border-primary-400 hover:bg-primary-50'
+                  : 'border-gray-200 bg-gray-100 cursor-not-allowed'
+            )}
+          >
+            {isSelected && '✓'}
+          </button>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-gray-900">{feat.name}</span>
+              {feat.category && (
+                <span className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                  {feat.category}
+                </span>
+              )}
+              {!requirements.met && (
+                <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded">
+                  {requirements.reason}
+                </span>
+              )}
+            </div>
+          </div>
+          
+          <button
+            onClick={() => setExpandedFeat(isExpanded ? null : feat.id)}
+            className="text-gray-400 hover:text-gray-600 p-1"
+          >
+            {isExpanded ? '▲' : '▼'}
+          </button>
+        </div>
+        
+        {isExpanded && (
+          <div className="px-3 pb-3 pt-2 border-t border-gray-100">
+            <p className="text-sm text-gray-700">{feat.description}</p>
+            
+            {feat.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {feat.tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="px-1.5 py-0.5 text-xs bg-primary-50 text-primary-700 rounded"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto flex items-center justify-center py-12">
@@ -122,51 +246,104 @@ export function FeatsStep() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Select Feats</h1>
           <p className="text-gray-600">
-            Choose feats that grant special abilities and bonuses.
+            Choose feats that grant special abilities and bonuses. Your archetype 
+            ({archetypeType}) allows {maxArchetypeFeats} archetype feat{maxArchetypeFeats !== 1 ? 's' : ''} 
+            {' '}and {maxCharacterFeats} character feat.
           </p>
-        </div>
-        
-        <div className={cn(
-          'px-4 py-2 rounded-xl font-bold text-lg',
-          selectedFeatIds.length < maxFeats
-            ? 'bg-blue-100 text-blue-700'
-            : 'bg-green-100 text-green-700'
-        )}>
-          {selectedFeatIds.length} / {maxFeats} Feats
         </div>
       </div>
 
       {/* Selected Feats Summary */}
-      {selectedFeatIds.length > 0 && (
-        <div className="bg-primary-50 rounded-xl p-4 mb-6">
-          <h3 className="font-medium text-primary-800 mb-2">Selected Feats</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Archetype Feats Selected */}
+        <div className={cn(
+          'p-4 rounded-xl border-2',
+          selectedArchetypeFeats.length === maxArchetypeFeats
+            ? 'bg-green-50 border-green-300'
+            : 'bg-amber-50 border-amber-300'
+        )}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-gray-900">Archetype Feats</h3>
+            <span className={cn(
+              'px-3 py-1 rounded-full text-sm font-bold',
+              selectedArchetypeFeats.length === maxArchetypeFeats
+                ? 'bg-green-200 text-green-800'
+                : 'bg-amber-200 text-amber-800'
+            )}>
+              {selectedArchetypeFeats.length} / {maxArchetypeFeats}
+            </span>
+          </div>
           <div className="flex flex-wrap gap-2">
-            {draft.feats?.map(feat => (
-              <span
-                key={feat.id}
-                className="px-3 py-1 bg-white text-primary-700 rounded-full text-sm flex items-center gap-2"
-              >
-                {feat.name}
-                <button
-                  onClick={() => toggleFeat({ id: feat.id, name: feat.name } as RTDBFeat)}
-                  className="hover:text-red-500"
+            {selectedArchetypeFeats.length === 0 ? (
+              <span className="text-sm text-gray-500 italic">None selected</span>
+            ) : (
+              selectedArchetypeFeats.map(feat => (
+                <span
+                  key={feat.id}
+                  className="px-3 py-1 bg-white text-primary-700 rounded-full text-sm flex items-center gap-2 border border-primary-200"
                 >
-                  ×
-                </button>
-              </span>
-            ))}
+                  {feat.name}
+                  <button
+                    onClick={() => updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) })}
+                    className="hover:text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))
+            )}
           </div>
         </div>
-      )}
+
+        {/* Character Feats Selected */}
+        <div className={cn(
+          'p-4 rounded-xl border-2',
+          selectedCharacterFeats.length === maxCharacterFeats
+            ? 'bg-green-50 border-green-300'
+            : 'bg-blue-50 border-blue-300'
+        )}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-gray-900">Character Feats</h3>
+            <span className={cn(
+              'px-3 py-1 rounded-full text-sm font-bold',
+              selectedCharacterFeats.length === maxCharacterFeats
+                ? 'bg-green-200 text-green-800'
+                : 'bg-blue-200 text-blue-800'
+            )}>
+              {selectedCharacterFeats.length} / {maxCharacterFeats}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedCharacterFeats.length === 0 ? (
+              <span className="text-sm text-gray-500 italic">None selected</span>
+            ) : (
+              selectedCharacterFeats.map(feat => (
+                <span
+                  key={feat.id}
+                  className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm flex items-center gap-2 border border-blue-200"
+                >
+                  {feat.name}
+                  <button
+                    onClick={() => updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) })}
+                    className="hover:text-red-500 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center">
+      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center border border-gray-200">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search feats..."
-          className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg"
+          className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
         />
         
         <select
@@ -180,114 +357,84 @@ export function FeatsStep() {
           ))}
         </select>
         
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showArchetype}
-            onChange={(e) => setShowArchetype(e.target.checked)}
-            className="w-4 h-4 rounded text-primary-600"
-          />
-          <span className="text-sm">Archetype</span>
-        </label>
-        
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showCharacter}
-            onChange={(e) => setShowCharacter(e.target.checked)}
-            className="w-4 h-4 rounded text-primary-600"
-          />
-          <span className="text-sm">Character</span>
-        </label>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setFeatTypeFilter('all')}
+            className={cn(
+              'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              featTypeFilter === 'all'
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFeatTypeFilter('archetype')}
+            className={cn(
+              'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              featTypeFilter === 'archetype'
+                ? 'bg-amber-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+          >
+            Archetype
+          </button>
+          <button
+            onClick={() => setFeatTypeFilter('character')}
+            className={cn(
+              'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+              featTypeFilter === 'character'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+          >
+            Character
+          </button>
+        </div>
       </div>
 
-      {/* Feats List */}
-      <div className="space-y-2 mb-8 max-h-[500px] overflow-y-auto">
-        {filteredFeats.map(feat => {
-          const isSelected = selectedFeatIds.includes(feat.id);
-          const isExpanded = expandedFeat === feat.id;
-          const requirements = checkRequirements(feat);
-          const canSelect = selectedFeatIds.length < maxFeats || isSelected;
-          
-          return (
-            <div
-              key={feat.id}
-              className={cn(
-                'bg-white rounded-lg border overflow-hidden transition-all',
-                isSelected ? 'border-primary-400 bg-primary-50' : 'border-gray-200',
-                !requirements.met && 'opacity-60'
-              )}
-            >
-              <div className="p-3 flex items-center gap-3">
-                <button
-                  onClick={() => requirements.met && canSelect && toggleFeat(feat)}
-                  disabled={!requirements.met || !canSelect}
-                  className={cn(
-                    'w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0',
-                    isSelected
-                      ? 'bg-primary-600 border-primary-600 text-white'
-                      : requirements.met && canSelect
-                        ? 'border-gray-300 hover:border-primary-400'
-                        : 'border-gray-200 bg-gray-100 cursor-not-allowed'
-                  )}
-                >
-                  {isSelected && '✓'}
-                </button>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-gray-900">{feat.name}</span>
-                    {feat.char_feat && (
-                      <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
-                        Character
-                      </span>
-                    )}
-                    {feat.category && (
-                      <span className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-                        {feat.category}
-                      </span>
-                    )}
-                    {!requirements.met && (
-                      <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded">
-                        {requirements.reason}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setExpandedFeat(isExpanded ? null : feat.id)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  {isExpanded ? '▲' : '▼'}
-                </button>
-              </div>
-              
-              {isExpanded && (
-                <div className="px-3 pb-3 pt-2 border-t border-gray-100">
-                  <p className="text-sm text-gray-700">{feat.description}</p>
-                  
-                  {feat.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {feat.tags.map(tag => (
-                        <span
-                          key={tag}
-                          className="px-1.5 py-0.5 text-xs bg-primary-50 text-primary-700 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+      {/* Feats Lists - Two Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Archetype Feats Column */}
+        {(featTypeFilter === 'all' || featTypeFilter === 'archetype') && (
+          <div>
+            <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+              Archetype Feats
+              <span className="text-sm font-normal text-gray-500">
+                ({selectedArchetypeFeats.length}/{maxArchetypeFeats})
+              </span>
+            </h3>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+              {archetypeFeats.map(feat => renderFeatCard(feat, false))}
+              {archetypeFeats.length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  No archetype feats match your filters.
                 </div>
               )}
             </div>
-          );
-        })}
-        
-        {filteredFeats.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No feats match your filters.
+          </div>
+        )}
+
+        {/* Character Feats Column */}
+        {(featTypeFilter === 'all' || featTypeFilter === 'character') && (
+          <div>
+            <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-blue-500"></span>
+              Character Feats
+              <span className="text-sm font-normal text-gray-500">
+                ({selectedCharacterFeats.length}/{maxCharacterFeats})
+              </span>
+            </h3>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+              {characterFeats.map(feat => renderFeatCard(feat, true))}
+              {characterFeats.length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  No character feats match your filters.
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -295,13 +442,13 @@ export function FeatsStep() {
       <div className="flex justify-between">
         <button
           onClick={prevStep}
-          className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100"
+          className="btn-back"
         >
           ← Back
         </button>
         <button
           onClick={nextStep}
-          className="px-8 py-3 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          className="btn-continue"
         >
           Continue →
         </button>

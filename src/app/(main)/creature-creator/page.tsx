@@ -13,7 +13,7 @@ import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { useAuthStore } from '@/stores/auth-store';
-import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useRTDBFeats, useItemProperties } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
@@ -496,7 +496,7 @@ function LoadFeatModal({
   onSelect: (feat: CreatureFeat) => void;
   selectedFeats: CreatureFeat[];
 }) {
-  const { data: allFeats = [] } = useRTDBFeats();
+  const { data: allFeats = [] } = useCreatureFeats();
   const [search, setSearch] = useState('');
   
   if (!isOpen) return null;
@@ -537,13 +537,16 @@ function LoadFeatModal({
                       id: feat.id,
                       name: feat.name,
                       description: feat.description,
-                      points: 1, // Default feat point cost
+                      points: feat.points ?? 1, // Use actual feat point cost
                     });
                     onClose();
                   }}
                   className="w-full p-3 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200"
                 >
-                  <div className="font-medium">{feat.name}</div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{feat.name}</span>
+                    <span className="text-sm text-amber-600 font-medium">{feat.points ?? 1} pt{(feat.points ?? 1) !== 1 ? 's' : ''}</span>
+                  </div>
                   {feat.description && (
                     <div className="text-sm text-gray-500 line-clamp-2">{feat.description}</div>
                   )}
@@ -624,7 +627,7 @@ function LoadArmamentModal({
                   >
                     <div className="font-medium">{item.name}</div>
                     <div className="text-sm text-gray-500">
-                      {item.type} | TP: {display.totalTP || 0} | {display.currencyCost || 0}gp | {display.rarity || 'Common'}
+                      {item.type} | TP: {display.totalTP || 0} | {display.currencyCost || 0}c | {display.rarity || 'Common'}
                     </div>
                   </button>
                 );
@@ -945,7 +948,7 @@ function CreatureCreatorContent() {
         </div>
         <div>
           <div className="text-sm text-gray-500">Loot Value</div>
-          <div className="text-xl font-bold text-amber-600">{stats.currency} gp</div>
+          <div className="text-xl font-bold text-amber-600">{stats.currency}c</div>
         </div>
       </div>
 
@@ -1464,7 +1467,14 @@ function CreatureCreatorContent() {
 
           {/* Feats */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Feats</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Feats</h3>
+              {creature.feats.length > 0 && (
+                <span className="text-sm text-amber-600 font-medium">
+                  Total: {creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0)} pts
+                </span>
+              )}
+            </div>
             {creature.feats.length === 0 ? (
               <p className="text-sm text-gray-400 italic mb-4">No feats added</p>
             ) : (
@@ -1481,7 +1491,10 @@ function CreatureCreatorContent() {
                       ×
                     </button>
                     <div className="flex-1">
-                      <div className="font-medium">{feat.name}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{feat.name}</span>
+                        <span className="text-sm text-amber-600">{feat.points ?? 1} pt{(feat.points ?? 1) !== 1 ? 's' : ''}</span>
+                      </div>
                       {feat.description && (
                         <div className="text-sm text-gray-500 line-clamp-2">{feat.description}</div>
                       )}
@@ -1522,7 +1535,7 @@ function CreatureCreatorContent() {
                         <td className="px-3 py-2 font-medium">{armament.name}</td>
                         <td className="px-3 py-2 capitalize">{armament.type}</td>
                         <td className="px-3 py-2">{armament.tp}</td>
-                        <td className="px-3 py-2">{armament.currency}gp</td>
+                        <td className="px-3 py-2">{armament.currency}c</td>
                         <td className="px-3 py-2">{armament.rarity}</td>
                         <td className="px-3 py-2">
                           <button

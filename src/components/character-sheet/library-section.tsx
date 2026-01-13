@@ -372,7 +372,7 @@ export function LibrarySection({
             ) : (
               <span className="font-bold text-amber-600">{currency.toLocaleString()}</span>
             )}
-            <span className="text-sm text-gray-600">gold</span>
+            <span className="text-sm text-gray-600">currency</span>
           </div>
           
           {isEditMode && activeTabData?.onAdd && (

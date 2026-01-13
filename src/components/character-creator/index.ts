@@ -5,4 +5,5 @@
  */
 
 export { CreatorTabBar } from './creator-tab-bar';
+export { SpeciesModal } from './species-modal';
 export * from './steps';

@@ -44,6 +44,10 @@ export {
   useParts,
   useItemProperties,
   useEquipment,
+  useCreatureFeats,
+  useResolvedTraits,
+  findTraitByIdOrName,
+  resolveTraitIds,
   prefetchFunctions,
   type Feat as RTDBFeat,
   type Skill as RTDBSkill,
@@ -54,6 +58,7 @@ export {
   type Part,
   type ItemProperty,
   type EquipmentItem,
+  type CreatureFeat,
 } from './use-rtdb';
 
 // User Library (user-specific content)

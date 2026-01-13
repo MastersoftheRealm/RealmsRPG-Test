@@ -137,7 +137,7 @@ export function EquipmentStep() {
           'px-4 py-2 rounded-xl font-bold text-lg',
           remainingGold > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
         )}>
-          {remainingGold} / {startingGold} Gold
+          {remainingGold} / {startingGold}c
         </div>
       </div>
 
@@ -225,7 +225,7 @@ export function EquipmentStep() {
                   'font-bold',
                   canAfford ? 'text-amber-600' : 'text-red-500'
                 )}>
-                  {item.gold_cost}g
+                  {item.gold_cost}c
                 </span>
               </div>
               
@@ -274,13 +274,13 @@ export function EquipmentStep() {
       <div className="flex justify-between">
         <button
           onClick={prevStep}
-          className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100"
+          className="btn-back"
         >
           ← Back
         </button>
         <button
           onClick={nextStep}
-          className="px-8 py-3 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          className="btn-continue"
         >
           Continue →
         </button>

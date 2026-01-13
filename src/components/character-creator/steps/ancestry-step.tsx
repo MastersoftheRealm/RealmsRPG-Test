@@ -1,20 +1,29 @@
 /**
  * Ancestry Step
  * ==============
- * Displays and confirms the selected species' ancestry traits
- * Shows species traits, ancestry traits, and characteristics
+ * Select ancestry traits, characteristic, and optional flaw from species.
+ * 
+ * Selection Rules:
+ * - 1 ancestry trait by default
+ * - Selecting a flaw grants +1 extra ancestry trait (up to 2 total)
+ * - 1 characteristic (optional)
+ * - Species traits are automatic (not selectable)
  */
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useSpecies, useTraits, type Species, type Trait } from '@/hooks';
-import { User, Ruler, Scale, Zap, Heart, Languages } from 'lucide-react';
+import { useSpecies, useTraits, resolveTraitIds, type Trait } from '@/hooks';
+import { Heart, AlertTriangle, Sparkles, Star, Check } from 'lucide-react';
+
+interface ResolvedTrait extends Trait {
+  found: boolean;
+}
 
 export function AncestryStep() {
-  const { draft, nextStep, prevStep, setStep } = useCharacterCreatorStore();
+  const { draft, nextStep, prevStep, setStep, updateDraft } = useCharacterCreatorStore();
   const { data: allSpecies } = useSpecies();
   const { data: allTraits } = useTraits();
 
@@ -24,42 +33,105 @@ export function AncestryStep() {
     return allSpecies.find(s => s.id === draft.ancestry?.id);
   }, [allSpecies, draft.ancestry?.id]);
 
-  // Get traits for selected species
-  const speciesTraits = useMemo(() => {
-    if (!allTraits || !selectedSpecies) return [];
-    
-    // Method 1: Check traits that list this species
-    const traitsBySpecies = allTraits.filter(t => 
-      t.species?.includes(selectedSpecies.id) || 
-      t.species?.includes(selectedSpecies.name)
-    );
-    
-    // Method 2: Check species.traits array for trait names
-    const traitsByName = selectedSpecies.traits?.map(traitName => 
-      allTraits.find(t => 
-        t.name.toLowerCase() === traitName.toLowerCase() ||
-        t.id === traitName
-      )
-    ).filter(Boolean) as Trait[] || [];
-    
-    // Combine and deduplicate
-    const combined = [...traitsBySpecies];
-    traitsByName.forEach(t => {
-      if (!combined.some(existing => existing.id === t.id)) {
-        combined.push(t);
-      }
-    });
-    
-    return combined;
-  }, [allTraits, selectedSpecies]);
+  // Current selections from draft
+  const selectedTraitIds = draft.ancestry?.selectedTraits || [];
+  const selectedFlaw = draft.ancestry?.selectedFlaw || null;
+  const selectedCharacteristic = draft.ancestry?.selectedCharacteristic || null;
 
-  // No species selected - prompt to go back
+  // Resolve trait categories from species
+  const { speciesTraits, ancestryTraits, flaws, characteristics } = useMemo(() => {
+    if (!selectedSpecies || !allTraits) {
+      return { speciesTraits: [], ancestryTraits: [], flaws: [], characteristics: [] };
+    }
+
+    const resolve = (ids: (string | number)[]): ResolvedTrait[] => {
+      return resolveTraitIds(ids, allTraits).map(t => ({
+        ...t,
+        found: t.id !== t.name,
+      }));
+    };
+
+    return {
+      speciesTraits: resolve(selectedSpecies.species_traits || []),
+      ancestryTraits: resolve(selectedSpecies.ancestry_traits || []),
+      flaws: resolve(selectedSpecies.flaws || []),
+      characteristics: resolve(selectedSpecies.characteristics || []),
+    };
+  }, [selectedSpecies, allTraits]);
+
+  // Calculate max ancestry traits based on flaw selection
+  const maxAncestryTraits = selectedFlaw ? 2 : 1;
+
+  // Toggle ancestry trait selection
+  const toggleAncestryTrait = useCallback((traitId: string) => {
+    const isSelected = selectedTraitIds.includes(traitId);
+    let newTraits: string[];
+
+    if (isSelected) {
+      newTraits = selectedTraitIds.filter(id => id !== traitId);
+    } else {
+      if (selectedTraitIds.length >= maxAncestryTraits) {
+        newTraits = [...selectedTraitIds.slice(1), traitId];
+      } else {
+        newTraits = [...selectedTraitIds, traitId];
+      }
+    }
+
+    updateDraft({
+      ancestry: {
+        ...draft.ancestry,
+        id: draft.ancestry?.id || '',
+        name: draft.ancestry?.name || '',
+        selectedTraits: newTraits,
+      },
+    });
+  }, [selectedTraitIds, maxAncestryTraits, draft.ancestry, updateDraft]);
+
+  // Toggle flaw selection
+  const toggleFlaw = useCallback((flawId: string) => {
+    const isSelected = selectedFlaw === flawId;
+    const newFlaw = isSelected ? null : flawId;
+
+    const currentTraits = selectedTraitIds;
+    const newMaxTraits = newFlaw ? 2 : 1;
+    const newTraits = currentTraits.length > newMaxTraits 
+      ? currentTraits.slice(0, newMaxTraits)
+      : currentTraits;
+
+    updateDraft({
+      ancestry: {
+        ...draft.ancestry,
+        id: draft.ancestry?.id || '',
+        name: draft.ancestry?.name || '',
+        selectedFlaw: newFlaw,
+        selectedTraits: newTraits,
+      },
+    });
+  }, [selectedFlaw, selectedTraitIds, draft.ancestry, updateDraft]);
+
+  // Toggle characteristic selection
+  const toggleCharacteristic = useCallback((charId: string) => {
+    const isSelected = selectedCharacteristic === charId;
+    updateDraft({
+      ancestry: {
+        ...draft.ancestry,
+        id: draft.ancestry?.id || '',
+        name: draft.ancestry?.name || '',
+        selectedCharacteristic: isSelected ? null : charId,
+      },
+    });
+  }, [selectedCharacteristic, draft.ancestry, updateDraft]);
+
+  // Validation
+  const canContinue = selectedTraitIds.length >= 1 || ancestryTraits.length === 0;
+
+  // No species selected
   if (!selectedSpecies) {
     return (
       <div className="max-w-2xl mx-auto text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Confirm Your Ancestry</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Ancestry Traits</h1>
         <p className="text-gray-600 mb-6">
-          Review your species&apos; traits and characteristics.
+          Customize your character with ancestry traits and an optional flaw.
         </p>
         
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
@@ -75,18 +147,8 @@ export function AncestryStep() {
         </div>
         
         <div className="flex justify-between">
-          <button
-            onClick={prevStep}
-            className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100"
-          >
-            ← Back
-          </button>
-          <button
-            disabled
-            className="px-8 py-3 rounded-xl font-bold bg-gray-200 text-gray-400 cursor-not-allowed"
-          >
-            Continue →
-          </button>
+          <button onClick={prevStep} className="btn-back">← Back</button>
+          <button disabled className="btn-continue">Continue →</button>
         </div>
       </div>
     );
@@ -94,133 +156,263 @@ export function AncestryStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Confirm Your Ancestry</h1>
-      <p className="text-gray-600 mb-6">
-        Review your species&apos; traits and characteristics before continuing.
-      </p>
-      
-      {/* Species Summary Card */}
-      <div className="bg-gradient-to-br from-primary-50 to-white border-2 border-primary-200 rounded-xl p-6 mb-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-primary-900 mb-1">{selectedSpecies.name}</h2>
-            <p className="text-gray-600 max-w-xl">{selectedSpecies.description}</p>
-          </div>
-          <button
-            onClick={() => setStep('species')}
-            className="text-sm text-primary-600 hover:text-primary-800 underline"
-          >
-            Change Species
-          </button>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Ancestry Traits</h1>
+          <p className="text-gray-600">
+            As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
+          </p>
         </div>
-        
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200">
-            <Ruler className="w-5 h-5 text-gray-400" />
-            <div>
-              <span className="text-xs text-gray-500 block">Size</span>
-              <span className="font-medium capitalize">{selectedSpecies.sizes?.join(', ') || selectedSpecies.size}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200">
-            <Zap className="w-5 h-5 text-gray-400" />
-            <div>
-              <span className="text-xs text-gray-500 block">Speed</span>
-              <span className="font-medium">{selectedSpecies.speed} sq</span>
-            </div>
-          </div>
-          {selectedSpecies.ave_height && (
-            <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200">
-              <User className="w-5 h-5 text-gray-400" />
-              <div>
-                <span className="text-xs text-gray-500 block">Avg Height</span>
-                <span className="font-medium">
-                  {selectedSpecies.ave_height} cm
-                </span>
-              </div>
-            </div>
-          )}
-          {selectedSpecies.ave_weight && (
-            <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-gray-200">
-              <Scale className="w-5 h-5 text-gray-400" />
-              <div>
-                <span className="text-xs text-gray-500 block">Avg Weight</span>
-                <span className="font-medium">
-                  {selectedSpecies.ave_weight} kg
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Ability Bonuses */}
-        {selectedSpecies.ability_bonuses && Object.keys(selectedSpecies.ability_bonuses).length > 0 && (
-          <div className="mt-4">
-            <span className="text-sm font-medium text-gray-700 block mb-2">Ability Bonuses</span>
-            <div className="flex gap-2 flex-wrap">
-              {Object.entries(selectedSpecies.ability_bonuses).map(([ability, bonus]) => (
-                <span
-                  key={ability}
-                  className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
-                >
-                  {ability.charAt(0).toUpperCase() + ability.slice(1)} +{bonus}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {/* Species Traits Section */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6">
-        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-          <h3 className="font-bold text-gray-900 flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary-600" />
-            Species Traits
-            <span className="text-sm font-normal text-gray-500">
-              ({speciesTraits.length} trait{speciesTraits.length !== 1 ? 's' : ''})
-            </span>
-          </h3>
-        </div>
-        <div className="divide-y divide-gray-100">
-          {speciesTraits.length > 0 ? (
-            speciesTraits.map(trait => (
-              <div key={trait.id} className="px-4 py-3 hover:bg-gray-50">
-                <h4 className="font-medium text-gray-900">{trait.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">{trait.description}</p>
-              </div>
-            ))
-          ) : (
-            <div className="px-4 py-6 text-center text-gray-500">
-              No specific traits defined for this species.
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Confirmation Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
-        <p className="text-blue-800 text-sm">
-          <strong>Ready to continue?</strong> These traits will be automatically applied to your character.
-          You can change your species at any time by going back.
-        </p>
-      </div>
-      
-      {/* Navigation */}
-      <div className="flex justify-between">
         <button
-          onClick={prevStep}
-          className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100"
+          onClick={() => setStep('species')}
+          className="text-sm text-primary-600 hover:text-primary-800 underline"
         >
-          ← Back
+          Change Species
         </button>
+      </div>
+
+      {/* Selection Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className={cn(
+          'p-4 rounded-xl border-2',
+          selectedTraitIds.length === maxAncestryTraits
+            ? 'bg-green-50 border-green-300'
+            : 'bg-amber-50 border-amber-300'
+        )}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-bold text-gray-900 text-sm">Ancestry Traits</span>
+            <span className={cn(
+              'px-2 py-0.5 rounded-full text-xs font-bold',
+              selectedTraitIds.length === maxAncestryTraits
+                ? 'bg-green-200 text-green-800'
+                : 'bg-amber-200 text-amber-800'
+            )}>
+              {selectedTraitIds.length} / {maxAncestryTraits}
+            </span>
+          </div>
+          <p className="text-xs text-gray-600">
+            {selectedFlaw ? 'Flaw grants +1 trait!' : 'Select a flaw for +1 trait'}
+          </p>
+        </div>
+
+        <div className={cn(
+          'p-4 rounded-xl border-2',
+          selectedCharacteristic
+            ? 'bg-green-50 border-green-300'
+            : 'bg-blue-50 border-blue-300'
+        )}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-bold text-gray-900 text-sm">Characteristic</span>
+            <span className={cn(
+              'px-2 py-0.5 rounded-full text-xs font-bold',
+              selectedCharacteristic
+                ? 'bg-green-200 text-green-800'
+                : 'bg-blue-200 text-blue-800'
+            )}>
+              {selectedCharacteristic ? '1' : '0'} / 1
+            </span>
+          </div>
+          <p className="text-xs text-gray-600">Optional bonus trait</p>
+        </div>
+
+        <div className={cn(
+          'p-4 rounded-xl border-2',
+          selectedFlaw
+            ? 'bg-red-50 border-red-300'
+            : 'bg-gray-50 border-gray-200'
+        )}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-bold text-gray-900 text-sm">Flaw</span>
+            <span className={cn(
+              'px-2 py-0.5 rounded-full text-xs font-bold',
+              selectedFlaw
+                ? 'bg-red-200 text-red-800'
+                : 'bg-gray-200 text-gray-600'
+            )}>
+              {selectedFlaw ? '1' : '0'} / 1
+            </span>
+          </div>
+          <p className="text-xs text-gray-600">Optional, grants +1 trait</p>
+        </div>
+      </div>
+
+      {/* Species Traits (Automatic) */}
+      {speciesTraits.length > 0 && (
+        <TraitSection
+          title="Species Traits"
+          subtitle="These are automatically applied"
+          icon={<Heart className="w-5 h-5 text-primary-600" />}
+          traits={speciesTraits}
+          selectable={false}
+          selectedIds={[]}
+          onToggle={() => {}}
+        />
+      )}
+
+      {/* Ancestry Traits (Selectable) */}
+      {ancestryTraits.length > 0 && (
+        <TraitSection
+          title="Ancestry Traits"
+          subtitle={`Select ${maxAncestryTraits} trait${maxAncestryTraits > 1 ? 's' : ''}`}
+          icon={<Star className="w-5 h-5 text-amber-600" />}
+          traits={ancestryTraits}
+          selectable
+          selectedIds={selectedTraitIds}
+          onToggle={toggleAncestryTrait}
+          variant="ancestry"
+        />
+      )}
+
+      {/* Characteristics (Selectable - 1) */}
+      {characteristics.length > 0 && (
+        <TraitSection
+          title="Characteristics"
+          subtitle="Select 1 characteristic (optional)"
+          icon={<Sparkles className="w-5 h-5 text-blue-600" />}
+          traits={characteristics}
+          selectable
+          selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
+          onToggle={toggleCharacteristic}
+          variant="characteristic"
+        />
+      )}
+
+      {/* Flaws (Selectable - 1) */}
+      {flaws.length > 0 && (
+        <TraitSection
+          title="Flaws"
+          subtitle="Select 1 flaw to gain an extra ancestry trait (optional)"
+          icon={<AlertTriangle className="w-5 h-5 text-red-600" />}
+          traits={flaws}
+          selectable
+          selectedIds={selectedFlaw ? [selectedFlaw] : []}
+          onToggle={toggleFlaw}
+          variant="flaw"
+        />
+      )}
+
+      {/* No traits message */}
+      {ancestryTraits.length === 0 && speciesTraits.length === 0 && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6 text-center">
+          <p className="text-gray-600">
+            No specific ancestry traits defined for {selectedSpecies.name}.
+            You may continue without selecting traits.
+          </p>
+        </div>
+      )}
+
+      {/* Navigation */}
+      <div className="flex justify-between mt-8">
+        <button onClick={prevStep} className="btn-back">← Back</button>
         <button
           onClick={nextStep}
-          className="px-8 py-3 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          disabled={!canContinue}
+          className="btn-continue"
         >
           Continue →
         </button>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// TraitSection Component
+// =============================================================================
+
+interface TraitSectionProps {
+  title: string;
+  subtitle?: string;
+  icon: React.ReactNode;
+  traits: ResolvedTrait[];
+  selectable: boolean;
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+  variant?: 'default' | 'ancestry' | 'characteristic' | 'flaw';
+}
+
+function TraitSection({
+  title,
+  subtitle,
+  icon,
+  traits,
+  selectable,
+  selectedIds,
+  onToggle,
+  variant = 'default',
+}: TraitSectionProps) {
+  const variantStyles = {
+    default: {
+      border: 'border-gray-200',
+      header: 'bg-gray-50',
+      selected: 'border-primary-400 bg-primary-50',
+      check: 'bg-primary-600 border-primary-600',
+    },
+    ancestry: {
+      border: 'border-amber-200',
+      header: 'bg-amber-50',
+      selected: 'border-amber-400 bg-amber-50',
+      check: 'bg-amber-600 border-amber-600',
+    },
+    characteristic: {
+      border: 'border-blue-200',
+      header: 'bg-blue-50',
+      selected: 'border-blue-400 bg-blue-50',
+      check: 'bg-blue-600 border-blue-600',
+    },
+    flaw: {
+      border: 'border-red-200',
+      header: 'bg-red-50',
+      selected: 'border-red-400 bg-red-50',
+      check: 'bg-red-600 border-red-600',
+    },
+  };
+
+  const styles = variantStyles[variant];
+
+  return (
+    <div className={cn('border rounded-xl overflow-hidden mb-6', styles.border)}>
+      <div className={cn('px-4 py-3 border-b flex items-center gap-2', styles.header, styles.border)}>
+        {icon}
+        <div>
+          <h3 className="font-bold text-gray-900">{title}</h3>
+          {subtitle && <p className="text-xs text-gray-600">{subtitle}</p>}
+        </div>
+      </div>
+      
+      <div className="divide-y divide-gray-100">
+        {traits.map(trait => {
+          const isSelected = selectedIds.includes(trait.id);
+          
+          return (
+            <div
+              key={trait.id}
+              onClick={() => selectable && onToggle(trait.id)}
+              className={cn(
+                'px-4 py-3 transition-colors',
+                selectable && 'cursor-pointer hover:bg-gray-50',
+                isSelected && styles.selected
+              )}
+            >
+              <div className="flex items-start gap-3">
+                {selectable && (
+                  <div className={cn(
+                    'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
+                    isSelected
+                      ? `${styles.check} text-white`
+                      : 'border-gray-300 bg-white'
+                  )}>
+                    {isSelected && <Check className="w-3 h-3" />}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">{trait.name}</h4>
+                  <p className="text-sm text-gray-600 mt-1">{trait.description}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

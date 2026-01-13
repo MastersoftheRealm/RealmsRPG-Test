@@ -2,28 +2,40 @@
  * Species Step
  * =============
  * Choose character species with real data from Firebase RTDB
+ * Phase 1 fix: Added modal popup, removed speed display, fixed size handling
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useSpecies, useTraits, type Species, type Trait } from '@/hooks';
+import { useSpecies, useTraits, type Species } from '@/hooks';
+import { SpeciesModal } from '../species-modal';
 
 export function SpeciesStep() {
   const { draft, nextStep, prevStep, setSpecies } = useCharacterCreatorStore();
   const { data: species, isLoading: speciesLoading } = useSpecies();
   const { data: traits } = useTraits();
-  const [expandedSpecies, setExpandedSpecies] = useState<string | null>(null);
+  const [selectedSpeciesForModal, setSelectedSpeciesForModal] = useState<Species | null>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleCardClick = (s: Species) => {
+    setSelectedSpeciesForModal(s);
+    setShowModal(true);
+  };
 
   const handleSelect = (speciesId: string, speciesName: string) => {
     setSpecies(speciesId, speciesName);
+    setShowModal(false);
   };
 
-  const getTraitsForSpecies = (speciesId: string): Trait[] => {
-    if (!traits) return [];
-    return traits.filter(t => t.species?.includes(speciesId));
+  // Get sizes display - species can have multiple size options
+  const getSizesDisplay = (s: Species): string => {
+    if (Array.isArray(s.sizes) && s.sizes.length > 0) {
+      return s.sizes.join('/');
+    }
+    return s.size || 'Medium';
   };
 
   if (speciesLoading) {
@@ -39,81 +51,60 @@ export function SpeciesStep() {
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Species</h1>
       <p className="text-gray-600 mb-6">
         Your species defines your character&apos;s physical traits and inherent abilities.
+        Click on a species card to view full details.
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {species?.map((s) => {
           const isSelected = draft.ancestry?.id === s.id;
-          const isExpanded = expandedSpecies === s.id;
-          const speciesTraits = getTraitsForSpecies(s.id);
           
           return (
             <div
               key={s.id}
+              onClick={() => handleCardClick(s)}
               className={cn(
-                'rounded-xl border-2 overflow-hidden transition-all',
-                isSelected
-                  ? 'border-primary-600 bg-primary-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                'selection-card',
+                isSelected && 'selection-card--selected'
               )}
             >
-              <button
-                onClick={() => handleSelect(s.id, s.name)}
-                className="w-full p-4 text-left"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-gray-900">{s.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded capitalize">
-                      {s.size}
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-gray-900">{s.name}</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded capitalize">
+                    {getSizesDisplay(s)}
+                  </span>
+                  {/* NO SPEED - species don't have speed values in RTDB */}
+                  {isSelected && (
+                    <span className="text-xs px-2 py-0.5 bg-primary-600 text-white rounded">
+                      ✓ Selected
                     </span>
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">
-                      Speed {s.speed}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{s.description}</p>
-                
-                {s.ability_bonuses && Object.keys(s.ability_bonuses).length > 0 && (
-                  <div className="flex gap-1 mt-2">
-                    {Object.entries(s.ability_bonuses).map(([ability, bonus]) => (
-                      <span
-                        key={ability}
-                        className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded"
-                      >
-                        {ability.substring(0, 3).toUpperCase()} +{bonus}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </button>
-              
-              {speciesTraits.length > 0 && (
-                <>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExpandedSpecies(isExpanded ? null : s.id);
-                    }}
-                    className="w-full px-4 py-2 text-sm text-primary-600 hover:bg-primary-50 border-t border-gray-200"
-                  >
-                    {isExpanded ? 'Hide Traits ▲' : `Show ${speciesTraits.length} Traits ▼`}
-                  </button>
-                  
-                  {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-gray-200 bg-gray-50">
-                      <div className="space-y-2 mt-3">
-                        {speciesTraits.map(trait => (
-                          <div key={trait.id} className="p-2 bg-white rounded border border-gray-100">
-                            <span className="font-medium text-sm">{trait.name}</span>
-                            <p className="text-xs text-gray-600">{trait.description}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   )}
-                </>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 line-clamp-2">{s.description}</p>
+              
+              {s.ability_bonuses && Object.keys(s.ability_bonuses).length > 0 && (
+                <div className="flex gap-1 mt-2">
+                  {Object.entries(s.ability_bonuses).map(([ability, bonus]) => (
+                    <span
+                      key={ability}
+                      className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded"
+                    >
+                      {ability.substring(0, 3).toUpperCase()} +{bonus}
+                    </span>
+                  ))}
+                </div>
               )}
+              
+              <button 
+                className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCardClick(s);
+                }}
+              >
+                View Details →
+              </button>
             </div>
           );
         })}
@@ -130,23 +121,31 @@ export function SpeciesStep() {
       <div className="flex justify-between">
         <button
           onClick={prevStep}
-          className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100"
+          className="btn-back"
         >
           ← Back
         </button>
         <button
           onClick={nextStep}
           disabled={!draft.ancestry?.id}
-          className={cn(
-            'px-8 py-3 rounded-xl font-bold transition-colors',
-            draft.ancestry?.id
-              ? 'bg-primary-600 text-white hover:bg-primary-700'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          )}
+          className="btn-continue"
         >
           Continue →
         </button>
       </div>
+
+      {/* Species Details Modal */}
+      <SpeciesModal
+        species={selectedSpeciesForModal}
+        traits={traits || []}
+        isOpen={showModal}
+        onSelect={() => {
+          if (selectedSpeciesForModal) {
+            handleSelect(selectedSpeciesForModal.id, selectedSpeciesForModal.name);
+          }
+        }}
+        onClose={() => setShowModal(false)}
+      />
     </div>
   );
 }

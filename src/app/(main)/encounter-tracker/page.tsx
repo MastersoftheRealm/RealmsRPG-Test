@@ -7,10 +7,10 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
-import { Save, Download, Trash2 } from 'lucide-react';
+import { Save, GripVertical } from 'lucide-react';
 
 const STORAGE_KEY = 'realms-encounter-tracker';
 
@@ -128,21 +128,78 @@ function EncounterTrackerContent() {
     isSurprised: false,
   });
 
-  // Sort by initiative (desc), then acuity (desc) for tie-breaking
-  // If surprise is applied, surprised creatures go last in round 1
-  const sortedCombatants = useMemo(() => {
-    const sorted = [...encounter.combatants].sort((a, b) => {
-      // If in round 1 with surprise, surprised creatures go to end
-      if (encounter.round === 1 && encounter.applySurprise) {
-        if (a.isSurprised && !b.isSurprised) return 1;
-        if (!a.isSurprised && b.isSurprised) return -1;
-      }
-      // Primary sort: initiative descending
-      if (b.initiative !== a.initiative) return b.initiative - a.initiative;
-      // Secondary sort: acuity descending
-      return b.acuity - a.acuity;
+  // Drag-and-drop state
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+    // Add slight delay to allow drag image to form
+    setTimeout(() => {
+      const element = document.getElementById(`combatant-${id}`);
+      if (element) element.classList.add('opacity-50');
+    }, 0);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    if (draggedId) {
+      const element = document.getElementById(`combatant-${draggedId}`);
+      if (element) element.classList.remove('opacity-50');
+    }
+    setDraggedId(null);
+    setDragOverId(null);
+  }, [draggedId]);
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (id !== draggedId) {
+      setDragOverId(id);
+    }
+  }, [draggedId]);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverId(null);
+  }, []);
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>, targetId: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      setDragOverId(null);
+      return;
+    }
+
+    setEncounter(prev => {
+      const combatants = [...prev.combatants];
+      const draggedIndex = combatants.findIndex(c => c.id === draggedId);
+      const targetIndex = combatants.findIndex(c => c.id === targetId);
+
+      if (draggedIndex === -1 || targetIndex === -1) return prev;
+
+      // Remove dragged item and insert at target position
+      const [draggedItem] = combatants.splice(draggedIndex, 1);
+      combatants.splice(targetIndex, 0, draggedItem);
+
+      return { ...prev, combatants };
     });
-    return sorted;
+
+    setDraggedId(null);
+    setDragOverId(null);
+  }, [draggedId]);
+
+  // Display combatants in their current order
+  // Only apply surprise filtering during round 1 (surprised go to end)
+  const sortedCombatants = useMemo(() => {
+    if (encounter.round === 1 && encounter.applySurprise) {
+      // Move surprised combatants to the end
+      const notSurprised = encounter.combatants.filter(c => !c.isSurprised);
+      const surprised = encounter.combatants.filter(c => c.isSurprised);
+      return [...notSurprised, ...surprised];
+    }
+    return encounter.combatants;
   }, [encounter.combatants, encounter.round, encounter.applySurprise]);
 
   const addCombatant = () => {
@@ -203,7 +260,8 @@ function EncounterTrackerContent() {
   // Add a condition to a combatant
   const addCondition = (id: string, conditionName: string) => {
     const condDef = CONDITION_OPTIONS.find(c => c.name === conditionName);
-    if (!condDef) return;
+    // Custom conditions are decaying by default
+    const isDecaying = condDef?.decaying ?? true;
     
     setEncounter(prev => ({
       ...prev,
@@ -213,7 +271,7 @@ function EncounterTrackerContent() {
         if (c.conditions.some(cond => cond.name === conditionName)) return c;
         return {
           ...c,
-          conditions: [...c.conditions, { name: conditionName, level: condDef.decaying ? 1 : 0 }]
+          conditions: [...c.conditions, { name: conditionName, level: isDecaying ? 1 : 0 }]
         };
       }),
     }));
@@ -264,10 +322,7 @@ function EncounterTrackerContent() {
     }));
   };
 
-  // Reset all AP to 4 at start of each combatant's turn (optional helper)
-  const resetAPForCombatant = (id: string) => {
-    updateCombatant(id, { ap: 4 });
-  };
+  // Note: AP can be manually reset via the updateCombatant function if needed
 
   const startCombat = () => {
     if (sortedCombatants.length === 0) return;
@@ -343,9 +398,57 @@ function EncounterTrackerContent() {
     setEncounter(prev => ({ ...prev, applySurprise: !prev.applySurprise }));
   };
 
-  const sortInitiative = () => {
-    // This triggers a re-sort by updating the combatants array
-    setEncounter(prev => ({ ...prev, combatants: [...prev.combatants] }));
+  // Sort by initiative, optionally alternating between allies and enemies
+  const sortInitiative = (alternate: boolean = false) => {
+    setEncounter(prev => {
+      const sortByRollAndAcuity = (a: Combatant, b: Combatant) => {
+        if (b.initiative !== a.initiative) return b.initiative - a.initiative;
+        return b.acuity - a.acuity;
+      };
+
+      if (!alternate) {
+        // Simple sort by initiative + acuity
+        const sorted = [...prev.combatants].sort(sortByRollAndAcuity);
+        return { ...prev, combatants: sorted };
+      }
+
+      // Alternating sort: split by side, sort each, then interleave
+      const allies = prev.combatants.filter(c => c.isAlly).sort(sortByRollAndAcuity);
+      const enemies = prev.combatants.filter(c => !c.isAlly).sort(sortByRollAndAcuity);
+
+      // Determine which side starts (whoever has highest initiative)
+      const firstAlly = allies[0];
+      const firstEnemy = enemies[0];
+      let startWithAlly = true;
+
+      if (firstAlly && firstEnemy) {
+        const comparison = sortByRollAndAcuity(firstAlly, firstEnemy);
+        startWithAlly = comparison <= 0; // Ally goes first if equal or lower (means higher initiative)
+      } else if (!firstAlly) {
+        startWithAlly = false;
+      }
+
+      // Interleave allies and enemies
+      const sorted: Combatant[] = [];
+      const alliesCopy = [...allies];
+      const enemiesCopy = [...enemies];
+      let useAlly = startWithAlly;
+
+      while (alliesCopy.length > 0 || enemiesCopy.length > 0) {
+        if (useAlly && alliesCopy.length > 0) {
+          sorted.push(alliesCopy.shift()!);
+        } else if (!useAlly && enemiesCopy.length > 0) {
+          sorted.push(enemiesCopy.shift()!);
+        } else if (alliesCopy.length > 0) {
+          sorted.push(alliesCopy.shift()!);
+        } else if (enemiesCopy.length > 0) {
+          sorted.push(enemiesCopy.shift()!);
+        }
+        useAlly = !useAlly;
+      }
+
+      return { ...prev, combatants: sorted };
+    });
   };
 
   const applyDamage = useCallback((id: string, amount: number) => {
@@ -360,8 +463,6 @@ function EncounterTrackerContent() {
       currentHealth: Math.min(combatant.maxHealth, combatant.currentHealth + amount)
     });
   }, [encounter.combatants]);
-
-  const currentCombatant = encounter.isActive ? sortedCombatants[encounter.currentTurnIndex] : null;
 
   // Show loading state until localStorage is checked
   if (!isLoaded) {
@@ -411,12 +512,22 @@ function EncounterTrackerContent() {
                 >
                   Start Encounter
                 </button>
-                <button
-                  onClick={sortInitiative}
-                  className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700"
-                >
-                  Sort Initiative
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => sortInitiative(false)}
+                    className="px-4 py-2 rounded-l-lg bg-primary-600 text-white hover:bg-primary-700"
+                    title="Sort by initiative roll and acuity"
+                  >
+                    Sort
+                  </button>
+                  <button
+                    onClick={() => sortInitiative(true)}
+                    className="px-3 py-2 rounded-r-lg bg-primary-500 text-white hover:bg-primary-600 text-sm"
+                    title="Sort by initiative, alternating between allies and enemies"
+                  >
+                    ⇆
+                  </button>
+                </div>
                 <label className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-lg border border-amber-200">
                   <input
                     type="checkbox"
@@ -463,6 +574,15 @@ function EncounterTrackerContent() {
             </button>
           </div>
 
+          {/* Help tip when not in combat */}
+          {!encounter.isActive && sortedCombatants.length > 0 && (
+            <div className="text-xs text-gray-500 flex items-center gap-4 px-2">
+              <span>💡 Drag combatants to reorder manually</span>
+              <span>•</span>
+              <span>⇆ = Alternating ally/enemy sort</span>
+            </div>
+          )}
+
           {/* Combatant Cards */}
           <div className="space-y-3">
             {sortedCombatants.length === 0 ? (
@@ -475,6 +595,7 @@ function EncounterTrackerContent() {
                   key={combatant.id}
                   combatant={combatant}
                   isCurrentTurn={encounter.isActive && index === encounter.currentTurnIndex}
+                  isDragOver={dragOverId === combatant.id}
                   onUpdate={(updates) => updateCombatant(combatant.id, updates)}
                   onRemove={() => removeCombatant(combatant.id)}
                   onAddCondition={(condition) => addCondition(combatant.id, condition)}
@@ -483,6 +604,11 @@ function EncounterTrackerContent() {
                   onUpdateAP={(delta) => updateAP(combatant.id, delta)}
                   onDamage={(amount) => applyDamage(combatant.id, amount)}
                   onHeal={(amount) => applyHealing(combatant.id, amount)}
+                  onDragStart={(e) => handleDragStart(e, combatant.id)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, combatant.id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, combatant.id)}
                 />
               ))
             )}
@@ -600,9 +726,11 @@ function EncounterTrackerContent() {
                 </span>
               ))}
             </div>
-            <p className="mt-2 text-xs text-gray-500">
-              ⬇ = Decaying (has levels). Hover for description.
-            </p>
+            <div className="mt-3 text-xs text-gray-500 space-y-1">
+              <p><span className="inline-block w-3 h-3 rounded-full bg-purple-100 mr-1"></span>Purple = Decaying (has levels)</p>
+              <p><span className="inline-block w-3 h-3 rounded-full bg-indigo-100 mr-1"></span>Indigo = Custom condition</p>
+              <p className="pt-1">Click name to ↑ level, × to ↓ level (removes at 0)</p>
+            </div>
           </div>
         </div>
       </div>
@@ -613,6 +741,7 @@ function EncounterTrackerContent() {
 interface CombatantCardProps {
   combatant: Combatant;
   isCurrentTurn: boolean;
+  isDragOver: boolean;
   onUpdate: (updates: Partial<Combatant>) => void;
   onRemove: () => void;
   onAddCondition: (condition: string) => void;
@@ -621,11 +750,17 @@ interface CombatantCardProps {
   onUpdateAP: (delta: number) => void;
   onDamage: (amount: number) => void;
   onHeal: (amount: number) => void;
+  onDragStart: (e: DragEvent<HTMLDivElement>) => void;
+  onDragEnd: () => void;
+  onDragOver: (e: DragEvent<HTMLDivElement>) => void;
+  onDragLeave: () => void;
+  onDrop: (e: DragEvent<HTMLDivElement>) => void;
 }
 
 function CombatantCard({ 
   combatant, 
   isCurrentTurn, 
+  isDragOver,
   onUpdate, 
   onRemove,
   onAddCondition,
@@ -634,11 +769,17 @@ function CombatantCard({
   onUpdateAP,
   onDamage,
   onHeal,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: CombatantCardProps) {
   const [damageInput, setDamageInput] = useState('');
   const [healInput, setHealInput] = useState('');
   const [showConditions, setShowConditions] = useState(false);
   const [selectedCondition, setSelectedCondition] = useState('');
+  const [customCondition, setCustomCondition] = useState('');
 
   const healthPercent = combatant.maxHealth > 0 ? (combatant.currentHealth / combatant.maxHealth) * 100 : 0;
   const isDead = combatant.currentHealth <= 0 && !combatant.isAlly;
@@ -666,23 +807,47 @@ function CombatantCard({
     }
   };
 
+  const handleAddCustomCondition = () => {
+    const name = customCondition.trim();
+    if (name && !combatant.conditions.some(c => c.name === name)) {
+      onAddCondition(name);
+      setCustomCondition('');
+    }
+  };
+
   return (
-    <div className={cn(
-      'bg-white rounded-xl shadow-md p-4 transition-all',
-      isCurrentTurn && 'ring-2 ring-primary-500 shadow-lg',
-      isDead && 'bg-red-50 opacity-75',
-      combatant.isAlly ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-red-500'
-    )}>
+    <div 
+      id={`combatant-${combatant.id}`}
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      className={cn(
+        'bg-white rounded-xl shadow-md p-4 transition-all cursor-move',
+        isCurrentTurn && 'ring-2 ring-primary-500 shadow-lg',
+        isDead && 'bg-red-50 opacity-75',
+        isDragOver && 'ring-2 ring-amber-400 bg-amber-50',
+        combatant.isAlly ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-red-500'
+      )}
+    >
       <div className="flex items-start gap-4">
-        {/* Initiative Badge */}
-        <div className={cn(
-          'w-12 h-12 rounded-lg flex flex-col items-center justify-center',
-          isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600'
-        )}>
-          <span className="text-xl font-bold">{combatant.initiative}</span>
-          {combatant.acuity !== 0 && (
-            <span className="text-xs opacity-75">+{combatant.acuity}</span>
-          )}
+        {/* Drag Handle */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing">
+            <GripVertical className="w-5 h-5" />
+          </div>
+          {/* Initiative Badge */}
+          <div className={cn(
+            'w-12 h-12 rounded-lg flex flex-col items-center justify-center',
+            isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600'
+          )}>
+            <span className="text-xl font-bold">{combatant.initiative}</span>
+            {combatant.acuity !== 0 && (
+              <span className="text-xs opacity-75">+{combatant.acuity}</span>
+            )}
+          </div>
         </div>
 
         {/* Main Info */}
@@ -769,15 +934,19 @@ function CombatantCard({
             <div className="flex flex-wrap gap-1 mb-3">
               {combatant.conditions.map(cond => {
                 const condDef = CONDITION_OPTIONS.find(c => c.name === cond.name);
-                const isDecaying = condDef?.decaying || false;
+                // Custom conditions (not in CONDITION_OPTIONS) are decaying by default
+                // We can tell by checking if level > 0
+                const isDecaying = condDef?.decaying ?? (cond.level > 0);
+                const isCustom = !condDef;
                 return (
                   <div
                     key={cond.name}
                     className={cn(
                       'px-2 py-0.5 text-xs rounded-full flex items-center gap-1',
+                      isCustom ? 'bg-indigo-100 text-indigo-800' :
                       isDecaying ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'
                     )}
-                    title={condDef?.description}
+                    title={condDef?.description ?? 'Custom condition (decaying)'}
                   >
                     <span 
                       onClick={() => isDecaying && onUpdateConditionLevel(cond.name, 1)}
@@ -877,8 +1046,26 @@ function CombatantCard({
                   Add
                 </button>
               </div>
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  value={customCondition}
+                  onChange={(e) => setCustomCondition(e.target.value)}
+                  placeholder="Custom condition..."
+                  className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
+                  maxLength={30}
+                />
+                <button
+                  onClick={handleAddCustomCondition}
+                  disabled={!customCondition.trim()}
+                  className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+                >
+                  Add Custom
+                </button>
+              </div>
               <p className="text-xs text-gray-500">
-                Click condition name to increase level. Click × to decrease/remove.
+                Click condition name to increase level. Click × to decrease/remove. Custom conditions are decaying.
               </p>
             </div>
           )}

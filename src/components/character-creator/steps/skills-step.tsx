@@ -174,13 +174,13 @@ export function SkillsStep() {
       <div className="flex justify-between">
         <button
           onClick={prevStep}
-          className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100"
+          className="btn-back"
         >
           ← Back
         </button>
         <button
           onClick={handleContinue}
-          className="px-8 py-3 rounded-xl font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          className="btn-continue"
         >
           Continue →
         </button>
@@ -219,12 +219,7 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
           <button
             onClick={() => onAllocate(-1)}
             disabled={value === 0}
-            className={cn(
-              'w-7 h-7 rounded flex items-center justify-center font-bold',
-              value > 0
-                ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-            )}
+            className="btn-stepper btn-stepper-danger !w-7 !h-7 text-sm"
           >
             −
           </button>
@@ -239,12 +234,7 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
           <button
             onClick={() => onAllocate(1)}
             disabled={!canIncrease}
-            className={cn(
-              'w-7 h-7 rounded flex items-center justify-center font-bold',
-              canIncrease
-                ? 'bg-primary-600 hover:bg-primary-700 text-white'
-                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-            )}
+            className="btn-stepper btn-stepper-success !w-7 !h-7 text-sm"
           >
             +
           </button>

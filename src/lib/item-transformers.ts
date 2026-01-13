@@ -19,11 +19,15 @@ export function capitalize(str: string): string {
 }
 
 // Helper: Format currency
-export function formatGold(amount: number): string {
-  if (amount >= 1) return `${amount} gp`;
-  if (amount >= 0.1) return `${Math.round(amount * 10)} sp`;
-  return `${Math.round(amount * 100)} cp`;
+export function formatCurrency(amount: number): string {
+  // Format as simple currency value with 'c' unit
+  if (amount >= 1) return `${amount}c`;
+  if (amount >= 0.1) return `${(amount).toFixed(1)}c`;
+  return `${(amount).toFixed(2)}c`;
 }
+
+// Legacy alias for backward compatibility
+export const formatGold = formatCurrency;
 
 // ===========================================
 // POWER TRANSFORMER
@@ -245,7 +249,7 @@ export function transformWeapon(raw: RawWeapon, context?: TransformContext): Dis
     category: 'weapon',
     type: raw.type,
     cost: raw.cost,
-    costLabel: 'gp',
+    costLabel: 'c',
     stats,
     details,
     badges,
@@ -307,7 +311,7 @@ export function transformArmor(raw: RawArmor, context?: TransformContext): Displ
     category: 'armor',
     type: raw.type,
     cost: raw.cost,
-    costLabel: 'gp',
+    costLabel: 'c',
     stats,
     details,
     badges,
@@ -358,7 +362,7 @@ export function transformEquipment(raw: RawEquipment, context?: TransformContext
     category: 'equipment',
     type: raw.type || raw.category,
     cost: raw.cost,
-    costLabel: 'gp',
+    costLabel: 'c',
     stats,
     details,
     badges,

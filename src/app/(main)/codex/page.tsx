@@ -26,9 +26,11 @@ import {
   useItemProperties,
   useEquipment,
   useParts,
+  resolveTraitIds,
   type RTDBFeat as Feat,
   type RTDBSkill as Skill,
   type Species,
+  type Trait,
 } from '@/hooks';
 
 type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts';
@@ -662,7 +664,7 @@ interface SpeciesFilters {
 
 function SpeciesTab() {
   const { data: species, isLoading, error } = useSpecies();
-  useTraits();
+  const { data: allTraits } = useTraits();
   const [showFilters, setShowFilters] = useState(true);
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
@@ -789,7 +791,7 @@ function SpeciesTab() {
           <div className="p-8 text-center text-gray-500">No species match your filters.</div>
         ) : (
           filteredSpecies.map(s => (
-            <SpeciesCard key={s.id} species={s} />
+            <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} />
           ))
         )}
       </div>
@@ -797,8 +799,26 @@ function SpeciesTab() {
   );
 }
 
-function SpeciesCard({ species }: { species: Species }) {
+function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trait[] }) {
   const [expanded, setExpanded] = useState(false);
+  
+  // Resolve trait IDs to full trait objects
+  const speciesTraits = useMemo(() => 
+    resolveTraitIds(species.species_traits || [], allTraits),
+    [species.species_traits, allTraits]
+  );
+  const ancestryTraits = useMemo(() => 
+    resolveTraitIds(species.ancestry_traits || [], allTraits),
+    [species.ancestry_traits, allTraits]
+  );
+  const flaws = useMemo(() => 
+    resolveTraitIds(species.flaws || [], allTraits),
+    [species.flaws, allTraits]
+  );
+  const characteristics = useMemo(() => 
+    resolveTraitIds(species.characteristics || [], allTraits),
+    [species.characteristics, allTraits]
+  );
 
   return (
     <div className="bg-white">
@@ -828,42 +848,70 @@ function SpeciesCard({ species }: { species: Species }) {
             {species.ave_weight && (
               <div><span className="font-medium">Avg Weight:</span> {species.ave_weight} kg</div>
             )}
-            {species.speed && (
-              <div><span className="font-medium">Speed:</span> {species.speed} ft</div>
-            )}
             {species.languages?.length > 0 && (
               <div><span className="font-medium">Languages:</span> {species.languages.join(', ')}</div>
             )}
           </div>
 
-          {species.species_traits?.length > 0 && (
+          {speciesTraits.length > 0 && (
             <div>
               <h4 className="font-medium text-gray-900 mb-2">Species Traits</h4>
-              <div className="flex flex-wrap gap-2">
-                {species.species_traits.map(trait => (
-                  <span key={trait} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">{trait}</span>
+              <div className="space-y-2">
+                {speciesTraits.map(trait => (
+                  <div key={trait.id} className="p-2 bg-blue-50 border border-blue-200 rounded">
+                    <span className="font-medium text-blue-800">{trait.name}</span>
+                    {trait.description && (
+                      <p className="text-sm text-blue-700 mt-1">{trait.description}</p>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {species.ancestry_traits?.length > 0 && (
+          {ancestryTraits.length > 0 && (
             <div>
               <h4 className="font-medium text-gray-900 mb-2">Ancestry Traits</h4>
-              <div className="flex flex-wrap gap-2">
-                {species.ancestry_traits.map(trait => (
-                  <span key={trait} className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">{trait}</span>
+              <div className="space-y-2">
+                {ancestryTraits.map(trait => (
+                  <div key={trait.id} className="p-2 bg-green-50 border border-green-200 rounded">
+                    <span className="font-medium text-green-800">{trait.name}</span>
+                    {trait.description && (
+                      <p className="text-sm text-green-700 mt-1">{trait.description}</p>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {species.flaws?.length > 0 && (
+          {flaws.length > 0 && (
             <div>
               <h4 className="font-medium text-gray-900 mb-2">Flaws</h4>
-              <div className="flex flex-wrap gap-2">
-                {species.flaws.map(flaw => (
-                  <span key={flaw} className="px-2 py-1 bg-red-100 text-red-800 rounded text-sm">{flaw}</span>
+              <div className="space-y-2">
+                {flaws.map(trait => (
+                  <div key={trait.id} className="p-2 bg-red-50 border border-red-200 rounded">
+                    <span className="font-medium text-red-800">{trait.name}</span>
+                    {trait.description && (
+                      <p className="text-sm text-red-700 mt-1">{trait.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {characteristics.length > 0 && (
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Characteristics</h4>
+              <div className="space-y-2">
+                {characteristics.map(trait => (
+                  <div key={trait.id} className="p-2 bg-purple-50 border border-purple-200 rounded">
+                    <span className="font-medium text-purple-800">{trait.name}</span>
+                    {trait.description && (
+                      <p className="text-sm text-purple-700 mt-1">{trait.description}</p>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -893,7 +941,6 @@ function EquipmentTab() {
   const { data: equipment, isLoading, error } = useEquipment();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
 
   const typeOptions = useMemo(() => {
     if (!equipment) return [];
@@ -912,12 +959,8 @@ function EquipmentTab() {
       }
       if (typeFilter && e.type !== typeFilter) return false;
       return true;
-    }).sort((a, b) => {
-      if (sortState.col === 'name') return sortState.dir * a.name.localeCompare(b.name);
-      if (sortState.col === 'gold_cost') return sortState.dir * ((a.gold_cost || 0) - (b.gold_cost || 0));
-      return 0;
-    });
-  }, [equipment, search, typeFilter, sortState]);
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  }, [equipment, search, typeFilter]);
 
   if (error) return <ErrorState message="Failed to load equipment" />;
 
@@ -957,7 +1000,7 @@ function EquipmentTab() {
                   <div className="text-sm text-gray-500">{item.type} {item.subtype && `• ${item.subtype}`}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium text-amber-600">{item.gold_cost} gp</div>
+                  <div className="font-medium text-amber-600">{item.gold_cost}c</div>
                 </div>
               </div>
               {item.description && (

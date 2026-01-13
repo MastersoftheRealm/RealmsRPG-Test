@@ -219,7 +219,7 @@ export function PowersStep() {
             </div>
           ) : userPowers.length > 0 ? (
             <div className="p-4 rounded-lg border border-dashed border-border text-center text-muted-foreground">
-              No powers selected. Click "Add Powers" to choose from your library.
+              No powers selected. Click &quot;Add Powers&quot; to choose from your library.
             </div>
           ) : (
             <div className="p-4 rounded-lg border border-dashed border-border text-center">
@@ -285,7 +285,7 @@ export function PowersStep() {
             </div>
           ) : userTechniques.length > 0 ? (
             <div className="p-4 rounded-lg border border-dashed border-border text-center text-muted-foreground">
-              No techniques selected. Click "Add Techniques" to choose from your library.
+              No techniques selected. Click &quot;Add Techniques&quot; to choose from your library.
             </div>
           ) : (
             <div className="p-4 rounded-lg border border-dashed border-border text-center">
@@ -302,13 +302,13 @@ export function PowersStep() {
       <div className="flex justify-between pt-6 border-t border-border">
         <button
           onClick={prevStep}
-          className="px-6 py-3 rounded-xl font-medium text-muted-foreground hover:bg-muted transition-colors"
+          className="btn-back"
         >
           ← Back
         </button>
         <button
           onClick={nextStep}
-          className="px-8 py-3 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          className="btn-continue"
         >
           Continue →
         </button>

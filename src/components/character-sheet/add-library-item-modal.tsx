@@ -199,7 +199,7 @@ export function AddLibraryItemModal({
               ) : (
                 <>
                   <p className="text-lg font-medium">All {itemType}s already added</p>
-                  <p className="text-sm mt-1">or no matches for "{searchQuery}"</p>
+                  <p className="text-sm mt-1">or no matches for &quot;{searchQuery}&quot;</p>
                 </>
               )}
             </div>

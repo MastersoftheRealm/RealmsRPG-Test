@@ -10,6 +10,7 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
+import { useMemo } from 'react';
 
 // =============================================================================
 // Types for RTDB Data
@@ -529,6 +530,119 @@ export function useEquipment(): UseQueryResult<EquipmentItem[], Error> {
 }
 
 // =============================================================================
+// Creature Feats
+// =============================================================================
+
+export interface CreatureFeat {
+  id: string;
+  name: string;
+  description: string;
+  points: number; // Cost in feat points (negative = gives points back)
+  tiers?: number; // Number of levels/tiers if applicable
+  prereqs?: string[];
+}
+
+async function fetchCreatureFeats(): Promise<CreatureFeat[]> {
+  return fetchWithRetry(async () => {
+    const snapshot = await get(ref(rtdb, 'creature_feats'));
+    if (!snapshot.exists()) {
+      console.warn('[rtdb] No creature_feats data found');
+      return [];
+    }
+    const raw = snapshot.val();
+    // Handle array or object format
+    const items = Array.isArray(raw) ? raw : Object.values(raw);
+    return items.filter(Boolean).map((feat: Record<string, unknown>) => ({
+      id: String(feat.id ?? ''),
+      name: String(feat.name ?? ''),
+      description: String(feat.description ?? ''),
+      points: Number(feat.points ?? feat.cost ?? 0),
+      tiers: feat.tiers ? Number(feat.tiers) : undefined,
+      prereqs: toStrArray(feat.prereqs),
+    }));
+  });
+}
+
+export function useCreatureFeats(): UseQueryResult<CreatureFeat[], Error> {
+  return useQuery({
+    queryKey: ['creature-feats'],
+    queryFn: fetchCreatureFeats,
+    ...DEFAULT_OPTIONS,
+  });
+}
+
+// =============================================================================
+// Trait Resolution Utilities
+// =============================================================================
+
+/**
+ * Find a trait by ID or name in a collection
+ * Used for resolving trait IDs from species to full trait objects
+ */
+export function findTraitByIdOrName(
+  traits: Trait[],
+  lookup: string | number
+): Trait | undefined {
+  if (!traits || !lookup) return undefined;
+  
+  const lookupStr = String(lookup);
+  
+  // Try exact ID match first
+  const byId = traits.find(t => t.id === lookupStr);
+  if (byId) return byId;
+  
+  // Try numeric ID match (in case of type mismatch)
+  const byNumericId = traits.find(t => String(t.id) === lookupStr);
+  if (byNumericId) return byNumericId;
+  
+  // Try case-insensitive name match
+  const lowerLookup = lookupStr.toLowerCase();
+  return traits.find(t => t.name.toLowerCase() === lowerLookup);
+}
+
+/**
+ * Resolve an array of trait IDs to full trait objects
+ */
+export function resolveTraitIds(
+  traitIds: (string | number)[],
+  allTraits: Trait[]
+): Trait[] {
+  if (!traitIds || !allTraits) return [];
+  
+  return traitIds.map(id => {
+    const trait = findTraitByIdOrName(allTraits, id);
+    return trait || {
+      id: String(id),
+      name: String(id),
+      description: 'Trait not found',
+    };
+  });
+}
+
+/**
+ * Hook to resolve trait IDs to full trait objects
+ * Automatically fetches all traits and resolves the given IDs
+ */
+export function useResolvedTraits(traitIds: (string | number)[]): {
+  traits: Trait[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data: allTraits, isLoading, error } = useTraits();
+  
+  const resolvedTraits = useMemo(() => {
+    if (!allTraits || !traitIds) return [];
+    return resolveTraitIds(traitIds, allTraits);
+  }, [allTraits, traitIds]);
+  
+  return {
+    traits: resolvedTraits,
+    isLoading,
+    error: error || null,
+  };
+}
+
+// =============================================================================
 // Prefetch Functions (for SSR or preloading)
 // =============================================================================
 
@@ -542,4 +656,5 @@ export const prefetchFunctions = {
   parts: fetchParts,
   itemProperties: fetchItemProperties,
   equipment: fetchEquipment,
+  creatureFeats: fetchCreatureFeats,
 };

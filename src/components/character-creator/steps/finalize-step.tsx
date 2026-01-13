@@ -222,7 +222,7 @@ export function FinalizeStep() {
     if (spentCurrency > baseCurrency) {
       issues.push({
         emoji: '💰',
-        message: `You've overspent currency by ${spentCurrency - baseCurrency}gp!`,
+        message: `You've overspent currency by ${spentCurrency - baseCurrency}c!`,
         severity: 'error'
       });
     }
@@ -448,7 +448,7 @@ export function FinalizeStep() {
         <button
           onClick={prevStep}
           disabled={saving}
-          className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50"
+          className="btn-back disabled:opacity-50"
         >
           ← Back
         </button>
