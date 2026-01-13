@@ -942,11 +942,19 @@ function CombatantCard({
                   <div
                     key={cond.name}
                     className={cn(
-                      'px-2 py-0.5 text-xs rounded-full flex items-center gap-1',
+                      'px-2 py-0.5 text-xs rounded-full flex items-center gap-1 select-none',
                       isCustom ? 'bg-indigo-100 text-indigo-800' :
                       isDecaying ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'
                     )}
-                    title={condDef?.description ?? 'Custom condition (decaying)'}
+                    title={condDef?.description ?? 'Custom condition (decaying). Left-click to increase, right-click to decrease level.'}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      if (isDecaying) {
+                        onUpdateConditionLevel(cond.name, -1);
+                      } else {
+                        onRemoveCondition(cond.name);
+                      }
+                    }}
                   >
                     <span 
                       onClick={() => isDecaying && onUpdateConditionLevel(cond.name, 1)}
@@ -1065,7 +1073,7 @@ function CombatantCard({
                 </button>
               </div>
               <p className="text-xs text-gray-500">
-                Click condition name to increase level. Click × to decrease/remove. Custom conditions are decaying.
+                Left-click to increase level, right-click or × to decrease/remove. Custom conditions are decaying.
               </p>
             </div>
           )}
