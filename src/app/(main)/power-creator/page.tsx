@@ -7,19 +7,19 @@
  * - Select power parts from RTDB database
  * - Configure option levels for each part
  * - Calculate energy and training point costs
- * - Save to user's library via Cloud Functions
+ * - Save to user's Firestore library
  */
 
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Wand2, Zap, Target, Info, FolderOpen } from 'lucide-react';
+import { collection, addDoc, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { usePowerParts, useUserPowers, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { functions } from '@/lib/firebase/client';
-import { httpsCallable } from 'firebase/functions';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
@@ -782,8 +782,6 @@ function PowerCreatorContent() {
     setSaveMessage(null);
 
     try {
-      const savePowerToLibrary = httpsCallable(functions, 'savePowerToLibrary');
-      
       // Format parts for saving (combine regular and advanced parts)
       const partsToSave = [
         ...selectedParts.map((sp) => ({
@@ -811,12 +809,27 @@ function PowerCreatorContent() {
           ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
           : [];
 
-      await savePowerToLibrary({
-        powerName: name.trim(),
-        powerDescription: description.trim(),
+      const powerData = {
+        name: name.trim(),
+        description: description.trim(),
         parts: partsToSave,
         damage: damageToSave,
-      });
+        updatedAt: new Date(),
+      };
+
+      // Check if power with same name exists
+      const libraryRef = collection(db, 'users', user.uid, 'library');
+      const q = query(libraryRef, where('name', '==', name.trim()));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        // Update existing power
+        const docRef = doc(db, 'users', user.uid, 'library', snapshot.docs[0].id);
+        await setDoc(docRef, powerData);
+      } else {
+        // Create new power
+        await addDoc(libraryRef, { ...powerData, createdAt: new Date() });
+      }
 
       setSaveMessage({ type: 'success', text: 'Power saved successfully!' });
       

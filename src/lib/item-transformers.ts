@@ -768,10 +768,33 @@ interface RawCreature {
   level?: number;
   type?: string;
   size?: string;
+  // Core stats - support both old and new field names
   hp?: number;
+  hitPoints?: number;
+  energyPoints?: number;
   defense?: number;
   abilities?: Record<string, number>;
-  skills?: Record<string, number>;
+  defenses?: Record<string, number>;
+  // Proficiencies
+  powerProficiency?: number;
+  martialProficiency?: number;
+  // Damage modifiers
+  resistances?: string[];
+  weaknesses?: string[];
+  immunities?: string[];
+  conditionImmunities?: string[];
+  // Movement and senses
+  senses?: string[];
+  movementTypes?: string[];
+  languages?: string[];
+  // Skills
+  skills?: Array<{ name: string; value: number; proficient?: boolean }> | Record<string, number>;
+  // Combat
+  powers?: unknown[];
+  techniques?: unknown[];
+  feats?: unknown[];
+  armaments?: unknown[];
+  // Legacy
   attacks?: unknown[];
   traits?: string[];
 }
@@ -786,14 +809,15 @@ export function transformCreature(raw: RawCreature, context?: TransformContext):
     stats.push({ label: 'Level', value: raw.level });
   }
 
-  // HP
-  if (raw.hp !== undefined) {
-    stats.push({ label: 'HP', value: raw.hp });
+  // HP - support both old 'hp' and new 'hitPoints' field names
+  const hitPoints = raw.hitPoints ?? raw.hp;
+  if (hitPoints !== undefined) {
+    stats.push({ label: 'HP', value: hitPoints });
   }
 
-  // Defense
-  if (raw.defense !== undefined) {
-    stats.push({ label: 'Def', value: raw.defense });
+  // Energy
+  if (raw.energyPoints !== undefined && raw.energyPoints > 0) {
+    stats.push({ label: 'EP', value: raw.energyPoints });
   }
 
   // Type badge
@@ -806,15 +830,111 @@ export function transformCreature(raw: RawCreature, context?: TransformContext):
     badges.push({ label: capitalize(raw.size), variant: 'info' });
   }
 
-  // Abilities
+  // Abilities - format as stat block
   if (raw.abilities) {
     const abilityStr = Object.entries(raw.abilities)
-      .map(([ability, value]) => `${ability.slice(0, 3).toUpperCase()} ${value}`)
+      .map(([ability, value]) => {
+        const sign = value >= 0 ? '+' : '';
+        return `${ability.slice(0, 3).toUpperCase()} ${sign}${value}`;
+      })
       .join(', ');
     details.push({ label: 'Abilities', value: abilityStr });
   }
 
-  // Traits
+  // Defenses
+  if (raw.defenses) {
+    const defenseStr = Object.entries(raw.defenses)
+      .filter(([, value]) => value !== 0)
+      .map(([def, value]) => {
+        // Shorten defense names
+        const shortNames: Record<string, string> = {
+          might: 'Mgt',
+          fortitude: 'Fort',
+          reflex: 'Ref',
+          discernment: 'Dis',
+          mentalFortitude: 'MF',
+          resolve: 'Res',
+        };
+        const name = shortNames[def] || capitalize(def.slice(0, 3));
+        return `${name} +${value}`;
+      })
+      .join(', ');
+    if (defenseStr) {
+      details.push({ label: 'Defense Bonuses', value: defenseStr });
+    }
+  }
+
+  // Proficiencies
+  const profs = [];
+  if (raw.powerProficiency) profs.push(`Power +${raw.powerProficiency}`);
+  if (raw.martialProficiency) profs.push(`Martial +${raw.martialProficiency}`);
+  if (profs.length > 0) {
+    details.push({ label: 'Proficiency', value: profs.join(', ') });
+  }
+
+  // Resistances, Weaknesses, Immunities
+  if (raw.resistances?.length) {
+    details.push({ label: 'Resistances', value: raw.resistances.join(', ') });
+  }
+  if (raw.weaknesses?.length) {
+    details.push({ label: 'Weaknesses', value: raw.weaknesses.join(', ') });
+  }
+  if (raw.immunities?.length) {
+    details.push({ label: 'Immunities', value: raw.immunities.join(', ') });
+  }
+  if (raw.conditionImmunities?.length) {
+    details.push({ label: 'Condition Immunities', value: raw.conditionImmunities.join(', ') });
+  }
+
+  // Senses and Movement
+  if (raw.senses?.length) {
+    details.push({ label: 'Senses', value: raw.senses.join(', ') });
+  }
+  if (raw.movementTypes?.length) {
+    details.push({ label: 'Movement', value: raw.movementTypes.join(', ') });
+  }
+  if (raw.languages?.length) {
+    details.push({ label: 'Languages', value: raw.languages.join(', ') });
+  }
+
+  // Skills
+  if (raw.skills) {
+    let skillStr = '';
+    if (Array.isArray(raw.skills)) {
+      skillStr = raw.skills
+        .filter(s => s.value !== 0 || s.proficient)
+        .map(s => `${s.name} ${s.value >= 0 ? '+' : ''}${s.value}${s.proficient ? '*' : ''}`)
+        .join(', ');
+    } else {
+      skillStr = Object.entries(raw.skills)
+        .filter(([, value]) => value !== 0)
+        .map(([skill, value]) => `${skill} +${value}`)
+        .join(', ');
+    }
+    if (skillStr) {
+      details.push({ label: 'Skills', value: skillStr });
+    }
+  }
+
+  // Combat abilities summary
+  const combatSummary = [];
+  if (raw.powers && Array.isArray(raw.powers) && raw.powers.length > 0) {
+    combatSummary.push(`${raw.powers.length} power(s)`);
+  }
+  if (raw.techniques && Array.isArray(raw.techniques) && raw.techniques.length > 0) {
+    combatSummary.push(`${raw.techniques.length} technique(s)`);
+  }
+  if (raw.armaments && Array.isArray(raw.armaments) && raw.armaments.length > 0) {
+    combatSummary.push(`${raw.armaments.length} armament(s)`);
+  }
+  if (raw.feats && Array.isArray(raw.feats) && raw.feats.length > 0) {
+    combatSummary.push(`${raw.feats.length} feat(s)`);
+  }
+  if (combatSummary.length > 0) {
+    details.push({ label: 'Combat', value: combatSummary.join(', ') });
+  }
+
+  // Legacy traits support
   if (raw.traits?.length) {
     details.push({ label: 'Traits', value: raw.traits });
   }

@@ -21,8 +21,8 @@ import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import { useAuthStore } from '@/stores';
-import { functions } from '@/lib/firebase/client';
-import { httpsCallable } from 'firebase/functions';
+import { db } from '@/lib/firebase/client';
+import { collection, query, where, getDocs, addDoc, setDoc, doc } from 'firebase/firestore';
 import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
@@ -178,7 +178,6 @@ function PropertyCard({
                   value={selectedProperty.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label="Level:"
-                  variant="item"
                 />
               </div>
               <p className="text-sm text-gray-600">{property.op_1_desc}</p>
@@ -314,8 +313,6 @@ function ItemCreatorContent() {
     setSaveMessage(null);
 
     try {
-      const saveItemToLibrary = httpsCallable(functions, 'saveItemToLibrary');
-      
       // Format properties for saving
       const propertiesToSave = selectedProperties.map((sp) => ({
         id: Number(sp.property.id),
@@ -329,13 +326,31 @@ function ItemCreatorContent() {
           ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
           : [];
 
-      await saveItemToLibrary({
-        itemName: name.trim(),
-        itemDescription: description.trim(),
-        armamentType,
+      // Prepare item data
+      const itemData = {
+        name: name.trim(),
+        description: description.trim(),
+        type: armamentType.toLowerCase(),
         properties: propertiesToSave,
         damage: damageToSave,
-      });
+        costs: costs,
+        rarity: rarity,
+        updatedAt: new Date(),
+      };
+
+      // Save directly to Firestore - check for existing item with same name
+      const libraryRef = collection(db, 'users', user.uid, 'itemLibrary');
+      const q = query(libraryRef, where('name', '==', name.trim()));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        // Update existing item
+        const docRef = doc(db, 'users', user.uid, 'itemLibrary', snapshot.docs[0].id);
+        await setDoc(docRef, itemData);
+      } else {
+        // Create new item
+        await addDoc(libraryRef, { ...itemData, createdAt: new Date() });
+      }
 
       setSaveMessage({ type: 'success', text: 'Item saved successfully!' });
       
@@ -475,7 +490,7 @@ function ItemCreatorContent() {
         isLoading={loadingUserItems}
         error={userItemsError}
         itemType="item"
-        title="Load Item from Library"
+        title="Load Armament from Library"
       />
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -611,7 +626,6 @@ function ItemCreatorContent() {
                   label="Dice:"
                   min={1}
                   max={10}
-                  variant="item"
                 />
                 <div className="flex items-center gap-1">
                   <span className="font-bold text-lg">d</span>

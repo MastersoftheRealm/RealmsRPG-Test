@@ -42,7 +42,7 @@ export interface EnrichedPower extends CharacterPower {
 export interface EnrichedTechnique extends CharacterTechnique {
   // Display fields from library
   description: string;
-  staminaCost?: number;
+  energyCost?: number;
   actionType?: string;
   weaponName?: string;
   damageStr?: string;

@@ -31,6 +31,7 @@ import {
   type RTDBSkill as Skill,
   type Species,
   type Trait,
+  type ItemProperty,
 } from '@/hooks';
 
 type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts';
@@ -493,8 +494,8 @@ function SkillsTab() {
     const baseSkills = new Set<string>();
 
     skills.forEach(s => {
-      if (s.ability) abilities.add(s.ability);
-      if (s.category) baseSkills.add(s.category);
+      if (s.ability && typeof s.ability === 'string') abilities.add(s.ability);
+      if (s.category && typeof s.category === 'string') baseSkills.add(s.category);
     });
 
     return {
@@ -570,7 +571,7 @@ function SkillsTab() {
           <ChipSelect
             label="Ability"
             placeholder="Choose ability"
-            options={filterOptions.abilities.map(a => ({ value: a, label: a.charAt(0).toUpperCase() + a.slice(1) }))}
+            options={filterOptions.abilities.map(a => ({ value: a, label: typeof a === 'string' && a.length > 0 ? a.charAt(0).toUpperCase() + a.slice(1) : String(a) }))}
             selectedValues={filters.abilities}
             onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
             onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
@@ -937,6 +938,18 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
 // EQUIPMENT TAB
 // =============================================================================
 
+interface Equipment {
+  id: string;
+  name: string;
+  description?: string;
+  type?: string;
+  subtype?: string;
+  gold_cost?: number;
+  currency?: number;
+  weight?: number;
+  rarity?: string;
+}
+
 function EquipmentTab() {
   const { data: equipment, isLoading, error } = useEquipment();
   const [search, setSearch] = useState('');
@@ -993,23 +1006,45 @@ function EquipmentTab() {
           <div className="p-8 text-center text-gray-500">No equipment found.</div>
         ) : (
           filteredEquipment.map(item => (
-            <div key={item.id} className="px-4 py-3 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-gray-900">{item.name}</div>
-                  <div className="text-sm text-gray-500">{item.type} {item.subtype && `• ${item.subtype}`}</div>
-                </div>
-                <div className="text-right">
-                  <div className="font-medium text-amber-600">{item.gold_cost}c</div>
-                </div>
-              </div>
-              {item.description && (
-                <p className="text-sm text-gray-600 mt-2">{item.description}</p>
-              )}
-            </div>
+            <EquipmentCard key={item.id} item={item as Equipment} />
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+function EquipmentCard({ item }: { item: Equipment }) {
+  const [expanded, setExpanded] = useState(false);
+  const cost = item.currency ?? item.gold_cost ?? 0;
+
+  return (
+    <div className="bg-white">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full grid grid-cols-3 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div>
+          <div className="font-medium text-gray-900">{item.name}</div>
+          <div className="text-sm text-gray-500">{item.type} {item.subtype && `• ${item.subtype}`}</div>
+        </div>
+        <div className="text-amber-600 font-medium">{cost}c</div>
+        <div className="flex items-center justify-end">
+          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
+        </div>
+      </button>
+      
+      {expanded && (
+        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
+          {item.description && (
+            <p className="text-gray-700 mb-2">{item.description}</p>
+          )}
+          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+            {item.weight !== undefined && <span><strong>Weight:</strong> {item.weight} kg</span>}
+            {item.rarity && <span><strong>Rarity:</strong> {item.rarity}</span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1074,21 +1109,67 @@ function PropertiesTab() {
           <div className="p-8 text-center text-gray-500">No properties found.</div>
         ) : (
           filteredProperties.map(prop => (
-            <div key={prop.id} className="px-4 py-3 hover:bg-gray-50">
-              <div className="flex items-center justify-between mb-1">
-                <div className="font-medium text-gray-900">{prop.name}</div>
-                <div className="text-sm text-gray-500">{prop.type}</div>
-              </div>
-              {prop.description && (
-                <p className="text-sm text-gray-600">{prop.description}</p>
-              )}
-              {prop.tp_cost !== undefined && (
-                <div className="text-sm text-amber-600 mt-1">TP Cost: {prop.tp_cost}</div>
-              )}
-            </div>
+            <PropertyCard key={prop.id} property={prop} />
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+function PropertyCard({ property }: { property: ItemProperty }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="bg-white">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full grid grid-cols-3 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div className="font-medium text-gray-900">{property.name}</div>
+        <div className="text-gray-600">{property.type || 'General'}</div>
+        <div className="flex items-center justify-between">
+          <span className="text-amber-600">
+            {property.tp_cost !== undefined && `${property.tp_cost} TP`}
+            {property.base_tp !== undefined && `${property.base_tp} TP`}
+          </span>
+          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
+        </div>
+      </button>
+      
+      {expanded && (
+        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
+          {property.description && (
+            <p className="text-gray-700 mb-3">{property.description}</p>
+          )}
+          <div className="flex flex-wrap gap-4 text-sm">
+            {property.base_ip !== undefined && (
+              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">IP: {property.base_ip}</span>
+            )}
+            {(property.tp_cost !== undefined || property.base_tp !== undefined) && (
+              <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                TP: {property.tp_cost ?? property.base_tp}
+              </span>
+            )}
+            {(property.gold_cost !== undefined || property.base_c !== undefined) && (
+              <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded">
+                Cost: {property.gold_cost ?? property.base_c}c
+              </span>
+            )}
+          </div>
+          {property.op_1_desc && (
+            <div className="mt-3 p-2 bg-gray-100 rounded text-sm">
+              <strong>Option:</strong> {property.op_1_desc}
+              {(property.op_1_ip !== undefined || property.op_1_tp !== undefined) && (
+                <span className="text-gray-500 ml-2">
+                  ({property.op_1_ip !== undefined && `+${property.op_1_ip} IP`}
+                  {property.op_1_tp !== undefined && ` +${property.op_1_tp} TP`})
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

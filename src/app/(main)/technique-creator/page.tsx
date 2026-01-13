@@ -7,19 +7,19 @@
  * - Select technique parts from RTDB database
  * - Configure option levels for each part
  * - Calculate energy and training point costs
- * - Save to user's library via Cloud Functions
+ * - Save to user's Firestore library
  */
 
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, FolderOpen } from 'lucide-react';
+import { collection, addDoc, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { useTechniqueParts, useUserTechniques, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { functions } from '@/lib/firebase/client';
-import { httpsCallable } from 'firebase/functions';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
@@ -149,7 +149,7 @@ function PartCard({
           </button>
           <span className="font-medium text-gray-900">{part.name}</span>
           <span className="text-sm text-gray-500">
-            Stam: {partStam.toFixed(1)} | TP: {Math.floor(partTP)}
+            En: {partStam.toFixed(1)} | TP: {Math.floor(partTP)}
           </span>
         </div>
         <button
@@ -233,7 +233,7 @@ function PartCard({
                     <span className="text-sm font-medium">
                       Option 1:{' '}
                       <span className="text-gray-500">
-                        Stam {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP{' '}
+                        En {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP{' '}
                         {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
                       </span>
                     </span>
@@ -241,7 +241,6 @@ function PartCard({
                       value={selectedPart.op_1_lvl}
                       onChange={(v) => onUpdate({ op_1_lvl: v })}
                       label="Level:"
-                      variant="technique"
                     />
                   </div>
                   {part.op_1_desc && (
@@ -256,7 +255,7 @@ function PartCard({
                     <span className="text-sm font-medium">
                       Option 2:{' '}
                       <span className="text-gray-500">
-                        Stam {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP{' '}
+                        En {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP{' '}
                         {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
                       </span>
                     </span>
@@ -264,7 +263,6 @@ function PartCard({
                       value={selectedPart.op_2_lvl}
                       onChange={(v) => onUpdate({ op_2_lvl: v })}
                       label="Level:"
-                      variant="technique"
                     />
                   </div>
                   {part.op_2_desc && (
@@ -279,7 +277,7 @@ function PartCard({
                     <span className="text-sm font-medium">
                       Option 3:{' '}
                       <span className="text-gray-500">
-                        Stam {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP{' '}
+                        En {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP{' '}
                         {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
                       </span>
                     </span>
@@ -287,7 +285,6 @@ function PartCard({
                       value={selectedPart.op_3_lvl}
                       onChange={(v) => onUpdate({ op_3_lvl: v })}
                       label="Level:"
-                      variant="technique"
                     />
                   </div>
                   {part.op_3_desc && (
@@ -398,8 +395,6 @@ function TechniqueCreatorContent() {
     setSaveMessage(null);
 
     try {
-      const saveTechniqueToLibrary = httpsCallable(functions, 'saveTechniqueToLibrary');
-      
       // Format parts for saving
       const partsToSave = selectedParts.map((sp) => ({
         id: Number(sp.part.id),
@@ -412,16 +407,31 @@ function TechniqueCreatorContent() {
       // Format damage
       const damageToSave =
         damage.type !== 'none' && damage.amount > 0
-          ? { amount: damage.amount, size: damage.size, type: damage.type }
-          : null;
+          ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
+          : [];
 
-      await saveTechniqueToLibrary({
-        techniqueName: name.trim(),
-        techniqueDescription: description.trim(),
+      const techniqueData = {
+        name: name.trim(),
+        description: description.trim(),
         parts: partsToSave,
         damage: damageToSave,
         weapon: weapon.id > 0 ? weapon : null,
-      });
+        updatedAt: new Date(),
+      };
+
+      // Check if technique with same name exists
+      const libraryRef = collection(db, 'users', user.uid, 'techniqueLibrary');
+      const q = query(libraryRef, where('name', '==', name.trim()));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        // Update existing technique
+        const docRef = doc(db, 'users', user.uid, 'techniqueLibrary', snapshot.docs[0].id);
+        await setDoc(docRef, techniqueData);
+      } else {
+        // Create new technique
+        await addDoc(libraryRef, { ...techniqueData, createdAt: new Date() });
+      }
 
       setSaveMessage({ type: 'success', text: 'Technique saved successfully!' });
       
@@ -706,7 +716,6 @@ function TechniqueCreatorContent() {
                 label="Dice:"
                 min={0}
                 max={20}
-                variant="technique"
               />
               <div className="flex items-center gap-1">
                 <span className="font-bold text-lg">d</span>

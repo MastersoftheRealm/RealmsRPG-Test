@@ -17,17 +17,9 @@ interface NumberStepperProps {
   step?: number;
   label?: string;
   size?: 'sm' | 'md' | 'lg';
-  variant?: 'primary' | 'power' | 'technique' | 'item';
   disabled?: boolean;
   className?: string;
 }
-
-const variantClasses = {
-  primary: 'bg-primary-600 hover:bg-primary-700 disabled:hover:bg-primary-600',
-  power: 'bg-primary-600 hover:bg-primary-700 disabled:hover:bg-primary-600',
-  technique: 'bg-red-600 hover:bg-red-700 disabled:hover:bg-red-600',
-  item: 'bg-amber-600 hover:bg-amber-700 disabled:hover:bg-amber-600',
-};
 
 export function NumberStepper({
   value,
@@ -37,7 +29,6 @@ export function NumberStepper({
   step = 1,
   label,
   size = 'md',
-  variant = 'primary',
   disabled = false,
   className,
 }: NumberStepperProps) {
@@ -85,8 +76,7 @@ export function NumberStepper({
         onClick={handleDecrement}
         disabled={disabled || value <= min}
         className={cn(
-          'rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold transition-colors',
-          'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-200',
+          'btn-stepper btn-stepper-danger',
           sizes.button
         )}
         aria-label="Decrease"
@@ -101,9 +91,7 @@ export function NumberStepper({
         onClick={handleIncrement}
         disabled={disabled || value >= max}
         className={cn(
-          'rounded text-white flex items-center justify-center font-bold transition-colors',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
-          variantClasses[variant],
+          'btn-stepper btn-stepper-success',
           sizes.button
         )}
         aria-label="Increase"

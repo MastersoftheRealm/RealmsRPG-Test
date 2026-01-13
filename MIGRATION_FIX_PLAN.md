@@ -1664,3 +1664,136 @@ const savePower = async (power: PowerData) => {
 ---
 
 *End of Document*
+---
+
+## Progress Tracking (Updated: January 13, 2026)
+
+### ✅ COMPLETED
+
+#### Session 1 (Previous)
+- [x] Power Creator CORS fix - Direct Firestore writes replacing Cloud Functions
+- [x] Technique Creator CORS fix - Direct Firestore writes replacing Cloud Functions
+- [x] Creature Creator - Improved library display with stat-block design
+- [x] Creature Creator - Added challenge rating, environment, creature type fields
+- [x] Library Creatures Tab - Better creature display with expandable stat blocks
+
+#### Session 2 (Current)
+- [x] **Codex Skills Tab Error** - Fixed `e.charAt is not a function` by adding type safety for non-string ability values
+- [x] **Codex Equipment Tab** - Added expand/collapse functionality with EquipmentCard component
+- [x] **Codex Properties Tab** - Added expand/collapse functionality with PropertyCard component
+- [x] **Item Creator CORS** - Converted to direct Firestore writes (matching power/technique pattern)
+- [x] **Character Creator Equipment** - Fixed RTDB path from 'equipment' to 'items' (matching vanilla site)
+- [x] **Species Trait Resolution** - Enhanced `findTraitByIdOrName` with sanitized ID lookups (handles "Trait Name" → "trait_name")
+- [x] **Terminology Fix** - Changed all "Stam/Stamina" references to "En/Energy" in technique creator
+- [x] **Type Consistency** - Renamed `staminaCost` to `energyCost` in EnrichedTechnique interface
+- [x] **NumberStepper Visibility** - Updated to use btn-stepper classes for consistent, visible +/- buttons across all creators
+- [x] **Encounter Tracker Verified** - Sort initiative (with alternating) and drag-drop already working
+- [x] **All Creators Use Direct Firestore** - Verified power, technique, item, and creature creators all save directly to Firestore (no Cloud Functions CORS issues)
+- [x] **Species Modal Verified** - Already has "Pick Me!" / "Nah..." buttons
+- [x] **Ancestry Step Verified** - Properly shows species traits, ancestry trait selection, flaw selection, and characteristics
+- [x] **Currency Terminology Verified** - UI displays "c" for currency (database field names unchanged)
+- [x] **Character Creator Feats** - Verified archetype feat limits work correctly (Power:1, Powered-Martial:2, Martial:3)
+- [x] **Power Creator Advanced Mechanics** - Verified Duration, Range, Area of Effect already implemented with RTDB parts
+- [x] **Creature Creator RTDB Feats** - Verified uses `creature_feats` from RTDB (not normal feats) via `useCreatureFeats()` hook
+- [x] **Creature Creator Feat Points** - Verified feat point tracking with `calculateCreatureFeatPoints()` function
+- [x] **Creature Health Calculation Fix** - Fixed negative vitality to only apply at level 1, not multiplied by level
+- [x] **Creature Energy Minimum Verified** - Energy minimum = highest non-vitality ability × level (correctly implemented)
+
+### ✅ VERIFIED WORKING (No Changes Needed)
+
+#### Character Creator
+- [x] Species popup modal with "Pick Me!" / "Nah..." buttons (already implemented)
+- [x] Species sizes displayed correctly (no speed shown - per spec)
+- [x] Ancestry traits display with selection logic
+- [x] Flaw selection grants +1 ancestry trait
+- [x] Characteristic selection
+- [x] btn-continue and btn-back classes for visible buttons
+- [x] Archetype feat limits: Power=1, Powered-Martial=2, Martial=3 (getArchetypeFeatLimit)
+- [x] Character feats separate from archetype feats
+
+#### Encounter Tracker
+- [x] Sort Initiative button with alternating ally/enemy logic
+- [x] Drag-and-drop reordering  
+- [x] Initiative values visible (using bg-primary-600 text-white when current turn)
+
+#### Power Creator
+- [x] Duration options (Round, Minute, Hour, Days, Permanent) with levels
+- [x] Range option (Power Range) with space calculation
+- [x] Area of Effect (Sphere, Cylinder, Cone, Line, Trail)
+- [x] Part-based cost calculation using RTDB parts data
+- [x] Direct Firestore save (no CORS issues)
+
+#### Creature Creator
+- [x] Uses creature_feats from RTDB (useCreatureFeats hook)
+- [x] Feat point tracking with calculateCreatureFeatPoints
+- [x] Proficiency point allocation
+- [x] Health calculation: 8 + vitalityContribution + hitPoints
+  - Negative vitality only applies once (at level 1)
+  - Positive vitality multiplied by level
+- [x] Energy minimum = highest non-vitality ability × level
+- [x] Direct Firestore save (no CORS issues)
+
+#### Library Creatures Tab
+- [x] Full stat-block display via transformCreature() function
+- [x] Displays: Level, HP, Energy Points
+- [x] Type and Size badges
+- [x] Abilities formatted as stat block
+- [x] Defense Bonuses
+- [x] Resistances, Weaknesses, Immunities, Condition Immunities
+- [x] Senses, Movement Types, Languages
+- [x] Skills with proficiency markers
+- [x] Combat abilities summary (powers, techniques, armaments, feats)
+
+#### Codex Species Tab
+- [x] Species Traits displayed (blue background)
+- [x] Ancestry Traits displayed (green background)
+- [x] Flaws displayed (red background)
+- [x] Characteristics displayed (purple background)
+- [x] Height, weight, languages shown
+- [x] Search and filter by type/size
+
+### 🔄 LOWER PRIORITY POLISH
+
+- [ ] Encounter Tracker: Condition right-click to reduce level
+- [ ] Encounter Tracker: Custom condition creation
+
+### 📋 TODO (Priority Order)
+
+#### High Priority - Functionality Gaps
+1. ~~**Character Creator Issues**~~ ✅ VERIFIED WORKING
+   - ~~Species popup modal with "Pick Me!" / "Nah..." buttons~~ ✅
+   - ~~Ancestry traits display (species traits from RTDB)~~ ✅
+   - ~~Feat system (archetype feats based on character type)~~ ✅
+   - ~~Verify button visibility with btn-continue class~~ ✅
+
+2. ~~**Power Creator Advanced Mechanics**~~ ✅ VERIFIED WORKING
+   - ~~Duration, Range, Area of Effect options~~ ✅
+   - ~~Part-based cost calculation from RTDB~~ ✅
+
+3. ~~**Creature Creator Issues**~~ ✅ MOSTLY COMPLETE
+   - ~~Use creature feats from RTDB (not normal feats)~~ ✅
+   - ~~Feat point tracking and display~~ ✅
+   - ~~Proficiency point allocation~~ ✅ (implemented with point tracking)
+   - ~~Health/Energy minimum calculations~~ ✅ Fixed negative vitality logic
+
+#### Medium Priority - UI/UX
+4. ~~**Library Creatures Tab**~~ ✅ VERIFIED WORKING
+   - ~~Improve stat-block display~~ ✅ Already comprehensive via transformCreature()
+   - ~~Show resistances, immunities, abilities properly~~ ✅ All displayed correctly
+
+5. ~~**Codex Species Display**~~ ✅ VERIFIED WORKING
+   - ~~Categories for traits/flaws/characteristics~~ ✅ Color-coded (blue/green/red/purple)
+   - Size sort headers (small-large, large-small) - **LOWER PRIORITY POLISH**
+
+#### Lower Priority - Polish
+6. **Creators Standardization**
+   - Unified save/load button positions
+   - Consistent cost summary placement
+   - "Learn one UI, learn them all" principle
+
+7. **Terminology Audit**
+   - Ensure no "gp/gold" usage (use "c/currency")
+   - Verify all stamina→energy changes
+
+8. **Size Sort Headers for Codex** (optional enhancement)
+   - Add ascending/descending size sorting for species list

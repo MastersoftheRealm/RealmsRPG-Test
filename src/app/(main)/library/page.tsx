@@ -432,8 +432,30 @@ function CreaturesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
       level: creature.level,
       type: creature.type,
       size: creature.size,
+      // Core stats - support both old and new field names
       hp: creature.hp,
+      hitPoints: creature.hitPoints,
+      energyPoints: creature.energyPoints,
       abilities: creature.abilities,
+      defenses: creature.defenses,
+      // Proficiencies
+      powerProficiency: creature.powerProficiency,
+      martialProficiency: creature.martialProficiency,
+      // Damage modifiers
+      resistances: creature.resistances,
+      weaknesses: creature.weaknesses,
+      immunities: creature.immunities,
+      conditionImmunities: creature.conditionImmunities,
+      // Movement and senses
+      senses: creature.senses,
+      movementTypes: creature.movementTypes,
+      languages: creature.languages,
+      // Skills and combat
+      skills: creature.skills,
+      powers: creature.powers,
+      techniques: creature.techniques,
+      feats: creature.feats,
+      armaments: creature.armaments,
     }));
   }, [creatures]);
   

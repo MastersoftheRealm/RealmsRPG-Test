@@ -164,7 +164,10 @@ export interface EquipmentItem {
   damage?: string;
   armor_value?: number;
   gold_cost: number;
+  currency: number;
   properties: string[];
+  rarity?: string;
+  weight?: number;
 }
 
 // =============================================================================
@@ -428,7 +431,8 @@ async function fetchItemProperties(): Promise<ItemProperty[]> {
 }
 
 async function fetchEquipment(): Promise<EquipmentItem[]> {
-  return fetchRTDBData<EquipmentItem>('equipment', (data) =>
+  // Note: RTDB uses 'items' path for equipment data
+  return fetchRTDBData<EquipmentItem>('items', (data) =>
     Object.entries(data).map(([id, e]) => {
       const equip = e as Record<string, unknown>;
       return {
@@ -440,7 +444,10 @@ async function fetchEquipment(): Promise<EquipmentItem[]> {
         damage: equip.damage as string | undefined,
         armor_value: parseInt(equip.armor_value as string) || undefined,
         gold_cost: parseFloat(equip.gold_cost as string) || 0,
+        currency: parseFloat(equip.currency as string) || parseFloat(equip.gold_cost as string) || 0,
         properties: toStrArray(equip.properties),
+        rarity: equip.rarity as string | undefined,
+        weight: parseFloat(equip.weight as string) || undefined,
       };
     })
   );
@@ -597,7 +604,20 @@ export function findTraitByIdOrName(
   
   // Try case-insensitive name match
   const lowerLookup = lookupStr.toLowerCase();
-  return traits.find(t => t.name.toLowerCase() === lowerLookup);
+  const byName = traits.find(t => t.name.toLowerCase() === lowerLookup);
+  if (byName) return byName;
+  
+  // Try sanitized ID match (convert "Trait Name" to "trait_name" or "trait-name")
+  const sanitizedLookup = lookupStr.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+  const bySanitizedId = traits.find(t => t.id === sanitizedLookup || t.id === sanitizedLookup.replace(/_/g, '-'));
+  if (bySanitizedId) return bySanitizedId;
+  
+  // Try matching sanitized name to ID
+  const bySanitizedName = traits.find(t => {
+    const sanitizedName = t.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+    return sanitizedName === sanitizedLookup || sanitizedName === lowerLookup;
+  });
+  return bySanitizedName;
 }
 
 /**

@@ -120,6 +120,36 @@ export function calculateCreatureTrainingPoints(level: number, highestNonVitalit
 }
 
 /**
+ * Calculate creature feat points based on level and martial proficiency.
+ * Base Formula: 4 + 1 * (level - 1)
+ * Martial Bonus: +1 per point of martial proficiency (up to 2) 
+ *                +1 per 3 levels after level 4 if martial >= 2
+ * For sub-levels: ceil(4 * level) + martial proficiency
+ */
+export function calculateCreatureFeatPoints(level: number, martialProficiency = 0): number {
+  const parsedLevel = parseFloat(String(level)) || 1;
+  const martial = martialProficiency || 0;
+  
+  if (parsedLevel < 1) {
+    // Fractional levels: 4 * level + martial proficiency, rounded up
+    return Math.ceil(4 * parsedLevel) + martial;
+  }
+  
+  // Base feat points: 4 + (level - 1)
+  const base = 4 + 1 * (parsedLevel - 1);
+  
+  // Martial bonus: +1 per point of martial proficiency (max 2)
+  let martialBonus = Math.min(martial, 2);
+  
+  // Additional martial bonus: +1 per 3 levels after level 4 if martial >= 2
+  if (martial >= 2 && parsedLevel >= 4) {
+    martialBonus += Math.floor((parsedLevel - 1) / 3);
+  }
+  
+  return base + martialBonus;
+}
+
+/**
  * Calculate creature currency based on level.
  * Formula: 200 * 1.45^(level-1)
  */

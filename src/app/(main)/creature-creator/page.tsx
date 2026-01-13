@@ -20,6 +20,7 @@ import { deriveItemDisplay } from '@/lib/calculators/item-calc';
 import { 
   calculateCreatureTrainingPoints, 
   calculateCreatureCurrency,
+  calculateCreatureFeatPoints,
   calculateHealthEnergyPool,
   calculateProficiency,
   calculateAbilityPoints,
@@ -335,14 +336,20 @@ function DefenseBlock({
       <div className="flex items-center justify-center gap-1">
         <button
           onClick={() => onChange(Math.max(0, bonusValue - 1))}
-          className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm"
+          disabled={bonusValue <= 0}
+          className={cn(
+            'w-6 h-6 rounded flex items-center justify-center text-sm',
+            bonusValue <= 0 
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+              : 'bg-red-100 text-red-700 hover:bg-red-200'
+          )}
         >
           −
         </button>
         <span className="text-xs text-gray-500 w-8">+{bonusValue}</span>
         <button
           onClick={() => onChange(bonusValue + 1)}
-          className="w-6 h-6 rounded bg-primary-600 text-white hover:bg-primary-700 flex items-center justify-center text-sm"
+          className="w-6 h-6 rounded bg-green-100 text-green-700 hover:bg-green-200 flex items-center justify-center text-sm"
         >
           +
         </button>
@@ -780,9 +787,19 @@ function CreatureCreatorContent() {
     const abilityPoints = calculateAbilityPoints(level, true);
     const skillPoints = calculateSkillPoints(level, true);
     
-    // Health = 8 + (vitality * level) + hitPoints
-    const maxHealth = 8 + (abilities.vitality * Math.max(1, level)) + creature.hitPoints;
-    const maxEnergy = creature.energyPoints;
+    // Feat points based on level and martial proficiency
+    const featPoints = calculateCreatureFeatPoints(level, creature.martialProficiency);
+    const featSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
+    
+    // Health = 8 + (vitality contribution) + hitPoints
+    // Negative vitality only applies at level 1, not multiplied by level
+    const vitalityContribution = abilities.vitality >= 0 
+      ? abilities.vitality * Math.max(1, level) 
+      : abilities.vitality; // Negative vitality only applies once (at level 1)
+    const maxHealth = 8 + vitalityContribution + creature.hitPoints;
+    // Energy minimum = highest non-vitality ability * level
+    const minEnergy = highestNonVitality * Math.max(1, level);
+    const maxEnergy = minEnergy + creature.energyPoints;
     
     // Speed = 6 + ceil(agility / 2) + size modifier
     const sizeData = CREATURE_SIZES.find(s => s.value === creature.size);
@@ -793,7 +810,8 @@ function CreatureCreatorContent() {
     const evasion = 10 + abilities.agility;
     
     // Points spent
-    const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + Math.max(0, val), 0);
+    // Negative abilities give points back, positive abilities cost points
+    const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + val, 0);
     const heSpent = creature.hitPoints + creature.energyPoints;
     const skillSpent = creature.skills.reduce((sum, s) => sum + s.value + (s.proficient ? 1 : 0), 0);
     const defenseSpent = Object.values(creature.defenses).reduce((sum, val) => sum + (val * 2), 0);
@@ -805,7 +823,11 @@ function CreatureCreatorContent() {
       proficiency,
       abilityPoints,
       skillPoints,
+      featPoints,
+      featSpent,
+      featRemaining: featPoints - featSpent,
       maxHealth,
+      minEnergy,
       maxEnergy,
       speed,
       evasion,
@@ -923,7 +945,7 @@ function CreatureCreatorContent() {
       </div>
 
       {/* Resource Summary Bar */}
-      <div className="bg-white rounded-xl shadow-md p-4 mb-6 grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+      <div className="bg-white rounded-xl shadow-md p-4 mb-6 grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
         <div>
           <div className="text-sm text-gray-500">Ability Points</div>
           <div className={cn('text-xl font-bold', stats.abilityRemaining < 0 ? 'text-red-600' : 'text-blue-600')}>
@@ -940,6 +962,12 @@ function CreatureCreatorContent() {
           <div className="text-sm text-gray-500">Skill Points</div>
           <div className={cn('text-xl font-bold', stats.skillRemaining < 0 ? 'text-red-600' : 'text-blue-600')}>
             {stats.skillRemaining}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500">Feat Points</div>
+          <div className={cn('text-xl font-bold', stats.featRemaining < 0 ? 'text-red-600' : 'text-amber-600')}>
+            {stats.featRemaining}
           </div>
         </div>
         <div>
@@ -1044,7 +1072,7 @@ function CreatureCreatorContent() {
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => updateAbility(ability, Math.max(-4, creature.abilities[ability] - 1))}
-                      className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold"
+                      className="btn-stepper btn-stepper-danger"
                     >
                       −
                     </button>
@@ -1057,7 +1085,7 @@ function CreatureCreatorContent() {
                     </span>
                     <button
                       onClick={() => updateAbility(ability, Math.min(7, creature.abilities[ability] + 1))}
-                      className="w-8 h-8 rounded bg-primary-600 text-white hover:bg-primary-700 flex items-center justify-center font-bold"
+                      className="btn-stepper btn-stepper-success"
                     >
                       +
                     </button>
@@ -1126,7 +1154,11 @@ function CreatureCreatorContent() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => updateCreature({ hitPoints: Math.max(0, creature.hitPoints - 1) })}
-                    className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 font-bold"
+                    disabled={creature.hitPoints <= 0}
+                    className={cn(
+                      'btn-stepper',
+                      creature.hitPoints <= 0 ? 'btn-stepper opacity-50 cursor-not-allowed' : 'btn-stepper-danger'
+                    )}
                   >
                     −
                   </button>
@@ -1139,7 +1171,7 @@ function CreatureCreatorContent() {
                   />
                   <button
                     onClick={() => updateCreature({ hitPoints: creature.hitPoints + 1 })}
-                    className="px-3 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 font-bold"
+                    className="btn-stepper btn-stepper-success"
                   >
                     +
                   </button>
@@ -1147,12 +1179,16 @@ function CreatureCreatorContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Energy Points (+{creature.energyPoints} → Max: {stats.maxEnergy})
+                  Energy Points (Base: {stats.minEnergy} + {creature.energyPoints} → Max: {stats.maxEnergy})
                 </label>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => updateCreature({ energyPoints: Math.max(0, creature.energyPoints - 1) })}
-                    className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 font-bold"
+                    disabled={creature.energyPoints <= 0}
+                    className={cn(
+                      'btn-stepper',
+                      creature.energyPoints <= 0 ? 'btn-stepper opacity-50 cursor-not-allowed' : 'btn-stepper-danger'
+                    )}
                   >
                     −
                   </button>
@@ -1165,7 +1201,7 @@ function CreatureCreatorContent() {
                   />
                   <button
                     onClick={() => updateCreature({ energyPoints: creature.energyPoints + 1 })}
-                    className="px-3 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 font-bold"
+                    className="btn-stepper btn-stepper-success"
                   >
                     +
                   </button>

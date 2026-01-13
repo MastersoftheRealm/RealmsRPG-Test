@@ -38,8 +38,8 @@ export function EquipmentStep() {
     return Math.max(...abilityValues, 0);
   }, [draft.abilities]);
 
-  // Calculate starting gold
-  const startingGold = calculateTrainingPoints(draft.level || 1, highestAbility) * 10;
+  // Calculate starting currency
+  const startingCurrency = calculateTrainingPoints(draft.level || 1, highestAbility) * 10;
   
   // Get selected equipment from draft - use inventory array
   const selectedItems = useMemo((): SelectedItem[] => {
@@ -57,11 +57,11 @@ export function EquipmentStep() {
     }));
   }, [draft.equipment?.inventory]);
 
-  const spentGold = useMemo(() => {
+  const spentCurrency = useMemo(() => {
     return selectedItems.reduce((sum: number, item) => sum + (item.cost || 0), 0);
   }, [selectedItems]);
 
-  const remainingGold = startingGold - spentGold;
+  const remainingCurrency = startingCurrency - spentCurrency;
 
   // Filter equipment by type and search
   const filteredEquipment = useMemo(() => {
@@ -94,8 +94,8 @@ export function EquipmentStep() {
         }
       });
     } else {
-      // Add item if we have enough gold
-      if (item.gold_cost > remainingGold) return;
+      // Add item if we have enough currency
+      if (item.gold_cost > remainingCurrency) return;
       
       const newItem: Item = {
         id: item.id,
@@ -135,9 +135,9 @@ export function EquipmentStep() {
         
         <div className={cn(
           'px-4 py-2 rounded-xl font-bold text-lg',
-          remainingGold > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+          remainingCurrency > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
         )}>
-          {remainingGold} / {startingGold}c
+          {remainingCurrency} / {startingCurrency}c
         </div>
       </div>
 
@@ -152,9 +152,9 @@ export function EquipmentStep() {
                 className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm flex items-center gap-2"
               >
                 {item.name}
-                <span className="text-amber-600 text-xs">{item.cost}g</span>
+                <span className="text-amber-600 text-xs">{item.cost}c</span>
                 <button
-                  onClick={() => toggleItem({ id: item.id, name: item.name, gold_cost: item.cost, type: 'equipment', properties: [], description: '' } as EquipmentItem)}
+                  onClick={() => toggleItem({ id: item.id, name: item.name, gold_cost: item.cost, currency: item.cost, type: 'equipment', properties: [], description: '' } as EquipmentItem)}
                   className="hover:text-red-500"
                 >
                   ×
@@ -196,7 +196,7 @@ export function EquipmentStep() {
       <div className="grid md:grid-cols-2 gap-3 mb-8 max-h-[400px] overflow-y-auto">
         {filteredEquipment.map(item => {
           const isSelected = selectedItems.some(i => i.id === item.id);
-          const canAfford = item.gold_cost <= remainingGold || isSelected;
+          const canAfford = item.gold_cost <= remainingCurrency || isSelected;
           
           return (
             <button

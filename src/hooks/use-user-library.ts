@@ -81,8 +81,32 @@ export interface UserCreature {
   level: number;
   type?: string;
   size?: string;
-  hp?: number;
+  // Core stats
+  hitPoints?: number;
+  energyPoints?: number;
   abilities?: Record<string, number>;
+  defenses?: Record<string, number>;
+  // Proficiencies
+  powerProficiency?: number;
+  martialProficiency?: number;
+  // Damage modifiers
+  resistances?: string[];
+  weaknesses?: string[];
+  immunities?: string[];
+  conditionImmunities?: string[];
+  // Movement and senses
+  senses?: string[];
+  movementTypes?: string[];
+  languages?: string[];
+  // Skills
+  skills?: Array<{ name: string; value: number; proficient?: boolean }>;
+  // Combat
+  powers?: unknown[];
+  techniques?: unknown[];
+  feats?: unknown[];
+  armaments?: unknown[];
+  // Deprecated - kept for backwards compatibility
+  hp?: number;
   attacks?: unknown[];
   createdAt?: Date;
   updatedAt?: Date;
