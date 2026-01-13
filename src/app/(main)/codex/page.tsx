@@ -714,9 +714,25 @@ function SpeciesTab() {
 
       return true;
     }).sort((a, b) => {
-      const col = sortState.col as keyof Species;
-      const aVal = a[col];
-      const bVal = b[col];
+      const col = sortState.col;
+      
+      // Custom size ordering
+      if (col === 'sizes') {
+        const sizeOrder = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
+        const getMinSizeIndex = (sizes: string[] | undefined) => {
+          if (!sizes || sizes.length === 0) return 999;
+          return Math.min(...sizes.map(s => {
+            const idx = sizeOrder.indexOf(s);
+            return idx >= 0 ? idx : 999;
+          }));
+        };
+        const aIdx = getMinSizeIndex(a.sizes);
+        const bIdx = getMinSizeIndex(b.sizes);
+        return sortState.dir * (aIdx - bIdx);
+      }
+      
+      const aVal = a[col as keyof Species];
+      const bVal = b[col as keyof Species];
       
       if (typeof aVal === 'string' && typeof bVal === 'string') {
         return sortState.dir * aVal.localeCompare(bVal);
@@ -781,7 +797,7 @@ function SpeciesTab() {
       <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
-        <div>SIZES</div>
+        <SortHeader label="SIZES" col="sizes" sortState={sortState} onSort={handleSort} />
         <div>DESCRIPTION</div>
       </div>
 

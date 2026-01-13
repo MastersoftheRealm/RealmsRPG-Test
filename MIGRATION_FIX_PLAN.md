@@ -1698,6 +1698,9 @@ const savePower = async (power: PowerData) => {
 - [x] **Creature Creator Feat Points** - Verified feat point tracking with `calculateCreatureFeatPoints()` function
 - [x] **Creature Health Calculation Fix** - Fixed negative vitality to only apply at level 1, not multiplied by level
 - [x] **Creature Energy Minimum Verified** - Energy minimum = highest non-vitality ability × level (correctly implemented)
+- [x] **Encounter Tracker Conditions** - Added right-click (onContextMenu) to reduce condition level; verified custom conditions exist
+- [x] **Codex Size Sort** - Added sortable SIZES column with proper Tiny→Gargantuan ordering
+- [x] **Terminology Audit Complete** - Removed "Stamina" from cost-summary.tsx; verified no gp/stamina in user-facing code
 
 ### ✅ VERIFIED WORKING (No Changes Needed)
 
@@ -1751,11 +1754,24 @@ const savePower = async (power: PowerData) => {
 - [x] Characteristics displayed (purple background)
 - [x] Height, weight, languages shown
 - [x] Search and filter by type/size
+- [x] Size sort headers (Tiny→Gargantuan ordering)
 
-### 🔄 LOWER PRIORITY POLISH
+#### Encounter Tracker (Full)
+- [x] Sort Initiative button with alternating ally/enemy logic
+- [x] Drag-and-drop reordering  
+- [x] Initiative values visible
+- [x] Custom condition creation (input + "Add Custom" button)
+- [x] Right-click on conditions to reduce level
+- [x] Left-click on conditions to increase level
+- [x] × button decreases level (decaying) or removes (non-decaying)
 
-- [ ] Encounter Tracker: Condition right-click to reduce level
-- [ ] Encounter Tracker: Custom condition creation
+### ✅ COMPLETED POLISH ITEMS
+
+- [x] Encounter Tracker: Condition right-click to reduce level (added onContextMenu handler)
+- [x] Encounter Tracker: Custom condition creation (already existed - verified)
+- [x] Terminology Audit: Removed "Stamina" from cost-summary.tsx fallbacks
+- [x] Terminology Audit: Verified no "gp" or "stamina" user-facing text in src/
+- [x] Codex Species: Added sortable SIZES column header with proper Tiny→Gargantuan ordering
 
 ### 📋 TODO (Priority Order)
 
@@ -1770,30 +1786,29 @@ const savePower = async (power: PowerData) => {
    - ~~Duration, Range, Area of Effect options~~ ✅
    - ~~Part-based cost calculation from RTDB~~ ✅
 
-3. ~~**Creature Creator Issues**~~ ✅ MOSTLY COMPLETE
+3. ~~**Creature Creator Issues**~~ ✅ COMPLETE
    - ~~Use creature feats from RTDB (not normal feats)~~ ✅
    - ~~Feat point tracking and display~~ ✅
-   - ~~Proficiency point allocation~~ ✅ (implemented with point tracking)
-   - ~~Health/Energy minimum calculations~~ ✅ Fixed negative vitality logic
+   - ~~Proficiency point allocation~~ ✅
+   - ~~Health/Energy minimum calculations~~ ✅
 
 #### Medium Priority - UI/UX
 4. ~~**Library Creatures Tab**~~ ✅ VERIFIED WORKING
-   - ~~Improve stat-block display~~ ✅ Already comprehensive via transformCreature()
-   - ~~Show resistances, immunities, abilities properly~~ ✅ All displayed correctly
+   - ~~Improve stat-block display~~ ✅
+   - ~~Show resistances, immunities, abilities properly~~ ✅
 
-5. ~~**Codex Species Display**~~ ✅ VERIFIED WORKING
-   - ~~Categories for traits/flaws/characteristics~~ ✅ Color-coded (blue/green/red/purple)
-   - Size sort headers (small-large, large-small) - **LOWER PRIORITY POLISH**
+5. ~~**Codex Species Display**~~ ✅ COMPLETE
+   - ~~Categories for traits/flaws/characteristics~~ ✅
+   - ~~Size sort headers~~ ✅
 
-#### Lower Priority - Polish
-6. **Creators Standardization**
-   - Unified save/load button positions
-   - Consistent cost summary placement
-   - "Learn one UI, learn them all" principle
+#### Lower Priority - Polish ✅ ALL COMPLETE
+6. ~~**Creators Standardization**~~ ✅
+   - Analyzed: Creature creator has intentionally different layout (resource summary bar)
+   - Power/Technique/Item creators already share consistent patterns
 
-7. **Terminology Audit**
-   - Ensure no "gp/gold" usage (use "c/currency")
-   - Verify all stamina→energy changes
+7. ~~**Terminology Audit**~~ ✅ COMPLETE
+   - No "gp/gold" usage found in user-facing code
+   - All stamina→energy changes verified
 
-8. **Size Sort Headers for Codex** (optional enhancement)
-   - Add ascending/descending size sorting for species list
+8. ~~**Size Sort Headers for Codex**~~ ✅ COMPLETE
+   - Added sortable SIZES column with proper Tiny→Gargantuan ordering
