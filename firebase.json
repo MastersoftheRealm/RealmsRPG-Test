@@ -10,27 +10,18 @@
       "region": "us-central1"
     }
   },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
-    }
-  ],
+  
   "firestore": {
     "database": "(default)",
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "storage": {
-    "rules": "storage.rules"
-  },
+  "storage": [
+    {
+      "bucket": "realmsrpg-test.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ],
   "database": {
     "rules": "database.rules.json"
   }
