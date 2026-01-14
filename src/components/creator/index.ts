@@ -14,5 +14,7 @@ export { NumberStepper } from './number-stepper';
 export { CostSummary, type CostItem } from './cost-summary';
 export { DamageConfig, type DamageValue } from './damage-config';
 export { CreatorActions } from './creator-actions';
-export { CreatorLayout, CreatorSection } from './creator-layout';
+export { CreatorLayout, CreatorSection, CreatorHeader } from './creator-layout';
 export { OptionStepper } from './option-stepper';
+export { LoadFromLibraryModal } from './LoadFromLibraryModal';
+export { PartCard, type PartDefinition, type SelectedPartState } from './part-card';

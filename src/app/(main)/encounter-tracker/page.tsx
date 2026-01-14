@@ -14,6 +14,8 @@ import { Save, GripVertical } from 'lucide-react';
 
 const STORAGE_KEY = 'realms-encounter-tracker';
 
+type CombatantType = 'ally' | 'enemy' | 'companion';
+
 interface Combatant {
   id: string;
   name: string;
@@ -28,7 +30,8 @@ interface Combatant {
   ap: number; // Action Points
   conditions: CombatantCondition[];
   notes: string;
-  isAlly: boolean; // true = ally, false = enemy
+  combatantType: CombatantType; // 'ally', 'enemy', or 'companion'
+  isAlly: boolean; // Kept for backwards compatibility
   isSurprised: boolean;
 }
 
@@ -124,33 +127,29 @@ function EncounterTrackerContent() {
     maxEnergy: 10,
     armor: 0,
     evasion: 10,
-    isAlly: true,
+    combatantType: 'ally' as CombatantType,
+    isAlly: true, // For backwards compatibility
     isSurprised: false,
+    quantity: 1,
   });
 
   // Drag-and-drop state
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
     setDraggedId(id);
+    setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', id);
-    // Add slight delay to allow drag image to form
-    setTimeout(() => {
-      const element = document.getElementById(`combatant-${id}`);
-      if (element) element.classList.add('opacity-50');
-    }, 0);
   }, []);
 
   const handleDragEnd = useCallback(() => {
-    if (draggedId) {
-      const element = document.getElementById(`combatant-${draggedId}`);
-      if (element) element.classList.remove('opacity-50');
-    }
     setDraggedId(null);
     setDragOverId(null);
-  }, [draggedId]);
+    setIsDragging(false);
+  }, []);
 
   const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
     e.preventDefault();
@@ -191,41 +190,84 @@ function EncounterTrackerContent() {
   }, [draggedId]);
 
   // Display combatants in their current order
-  // Only apply surprise filtering during round 1 (surprised go to end)
+  // Auto-apply surprise during round 1 (surprised go to end), companions always go last
   const sortedCombatants = useMemo(() => {
-    if (encounter.round === 1 && encounter.applySurprise) {
-      // Move surprised combatants to the end
-      const notSurprised = encounter.combatants.filter(c => !c.isSurprised);
-      const surprised = encounter.combatants.filter(c => c.isSurprised);
-      return [...notSurprised, ...surprised];
+    let combatants = [...encounter.combatants];
+    
+    // Separate companions (they always go at the end)
+    const companions = combatants.filter(c => c.combatantType === 'companion');
+    const nonCompanions = combatants.filter(c => c.combatantType !== 'companion');
+    
+    if (encounter.round === 1) {
+      // Move surprised non-companions to the end (before companions)
+      const notSurprised = nonCompanions.filter(c => !c.isSurprised);
+      const surprised = nonCompanions.filter(c => c.isSurprised);
+      return [...notSurprised, ...surprised, ...companions];
+    }
+    
+    return [...nonCompanions, ...companions];
     }
     return encounter.combatants;
-  }, [encounter.combatants, encounter.round, encounter.applySurprise]);
+  }, [encounter.combatants, encounter.round]);
+
+  // Generate suffix letters for duplicate names (A, B, C, etc.)
+  const getNextSuffix = (baseName: string, existingCombatants: Combatant[]): string => {
+    const existingNames = existingCombatants
+      .map(c => c.name)
+      .filter(name => name.startsWith(baseName));
+    
+    if (existingNames.length === 0) return '';
+    
+    // Find the highest letter suffix used
+    const usedSuffixes = existingNames
+      .map(name => {
+        const match = name.match(new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*([A-Z])?$`));
+        return match ? match[1] || '' : '';
+      })
+      .filter(Boolean);
+    
+    // Get next available letter
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (const letter of alphabet) {
+      if (!usedSuffixes.includes(letter)) {
+        return ` ${letter}`;
+      }
+    }
+    return ` ${alphabet.length + 1}`;
+  };
 
   const addCombatant = () => {
     if (!newCombatant.name.trim()) return;
     
-    const combatant: Combatant = {
-      id: generateId(),
-      name: newCombatant.name,
-      initiative: newCombatant.initiative,
-      acuity: newCombatant.acuity,
-      maxHealth: newCombatant.maxHealth,
-      maxEnergy: newCombatant.maxEnergy,
-      armor: newCombatant.armor,
-      evasion: newCombatant.evasion,
-      currentHealth: newCombatant.maxHealth,
-      currentEnergy: newCombatant.maxEnergy,
-      ap: 4, // Default AP
-      conditions: [],
-      notes: '',
-      isAlly: newCombatant.isAlly,
-      isSurprised: newCombatant.isSurprised,
-    };
+    const quantity = Math.max(1, Math.min(26, newCombatant.quantity || 1));
+    const newCombatants: Combatant[] = [];
+    
+    for (let i = 0; i < quantity; i++) {
+      const suffix = quantity > 1 ? ` ${String.fromCharCode(65 + i)}` : '';
+      const combatant: Combatant = {
+        id: generateId(),
+        name: newCombatant.name + suffix,
+        initiative: newCombatant.initiative,
+        acuity: newCombatant.acuity,
+        maxHealth: newCombatant.maxHealth,
+        maxEnergy: newCombatant.maxEnergy,
+        armor: newCombatant.armor,
+        evasion: newCombatant.evasion,
+        currentHealth: newCombatant.maxHealth,
+        currentEnergy: newCombatant.maxEnergy,
+        ap: 4, // Default AP
+        conditions: [],
+        notes: '',
+        combatantType: newCombatant.combatantType,
+        isAlly: newCombatant.combatantType === 'ally' || newCombatant.combatantType === 'companion',
+        isSurprised: newCombatant.isSurprised,
+      };
+      newCombatants.push(combatant);
+    }
     
     setEncounter(prev => ({
       ...prev,
-      combatants: [...prev.combatants, combatant],
+      combatants: [...prev.combatants, ...newCombatants],
     }));
     
     setNewCombatant({
@@ -236,9 +278,34 @@ function EncounterTrackerContent() {
       maxEnergy: 10,
       armor: 0,
       evasion: 10,
+      combatantType: 'ally',
       isAlly: true,
       isSurprised: false,
+      quantity: 1,
     });
+  };
+
+  // Duplicate a combatant with next letter suffix
+  const duplicateCombatant = (combatant: Combatant) => {
+    // Get base name without existing letter suffix
+    const baseNameMatch = combatant.name.match(/^(.+?)\s*[A-Z]?$/);
+    const baseName = baseNameMatch ? baseNameMatch[1].trim() : combatant.name;
+    
+    const suffix = getNextSuffix(baseName, [...encounter.combatants, combatant]);
+    
+    const duplicate: Combatant = {
+      ...combatant,
+      id: generateId(),
+      name: baseName + suffix,
+      currentHealth: combatant.maxHealth,
+      currentEnergy: combatant.maxEnergy,
+      conditions: [],
+    };
+    
+    setEncounter(prev => ({
+      ...prev,
+      combatants: [...prev.combatants, duplicate],
+    }));
   };
 
   const removeCombatant = (id: string) => {
@@ -394,27 +461,26 @@ function EncounterTrackerContent() {
     }));
   };
 
-  const toggleSurprise = () => {
-    setEncounter(prev => ({ ...prev, applySurprise: !prev.applySurprise }));
-  };
-
-  // Sort by initiative, optionally alternating between allies and enemies
-  const sortInitiative = (alternate: boolean = false) => {
+  // Sort by alternative initiative (alternating between allies and enemies), companions always last
+  const sortInitiative = () => {
     setEncounter(prev => {
       const sortByRollAndAcuity = (a: Combatant, b: Combatant) => {
         if (b.initiative !== a.initiative) return b.initiative - a.initiative;
         return b.acuity - a.acuity;
       };
 
-      if (!alternate) {
-        // Simple sort by initiative + acuity
-        const sorted = [...prev.combatants].sort(sortByRollAndAcuity);
-        return { ...prev, combatants: sorted };
-      }
+      // Separate companions (they always go last in their own order)
+      const companions = prev.combatants
+        .filter(c => c.combatantType === 'companion')
+        .sort(sortByRollAndAcuity);
 
       // Alternating sort: split by side, sort each, then interleave
-      const allies = prev.combatants.filter(c => c.isAlly).sort(sortByRollAndAcuity);
-      const enemies = prev.combatants.filter(c => !c.isAlly).sort(sortByRollAndAcuity);
+      const allies = prev.combatants
+        .filter(c => c.combatantType === 'ally')
+        .sort(sortByRollAndAcuity);
+      const enemies = prev.combatants
+        .filter(c => c.combatantType === 'enemy')
+        .sort(sortByRollAndAcuity);
 
       // Determine which side starts (whoever has highest initiative)
       const firstAlly = allies[0];
@@ -447,7 +513,8 @@ function EncounterTrackerContent() {
         useAlly = !useAlly;
       }
 
-      return { ...prev, combatants: sorted };
+      // Add companions at the end
+      return { ...prev, combatants: [...sorted, ...companions] };
     });
   };
 
@@ -463,6 +530,25 @@ function EncounterTrackerContent() {
       currentHealth: Math.min(combatant.maxHealth, combatant.currentHealth + amount)
     });
   }, [encounter.combatants]);
+
+  const applyEnergyDrain = useCallback((id: string, amount: number) => {
+    updateCombatant(id, {
+      currentEnergy: Math.max(0, encounter.combatants.find(c => c.id === id)!.currentEnergy - amount)
+    });
+  }, [encounter.combatants]);
+
+  const applyEnergyRestore = useCallback((id: string, amount: number) => {
+    const combatant = encounter.combatants.find(c => c.id === id)!;
+    updateCombatant(id, {
+      currentEnergy: Math.min(combatant.maxEnergy, combatant.currentEnergy + amount)
+    });
+  }, [encounter.combatants]);
+
+  // Calculate current turn number across all rounds
+  const currentTurnNumber = useMemo(() => {
+    if (!encounter.isActive) return 0;
+    return (encounter.round - 1) * sortedCombatants.length + encounter.currentTurnIndex + 1;
+  }, [encounter.isActive, encounter.round, encounter.currentTurnIndex, sortedCombatants.length]);
 
   // Show loading state until localStorage is checked
   if (!isLoaded) {
@@ -492,7 +578,7 @@ function EncounterTrackerContent() {
         <div className="flex items-center gap-2 text-lg">
           {encounter.isActive && (
             <div className="px-4 py-2 bg-red-100 text-red-800 rounded-lg font-bold">
-              Round {encounter.round}
+              Round {encounter.round} • Turn {encounter.currentTurnIndex + 1}/{sortedCombatants.length}
             </div>
           )}
         </div>
@@ -501,8 +587,8 @@ function EncounterTrackerContent() {
       <div className="grid lg:grid-cols-4 gap-6">
         {/* Combatant List */}
         <div className="lg:col-span-3 space-y-4">
-          {/* Combat Controls */}
-          <div className="bg-white rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4">
+          {/* Combat Controls - Sticky */}
+          <div className="bg-white rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4 sticky top-4 z-10">
             {!encounter.isActive ? (
               <>
                 <button
@@ -512,31 +598,13 @@ function EncounterTrackerContent() {
                 >
                   Start Encounter
                 </button>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => sortInitiative(false)}
-                    className="px-4 py-2 rounded-l-lg bg-primary-600 text-white hover:bg-primary-700"
-                    title="Sort by initiative roll and acuity"
-                  >
-                    Sort
-                  </button>
-                  <button
-                    onClick={() => sortInitiative(true)}
-                    className="px-3 py-2 rounded-r-lg bg-primary-500 text-white hover:bg-primary-600 text-sm"
-                    title="Sort by initiative, alternating between allies and enemies"
-                  >
-                    ⇆
-                  </button>
-                </div>
-                <label className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-lg border border-amber-200">
-                  <input
-                    type="checkbox"
-                    checked={encounter.applySurprise}
-                    onChange={toggleSurprise}
-                    className="w-4 h-4 rounded text-amber-600"
-                  />
-                  <span className="text-sm text-amber-800">Apply Surprise</span>
-                </label>
+                <button
+                  onClick={sortInitiative}
+                  className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700"
+                  title="Sort by alternative initiative (alternating allies/enemies, companions last)"
+                >
+                  Sort Initiative ⇆
+                </button>
               </>
             ) : (
               <>
@@ -577,14 +645,12 @@ function EncounterTrackerContent() {
           {/* Help tip when not in combat */}
           {!encounter.isActive && sortedCombatants.length > 0 && (
             <div className="text-xs text-gray-500 flex items-center gap-4 px-2">
-              <span>💡 Drag combatants to reorder manually</span>
-              <span>•</span>
-              <span>⇆ = Alternating ally/enemy sort</span>
+              <span>💡 Drag the grip handle to reorder • Surprised creatures go last in round 1 • Companions always go last</span>
             </div>
           )}
 
-          {/* Combatant Cards */}
-          <div className="space-y-3">
+          {/* Combatant Cards - Scrollable Container */}
+          <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scroll-smooth">
             {sortedCombatants.length === 0 ? (
               <div className="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
                 No combatants added yet. Add some using the panel on the right.
@@ -596,14 +662,18 @@ function EncounterTrackerContent() {
                   combatant={combatant}
                   isCurrentTurn={encounter.isActive && index === encounter.currentTurnIndex}
                   isDragOver={dragOverId === combatant.id}
+                  isDragging={draggedId === combatant.id}
                   onUpdate={(updates) => updateCombatant(combatant.id, updates)}
                   onRemove={() => removeCombatant(combatant.id)}
+                  onDuplicate={() => duplicateCombatant(combatant)}
                   onAddCondition={(condition) => addCondition(combatant.id, condition)}
                   onRemoveCondition={(condition) => removeCondition(combatant.id, condition)}
                   onUpdateConditionLevel={(condition, delta) => updateConditionLevel(combatant.id, condition, delta)}
                   onUpdateAP={(delta) => updateAP(combatant.id, delta)}
                   onDamage={(amount) => applyDamage(combatant.id, amount)}
                   onHeal={(amount) => applyHealing(combatant.id, amount)}
+                  onEnergyDrain={(amount) => applyEnergyDrain(combatant.id, amount)}
+                  onEnergyRestore={(amount) => applyEnergyRestore(combatant.id, amount)}
                   onDragStart={(e) => handleDragStart(e, combatant.id)}
                   onDragEnd={handleDragEnd}
                   onDragOver={(e) => handleDragOver(e, combatant.id)}
@@ -632,7 +702,7 @@ function EncounterTrackerContent() {
                 />
               </div>
               
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Roll</label>
                   <input
@@ -653,6 +723,9 @@ function EncounterTrackerContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Max HP</label>
                   <input
@@ -662,40 +735,83 @@ function EncounterTrackerContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max EN</label>
+                  <input
+                    type="number"
+                    value={newCombatant.maxEnergy}
+                    onChange={(e) => setNewCombatant(prev => ({ ...prev, maxEnergy: parseInt(e.target.value) || 0 }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
               </div>
 
-              {/* Ally/Enemy Toggle */}
-              <div className="flex items-center gap-4">
+              {/* Quantity */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewCombatant(prev => ({ ...prev, quantity: Math.max(1, (prev.quantity || 1) - 1) }))}
+                    className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold"
+                  >
+                    −
+                  </button>
+                  <span className="w-8 text-center font-medium">{newCombatant.quantity || 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => setNewCombatant(prev => ({ ...prev, quantity: Math.min(26, (prev.quantity || 1) + 1) }))}
+                    className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold"
+                  >
+                    +
+                  </button>
+                  <span className="text-xs text-gray-500 ml-2">Creates A, B, C... suffixes</span>
+                </div>
+              </div>
+
+              {/* Ally/Enemy/Companion Toggle */}
+              <div className="flex items-center gap-3 flex-wrap">
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
-                    name="side"
-                    checked={newCombatant.isAlly}
-                    onChange={() => setNewCombatant(prev => ({ ...prev, isAlly: true }))}
+                    name="combatantType"
+                    checked={newCombatant.combatantType === 'ally'}
+                    onChange={() => setNewCombatant(prev => ({ ...prev, combatantType: 'ally', isAlly: true }))}
                     className="w-4 h-4 text-blue-600"
                   />
-                  <span className="text-sm text-gray-700">Ally</span>
+                  <span className="text-sm text-blue-700 font-medium">Ally</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
                     type="radio"
-                    name="side"
-                    checked={!newCombatant.isAlly}
-                    onChange={() => setNewCombatant(prev => ({ ...prev, isAlly: false }))}
+                    name="combatantType"
+                    checked={newCombatant.combatantType === 'enemy'}
+                    onChange={() => setNewCombatant(prev => ({ ...prev, combatantType: 'enemy', isAlly: false }))}
                     className="w-4 h-4 text-red-600"
                   />
-                  <span className="text-sm text-gray-700">Enemy</span>
+                  <span className="text-sm text-red-700 font-medium">Enemy</span>
                 </label>
-                <label className="flex items-center gap-2 ml-auto">
+                <label className="flex items-center gap-2">
                   <input
-                    type="checkbox"
-                    checked={newCombatant.isSurprised}
-                    onChange={(e) => setNewCombatant(prev => ({ ...prev, isSurprised: e.target.checked }))}
-                    className="w-4 h-4 rounded text-amber-600"
+                    type="radio"
+                    name="combatantType"
+                    checked={newCombatant.combatantType === 'companion'}
+                    onChange={() => setNewCombatant(prev => ({ ...prev, combatantType: 'companion', isAlly: true }))}
+                    className="w-4 h-4 text-purple-600"
                   />
-                  <span className="text-sm text-gray-700">Surprised</span>
+                  <span className="text-sm text-purple-700 font-medium">Companion</span>
                 </label>
               </div>
+              
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={newCombatant.isSurprised}
+                  onChange={(e) => setNewCombatant(prev => ({ ...prev, isSurprised: e.target.checked }))}
+                  className="w-4 h-4 rounded text-amber-600"
+                />
+                <span className="text-sm text-gray-700">Surprised (goes last in round 1)</span>
+              </label>
               
               <button
                 onClick={addCombatant}
@@ -742,14 +858,18 @@ interface CombatantCardProps {
   combatant: Combatant;
   isCurrentTurn: boolean;
   isDragOver: boolean;
+  isDragging: boolean;
   onUpdate: (updates: Partial<Combatant>) => void;
   onRemove: () => void;
+  onDuplicate: () => void;
   onAddCondition: (condition: string) => void;
   onRemoveCondition: (condition: string) => void;
   onUpdateConditionLevel: (condition: string, delta: number) => void;
   onUpdateAP: (delta: number) => void;
   onDamage: (amount: number) => void;
   onHeal: (amount: number) => void;
+  onEnergyDrain: (amount: number) => void;
+  onEnergyRestore: (amount: number) => void;
   onDragStart: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
   onDragOver: (e: DragEvent<HTMLDivElement>) => void;
@@ -761,14 +881,18 @@ function CombatantCard({
   combatant, 
   isCurrentTurn, 
   isDragOver,
+  isDragging,
   onUpdate, 
   onRemove,
+  onDuplicate,
   onAddCondition,
   onRemoveCondition,
   onUpdateConditionLevel,
   onUpdateAP,
   onDamage,
   onHeal,
+  onEnergyDrain,
+  onEnergyRestore,
   onDragStart,
   onDragEnd,
   onDragOver,
@@ -777,12 +901,17 @@ function CombatantCard({
 }: CombatantCardProps) {
   const [damageInput, setDamageInput] = useState('');
   const [healInput, setHealInput] = useState('');
+  const [energyDrainInput, setEnergyDrainInput] = useState('');
+  const [energyRestoreInput, setEnergyRestoreInput] = useState('');
   const [showConditions, setShowConditions] = useState(false);
   const [selectedCondition, setSelectedCondition] = useState('');
   const [customCondition, setCustomCondition] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isEditingInitiative, setIsEditingInitiative] = useState(false);
 
   const healthPercent = combatant.maxHealth > 0 ? (combatant.currentHealth / combatant.maxHealth) * 100 : 0;
-  const isDead = combatant.currentHealth <= 0 && !combatant.isAlly;
+  const energyPercent = combatant.maxEnergy > 0 ? (combatant.currentEnergy / combatant.maxEnergy) * 100 : 0;
+  const isDead = combatant.currentHealth <= 0 && combatant.combatantType === 'enemy';
 
   const handleDamage = () => {
     const amount = parseInt(damageInput);
@@ -797,6 +926,32 @@ function CombatantCard({
     if (amount > 0) {
       onHeal(amount);
       setHealInput('');
+    }
+  };
+
+  const handleEnergyDrain = () => {
+    const amount = parseInt(energyDrainInput);
+    if (amount > 0) {
+      onEnergyDrain(amount);
+      setEnergyDrainInput('');
+    }
+  };
+
+  const handleEnergyRestore = () => {
+    const amount = parseInt(energyRestoreInput);
+    if (amount > 0) {
+      onEnergyRestore(amount);
+      setEnergyRestoreInput('');
+    }
+  };
+
+  // Get border color based on combatant type
+  const getBorderColor = () => {
+    switch (combatant.combatantType) {
+      case 'ally': return 'border-l-blue-500';
+      case 'enemy': return 'border-l-red-500';
+      case 'companion': return 'border-l-purple-500';
+      default: return combatant.isAlly ? 'border-l-blue-500' : 'border-l-red-500';
     }
   };
 
@@ -818,114 +973,186 @@ function CombatantCard({
   return (
     <div 
       id={`combatant-${combatant.id}`}
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       className={cn(
-        'bg-white rounded-xl shadow-md p-4 transition-all cursor-move',
+        'bg-white rounded-xl shadow-md p-3 transition-all',
         isCurrentTurn && 'ring-2 ring-primary-500 shadow-lg',
         isDead && 'bg-red-50 opacity-75',
         isDragOver && 'ring-2 ring-amber-400 bg-amber-50',
-        combatant.isAlly ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-red-500'
+        isDragging && 'opacity-50',
+        'border-l-4',
+        getBorderColor()
       )}
     >
-      <div className="flex items-start gap-4">
-        {/* Drag Handle */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing">
+      <div className="flex items-start gap-3">
+        {/* Drag Handle - Only this is draggable */}
+        <div 
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none"
+        >
+          <div className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100">
             <GripVertical className="w-5 h-5" />
           </div>
-          {/* Initiative Badge */}
-          <div className={cn(
-            'w-12 h-12 rounded-lg flex flex-col items-center justify-center',
-            isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600'
-          )}>
-            <span className="text-xl font-bold">{combatant.initiative}</span>
-            {combatant.acuity !== 0 && (
-              <span className="text-xs opacity-75">+{combatant.acuity}</span>
+          {/* Initiative Badge - Editable */}
+          <div 
+            className={cn(
+              'w-10 h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors',
+              isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+            onClick={() => setIsEditingInitiative(true)}
+            title="Click to edit initiative"
+          >
+            {isEditingInitiative ? (
+              <input
+                type="number"
+                value={combatant.initiative}
+                onChange={(e) => onUpdate({ initiative: parseInt(e.target.value) || 0 })}
+                onBlur={() => setIsEditingInitiative(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditingInitiative(false)}
+                className="w-8 h-8 text-center text-sm font-bold bg-transparent border-none outline-none"
+                autoFocus
+              />
+            ) : (
+              <>
+                <span className="text-lg font-bold leading-none">{combatant.initiative}</span>
+                {combatant.acuity !== 0 && (
+                  <span className="text-[10px] opacity-75 leading-none">+{combatant.acuity}</span>
+                )}
+              </>
             )}
           </div>
         </div>
 
         {/* Main Info */}
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h3 className={cn('text-lg font-bold', isDead && 'line-through text-gray-500')}>
-              {combatant.name}
-            </h3>
+        <div className="flex-1 min-w-0">
+          {/* Name Row - More Compact */}
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
+            {isEditingName ? (
+              <input
+                type="text"
+                value={combatant.name}
+                onChange={(e) => onUpdate({ name: e.target.value })}
+                onBlur={() => setIsEditingName(false)}
+                onKeyDown={(e) => e.key === 'Enter' && setIsEditingName(false)}
+                className="text-base font-bold border-b-2 border-primary-500 outline-none bg-transparent"
+                autoFocus
+              />
+            ) : (
+              <h3 
+                className={cn('text-base font-bold cursor-pointer hover:text-primary-600', isDead && 'line-through text-gray-500')}
+                onClick={() => setIsEditingName(true)}
+                title="Click to edit name"
+              >
+                {combatant.name}
+              </h3>
+            )}
+            
+            {/* Badges - Inline */}
+            {combatant.combatantType === 'companion' && (
+              <span className="px-1.5 py-0.5 text-[10px] bg-purple-100 text-purple-700 rounded font-medium">
+                Companion
+              </span>
+            )}
             {combatant.isSurprised && (
-              <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full font-medium">
-                Surprised
+              <span 
+                className="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 rounded font-medium cursor-pointer hover:bg-amber-200"
+                onClick={() => onUpdate({ isSurprised: false })}
+                title="Click to remove surprised"
+              >
+                Surprised ×
               </span>
             )}
             {isCurrentTurn && (
-              <span className="px-2 py-0.5 text-xs bg-primary-100 text-primary-700 rounded-full font-medium">
-                Current Turn
+              <span className="px-1.5 py-0.5 text-[10px] bg-primary-100 text-primary-700 rounded font-medium">
+                Current
               </span>
             )}
             {isDead && (
-              <span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded-full font-medium">
+              <span className="px-1.5 py-0.5 text-[10px] bg-red-100 text-red-700 rounded font-medium">
                 Down
               </span>
             )}
             
-            {/* AP Tracker */}
+            {/* AP Tracker - Moved inline */}
             <div className="flex items-center gap-1 ml-auto">
-              <span className="text-sm text-gray-500">AP:</span>
+              <span className="text-xs text-gray-500">AP:</span>
               <button
                 onClick={() => onUpdateAP(-1)}
-                className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-sm"
+                className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-xs"
               >
                 −
               </button>
-              <span className={cn(
-                'w-8 text-center font-bold',
-                combatant.ap === 0 && 'text-red-600'
-              )}>
+              <span className={cn('w-5 text-center text-sm font-bold', combatant.ap === 0 && 'text-red-600')}>
                 {combatant.ap}
               </span>
               <button
                 onClick={() => onUpdateAP(1)}
-                className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-sm"
+                className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-xs"
               >
                 +
               </button>
             </div>
           </div>
 
-          {/* HP Display */}
-          <div className="flex items-center gap-4 mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">HP:</span>
+          {/* HP & Energy Row - Compact Inline */}
+          <div className="flex items-center gap-3 mb-2">
+            {/* HP */}
+            <div className="flex items-center gap-1 flex-1">
+              <span className="text-xs text-red-600 font-medium w-6">HP</span>
               <input
                 type="number"
                 value={combatant.currentHealth}
                 onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                 className={cn(
-                  'w-16 px-2 py-1 text-sm border rounded text-center font-medium',
+                  'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium',
                   combatant.currentHealth <= 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-gray-300'
                 )}
               />
-              <span className="text-gray-400">/</span>
+              <span className="text-gray-400 text-xs">/</span>
               <input
                 type="number"
                 value={combatant.maxHealth}
                 onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
-                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded text-center"
+                className="w-12 px-1 py-0.5 text-xs border border-gray-300 rounded text-center"
               />
+              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-20">
+                <div 
+                  className={cn(
+                    'h-full transition-all',
+                    healthPercent > 50 ? 'bg-green-500' :
+                    healthPercent > 25 ? 'bg-yellow-500' : 'bg-red-500'
+                  )}
+                  style={{ width: `${Math.max(0, Math.min(100, healthPercent))}%` }}
+                />
+              </div>
             </div>
-            <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className={cn(
-                  'h-full transition-all',
-                  healthPercent > 50 ? 'bg-green-500' :
-                  healthPercent > 25 ? 'bg-yellow-500' : 'bg-red-500'
-                )}
-                style={{ width: `${Math.max(0, Math.min(100, healthPercent))}%` }}
+            
+            {/* Energy */}
+            <div className="flex items-center gap-1 flex-1">
+              <span className="text-xs text-blue-600 font-medium w-6">EN</span>
+              <input
+                type="number"
+                value={combatant.currentEnergy}
+                onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
+                className="w-12 px-1 py-0.5 text-xs border border-gray-300 rounded text-center font-medium"
               />
+              <span className="text-gray-400 text-xs">/</span>
+              <input
+                type="number"
+                value={combatant.maxEnergy}
+                onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
+                className="w-12 px-1 py-0.5 text-xs border border-gray-300 rounded text-center"
+              />
+              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-20">
+                <div 
+                  className="h-full bg-blue-500 transition-all"
+                  style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
+                />
+              </div>
             </div>
           </div>
 
@@ -975,55 +1202,104 @@ function CombatantCard({
             </div>
           )}
 
-          {/* Action Bar */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-1">
+          {/* Action Bar - More Compact */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100">
+            {/* HP Controls */}
+            <div className="flex items-center gap-0.5 bg-red-50 rounded px-1.5 py-0.5">
               <input
                 type="number"
                 value={damageInput}
                 onChange={(e) => setDamageInput(e.target.value)}
-                placeholder="Dmg"
-                className="w-14 px-2 py-1 text-sm border border-gray-300 rounded"
+                placeholder="−"
+                className="w-10 px-1 py-0.5 text-xs bg-white border border-red-200 rounded text-center"
                 onKeyDown={(e) => e.key === 'Enter' && handleDamage()}
               />
               <button
                 onClick={handleDamage}
-                className="px-2 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                className="px-1.5 py-0.5 text-xs text-red-700 hover:text-red-900 font-medium"
+                title="Apply damage"
               >
                 Dmg
               </button>
-            </div>
-            <div className="flex items-center gap-1">
+              <span className="text-gray-300">|</span>
               <input
                 type="number"
                 value={healInput}
                 onChange={(e) => setHealInput(e.target.value)}
-                placeholder="Heal"
-                className="w-14 px-2 py-1 text-sm border border-gray-300 rounded"
+                placeholder="+"
+                className="w-10 px-1 py-0.5 text-xs bg-white border border-green-200 rounded text-center"
                 onKeyDown={(e) => e.key === 'Enter' && handleHeal()}
               />
               <button
                 onClick={handleHeal}
-                className="px-2 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
+                className="px-1.5 py-0.5 text-xs text-green-700 hover:text-green-900 font-medium"
+                title="Apply healing"
               >
                 Heal
               </button>
             </div>
+            
+            {/* Energy Controls */}
+            <div className="flex items-center gap-0.5 bg-blue-50 rounded px-1.5 py-0.5">
+              <input
+                type="number"
+                value={energyDrainInput}
+                onChange={(e) => setEnergyDrainInput(e.target.value)}
+                placeholder="−"
+                className="w-10 px-1 py-0.5 text-xs bg-white border border-blue-200 rounded text-center"
+                onKeyDown={(e) => e.key === 'Enter' && handleEnergyDrain()}
+              />
+              <button
+                onClick={handleEnergyDrain}
+                className="px-1.5 py-0.5 text-xs text-blue-700 hover:text-blue-900 font-medium"
+                title="Drain energy"
+              >
+                Use
+              </button>
+              <span className="text-gray-300">|</span>
+              <input
+                type="number"
+                value={energyRestoreInput}
+                onChange={(e) => setEnergyRestoreInput(e.target.value)}
+                placeholder="+"
+                className="w-10 px-1 py-0.5 text-xs bg-white border border-cyan-200 rounded text-center"
+                onKeyDown={(e) => e.key === 'Enter' && handleEnergyRestore()}
+              />
+              <button
+                onClick={handleEnergyRestore}
+                className="px-1.5 py-0.5 text-xs text-cyan-700 hover:text-cyan-900 font-medium"
+                title="Restore energy"
+              >
+                Rest
+              </button>
+            </div>
+            
             <button
               onClick={() => setShowConditions(!showConditions)}
               className={cn(
-                'px-2 py-1 text-sm rounded',
+                'px-2 py-0.5 text-xs rounded',
                 showConditions ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
               )}
             >
-              {showConditions ? '▲' : '▼'} Conditions
+              {showConditions ? '▲' : '▼'} Cond
             </button>
-            <button
-              onClick={onRemove}
-              className="px-2 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 ml-auto"
-            >
-              ✕
-            </button>
+            
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                onClick={onDuplicate}
+                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                title="Duplicate this combatant"
+              >
+                📋
+              </button>
+              <button
+                onClick={onRemove}
+                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-red-100 hover:text-red-700"
+                title="Remove combatant"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Conditions Picker */}

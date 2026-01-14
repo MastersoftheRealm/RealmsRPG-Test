@@ -133,6 +133,7 @@ export interface Skill {
   description: string;
   ability: string;
   category: string;
+  base_skill?: string;
   trained_only?: boolean;
 }
 
@@ -279,12 +280,26 @@ async function fetchSkills(): Promise<Skill[]> {
   return fetchRTDBData<Skill>('skills', (data) =>
     Object.entries(data).map(([id, s]) => {
       const skill = s as Record<string, unknown>;
+      
+      // Handle ability - can be string, array, or comma-separated
+      let ability = '';
+      if (Array.isArray(skill.ability)) {
+        ability = (skill.ability as string[]).join(', ');
+      } else if (typeof skill.ability === 'string') {
+        // Check if it's already comma-separated or needs fixing
+        ability = skill.ability;
+      }
+      
+      // Handle base_skill field (some records use base_skill instead of category)
+      const category = (skill.category as string) || (skill.base_skill as string) || '';
+      
       return {
         id,
         name: (skill.name as string) || '',
         description: (skill.description as string) || '',
-        ability: (skill.ability as string) || '',
-        category: (skill.category as string) || '',
+        ability,
+        category,
+        base_skill: (skill.base_skill as string) || '',
       };
     })
   );
@@ -366,6 +381,13 @@ async function fetchPowerParts(): Promise<PowerPart[]> {
           op_2_desc: part.op_2_desc as string | undefined,
           op_2_en: parseFloat(part.op_2_en as string) || 0,
           op_2_tp: parseFloat(part.op_2_tp as string) || 0,
+          op_3_desc: part.op_3_desc as string | undefined,
+          op_3_en: parseFloat(part.op_3_en as string) || 0,
+          op_3_tp: parseFloat(part.op_3_tp as string) || 0,
+          // Part type flags for mechanic builder and cost calculations
+          mechanic: Boolean(part.mechanic),
+          duration: Boolean(part.duration),
+          percentage: Boolean(part.percentage),
         };
       })
   );
@@ -387,6 +409,19 @@ async function fetchTechniqueParts(): Promise<TechniquePart[]> {
           category: (part.category as string) || '',
           base_tp: parseFloat(part.base_tp as string) || 0,
           base_stam: parseFloat(part.base_stam as string) || 0,
+          base_en: parseFloat(part.base_en as string) || 0,
+          op_1_desc: part.op_1_desc as string | undefined,
+          op_1_en: parseFloat(part.op_1_en as string) || 0,
+          op_1_tp: parseFloat(part.op_1_tp as string) || 0,
+          op_2_desc: part.op_2_desc as string | undefined,
+          op_2_en: parseFloat(part.op_2_en as string) || 0,
+          op_2_tp: parseFloat(part.op_2_tp as string) || 0,
+          op_3_desc: part.op_3_desc as string | undefined,
+          op_3_en: parseFloat(part.op_3_en as string) || 0,
+          op_3_tp: parseFloat(part.op_3_tp as string) || 0,
+          // Part type flags for mechanic builder and cost calculations
+          percentage: Boolean(part.percentage),
+          mechanic: Boolean(part.mechanic),
         };
       })
   );
@@ -429,9 +464,18 @@ async function fetchItemProperties(): Promise<ItemProperty[]> {
         id,
         name: (prop.name as string) || '',
         description: (prop.description as string) || '',
-        type: ((prop.type as string) || 'general') as 'weapon' | 'armor' | 'general',
+        type: ((prop.type as string) || 'general') as 'weapon' | 'armor' | 'shield' | 'general',
+        // Legacy fields
         tp_cost: parseFloat(prop.tp_cost as string) || 0,
         gold_cost: parseFloat(prop.gold_cost as string) || 0,
+        // New standardized fields matching power/technique parts
+        base_ip: parseFloat(prop.base_ip as string) || 0,
+        base_tp: parseFloat(prop.base_tp as string) || 0,
+        base_c: parseFloat(prop.base_c as string) || 0,
+        op_1_desc: prop.op_1_desc as string | undefined,
+        op_1_ip: parseFloat(prop.op_1_ip as string) || 0,
+        op_1_tp: parseFloat(prop.op_1_tp as string) || 0,
+        op_1_c: parseFloat(prop.op_1_c as string) || 0,
       };
     })
   );
@@ -564,16 +608,22 @@ async function fetchCreatureFeats(): Promise<CreatureFeat[]> {
       return [];
     }
     const raw = snapshot.val();
-    // Handle array or object format
-    const items = Array.isArray(raw) ? raw : Object.values(raw);
-    return items.filter(Boolean).map((feat: Record<string, unknown>) => ({
-      id: String(feat.id ?? ''),
-      name: String(feat.name ?? ''),
-      description: String(feat.description ?? ''),
-      points: Number(feat.points ?? feat.cost ?? 0),
-      tiers: feat.tiers ? Number(feat.tiers) : undefined,
-      prereqs: toStrArray(feat.prereqs),
-    }));
+    // Handle array or object format - preserve keys/indices for ID fallback
+    const entries: [string, Record<string, unknown>][] = Array.isArray(raw)
+      ? raw.map((item, idx) => [String(idx), item])
+      : Object.entries(raw);
+    
+    return entries
+      .filter(([, feat]) => feat != null)
+      .map(([key, feat]) => ({
+        // Use feat.id if present, otherwise use the array index/object key
+        id: String(feat.id ?? key),
+        name: String(feat.name ?? ''),
+        description: String(feat.description ?? ''),
+        points: Number(feat.points ?? feat.cost ?? 0),
+        tiers: feat.tiers ? Number(feat.tiers) : undefined,
+        prereqs: toStrArray(feat.prereqs),
+      }));
   });
 }
 

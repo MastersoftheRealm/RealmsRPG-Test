@@ -9,13 +9,14 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Search, ChevronDown, ChevronUp, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDamageDisplay } from '@/lib/utils';
 import {
   ChipSelect,
   AbilityRequirementFilter,
   TagFilter,
   CheckboxFilter,
   SelectFilter,
+  FilterSection,
   type AbilityRequirement,
 } from '@/components/codex';
 import { 
@@ -272,17 +273,29 @@ function FeatsTab() {
       {showFilters && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           {/* Required Level */}
-          <SelectFilter
-            label="Required Level"
-            value={filters.maxLevel?.toString() ?? ''}
-            options={filterOptions.levels.map(l => ({ value: l.toString(), label: `Up to ${l}` }))}
-            onChange={(v) => setFilters(f => ({ ...f, maxLevel: v ? parseInt(v) : null }))}
-            placeholder="No limit"
-          />
+          {/* Required Level - Input filter */}
+          <div className="filter-group">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Max Required Level
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={filters.maxLevel ?? ''}
+              onChange={(e) => setFilters(f => ({ 
+                ...f, 
+                maxLevel: e.target.value ? parseInt(e.target.value) : null 
+              }))}
+              placeholder="No limit"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">Hide feats requiring higher levels</p>
+          </div>
 
-          {/* Ability Requirement */}
+          {/* Ability/Defense Requirement */}
           <div className="md:col-span-2">
             <AbilityRequirementFilter
+              label="Ability/Defense Requirement"
               abilities={filterOptions.abilReqAbilities}
               requirements={filters.abilityRequirements}
               onAdd={(req) => setFilters(f => ({ ...f, abilityRequirements: [...f.abilityRequirements, req] }))}
@@ -343,12 +356,12 @@ function FeatsTab() {
             label="State Feats"
             value={filters.stateFeatMode}
             options={[
-              { value: 'show', label: 'Show State Feats' },
-              { value: 'only', label: 'Show Only State Feats' },
-              { value: 'hide', label: "Don't Show State Feats" },
+              { value: 'show', label: 'Include State Feats' },
+              { value: 'only', label: 'Only State Feats' },
+              { value: 'hide', label: 'Hide State Feats' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'show' | 'only' | 'hide' }))}
-            placeholder="Show State Feats"
+            placeholder="All Feats"
           />
         </div>
       )}
@@ -494,8 +507,15 @@ function SkillsTab() {
     const baseSkills = new Set<string>();
 
     skills.forEach(s => {
-      if (s.ability && typeof s.ability === 'string') abilities.add(s.ability);
+      // Handle comma-separated abilities
+      if (s.ability && typeof s.ability === 'string') {
+        s.ability.split(',').forEach(ab => {
+          const trimmed = ab.trim();
+          if (trimmed) abilities.add(trimmed);
+        });
+      }
       if (s.category && typeof s.category === 'string') baseSkills.add(s.category);
+      if (s.base_skill && typeof s.base_skill === 'string') baseSkills.add(s.base_skill);
     });
 
     return {
@@ -516,13 +536,30 @@ function SkillsTab() {
         }
       }
 
-      if (filters.abilities.length > 0 && !filters.abilities.includes(s.ability)) {
-        return false;
+      // Handle comma-separated abilities in filter
+      if (filters.abilities.length > 0) {
+        const skillAbilities = s.ability?.split(',').map(a => a.trim()) || [];
+        const hasMatchingAbility = filters.abilities.some(filterAb => 
+          skillAbilities.includes(filterAb)
+        );
+        if (!hasMatchingAbility) return false;
       }
 
-      if (filters.baseSkill && s.category !== filters.baseSkill) {
-        return false;
+      // Filter by base skill - shows skills that ARE this base skill or have it as their parent
+      if (filters.baseSkill) {
+        const isThisBaseSkill = s.name === filters.baseSkill;
+        const hasThisBaseSkill = s.base_skill === filters.baseSkill;
+        if (!isThisBaseSkill && !hasThisBaseSkill) return false;
       }
+
+      // Sub-skill filtering logic (matching vanilla site)
+      const isSubSkill = Boolean(s.base_skill);
+      
+      // If subSkillsOnly is true, only show skills that have a base_skill
+      if (filters.subSkillsOnly && !isSubSkill) return false;
+      
+      // If showSubSkills is false, hide skills that have a base_skill
+      if (!filters.showSubSkills && isSubSkill) return false;
 
       return true;
     }).sort((a, b) => {
@@ -608,7 +645,7 @@ function SkillsTab() {
       <div className="hidden lg:grid grid-cols-3 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="BASE SKILL" col="category" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
       </div>
 
       {/* Skill List */}
@@ -629,6 +666,7 @@ function SkillsTab() {
 
 function SkillCard({ skill }: { skill: Skill }) {
   const [expanded, setExpanded] = useState(false);
+  const isSubSkill = Boolean(skill.base_skill);
 
   return (
     <div className="bg-white">
@@ -636,10 +674,15 @@ function SkillCard({ skill }: { skill: Skill }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
       >
-        <div className="font-medium text-gray-900">{skill.name}</div>
+        <div className="flex items-center gap-2">
+          {isSubSkill && <span className="text-xs text-gray-400">↳</span>}
+          <span className={cn('font-medium', isSubSkill ? 'text-gray-700' : 'text-gray-900')}>{skill.name}</span>
+        </div>
         <div className="text-gray-600 capitalize">{skill.ability || '-'}</div>
         <div className="hidden lg:flex items-center justify-between">
-          <span className="text-gray-600">{skill.category || '-'}</span>
+          <span className={cn('text-gray-600', isSubSkill && 'text-primary-600')}>
+            {skill.base_skill || '-'}
+          </span>
           <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
         </div>
       </button>
@@ -647,6 +690,11 @@ function SkillCard({ skill }: { skill: Skill }) {
       {expanded && skill.description && (
         <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
           <p className="text-gray-700">{skill.description}</p>
+          {skill.base_skill && (
+            <p className="text-sm text-primary-600 mt-2">
+              Sub-skill of: <strong>{skill.base_skill}</strong>
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -970,12 +1018,18 @@ function EquipmentTab() {
   const { data: equipment, isLoading, error } = useEquipment();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [subtypeFilter, setSubtypeFilter] = useState('');
+  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
 
-  const typeOptions = useMemo(() => {
-    if (!equipment) return [];
+  const filterOptions = useMemo(() => {
+    if (!equipment) return { types: [], subtypes: [] };
     const types = new Set<string>();
-    equipment.forEach(e => e.type && types.add(e.type));
-    return Array.from(types).sort();
+    const subtypes = new Set<string>();
+    equipment.forEach(e => {
+      if (e.type) types.add(e.type);
+      if (e.subtype) subtypes.add(e.subtype);
+    });
+    return { types: Array.from(types).sort(), subtypes: Array.from(subtypes).sort() };
   }, [equipment]);
 
   const filteredEquipment = useMemo(() => {
@@ -987,44 +1041,91 @@ function EquipmentTab() {
         return false;
       }
       if (typeFilter && e.type !== typeFilter) return false;
+      if (subtypeFilter && e.subtype !== subtypeFilter) return false;
       return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [equipment, search, typeFilter]);
+    }).sort((a, b) => {
+      const { col, dir } = sortState;
+      if (col === 'name') return dir * a.name.localeCompare(b.name);
+      if (col === 'type') return dir * (a.type || '').localeCompare(b.type || '');
+      if (col === 'subtype') return dir * (a.subtype || '').localeCompare(b.subtype || '');
+      if (col === 'cost') return dir * ((a.currency ?? a.gold_cost ?? 0) - (b.currency ?? b.gold_cost ?? 0));
+      if (col === 'rarity') return dir * (a.rarity || '').localeCompare(b.rarity || '');
+      return 0;
+    });
+  }, [equipment, search, typeFilter, subtypeFilter, sortState]);
+
+  const toggleSort = (col: string) => {
+    setSortState(prev => prev.col === col ? { col, dir: prev.dir === 1 ? -1 : 1 } : { col, dir: 1 });
+  };
 
   if (error) return <ErrorState message="Failed to load equipment" />;
 
   return (
     <div>
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search equipment..." />
-        </div>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-        >
-          <option value="">All Types</option>
-          {typeOptions.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+      <div className="mb-4">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search equipment..." />
       </div>
+
+      <FilterSection>
+        <div className="flex flex-wrap gap-4">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
+          >
+            <option value="">All Types</option>
+            {filterOptions.types.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+          <select
+            value={subtypeFilter}
+            onChange={(e) => setSubtypeFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
+          >
+            <option value="">All Subtypes</option>
+            {filterOptions.subtypes.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      </FilterSection>
 
       <div className="text-sm text-gray-500 mb-4">
         {isLoading ? 'Loading...' : `${filteredEquipment.length} items found`}
       </div>
 
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-lg">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredEquipment.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No equipment found.</div>
-        ) : (
-          filteredEquipment.map(item => (
-            <EquipmentCard key={item.id} item={item as Equipment} />
-          ))
-        )}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        {/* Header Row */}
+        <div className="grid grid-cols-[1fr_100px_100px_80px_80px] gap-2 lg:gap-4 px-4 py-3 bg-gray-100 border-b border-gray-200 text-sm font-medium text-gray-700">
+          <button onClick={() => toggleSort('name')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Name {sortState.col === 'name' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('type')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Type {sortState.col === 'type' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('subtype')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Subtype {sortState.col === 'subtype' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('cost')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Cost {sortState.col === 'cost' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('rarity')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Rarity {sortState.col === 'rarity' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+        </div>
+        
+        <div className="divide-y divide-gray-200">
+          {isLoading ? (
+            <LoadingState />
+          ) : filteredEquipment.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">No equipment found.</div>
+          ) : (
+            filteredEquipment.map(item => (
+              <EquipmentCard key={item.id} item={item as Equipment} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1038,16 +1139,16 @@ function EquipmentCard({ item }: { item: Equipment }) {
     <div className="bg-white">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-3 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+        className="w-full grid grid-cols-[1fr_100px_100px_80px_80px] gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
       >
-        <div>
-          <div className="font-medium text-gray-900">{item.name}</div>
-          <div className="text-sm text-gray-500">{item.type} {item.subtype && `• ${item.subtype}`}</div>
+        <div className="font-medium text-gray-900 flex items-center gap-2">
+          {item.name}
+          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} />
         </div>
-        <div className="text-amber-600 font-medium">{cost}c</div>
-        <div className="flex items-center justify-end">
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
-        </div>
+        <div className="text-gray-600 capitalize">{item.type || '-'}</div>
+        <div className="text-gray-600 capitalize">{item.subtype || '-'}</div>
+        <div className="text-amber-600 font-medium">{cost > 0 ? `${cost}c` : '-'}</div>
+        <div className="text-purple-600 capitalize">{item.rarity || '-'}</div>
       </button>
       
       {expanded && (
@@ -1056,8 +1157,12 @@ function EquipmentCard({ item }: { item: Equipment }) {
             <p className="text-gray-700 mb-2">{item.description}</p>
           )}
           <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+            {item.damage && <span><strong>Damage:</strong> {formatDamageDisplay(item.damage)}</span>}
+            {item.armor_value !== undefined && <span><strong>Armor:</strong> {item.armor_value}</span>}
             {item.weight !== undefined && <span><strong>Weight:</strong> {item.weight} kg</span>}
-            {item.rarity && <span><strong>Rarity:</strong> {item.rarity}</span>}
+            {item.properties && item.properties.length > 0 && (
+              <span><strong>Properties:</strong> {item.properties.join(', ')}</span>
+            )}
           </div>
         </div>
       )}
@@ -1073,6 +1178,7 @@ function PropertiesTab() {
   const { data: properties, isLoading, error } = useItemProperties();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
 
   const typeOptions = useMemo(() => {
     if (!properties) return [];
@@ -1091,43 +1197,79 @@ function PropertiesTab() {
       }
       if (typeFilter && p.type !== typeFilter) return false;
       return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [properties, search, typeFilter]);
+    }).sort((a, b) => {
+      const { col, dir } = sortState;
+      if (col === 'name') return dir * a.name.localeCompare(b.name);
+      if (col === 'type') return dir * (a.type || 'General').localeCompare(b.type || 'General');
+      if (col === 'ip') return dir * ((a.base_ip ?? 0) - (b.base_ip ?? 0));
+      if (col === 'tp') return dir * ((a.base_tp ?? a.tp_cost ?? 0) - (b.base_tp ?? b.tp_cost ?? 0));
+      if (col === 'cost') return dir * ((a.base_c ?? a.gold_cost ?? 0) - (b.base_c ?? b.gold_cost ?? 0));
+      return 0;
+    });
+  }, [properties, search, typeFilter, sortState]);
+
+  const toggleSort = (col: string) => {
+    setSortState(prev => prev.col === col ? { col, dir: prev.dir === 1 ? -1 : 1 } : { col, dir: 1 });
+  };
 
   if (error) return <ErrorState message="Failed to load properties" />;
 
   return (
     <div>
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search properties..." />
-        </div>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-        >
-          <option value="">All Types</option>
-          {typeOptions.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+      <div className="mb-4">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search properties..." />
       </div>
+
+      <FilterSection>
+        <div className="flex gap-4">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
+          >
+            <option value="">All Types</option>
+            {typeOptions.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      </FilterSection>
 
       <div className="text-sm text-gray-500 mb-4">
         {isLoading ? 'Loading...' : `${filteredProperties.length} properties found`}
       </div>
 
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-lg">
-        {isLoading ? (
-          <LoadingState />
-        ) : filteredProperties.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No properties found.</div>
-        ) : (
-          filteredProperties.map(prop => (
-            <PropertyCard key={prop.id} property={prop} />
-          ))
-        )}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        {/* Header Row */}
+        <div className="grid grid-cols-[1fr_100px_60px_60px_80px] gap-2 lg:gap-4 px-4 py-3 bg-gray-100 border-b border-gray-200 text-sm font-medium text-gray-700">
+          <button onClick={() => toggleSort('name')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Name {sortState.col === 'name' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('type')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Type {sortState.col === 'type' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('ip')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            IP {sortState.col === 'ip' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('tp')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            TP {sortState.col === 'tp' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+          <button onClick={() => toggleSort('cost')} className="text-left hover:text-gray-900 flex items-center gap-1">
+            Cost {sortState.col === 'cost' && (sortState.dir === 1 ? '↑' : '↓')}
+          </button>
+        </div>
+        
+        <div className="divide-y divide-gray-200">
+          {isLoading ? (
+            <LoadingState />
+          ) : filteredProperties.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">No properties found.</div>
+          ) : (
+            filteredProperties.map(prop => (
+              <PropertyCard key={prop.id} property={prop} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
@@ -1135,22 +1277,24 @@ function PropertiesTab() {
 
 function PropertyCard({ property }: { property: ItemProperty }) {
   const [expanded, setExpanded] = useState(false);
+  const ip = property.base_ip ?? 0;
+  const tp = property.base_tp ?? property.tp_cost ?? 0;
+  const cost = property.base_c ?? property.gold_cost ?? 0;
 
   return (
     <div className="bg-white">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-3 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+        className="w-full grid grid-cols-[1fr_100px_60px_60px_80px] gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
       >
-        <div className="font-medium text-gray-900">{property.name}</div>
-        <div className="text-gray-600">{property.type || 'General'}</div>
-        <div className="flex items-center justify-between">
-          <span className="text-amber-600">
-            {property.tp_cost !== undefined && `${property.tp_cost} TP`}
-            {property.base_tp !== undefined && `${property.base_tp} TP`}
-          </span>
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
+        <div className="font-medium text-gray-900 flex items-center gap-2">
+          {property.name}
+          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} />
         </div>
+        <div className="text-gray-600 capitalize">{property.type || 'General'}</div>
+        <div className="text-blue-600">{ip > 0 ? ip : '-'}</div>
+        <div className="text-purple-600">{tp > 0 ? tp : '-'}</div>
+        <div className="text-amber-600">{cost > 0 ? `${cost}c` : '-'}</div>
       </button>
       
       {expanded && (
@@ -1158,28 +1302,14 @@ function PropertyCard({ property }: { property: ItemProperty }) {
           {property.description && (
             <p className="text-gray-700 mb-3">{property.description}</p>
           )}
-          <div className="flex flex-wrap gap-4 text-sm">
-            {property.base_ip !== undefined && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">IP: {property.base_ip}</span>
-            )}
-            {(property.tp_cost !== undefined || property.base_tp !== undefined) && (
-              <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">
-                TP: {property.tp_cost ?? property.base_tp}
-              </span>
-            )}
-            {(property.gold_cost !== undefined || property.base_c !== undefined) && (
-              <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded">
-                Cost: {property.gold_cost ?? property.base_c}c
-              </span>
-            )}
-          </div>
           {property.op_1_desc && (
             <div className="mt-3 p-2 bg-gray-100 rounded text-sm">
               <strong>Option:</strong> {property.op_1_desc}
-              {(property.op_1_ip !== undefined || property.op_1_tp !== undefined) && (
+              {(property.op_1_ip !== undefined || property.op_1_tp !== undefined || property.op_1_c !== undefined) && (
                 <span className="text-gray-500 ml-2">
                   ({property.op_1_ip !== undefined && `+${property.op_1_ip} IP`}
-                  {property.op_1_tp !== undefined && ` +${property.op_1_tp} TP`})
+                  {property.op_1_tp !== undefined && ` +${property.op_1_tp} TP`}
+                  {property.op_1_c !== undefined && ` +${property.op_1_c}c`})
                 </span>
               )}
             </div>
@@ -1249,28 +1379,30 @@ function PartsTab() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search parts..." />
       </div>
 
-      <div className="flex gap-4 mb-6">
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-        >
-          <option value="">All Categories</option>
-          {filterOptions.categories.map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
-        >
-          <option value="">All Types</option>
-          {filterOptions.types.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-      </div>
+      <FilterSection>
+        <div className="flex gap-4">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
+          >
+            <option value="">All Categories</option>
+            {filterOptions.categories.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg bg-white"
+          >
+            <option value="">All Types</option>
+            {filterOptions.types.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      </FilterSection>
 
       <div className="text-sm text-gray-500 mb-4">
         {isLoading ? 'Loading...' : `${filteredParts.length} parts found`}

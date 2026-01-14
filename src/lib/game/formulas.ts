@@ -245,3 +245,84 @@ export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: Arche
   const type = typeof archetype === 'string' ? archetype : archetype?.type;
   return getArchetypeConfig(type || 'power').innateEnergy;
 }
+
+// =============================================================================
+// Skill Helpers
+// =============================================================================
+
+/** 
+ * Ability name to abilities object key mapping 
+ */
+const ABILITY_MAP: Record<string, keyof Abilities> = {
+  'strength': 'strength',
+  'vitality': 'vitality', 
+  'agility': 'agility',
+  'acuity': 'acuity',
+  'intelligence': 'intelligence',
+  'charisma': 'charisma',
+};
+
+/**
+ * Get the highest ability modifier from a list of linked abilities.
+ * Skills can have multiple linked abilities, and we use the highest.
+ */
+export function getHighestLinkedAbility(
+  linkedAbilities: string | string[] | undefined,
+  abilities: Abilities
+): number {
+  if (!linkedAbilities) return 0;
+  
+  const abilityArray = Array.isArray(linkedAbilities) 
+    ? linkedAbilities 
+    : linkedAbilities.split(',').map(a => a.trim());
+  
+  if (abilityArray.length === 0) return 0;
+  
+  let max = -Infinity;
+  for (const ability of abilityArray) {
+    const key = ABILITY_MAP[ability.toLowerCase()];
+    if (key && abilities[key] !== undefined) {
+      const value = abilities[key];
+      if (value > max) max = value;
+    }
+  }
+  
+  return max === -Infinity ? 0 : max;
+}
+
+/**
+ * Calculate skill bonus: highest linked ability + skill value.
+ * This formula is used across creature creator and character sheet.
+ * 
+ * @param linkedAbilities - The ability/abilities linked to this skill (from skill.ability)
+ * @param skillValue - The points allocated to this skill
+ * @param abilities - The character/creature's ability scores
+ * @returns The total skill bonus
+ */
+export function calculateSkillBonus(
+  linkedAbilities: string | string[] | undefined,
+  skillValue: number,
+  abilities: Abilities
+): number {
+  const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
+  return abilityMod + skillValue;
+}
+
+/**
+ * Calculate total skill bonus including proficiency.
+ * Used in character sheet where proficiency adds +1.
+ * 
+ * @param linkedAbilities - The ability/abilities linked to this skill
+ * @param skillValue - The points allocated to this skill  
+ * @param abilities - The character/creature's ability scores
+ * @param isProficient - Whether the character is proficient in this skill
+ * @returns The total skill bonus including proficiency
+ */
+export function calculateSkillBonusWithProficiency(
+  linkedAbilities: string | string[] | undefined,
+  skillValue: number,
+  abilities: Abilities,
+  isProficient: boolean = false
+): number {
+  return calculateSkillBonus(linkedAbilities, skillValue, abilities) + (isProficient ? 1 : 0);
+}

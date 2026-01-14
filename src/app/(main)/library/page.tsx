@@ -9,15 +9,14 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
+import { Plus, Wand2, Swords, Shield, Users, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
-import { ItemList } from '@/components/shared';
+import { ItemList, CreatureStatBlock } from '@/components/shared';
 import { 
   transformWeapon,
   transformArmor,
   transformEquipment,
-  transformCreature 
 } from '@/lib/item-transformers';
 import {
   derivePowerDisplay,
@@ -203,6 +202,16 @@ function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
         details.push({ label: 'TP Breakdown', value: display.tpSources });
       }
       
+      // Add part details with descriptions
+      if (display.partChips.length > 0) {
+        display.partChips.forEach(chip => {
+          details.push({ 
+            label: chip.text.split(' |')[0], // Part name without TP suffix
+            value: chip.description || 'No description available'
+          });
+        });
+      }
+      
       return {
         id: power.docId,
         name: power.name,
@@ -292,6 +301,16 @@ function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) 
       const details: ItemDetail[] = [];
       if (display.tpSources.length > 0) {
         details.push({ label: 'TP Breakdown', value: display.tpSources });
+      }
+      
+      // Add part details with descriptions
+      if (display.partChips.length > 0) {
+        display.partChips.forEach(chip => {
+          details.push({ 
+            label: chip.text.split(' |')[0], // Part name without TP suffix
+            value: chip.description || 'No description available'
+          });
+        });
       }
       
       return {
@@ -417,77 +436,127 @@ function ItemsTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
 
 const CREATURE_SORTS: SortOption[] = [
   { id: 'name', label: 'Name', field: 'name', type: 'string' },
-  { id: 'level', label: 'Level', field: 'cost', type: 'number' },
+  { id: 'level', label: 'Level', field: 'level', type: 'number' },
 ];
 
 function CreaturesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
   const { data: creatures, isLoading, error } = useUserCreatures();
+  const [search, setSearch] = useState('');
+  const [sortState, setSortState] = useState<{ field: string; dir: 1 | -1 }>({ field: 'name', dir: 1 });
   
-  const displayItems = useMemo((): DisplayItem[] => {
+  // Filter and sort creatures
+  const filteredCreatures = useMemo(() => {
     if (!creatures) return [];
-    return creatures.map(creature => transformCreature({
-      id: creature.docId,
-      name: creature.name,
-      description: creature.description,
-      level: creature.level,
-      type: creature.type,
-      size: creature.size,
-      // Core stats - support both old and new field names
-      hp: creature.hp,
-      hitPoints: creature.hitPoints,
-      energyPoints: creature.energyPoints,
-      abilities: creature.abilities,
-      defenses: creature.defenses,
-      // Proficiencies
-      powerProficiency: creature.powerProficiency,
-      martialProficiency: creature.martialProficiency,
-      // Damage modifiers
-      resistances: creature.resistances,
-      weaknesses: creature.weaknesses,
-      immunities: creature.immunities,
-      conditionImmunities: creature.conditionImmunities,
-      // Movement and senses
-      senses: creature.senses,
-      movementTypes: creature.movementTypes,
-      languages: creature.languages,
-      // Skills and combat
-      skills: creature.skills,
-      powers: creature.powers,
-      techniques: creature.techniques,
-      feats: creature.feats,
-      armaments: creature.armaments,
-    }));
-  }, [creatures]);
-  
-  const actions: ItemActions = {
-    onEdit: (item) => {
-      window.location.href = `/creature-creator?edit=${item.id}`;
-    },
-    onDelete,
-    onDuplicate: (item) => {
-      window.location.href = `/creature-creator?copy=${item.id}`;
-    },
-  };
+    
+    return creatures
+      .filter(creature => {
+        if (!search) return true;
+        const searchLower = search.toLowerCase();
+        return (
+          creature.name?.toLowerCase().includes(searchLower) ||
+          creature.type?.toLowerCase().includes(searchLower) ||
+          creature.description?.toLowerCase().includes(searchLower)
+        );
+      })
+      .sort((a, b) => {
+        const { field, dir } = sortState;
+        if (field === 'name') return dir * (a.name || '').localeCompare(b.name || '');
+        if (field === 'level') return dir * ((a.level ?? 0) - (b.level ?? 0));
+        return 0;
+      });
+  }, [creatures, search, sortState]);
   
   if (error) {
     return <ErrorState message="Failed to load creatures" />;
   }
   
-  if (!isLoading && displayItems.length === 0) {
+  if (!isLoading && (!creatures || creatures.length === 0)) {
     return <EmptyState type="creatures" href="/creature-creator" />;
   }
   
   return (
-    <ItemList
-      items={displayItems}
-      mode="manage"
-      layout="list"
-      actions={actions}
-      sortOptions={CREATURE_SORTS}
-      searchPlaceholder="Search creatures..."
-      loading={isLoading}
-      emptyMessage="No creatures found"
-    />
+    <div className="space-y-4">
+      {/* Search and Sort Controls */}
+      <div className="flex flex-wrap gap-4">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search creatures..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortState.field}
+            onChange={(e) => setSortState(prev => ({ ...prev, field: e.target.value }))}
+            className="px-3 py-2 rounded-lg border border-border bg-background text-sm"
+          >
+            {CREATURE_SORTS.map(opt => (
+              <option key={opt.id} value={opt.field}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setSortState(prev => ({ ...prev, dir: prev.dir === 1 ? -1 : 1 }))}
+            className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground"
+          >
+            {sortState.dir === 1 ? '↑ Asc' : '↓ Desc'}
+          </button>
+        </div>
+      </div>
+      
+      {/* Results count */}
+      <div className="text-sm text-muted-foreground">
+        {isLoading ? 'Loading...' : `${filteredCreatures.length} creature${filteredCreatures.length !== 1 ? 's' : ''} found`}
+      </div>
+      
+      {/* Creature Stat Blocks */}
+      {isLoading ? (
+        <div className="py-12 text-center text-muted-foreground">Loading creatures...</div>
+      ) : filteredCreatures.length === 0 ? (
+        <div className="py-12 text-center text-muted-foreground">No creatures match your search.</div>
+      ) : (
+        <div className="space-y-3">
+          {filteredCreatures.map(creature => (
+            <CreatureStatBlock
+              key={creature.docId}
+              creature={{
+                id: creature.docId,
+                name: creature.name,
+                description: creature.description,
+                level: creature.level,
+                type: creature.type,
+                size: creature.size,
+                hp: creature.hp,
+                hitPoints: creature.hitPoints,
+                energyPoints: creature.energyPoints,
+                abilities: creature.abilities,
+                defenses: creature.defenses,
+                powerProficiency: creature.powerProficiency,
+                martialProficiency: creature.martialProficiency,
+                resistances: creature.resistances,
+                weaknesses: creature.weaknesses,
+                immunities: creature.immunities,
+                conditionImmunities: creature.conditionImmunities,
+                senses: creature.senses,
+                movementTypes: creature.movementTypes,
+                languages: creature.languages,
+                skills: creature.skills,
+                powers: creature.powers,
+                techniques: creature.techniques,
+                feats: creature.feats,
+                armaments: creature.armaments,
+              }}
+              onEdit={() => { window.location.href = `/creature-creator?edit=${creature.docId}`; }}
+              onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
+              onDuplicate={() => { window.location.href = `/creature-creator?copy=${creature.docId}`; }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

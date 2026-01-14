@@ -75,9 +75,7 @@ const DIE_SIZES = [4, 6, 8, 10, 12];
 
 // Default weapon options (always available)
 const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
-  { id: 0, name: 'Unarmed', tp: 0 },
-  { id: 'any-melee', name: 'Any Melee Weapon', tp: 1 },
-  { id: 'any-ranged', name: 'Any Ranged Weapon', tp: 1 },
+  { id: 0, name: 'Unarmed Prowess', tp: 0 },
 ];
 
 // =============================================================================
@@ -122,8 +120,8 @@ function PartCard({
   };
 
   // Calculate part's individual contribution
-  const partStam =
-    (part.base_stam || 0) +
+  const partEnergy =
+    (part.base_en || 0) +
     (part.op_1_en || 0) * selectedPart.op_1_lvl +
     (part.op_2_en || 0) * selectedPart.op_2_lvl +
     (part.op_3_en || 0) * selectedPart.op_3_lvl;
@@ -148,7 +146,7 @@ function PartCard({
           </button>
           <span className="font-medium text-gray-900">{part.name}</span>
           <span className="text-sm text-gray-500">
-            En: {partStam.toFixed(1)} | TP: {Math.floor(partTP)}
+            En: {partEnergy.toFixed(1)} | TP: {Math.floor(partTP)}
           </span>
         </div>
         <button
@@ -216,7 +214,7 @@ function PartCard({
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
             <span className="text-gray-600">
-              Base Energy: <strong>{part.base_stam}</strong>
+              Base Energy: <strong>{part.base_en || 0}</strong>
             </span>
             <span className="text-gray-600">
               Base TP: <strong>{part.base_tp}</strong>

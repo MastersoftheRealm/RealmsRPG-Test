@@ -10,6 +10,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, Search, Plus, Check, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui';
+import { formatDamageDisplay } from '@/lib/utils';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
@@ -279,7 +280,7 @@ function renderItemMeta(item: UserPower | UserTechnique | UserItem, itemType: It
   if (itemType === 'weapon') {
     const weapon = item as UserItem;
     return weapon.damage ? (
-      <span className="text-sm text-red-600 font-medium">{weapon.damage}</span>
+      <span className="text-sm text-red-600 font-medium">{formatDamageDisplay(weapon.damage)}</span>
     ) : null;
   }
   if (itemType === 'armor') {

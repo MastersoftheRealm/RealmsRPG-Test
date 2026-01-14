@@ -133,6 +133,11 @@ function PropertyCard({
           {propTP > 0 && (
             <span className="text-sm text-purple-600 font-medium">TP: {propTP}</span>
           )}
+          {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
+            <span className="text-sm text-amber-600 font-medium">
+              C: {((property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl).toFixed(2)}
+            </span>
+          )}
         </div>
         <button
           type="button"
@@ -762,7 +767,7 @@ function ItemCreatorContent() {
                 <span className="font-medium">{armamentType}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Item Power:</span>
+                <span className="text-gray-600">Item Points:</span>
                 <span className="font-medium">{costs.totalIP} IP</span>
               </div>
               {armamentType === 'Weapon' && (

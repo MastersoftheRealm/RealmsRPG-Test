@@ -10,10 +10,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { cn } from '@/lib/utils';
+import { cn, formatDamageDisplay } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { useAuthStore } from '@/stores/auth-store';
-import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
@@ -25,7 +25,9 @@ import {
   calculateProficiency,
   calculateAbilityPoints,
   calculateSkillPoints,
+  calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
+import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 
 // =============================================================================
 // Constants
@@ -509,11 +511,18 @@ function LoadFeatModal({
   if (!isOpen) return null;
   
   const selectedIds = new Set(selectedFeats.map(f => f.id));
-  const filteredFeats = allFeats.filter(feat => 
-    !selectedIds.has(feat.id) &&
-    (feat.name?.toLowerCase().includes(search.toLowerCase()) ||
-     feat.description?.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filteredFeats = allFeats.filter(feat => {
+    // Exclude already selected feats
+    if (selectedIds.has(feat.id)) return false;
+    
+    // Exclude mechanical feats that are auto-added via basic info
+    const numId = parseInt(feat.id, 10);
+    if (!isNaN(numId) && MECHANICAL_CREATURE_FEAT_IDS.has(numId)) return false;
+    
+    // Search filter
+    return (feat.name?.toLowerCase().includes(search.toLowerCase()) ||
+            feat.description?.toLowerCase().includes(search.toLowerCase()));
+  });
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -727,6 +736,8 @@ function LoadCreatureModal({
 
 function CreatureCreatorContent() {
   const { user } = useAuthStore();
+  const { data: creatureFeatsData = [] } = useCreatureFeats();
+  const { data: skillsData = [] } = useRTDBSkills();
   const [creature, setCreature] = useState<CreatureState>(initialState);
   const [saving, setSaving] = useState(false);
   const [showPowerModal, setShowPowerModal] = useState(false);
@@ -735,6 +746,32 @@ function CreatureCreatorContent() {
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
+  
+  // Create lookup map for feat point costs by ID
+  const featPointsMap = useMemo(() => {
+    const map = new Map<string, number>();
+    creatureFeatsData.forEach(feat => {
+      map.set(feat.id, feat.points);
+    });
+    return map;
+  }, [creatureFeatsData]);
+  
+  // Create lookup map for skill abilities
+  const skillAbilityMap = useMemo(() => {
+    const map = new Map<string, string>();
+    skillsData.forEach(skill => {
+      if (skill.ability) {
+        map.set(skill.name, skill.ability.toLowerCase());
+      }
+    });
+    return map;
+  }, [skillsData]);
+  
+  // Calculate skill bonus (uses shared utility from formulas.ts)
+  const getSkillBonus = useCallback((skillName: string, skillValue: number, proficient: boolean) => {
+    const abilityName = skillAbilityMap.get(skillName) || '';
+    return calculateSkillBonusWithProficiency(abilityName, skillValue, creature.abilities, proficient);
+  }, [skillAbilityMap, creature.abilities]);
 
   const updateCreature = useCallback((updates: Partial<CreatureState>) => {
     setCreature(prev => ({ ...prev, ...updates }));
@@ -787,9 +824,31 @@ function CreatureCreatorContent() {
     const abilityPoints = calculateAbilityPoints(level, true);
     const skillPoints = calculateSkillPoints(level, true);
     
+    // Max archetype proficiency points based on level (vanilla formula)
+    // level < 1: ceil(2 * level), else: 2 + floor(level / 5)
+    const maxProficiencyPoints = level < 1 ? Math.ceil(2 * level) : 2 + Math.floor(level / 5);
+    const proficiencySpent = creature.powerProficiency + creature.martialProficiency;
+    const proficiencyRemaining = maxProficiencyPoints - proficiencySpent;
+    
     // Feat points based on level and martial proficiency
     const featPoints = calculateCreatureFeatPoints(level, creature.martialProficiency);
-    const featSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
+    
+    // Calculate mechanical feat points from resistances, immunities, weaknesses, condition immunities
+    // Each counts as one instance of that feat, costing/granting its feat points
+    const resistanceFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.RESISTANCE)) ?? 1;
+    const immunityFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.IMMUNITY)) ?? 2;
+    const weaknessFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.WEAKNESS)) ?? -1;
+    const conditionImmunityFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.CONDITION_IMMUNITY)) ?? 1;
+    
+    const mechanicalFeatPoints = 
+      (creature.resistances.length * resistanceFeatCost) +
+      (creature.immunities.length * immunityFeatCost) +
+      (creature.weaknesses.length * weaknessFeatCost) +
+      (creature.conditionImmunities.length * conditionImmunityFeatCost);
+    
+    // Total feat spent = manual feats + mechanical feats
+    const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
+    const featSpent = manualFeatSpent + mechanicalFeatPoints;
     
     // Health = 8 + (vitality contribution) + hitPoints
     // Negative vitality only applies at level 1, not multiplied by level
@@ -835,8 +894,11 @@ function CreatureCreatorContent() {
       abilityRemaining: abilityPoints - abilitySpent,
       heRemaining: hePool - heSpent,
       skillRemaining: skillPoints - skillSpent - defenseSpent,
+      maxProficiencyPoints,
+      proficiencySpent,
+      proficiencyRemaining,
     };
-  }, [creature]);
+  }, [creature, featPointsMap]);
 
   // Save creature to Firestore
   const handleSave = async () => {
@@ -944,39 +1006,54 @@ function CreatureCreatorContent() {
         </div>
       </div>
 
-      {/* Resource Summary Bar */}
-      <div className="bg-white rounded-xl shadow-md p-4 mb-6 grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
-        <div>
-          <div className="text-sm text-gray-500">Ability Points</div>
-          <div className={cn('text-xl font-bold', stats.abilityRemaining < 0 ? 'text-red-600' : 'text-blue-600')}>
-            {stats.abilityRemaining}
+      {/* Creature Summary Card (Top) */}
+      <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="text-xl font-bold text-gray-900">{creature.name || 'Unnamed Creature'}</div>
+              <div className="text-sm text-gray-500">
+                Level {creature.level} {creature.size.charAt(0).toUpperCase() + creature.size.slice(1)} {creature.type}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
+              <span className="text-gray-600">HP</span>
+              <span className="font-bold text-red-600">{stats.maxHealth}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+              <span className="text-gray-600">EN</span>
+              <span className="font-bold text-blue-600">{stats.maxEnergy}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+              <span className="text-gray-600">SPD</span>
+              <span className="font-bold">{stats.speed}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+              <span className="text-gray-600">EVA</span>
+              <span className="font-bold">{stats.evasion}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
+              <span className="text-gray-600">PROF</span>
+              <span className="font-bold">+{stats.proficiency}</span>
+            </div>
           </div>
         </div>
-        <div>
-          <div className="text-sm text-gray-500">H/E Points</div>
-          <div className={cn('text-xl font-bold', stats.heRemaining < 0 ? 'text-red-600' : 'text-blue-600')}>
-            {stats.heRemaining}
-          </div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Skill Points</div>
-          <div className={cn('text-xl font-bold', stats.skillRemaining < 0 ? 'text-red-600' : 'text-blue-600')}>
-            {stats.skillRemaining}
-          </div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Feat Points</div>
-          <div className={cn('text-xl font-bold', stats.featRemaining < 0 ? 'text-red-600' : 'text-amber-600')}>
-            {stats.featRemaining}
-          </div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Training Points</div>
-          <div className="text-xl font-bold text-amber-600">{stats.trainingPoints}</div>
-        </div>
-        <div>
-          <div className="text-sm text-gray-500">Loot Value</div>
-          <div className="text-xl font-bold text-amber-600">{stats.currency}c</div>
+        {/* Quick feature tags */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {creature.resistances.map(r => (
+            <span key={r} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">{r} Res.</span>
+          ))}
+          {creature.weaknesses.map(w => (
+            <span key={w} className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded">{w} Weak</span>
+          ))}
+          {creature.immunities.map(i => (
+            <span key={i} className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">{i} Imm.</span>
+          ))}
+          {creature.senses.map(s => (
+            <span key={s} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">{s}</span>
+          ))}
         </div>
       </div>
 
@@ -1039,7 +1116,10 @@ function CreatureCreatorContent() {
                   value={creature.powerProficiency}
                   onChange={(e) => updateCreature({ powerProficiency: Math.max(0, parseInt(e.target.value) || 0) })}
                   min={0}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className={cn(
+                    "w-full px-3 py-2 border rounded-lg",
+                    stats.proficiencyRemaining < 0 ? "border-red-500 bg-red-50" : "border-gray-300"
+                  )}
                 />
               </div>
               <div>
@@ -1049,9 +1129,87 @@ function CreatureCreatorContent() {
                   value={creature.martialProficiency}
                   onChange={(e) => updateCreature({ martialProficiency: Math.max(0, parseInt(e.target.value) || 0) })}
                   min={0}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className={cn(
+                    "w-full px-3 py-2 border rounded-lg",
+                    stats.proficiencyRemaining < 0 ? "border-red-500 bg-red-50" : "border-gray-300"
+                  )}
                 />
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Proficiency Points</label>
+                <div className={cn(
+                  "px-3 py-2 rounded-lg text-sm font-medium",
+                  stats.proficiencyRemaining < 0 ? "bg-red-100 text-red-700" : stats.proficiencyRemaining === 0 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+                )}>
+                  {stats.proficiencySpent} / {stats.maxProficiencyPoints} used
+                  {stats.proficiencyRemaining < 0 && <span className="ml-2">({stats.proficiencyRemaining} over!)</span>}
+                </div>
+              </div>
+              
+              {/* HP and EN in Basic Info */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  HP ({stats.maxHealth})
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => updateCreature({ hitPoints: Math.max(0, creature.hitPoints - 1) })}
+                    disabled={creature.hitPoints <= 0}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg font-medium text-sm',
+                      creature.hitPoints <= 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200'
+                    )}
+                  >
+                    −
+                  </button>
+                  <div className="flex-1 text-center">
+                    <span className="text-lg font-bold text-gray-900">+{creature.hitPoints}</span>
+                    <span className="text-sm text-gray-500 ml-1">bonus</span>
+                  </div>
+                  <button
+                    onClick={() => updateCreature({ hitPoints: creature.hitPoints + 1 })}
+                    className="px-3 py-1.5 rounded-lg font-medium text-sm bg-green-100 text-green-700 hover:bg-green-200"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Energy ({stats.maxEnergy})
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => updateCreature({ energyPoints: Math.max(0, creature.energyPoints - 1) })}
+                    disabled={creature.energyPoints <= 0}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg font-medium text-sm',
+                      creature.energyPoints <= 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200'
+                    )}
+                  >
+                    −
+                  </button>
+                  <div className="flex-1 text-center">
+                    <span className="text-lg font-bold text-gray-900">+{creature.energyPoints}</span>
+                    <span className="text-sm text-gray-500 ml-1">bonus</span>
+                  </div>
+                  <button
+                    onClick={() => updateCreature({ energyPoints: creature.energyPoints + 1 })}
+                    className="px-3 py-1.5 rounded-lg font-medium text-sm bg-green-100 text-green-700 hover:bg-green-200"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* HP/EN Pool Status */}
+            <div className={cn(
+              "mt-4 px-3 py-2 rounded-lg text-sm font-medium",
+              stats.heRemaining < 0 ? "bg-red-100 text-red-700" : stats.heRemaining === 0 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
+            )}>
+              HP/EN Pool: {creature.hitPoints + creature.energyPoints} / {stats.hePool} used
+              {stats.heRemaining < 0 && <span className="ml-2">({stats.heRemaining} over!)</span>}
             </div>
           </div>
 
@@ -1135,78 +1293,6 @@ function CreatureCreatorContent() {
                 bonusValue={creature.defenses.resolve}
                 onChange={(val) => updateDefense('resolve', val)}
               />
-            </div>
-          </div>
-
-          {/* Health & Energy */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Health & Energy</h3>
-              <span className={cn('text-sm font-medium', stats.heRemaining < 0 ? 'text-red-600' : 'text-gray-500')}>
-                Pool: {stats.hePool} | Remaining: {stats.heRemaining}
-              </span>
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Hit Points (+{creature.hitPoints} → Max: {stats.maxHealth})
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateCreature({ hitPoints: Math.max(0, creature.hitPoints - 1) })}
-                    disabled={creature.hitPoints <= 0}
-                    className={cn(
-                      'btn-stepper',
-                      creature.hitPoints <= 0 ? 'btn-stepper opacity-50 cursor-not-allowed' : 'btn-stepper-danger'
-                    )}
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    value={creature.hitPoints}
-                    onChange={(e) => updateCreature({ hitPoints: Math.max(0, parseInt(e.target.value) || 0) })}
-                    min={0}
-                    className="w-20 text-center px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <button
-                    onClick={() => updateCreature({ hitPoints: creature.hitPoints + 1 })}
-                    className="btn-stepper btn-stepper-success"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Energy Points (Base: {stats.minEnergy} + {creature.energyPoints} → Max: {stats.maxEnergy})
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateCreature({ energyPoints: Math.max(0, creature.energyPoints - 1) })}
-                    disabled={creature.energyPoints <= 0}
-                    className={cn(
-                      'btn-stepper',
-                      creature.energyPoints <= 0 ? 'btn-stepper opacity-50 cursor-not-allowed' : 'btn-stepper-danger'
-                    )}
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    value={creature.energyPoints}
-                    onChange={(e) => updateCreature({ energyPoints: Math.max(0, parseInt(e.target.value) || 0) })}
-                    min={0}
-                    className="w-20 text-center px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <button
-                    onClick={() => updateCreature({ energyPoints: creature.energyPoints + 1 })}
-                    className="btn-stepper btn-stepper-success"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1352,7 +1438,12 @@ function CreatureCreatorContent() {
                         )}
                         title={skill.proficient ? 'Proficient (+1)' : 'Not proficient'}
                       />
-                      <span className="font-medium text-gray-700">{skill.name}</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-700">{skill.name}</span>
+                        {skillAbilityMap.get(skill.name) && (
+                          <span className="text-xs text-gray-400 capitalize">{skillAbilityMap.get(skill.name)}</span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex items-center gap-2">
@@ -1372,14 +1463,18 @@ function CreatureCreatorContent() {
                           +
                         </button>
                       </div>
-                      <span className={cn(
-                        'w-12 text-right font-bold',
-                        (skill.value + (skill.proficient ? 1 : 0)) > 0 
-                          ? 'text-green-600' 
-                          : 'text-gray-400'
-                      )}>
-                        +{skill.value + (skill.proficient ? 1 : 0)}
-                      </span>
+                      {/* Show full bonus: ability + skill value + proficiency */}
+                      {(() => {
+                        const bonus = getSkillBonus(skill.name, skill.value, skill.proficient);
+                        return (
+                          <span className={cn(
+                            'w-12 text-right font-bold',
+                            bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-gray-400'
+                          )}>
+                            {bonus >= 0 ? '+' : ''}{bonus}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -1450,7 +1545,7 @@ function CreatureCreatorContent() {
                         <td className="px-3 py-2">{power.duration}</td>
                         <td className="px-3 py-2">{power.range}</td>
                         <td className="px-3 py-2">{power.area}</td>
-                        <td className="px-3 py-2">{power.damage}</td>
+                        <td className="px-3 py-2">{formatDamageDisplay(power.damage)}</td>
                         <td className="px-3 py-2">
                           <button
                             onClick={() => setCreature(prev => ({
@@ -1503,7 +1598,7 @@ function CreatureCreatorContent() {
                         <td className="px-3 py-2">{tech.tp}</td>
                         <td className="px-3 py-2">{tech.action}</td>
                         <td className="px-3 py-2">{tech.weapon}</td>
-                        <td className="px-3 py-2">{tech.damage}</td>
+                        <td className="px-3 py-2">{formatDamageDisplay(tech.damage)}</td>
                         <td className="px-3 py-2">
                           <button
                             onClick={() => setCreature(prev => ({
@@ -1639,74 +1734,98 @@ function CreatureCreatorContent() {
           </div>
         </div>
 
-        {/* Stats Summary Sidebar */}
+        {/* Resource Summary Sidebar (scrolls with user) */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Creature Summary</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Resource Points</h3>
             
             <div className="space-y-3">
+              <div className={cn(
+                'flex justify-between p-3 rounded-lg',
+                stats.abilityRemaining < 0 ? 'bg-red-50' : 'bg-blue-50'
+              )}>
+                <span className="text-gray-700">Ability Points</span>
+                <span className={cn(
+                  'font-bold',
+                  stats.abilityRemaining < 0 ? 'text-red-600' : 'text-blue-600'
+                )}>
+                  {stats.abilityRemaining}
+                </span>
+              </div>
+              
+              <div className={cn(
+                'flex justify-between p-3 rounded-lg',
+                stats.heRemaining < 0 ? 'bg-red-50' : 'bg-blue-50'
+              )}>
+                <span className="text-gray-700">HP/EN Points</span>
+                <span className={cn(
+                  'font-bold',
+                  stats.heRemaining < 0 ? 'text-red-600' : 'text-blue-600'
+                )}>
+                  {stats.heRemaining}
+                </span>
+              </div>
+              
+              <div className={cn(
+                'flex justify-between p-3 rounded-lg',
+                stats.skillRemaining < 0 ? 'bg-red-50' : 'bg-blue-50'
+              )}>
+                <span className="text-gray-700">Skill Points</span>
+                <span className={cn(
+                  'font-bold',
+                  stats.skillRemaining < 0 ? 'text-red-600' : 'text-blue-600'
+                )}>
+                  {stats.skillRemaining}
+                </span>
+              </div>
+              
+              <div className={cn(
+                'flex justify-between p-3 rounded-lg',
+                stats.featRemaining < 0 ? 'bg-red-50' : 'bg-amber-50'
+              )}>
+                <span className="text-gray-700">Feat Points</span>
+                <span className={cn(
+                  'font-bold',
+                  stats.featRemaining < 0 ? 'text-red-600' : 'text-amber-600'
+                )}>
+                  {stats.featRemaining}
+                </span>
+              </div>
+              
+              <div className="flex justify-between p-3 bg-amber-50 rounded-lg">
+                <span className="text-gray-700">Training Points</span>
+                <span className="font-bold text-amber-600">{stats.trainingPoints}</span>
+              </div>
+              
+              <div className="flex justify-between p-3 bg-amber-50 rounded-lg">
+                <span className="text-gray-700">Currency</span>
+                <span className="font-bold text-amber-600">{stats.currency}c</span>
+              </div>
+
+              <hr className="my-4 border-gray-200" />
+
+              {/* Proficiency Points Section */}
               <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-lg font-bold">{creature.name || 'Unnamed Creature'}</div>
-                <div className="text-sm text-gray-500">
-                  Level {creature.level} {creature.size.charAt(0).toUpperCase() + creature.size.slice(1)} {creature.type}
+                <div className="text-sm font-medium text-gray-700 mb-2">Proficiency Allocation</div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Power Prof</span>
+                  <span className="font-medium">{creature.powerProficiency}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Martial Prof</span>
+                  <span className="font-medium">{creature.martialProficiency}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1 pt-1 border-t border-gray-200">
+                  <span className="text-gray-600">Total</span>
+                  <span className={cn(
+                    'font-bold',
+                    (creature.powerProficiency + creature.martialProficiency) > stats.proficiency
+                      ? 'text-red-600' : 'text-green-600'
+                  )}>
+                    {creature.powerProficiency + creature.martialProficiency} / {stats.proficiency}
+                  </span>
                 </div>
               </div>
-              
-              <div className="flex justify-between p-2 bg-red-50 rounded">
-                <span className="text-gray-700">Max Health</span>
-                <span className="font-bold text-red-600">{stats.maxHealth}</span>
-              </div>
-              <div className="flex justify-between p-2 bg-blue-50 rounded">
-                <span className="text-gray-700">Max Energy</span>
-                <span className="font-bold text-blue-600">{stats.maxEnergy}</span>
-              </div>
-              <div className="flex justify-between p-2 bg-gray-50 rounded">
-                <span className="text-gray-700">Speed</span>
-                <span className="font-bold">{stats.speed}</span>
-              </div>
-              <div className="flex justify-between p-2 bg-gray-50 rounded">
-                <span className="text-gray-700">Evasion</span>
-                <span className="font-bold">{stats.evasion}</span>
-              </div>
-              <div className="flex justify-between p-2 bg-gray-50 rounded">
-                <span className="text-gray-700">Proficiency</span>
-                <span className="font-bold">+{stats.proficiency}</span>
-              </div>
-              
-              {creature.resistances.length > 0 && (
-                <div className="p-2 bg-green-50 rounded">
-                  <div className="text-xs text-gray-500 uppercase mb-1">Resistances</div>
-                  <div className="text-sm font-medium text-green-700">{creature.resistances.join(', ')}</div>
-                </div>
-              )}
-              
-              {creature.weaknesses.length > 0 && (
-                <div className="p-2 bg-red-50 rounded">
-                  <div className="text-xs text-gray-500 uppercase mb-1">Weaknesses</div>
-                  <div className="text-sm font-medium text-red-700">{creature.weaknesses.join(', ')}</div>
-                </div>
-              )}
-              
-              {creature.immunities.length > 0 && (
-                <div className="p-2 bg-purple-50 rounded">
-                  <div className="text-xs text-gray-500 uppercase mb-1">Immunities</div>
-                  <div className="text-sm font-medium text-purple-700">{creature.immunities.join(', ')}</div>
-                </div>
-              )}
-              
-              {creature.senses.length > 0 && (
-                <div className="p-2 bg-blue-50 rounded">
-                  <div className="text-xs text-gray-500 uppercase mb-1">Senses</div>
-                  <div className="text-sm font-medium text-blue-700">{creature.senses.join(', ')}</div>
-                </div>
-              )}
-              
-              {creature.languages.length > 0 && (
-                <div className="p-2 bg-teal-50 rounded">
-                  <div className="text-xs text-gray-500 uppercase mb-1">Languages</div>
-                  <div className="text-sm font-medium text-teal-700">{creature.languages.join(', ')}</div>
-                </div>
-              )}
             </div>
           </div>
         </div>

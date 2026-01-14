@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, type EquipmentItem } from '@/hooks';
 import { calculateTrainingPoints } from '@/lib/game/formulas';
@@ -232,7 +232,7 @@ export function EquipmentStep() {
               <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                 {item.damage && (
                   <span className="px-2 py-0.5 bg-red-50 text-red-700 rounded">
-                    {item.damage}
+                    {formatDamageDisplay(item.damage)}
                   </span>
                 )}
                 {item.armor_value && (

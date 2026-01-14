@@ -9,7 +9,7 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatDamageDisplay } from '@/lib/utils';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
@@ -209,7 +209,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             {type === 'weapon' && item.damage && (
-              <span className="text-red-600 font-medium">{item.damage}</span>
+              <span className="text-red-600 font-medium">{formatDamageDisplay(item.damage)}</span>
             )}
             {type === 'armor' && item.armor && (
               <span className="text-blue-600 font-medium">+{item.armor} AR</span>

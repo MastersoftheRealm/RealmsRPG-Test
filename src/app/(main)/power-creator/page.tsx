@@ -96,6 +96,33 @@ const DURATION_TYPES = [
   { value: 'permanent', label: 'Permanent' },
 ];
 
+// Duration value intervals per type (matching vanilla site)
+const DURATION_VALUES: Record<string, { value: number; label: string }[]> = {
+  rounds: [
+    { value: 1, label: '1 round' },
+    { value: 2, label: '2 rounds' },
+    { value: 3, label: '3 rounds' },
+    { value: 4, label: '4 rounds' },
+    { value: 5, label: '5 rounds' },
+    { value: 6, label: '6 rounds' },
+  ],
+  minutes: [
+    { value: 1, label: '1 minute' },
+    { value: 10, label: '10 minutes' },
+    { value: 30, label: '30 minutes' },
+  ],
+  hours: [
+    { value: 1, label: '1 hour' },
+    { value: 6, label: '6 hours' },
+    { value: 12, label: '12 hours' },
+  ],
+  days: [
+    { value: 1, label: '1 day' },
+    { value: 7, label: '7 days' },
+    { value: 14, label: '14 days' },
+  ],
+};
+
 // Advanced mechanics categories
 const ADVANCED_CATEGORIES = [
   'Action',
@@ -1283,7 +1310,12 @@ function PowerCreatorContent() {
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
                 value={duration.type}
-                onChange={(e) => setDuration((d) => ({ ...d, type: e.target.value as DurationConfig['type'] }))}
+                onChange={(e) => {
+                  const newType = e.target.value as DurationConfig['type'];
+                  // Reset value to first option when changing type
+                  const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
+                  setDuration((d) => ({ ...d, type: newType, value: newValue }));
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg"
               >
                 {DURATION_TYPES.map((opt) => (
@@ -1292,14 +1324,18 @@ function PowerCreatorContent() {
                   </option>
                 ))}
               </select>
-              {duration.type !== 'instant' && duration.type !== 'permanent' && (
-                <NumberStepper
+              {duration.type !== 'instant' && duration.type !== 'permanent' && DURATION_VALUES[duration.type] && (
+                <select
                   value={duration.value}
-                  onChange={(v) => setDuration((d) => ({ ...d, value: v }))}
-                  label="Value:"
-                  min={1}
-                  max={100}
-                />
+                  onChange={(e) => setDuration((d) => ({ ...d, value: parseInt(e.target.value) }))}
+                  className="px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  {DURATION_VALUES[duration.type].map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
             {/* Duration Modifiers */}
@@ -1341,6 +1377,8 @@ function PowerCreatorContent() {
                   <option value={0}>None</option>
                   <option value={1}>1 AP</option>
                   <option value={2}>2 AP</option>
+                  <option value={3}>3 AP</option>
+                  <option value={4}>4 AP</option>
                 </select>
               </div>
             </div>

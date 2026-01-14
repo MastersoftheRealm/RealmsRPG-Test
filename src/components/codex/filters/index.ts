@@ -9,3 +9,4 @@ export { AbilityRequirementFilter, type AbilityRequirement } from './ability-req
 export { TagFilter } from './tag-filter';
 export { CheckboxFilter } from './checkbox-filter';
 export { SelectFilter } from './select-filter';
+export { FilterSection } from './filter-section';

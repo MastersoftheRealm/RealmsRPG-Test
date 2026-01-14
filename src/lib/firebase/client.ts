@@ -108,8 +108,39 @@ export async function waitForFirebase(): Promise<void> {
   return initPromise;
 }
 
+/**
+ * Suppress common Firebase connection warnings in development.
+ * These errors are typically caused by:
+ * - Browser extensions intercepting messages
+ * - Network instability or firewall issues
+ * - Firebase cold starts
+ * 
+ * They don't affect functionality as Firebase auto-reconnects.
+ */
+function suppressConnectionWarnings() {
+  if (typeof window === 'undefined') return;
+  
+  const originalConsoleError = console.error;
+  console.error = (...args: unknown[]) => {
+    const message = args[0];
+    if (typeof message === 'string') {
+      // Suppress known benign Firebase connection messages
+      if (
+        message.includes('message channel closed before a response was received') ||
+        message.includes('WebSocket connection to') && message.includes('failed')
+      ) {
+        // Log at debug level instead
+        console.debug('[Firebase Connection]', ...args);
+        return;
+      }
+    }
+    originalConsoleError.apply(console, args);
+  };
+}
+
 // Auto-initialize on client side
 if (typeof window !== 'undefined') {
+  suppressConnectionWarnings();
   waitForFirebase().catch(err => {
     console.error('Failed to initialize Firebase:', err);
   });
