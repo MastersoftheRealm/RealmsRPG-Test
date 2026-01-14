@@ -60,33 +60,33 @@ const DAMAGE_TYPES = [
 ];
 
 const SENSES = [
-  { value: 'Darkvision', label: 'Darkvision (6 spaces)' },
-  { value: 'Darkvision II', label: 'Darkvision II (12 spaces)' },
-  { value: 'Darkvision III', label: 'Darkvision III (24 spaces)' },
-  { value: 'Blindsense', label: 'Blindsense (3 spaces)' },
-  { value: 'Blindsense II', label: 'Blindsense II (6 spaces)' },
-  { value: 'Blindsense III', label: 'Blindsense III (12 spaces)' },
-  { value: 'Amphibious', label: 'Amphibious' },
-  { value: 'All-Surface Climber', label: 'All-Surface Climber' },
-  { value: 'Telepathy', label: 'Telepathy (12 spaces)' },
-  { value: 'Telepathy II', label: 'Telepathy II (48 spaces)' },
-  { value: 'Waterbreathing', label: 'Waterbreathing' },
-  { value: 'Unrestrained Movement', label: 'Unrestrained Movement' },
+  { value: 'Darkvision', label: 'Darkvision (6 spaces)', description: 'See in darkness up to 6 spaces as if it were dim light.' },
+  { value: 'Darkvision II', label: 'Darkvision II (12 spaces)', description: 'See in darkness up to 12 spaces as if it were dim light.' },
+  { value: 'Darkvision III', label: 'Darkvision III (24 spaces)', description: 'See in darkness up to 24 spaces as if it were dim light.' },
+  { value: 'Blindsense', label: 'Blindsense (3 spaces)', description: 'Detect creatures within 3 spaces without relying on sight.' },
+  { value: 'Blindsense II', label: 'Blindsense II (6 spaces)', description: 'Detect creatures within 6 spaces without relying on sight.' },
+  { value: 'Blindsense III', label: 'Blindsense III (12 spaces)', description: 'Detect creatures within 12 spaces without relying on sight.' },
+  { value: 'Amphibious', label: 'Amphibious', description: 'Can breathe air and water.' },
+  { value: 'All-Surface Climber', label: 'All-Surface Climber', description: 'Can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.' },
+  { value: 'Telepathy', label: 'Telepathy (12 spaces)', description: 'Mentally communicate with creatures within 12 spaces.' },
+  { value: 'Telepathy II', label: 'Telepathy II (48 spaces)', description: 'Mentally communicate with creatures within 48 spaces.' },
+  { value: 'Waterbreathing', label: 'Waterbreathing', description: 'Can breathe underwater.' },
+  { value: 'Unrestrained Movement', label: 'Unrestrained Movement', description: 'Movement is unaffected by difficult terrain, and spells and magical effects can neither reduce speed nor cause paralysis or restraint.' },
 ];
 
 const MOVEMENT_TYPES = [
-  { value: 'Fly Half', label: 'Flying (Half Speed)' },
-  { value: 'Fly', label: 'Flying II (Full Speed)' },
-  { value: 'Burrow', label: 'Burrow (Half Speed)' },
-  { value: 'Burrow II', label: 'Burrow II (Full Speed)' },
-  { value: 'Jump', label: 'Jump (Long 3, High 2)' },
-  { value: 'Jump II', label: 'Jump II (Long 4, High 3)' },
-  { value: 'Jump III', label: 'Jump III (Long 5, High 4)' },
-  { value: 'Speedy', label: 'Speedy (+2 spaces)' },
-  { value: 'Speedy II', label: 'Speedy II (+4 spaces)' },
-  { value: 'Speedy III', label: 'Speedy III (+6 spaces)' },
-  { value: 'Slow', label: 'Slow (-2 spaces)' },
-  { value: 'Hover', label: 'Hover' },
+  { value: 'Fly Half', label: 'Flying (Half Speed)', description: 'Gains a flying speed equal to half its walking speed.' },
+  { value: 'Fly', label: 'Flying II (Full Speed)', description: 'Gains a flying speed equal to its walking speed.' },
+  { value: 'Burrow', label: 'Burrow (Half Speed)', description: 'Gains a burrowing speed equal to half its walking speed.' },
+  { value: 'Burrow II', label: 'Burrow II (Full Speed)', description: 'Gains a burrowing speed equal to its walking speed.' },
+  { value: 'Jump', label: 'Jump (Long 3, High 2)', description: 'Long jump of 3 spaces and high jump of 2 spaces, with or without a running start.' },
+  { value: 'Jump II', label: 'Jump II (Long 4, High 3)', description: 'Long jump of 4 spaces and high jump of 3 spaces, with or without a running start.' },
+  { value: 'Jump III', label: 'Jump III (Long 5, High 4)', description: 'Long jump of 5 spaces and high jump of 4 spaces, with or without a running start.' },
+  { value: 'Speedy', label: 'Speedy (+2 spaces)', description: 'Walking speed is increased by 2 spaces.' },
+  { value: 'Speedy II', label: 'Speedy II (+4 spaces)', description: 'Walking speed is increased by 4 spaces.' },
+  { value: 'Speedy III', label: 'Speedy III (+6 spaces)', description: 'Walking speed is increased by 6 spaces.' },
+  { value: 'Slow', label: 'Slow (-2 spaces)', description: 'Walking speed is reduced by 2 spaces.' },
+  { value: 'Hover', label: 'Hover', description: 'Can remain in the air without expending movement (requires a flying speed).' },
 ];
 
 const CONDITIONS = [
@@ -102,6 +102,37 @@ const SKILLS = [
   'Nature', 'Perception', 'Performance', 'Persuasion', 'Religion',
   'Sleight of Hand', 'Stealth', 'Survival'
 ];
+
+// Map sense/movement values to their creature feat IDs
+const SENSE_TO_FEAT_ID: Record<string, number> = {
+  'Darkvision': CREATURE_FEAT_IDS.DARKVISION,
+  'Darkvision II': CREATURE_FEAT_IDS.DARKVISION_II,
+  'Darkvision III': CREATURE_FEAT_IDS.DARKVISION_III,
+  'Blindsense': CREATURE_FEAT_IDS.BLINDSENSE,
+  'Blindsense II': CREATURE_FEAT_IDS.BLINDSENSE_II,
+  'Blindsense III': CREATURE_FEAT_IDS.BLINDSENSE_III,
+  'Amphibious': CREATURE_FEAT_IDS.AMPHIBIOUS,
+  'All-Surface Climber': CREATURE_FEAT_IDS.ALL_SURFACE_CLIMBER,
+  'Telepathy': CREATURE_FEAT_IDS.TELEPATHY,
+  'Telepathy II': CREATURE_FEAT_IDS.TELEPATHY_II,
+  'Waterbreathing': CREATURE_FEAT_IDS.WATERBREATHING,
+  'Unrestrained Movement': CREATURE_FEAT_IDS.UNRESTRAINED_MOVEMENT,
+};
+
+const MOVEMENT_TO_FEAT_ID: Record<string, number> = {
+  'Fly Half': CREATURE_FEAT_IDS.FLYING,
+  'Fly': CREATURE_FEAT_IDS.FLYING_II,
+  'Burrow': CREATURE_FEAT_IDS.BURROW,
+  'Burrow II': CREATURE_FEAT_IDS.BURROW_II,
+  'Jump': CREATURE_FEAT_IDS.JUMP,
+  'Jump II': CREATURE_FEAT_IDS.JUMP_II,
+  'Jump III': CREATURE_FEAT_IDS.JUMP_III,
+  'Speedy': CREATURE_FEAT_IDS.SPEEDY,
+  'Speedy II': CREATURE_FEAT_IDS.SPEEDY_II,
+  'Speedy III': CREATURE_FEAT_IDS.SPEEDY_III,
+  'Slow': CREATURE_FEAT_IDS.SLOW,
+  'Hover': CREATURE_FEAT_IDS.HOVER,
+};
 
 // =============================================================================
 // Types
@@ -261,6 +292,61 @@ function ChipList({
           </button>
         </span>
       ))}
+    </div>
+  );
+}
+
+function ExpandableChipList({ 
+  items, 
+  onRemove, 
+  color = 'bg-gray-100',
+  descriptions
+}: { 
+  items: string[]; 
+  onRemove: (item: string) => void;
+  color?: string;
+  descriptions: Record<string, string>;
+}) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  
+  if (items.length === 0) return <p className="text-sm text-gray-400 italic">None</p>;
+  
+  return (
+    <div className="flex flex-col gap-2">
+      {items.map(item => {
+        const isExpanded = expanded[item];
+        const description = descriptions[item];
+        
+        return (
+          <div key={item} className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className={cn('px-3 py-2 flex items-center justify-between', color)}>
+              <div className="flex items-center gap-2 flex-1">
+                {description && (
+                  <button
+                    onClick={() => setExpanded(prev => ({ ...prev, [item]: !prev[item] }))}
+                    className="text-gray-600 hover:text-gray-800 transition-transform"
+                    style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                  >
+                    ▶
+                  </button>
+                )}
+                <span className="font-medium">{item}</span>
+              </div>
+              <button 
+                onClick={() => onRemove(item)} 
+                className="text-gray-500 hover:text-red-500 ml-2"
+              >
+                ×
+              </button>
+            </div>
+            {isExpanded && description && (
+              <div className="px-3 py-2 bg-gray-50 text-sm text-gray-600 border-t border-gray-200">
+                {description}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -767,11 +853,42 @@ function CreatureCreatorContent() {
     return map;
   }, [skillsData]);
   
+  // Create description maps for senses and movements
+  const senseDescriptions = useMemo(() => {
+    const map: Record<string, string> = {};
+    SENSES.forEach(sense => {
+      map[sense.value] = sense.description;
+    });
+    return map;
+  }, []);
+  
+  const movementDescriptions = useMemo(() => {
+    const map: Record<string, string> = {};
+    MOVEMENT_TYPES.forEach(movement => {
+      map[movement.value] = movement.description;
+    });
+    return map;
+  }, []);
+  
   // Calculate skill bonus (uses shared utility from formulas.ts)
   const getSkillBonus = useCallback((skillName: string, skillValue: number, proficient: boolean) => {
     const abilityName = skillAbilityMap.get(skillName) || '';
     return calculateSkillBonusWithProficiency(abilityName, skillValue, creature.abilities, proficient);
   }, [skillAbilityMap, creature.abilities]);
+  
+  // Filter available skills: exclude sub-skills unless their base skill is already added
+  const availableSkills = useMemo(() => {
+    const addedSkillNames = creature.skills.map(s => s.name);
+    
+    return skillsData.filter(skill => {
+      // If this skill has a base_skill, only show it if the base skill is already added
+      if (skill.base_skill) {
+        return addedSkillNames.includes(skill.base_skill);
+      }
+      // Otherwise, show all base skills
+      return true;
+    }).map(skill => skill.name);
+  }, [skillsData, creature.skills]);
 
   const updateCreature = useCallback((updates: Partial<CreatureState>) => {
     setCreature(prev => ({ ...prev, ...updates }));
@@ -840,11 +957,33 @@ function CreatureCreatorContent() {
     const weaknessFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.WEAKNESS)) ?? -1;
     const conditionImmunityFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.CONDITION_IMMUNITY)) ?? 1;
     
+    // Calculate feat points for senses
+    const senseFeatPoints = creature.senses.reduce((sum, sense) => {
+      const featId = SENSE_TO_FEAT_ID[sense];
+      if (featId) {
+        const cost = featPointsMap.get(String(featId)) ?? 0;
+        return sum + cost;
+      }
+      return sum;
+    }, 0);
+    
+    // Calculate feat points for movement types
+    const movementFeatPoints = creature.movementTypes.reduce((sum, movement) => {
+      const featId = MOVEMENT_TO_FEAT_ID[movement];
+      if (featId) {
+        const cost = featPointsMap.get(String(featId)) ?? 0;
+        return sum + cost;
+      }
+      return sum;
+    }, 0);
+    
     const mechanicalFeatPoints = 
       (creature.resistances.length * resistanceFeatCost) +
       (creature.immunities.length * immunityFeatCost) +
       (creature.weaknesses.length * weaknessFeatCost) +
-      (creature.conditionImmunities.length * conditionImmunityFeatCost);
+      (creature.conditionImmunities.length * conditionImmunityFeatCost) +
+      senseFeatPoints +
+      movementFeatPoints;
     
     // Total feat spent = manual feats + mechanical feats
     const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
@@ -955,9 +1094,10 @@ function CreatureCreatorContent() {
 
   const addSkill = (skillName: string) => {
     if (!creature.skills.find(s => s.name === skillName)) {
+      // For creatures, all skills added are automatically proficient (spend that point)
       setCreature(prev => ({
         ...prev,
-        skills: [...prev.skills, { name: skillName, value: 0, proficient: false }]
+        skills: [...prev.skills, { name: skillName, value: 0, proficient: true }]
       }));
     }
   };
@@ -965,7 +1105,18 @@ function CreatureCreatorContent() {
   const updateSkill = (skillName: string, updates: Partial<CreatureSkill>) => {
     setCreature(prev => ({
       ...prev,
-      skills: prev.skills.map(s => s.name === skillName ? { ...s, ...updates } : s)
+      skills: prev.skills.map(s => {
+        if (s.name === skillName) {
+          const newSkill = { ...s, ...updates };
+          // For creatures, proficiency cannot be removed once added
+          // If trying to remove proficiency, also reset skill value to 0
+          if ('proficient' in updates && !updates.proficient) {
+            return { ...newSkill, proficient: true, value: 0 };
+          }
+          return newSkill;
+        }
+        return s;
+      })
     }));
   };
 
@@ -1351,10 +1502,11 @@ function CreatureCreatorContent() {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Senses</label>
-                <ChipList 
+                <ExpandableChipList 
                   items={creature.senses} 
                   onRemove={(item) => removeFromArray('senses', item)}
                   color="bg-blue-100 text-blue-800"
+                  descriptions={senseDescriptions}
                 />
                 <AddItemDropdown
                   options={SENSES}
@@ -1365,10 +1517,11 @@ function CreatureCreatorContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Movement Types</label>
-                <ChipList 
+                <ExpandableChipList 
                   items={creature.movementTypes} 
                   onRemove={(item) => removeFromArray('movementTypes', item)}
                   color="bg-amber-100 text-amber-800"
+                  descriptions={movementDescriptions}
                 />
                 <AddItemDropdown
                   options={MOVEMENT_TYPES}
@@ -1428,16 +1581,8 @@ function CreatureCreatorContent() {
                       >
                         ×
                       </button>
-                      <button
-                        onClick={() => updateSkill(skill.name, { proficient: !skill.proficient })}
-                        className={cn(
-                          'w-4 h-4 rounded-full border-2 transition-colors cursor-pointer',
-                          skill.proficient 
-                            ? 'bg-primary-600 border-primary-600' 
-                            : 'bg-white border-gray-300 hover:border-primary-400'
-                        )}
-                        title={skill.proficient ? 'Proficient (+1)' : 'Not proficient'}
-                      />
+                      {/* For creatures, all skills are automatically proficient */}
+                      <div className="w-4 h-4 rounded-full border-2 bg-primary-600 border-primary-600" title="Proficient (all creature skills are proficient)" />
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-700">{skill.name}</span>
                         {skillAbilityMap.get(skill.name) && (
@@ -1463,7 +1608,7 @@ function CreatureCreatorContent() {
                           +
                         </button>
                       </div>
-                      {/* Show full bonus: ability + skill value + proficiency */}
+                      {/* Show full bonus: ability + skill value (all creature skills are proficient) */}
                       {(() => {
                         const bonus = getSkillBonus(skill.name, skill.value, skill.proficient);
                         return (
@@ -1482,7 +1627,7 @@ function CreatureCreatorContent() {
             )}
             
             <AddItemDropdown
-              options={SKILLS}
+              options={availableSkills}
               selectedItems={creature.skills.map(s => s.name)}
               onAdd={addSkill}
               placeholder="Add skill..."

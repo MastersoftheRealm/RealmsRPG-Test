@@ -620,7 +620,7 @@ async function fetchCreatureFeats(): Promise<CreatureFeat[]> {
         id: String(feat.id ?? key),
         name: String(feat.name ?? ''),
         description: String(feat.description ?? ''),
-        points: Number(feat.points ?? feat.cost ?? 0),
+        points: Number(feat.feat_points ?? feat.points ?? feat.cost ?? 0),
         tiers: feat.tiers ? Number(feat.tiers) : undefined,
         prereqs: toStrArray(feat.prereqs),
       }));

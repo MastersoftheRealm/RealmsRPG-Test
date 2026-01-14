@@ -187,6 +187,8 @@ export const CREATURE_FEAT_IDS = {
   SLOW_III: 41,
   RESOURCES: 42,
   RESOURCES_II: 43,
+  HOVER: 44,
+  TELEPATHICALLY_INTUNE: 45,
 } as const;
 
 // Mechanical creature feats that are auto-added based on UI selections
@@ -226,6 +228,10 @@ export const MECHANICAL_CREATURE_FEAT_IDS: Set<number> = new Set([
   CREATURE_FEAT_IDS.SLOW,
   CREATURE_FEAT_IDS.SLOW_II,
   CREATURE_FEAT_IDS.SLOW_III,
+  CREATURE_FEAT_IDS.HOVER,
+  CREATURE_FEAT_IDS.TELEPATHY,
+  CREATURE_FEAT_IDS.TELEPATHY_II,
+  CREATURE_FEAT_IDS.TELEPATHICALLY_INTUNE,
 ]);
 
 // General property IDs excluded from selectable property iterations

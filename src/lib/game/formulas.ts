@@ -121,32 +121,26 @@ export function calculateCreatureTrainingPoints(level: number, highestNonVitalit
 
 /**
  * Calculate creature feat points based on level and martial proficiency.
- * Base Formula: 4 + 1 * (level - 1)
- * Martial Bonus: +1 per point of martial proficiency (up to 2) 
- *                +1 per 3 levels after level 4 if martial >= 2
- * For sub-levels: ceil(4 * level) + martial proficiency
+ * Base Formula at level 1: 1.5 + martial proficiency
+ * Additional levels: +1 per level after level 1
+ * For sub-levels: ceil((1.5 + martial) * level)
  */
 export function calculateCreatureFeatPoints(level: number, martialProficiency = 0): number {
   const parsedLevel = parseFloat(String(level)) || 1;
   const martial = martialProficiency || 0;
   
   if (parsedLevel < 1) {
-    // Fractional levels: 4 * level + martial proficiency, rounded up
-    return Math.ceil(4 * parsedLevel) + martial;
+    // Fractional levels: (1.5 + martial) * level, rounded up
+    return Math.ceil((1.5 + martial) * parsedLevel);
   }
   
-  // Base feat points: 4 + (level - 1)
-  const base = 4 + 1 * (parsedLevel - 1);
+  // Base feat points at level 1: 1.5 + martial proficiency
+  const baseAtLevel1 = 1.5 + martial;
   
-  // Martial bonus: +1 per point of martial proficiency (max 2)
-  let martialBonus = Math.min(martial, 2);
+  // Add 1 per level after level 1
+  const levelBonus = parsedLevel > 1 ? (parsedLevel - 1) : 0;
   
-  // Additional martial bonus: +1 per 3 levels after level 4 if martial >= 2
-  if (martial >= 2 && parsedLevel >= 4) {
-    martialBonus += Math.floor((parsedLevel - 1) / 3);
-  }
-  
-  return base + martialBonus;
+  return baseAtLevel1 + levelBonus;
 }
 
 /**
@@ -324,5 +318,14 @@ export function calculateSkillBonusWithProficiency(
   abilities: Abilities,
   isProficient: boolean = false
 ): number {
-  return calculateSkillBonus(linkedAbilities, skillValue, abilities) + (isProficient ? 1 : 0);
+  const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
+  
+  if (isProficient) {
+    // Proficient: ability + skill value + 1
+    return abilityMod + skillValue + 1;
+  } else {
+    // Unproficient: half ability (rounded up) or double negative
+    const unprofAbilityBonus = abilityMod < 0 ? abilityMod * 2 : Math.ceil(abilityMod / 2);
+    return unprofAbilityBonus;
+  }
 }
