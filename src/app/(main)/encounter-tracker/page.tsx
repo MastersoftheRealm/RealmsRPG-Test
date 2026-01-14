@@ -206,8 +206,6 @@ function EncounterTrackerContent() {
     }
     
     return [...nonCompanions, ...companions];
-    }
-    return encounter.combatants;
   }, [encounter.combatants, encounter.round]);
 
   // Generate suffix letters for duplicate names (A, B, C, etc.)

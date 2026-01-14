@@ -110,7 +110,6 @@ interface FeatFilters {
 
 function FeatsTab() {
   const { data: feats, isLoading, error } = useRTDBFeats();
-  const [showFilters, setShowFilters] = useState(true);
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
   const [filters, setFilters] = useState<FeatFilters>({
@@ -260,18 +259,9 @@ function FeatsTab() {
         </div>
       </div>
 
-      {/* Filters Toggle */}
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4"
-      >
-        {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        {showFilters ? 'Hide Filters' : 'Show Filters'}
-      </button>
-
       {/* Filters Panel */}
-      {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {/* Required Level */}
           {/* Required Level - Input filter */}
           <div className="filter-group">
@@ -364,7 +354,7 @@ function FeatsTab() {
             placeholder="All Feats"
           />
         </div>
-      )}
+      </FilterSection>
 
       {/* Results Count */}
       <div className="text-sm text-gray-500 mb-4">
@@ -489,7 +479,6 @@ interface SkillFilters {
 
 function SkillsTab() {
   const { data: skills, isLoading, error } = useRTDBSkills();
-  const [showFilters, setShowFilters] = useState(true);
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
   const [filters, setFilters] = useState<SkillFilters>({
@@ -594,17 +583,9 @@ function SkillsTab() {
         />
       </div>
 
-      {/* Filters Toggle */}
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4"
-      >
-        {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        {showFilters ? 'Hide Filters' : 'Show Filters'}
-      </button>
-
-      {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      {/* Filters Panel */}
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <ChipSelect
             label="Ability"
             placeholder="Choose ability"
@@ -634,7 +615,7 @@ function SkillsTab() {
             }}
           />
         </div>
-      )}
+      </FilterSection>
 
       {/* Results Count */}
       <div className="text-sm text-gray-500 mb-4">
@@ -714,7 +695,6 @@ interface SpeciesFilters {
 function SpeciesTab() {
   const { data: species, isLoading, error } = useSpecies();
   const { data: allTraits } = useTraits();
-  const [showFilters, setShowFilters] = useState(true);
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
   const [filters, setFilters] = useState<SpeciesFilters>({
@@ -808,16 +788,8 @@ function SpeciesTab() {
         />
       </div>
 
-      <button
-        onClick={() => setShowFilters(!showFilters)}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4"
-      >
-        {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        {showFilters ? 'Hide Filters' : 'Show Filters'}
-      </button>
-
-      {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ChipSelect
             label="Type"
             placeholder="Choose type"
@@ -836,7 +808,7 @@ function SpeciesTab() {
             onRemove={(v) => setFilters(f => ({ ...f, sizes: f.sizes.filter(s => s !== v) }))}
           />
         </div>
-      )}
+      </FilterSection>
 
       <div className="text-sm text-gray-500 mb-4">
         {isLoading ? 'Loading...' : `${filteredSpecies.length} species found`}
@@ -1012,6 +984,9 @@ interface Equipment {
   currency?: number;
   weight?: number;
   rarity?: string;
+  damage?: string;
+  armor_value?: number;
+  properties?: string[];
 }
 
 function EquipmentTab() {

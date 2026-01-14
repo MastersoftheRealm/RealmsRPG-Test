@@ -223,6 +223,13 @@ function ItemCreatorContent() {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [isTwoHanded, setIsTwoHanded] = useState(false);
   const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
+  
+  // Armor-specific state
+  const [damageReduction, setDamageReduction] = useState(1); // Armor damage reduction (min 1)
+  const [agilityReduction, setAgilityReduction] = useState(0); // Armor agility reduction
+  
+  // Shield-specific state
+  const [shieldAmount, setShieldAmount] = useState(1); // Shield block amount (min 1)
 
   // Fetch item properties
   const { data: itemProperties = [], isLoading, error } = useItemProperties();
@@ -254,7 +261,7 @@ function ItemCreatorContent() {
   }, [rangeLevel]);
 
   // Convert selected properties to payload format for calculator
-  // Including auto-generated Range and Two-Handed properties
+  // Including auto-generated properties for Weapon, Armor, and Shield
   const propertiesPayload: ItemPropertyPayload[] = useMemo(() => {
     const baseProps = selectedProperties.map((sp) => ({
       id: Number(sp.property.id),
@@ -262,6 +269,7 @@ function ItemCreatorContent() {
       op_1_lvl: sp.op_1_lvl,
     }));
     
+    // === WEAPON PROPERTIES ===
     // Add Two-Handed property if weapon and selected
     if (armamentType === 'Weapon' && isTwoHanded) {
       const twoHandedProp = itemProperties.find(p => p.name === 'Two-Handed');
@@ -278,8 +286,41 @@ function ItemCreatorContent() {
       }
     }
     
+    // === ARMOR PROPERTIES ===
+    if (armamentType === 'Armor') {
+      // Auto-add Armor Base property (ID: 16)
+      const armorBaseProp = itemProperties.find(p => p.name === 'Armor Base' || Number(p.id) === 16);
+      if (armorBaseProp) {
+        baseProps.push({ id: Number(armorBaseProp.id), name: armorBaseProp.name, op_1_lvl: 0 });
+      }
+      
+      // Add Damage Reduction property (ID: 1) - armor must have at least 1 DR
+      const drProp = itemProperties.find(p => p.name === 'Damage Reduction' || Number(p.id) === 1);
+      if (drProp && damageReduction > 0) {
+        baseProps.push({ id: Number(drProp.id), name: drProp.name, op_1_lvl: damageReduction - 1 });
+      }
+      
+      // Add Agility Reduction property (ID: 5) if any
+      if (agilityReduction > 0) {
+        const arProp = itemProperties.find(p => p.name === 'Agility Reduction' || Number(p.id) === 5);
+        if (arProp) {
+          baseProps.push({ id: Number(arProp.id), name: arProp.name, op_1_lvl: agilityReduction - 1 });
+        }
+      }
+    }
+    
+    // === SHIELD PROPERTIES ===
+    if (armamentType === 'Shield') {
+      // Auto-add Shield Base property (ID: 15)
+      const shieldBaseProp = itemProperties.find(p => p.name === 'Shield Base' || Number(p.id) === 15);
+      if (shieldBaseProp) {
+        // op_1_lvl controls shield amount (base = 1, each level adds 1)
+        baseProps.push({ id: Number(shieldBaseProp.id), name: shieldBaseProp.name, op_1_lvl: shieldAmount - 1 });
+      }
+    }
+    
     return baseProps;
-  }, [selectedProperties, armamentType, isTwoHanded, rangeLevel, itemProperties]);
+  }, [selectedProperties, armamentType, isTwoHanded, rangeLevel, itemProperties, damageReduction, agilityReduction, shieldAmount]);
 
   // Calculate costs
   const costs = useMemo(
@@ -693,6 +734,100 @@ function ItemCreatorContent() {
             </div>
           )}
 
+          {/* Armor Configuration */}
+          {armamentType === 'Armor' && (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Armor Configuration</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Damage Reduction */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Damage Reduction
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setDamageReduction(Math.max(1, damageReduction - 1))}
+                      className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
+                    >
+                      −
+                    </button>
+                    <span className="w-12 text-center text-2xl font-bold text-gray-900">
+                      {damageReduction}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setDamageReduction(Math.min(10, damageReduction + 1))}
+                      className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Reduces physical damage taken</p>
+                </div>
+                
+                {/* Agility Reduction */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Agility Reduction
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAgilityReduction(Math.max(0, agilityReduction - 1))}
+                      className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
+                    >
+                      −
+                    </button>
+                    <span className="w-12 text-center text-2xl font-bold text-gray-900">
+                      {agilityReduction || 'None'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAgilityReduction(Math.min(6, agilityReduction + 1))}
+                      className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Reduces Agility for wearing this armor</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Shield Configuration */}
+          {armamentType === 'Shield' && (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Shield Configuration</h3>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Shield Amount
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShieldAmount(Math.max(1, shieldAmount - 1))}
+                    className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
+                  >
+                    −
+                  </button>
+                  <span className="w-12 text-center text-2xl font-bold text-gray-900">
+                    {shieldAmount}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShieldAmount(Math.min(10, shieldAmount + 1))}
+                    className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Damage blocked when using Shield reaction</p>
+              </div>
+            </div>
+          )}
+
           {/* Item Properties */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
@@ -781,6 +916,26 @@ function ItemCreatorContent() {
                     <span className="font-medium">{rangeDisplay}</span>
                   </div>
                 </>
+              )}
+              {armamentType === 'Armor' && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Damage Reduction:</span>
+                    <span className="font-medium">{damageReduction}</span>
+                  </div>
+                  {agilityReduction > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Agility Reduction:</span>
+                      <span className="font-medium text-red-600">-{agilityReduction}</span>
+                    </div>
+                  )}
+                </>
+              )}
+              {armamentType === 'Shield' && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Shield Amount:</span>
+                  <span className="font-medium">{shieldAmount}</span>
+                </div>
               )}
               {damageDisplay && (
                 <div className="flex justify-between">

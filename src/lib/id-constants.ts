@@ -191,7 +191,7 @@ export const CREATURE_FEAT_IDS = {
 
 // Mechanical creature feats that are auto-added based on UI selections
 // These should be hidden from manual feat selection
-export const MECHANICAL_CREATURE_FEAT_IDS = new Set([
+export const MECHANICAL_CREATURE_FEAT_IDS: Set<number> = new Set([
   CREATURE_FEAT_IDS.RESISTANCE,
   CREATURE_FEAT_IDS.IMMUNITY,
   CREATURE_FEAT_IDS.WEAKNESS,

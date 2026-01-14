@@ -101,10 +101,10 @@ export interface UserCreature {
   // Skills
   skills?: Array<{ name: string; value: number; proficient?: boolean }>;
   // Combat
-  powers?: unknown[];
-  techniques?: unknown[];
-  feats?: unknown[];
-  armaments?: unknown[];
+  powers?: Array<{ name: string; description?: string }>;
+  techniques?: Array<{ name: string; description?: string }>;
+  feats?: Array<{ name: string; description?: string }>;
+  armaments?: Array<{ name: string }>;
   // Deprecated - kept for backwards compatibility
   hp?: number;
   attacks?: unknown[];
