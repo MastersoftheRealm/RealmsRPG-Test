@@ -124,13 +124,13 @@ const EXCLUDED_PARTS = new Set([
 
 function PartCard({
   selectedPart,
-  index,
+  _index,
   onRemove,
   onUpdate,
   allParts,
 }: {
   selectedPart: SelectedPart;
-  index: number;
+  _index: number;
   onRemove: () => void;
   onUpdate: (updates: Partial<SelectedPart>) => void;
   allParts: PowerPart[];
@@ -444,12 +444,12 @@ function AdvancedChip({
 
 function AddedAdvancedChip({
   advPart,
-  index,
+  _index,
   onRemove,
   onUpdate,
 }: {
   advPart: AdvancedPart;
-  index: number;
+  _index: number;
   onRemove: () => void;
   onUpdate: (updates: Partial<AdvancedPart>) => void;
 }) {
@@ -633,7 +633,7 @@ function AdvancedMechanicsSection({
                   <AddedAdvancedChip
                     key={idx}
                     advPart={ap}
-                    index={idx}
+                    _index={idx}
                     onRemove={() => onRemove(idx)}
                     onUpdate={(updates) => onUpdate(idx, updates)}
                   />
@@ -1546,7 +1546,7 @@ function PowerCreatorContent() {
                   <PartCard
                     key={idx}
                     selectedPart={sp}
-                    index={idx}
+                    _index={idx}
                     onRemove={() => removePart(idx)}
                     onUpdate={(updates) => updatePart(idx, updates)}
                     allParts={nonMechanicParts}

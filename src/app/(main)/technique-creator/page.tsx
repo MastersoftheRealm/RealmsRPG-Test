@@ -61,7 +61,6 @@ interface WeaponConfig {
 
 import {
   ACTION_OPTIONS,
-  PHYSICAL_DAMAGE_TYPES as DAMAGE_TYPES,
   DIE_SIZES,
   CREATOR_CACHE_KEYS,
 } from '@/lib/game/creator-constants';
@@ -80,13 +79,13 @@ const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
 
 function PartCard({
   selectedPart,
-  index,
+  _index,
   onRemove,
   onUpdate,
   allParts,
 }: {
   selectedPart: SelectedPart;
-  index: number;
+  _index: number;
   onRemove: () => void;
   onUpdate: (updates: Partial<SelectedPart>) => void;
   allParts: TechniquePart[];
@@ -888,7 +887,7 @@ function TechniqueCreatorContent() {
                   <PartCard
                     key={idx}
                     selectedPart={sp}
-                    index={idx}
+                    _index={idx}
                     onRemove={() => removePart(idx)}
                     onUpdate={(updates) => updatePart(idx, updates)}
                     allParts={techniqueParts}
