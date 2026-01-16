@@ -60,68 +60,22 @@ interface RangeConfig {
 }
 
 // =============================================================================
-// Constants
+// Shared Constants (imported from central location)
 // =============================================================================
 
-const ACTION_OPTIONS = [
-  { value: 'basic', label: 'Basic Action' },
-  { value: 'quick', label: 'Quick Action' },
-  { value: 'free', label: 'Free Action' },
-  { value: 'long3', label: 'Long Action (3 AP)' },
-  { value: 'long4', label: 'Long Action (4 AP)' },
-];
+import {
+  ACTION_OPTIONS,
+  MAGIC_DAMAGE_TYPES as DAMAGE_TYPES,
+  DIE_SIZES,
+  AREA_TYPES,
+  DURATION_TYPES,
+  DURATION_VALUES,
+  CATEGORY_COLORS,
+  CREATOR_CACHE_KEYS,
+} from '@/lib/game/creator-constants';
 
-const DAMAGE_TYPES = [
-  'none', 'magic', 'fire', 'cold', 'lightning', 'physical', 
-  'necrotic', 'radiant', 'psychic', 'poison', 'sonic'
-];
-
-const DIE_SIZES = [4, 6, 8, 10, 12];
-
-const AREA_TYPES = [
-  { value: 'none', label: 'None (Single Space)' },
-  { value: 'sphere', label: 'Sphere' },
-  { value: 'cylinder', label: 'Cylinder' },
-  { value: 'cone', label: 'Cone' },
-  { value: 'line', label: 'Line' },
-  { value: 'trail', label: 'Trail' },
-];
-
-const DURATION_TYPES = [
-  { value: 'instant', label: 'Instant' },
-  { value: 'rounds', label: 'Rounds' },
-  { value: 'minutes', label: 'Minutes' },
-  { value: 'hours', label: 'Hours' },
-  { value: 'days', label: 'Days' },
-  { value: 'permanent', label: 'Permanent' },
-];
-
-// Duration value intervals per type (matching vanilla site)
-const DURATION_VALUES: Record<string, { value: number; label: string }[]> = {
-  rounds: [
-    { value: 1, label: '1 round' },
-    { value: 2, label: '2 rounds' },
-    { value: 3, label: '3 rounds' },
-    { value: 4, label: '4 rounds' },
-    { value: 5, label: '5 rounds' },
-    { value: 6, label: '6 rounds' },
-  ],
-  minutes: [
-    { value: 1, label: '1 minute' },
-    { value: 10, label: '10 minutes' },
-    { value: 30, label: '30 minutes' },
-  ],
-  hours: [
-    { value: 1, label: '1 hour' },
-    { value: 6, label: '6 hours' },
-    { value: 12, label: '12 hours' },
-  ],
-  days: [
-    { value: 1, label: '1 day' },
-    { value: 7, label: '7 days' },
-    { value: 14, label: '14 days' },
-  ],
-};
+// LocalStorage key for caching power creator state
+const POWER_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.POWER;
 
 // Advanced mechanics categories
 const ADVANCED_CATEGORIES = [
@@ -163,20 +117,6 @@ const EXCLUDED_PARTS = new Set([
   'Sustain for Duration',
   'Power Range'
 ]);
-
-// Color classes for each category
-const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; hoverBg: string }> = {
-  'Action': { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', hoverBg: 'hover:bg-blue-200' },
-  'Activation': { bg: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', hoverBg: 'hover:bg-teal-200' },
-  'Area of Effect': { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', hoverBg: 'hover:bg-green-200' },
-  'Duration': { bg: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-800', hoverBg: 'hover:bg-purple-200' },
-  'Target': { bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-800', hoverBg: 'hover:bg-orange-200' },
-  'Special': { bg: 'bg-amber-100', border: 'border-amber-300', text: 'text-amber-800', hoverBg: 'hover:bg-amber-200' },
-  'Restriction': { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', hoverBg: 'hover:bg-red-200' },
-};
-
-// LocalStorage key for caching power creator state
-const POWER_CREATOR_CACHE_KEY = 'realms-power-creator-cache';
 
 // =============================================================================
 // Subcomponents

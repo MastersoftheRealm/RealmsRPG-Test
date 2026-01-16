@@ -28,24 +28,17 @@ import {
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
+import {
+  CREATURE_TYPES,
+  CREATURE_SIZES,
+  CONDITIONS,
+  SKILLS,
+  CREATOR_CACHE_KEYS,
+} from '@/lib/game/creator-constants';
 
 // =============================================================================
-// Constants
+// Creature-specific Constants
 // =============================================================================
-
-const CREATURE_TYPES = [
-  'Beast', 'Humanoid', 'Undead', 'Construct', 'Elemental', 
-  'Aberration', 'Dragon', 'Fiend', 'Celestial', 'Fey', 'Plant', 'Ooze', 'Other'
-];
-
-const CREATURE_SIZES = [
-  { value: 'tiny', label: 'Tiny', modifier: -2 },
-  { value: 'small', label: 'Small', modifier: -1 },
-  { value: 'medium', label: 'Medium', modifier: 0 },
-  { value: 'large', label: 'Large', modifier: 1 },
-  { value: 'huge', label: 'Huge', modifier: 2 },
-  { value: 'gargantuan', label: 'Gargantuan', modifier: 3 },
-];
 
 const LEVEL_OPTIONS = [
   { value: 0.25, label: '1/4' },
@@ -54,6 +47,7 @@ const LEVEL_OPTIONS = [
   ...Array.from({ length: 30 }, (_, i) => ({ value: i + 1, label: String(i + 1) })),
 ];
 
+// Damage types with proper capitalization for creatures (display only)
 const DAMAGE_TYPES = [
   'Bludgeoning', 'Piercing', 'Slashing', 'Magic', 'Fire', 'Ice', 
   'Lightning', 'Spiritual', 'Sonic', 'Poison', 'Necrotic', 'Acid', 'Psychic'
@@ -89,19 +83,7 @@ const MOVEMENT_TYPES = [
   { value: 'Hover', label: 'Hover', description: 'Can remain in the air without expending movement (requires a flying speed).' },
 ];
 
-const CONDITIONS = [
-  'Bleeding', 'Blinded', 'Charmed', 'Restrained', 'Dazed', 'Deafened',
-  'Dying', 'Exhausted', 'Exposed', 'Faint', 'Frightened', 'Grappled',
-  'Hidden', 'Immobile', 'Invisible', 'Prone', 'Resilient', 'Slowed',
-  'Stunned', 'Susceptible', 'Terminal', 'Weakened'
-];
-
-const SKILLS = [
-  'Acrobatics', 'Animal Handling', 'Arcana', 'Athletics', 'Deception',
-  'History', 'Insight', 'Intimidation', 'Investigation', 'Medicine',
-  'Nature', 'Perception', 'Performance', 'Persuasion', 'Religion',
-  'Sleight of Hand', 'Stealth', 'Survival'
-];
+// CONDITIONS and SKILLS imported from '@/lib/game/creator-constants'
 
 // Map sense/movement values to their creature feat IDs
 const SENSE_TO_FEAT_ID: Record<string, number> = {
@@ -357,14 +339,14 @@ function AddItemDropdown({
   onAdd,
   placeholder,
 }: {
-  options: { value: string; label: string }[] | string[];
-  selectedItems: string[];
+  options: readonly { value: string; label: string }[] | readonly string[];
+  selectedItems: readonly string[];
   onAdd: (item: string) => void;
   placeholder: string;
 }) {
   const [selectedValue, setSelectedValue] = useState('');
   
-  const normalizedOptions = options.map(opt => 
+  const normalizedOptions = [...options].map(opt => 
     typeof opt === 'string' ? { value: opt, label: opt } : opt
   );
   
@@ -822,7 +804,7 @@ function LoadCreatureModal({
 // LocalStorage Cache
 // =============================================================================
 
-const CREATURE_CREATOR_CACHE_KEY = 'realms-creature-creator-cache';
+const CREATURE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.CREATURE;
 
 // =============================================================================
 // Main Component

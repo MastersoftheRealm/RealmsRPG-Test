@@ -50,7 +50,21 @@ interface DamageConfig {
 }
 
 // =============================================================================
-// Constants
+// Shared Constants (imported from central location)
+// =============================================================================
+
+import {
+  ALL_DAMAGE_TYPES as DAMAGE_TYPES,
+  DIE_SIZES,
+  RARITY_COLORS,
+  CREATOR_CACHE_KEYS,
+} from '@/lib/game/creator-constants';
+
+// LocalStorage key for caching item creator state
+const ITEM_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.ITEM;
+
+// =============================================================================
+// Item-specific Constants
 // =============================================================================
 
 const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }[] = [
@@ -58,23 +72,6 @@ const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }
   { value: 'Armor', label: 'Armor', icon: Shield },
   { value: 'Shield', label: 'Shield', icon: Shield },
 ];
-
-const DAMAGE_TYPES = [
-  'none', 'slashing', 'piercing', 'bludgeoning', 'fire', 'cold', 
-  'lightning', 'acid', 'poison', 'necrotic', 'radiant', 'psychic'
-];
-
-const DIE_SIZES = [4, 6, 8, 10, 12];
-
-const RARITY_COLORS: Record<string, string> = {
-  Common: 'text-gray-600 bg-gray-100',
-  Uncommon: 'text-green-600 bg-green-100',
-  Rare: 'text-blue-600 bg-blue-100',
-  Epic: 'text-purple-600 bg-purple-100',
-  Legendary: 'text-amber-600 bg-amber-100',
-  Mythic: 'text-red-600 bg-red-100',
-  Ascended: 'text-pink-600 bg-pink-100',
-};
 
 // Ability requirement configurations for different armament types
 const WEAPON_ABILITY_REQUIREMENTS = [
@@ -91,9 +88,6 @@ const ARMOR_ABILITY_REQUIREMENTS = [
   { id: PROPERTY_IDS.ARMOR_AGILITY_REQUIREMENT, name: 'Armor Agility Requirement', label: 'AGI' },
   { id: PROPERTY_IDS.ARMOR_VITALITY_REQUIREMENT, name: 'Armor Vitality Requirement', label: 'VIT' },
 ];
-
-// LocalStorage key for caching item creator state
-const ITEM_CREATOR_CACHE_KEY = 'realms-item-creator-cache';
 
 // =============================================================================
 // Subcomponents

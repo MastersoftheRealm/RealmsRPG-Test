@@ -39,10 +39,6 @@ export type {
   ErrorDisplayProps,
 } from './list-components';
 
-// Creator components
-export { PartCard } from './part-card';
-export type { BasePartData, SelectedPartState, PartCardProps, CreatorType } from './part-card';
-
 // Creature components
 export { CreatureStatBlock } from './creature-stat-block';
 export type { CreatureData, CreatureStatBlockProps } from './creature-stat-block';

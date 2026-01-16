@@ -56,30 +56,23 @@ interface WeaponConfig {
 }
 
 // =============================================================================
-// Constants
+// Shared Constants (imported from central location)
 // =============================================================================
 
-const ACTION_OPTIONS = [
-  { value: 'basic', label: 'Basic Action' },
-  { value: 'quick', label: 'Quick Action' },
-  { value: 'free', label: 'Free Action' },
-  { value: 'long3', label: 'Long Action (3 AP)' },
-  { value: 'long4', label: 'Long Action (4 AP)' },
-];
+import {
+  ACTION_OPTIONS,
+  PHYSICAL_DAMAGE_TYPES as DAMAGE_TYPES,
+  DIE_SIZES,
+  CREATOR_CACHE_KEYS,
+} from '@/lib/game/creator-constants';
 
-const DAMAGE_TYPES = [
-  'none', 'physical', 'slashing', 'piercing', 'bludgeoning'
-];
-
-const DIE_SIZES = [4, 6, 8, 10, 12];
+// LocalStorage key for caching technique creator state
+const TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.TECHNIQUE;
 
 // Default weapon options (always available)
 const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
   { id: 0, name: 'Unarmed Prowess', tp: 0 },
 ];
-
-// LocalStorage key for caching technique creator state
-const TECHNIQUE_CREATOR_CACHE_KEY = 'realms-technique-creator-cache';
 
 // =============================================================================
 // Subcomponents
