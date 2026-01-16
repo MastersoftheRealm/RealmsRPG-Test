@@ -30,6 +30,7 @@ import {
   type ItemPropertyPayload,
   type ItemDamage,
 } from '@/lib/calculators';
+import { PROPERTY_IDS } from '@/lib/id-constants';
 
 // =============================================================================
 // Types
@@ -74,6 +75,22 @@ const RARITY_COLORS: Record<string, string> = {
   Mythic: 'text-red-600 bg-red-100',
   Ascended: 'text-pink-600 bg-pink-100',
 };
+
+// Ability requirement configurations for different armament types
+const WEAPON_ABILITY_REQUIREMENTS = [
+  { id: PROPERTY_IDS.WEAPON_STRENGTH_REQUIREMENT, name: 'Weapon Strength Requirement', label: 'STR' },
+  { id: PROPERTY_IDS.WEAPON_AGILITY_REQUIREMENT, name: 'Weapon Agility Requirement', label: 'AGI' },
+  { id: PROPERTY_IDS.WEAPON_VITALITY_REQUIREMENT, name: 'Weapon Vitality Requirement', label: 'VIT' },
+  { id: PROPERTY_IDS.WEAPON_ACUITY_REQUIREMENT, name: 'Weapon Acuity Requirement', label: 'ACU' },
+  { id: PROPERTY_IDS.WEAPON_INTELLIGENCE_REQUIREMENT, name: 'Weapon Intelligence Requirement', label: 'INT' },
+  { id: PROPERTY_IDS.WEAPON_CHARISMA_REQUIREMENT, name: 'Weapon Charisma Requirement', label: 'CHA' },
+];
+
+const ARMOR_ABILITY_REQUIREMENTS = [
+  { id: PROPERTY_IDS.ARMOR_STRENGTH_REQUIREMENT, name: 'Armor Strength Requirement', label: 'STR' },
+  { id: PROPERTY_IDS.ARMOR_AGILITY_REQUIREMENT, name: 'Armor Agility Requirement', label: 'AGI' },
+  { id: PROPERTY_IDS.ARMOR_VITALITY_REQUIREMENT, name: 'Armor Vitality Requirement', label: 'VIT' },
+];
 
 // =============================================================================
 // Subcomponents
@@ -217,7 +234,7 @@ function ItemCreatorContent() {
   const [description, setDescription] = useState('');
   const [armamentType, setArmamentType] = useState<ArmamentType>('Weapon');
   const [selectedProperties, setSelectedProperties] = useState<SelectedProperty[]>([]);
-  const [damage, setDamage] = useState<DamageConfig>({ amount: 1, size: 6, type: 'slashing' });
+  const [damage, setDamage] = useState<DamageConfig>({ amount: 1, size: 4, type: 'slashing' });
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showLoadModal, setShowLoadModal] = useState(false);
@@ -225,11 +242,16 @@ function ItemCreatorContent() {
   const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
   
   // Armor-specific state
-  const [damageReduction, setDamageReduction] = useState(1); // Armor damage reduction (min 1)
+  const [damageReduction, setDamageReduction] = useState(0); // Armor damage reduction (default 0)
   const [agilityReduction, setAgilityReduction] = useState(0); // Armor agility reduction
   
-  // Shield-specific state
-  const [shieldAmount, setShieldAmount] = useState(1); // Shield block amount (min 1)
+  // Shield-specific state - dice-based like weapon damage
+  const [shieldDR, setShieldDR] = useState<{ amount: number; size: number }>({ amount: 1, size: 4 }); // Shield damage reduction (1d4 base)
+  const [hasShieldDamage, setHasShieldDamage] = useState(false); // Optional shield damage
+  const [shieldDamage, setShieldDamage] = useState<{ amount: number; size: number }>({ amount: 1, size: 4 }); // 1d4 bludgeoning
+  
+  // Ability requirements state - each armament can have one ability requirement
+  const [abilityRequirement, setAbilityRequirement] = useState<{ id: number; name: string; level: number } | null>(null);
 
   // Fetch item properties
   const { data: itemProperties = [], isLoading, error } = useItemProperties();
@@ -252,6 +274,8 @@ function ItemCreatorContent() {
         return propType === armamentTypeLower;
       })
     );
+    // Clear ability requirement when armament type changes (different types have different requirements)
+    setAbilityRequirement(null);
   }, [armamentType]);
 
   // Range display string
@@ -286,6 +310,36 @@ function ItemCreatorContent() {
       }
     }
     
+    // Add Weapon Damage property if weapon has valid damage
+    if (armamentType === 'Weapon' && damage.type !== 'none' && damage.amount >= 1) {
+      const validSizes = [4, 6, 8, 10, 12];
+      if (validSizes.includes(damage.size)) {
+        const weaponDamageProp = itemProperties.find(p => 
+          p.name === 'Weapon Damage' || Number(p.id) === PROPERTY_IDS.WEAPON_DAMAGE
+        );
+        if (weaponDamageProp) {
+          // Formula: ((dieAmount * dieSize) - 4) / 2, min 0
+          const weaponDamageLevel = Math.max(0, ((damage.amount * damage.size) - 4) / 2);
+          baseProps.push({ id: Number(weaponDamageProp.id), name: 'Weapon Damage', op_1_lvl: weaponDamageLevel });
+        }
+        
+        // Add Split Damage Dice property if multiple dice
+        if (damage.amount > 1) {
+          const total = damage.amount * damage.size;
+          const minDiceUsingD12 = Math.ceil(total / 12);
+          const splits = Math.max(0, damage.amount - minDiceUsingD12);
+          if (splits > 0) {
+            const splitDiceProp = itemProperties.find(p => 
+              p.name === 'Split Damage Dice' || Number(p.id) === PROPERTY_IDS.SPLIT_DAMAGE_DICE
+            );
+            if (splitDiceProp) {
+              baseProps.push({ id: Number(splitDiceProp.id), name: 'Split Damage Dice', op_1_lvl: splits - 1 });
+            }
+          }
+        }
+      }
+    }
+    
     // === ARMOR PROPERTIES ===
     if (armamentType === 'Armor') {
       // Auto-add Armor Base property (ID: 16)
@@ -314,13 +368,45 @@ function ItemCreatorContent() {
       // Auto-add Shield Base property (ID: 15)
       const shieldBaseProp = itemProperties.find(p => p.name === 'Shield Base' || Number(p.id) === 15);
       if (shieldBaseProp) {
-        // op_1_lvl controls shield amount (base = 1, each level adds 1)
-        baseProps.push({ id: Number(shieldBaseProp.id), name: shieldBaseProp.name, op_1_lvl: shieldAmount - 1 });
+        baseProps.push({ id: Number(shieldBaseProp.id), name: shieldBaseProp.name, op_1_lvl: 0 });
+      }
+      
+      // Shield Amount (damage reduction) - Property ID 39
+      // Uses same formula as weapon damage: ((diceAmount * dieSize) - 4) / 2
+      const validSizes = [4, 6, 8, 10, 12];
+      if (validSizes.includes(shieldDR.size) && shieldDR.amount >= 1) {
+        const shieldAmountProp = itemProperties.find(p => 
+          p.name === 'Shield Amount' || Number(p.id) === PROPERTY_IDS.SHIELD_AMOUNT
+        );
+        if (shieldAmountProp) {
+          const shieldDRLevel = Math.max(0, ((shieldDR.amount * shieldDR.size) - 4) / 2);
+          baseProps.push({ id: Number(shieldAmountProp.id), name: 'Shield Amount', op_1_lvl: shieldDRLevel });
+        }
+      }
+      
+      // Shield Damage (optional) - Property ID 40
+      if (hasShieldDamage && validSizes.includes(shieldDamage.size) && shieldDamage.amount >= 1) {
+        const shieldDamageProp = itemProperties.find(p => 
+          p.name === 'Shield Damage' || Number(p.id) === PROPERTY_IDS.SHIELD_DAMAGE
+        );
+        if (shieldDamageProp) {
+          const shieldDamageLevel = Math.max(0, ((shieldDamage.amount * shieldDamage.size) - 4) / 2);
+          baseProps.push({ id: Number(shieldDamageProp.id), name: 'Shield Damage', op_1_lvl: shieldDamageLevel });
+        }
       }
     }
     
+    // === ABILITY REQUIREMENTS ===
+    if (abilityRequirement && abilityRequirement.level > 0) {
+      baseProps.push({
+        id: abilityRequirement.id,
+        name: abilityRequirement.name,
+        op_1_lvl: abilityRequirement.level - 1,
+      });
+    }
+    
     return baseProps;
-  }, [selectedProperties, armamentType, isTwoHanded, rangeLevel, itemProperties, damageReduction, agilityReduction, shieldAmount]);
+  }, [selectedProperties, armamentType, isTwoHanded, rangeLevel, itemProperties, damageReduction, agilityReduction, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement, damage]);
 
   // Calculate costs
   const costs = useMemo(
@@ -549,14 +635,36 @@ function ItemCreatorContent() {
             Properties determine the item&apos;s rarity and cost.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowLoadModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-        >
-          <FolderOpen className="w-5 h-5" />
-          Load from Library
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowLoadModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            <FolderOpen className="w-5 h-5" />
+            Load
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 transition-colors"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !name.trim()}
+            className={cn(
+              'px-4 py-2 rounded-lg font-medium transition-colors',
+              saving || !name.trim()
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-green-600 text-white hover:bg-green-700'
+            )}
+          >
+            {saving ? 'Saving...' : 'Save Armament'}
+          </button>
+        </div>
       </div>
 
       {/* Load from Library Modal */}
@@ -798,35 +906,142 @@ function ItemCreatorContent() {
 
           {/* Shield Configuration */}
           {armamentType === 'Shield' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Shield Configuration</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Shield Amount
-                </label>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShieldAmount(Math.max(1, shieldAmount - 1))}
-                    className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
-                  >
-                    −
-                  </button>
-                  <span className="w-12 text-center text-2xl font-bold text-gray-900">
-                    {shieldAmount}
+            <>
+              {/* Shield Damage Reduction */}
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Shield Block (Damage Reduction)</h3>
+                <div className="flex flex-wrap items-center gap-4">
+                  <NumberStepper
+                    value={shieldDR.amount}
+                    onChange={(v) => setShieldDR((d) => ({ ...d, amount: v }))}
+                    label="Dice:"
+                    min={1}
+                    max={10}
+                  />
+                  <div className="flex items-center gap-1">
+                    <span className="font-bold text-lg">d</span>
+                    <select
+                      value={shieldDR.size}
+                      onChange={(e) => setShieldDR((d) => ({ ...d, size: parseInt(e.target.value) }))}
+                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      {DIE_SIZES.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    ({shieldDR.amount}d{shieldDR.size} damage blocked)
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setShieldAmount(Math.min(10, shieldAmount + 1))}
-                    className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
-                  >
-                    +
-                  </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Damage blocked when using Shield reaction</p>
+                <p className="text-xs text-gray-500 mt-2">Damage blocked when using Shield reaction</p>
               </div>
-            </div>
+
+              {/* Shield Damage (Optional) */}
+              <div className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <input
+                    type="checkbox"
+                    id="hasShieldDamage"
+                    checked={hasShieldDamage}
+                    onChange={(e) => setHasShieldDamage(e.target.checked)}
+                    className="w-5 h-5 rounded border-gray-300"
+                  />
+                  <label htmlFor="hasShieldDamage" className="text-lg font-bold text-gray-900">
+                    Shield Damage (Optional)
+                  </label>
+                </div>
+                {hasShieldDamage && (
+                  <>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <NumberStepper
+                        value={shieldDamage.amount}
+                        onChange={(v) => setShieldDamage((d) => ({ ...d, amount: v }))}
+                        label="Dice:"
+                        min={1}
+                        max={10}
+                      />
+                      <div className="flex items-center gap-1">
+                        <span className="font-bold text-lg">d</span>
+                        <select
+                          value={shieldDamage.size}
+                          onChange={(e) => setShieldDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
+                          className="px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          {DIE_SIZES.map((size) => (
+                            <option key={size} value={size}>
+                              {size}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <span className="text-sm text-gray-600">Bludgeoning</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">This shield can deal {shieldDamage.amount}d{shieldDamage.size} bludgeoning damage as a melee weapon attack</p>
+                  </>
+                )}
+                {!hasShieldDamage && (
+                  <p className="text-sm text-gray-500">Enable to allow this shield to be used as a weapon</p>
+                )}
+              </div>
+            </>
           )}
+
+          {/* Ability Requirement (Optional) */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Ability Requirement (Optional)</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Require a minimum ability score to use this {armamentType.toLowerCase()} effectively.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+              {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (
+                <button
+                  key={req.id}
+                  type="button"
+                  onClick={() => {
+                    if (abilityRequirement?.id === req.id) {
+                      setAbilityRequirement(null);
+                    } else {
+                      setAbilityRequirement({ id: req.id, name: req.name, level: 1 });
+                    }
+                  }}
+                  className={cn(
+                    'px-4 py-2 rounded-lg font-medium transition-colors',
+                    abilityRequirement?.id === req.id
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  )}
+                >
+                  {req.label}
+                </button>
+              ))}
+            </div>
+            {abilityRequirement && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-700">Required Level:</span>
+                <button
+                  type="button"
+                  onClick={() => setAbilityRequirement(prev => prev ? { ...prev, level: Math.max(1, prev.level - 1) } : null)}
+                  disabled={abilityRequirement.level <= 1}
+                  className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  -
+                </button>
+                <span className="w-8 text-center text-lg font-bold text-gray-900">
+                  {abilityRequirement.level}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setAbilityRequirement(prev => prev ? { ...prev, level: Math.min(6, prev.level + 1) } : null)}
+                  className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Item Properties */}
           <div className="bg-white rounded-xl shadow-md p-6">
@@ -932,10 +1147,18 @@ function ItemCreatorContent() {
                 </>
               )}
               {armamentType === 'Shield' && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shield Amount:</span>
-                  <span className="font-medium">{shieldAmount}</span>
-                </div>
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Shield Block:</span>
+                    <span className="font-medium">{shieldDR.amount}d{shieldDR.size}</span>
+                  </div>
+                  {hasShieldDamage && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Shield Damage:</span>
+                      <span className="font-medium">{shieldDamage.amount}d{shieldDamage.size}</span>
+                    </div>
+                  )}
+                </>
               )}
               {damageDisplay && (
                 <div className="flex justify-between">
@@ -947,7 +1170,7 @@ function ItemCreatorContent() {
 
             {/* Property Summary */}
             {selectedProperties.length > 0 && (
-              <div className="border-t border-gray-100 pt-4 mb-6">
+              <div className="border-t border-gray-100 pt-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Properties</h4>
                 <ul className="text-xs text-gray-600 space-y-1">
                   {selectedProperties.map((sp, i) => (
@@ -964,7 +1187,7 @@ function ItemCreatorContent() {
             {saveMessage && (
               <div
                 className={cn(
-                  'mb-4 p-3 rounded-lg text-sm',
+                  'mt-4 p-3 rounded-lg text-sm',
                   saveMessage.type === 'success'
                     ? 'bg-green-50 text-green-700'
                     : 'bg-red-50 text-red-700'
@@ -973,30 +1196,6 @@ function ItemCreatorContent() {
                 {saveMessage.text}
               </div>
             )}
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || !name.trim()}
-                className={cn(
-                  'w-full py-3 rounded-xl font-bold transition-colors',
-                  saving || !name.trim()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                )}
-              >
-                {saving ? 'Saving...' : 'Save to Library'}
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="w-full py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Reset
-              </button>
-            </div>
           </div>
         </div>
       </div>

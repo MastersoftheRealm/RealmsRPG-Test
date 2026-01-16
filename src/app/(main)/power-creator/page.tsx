@@ -79,12 +79,12 @@ const DAMAGE_TYPES = [
 const DIE_SIZES = [4, 6, 8, 10, 12];
 
 const AREA_TYPES = [
-  { value: 'none', label: 'None (Single Target)' },
+  { value: 'none', label: 'None (Single Space)' },
   { value: 'sphere', label: 'Sphere' },
   { value: 'cylinder', label: 'Cylinder' },
   { value: 'cone', label: 'Cone' },
   { value: 'line', label: 'Line' },
-  { value: 'trail', label: 'Trail (Space)' },
+  { value: 'trail', label: 'Trail' },
 ];
 
 const DURATION_TYPES = [
@@ -266,7 +266,27 @@ function PartCard({
               </label>
               <select
                 value={selectedPart.selectedCategory}
-                onChange={(e) => onUpdate({ selectedCategory: e.target.value })}
+                onChange={(e) => {
+                  const newCategory = e.target.value;
+                  // Get parts for the new category
+                  const partsInCategory = newCategory === 'any' 
+                    ? allParts.sort((a, b) => a.name.localeCompare(b.name))
+                    : allParts.filter((p) => p.category === newCategory).sort((a, b) => a.name.localeCompare(b.name));
+                  // Auto-select first alphabetical part in the new category
+                  const firstPart = partsInCategory[0];
+                  if (firstPart) {
+                    onUpdate({
+                      selectedCategory: newCategory,
+                      part: firstPart,
+                      op_1_lvl: 0,
+                      op_2_lvl: 0,
+                      op_3_lvl: 0,
+                      applyDuration: false,
+                    });
+                  } else {
+                    onUpdate({ selectedCategory: newCategory });
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 {categories.map((cat) => (
@@ -1158,14 +1178,36 @@ function PowerCreatorContent() {
             energy cost and training point requirements.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowLoadModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-        >
-          <FolderOpen className="w-5 h-5" />
-          Load from Library
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowLoadModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            <FolderOpen className="w-5 h-5" />
+            Load
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 transition-colors"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !name.trim()}
+            className={cn(
+              'px-4 py-2 rounded-lg font-medium transition-colors',
+              saving || !name.trim()
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-green-600 text-white hover:bg-green-700'
+            )}
+          >
+            {saving ? 'Saving...' : 'Save Power'}
+          </button>
+        </div>
       </div>
 
       {/* Load from Library Modal */}
@@ -1247,12 +1289,12 @@ function PowerCreatorContent() {
               <NumberStepper
                 value={range.steps}
                 onChange={(v) => setRange((r) => ({ ...r, steps: v }))}
-                label="Range Steps:"
+                label="Range:"
                 min={0}
                 max={10}
               />
               <span className="text-sm text-gray-600">
-                {range.steps === 0 ? '(Melee / 1 Space)' : `(${range.steps * 6} spaces)`}
+                {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
               </span>
               <label className="flex items-center gap-2 ml-4">
                 <input
@@ -1347,7 +1389,7 @@ function PowerCreatorContent() {
                   onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
                   className="rounded border-gray-300"
                 />
-                <span className="text-sm">Focus (Maintain)</span>
+                <span className="text-sm">Focus</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -1356,7 +1398,7 @@ function PowerCreatorContent() {
                   onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
                   className="rounded border-gray-300"
                 />
-                <span className="text-sm">No Harm (End Early)</span>
+                <span className="text-sm">No Harm or Adaptation Parts</span>
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -1516,7 +1558,7 @@ function PowerCreatorContent() {
 
             {/* TP Sources */}
             {costs.tpSources.length > 0 && (
-              <div className="border-t border-gray-100 pt-4 mb-6">
+              <div className="border-t border-gray-100 pt-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">TP Breakdown</h4>
                 <ul className="text-xs text-gray-600 space-y-1">
                   {costs.tpSources.map((src, i) => (
@@ -1530,7 +1572,7 @@ function PowerCreatorContent() {
             {saveMessage && (
               <div
                 className={cn(
-                  'mb-4 p-3 rounded-lg text-sm',
+                  'mt-4 p-3 rounded-lg text-sm',
                   saveMessage.type === 'success'
                     ? 'bg-green-50 text-green-700'
                     : 'bg-red-50 text-red-700'
@@ -1539,30 +1581,6 @@ function PowerCreatorContent() {
                 {saveMessage.text}
               </div>
             )}
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || !name.trim()}
-                className={cn(
-                  'w-full py-3 rounded-xl font-bold transition-colors',
-                  saving || !name.trim()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                )}
-              >
-                {saving ? 'Saving...' : 'Save to Library'}
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="w-full py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Reset
-              </button>
-            </div>
           </div>
         </div>
       </div>

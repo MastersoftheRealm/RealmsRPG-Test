@@ -199,7 +199,21 @@ export function calculateTechniqueDamageLevel(diceAmount: number, dieSize: numbe
 }
 
 /**
+ * Calculate split damage dice using proper formula
+ * Same as vanilla site: splits = max(0, diceAmt - ceil(total / 12))
+ * where total = diceAmt * dieSize
+ */
+export function computeSplits(diceAmt: number, dieSize: number): number {
+  const validSizes = [4, 6, 8, 10, 12];
+  if (!validSizes.includes(dieSize) || diceAmt <= 1) return 0;
+  const total = diceAmt * dieSize;
+  const minDiceUsingD12 = Math.ceil(total / 12);
+  return Math.max(0, diceAmt - minDiceUsingD12);
+}
+
+/**
  * Calculate technique split damage dice level
+ * @deprecated Use computeSplits(diceAmt, dieSize) instead for accurate calculation
  */
 export function calculateSplitDiceLevel(diceAmount: number): number {
   // 1 die = 0 splits, 2 dice = 1 split (level 0), 3 dice = 2 splits (level 1), etc.
@@ -268,12 +282,30 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
 
   // ----- Power Damage (type-based) -----
   if (ctx.powerDamage && ctx.powerDamage.length > 0) {
+    // Track total dice for split damage calculation
+    let totalDiceAmount = 0;
+    let maxDieSize = 0;
+    
     for (const dmg of ctx.powerDamage) {
       if (dmg.type === 'none' || dmg.diceAmount <= 0 || dmg.dieSize < 4) continue;
       const partInfo = getPowerDamagePartInfo(dmg.type);
       if (partInfo) {
         const level = calculatePowerDamageLevel(dmg.diceAmount, dmg.dieSize);
         addPart(partInfo.id, partInfo.name, level, dmg.applyDuration);
+        
+        // Accumulate for split damage
+        totalDiceAmount += dmg.diceAmount;
+        maxDieSize = Math.max(maxDieSize, dmg.dieSize);
+      }
+    }
+    
+    // Power Split Damage Dice - applies when total dice across all damage types > 1
+    if (totalDiceAmount > 1 && maxDieSize >= 4) {
+      const splits = computeSplits(totalDiceAmount, maxDieSize);
+      if (splits > 0) {
+        // Apply duration based on first damage entry that has applyDuration
+        const applyDur = ctx.powerDamage.find(d => d.applyDuration)?.applyDuration ?? false;
+        addPart(PART_IDS.POWER_SPLIT_DAMAGE_DICE, 'Power Split Damage Dice', splits - 1, applyDur);
       }
     }
   }
@@ -285,8 +317,8 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
       const level = calculateTechniqueDamageLevel(diceAmount, dieSize);
       addPart(PART_IDS.ADDITIONAL_DAMAGE, 'Additional Damage', level);
 
-      // Split damage dice
-      const splits = calculateSplitDiceLevel(diceAmount);
+      // Split damage dice - use proper computeSplits formula
+      const splits = computeSplits(diceAmount, dieSize);
       if (splits > 0) {
         addPart(PART_IDS.SPLIT_DAMAGE_DICE, 'Split Damage Dice', splits - 1);
       }

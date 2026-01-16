@@ -117,6 +117,7 @@ export function calculatePowerCosts(
     const isPercentage = def.percentage;
 
     if (isDuration) {
+      // Duration parts multiply into dur_all (used in formula: (dur_all + 1) * flat_duration * perc_dur)
       dur_all *= energyContribution;
       hasDurationParts = true;
     } else if (isPercentage) {

@@ -169,7 +169,24 @@ function PartCard({
               </label>
               <select
                 value={selectedPart.selectedCategory}
-                onChange={(e) => onUpdate({ selectedCategory: e.target.value })}
+                onChange={(e) => {
+                  const newCategory = e.target.value;
+                  // Get parts for the new category
+                  const partsInCategory = newCategory === 'any' 
+                    ? allParts.sort((a, b) => a.name.localeCompare(b.name))
+                    : allParts.filter((p) => p.category === newCategory).sort((a, b) => a.name.localeCompare(b.name));
+                  // Auto-select first alphabetical part in the new category
+                  const firstPart = partsInCategory[0];
+                  if (firstPart) {
+                    onUpdate({
+                      selectedCategory: newCategory,
+                      part: firstPart,
+                      op_1_lvl: 0,
+                    });
+                  } else {
+                    onUpdate({ selectedCategory: newCategory });
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 {categories.map((cat) => (
@@ -591,14 +608,36 @@ function TechniqueCreatorContent() {
             energy cost and training point requirements.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowLoadModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
-        >
-          <FolderOpen className="w-5 h-5" />
-          Load from Library
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowLoadModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          >
+            <FolderOpen className="w-5 h-5" />
+            Load
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 transition-colors"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !name.trim()}
+            className={cn(
+              'px-4 py-2 rounded-lg font-medium transition-colors',
+              saving || !name.trim()
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-green-600 text-white hover:bg-green-700'
+            )}
+          >
+            {saving ? 'Saving...' : 'Save Technique'}
+          </button>
+        </div>
       </div>
 
       {/* Load from Library Modal */}
@@ -850,7 +889,7 @@ function TechniqueCreatorContent() {
             {saveMessage && (
               <div
                 className={cn(
-                  'mb-4 p-3 rounded-lg text-sm',
+                  'mt-4 p-3 rounded-lg text-sm',
                   saveMessage.type === 'success'
                     ? 'bg-green-50 text-green-700'
                     : 'bg-red-50 text-red-700'
@@ -859,30 +898,6 @@ function TechniqueCreatorContent() {
                 {saveMessage.text}
               </div>
             )}
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving || !name.trim()}
-                className={cn(
-                  'w-full py-3 rounded-xl font-bold transition-colors',
-                  saving || !name.trim()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                )}
-              >
-                {saving ? 'Saving...' : 'Save to Library'}
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="w-full py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-              >
-                Reset
-              </button>
-            </div>
           </div>
         </div>
       </div>

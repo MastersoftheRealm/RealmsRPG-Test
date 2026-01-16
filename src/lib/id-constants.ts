@@ -68,8 +68,8 @@ export const PART_IDS = {
   PSYCHIC_DAMAGE: 301,
 
   // Duration Parts
-  DURATION_ROUND: 377,
-  DURATION_MINUTE: 378,
+  DURATION_ROUND: 378,
+  DURATION_MINUTE: 379,
   DURATION_HOUR: 376,
   DURATION_DAYS: 375,
   DURATION_PERMANENT: 306,
@@ -79,6 +79,9 @@ export const PART_IDS = {
   DURATION_NO_HARM: 303,
   DURATION_FOCUS: 304,
   DURATION_SUSTAIN: 305,
+
+  // Power Split Damage Dice
+  POWER_SPLIT_DAMAGE_DICE: 414,
 } as const;
 
 // =============================================================================
