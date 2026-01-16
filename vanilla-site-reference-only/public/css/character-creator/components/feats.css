@@ -1,0 +1,133 @@
+.feats-section {
+  background: var(--bg-section);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--border-primary);
+}
+
+.feats-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feat-item {
+  border-bottom: 1px dashed var(--border-primary);
+}
+
+.feat-item:last-child {
+  border-bottom: none;
+}
+
+.feat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  background: var(--bg-modal);
+  transition: background 0.2s ease;
+}
+
+.feat-header:hover {
+  background: var(--bg-hover);
+}
+
+.feat-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.feat-arrow {
+  font-size: 18px;
+  color: var(--text-primary);
+  transition: transform 0.2s ease;
+}
+
+.feat-arrow.open {
+  transform: rotate(180deg);
+}
+
+.feat-body {
+  display: none;
+  padding: 0 var(--spacing-md) var(--spacing-md);
+  background: #eef2f7;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.feat-body.open {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.feat-body p {
+  margin: 0;
+  flex: 1;
+}
+
+.feat-select-btn {
+  margin-left: var(--spacing-md);
+  flex-shrink: 0;
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.feat-select-btn:hover {
+  background: var(--primary-light);
+}
+
+.feat-select-btn.selected {
+  background: var(--bg-white);
+  color: var(--primary);
+  border: 1px solid var(--border-primary);
+}
+
+.feat-select-btn:disabled {
+  background: #ccc;
+  color: var(--text-muted);
+  cursor: not-allowed;
+  border: 1px solid #999;
+}
+
+#feats-continue {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#feats-continue:hover {
+  background: var(--primary-light);
+}

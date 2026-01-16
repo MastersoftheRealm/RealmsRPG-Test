@@ -1,0 +1,314 @@
+/**
+ * Character Sheet Header
+ * ======================
+ * Displays character identity, portrait, and vital stats
+ * Defense blocks are clickable to roll saving throws
+ */
+
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
+import { useRollsOptional } from './roll-context';
+import type { Character } from '@/types';
+
+interface CalculatedStats {
+  maxHealth: number;
+  maxEnergy: number;
+  terminal: number;
+  speed: number;
+  evasion: number;
+  armor: number;
+  defenseBonuses: Record<string, number>;
+  defenseScores: Record<string, number>;
+}
+
+interface SheetHeaderProps {
+  character: Character;
+  calculatedStats: CalculatedStats;
+  isEditMode?: boolean;
+  onHealthChange?: (value: number) => void;
+  onEnergyChange?: (value: number) => void;
+  onPortraitChange?: (file: File) => void;
+  isUploadingPortrait?: boolean;
+}
+
+function ResourceBar({
+  label,
+  current,
+  max,
+  color,
+  terminalThreshold,
+  showControls,
+  onChange,
+}: {
+  label: string;
+  current: number;
+  max: number;
+  color: 'red' | 'blue';
+  terminalThreshold?: number;
+  showControls?: boolean;
+  onChange?: (value: number) => void;
+}) {
+  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+  const isTerminal = terminalThreshold && current <= terminalThreshold && current > 0;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex justify-between text-sm font-medium">
+        <span className="text-gray-700">{label}</span>
+        <span className={cn(
+          'font-bold',
+          isTerminal && 'text-yellow-600',
+          current <= 0 && 'text-red-600'
+        )}>
+          {current} / {max}
+        </span>
+      </div>
+      <div className="relative h-6 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className={cn(
+            'absolute inset-y-0 left-0 transition-all duration-300',
+            color === 'red' ? 'bg-red-500' : 'bg-blue-500',
+            isTerminal && 'bg-yellow-500 animate-pulse'
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+        {terminalThreshold && (
+          <div
+            className="absolute inset-y-0 w-0.5 bg-yellow-600 opacity-50"
+            style={{ left: `${(terminalThreshold / max) * 100}%` }}
+            title={`Terminal: ${terminalThreshold}`}
+          />
+        )}
+      </div>
+      {showControls && onChange && (
+        <div className="flex gap-2 mt-1 items-center justify-center">
+          <button
+            onClick={() => onChange(Math.max(0, current - 1))}
+            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+            disabled={current <= 0}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            value={current}
+            onChange={(e) => onChange(Math.max(0, Math.min(max, parseInt(e.target.value) || 0)))}
+            className="w-16 text-center border rounded px-2 py-1 text-sm"
+            min={0}
+            max={max}
+          />
+          <button
+            onClick={() => onChange(Math.min(max, current + 1))}
+            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+            disabled={current >= max}
+          >
+            +
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatBlock({ label, value, subValue }: { label: string; value: number | string; subValue?: string }) {
+  return (
+    <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg min-w-[60px]">
+      <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
+      <span className="text-xl font-bold text-gray-800">{value}</span>
+      {subValue && <span className="text-xs text-gray-500">{subValue}</span>}
+    </div>
+  );
+}
+
+function DefenseBlock({ name, bonus, score, onRoll }: { name: string; bonus: number; score: number; onRoll?: () => void }) {
+  const formattedBonus = bonus >= 0 ? `+${bonus}` : `${bonus}`;
+  
+  return (
+    <div 
+      onClick={onRoll}
+      className={cn(
+        "flex flex-col items-center p-2 bg-white border border-gray-200 rounded-lg min-w-[70px] transition-all",
+        onRoll && "cursor-pointer hover:bg-teal-50 hover:border-teal-300 active:scale-95"
+      )}
+      role={onRoll ? 'button' : undefined}
+      title={onRoll ? `Click to roll ${name} save` : undefined}
+    >
+      <span className="text-[10px] text-gray-500 uppercase tracking-wide">{name}</span>
+      <span className="text-lg font-bold text-gray-800">{score}</span>
+      <span className="text-xs text-gray-500">{formattedBonus}</span>
+    </div>
+  );
+}
+
+export function SheetHeader({
+  character,
+  calculatedStats,
+  isEditMode = false,
+  onHealthChange,
+  onEnergyChange,
+  onPortraitChange,
+  isUploadingPortrait = false,
+}: SheetHeaderProps) {
+  const currentHealth = character.health?.current ?? calculatedStats.maxHealth;
+  const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
+  const rollContext = useRollsOptional();
+  
+  const genderSymbol = character.description?.includes('female') ? '♀' : 
+                       character.description?.includes('male') ? '♂' : '';
+
+  // Check if character can level up (XP >= level * 4)
+  const xp = character.experience ?? 0;
+  const level = character.level || 1;
+  const canLevelUp = xp >= (level * 4);
+
+  // Handle portrait file selection
+  const handlePortraitClick = () => {
+    if (!isEditMode || !onPortraitChange) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        onPortraitChange(file);
+      }
+    };
+    input.click();
+  };
+
+  // Defense names mapping
+  const defenseLabels: Record<string, string> = {
+    might: 'Might',
+    fortitude: 'Fortitude',
+    reflex: 'Reflex',
+    discernment: 'Discernment',
+    mentalFortitude: 'Mental Fort',
+    resolve: 'Resolve',
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-4">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Portrait and Identity */}
+        <div className="flex gap-4">
+          <div 
+            className={cn(
+              "relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0",
+              isEditMode && onPortraitChange && "cursor-pointer group"
+            )}
+            onClick={handlePortraitClick}
+            title={isEditMode && onPortraitChange ? "Click to change portrait" : undefined}
+          >
+            <Image
+              src={character.portrait || '/images/placeholder-portrait.png'}
+              alt={character.name}
+              fill
+              className={cn(
+                "object-cover transition-opacity",
+                isUploadingPortrait && "opacity-50"
+              )}
+              sizes="(max-width: 768px) 96px, 128px"
+            />
+            {/* Upload overlay in edit mode */}
+            {isEditMode && onPortraitChange && (
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-2xl">
+                  📷
+                </span>
+              </div>
+            )}
+            {/* Loading spinner */}
+            {isUploadingPortrait && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex flex-col justify-center">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              {character.name}
+              {genderSymbol && <span className="ml-2 text-gray-400">{genderSymbol}</span>}
+            </h1>
+            <p className="text-gray-600">
+              Level {character.level} {character.ancestry?.name || 'Unknown Ancestry'}
+            </p>
+            <p className="text-gray-500 text-sm">
+              {character.archetype?.name || 'No Archetype'}
+            </p>
+            {/* XP Display with Level Up indicator */}
+            <p className="text-gray-500 text-sm flex items-center gap-1">
+              <span>XP: {character.experience ?? 0}</span>
+              {canLevelUp && (
+                <span 
+                  className="text-green-600 animate-pulse" 
+                  title="Ready to level up!"
+                >
+                  ⬆
+                </span>
+              )}
+              {canLevelUp && (
+                <span className="text-xs text-green-600">(Level up available!)</span>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Core Stats */}
+        <div className="flex flex-wrap gap-2 items-start">
+          <StatBlock label="Speed" value={calculatedStats.speed} />
+          <StatBlock label="Evasion" value={calculatedStats.evasion} />
+          <StatBlock label="Armor" value={calculatedStats.armor} />
+          {character.innateEnergy !== undefined && character.innateEnergy > 0 && (
+            <StatBlock label="Innate" value={character.innateEnergy} />
+          )}
+        </div>
+
+        {/* Resources - always show +/- controls */}
+        <div className="flex-1 space-y-3 min-w-[200px]">
+          <ResourceBar
+            label="Health"
+            current={currentHealth}
+            max={calculatedStats.maxHealth}
+            color="red"
+            terminalThreshold={calculatedStats.terminal}
+            showControls={true}
+            onChange={onHealthChange}
+          />
+          <ResourceBar
+            label="Energy"
+            current={currentEnergy}
+            max={calculatedStats.maxEnergy}
+            color="blue"
+            showControls={true}
+            onChange={onEnergyChange}
+          />
+        </div>
+      </div>
+
+      {/* Defenses */}
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          Defenses
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(defenseLabels).map(([key, label]) => {
+            const bonus = calculatedStats.defenseBonuses[key] ?? 0;
+            return (
+              <DefenseBlock
+                key={key}
+                name={label}
+                bonus={bonus}
+                score={calculatedStats.defenseScores[key] ?? 10}
+                onRoll={rollContext ? () => rollContext.rollDefense(label, bonus) : undefined}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

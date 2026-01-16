@@ -1,0 +1,46 @@
+/* ==========================================================================
+   Character Creator Variables
+   Maps to the core design system for consistency
+   ========================================================================== */
+
+/* Import core variables first */
+@import url('../core/variables.css');
+
+/* Character Creator specific overrides and aliases */
+:root {
+  /* Primary colors - use core variables */
+  --primary-dark: var(--color-primary-dark);
+  --primary: var(--color-primary);
+  --primary-light: var(--color-primary-light);
+  --primary-lighter: var(--color-primary-light);
+  --accent-blue: #4a9eff;
+  --accent-blue-hover: #3a8eef;
+  
+  /* Backgrounds - map to core */
+  --bg-main: var(--color-background);
+  --bg-white: var(--color-white);
+  --bg-section: var(--color-gray-100);
+  --bg-header: #e0e7ed;
+  --bg-hover: #f0f8ff;
+  --bg-selected: #e0f0ff;
+  --bg-modal: #f8f9fa;
+  
+  /* Text colors - map to core */
+  --text-primary: var(--color-primary);
+  --text-secondary: var(--color-text-muted);
+  --text-muted: var(--color-gray-500);
+  --text-light: var(--color-gray-300);
+  
+  /* Borders - map to core */
+  --border-light: var(--color-gray-300);
+  --border-primary: var(--color-primary);
+  
+  /* Shadows - these match our core shadows */
+  /* --shadow-sm, --shadow-md, --shadow-lg, --shadow-xl already defined in core */
+  
+  /* Radii - these match our core radii */
+  /* --radius-sm, --radius-md, --radius-lg, --radius-xl, --radius-full already defined in core */
+  
+  /* Spacing - these match our core spacing */
+  /* --spacing-xs, --spacing-sm, --spacing-md, --spacing-lg, --spacing-xl, --spacing-2xl already defined in core */
+}

@@ -1,0 +1,276 @@
+/**
+ * RealmsRPG Design System - Core Variables
+ * =========================================
+ * This file contains all CSS custom properties (variables) used across the site.
+ * Import this file in main.css and all page-specific stylesheets.
+ * 
+ * Usage: var(--variable-name)
+ */
+
+:root {
+    /* ============================================
+       COLOR PALETTE
+       ============================================ */
+    
+    /* Primary Blues - Dark blue for buttons/accents */
+    --color-primary-darkest: #001f3f;
+    --color-primary-dark: #053357;
+    --color-primary: #0a4a7a;  /* Main brand color */
+    --color-primary-light: #1a5c94;  /* Slightly lighter for hover/variants */
+    --color-primary-lighter: #1a73e8;
+    --color-primary-accent: #4a9eff;
+    
+    /* Accent Colors - Light blue for panels/summaries/backgrounds */
+    --color-accent-light: #e6f7ff;    /* Very light blue - for panel backgrounds */
+    --color-accent-medium: #b3e0ff;   /* Medium light blue - for hover states */
+    --color-accent-chip: #d4edff;     /* Chip background color */
+    --color-accent-dark: #0a4a7a;     /* Same as primary - for text on light accents */
+    
+    /* Button Gradient Colors */
+    --color-btn-gradient-start: #1a5c94;
+    --color-btn-gradient-end: #0a4a7a;
+    
+    /* Hover/Focus States */
+    --color-primary-hover: #0d5a94;
+    --color-primary-light-hover: #1a6aa8;
+    --color-primary-accent-hover: #3a8eef;
+    
+    /* Status Colors */
+    --color-success: #28a745;
+    --color-success-hover: #218838;
+    --color-success-light: #d4edda;
+    
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-danger-dark: #a71d2a;
+    --color-danger-light: #f8d7da;
+    
+    --color-warning: #ffc107;
+    --color-warning-hover: #e0a800;
+    --color-warning-light: #fff3cd;
+    
+    --color-info: #17a2b8;
+    --color-info-hover: #138496;
+    --color-info-light: #d1ecf1;
+    
+    /* Neutral Grays */
+    --color-gray-900: #212529;
+    --color-gray-800: #343a40;
+    --color-gray-700: #495057;
+    --color-gray-600: #6c757d;
+    --color-gray-500: #adb5bd;
+    --color-gray-400: #ced4da;
+    --color-gray-300: #dee2e6;
+    --color-gray-200: #e9ecef;
+    --color-gray-100: #f8f9fa;
+    --color-gray-50: #fafbfc;
+    
+    /* Semantic Colors */
+    --color-text: #333333;
+    --color-text-secondary: #6c757d;
+    --color-text-muted: #888888;
+    --color-text-light: #adb5bd;
+    --color-text-inverse: #ffffff;
+    
+    /* Background Colors */
+    --color-bg: #f8f9fa;
+    --color-bg-alt: #f4f4f4;
+    --color-bg-card: #ffffff;
+    --color-bg-section: #f5f5f5;
+    --color-bg-header: #f6f6f6;
+    --color-bg-hover: #f0f8ff;
+    --color-bg-selected: #e0f0ff;
+    --color-bg-modal: #ffffff;
+    --color-bg-modal-overlay: rgba(0, 0, 0, 0.5);
+    
+    /* Border Colors */
+    --color-border: #dee2e6;
+    --color-border-light: #e9ecef;
+    --color-border-dark: #707070;
+    --color-border-primary: #053357;
+    --color-border-focus: #4a9eff;
+    
+    /* Basic Colors */
+    --color-white: #ffffff;
+    --color-black: #000000;
+    
+    /* ============================================
+       TYPOGRAPHY
+       ============================================
+       
+       Font Usage Guide:
+       - Nova Flat: Page titles (h1), section headers (h2), panel titles
+       - Nunito: Body text, buttons, labels, h3-h6, form inputs, everything else
+       
+       Weight Guide (use only 2 levels for consistency):
+       - Normal (400): Body text, paragraphs, descriptions
+       - Semibold (600): Buttons, labels, headers, emphasis
+    */
+    
+    /* Font Families */
+    --font-body: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-title: 'Nova Flat', cursive, sans-serif;  /* For h1, h2, page titles, section headers */
+    --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+    
+    /* Font Family Aliases (for backwards compatibility) */
+    --font-family-body: var(--font-body);
+    --font-family-heading: var(--font-body);  /* h3-h6 use Nunito */
+    --font-family-title: var(--font-title);   /* h1, h2 use Nova Flat */
+    --font-family-mono: var(--font-mono);
+    
+    /* Font Sizes - Consolidated scale (8 sizes) */
+    --font-size-xs: 0.75rem;    /* 12px - captions, chips, helper text */
+    --font-size-sm: 0.875rem;   /* 14px - buttons, labels, small text */
+    --font-size-base: 1rem;     /* 16px - body text, paragraphs */
+    --font-size-lg: 1.125rem;   /* 18px - large body, nav links */
+    --font-size-xl: 1.25rem;    /* 20px - h4, subsection headers */
+    --font-size-2xl: 1.5rem;    /* 24px - h3, card headers */
+    --font-size-3xl: 2rem;      /* 32px - h2, section headers */
+    --font-size-4xl: 2.25rem;   /* 36px - h1, page titles */
+    
+    /* Legacy size aliases (for backwards compatibility) */
+    --font-size-2xs: 0.625rem;  /* 10px - deprecated, use --font-size-xs */
+    --font-size-5xl: 2.5rem;    /* 40px - deprecated, use --font-size-4xl */
+    
+    /* Font Weights - Standardized to 2 primary levels */
+    --font-weight-normal: 400;   /* Regular text, paragraphs */
+    --font-weight-semibold: 600; /* Buttons, labels, headers, emphasis */
+    
+    /* Legacy weight aliases (for backwards compatibility - maps to standard weights) */
+    --font-weight-light: 400;    /* Deprecated: use --font-weight-normal */
+    --font-weight-medium: 600;   /* Deprecated: use --font-weight-semibold */
+    --font-weight-bold: 600;     /* Deprecated: use --font-weight-semibold */
+    
+    /* Line Heights */
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+    
+    /* Letter Spacing */
+    --letter-spacing-tight: -0.025em;
+    --letter-spacing-normal: 0;
+    --letter-spacing-wide: 0.025em;
+    --letter-spacing-wider: 0.05em;
+    
+    /* ============================================
+       SPACING
+       ============================================ */
+    
+    --spacing-0: 0;
+    --spacing-1: 0.25rem;   /* 4px */
+    --spacing-2: 0.5rem;    /* 8px */
+    --spacing-3: 0.75rem;   /* 12px */
+    --spacing-4: 1rem;      /* 16px */
+    --spacing-5: 1.25rem;   /* 20px */
+    --spacing-6: 1.5rem;    /* 24px */
+    --spacing-8: 2rem;      /* 32px */
+    --spacing-10: 2.5rem;   /* 40px */
+    --spacing-12: 3rem;     /* 48px */
+    --spacing-16: 4rem;     /* 64px */
+    --spacing-20: 5rem;     /* 80px */
+    --spacing-24: 6rem;     /* 96px */
+    
+    /* Semantic Spacing */
+    --spacing-2xs: var(--spacing-1);  /* 4px - Extra extra small */
+    --spacing-xs: var(--spacing-2);   /* 8px */
+    --spacing-sm: var(--spacing-3);   /* 12px */
+    --spacing-md: var(--spacing-4);   /* 16px */
+    --spacing-lg: var(--spacing-6);   /* 24px */
+    --spacing-xl: var(--spacing-8);   /* 32px */
+    --spacing-2xl: var(--spacing-10); /* 40px */
+    
+    /* ============================================
+       BORDER RADIUS
+       ============================================ */
+    
+    --radius-none: 0;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+    --radius-pill: 9999px;
+    
+    /* ============================================
+       SHADOWS
+       ============================================ */
+    
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+    --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+    
+    /* Colored Shadows */
+    --shadow-primary: 0 4px 14px rgba(5, 51, 87, 0.25);
+    --shadow-success: 0 4px 14px rgba(40, 167, 69, 0.25);
+    --shadow-danger: 0 4px 14px rgba(220, 53, 69, 0.25);
+    
+    /* ============================================
+       TRANSITIONS
+       ============================================ */
+    
+    --transition-fast: 0.15s ease;
+    --transition-base: 0.2s ease;
+    --transition-slow: 0.3s ease;
+    --transition-slower: 0.5s ease;
+    
+    /* Specific Transitions */
+    --transition-colors: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    --transition-transform: transform 0.2s ease;
+    --transition-opacity: opacity 0.2s ease;
+    --transition-shadow: box-shadow 0.2s ease;
+    --transition-all: all 0.2s ease;
+    
+    /* ============================================
+       Z-INDEX SCALE
+       ============================================ */
+    
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal-backdrop: 400;
+    --z-modal: 500;
+    --z-popover: 600;
+    --z-tooltip: 700;
+    --z-toast: 800;
+    
+    /* ============================================
+       BREAKPOINTS (for reference in JS)
+       ============================================ */
+    
+    --breakpoint-sm: 576px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 992px;
+    --breakpoint-xl: 1200px;
+    --breakpoint-2xl: 1400px;
+    
+    /* ============================================
+       LAYOUT
+       ============================================ */
+    
+    --container-sm: 576px;
+    --container-md: 768px;
+    --container-lg: 992px;
+    --container-xl: 1200px;
+    --container-max-width: 1440px;
+    --content-max-width: 1200px;
+    --sidebar-width: 280px;
+    --header-height: 80px;
+    --footer-height: 60px;
+}
+
+/* Dark mode support (optional, for future use) */
+/* Uncomment and add dark mode variables when needed
+@media (prefers-color-scheme: dark) {
+    :root.theme-auto {
+        --color-bg: #1a1a2e;
+        --color-bg-secondary: #16213e;
+        --color-text: #eaeaea;
+    }
+}
+*/

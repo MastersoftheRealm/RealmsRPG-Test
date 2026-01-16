@@ -1,0 +1,349 @@
+/**
+ * Centralized Power Calculation & Display Utilities
+ * Mirrors item_calc.js and technique_calc.js structure for powers.
+ *
+ * Part payload shape expected by calculators:
+ * { id: number, op_1_lvl: number, op_2_lvl?: number, op_3_lvl?: number, applyDuration?: boolean }
+ * 
+ * Legacy format (for backwards compatibility):
+ * { name: string, op_1_lvl: number, op_2_lvl?: number, op_3_lvl?: number, applyDuration?: boolean }
+ *
+ * Also supports UI shape:
+ * { part: defObj, op_1_lvl?: number, op_2_lvl?: number, op_3_lvl?: number, applyDuration?: boolean }
+ * (legacy UI shape: opt1Level/opt2Level/opt3Level)
+ */
+
+import { PART_IDS, findByIdOrName } from '/js/shared/id-constants.js';
+
+/* ------------ Core Cost Calculator ------------ */
+
+/**
+ * Calculate total energy, TP and list TP sources for a power.
+ * Uses the unified equation: (flat_normal * perc_all) + ((dur_all + 1) * flat_duration * perc_dur) - (flat_duration * perc_dur)
+ * @param {Array<{name, op_1_lvl, op_2_lvl, op_3_lvl, applyDuration}>} partsPayload
+ * @param {Array} partsDb
+ * @returns {{
+ *   totalEnergy:number,        // rounded up to whole number
+ *   totalTP:number,
+ *   tpSources:string[],
+ *   energyRaw:number           // unrounded decimal for creators
+ * }}
+ */
+export function calculatePowerCosts(partsPayload = [], partsDb = []) {
+  let flat_normal = 0;
+  let flat_duration = 0;
+  let perc_all = 1;
+  let perc_dur = 1;
+  let dur_all = 1;
+  let hasDurationParts = false;
+  let totalTP = 0;
+  const tpSources = [];
+
+  partsPayload.forEach(pl => {
+    // Normalize to support both saved-format and UI-format
+    const isUiShape = pl && pl.part && (pl.part.id !== undefined || pl.part.name);
+    
+    // Get part definition - prefer ID lookup, fallback to name for backwards compatibility
+    let def;
+    if (isUiShape) {
+      def = pl.part; // UI shape already has the full part object
+    } else {
+      // Saved format - lookup by id or name
+      def = findByIdOrName(partsDb, pl);
+    }
+    if (!def) return;
+
+    // Prefer standardized op_#_lvl; fallback to legacy opt#Level for compatibility
+    const l1 = isUiShape ? (pl.op_1_lvl ?? pl.opt1Level ?? 0) : (pl.op_1_lvl || 0);
+    const l2 = isUiShape ? (pl.op_2_lvl ?? pl.opt2Level ?? 0) : (pl.op_2_lvl || 0);
+    const l3 = isUiShape ? (pl.op_3_lvl ?? pl.opt3Level ?? 0) : (pl.op_3_lvl || 0);
+    const applyToDuration = pl.applyDuration || false;
+
+    // Energy contribution (effective energy)
+    const energyContribution =
+      (def.base_en || 0) +
+      (def.op_1_en || 0) * l1 +
+      (def.op_2_en || 0) * l2 +
+      (def.op_3_en || 0) * l3;
+
+    // Categorize energy contribution based on part flags
+    if (def.duration) {
+      // Duration part: multiply into dur_all
+      dur_all *= energyContribution;
+      hasDurationParts = true;
+    } else if (def.percentage) {
+      // Percentage part: multiply into perc_all (and perc_dur if applyDuration checked)
+      perc_all *= energyContribution;
+      if (applyToDuration) perc_dur *= energyContribution;
+    } else {
+      // Flat part: add to flat_normal (and flat_duration if applyDuration checked)
+      flat_normal += energyContribution;
+      if (applyToDuration) flat_duration += energyContribution;
+    }
+
+    // TP calculation (floor entire sum)
+    const rawTP =
+      (def.base_tp || 0) +
+      (def.op_1_tp || 0) * l1 +
+      (def.op_2_tp || 0) * l2 +
+      (def.op_3_tp || 0) * l3;
+
+    const partTP = Math.floor(rawTP);
+    if (partTP > 0) {
+      let src = `${partTP} TP: ${def.name}`;
+      if (l1 > 0) src += ` (Opt1 ${l1})`;
+      if (l2 > 0) src += ` (Opt2 ${l2})`;
+      if (l3 > 0) src += ` (Opt3 ${l3})`;
+      tpSources.push(src);
+    }
+    totalTP += partTP;
+  });
+
+  // If no duration parts exist, dur_all should be 0 (not 1)
+  if (!hasDurationParts) dur_all = 0;
+
+  // Unified power energy equation
+  const totalEnergyRaw = (flat_normal * perc_all) + ((dur_all + 1) * flat_duration * perc_dur) - (flat_duration * perc_dur);
+  const totalEnergy = Math.ceil(totalEnergyRaw); // Round up for display contexts
+
+  return { totalEnergy, totalTP, tpSources, energyRaw: totalEnergyRaw };
+}
+
+/* ------------ Action Type ------------ */
+
+/**
+ * Compute action type from parts payload
+ * @param {Array} partsPayload - Parts with id or name
+ * @param {Array} partsDb - Optional parts database for ID lookups
+ */
+export function computeActionType(partsPayload = [], partsDb = []) {
+  let actionType = 'Basic';
+  let isReaction = false;
+
+  partsPayload.forEach(p => {
+    // Get part ID - from UI shape (part.id), saved format (id), or lookup by name
+    let partId;
+    if (p?.part?.id !== undefined) {
+      partId = p.part.id;
+    } else if (p?.id !== undefined) {
+      partId = p.id;
+    } else if (p?.part?.name || p?.name) {
+      // Legacy name-based lookup using findByIdOrName
+      const name = p?.part?.name || p?.name;
+      const def = findByIdOrName(partsDb, { name: name });
+      partId = def?.id;
+    }
+
+    // Prefer standardized op_1_lvl with fallback
+    const l1 = p?.part ? (p.op_1_lvl ?? p.opt1Level ?? 0) : (p.op_1_lvl || 0);
+
+    if (partId === PART_IDS.POWER_REACTION) isReaction = true;
+    else if (partId === PART_IDS.POWER_QUICK_OR_FREE_ACTION) {
+      if (l1 === 0) actionType = 'Quick';
+      else if (l1 === 1) actionType = 'Free';
+    } else if (partId === PART_IDS.POWER_LONG_ACTION) {
+      if (l1 === 0) actionType = 'Long (3)';
+      else if (l1 === 1) actionType = 'Long (4)';
+    }
+  });
+
+  return isReaction ? `${actionType} Reaction` : `${actionType} Action`;
+}
+
+/**
+ * Helper when UI stores selector value (quick|free|long3|long4|basic)
+ */
+export function computeActionTypeFromSelection(selection, reactionFlag) {
+  let base = 'Basic';
+  if (selection === 'quick') base = 'Quick';
+  else if (selection === 'free') base = 'Free';
+  else if (selection === 'long3') base = 'Long (3)';
+  else if (selection === 'long4') base = 'Long (4)';
+  return reactionFlag ? `${base} Reaction` : `${base} Action`;
+}
+
+/* ------------ Range / Area / Duration Derivation ------------ */
+
+/**
+ * Derive range string from parts
+ * @param {Array} partsPayload - Parts with id or name
+ * @param {Array} partsDb - Optional parts database for ID lookups
+ */
+export function deriveRange(partsPayload = [], partsDb = []) {
+  const pr = partsPayload.find(p => {
+    const partId = p?.part?.id ?? p?.id;
+    if (partId === PART_IDS.POWER_RANGE) return true;
+    // Fallback to name for backwards compatibility
+    const name = p?.part?.name || p?.name;
+    return name === 'Power Range';
+  });
+  if (!pr) return '1 space';
+  const lvl = pr.part ? (pr.op_1_lvl ?? pr.opt1Level ?? 0) : (pr.op_1_lvl || 0);
+  const spaces = 3 + (3 * lvl);
+  return `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
+}
+
+/**
+ * Derive area string from parts
+ * @param {Array} partsPayload - Parts with id or name
+ * @param {Array} partsDb - Optional parts database for ID lookups
+ */
+export function deriveArea(partsPayload = [], partsDb = []) {
+  const areaPartIds = [
+    PART_IDS.SPHERE_OF_EFFECT,
+    PART_IDS.CYLINDER_OF_EFFECT,
+    PART_IDS.CONE_OF_EFFECT,
+    PART_IDS.LINE_OF_EFFECT,
+    PART_IDS.TRAIL_OF_EFFECT
+  ];
+  const areaNames = ['Sphere', 'Cylinder', 'Cone', 'Line', 'Trail'];
+  
+  for (let i = 0; i < areaPartIds.length; i++) {
+    const found = partsPayload.find(p => {
+      const partId = p?.part?.id ?? p?.id;
+      if (partId === areaPartIds[i]) return true;
+      // Fallback to name
+      const name = p?.part?.name || p?.name;
+      return name === `${areaNames[i]} of Effect`;
+    });
+    if (found) return areaNames[i];
+  }
+  return '1 target';
+}
+
+/**
+ * Derive duration string from parts
+ * @param {Array} partsPayload - Parts with id or name
+ * @param {Array} partsDb - Optional parts database for ID lookups
+ */
+export function deriveDuration(partsPayload = [], partsDb = []) {
+  const findPartById = (partId, fallbackName) => partsPayload.find(p => {
+    const id = p?.part?.id ?? p?.id;
+    if (id === partId) return true;
+    const name = p?.part?.name || p?.name;
+    return name === fallbackName;
+  });
+  const getLvl = (p) => p ? (p.part ? (p.opt1Level || 0) : (p.op_1_lvl || 0)) : 0;
+
+  const permanentPart = findPartById(PART_IDS.DURATION_PERMANENT, 'Duration (Permanent)');
+  if (permanentPart) return 'Permanent';
+
+  const roundPart = findPartById(PART_IDS.DURATION_ROUND, 'Duration (Round)');
+  if (roundPart) {
+    const lvl = getLvl(roundPart);
+    const rounds = 2 + lvl;
+    return `${rounds} ${rounds > 1 ? 'rounds' : 'round'}`;
+  }
+
+  const minutePart = findPartById(PART_IDS.DURATION_MINUTE, 'Duration (Minute)');
+  if (minutePart) {
+    const lvl = getLvl(minutePart);
+    const minutes = [1, 10, 30][lvl] || 1;
+    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+  }
+
+  const hourPart = findPartById(PART_IDS.DURATION_HOUR, 'Duration (Hour)');
+  if (hourPart) {
+    const lvl = getLvl(hourPart);
+    const hours = [1, 6, 12][lvl] || 1;
+    return `${hours} hour${hours > 1 ? 's' : ''}`;
+  }
+
+  const dayPart = findPartById(PART_IDS.DURATION_DAYS, 'Duration (Days)');
+  if (dayPart) {
+    const lvl = getLvl(dayPart);
+    const days = [1, 10, 20, 30][lvl] || 1;
+    return `${days} day${days > 1 ? 's' : ''}`;
+  }
+
+  return '1 round';
+}
+
+/* ------------ Chip Formatting ------------ */
+
+/**
+ * Format a single power part as a chip
+ */
+export function formatPowerPartChip(def, pl) {
+  const l1 = pl.op_1_lvl || 0;
+  const l2 = pl.op_2_lvl || 0;
+  const l3 = pl.op_3_lvl || 0;
+
+  const rawTP =
+    (def.base_tp || 0) +
+    (def.op_1_tp || 0) * l1 +
+    (def.op_2_tp || 0) * l2 +
+    (def.op_3_tp || 0) * l3;
+
+  const finalTP = Math.floor(rawTP);
+  let text = def.name;
+  if (l1 > 0) text += ` (Opt1 ${l1})`;
+  if (l2 > 0) text += ` (Opt2 ${l2})`;
+  if (l3 > 0) text += ` (Opt3 ${l3})`;
+  if (finalTP > 0) text += ` | TP: ${finalTP}`;
+
+  return { text, finalTP };
+}
+
+/* ------------ High-level Display Builder ------------ */
+
+/**
+ * Build complete display data from a saved power document
+ * @param {Object} powerDoc - saved power document from Firestore
+ * @param {Array} partsDb - power parts database
+ * @returns {Object} display data
+ */
+export function derivePowerDisplay(powerDoc, partsDb) {
+  const partsPayload = Array.isArray(powerDoc.parts)
+    ? powerDoc.parts.map(p => ({
+        id: p.id,
+        name: p.name, // Keep name for backwards compatibility
+        op_1_lvl: p.op_1_lvl || 0,
+        op_2_lvl: p.op_2_lvl || 0,
+        op_3_lvl: p.op_3_lvl || 0,
+        applyDuration: p.applyDuration || false
+      }))
+    : [];
+
+  const calc = calculatePowerCosts(partsPayload, partsDb);
+  const actionType = computeActionType(partsPayload, partsDb);
+  const rangeStr = deriveRange(partsPayload, partsDb);
+  const areaStr = deriveArea(partsPayload, partsDb);
+  const durationStr = deriveDuration(partsPayload, partsDb);
+
+  // Build part chips HTML
+  const partChips = partsPayload.map(pl => {
+    const def = findByIdOrName(partsDb, pl);
+    if (!def) return '';
+    const chip = formatPowerPartChip(def, pl);
+    const cls = chip.finalTP > 0 ? 'part-chip proficiency-chip' : 'part-chip';
+    return `<div class="${cls}" title="${def.description || ''}">${chip.text}</div>`;
+  });
+
+  return {
+    name: powerDoc.name || '',
+    description: powerDoc.description || '',
+    actionType,
+    range: rangeStr,
+    area: areaStr,
+    duration: durationStr,
+    energy: calc.totalEnergy,
+    tp: calc.totalTP,
+    tpSources: calc.tpSources,
+    partChipsHTML: partChips.join('')
+  };
+}
+
+/* ------------ Damage Formatting ------------ */
+
+/**
+ * Format power damage as [amount]d[size] [type] (first valid entry)
+ * @param {Array} damageArr
+ * @returns {string}
+ */
+export function formatPowerDamage(damageArr) {
+  if (!Array.isArray(damageArr)) return '';
+  const dmg = damageArr.find(d => d && d.amount && d.size && d.type && d.type !== 'none');
+  if (dmg) return `${dmg.amount}d${dmg.size} ${dmg.type}`;
+  return '';
+}

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - Realms: The Freeform Roleplaying Game</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+</head>
+<body>
+    <header id="header"></header>
+    <main>
+        <section id="account-section">
+            <h2>Manage Your Account</h2>
+            <div class="account-container">
+                <div class="account-column">
+                    <label for="current-username">Current Username:</label>
+                    <input type="text" id="current-username" disabled>
+                    <label for="current-email">Current Email:</label>
+                    <input type="email" id="current-email" disabled>
+                    <label for="new-username">New Username:</label>
+                    <input type="text" id="new-username" placeholder="New Username">
+                    <button id="update-username-button">Update Username</button>
+                    <label for="new-email">New Email:</label>
+                    <input type="email" id="new-email" placeholder="New Email">
+                    <input type="email" id="confirm-new-email" placeholder="Confirm New Email">
+                    <button id="update-email-button">Update Email</button>
+                </div>
+                <div class="account-column">
+                    <label for="old-password">Old Password:</label>
+                    <input type="password" id="old-password" placeholder="Old Password">
+                    <label for="new-password">New Password:</label>
+                    <input type="password" id="new-password" placeholder="New Password">
+                    <input type="password" id="confirm-new-password" placeholder="Confirm New Password">
+                    <button id="update-password-button">Update Password</button>
+                    <button id="logout-button">Log Out</button>
+                    <button id="delete-account-button">Delete Account</button>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer id="footer"></footer>
+    <div id="delete-confirmation" class="modal">
+        <div class="modal-content">
+            <p>Delete Account? (This cannot be undone)</p>
+            <button id="confirm-delete-button">Yes</button>
+            <button id="cancel-delete-button">No</button>
+        </div>
+    </div>
+    <script type="module">
+      import { initializeFirebase, handleAuthStateChange, updateUserPassword, updateUserEmail } from '/js/core/auth.js';
+      import { getAuth, onAuthStateChanged, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+      import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+      async function loadHeaderFooter() {
+        const header = document.getElementById('header');
+        const footer = document.getElementById('footer');
+        if (header) {
+          header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        }
+        if (footer) {
+          footer.innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+        }
+      }
+      loadHeaderFooter();
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        const { auth, db, functions } = await initializeFirebase();
+        handleAuthStateChange(auth, db);
+
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', user.uid));
+              if (userDoc.exists()) {
+                const username = userDoc.data().username;
+                const email = user.email;
+                document.getElementById('current-username').value = username;
+                document.getElementById('current-email').value = email;
+              } else {
+                console.log('No user document found');
+              }
+            } catch (error) {
+              console.error('Error fetching user document:', error);
+            }
+          } else {
+            window.location.href = '/pages/login.html';
+          }
+        });
+
+        document.getElementById('update-username-button').addEventListener('click', async () => {
+          const newUsername = document.getElementById('new-username').value;
+          if (newUsername) {
+            try {
+              const user = auth.currentUser;
+              await updateDoc(doc(db, 'users', user.uid), { username: newUsername });
+              alert('Username updated successfully');
+              document.getElementById('current-username').value = newUsername;
+            } catch (error) {
+              console.error('Error updating username:', error);
+              alert('Error updating username');
+            }
+          } else {
+            alert('New username cannot be empty');
+          }
+        });
+
+        document.getElementById('update-email-button').addEventListener('click', async () => {
+          const newEmail = document.getElementById('new-email').value;
+          const confirmNewEmail = document.getElementById('confirm-new-email').value;
+          if (newEmail && newEmail === confirmNewEmail) {
+            try {
+              await updateUserEmail(functions, newEmail);
+            } catch (error) {
+              console.error('Error updating email:', error);
+              alert('Error updating email');
+            }
+          } else {
+            alert('Emails do not match or are empty');
+          }
+        });
+
+        document.getElementById('update-password-button').addEventListener('click', async () => {
+          const oldPassword = document.getElementById('old-password').value;
+          const newPassword = document.getElementById('new-password').value;
+          const confirmNewPassword = document.getElementById('confirm-new-password').value;
+          if (newPassword && newPassword === confirmNewPassword) {
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+            if (!passwordRegex.test(newPassword)) {
+              alert('Password must be at least 6 characters long and contain at least one letter and one number.');
+              return;
+            }
+            try {
+              await updateUserPassword(auth, oldPassword, newPassword);
+            } catch (error) {
+              console.error('Error updating password:', error);
+              alert('Error updating password');
+            }
+          } else {
+            alert('Passwords do not match or are empty');
+          }
+        });
+
+        document.getElementById('logout-button').addEventListener('click', () => {
+          auth.signOut().then(() => {
+            window.location.href = '/pages/login.html';
+          }).catch((error) => {
+            console.error('Error logging out:', error);
+          });
+        });
+
+        document.getElementById('delete-account-button').addEventListener('click', () => {
+          document.getElementById('delete-confirmation').style.display = 'block';
+        });
+
+        document.getElementById('confirm-delete-button').addEventListener('click', async () => {
+          try {
+            const user = auth.currentUser;
+            await user.delete();
+            alert('Account deleted successfully');
+            window.location.href = '/index.html';
+          } catch (error) {
+            console.error('Error deleting account:', error);
+            alert('Error deleting account');
+          }
+        });
+
+        document.getElementById('cancel-delete-button').addEventListener('click', () => {
+          document.getElementById('delete-confirmation').style.display = 'none';
+        });
+      });
+    </script>
+</body>
+</html>

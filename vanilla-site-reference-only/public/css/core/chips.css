@@ -1,0 +1,651 @@
+/**
+ * RealmsRPG Centralized Chip Styles
+ * ==================================
+ * Shared styles for chips, parts, and properties across the entire site.
+ * Used in: Character Creator, Character Sheet, Library, Creature Creator
+ * 
+ * Size variants:
+ * - Default: Standard size for creators and library
+ * - .chip--sm: Smaller for character sheet library, creature stat blocks
+ * - .chip--lg: Larger for modals and focused displays
+ */
+
+/* ==========================================================================
+   Base Chip Styles
+   ========================================================================== */
+.chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--spacing-2xs, 4px) var(--spacing-xs, 8px);
+    border-radius: var(--radius-md, 8px);
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: 1.3;
+    border: 1px solid transparent;
+    user-select: none;
+    cursor: pointer;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 300px;
+    transition: opacity 0.15s ease, box-shadow 0.15s ease;
+    background: var(--color-gray-100, #f1f3f4);
+    color: var(--color-text, #202124);
+}
+
+.chip:hover {
+    opacity: 0.9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chip.expanded {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Chip Header - name and buttons inline */
+.chip-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs, 4px);
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.chip-name {
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.chip-expand-icon {
+    font-size: 0.75em;
+    transition: transform 0.2s ease;
+    margin-left: auto;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.chip.expanded .chip-expand-icon {
+    transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   Chip Category Colors
+   ========================================================================== */
+
+/* Power/Technique Action Types */
+.chip--action, .chip.action {
+    background: #e7f0ff;
+    color: #0b5ed7;
+    border-color: #bcd4ff;
+}
+
+.chip--activation, .chip.activation {
+    background: #e6fffa;
+    color: #0f766e;
+    border-color: #b3f0e7;
+}
+
+.chip--area, .chip.area {
+    background: #eafbe7;
+    color: #166534;
+    border-color: #c7efc1;
+}
+
+.chip--duration, .chip.duration {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border-color: #e3d0ff;
+}
+
+.chip--target, .chip.target {
+    background: #fff4e5;
+    color: #9a3412;
+    border-color: #ffd8a8;
+}
+
+.chip--special, .chip.special {
+    background: #fffbe6;
+    color: #854d0e;
+    border-color: #ffe58f;
+}
+
+.chip--restriction, .chip.restriction {
+    background: #ffe5e5;
+    color: #b91c1c;
+    border-color: #ffb3b3;
+}
+
+/* Part Types */
+.chip--part {
+    background: var(--color-gray-100, #f1f3f4);
+    color: var(--color-gray-600, #5f6368);
+}
+
+.chip--proficiency, .chip.proficiency-chip {
+    background: #e3f2fd;
+    color: var(--color-primary, #1a73e8);
+    font-weight: 500;
+}
+
+/* Property Types (Armaments) */
+.chip--weapon {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+.chip--armor {
+    background: #e0e7ff;
+    color: #3730a3;
+    border-color: #a5b4fc;
+}
+
+.chip--shield {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+}
+
+/* Feat chips */
+.chip--feat {
+    background: #fce7f3;
+    color: #9d174d;
+    border-color: #f9a8d4;
+}
+
+/* Weakness chip (creatures) */
+.chip--weakness {
+    background: #ffe0e0;
+    color: #a33;
+    border-color: #c44;
+}
+
+/* ==========================================================================
+   Chip Buttons - Inherit chip colors
+   ========================================================================== */
+.chip-btn {
+    padding: 2px 6px;
+    font-size: var(--font-size-xs, 0.75rem);
+    background-color: rgba(0, 0, 0, 0.1);
+    color: inherit;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-xs, 4px);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.chip-btn:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.chip-btn--add {
+    font-size: 1em;
+    padding: 1px 5px;
+}
+
+.chip-btn--remove {
+    font-size: 0.9em;
+    padding: 1px 4px;
+    background: transparent;
+    border: none;
+}
+
+.chip-btn--option {
+    min-width: 20px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   Chip Description (Expandable)
+   ========================================================================== */
+.chip-description {
+    display: none;
+    margin-top: var(--spacing-xs, 8px);
+    padding: var(--spacing-xs, 8px);
+    border-radius: var(--radius-sm, 4px);
+    font-size: var(--font-size-xs, 0.75rem);
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.03);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.chip.expanded .chip-description {
+    display: block;
+}
+
+.chip-description p {
+    margin: 0 0 var(--spacing-2xs, 4px) 0;
+}
+
+.chip-description p:last-child {
+    margin-bottom: 0;
+}
+
+/* Option controls inside description */
+.chip-option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2xs, 4px);
+    padding: var(--spacing-2xs, 4px) 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    margin-top: var(--spacing-2xs, 4px);
+}
+
+.chip-option:first-of-type {
+    margin-top: var(--spacing-xs, 8px);
+}
+
+.chip-option-label {
+    font-weight: 600;
+    min-width: 60px;
+}
+
+.chip-option-controls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.chip-option-level {
+    min-width: 24px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.chip-option-desc {
+    flex: 1;
+    font-size: 0.9em;
+    color: inherit;
+    opacity: 0.85;
+}
+
+.chip-option-cost {
+    font-size: 0.85em;
+    opacity: 0.75;
+    margin-left: auto;
+}
+
+/* ==========================================================================
+   Chip Size Variants
+   ========================================================================== */
+
+/* Small chips - for character sheet, creature stat blocks */
+.chip--sm {
+    padding: 2px 6px;
+    font-size: var(--font-size-xs, 0.75rem);
+    border-radius: var(--radius-sm, 4px);
+    max-width: 200px;
+}
+
+.chip--sm .chip-header {
+    gap: 2px;
+}
+
+.chip--sm .chip-btn {
+    padding: 1px 4px;
+    font-size: 0.7rem;
+}
+
+.chip--sm .chip-description {
+    padding: var(--spacing-2xs, 4px);
+    font-size: 0.7rem;
+}
+
+/* Large chips - for modals, focused displays */
+.chip--lg {
+    padding: var(--spacing-sm, 12px) var(--spacing-md, 16px);
+    font-size: var(--font-size-base, 1rem);
+    border-radius: var(--radius-lg, 12px);
+    max-width: 400px;
+}
+
+.chip--lg .chip-description {
+    padding: var(--spacing-sm, 12px);
+    font-size: var(--font-size-sm, 0.875rem);
+}
+
+/* ==========================================================================
+   Chip Container Layouts
+   ========================================================================== */
+.chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs, 8px);
+}
+
+.chips-container--compact {
+    gap: var(--spacing-2xs, 4px);
+}
+
+.chips-container--vertical {
+    flex-direction: column;
+}
+
+/* ==========================================================================
+   Part Chip Styles (Powers, Techniques)
+   ========================================================================== */
+.part-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    background: var(--color-gray-100, #f1f3f4);
+    color: var(--color-gray-600, #5f6368);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.part-chip:hover {
+    background: var(--color-gray-200, #e8eaed);
+}
+
+.part-chip.proficiency-chip {
+    background: #e3f2fd;
+    color: var(--color-primary, #1a73e8);
+    font-weight: 500;
+}
+
+.part-chip.expanded {
+    border-radius: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* ==========================================================================
+   Property Chip Styles (Armaments)
+   ========================================================================== */
+.property-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    cursor: help;
+    transition: background 0.2s;
+    background: #e8f0fe;
+    color: var(--color-primary, #1a73e8);
+}
+
+.property-chip:hover {
+    background: #d2e3fc;
+}
+
+.property-chip--weapon {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.property-chip--armor {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.property-chip--shield {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* ==========================================================================
+   Feat Display Chips
+   ========================================================================== */
+.feat-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2xs, 4px);
+    padding: var(--spacing-2xs, 4px) var(--spacing-xs, 8px);
+    background: var(--color-accent-light, #e6f7ff);
+    border-radius: var(--radius-sm, 4px);
+    font-size: var(--font-size-xs, 0.75rem);
+    color: var(--color-primary-dark, #0d47a1);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.feat-chip:hover {
+    background: var(--color-accent-medium, #b3e0ff);
+}
+
+/* ==========================================================================
+   Library-Specific Part Display
+   ========================================================================== */
+.library-parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.library-parts .part-chip {
+    background: var(--color-gray-100, #f1f3f4);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    color: var(--color-gray-600, #5f6368);
+}
+
+.library-parts .proficiency-chip {
+    background: #e3f2fd;
+    color: var(--color-primary, #1a73e8);
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Expandable Section Styles (for features/powers/techniques lists)
+   ========================================================================== */
+.expandable-section {
+    margin: 8px 0;
+    border-left: 3px solid var(--color-primary-light, #4a90e2);
+    padding-left: 10px;
+    background: rgba(26, 115, 232, 0.04);
+    border-radius: 4px;
+}
+
+.expandable-header {
+    cursor: pointer;
+    padding: 8px 4px;
+    color: var(--color-primary, #1a73e8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: background 0.2s;
+    font-weight: 600;
+}
+
+.expandable-header:hover {
+    background: rgba(26, 115, 232, 0.08);
+}
+
+.expandable-count {
+    font-size: 0.85em;
+    color: var(--color-gray-600, #5f6368);
+    font-weight: normal;
+}
+
+.expandable-toggle {
+    font-size: 0.8em;
+    transition: transform 0.3s;
+    color: var(--color-primary, #1a73e8);
+}
+
+.expandable-section.expanded .expandable-toggle {
+    transform: rotate(180deg);
+}
+
+.expandable-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    margin-top: 4px;
+}
+
+.expandable-section.expanded .expandable-body {
+    max-height: 2000px;
+    transition: max-height 0.5s ease-in;
+}
+
+/* ==========================================================================
+   Feature Item Styles (Powers, Techniques, Armaments in lists)
+   ========================================================================== */
+.feature-item {
+    padding: 8px 10px;
+    font-size: 0.9em;
+    line-height: 1.5;
+    border-bottom: 1px solid var(--color-border-light, #e8eaed);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.feature-item:last-child {
+    border-bottom: none;
+}
+
+.feature-item:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.feature-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.feature-item-name {
+    color: var(--color-primary, #1a73e8);
+    font-weight: 600;
+}
+
+.feature-item-meta {
+    font-size: 0.85em;
+    color: var(--color-gray-600, #5f6368);
+}
+
+.feature-item-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    padding-left: 12px;
+    color: var(--color-gray-600, #5f6368);
+    font-size: 0.85em;
+}
+
+.feature-item.expanded .feature-item-details {
+    max-height: 500px;
+    transition: max-height 0.4s ease-in;
+    margin-top: 8px;
+}
+
+.feature-detail-line {
+    margin: 4px 0;
+}
+
+.feature-detail-line strong {
+    color: var(--color-primary, #1a73e8);
+}
+
+/* ==========================================================================
+   Total Costs Box (Collapsible)
+   ========================================================================== */
+.total-costs-box {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 180px;
+    padding: 12px;
+    background: var(--color-accent-light, #e6f7ff);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    font-size: 14px;
+    transition: left 0.3s cubic-bezier(.4,0,.2,1), 
+                box-shadow 0.3s, 
+                background 0.3s,
+                opacity 0.3s;
+}
+
+.total-costs-box h3 {
+    margin: 0 0 var(--spacing-3) 0;
+    font-size: var(--font-size-base);
+    font-family: var(--font-title);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-primary);
+}
+
+.total-costs-box p {
+    margin: 5px 0;
+}
+
+.total-costs-box .toggle-arrow {
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    width: 24px;
+    height: 24px;
+    background: var(--color-primary, #007bff);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform: translateY(-50%);
+    z-index: 1001;
+    font-size: 14px;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s;
+}
+
+.total-costs-box.collapsed {
+    left: -160px;
+}
+
+.total-costs-box.collapsed > *:not(.toggle-arrow) {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.total-costs-box.collapsed .toggle-arrow {
+    right: -44px;
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 768px) {
+    .chip {
+        max-width: 100%;
+    }
+    
+    .chip--lg {
+        max-width: 100%;
+        padding: var(--spacing-xs, 8px) var(--spacing-sm, 12px);
+    }
+    
+    .chips-container {
+        gap: var(--spacing-2xs, 4px);
+    }
+    
+    .total-costs-box {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: 100%;
+        margin-bottom: 16px;
+    }
+    
+    .total-costs-box.collapsed {
+        left: auto;
+    }
+    
+    .total-costs-box .toggle-arrow {
+        display: none;
+    }
+}

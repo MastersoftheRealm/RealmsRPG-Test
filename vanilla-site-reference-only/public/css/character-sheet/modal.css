@@ -1,0 +1,470 @@
+/* ============================================
+   MODAL - Core Styles
+   ============================================ */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.2s;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 750px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 32px;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(26, 115, 232, 0.15), 0 2px 8px rgba(0,0,0,0.1);
+  animation: modal-pop 0.18s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.97) translateY(24px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 28px;
+  color: #aaa;
+  cursor: pointer;
+  font-weight: bold;
+  transition: color 0.15s;
+  z-index: 2;
+}
+
+.modal-close:hover {
+  color: var(--primary-blue, #1a73e8);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+#resource-modal-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.5em;
+  font-weight: 700;
+  color: var(--primary-blue, #1a73e8);
+  margin: 0;
+}
+
+/* ============================================
+   MODAL - Loading & Error States
+   ============================================ */
+
+.modal-loading {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+}
+
+.modal-error {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--error-color, #dc3545);
+  font-size: 14px;
+  background: rgba(220, 53, 69, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.modal-empty {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-secondary, #666);
+  font-size: 14px;
+}
+
+/* ============================================
+   MODAL - Header Info (slots, points, etc)
+   ============================================ */
+
+.modal-header-info {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.feat-slots-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.feat-slots-badge.has-points {
+  background: rgba(76, 175, 80, 0.15);
+  color: #2e7d32;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.feat-slots-badge.no-points {
+  background: rgba(74, 144, 226, 0.15);
+  color: var(--primary-blue, #1a73e8);
+  border: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+.feat-slots-badge.over-budget {
+  background: rgba(192, 57, 43, 0.15);
+  color: var(--danger-red, #c0392b);
+  border: 1px solid rgba(192, 57, 43, 0.3);
+}
+
+/* ============================================
+   MODAL - Filters (search, dropdowns, checkboxes)
+   ============================================ */
+
+.modal-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  background: var(--bg-light, #f8f9fa);
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.modal-search {
+  flex: 1;
+  min-width: 180px;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  background: white;
+  color: var(--text-primary, #333);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-search:focus {
+  outline: none;
+  border-color: var(--primary-blue, #1a73e8);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.modal-search::placeholder {
+  color: var(--text-secondary, #999);
+}
+
+.modal-select {
+  padding: 10px 32px 10px 14px;
+  font-size: 14px;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 12px center;
+  background-size: 10px;
+  appearance: none;
+  cursor: pointer;
+  color: var(--text-primary, #333);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 140px;
+}
+
+.modal-select:focus {
+  outline: none;
+  border-color: var(--primary-blue, #1a73e8);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+}
+
+.modal-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-primary, #333);
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.modal-checkbox-label:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.modal-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-blue, #1a73e8);
+  cursor: pointer;
+}
+
+/* ============================================
+   MODAL - Table Styles
+   ============================================ */
+
+.modal-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 14px;
+}
+
+.modal-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.modal-table th {
+  background: linear-gradient(90deg, #e8f4fc 0%, #f1f5f9 100%);
+  color: var(--primary-dark, #053357);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-color, #e0e0e0);
+}
+
+.modal-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.modal-table th.sortable:hover {
+  background: linear-gradient(90deg, #d6eaf8 0%, #e8ecf0 100%);
+}
+
+.modal-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color, #eee);
+  vertical-align: middle;
+}
+
+.modal-table td.truncated {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-table tr:hover td {
+  background: rgba(74, 144, 226, 0.04);
+}
+
+.modal-table tr.row-unmet td {
+  opacity: 0.6;
+}
+
+.modal-table .requirements-cell {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+}
+
+.modal-table .requirements-cell.unmet {
+  color: var(--error-color, #dc3545);
+}
+
+/* ============================================
+   MODAL - Buttons
+   ============================================ */
+
+.modal-add-btn {
+  background: linear-gradient(135deg, var(--primary-blue, #1a73e8) 0%, var(--primary-dark, #053357) 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.modal-add-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+  background: linear-gradient(135deg, #388ee7 0%, var(--primary-dark, #053357) 100%);
+}
+
+.modal-add-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.modal-add-btn.disabled,
+.modal-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Unmet requirements button - orange/warning style */
+.modal-add-btn.btn-unmet {
+  background: linear-gradient(135deg, #f5a623 0%, #d68910 100%);
+  border-color: #d68910;
+}
+
+.modal-add-btn.btn-unmet:hover {
+  background: linear-gradient(135deg, #f7b84b 0%, #e5a21e 100%);
+  box-shadow: 0 4px 12px rgba(245, 166, 35, 0.3);
+}
+
+/* Overspend button - red/danger style */
+.modal-add-btn.btn-overspend {
+  background: linear-gradient(135deg, var(--danger-red, #c0392b) 0%, #922b21 100%);
+  border-color: #922b21;
+}
+
+.modal-add-btn.btn-overspend:hover {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
+}
+
+/* Combined unmet + overspend - darker red */
+.modal-add-btn.btn-unmet.btn-overspend {
+  background: linear-gradient(135deg, #c0392b 0%, #7b241c 100%);
+  border-color: #7b241c;
+}
+
+.modal-add-btn.btn-unmet.btn-overspend:hover {
+  background: linear-gradient(135deg, #e74c3c 0%, #922b21 100%);
+  box-shadow: 0 4px 12px rgba(123, 36, 28, 0.3);
+}
+
+/* ============================================
+   MODAL - Legacy Equipment Table (for compatibility)
+   ============================================ */
+
+.equipment-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.equipment-table th,
+.equipment-table td {
+  padding: 10px 8px;
+  text-align: left;
+  border: 1px solid #e6f7ff;
+  font-size: 14px;
+}
+
+.equipment-table th {
+  background: linear-gradient(90deg, #e6f7ff 0%, #f1f3f4 100%);
+  color: #053357;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.equipment-table tr:hover td {
+  background: #f8f9fa;
+}
+
+/* Legacy small buttons */
+.small-button.blue-button {
+  background: linear-gradient(135deg, #1a73e8 0%, #053357 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.small-button.blue-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #388ee7 0%, #053357 100%);
+  transform: translateY(-1px);
+}
+
+.small-button.blue-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.small-button.green-button {
+  background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.small-button.green-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #66bb6a 0%, #388e3c 100%);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   MODAL - Responsive
+   ============================================ */
+
+@media (max-width: 600px) {
+  .modal-content {
+    padding: 20px 16px;
+    max-width: 99vw;
+    border-radius: 12px;
+  }
+
+  .modal-filters {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-search,
+  .modal-select {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .modal-table th,
+  .modal-table td {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+
+  .modal-add-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .equipment-table th,
+  .equipment-table td {
+    font-size: 12px;
+    padding: 6px 4px;
+  }
+}

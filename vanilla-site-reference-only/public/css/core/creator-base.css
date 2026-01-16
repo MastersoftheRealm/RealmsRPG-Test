@@ -1,0 +1,531 @@
+/* ==========================================================================
+   Creator Base Styles
+   Shared styles for all creator pages (power, technique, item, creature)
+   Import this file AFTER the core design system
+   ========================================================================== */
+
+/* ==========================================================================
+   Creator Page Layout
+   ========================================================================== */
+.creator-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.creator-page-title {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text);
+    text-align: center;
+}
+
+.creator-container {
+    width: 100%;
+    max-width: var(--container-lg);
+    padding: 0 var(--spacing-lg);
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   Total Costs Panel (Fixed Position)
+   ========================================================================== */
+.costs-panel {
+    position: fixed;
+    top: var(--spacing-lg);
+    left: var(--spacing-lg);
+    width: 140px;
+    padding: var(--spacing-sm);
+    background-color: #e6f7ff; /* Light blue for readability */
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-sticky);
+    font-size: var(--font-size-sm);
+    transition: transform var(--transition-base);
+}
+
+.costs-panel h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+}
+
+.costs-panel p {
+    margin: var(--spacing-2xs) 0;
+    color: var(--color-text);
+}
+
+.costs-panel.collapsed {
+    transform: translateX(-90%);
+}
+
+.costs-panel .toggle-arrow {
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transform: translateY(-50%);
+    z-index: calc(var(--z-sticky) + 1);
+    transition: background-color var(--transition-fast);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+}
+
+.costs-panel .toggle-arrow:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   General Options Container
+   ========================================================================== */
+.general-options-container {
+    margin-top: var(--spacing-lg);
+    width: 100%;
+    padding: var(--spacing-sm);
+    background-color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.centered-title {
+    text-align: center;
+}
+
+/* ==========================================================================
+   Part/Property Section (Repeatable sections)
+   ========================================================================== */
+.creator-section {
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.creator-section h3 {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-2xl);
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--color-text);
+}
+
+.creator-section h4 {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    margin: var(--spacing-sm) 0 var(--spacing-xs);
+    display: flex;
+    align-items: center;
+}
+
+.creator-section p {
+    font-family: var(--font-family-body);
+    font-size: var(--font-size-sm);
+    margin: var(--spacing-2xs) 0;
+    color: var(--color-text-muted);
+}
+
+.creator-section .delete-button {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Option Boxes (Range, Area, Duration, etc.)
+   ========================================================================== */
+.option-container {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.option-box {
+    flex: 1;
+    min-width: 200px;
+    padding: var(--spacing-sm);
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-xs);
+}
+
+.option-box h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+.range-box,
+.area-box {
+    flex: 0 0 30%;
+    max-width: 30%;
+}
+
+.duration-box {
+    flex: 0 0 60%;
+    max-width: 60%;
+}
+
+.damage-box {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Creator Form Elements
+   ========================================================================== */
+.creator-section select,
+.creator-section input[type="text"],
+.creator-section input[type="number"] {
+    display: block;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-body);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-300);
+    background-color: var(--color-white);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.creator-section select:focus,
+.creator-section input[type="text"]:focus,
+.creator-section input[type="number"]:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(5, 51, 87, 0.1);
+}
+
+.creator-section input[type="checkbox"] {
+    margin-right: var(--spacing-xs);
+    accent-color: var(--color-primary);
+}
+
+/* Inline form layout */
+.inline-form {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.inline-form label {
+    margin-right: var(--spacing-xs);
+}
+
+.inline-form select,
+.inline-form input {
+    margin: 0;
+}
+
+/* ==========================================================================
+   Checkbox Containers
+   ========================================================================== */
+.checkbox-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-sm);
+    gap: var(--spacing-xs);
+}
+
+.checkbox-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.checkbox-column.left-column {
+    align-items: flex-start;
+}
+
+.checkbox-column.right-column {
+    align-items: flex-end;
+}
+
+.checkbox-container label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Button Containers
+   ========================================================================== */
+.button-row {
+    display: inline-flex;
+    gap: var(--spacing-xs);
+    margin-left: var(--spacing-sm);
+}
+
+.load-save-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-sm);
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Summary Panel
+   ========================================================================== */
+.summary-panel {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--color-primary-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    position: relative;
+}
+
+.summary-panel h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+}
+
+.summary-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.summary-top p {
+    margin: var(--spacing-2xs) 0;
+    flex: 1 1 30%;
+}
+
+/* ==========================================================================
+   Creator Buttons (using core button styles)
+   ========================================================================== */
+.creator-btn-add {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: var(--font-size-base);
+    align-self: flex-start;
+    margin: var(--spacing-sm);
+}
+
+.creator-btn-small {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-xs);
+}
+
+.creator-btn-medium {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Description/Text Boxes
+   ========================================================================== */
+.description-box {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background-color: var(--color-gray-100);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--color-primary);
+}
+
+.description-box p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+/* Small text helpers */
+.small-text {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-left: var(--spacing-sm);
+}
+
+/* ==========================================================================
+   Sub-properties / Nested Options
+   ========================================================================== */
+.sub-properties-container {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background-color: var(--color-gray-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-200);
+}
+
+.sub-property-section {
+    padding: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+    background-color: var(--color-white);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-gray-200);
+}
+
+.sub-property-section:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   Trait/Tag Pills
+   ========================================================================== */
+.trait-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.trait-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-2xs) var(--spacing-sm);
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.trait-pill .remove-trait {
+    margin-left: var(--spacing-xs);
+    cursor: pointer;
+    font-weight: var(--font-weight-bold);
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+}
+
+.trait-pill .remove-trait:hover {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Action Type Box
+   ========================================================================== */
+.action-type-box {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.action-type-box h4 {
+    display: inline-block;
+    margin: 0;
+    margin-right: var(--spacing-sm);
+}
+
+.action-type-box select {
+    margin-right: var(--spacing-sm);
+}
+
+.action-type-description {
+    width: 100%;
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Sustain/Concentration Containers
+   ========================================================================== */
+.sustain-container,
+.concentration-container {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* ==========================================================================
+   Toggle Buttons (e.g., Alt Energy)
+   ========================================================================== */
+.toggle-btn {
+    transition: background-color var(--transition-fast);
+}
+
+.toggle-btn.toggled {
+    background-color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 992px) {
+    .costs-panel {
+        position: static;
+        width: 100%;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .costs-panel.collapsed {
+        transform: none;
+    }
+    
+    .costs-panel .toggle-arrow {
+        display: none;
+    }
+    
+    .option-container {
+        flex-direction: column;
+    }
+    
+    .range-box,
+    .area-box,
+    .duration-box {
+        flex: none;
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .creator-page-title {
+        font-size: var(--font-size-3xl);
+    }
+    
+    .creator-container {
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .creator-section {
+        padding: var(--spacing-sm);
+    }
+    
+    .summary-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .summary-top p {
+        flex: none;
+        width: 100%;
+    }
+    
+    .load-save-container {
+        position: static;
+        flex-direction: row;
+        justify-content: flex-end;
+        margin-top: var(--spacing-sm);
+    }
+}

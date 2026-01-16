@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Personal Library</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+      import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+      import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js";
+      import { AUTH_DOMAIN, RECAPTCHA_SITE_KEY } from "/js/core/environment.js";
+
+      document.addEventListener('DOMContentLoaded', function() {
+        // Fetch the Firebase config from the environment
+        fetch('/__/firebase/init.json').then(response => response.json()).then(firebaseConfig => {
+          // Update the authDomain from centralized environment config
+          firebaseConfig.authDomain = AUTH_DOMAIN;
+          const app = initializeApp(firebaseConfig);
+
+          // Initialize App Check with site key from environment config
+          const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+            isTokenAutoRefreshEnabled: true
+          });
+
+          const auth = getAuth(app);
+          const db = getFirestore(app);
+
+          onAuthStateChanged(auth, (user) => {
+            if (user) {
+              console.log('User is signed in:', user);
+
+              document.getElementById('save-power').addEventListener('click', () => {
+                savePowerToLibrary(db, user.uid);
+              });
+
+              document.getElementById('see-powers').addEventListener('click', () => {
+                showSavedPowers(db, user.uid);
+              });
+            } else {
+              console.log('No user is signed in');
+            }
+          });
+        }).catch(error => {
+          console.error('Error fetching Firebase config:', error);
+        });
+      });
+
+      async function savePowerToLibrary(db, userId) {
+        const powerDescription = document.getElementById('power-description').value;
+        try {
+          const docRef = await addDoc(collection(db, 'users', userId, 'library'), {
+            description: powerDescription,
+            timestamp: new Date()
+          });
+          console.log('Document written with ID: ', docRef.id);
+          alert('Power saved to library');
+        } catch (e) {
+          console.error('Error adding document: ', e);
+          alert('Error saving power to library');
+        }
+      }
+
+      async function showSavedPowers(db, userId) {
+        const powersDropdown = document.getElementById('powers-dropdown');
+        powersDropdown.innerHTML = ''; // Clear existing options
+        try {
+          const querySnapshot = await getDocs(collection(db, 'users', userId, 'library'));
+          querySnapshot.forEach((doc) => {
+            const option = document.createElement('option');
+            option.value = doc.data().description;
+            option.textContent = doc.data().description;
+            option.addEventListener('click', () => {
+              document.getElementById('power-description').value = doc.data().description;
+            });
+            powersDropdown.appendChild(option);
+          });
+        } catch (e) {
+          console.error('Error fetching saved powers: ', e);
+          alert('Error fetching saved powers');
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Personal Library</h1>
+    <p>This is the Personal Library page.</p>
+    <input type="text" id="power-description" placeholder="Enter power description">
+    <button id="save-power">Save Power to Library</button>
+    <button id="see-powers">See Saved Powers</button>
+    <select id="powers-dropdown" size="5" style="display: block; width: 100%;"></select>
+    <a href="index.html">Home</a>
+  </body>
+</html>

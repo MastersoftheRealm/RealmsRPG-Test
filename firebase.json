@@ -1,0 +1,28 @@
+﻿{
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
+  },
+  
+  "firestore": {
+    "database": "(default)",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": [
+    {
+      "bucket": "realmsrpg-test.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ],
+  "database": {
+    "rules": "database.rules.json"
+  }
+}

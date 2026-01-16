@@ -1,0 +1,124 @@
+.dropdown {
+  display: none;
+  position: absolute;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  z-index: 100;
+  padding: var(--spacing-md) 0;
+  min-width: 160px;
+  top: calc(100% + 12px);
+  left: 0;
+  border: 1px solid var(--border-light);
+}
+
+.dropdown::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid white;
+}
+
+.dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown li {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text-primary);
+  transition: background 0.2s ease;
+  text-align: center;
+}
+
+.dropdown li:hover {
+  background: var(--bg-hover);
+}
+
+.dropdown li.selected {
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+.dropdown.powered-martial {
+  display: none;
+  flex-direction: row;
+  padding: var(--spacing-md);
+  gap: var(--spacing-md);
+  min-width: 340px;
+  top: calc(100% + 12px);
+  left: 0;
+  border: 1px solid var(--border-light);
+}
+
+.dropdown.powered-martial::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid white;
+}
+
+.column {
+  flex: 1;
+  min-width: 140px;
+}
+
+.column h3 {
+  font-family: 'Nova Flat', cursive;
+  font-size: 16px;
+  color: var(--primary-light);
+  text-align: center;
+  margin: 0 0 var(--spacing-sm);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dropdown-confirm {
+  text-align: center;
+  padding: var(--spacing-sm);
+  border-top: 1px solid var(--border-light);
+}
+
+.dropdown-confirm button {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdown-confirm button:hover:not(:disabled) {
+  background: var(--primary-light);
+}
+
+.dropdown-confirm button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .dropdown.powered-martial {
+    width: 90vw;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}

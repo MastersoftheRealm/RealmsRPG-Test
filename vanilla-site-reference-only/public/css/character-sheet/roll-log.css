@@ -1,0 +1,591 @@
+/* =============================================================================
+   Roll Log Component Styles
+   A DND Beyond-inspired roll log that slides up from the bottom-right
+   ============================================================================= */
+
+/* Container - fixed to bottom right */
+.roll-log-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+/* Toggle Button - circular dice button */
+.roll-log-toggle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    padding: 0;
+    overflow: hidden;
+}
+
+.roll-log-toggle .toggle-dice-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.roll-log-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.roll-log-toggle:hover .toggle-dice-img {
+    transform: scale(1.15);
+}
+
+.roll-log-toggle.active {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #021a2e 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Log Panel - slides up from bottom */
+.roll-log-panel {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    height: 0;
+    max-height: 75vh;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transition: height 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+}
+
+.roll-log-panel.open {
+    height: 70vh;
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Header */
+.roll-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #053357 100%);
+    color: white;
+    border-bottom: 2px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.roll-log-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.roll-log-clear {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.roll-log-clear:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: white;
+}
+
+/* Roll List - scrollable */
+.roll-log-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    background: var(--bg-light);
+    scroll-behavior: smooth;
+}
+
+.roll-log-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+/* Individual Roll Entry */
+.roll-entry {
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid var(--border-color);
+    transition: transform 0.2s ease;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.roll-entry:last-child {
+    margin-bottom: 0;
+}
+
+/* Roll type styling */
+.roll-entry.roll-type-attack {
+    border-left-color: #dc3545;
+}
+
+.roll-entry.roll-type-damage {
+    border-left-color: #fd7e14;
+}
+
+.roll-entry.roll-type-skill {
+    border-left-color: var(--primary-blue);
+}
+
+.roll-entry.roll-type-ability {
+    border-left-color: #6f42c1;
+}
+
+.roll-entry.roll-type-defense {
+    border-left-color: #20c997;
+}
+
+/* Critical roll styling */
+.roll-entry.is-crit {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Entry Header */
+.roll-entry-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.roll-icon {
+    font-size: 1rem;
+}
+
+.roll-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary-dark);
+}
+
+.roll-time {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Entry Body */
+.roll-entry-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Dice Container */
+.roll-dice-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* D20 Result */
+.roll-d20 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary-dark);
+}
+
+.roll-d20.crit-success {
+    background: linear-gradient(135deg, #d4edda 0%, #a8e6cf 100%);
+    border-color: var(--success-green);
+    color: #155724;
+}
+
+.roll-d20.crit-fail {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-color: var(--danger-red);
+    color: #721c24;
+}
+
+/* Individual Damage Die */
+.roll-die {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+/* Modifier */
+.roll-modifier {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    padding: 0 4px;
+}
+
+/* Total */
+.roll-total {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--primary-dark);
+    background: var(--bg-medium);
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.roll-total.damage-total {
+    background: linear-gradient(135deg, #fff8e7 0%, #ffecb5 100%);
+    border-color: #ffc107;
+}
+
+.damage-type {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+/* Critical Indicator */
+.crit-indicator {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.crit-indicator.success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.crit-indicator.fail {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+/* Critical Message */
+.roll-crit-message {
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: var(--bg-light);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Scrollbar Styling */
+.roll-log-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.roll-log-list::-webkit-scrollbar-track {
+    background: var(--bg-light);
+    border-radius: 3px;
+}
+
+.roll-log-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.roll-log-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Responsive - smaller screens */
+@media (max-width: 480px) {
+    .roll-log-container {
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    .roll-log-panel {
+        width: calc(100vw - 20px);
+        right: -10px;
+    }
+    
+    .roll-log-toggle {
+        width: 44px;
+        height: 44px;
+        font-size: 1.3rem;
+    }
+}
+
+/* Animation for new rolls */
+.roll-entry:first-child {
+    animation: slideIn 0.3s ease, highlight 0.5s ease 0.3s;
+}
+
+@keyframes highlight {
+    0% { background-color: var(--bg-medium); }
+    100% { background-color: white; }
+}
+
+/* =============================================================================
+   Dice Roller Section
+   ============================================================================= */
+
+.dice-roller-section {
+    padding: 12px;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #053357 100%);
+    border-top: 2px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.dice-roller-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dice-roll-all-btn {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+}
+
+.dice-roll-all-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
+}
+
+.dice-buttons {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+}
+
+.dice-btn-wrapper {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.dice-btn-wrapper:hover {
+    transform: scale(1.15);
+}
+
+.dice-btn-wrapper.has-dice {
+    transform: scale(1.1);
+}
+
+.dice-btn-wrapper.has-dice:hover {
+    transform: scale(1.2);
+}
+
+.dice-img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    filter: brightness(0.9);
+    transition: filter 0.2s ease, drop-shadow 0.2s ease;
+}
+
+.dice-btn-wrapper:hover .dice-img {
+    filter: brightness(1.1);
+}
+
+.dice-btn-wrapper.has-dice .dice-img {
+    filter: brightness(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
+}
+
+.dice-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* =============================================================================
+   New Roll Format - Dice Groups with Images and Notation
+   ============================================================================= */
+
+/* Container for the new roll format body */
+.roll-entry-body.roll-new-format {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Container for dice groups */
+.roll-dice-groups {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+/* Individual dice group (image + notation) */
+.dice-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.dice-group-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.dice-group-notation {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-medium);
+    padding: 1px 6px;
+    border-radius: 3px;
+    cursor: help;
+}
+
+/* Result section */
+.roll-result {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 1rem;
+    flex-wrap: wrap;
+}
+
+.roll-subtotal {
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: linear-gradient(135deg, #f0f4ff 0%, #e3e9ff 100%);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.roll-operator {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.roll-modifier-value {
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.roll-equals {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.roll-total-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+/* Damage type styling */
+.roll-entry.roll-type-damage .roll-total-value {
+    background: linear-gradient(135deg, #fd7e14 0%, #e55b00 100%);
+}
+
+/* Critical success styling */
+.roll-entry.is-crit .roll-subtotal {
+    background: linear-gradient(135deg, #d4edda 0%, #a8e6cf 100%);
+    border-color: var(--success-green);
+}
+
+.roll-entry.is-crit.roll-type-attack .roll-total-value,
+.roll-entry.is-crit.roll-type-skill .roll-total-value {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+/* Critical fail styling */
+.roll-entry.is-crit .roll-d20.crit-fail ~ .roll-result .roll-subtotal {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-color: var(--danger-red);
+}
+

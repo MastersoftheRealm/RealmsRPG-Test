@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/tools/power-creator.css">
+    <script type="module" src="/js/tools/power-creator/main.js" defer></script>
+</head>
+<body>
+    <header id="header"></header>
+    <main>
+        <div id="generalPowerOptionsContainer">
+            <h3 class="centered-title">Basic Power Mechanics</h3>
+            <div class="option-container">
+                <div class="option-box range-box">
+                    <h4>Range: <span id="rangeValue">1</span> space
+                        <div class="range-button-container">
+                            <button class="small-button blue-button" onclick="changeRange(1)">+</button>
+                            <button class="small-button blue-button" onclick="changeRange(-1)">-</button>
+                        </div>
+                    </h4>
+                    <!-- Restore Area of Effect controls (used by JS) -->
+                    <div class="area-effect-container">
+                        <label for="areaEffect">Area of Effect:</label>
+                        <select id="areaEffect" onchange="updateAreaEffect()">
+                            <option value="none">None</option>
+                            <option value="sphere">Sphere</option>
+                            <option value="cylinder">Cylinder</option>
+                            <option value="cone">Cone</option>
+                            <option value="line">Line</option>
+                            <option value="space">Space</option>
+                        </select>
+                        <span id="areaEffectLevelValue">1</span>
+                        <div id="areaEffectDescription"></div>
+                        <div class="area-effect-button-container">
+                            <button class="small-button blue-button" onclick="changeAreaEffectLevel(1)">+</button>
+                            <button class="small-button blue-button" onclick="changeAreaEffectLevel(-1)">-</button>
+                        </div>
+                        <label><input type="checkbox" id="areaEffectApplyDuration" onclick="updateTotalCosts()"> Apply Duration</label>
+                    </div>
+                </div>
+                <div class="option-box duration-box">
+                    <h4>Duration: 
+                        <select id="durationValue" onchange="updateTotalCosts()">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                        <select id="durationType" onchange="changeDurationType()">
+                            <option value="rounds">round(s)</option>
+                            <option value="minutes">minute(s)</option>
+                            <option value="hours">hour(s)</option>
+                            <option value="days">day(s)</option>
+                            <option value="permanent">permanent</option>
+                        </select>
+                    </h4>
+                    <!-- Restore duration modifiers (used by JS) -->
+                    <div class="checkbox-container">
+                        <div class="checkbox-column left-column">
+                            <label><input type="checkbox" id="focusCheckbox" onclick="updateTotalCosts()"> Focus</label>
+                            <div class="sustain-container">
+                                <label for="sustainValue">Sustain:</label>
+                                <select id="sustainValue" onchange="updateTotalCosts()">
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="checkbox-column right-column">
+                            <label><input type="checkbox" id="noHarmCheckbox" onclick="updateTotalCosts()"> No direct harm or adaptation parts</label>
+                            <label><input type="checkbox" id="endsOnceCheckbox" onclick="updateTotalCosts()"> Power ends when used once/activated</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="option-box action-type-box">
+                    <h4>Action Type:</h4>
+                    <select id="actionType" onchange="updateActionType()">
+                        <option value="basic">Basic Action</option>
+                        <option value="free">Free Action</option>
+                        <option value="quick">Quick Action</option>
+                        <option value="long3">Long Action (3 AP)</option>
+                        <option value="long4">Long Action (4 AP)</option>
+                    </select>
+                    <label><input type="checkbox" id="reactionCheckbox" onclick="updateActionType()"> Reaction</label>
+                    <div id="actionTypeDescription"></div>
+                </div>
+                <div class="option-box damage-box">
+                    <h4>Damage: 
+                        <input type="number" id="dieAmount1" min="1" max="99" value="" placeholder="Amount"> d 
+                        <select id="dieSize1">
+                            <option value="" selected disabled>Size</option>
+                            <option value="4">4</option>
+                            <option value="6">6</option>
+                            <option value="8">8</option>
+                            <option value="10">10</option>
+                            <option value="12">12</option>
+                        </select>
+                        <select id="damageType1" onchange="updateDamageType()">
+                            <option value="none" selected>No Damage</option>
+                            <option value="magic">Magic</option>
+                            <option value="light">Light</option>
+                            <option value="fire">Fire</option>
+                            <option value="ice">Ice</option>
+                            <option value="lightning">Lightning</option>
+                            <option value="spiritual">Spiritual</option>
+                            <option value="sonic">Sonic</option>
+                            <option value="poison">Poison</option>
+                            <option value="necrotic">Necrotic</option>
+                            <option value="acid">Acid</option>
+                            <option value="psychic">Psychic</option>
+                            <option value="bludgeoning">Bludgeoning</option>
+                            <option value="piercing">Piercing</option>
+                            <option value="slashing">Slashing</option>
+                        </select>
+                        <button id="addDamageRowButton" class="medium-button blue-button" onclick="addDamageRow()">+</button>
+                        <label style="margin-left:10px;"><input type="checkbox" id="damageApplyDuration1" onclick="updateTotalCosts()"> Apply Duration</label>
+                    </h4>
+                    <div id="additionalDamageRow"></div>
+                </div>
+            </div>
+            <div class="advanced-toggle" onclick="toggleAdvancedMechanics()">
+                <span class="arrow">&#9660;</span> Advanced Power Mechanics
+                <div class="collapsed-added-chips" id="collapsedAddedChips"></div>
+            </div>
+            <div class="advanced-mechanics">
+                <div class="added-advanced-parts">
+                    <h4>Added Advanced Mechanics</h4>
+                    <div id="addedAdvancedPartsContainer"></div>
+                </div>
+                <div class="advanced-mechanics-content">
+                    <div class="chips-section">
+                        <!-- Grid of headers across the top with chips -->
+                        <div class="advanced-mechanics-grid">
+                            <!-- Column 1: Action + Activation -->
+                            <div class="adv-col">
+                                <div class="adv-group">
+                                    <h4>Action</h4>
+                                    <div class="chips">
+                                    </div>
+                                </div>
+                                <div class="adv-group">
+                                    <h4>Activation</h4>
+                                    <div class="chips">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Column 2: Area of Effect + Duration -->
+                            <div class="adv-col">
+                                <div class="adv-group">
+                                    <h4>Area of Effect</h4>
+                                    <div class="chips">
+                                    </div>
+                                </div>
+                                <div class="adv-group">
+                                    <h4>Duration</h4>
+                                    <div class="chips">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Column 3: Target + Special -->
+                            <div class="adv-col">
+                                <div class="adv-group">
+                                    <h4>Target</h4>
+                                    <div class="chips">
+                                    </div>
+                                </div>
+                                <div class="adv-group">
+                                    <h4>Special</h4>
+                                    <div class="chips">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Column 4: Restriction (its own column on the far right) -->
+                            <div class="adv-col restriction-col">
+                                <div class="adv-group">
+                                    <h4>Restriction</h4>
+                                    <div class="chips">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="button-row">
+            <button id="addPowerPartButton">Add Part</button>
+        </div>
+        <div id="powerPartsContainer"></div>
+        <div id="powerSummary">
+            <h3>Power Summary</h3>
+            <div class="power-summary-top">
+                <input type="text" id="powerName" placeholder="Power Name" style="flex: 1;">
+                <div class="load-save-button-container" style="display: flex; flex-direction: column;">
+                    <button id="loadPowerButton" class="add-to-library-button">Load Power</button>
+                    <button id="savePowerButton" class="add-to-library-button">Save Power</button>
+                </div>
+                <p>Energy: <span id="summaryEnergy">0</span></p>
+                <p>Training Points: <span id="summaryTP">0</span></p>
+                <p>Range: <span id="summaryRange">1</span></p>
+                <p>Duration: <span id="summaryDuration">1</span></p>
+                <p>Action Type: <span id="summaryActionType">Basic Action</span></p>
+                <p id="summaryFocus" style="display: none;">Focus Required</p>
+                <p id="summarySustain" style="display: none;">Sustain (<span id="summarySustainValue">0</span>) Required</p>
+                <p id="summaryDamage" style="display: none;"></p>
+            </div>
+            <div class="power-summary-parts">
+                <h4>Power Parts:</h4>
+                <div id="summaryParts"></div>
+            </div>
+            <div class="power-summary-proficiencies">
+                <h4>Proficiencies:</h4>
+                <div id="summaryProficiencies"></div>
+            </div>
+            <div class="power-summary-description">
+                <h4>Description:</h4>
+                <textarea id="powerDescription" placeholder="Power Description"></textarea>
+            </div>
+        </div>
+        <div id="loadPowerModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h3>Load Power</h3>
+                <ul id="savedPowersList"></ul>
+            </div>
+        </div>
+        <div id="totalCosts">
+            <h3>Total Power Costs</h3>
+            <p>Total Energy: <span id="totalEnergy">0</span></p>
+            <p>Total TP: <span id="totalTP">0</span></p>
+            <div class="toggle-arrow"><</div> <!-- Add toggle arrow -->
+        </div>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module">
+      import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+      async function loadHeaderFooter() {
+        const header = document.getElementById('header');
+        const footer = document.getElementById('footer');
+        if (header) {
+          header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        }
+        if (footer) {
+          footer.innerHTML = await fetch('/partials/footer.html').then (response => response.text());
+        }
+      }
+      loadHeaderFooter();
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        const { auth, db } = await initializeFirebase();
+        handleAuthStateChange(auth, db);
+      });
+    </script>
+</body>
+</html>

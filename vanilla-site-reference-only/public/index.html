@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to Realms</title>
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&family=Nova+Flat:wght@400&family=Pecita&display=swap" rel="stylesheet">
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/11.3.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/11.3.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-performance-compat.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+  </head>
+  <body>
+    <header id="header"></header>
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <img src="/images/Banner.png" alt="Realms Banner" class="banner-image">
+      <img src="/images/LogoFullGrey.png" alt="Realms Logo Overlay" class="banner-logo">
+    </div>
+    <main class="home-main">
+      <!-- Features Section -->
+      <section class="features-section">
+        <div class="features-container">
+          <div class="feature-card">
+            <h3 class="feature-title">CREATE CHARACTERS</h3>
+            <p class="feature-description">Design your unique characters with detailed attributes and backgrounds.</p>
+          </div>
+          <div class="feature-separator"></div>
+          <div class="feature-card">
+            <h3 class="feature-title">DEFINE POWERS</h3>
+            <p class="feature-description">Customize and create powerful abilities for your characters.</p>
+          </div>
+          <div class="feature-separator"></div>
+          <div class="feature-card">
+            <h3 class="feature-title">JOIN ADVENTURES</h3>
+            <p class="feature-description">Participate in epic adventures and quests with other players.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Content Section -->
+      <section class="content-section">
+        <!-- Reviews Section -->
+        <div class="reviews-section">
+          <div class="review-container">
+            <button class="review-nav-btn review-prev" aria-label="Previous review">
+              <img src="/images/ArrowL.png" alt="Previous" class="nav-icon">
+            </button>
+            
+            <div class="review-content">
+              <h2 class="reviews-title">Reviews</h2>
+              <div class="review-item">
+                <div class="review-picture"></div>
+                <div class="review-text">
+                  <p class="review-quote">It's a genuinely enjoyable time. I love the character creation experience.</p>
+                  <p class="review-author">Olive, Realms Playtester</p>
+                </div>
+              </div>
+            </div>
+            
+            <button class="review-nav-btn review-next" aria-label="Next review">
+              <img src="/images/ArrowR.png" alt="Next" class="nav-icon">
+            </button>
+          </div>
+        </div>
+
+        <!-- Creator Message Section -->
+        <div class="creator-message-section">
+          <div class="message-divider"></div>
+          <div class="creator-message">
+            <p>Dear Realms Players,</p>
+            <p>Thank you for playing my game! I designed it with the hope that others would have as much fun with it as I do, and it means a lot to see people enjoying it. I appreciate your time and enthusiasm.</p>
+            <p>Sincerely, Realms creator<br>Kadin Brooksby</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module">
+      import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+      async function loadHeaderFooter() {
+        const header = document.getElementById('header');
+        const footer = document.getElementById('footer');
+        if (header) {
+          header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        }
+        if (footer) {
+          footer.innerHTML = await fetch('/partials/footer.html').then(response => response.text());
+        }
+      }
+      loadHeaderFooter();
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        const { auth, db } = await initializeFirebase();
+        handleAuthStateChange(auth, db);
+      });
+    </script>
+  </body>
+</html>

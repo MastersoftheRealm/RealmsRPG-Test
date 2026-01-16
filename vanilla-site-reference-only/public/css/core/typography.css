@@ -1,0 +1,350 @@
+/**
+ * RealmsRPG Design System - Typography
+ * =====================================
+ * Typography utilities and heading styles.
+ * 
+ * Font Usage:
+ * - Nova Flat: h1, h2, .page-title, .section-title (major headers)
+ * - Nunito: h3-h6, body text, buttons, labels (everything else)
+ * 
+ * Weight Usage (2 levels only):
+ * - 400 (normal): Body text, descriptions
+ * - 600 (semibold): Headers, buttons, labels, emphasis
+ */
+
+/* Font imports - Only Nunito and Nova Flat */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600&family=Nova+Flat&display=swap');
+
+/* ============================================
+   HEADINGS
+   ============================================ */
+
+/* h1 - Page titles - Nova Flat */
+.heading-1,
+h1 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-tight);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-6);
+}
+
+/* h2 - Section headers - Nova Flat */
+.heading-2,
+h2 {
+    font-family: var(--font-title);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-tight);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-5);
+}
+
+/* h3 - Card/panel headers - Nunito */
+.heading-3,
+h3 {
+    font-family: var(--font-body);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-4);
+}
+
+/* h4 - Subsection headers - Nunito */
+.heading-4,
+h4 {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-3);
+}
+
+/* h5 - Minor headers - Nunito */
+.heading-5,
+h5 {
+    font-family: var(--font-body);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    color: var(--color-gray-800);
+    margin-bottom: var(--spacing-2);
+}
+
+/* h6 - Smallest headers - Nunito */
+.heading-6,
+h6 {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    color: var(--color-gray-700);
+    margin-bottom: var(--spacing-2);
+}
+
+/* Page title - large decorative heading - Nova Flat */
+.page-title {
+    font-family: var(--font-title);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-primary);
+    text-align: center;
+    margin-bottom: var(--spacing-8);
+}
+
+/* Section title with underline accent - Nova Flat */
+.section-title {
+    font-family: var(--font-title);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-primary);
+    padding-bottom: var(--spacing-3);
+    margin-bottom: var(--spacing-6);
+    border-bottom: 3px solid var(--color-primary-light);
+}
+
+/* ============================================
+   BODY TEXT
+   ============================================ */
+
+.text-body {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-text);
+}
+
+.text-large {
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-relaxed);
+}
+
+.text-small {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+}
+
+.text-xs {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-normal);
+}
+
+/* ============================================
+   TEXT COLORS
+   ============================================ */
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.text-secondary {
+    color: var(--color-text-secondary);
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.text-warning {
+    color: var(--color-warning);
+}
+
+.text-info {
+    color: var(--color-info);
+}
+
+.text-inverse {
+    color: var(--color-text-inverse);
+}
+
+/* ============================================
+   TEXT ALIGNMENT
+   ============================================ */
+
+.text-left {
+    text-align: left;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-justify {
+    text-align: justify;
+}
+
+/* ============================================
+   FONT WEIGHTS
+   ============================================ */
+
+.font-light {
+    font-weight: var(--font-weight-light);
+}
+
+.font-normal {
+    font-weight: var(--font-weight-normal);
+}
+
+.font-medium {
+    font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+    font-weight: var(--font-weight-semibold);
+}
+
+.font-bold {
+    font-weight: var(--font-weight-bold);
+}
+
+/* ============================================
+   TEXT DECORATION
+   ============================================ */
+
+.text-underline {
+    text-decoration: underline;
+}
+
+.text-line-through {
+    text-decoration: line-through;
+}
+
+.text-no-underline {
+    text-decoration: none;
+}
+
+.text-italic {
+    font-style: italic;
+}
+
+.text-uppercase {
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+}
+
+.text-lowercase {
+    text-transform: lowercase;
+}
+
+.text-capitalize {
+    text-transform: capitalize;
+}
+
+/* ============================================
+   TEXT OVERFLOW
+   ============================================ */
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-break {
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.text-nowrap {
+    white-space: nowrap;
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+
+.link {
+    color: var(--color-primary-light);
+    text-decoration: none;
+    transition: var(--transition-colors);
+    cursor: pointer;
+}
+
+.link:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+.link-muted {
+    color: var(--color-text-secondary);
+}
+
+.link-muted:hover {
+    color: var(--color-primary);
+}
+
+/* ============================================
+   LISTS
+   ============================================ */
+
+.list-styled {
+    padding-left: var(--spacing-6);
+}
+
+.list-styled li {
+    margin-bottom: var(--spacing-2);
+}
+
+ul.list-styled {
+    list-style-type: disc;
+}
+
+ol.list-styled {
+    list-style-type: decimal;
+}
+
+.list-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-4);
+}
+
+/* ============================================
+   BLOCKQUOTE
+   ============================================ */
+
+.blockquote {
+    padding: var(--spacing-4) var(--spacing-6);
+    border-left: 4px solid var(--color-primary-light);
+    background-color: var(--color-gray-100);
+    font-style: italic;
+    margin: var(--spacing-4) 0;
+}
+
+.blockquote-footer {
+    margin-top: var(--spacing-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+/* ============================================
+   LABELS & BADGES
+   ============================================ */
+
+.label {
+    display: inline-block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-1);
+}
+
+.label-required::after {
+    content: ' *';
+    color: var(--color-danger);
+}

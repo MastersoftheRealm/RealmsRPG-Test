@@ -1,0 +1,73 @@
+<header class="main-header">
+  <div class="header-container">
+    <div class="header-logo">
+      <a href="/">
+        <img src="/images/LogoSmall.png" alt="Realms Logo" class="logo-image">
+      </a>
+    </div>
+    
+    <nav class="header-nav">
+      <a href="/pages/library.html" class="nav-link">Library</a>
+      <a href="/pages/characters.html" class="nav-link">Characters</a>
+      <a href="/pages/codex.html" class="nav-link">Codex</a>
+      
+      <div class="nav-dropdown">
+        <a href="javascript:void(0)" class="nav-link dropdown-trigger">Rules</a>
+        <div class="dropdown-menu">
+          <a href="/pages/rules.html" class="dropdown-item">Core Rulebook</a>
+          <a href="/pages/resources.html" class="dropdown-item">Resources</a>
+        </div>
+      </div>
+      
+      <div class="nav-dropdown">
+        <a href="javascript:void(0)" class="nav-link dropdown-trigger">Creators</a>
+        <div class="dropdown-menu">
+          <a href="/tools/power-creator/" class="dropdown-item">Powers</a>
+          <a href="/tools/technique-creator/" class="dropdown-item">Techniques</a>
+          <a href="/tools/item-creator/" class="dropdown-item">Armaments</a>
+        </div>
+      </div>
+      
+      <div class="nav-dropdown">
+        <a href="javascript:void(0)" class="nav-link dropdown-trigger">RM Tools</a>
+        <div class="dropdown-menu">
+          <a href="/tools/encounter-tracker/" class="dropdown-item">Encounter Tracker</a>
+          <a href="/tools/creature-creator/" class="dropdown-item">Creature Creator</a>
+        </div>
+      </div>
+      
+      <a href="/campaigns.html" class="nav-link">Campaigns</a>
+      <a href="#" class="nav-link">About Us</a>
+    </nav>
+    
+    <div class="header-account">
+      <div id="loginStatus" class="account-section">
+        <a href="/pages/login.html" class="account-link">
+          <img src="/images/ProfileIcon.png" alt="Profile Icon" class="profile-icon">
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+/* Ensure header spans full width on all pages */
+.main-header {
+    width: 100vw !important;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    flex-shrink: 0; /* Prevent header from shrinking in flex layout */
+}
+</style>
+
+<script type="module">
+  import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    const { auth, db } = await initializeFirebase();
+    handleAuthStateChange(auth, db);
+  });
+</script>

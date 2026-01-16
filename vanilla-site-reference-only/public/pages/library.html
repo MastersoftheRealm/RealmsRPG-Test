@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/layouts/main.css">
+    <link rel="stylesheet" href="/css/pages/library.css">
+    <script defer src="/__/firebase/11.3.0/firebase-app-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/11.3.0/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <script type="module" src="/js/pages/library.js"></script>
+    <title>Library</title>
+</head>
+<body>
+    <header id="header"></header>
+    <main>
+        <div class="container">
+            <div class="tabs">
+                <button class="tab-button active" onclick="openTab(event, 'powers')">Powers</button>
+                <button class="tab-button" onclick="openTab(event, 'techniques')">Techniques</button>
+                <button class="tab-button" onclick="openTab(event, 'armaments')">Armaments</button>
+                <button class="tab-button" onclick="openTab(event, 'creatures')">Creatures</button>
+            </div>
+            
+            <div id="powers" class="tab-content active-tab">
+                <div class="library-headers">
+                    <div class="col" data-col="name">
+                        NAME
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="powers">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="powers">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="energy">
+                        ENERGY
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="powers">0-10</span>
+                            <span class="sort" data-dir="desc" data-tab="powers">10-0</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="actionType">
+                        ACTION
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="powers">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="powers">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="duration">
+                        DURATION
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="powers">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="powers">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="range">
+                        RANGE
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="powers">0-10</span>
+                            <span class="sort" data-dir="desc" data-tab="powers">10-0</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="areaEffect">
+                        AREA
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="powers">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="powers">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="damage">
+                        DAMAGE
+                    </div>
+                </div>
+                <div id="powersList" class="library-list">
+                    <div class="no-results">Loading powers...</div>
+                </div>
+            </div>
+            
+            <div id="techniques" class="tab-content">
+                <div class="library-headers technique-headers">
+                    <div class="col" data-col="name">
+                        NAME
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="techniques">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="techniques">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="energy">
+                        ENERGY
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="techniques">0-10</span>
+                            <span class="sort" data-dir="desc" data-tab="techniques">10-0</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="tp">
+                        TP
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="techniques">0-10</span>
+                            <span class="sort" data-dir="desc" data-tab="techniques">10-0</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="actionType">
+                        ACTION
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="techniques">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="techniques">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="weapon">
+                        WEAPON
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="techniques">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="techniques">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="damage">
+                        DAMAGE
+                    </div>
+                </div>
+                <div id="techniquesList" class="library-list">
+                    <div class="no-results">Loading techniques...</div>
+                </div>
+            </div>
+            
+            <div id="armaments" class="tab-content">
+                <div class="library-headers">
+                    <div class="col" data-col="name">
+                        NAME
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="armaments">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="armaments">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="type">
+                        TYPE
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="armaments">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="armaments">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="rarity">
+                        RARITY
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="armaments">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="armaments">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="currencyCost">
+                        CURRENCY
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="armaments">0-10</span>
+                            <span class="sort" data-dir="desc" data-tab="armaments">10-0</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="tp">
+                        TP
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="armaments">0-10</span>
+                            <span class="sort" data-dir="desc" data-tab="armaments">10-0</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="range">
+                        RANGE
+                        <div class="sort-group">
+                            <span class="sort" data-dir="asc" data-tab="armaments">A-Z</span>
+                            <span class="sort" data-dir="desc" data-tab="armaments">Z-A</span>
+                        </div>
+                    </div>
+                    <div class="col" data-col="damage">
+                        DAMAGE
+                    </div>
+                </div>
+                <div id="armamentsList" class="library-list">
+                    <div class="no-results">Loading armaments...</div>
+                </div>
+            </div>
+            
+            <div id="creatures" class="tab-content">
+                <div id="creaturesList" class="library-list creatures-grid">
+                    <div class="no-results">Loading creatures...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module">
+      import { initializeFirebase, handleAuthStateChange } from '/js/core/auth.js';
+
+      async function loadHeaderFooter() {
+        const header = document.getElementById('header');
+        const footer = document.getElementById('footer');
+        if (header) {
+          header.innerHTML = await fetch('/partials/header.html').then(response => response.text());
+        }
+        if (footer) {
+          footer.innerHTML = await fetch('/partials/footer.html').then (response => response.text());
+        }
+      }
+      loadHeaderFooter();
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        const { auth, db } = await initializeFirebase();
+        handleAuthStateChange(auth, db);
+      });
+    </script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+﻿@import "tailwindcss";
+
+/* RealmsRPG Design System - Tailwind v4 Theme */
+@theme {
+  /* Primary Color Scale (Blue) */
+  --color-primary-50: #e6f0f9;
+  --color-primary-100: #cce1f3;
+  --color-primary-200: #99c3e7;
+  --color-primary-300: #66a5db;
+  --color-primary-400: #3387cf;
+  --color-primary-500: #0a4a7a;
+  --color-primary-600: #0a4a7a;
+  --color-primary-700: #053357;
+  --color-primary-800: #042845;
+  --color-primary-900: #001f3f;
+  
+  /* Legacy primary aliases */
+  --color-primary-darkest: #001f3f;
+  --color-primary-dark: #053357;
+  --color-primary: #0a4a7a;
+  --color-primary-light: #1a5c94;
+  --color-primary-lighter: #1a73e8;
+  --color-primary-accent: #4a9eff;
+  
+  /* Accent Colors */
+  --color-accent-light: #e6f7ff;
+  --color-accent-medium: #b3e0ff;
+  --color-accent-chip: #d4edff;
+  --color-accent-dark: #0a4a7a;
+  
+  /* Status Colors */
+  --color-success: #28a745;
+  --color-success-hover: #218838;
+  --color-success-light: #d4edda;
+  
+  --color-danger: #dc3545;
+  --color-danger-hover: #c82333;
+  --color-danger-dark: #a71d2a;
+  --color-danger-light: #f8d7da;
+  
+  --color-warning: #ffc107;
+  --color-warning-hover: #e0a800;
+  --color-warning-light: #fff3cd;
+  
+  --color-info: #17a2b8;
+  --color-info-hover: #138496;
+  --color-info-light: #d1ecf1;
+  
+  /* Fonts */
+  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-display: "Nova Flat", system-ui, sans-serif;
+  
+  /* Semantic colors for components */
+  --color-primary-foreground: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-destructive: #dc3545;
+  --color-destructive-foreground: #ffffff;
+  --color-card: #ffffff;
+  --color-card-foreground: #333333;
+  --color-border: #dee2e6;
+  --color-on-primary: #ffffff;
+}
+
+@layer base {
+  :root {
+    --background: #f8f9fa;
+    --foreground: #333333;
+    --card-bg: #ffffff;
+    --border: #dee2e6;
+    --primary-foreground: #ffffff;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --destructive: #dc3545;
+    --destructive-foreground: #ffffff;
+  }
+  
+  body {
+    @apply bg-[var(--background)] text-[var(--foreground)] antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  .container-main {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold 
+           bg-gradient-to-b from-primary-light to-primary text-white 
+           px-5 py-2.5 transition-all hover:shadow-lg 
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold
+           bg-gray-200 text-gray-800 px-5 py-2.5 transition-all hover:bg-gray-300
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold
+           bg-danger text-white px-5 py-2.5 transition-all hover:bg-danger-hover
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .card {
+    @apply bg-[var(--card-bg)] rounded-xl border border-[var(--border)] shadow-sm p-6;
+  }
+  
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-accent-chip text-primary-dark 
+           px-3 py-1 text-sm font-medium;
+  }
+  
+  .input-field {
+    @apply w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5
+           text-[var(--foreground)] placeholder:text-gray-400
+           focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-accent/20
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}
+
+/* Animations */
+@layer utilities {
+  /* Modal pop-in animation matching vanilla site */
+  @keyframes modal-pop {
+    0% {
+      transform: scale(0.97) translateY(24px);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .animate-modal-pop {
+    animation: modal-pop 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Fade in animation */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.2s ease;
+  }
+  
+  /* Slide in from right (for toasts) */
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease;
+  }
+  
+  /* Slide up (for roll log, bottom panels) */
+  @keyframes slide-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.3s ease;
+  }
+  
+  /* Pulse animation for notifications */
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+  }
+  
+  .animate-pulse-dot {
+    animation: pulse-dot 2s infinite;
+  }
+  
+  /* Glow animation for level-up indicator */
+  @keyframes glow-green {
+    0%, 100% { box-shadow: 0 0 5px #22c55e, 0 0 10px #22c55e; }
+    50% { box-shadow: 0 0 15px #22c55e, 0 0 20px #22c55e; }
+  }
+  
+  .animate-glow-green {
+    animation: glow-green 1.5s ease-in-out infinite;
+  }
+  
+  /* Skeleton shimmer */
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  .animate-shimmer {
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  /* Hover lift effect for cards */
+  .hover-lift {
+    @apply transition-transform duration-200;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-0.5;
+  }
+  
+  /* Focus ring utility */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2;
+  }
+}
+
+/* =============================================================================
+   PHASE 1 FIX: Button Visibility & Interactive Elements
+   ============================================================================= */
+
+@layer components {
+  /* Stepper buttons for +/- controls across all creators */
+  .btn-stepper {
+    @apply flex items-center justify-center w-10 h-10 rounded-full 
+           bg-primary-100 text-primary-700 font-bold text-xl
+           border-2 border-primary-200
+           hover:bg-primary-200 hover:border-primary-300 active:bg-primary-300
+           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200 disabled:cursor-not-allowed
+           transition-colors duration-150;
+  }
+
+  .btn-stepper-danger {
+    @apply bg-red-100 text-red-700 border-red-200
+           hover:bg-red-200 hover:border-red-300 active:bg-red-300
+           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200;
+  }
+
+  .btn-stepper-success {
+    @apply bg-green-100 text-green-700 border-green-200
+           hover:bg-green-200 hover:border-green-300 active:bg-green-300
+           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200;
+  }
+
+  /* Large prominent continue/action buttons */
+  .btn-continue {
+    @apply bg-primary-600 text-white font-bold px-8 py-3 rounded-xl
+           shadow-md border-2 border-primary-700
+           hover:bg-primary-700 hover:shadow-lg
+           active:bg-primary-800
+           disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none disabled:cursor-not-allowed
+           transition-all duration-150;
+  }
+
+  /* Secondary back/cancel buttons */
+  .btn-back {
+    @apply px-6 py-3 rounded-xl font-medium 
+           text-gray-600 bg-gray-100 border-2 border-gray-200
+           hover:bg-gray-200 hover:text-gray-800 hover:border-gray-300
+           transition-colors duration-150;
+  }
+
+  /* Interactive card hover effects */
+  .interactive-card {
+    @apply transition-all duration-200 cursor-pointer
+           hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5;
+  }
+
+  /* Selection card styling */
+  .selection-card {
+    @apply rounded-xl border-2 p-4 transition-all duration-200 cursor-pointer
+           bg-white border-gray-200
+           hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .selection-card--selected {
+    @apply border-primary-600 bg-primary-50 shadow-md;
+  }
+
+  /* Tab navigation styles for creator wizard */
+  .creator-tab {
+    @apply px-4 py-2 font-medium transition-colors rounded-lg text-sm;
+  }
+
+  .creator-tab--active {
+    @apply bg-primary-600 text-white shadow-md;
+  }
+
+  .creator-tab--completed {
+    @apply bg-green-100 text-green-700 hover:bg-green-200;
+  }
+
+  .creator-tab--upcoming {
+    @apply bg-white text-gray-600 hover:bg-gray-50;
+  }
+
+  .creator-tab--disabled {
+    @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+  }
+
+  /* Trait/feature chips */
+  .trait-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium
+           bg-accent-chip text-primary-dark;
+  }
+
+  .trait-chip--flaw {
+    @apply bg-red-100 text-red-700;
+  }
+
+  .trait-chip--selectable {
+    @apply cursor-pointer hover:bg-primary-200 transition-colors;
+  }
+
+  .trait-chip--selected {
+    @apply bg-primary-600 text-white;
+  }
+}
+

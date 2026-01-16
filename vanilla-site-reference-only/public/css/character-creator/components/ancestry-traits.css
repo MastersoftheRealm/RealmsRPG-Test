@@ -1,0 +1,215 @@
+.species-details-section {
+  background: var(--bg-section);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.species-header {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: flex-start;
+}
+
+.species-img-large {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  background-size: cover;
+  background-position: center;
+  border: 4px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.species-info h2 {
+  margin: 0 0 var(--spacing-sm);
+  font-family: 'Nova Flat', cursive;
+  font-size: 24px;
+  color: var(--text-primary);
+}
+
+.species-info p {
+  margin: 0 0 var(--spacing-md);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.species-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.stat-item {
+  background: var(--bg-white);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ancestry-trait-section {
+  background: var(--bg-section);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-header);
+  padding: var(--spacing-sm) 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-family: 'Nova Flat', cursive;
+  font-size: 18px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-note {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: normal;
+  text-transform: none;
+}
+
+.toggle-arrow {
+  font-size: 20px;
+  transition: transform 0.2s ease;
+  transform: rotate(0deg);
+}
+
+.toggle-arrow.open {
+  transform: rotate(180deg);
+}
+
+.section-body {
+  padding: var(--spacing-md) 20px;
+  background: var(--bg-white);
+  display: none;
+}
+
+.section-body.open {
+  display: block !important;
+}
+
+.trait-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.trait-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 14px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.trait-list li:hover {
+  background: var(--bg-hover);
+}
+
+.trait-list li.selected {
+  background: var(--primary);
+  color: var(--bg-white);
+  font-weight: 600;
+}
+
+.trait-list li .trait-content {
+  flex: 1;
+}
+
+.trait-list li .trait-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.trait-list li .trait-desc {
+  font-size: 14px;
+  color: #666;
+}
+
+.trait-list li.selected .trait-desc {
+  color: var(--text-light);
+}
+
+.trait-list li .add-btn {
+  background: linear-gradient(180deg, #1a5c94 0%, #0a4a7a 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  min-width: 80px;
+  height: 26px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 10px;
+}
+
+.trait-list li .add-btn::before {
+  content: 'Select Trait';
+}
+
+.trait-list li .add-btn:hover {
+  background: linear-gradient(180deg, #1a6aa8 0%, #0d5a94 100%);
+  transform: translateY(-1px);
+}
+
+.trait-list li.selected .add-btn {
+  background: linear-gradient(180deg, #1a5c94 0%, #0a4a7a 100%);
+  color: #ffffff;
+}
+
+.trait-list li.selected .add-btn::before {
+  content: 'Selected ✓';
+}
+
+.trait-definition {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: #eef2f7;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  line-height: 1.5;
+  display: none;
+}
+
+.trait-definition.show {
+  display: block;
+}
+
+.ancestry-actions {
+  text-align: center;
+  margin-top: var(--spacing-xl);
+}
+
+#ancestry-continue {
+  background: var(--primary);
+  color: var(--bg-white);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#ancestry-continue:hover {
+  background: var(--primary-light);
+}

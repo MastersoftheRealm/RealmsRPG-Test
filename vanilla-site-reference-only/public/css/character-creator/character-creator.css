@@ -1,0 +1,250 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&family=Nova+Flat:wght@400&display=swap');
+
+/* Core */
+@import './_variables.css';
+@import './base.css';
+@import './layout.css';
+@import './utils.css';
+@import '../core/chips.css';
+
+/* Components – load in order of appearance */
+@import './components/tabs.css';
+@import './components/archetype.css';
+@import './components/dropdown.css';
+@import './components/modal.css';
+@import './components/ancestry-grid.css';
+@import './components/ancestry-traits.css';
+@import './components/abilities.css';
+@import './components/skills.css';
+@import './components/feats.css';
+@import './components/equipment.css';
+@import './components/buttons.css';
+
+.finalize-form {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+}
+.finalize-fields {
+    flex: 1 1 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.finalize-fields label {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+.finalize-fields input,
+.finalize-fields textarea {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
+.finalize-health-energy {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    padding: 32px 0;
+    background: #f7faff;
+    border-radius: 16px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.07);
+    margin-top: 24px;
+}
+.finalize-health-energy > div {
+    min-width: 160px;
+}
+.finalize-health-energy h3 {
+    font-size: 1.3em;
+    margin-bottom: 8px;
+}
+.finalize-health-energy input[type="number"] {
+    width: 60px;
+    padding: 3px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1.2em;
+}
+.finalize-health-energy .small-button {
+    padding: 4px 12px;
+    font-size: 1.2em;
+    border-radius: 8px;
+    border: 1px solid #bbb;
+    background: #eee;
+    cursor: pointer;
+    margin: 0 4px;
+}
+.finalize-health-energy .small-button:active {
+    background: #ddd;
+}
+.control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+}
+.control button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0056b3; /* Dark blue background */
+    border: 1px solid #ccc;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white; /* Ensure +/- is visible on dark background */
+    line-height: 1; /* Center text vertically */
+    padding: 0; /* Remove padding to center better */
+}
+.control button:active {
+    background: #003d82; /* Darker on click */
+}
+.control .qty-value,
+.control .bonus-qty-value {
+    display: inline-block;
+    width: 32px;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 600;
+    background: #f7f7f7;
+    border-radius: 8px;
+    margin: 0 2px;
+}
+@media (max-width: 900px) {
+    .finalize-form { flex-direction: column; gap: 18px; }
+    .finalize-health-energy { flex-direction: column; gap: 18px; }
+    .finalize-health-energy > div { min-width: 120px; }
+}
+
+/* Finalize: Complete Character button */
+#content-finalize #complete-character-btn {
+    background: linear-gradient(180deg, #1a73e8, #1558b0);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 28px;
+    font-weight: 600;
+    box-shadow: 0 6px 14px rgba(26, 115, 232, 0.25);
+    transition: transform 0.05s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+#content-finalize #complete-character-btn:hover {
+    box-shadow: 0 8px 18px rgba(26, 115, 232, 0.35);
+}
+#content-finalize #complete-character-btn:active {
+    transform: translateY(1px);
+    background: linear-gradient(180deg, #1558b0, #0f3f82);
+}
+
+/* Finalize: health/energy +/- buttons */
+#content-finalize .finalize-health-energy .small-button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #1a73e8;
+    color: #fff;
+    border: none;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(26,115,232,0.25);
+    transition: transform 0.05s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+#content-finalize .finalize-health-energy .small-button:hover {
+    box-shadow: 0 6px 12px rgba(26,115,232,0.35);
+}
+#content-finalize .finalize-health-energy .small-button:active {
+    transform: translateY(1px);
+    background: #1558b0;
+}
+
+/* Finalize: Size select aesthetics */
+#finalize-size {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #cfd8dc;
+    background: #f8fbff;
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #0f3f82;
+    min-width: 180px;
+    outline: none;
+    transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+#finalize-size:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+}
+#finalize-size:disabled {
+    color: #78909c;
+    background: #f1f1f1;
+}
+
+/* Species warning containers */
+#species-warning,
+#ancestry-warning {
+    border-left: 4px solid #ff9800;
+    background: #fff8e1;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+/* Warning: Go to Species button */
+#species-warning .small-button,
+#ancestry-warning .small-button {
+    background: linear-gradient(180deg, #1a73e8, #1558b0);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(26,115,232,0.25);
+    transition: transform 0.05s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+#species-warning .small-button:hover,
+#ancestry-warning .small-button:hover {
+    box-shadow: 0 6px 12px rgba(26,115,232,0.35);
+}
+#species-warning .small-button:active,
+#ancestry-warning .small-button:active {
+    transform: translateY(1px);
+    background: #1558b0;
+}
+
+/* Finalize: Validation modal 'Got it!' button */
+#validation-modal #validation-ok-btn {
+    background: linear-gradient(180deg, #1a73e8, #1558b0);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 0.98rem;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(26, 115, 232, 0.25);
+    transition: transform 0.05s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+#validation-modal #validation-ok-btn:hover {
+    box-shadow: 0 8px 18px rgba(26, 115, 232, 0.35);
+}
+#validation-modal #validation-ok-btn:active {
+    transform: translateY(1px);
+    background: linear-gradient(180deg, #1558b0, #0f3f82);
+}
+
+/* Optional: make the modal close icon feel consistent */
+#validation-modal .close-button {
+    color: #7a8aa0;
+    transition: color 0.2s ease;
+}
+#validation-modal .close-button:hover {
+    color: #0f3f82;
+}

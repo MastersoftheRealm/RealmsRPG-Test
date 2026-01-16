@@ -1,0 +1,1177 @@
+/* ==========================================================================
+   Library Styles
+   Imports shared design system and adds library-specific styles
+   ========================================================================== */
+
+/* Core Design System */
+@import url('../core/variables.css');
+@import url('../core/reset.css');
+@import url('../core/typography.css');
+@import url('../core/components.css');
+@import url('../core/chips.css');
+@import url('../core/listing-shared.css');
+
+/* ==========================================================================
+   Library-Specific Variables
+   ========================================================================== */
+:root {
+    --library-card-bg: #fafafa;
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+.container {
+    max-width: var(--container-lg);
+    margin: 0 auto;
+    padding: var(--spacing-md);
+}
+
+/* ==========================================================================
+   Search Bar
+   ========================================================================== */
+.search-bar {
+    margin-bottom: var(--spacing-md);
+}
+
+.search-bar input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-body);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(5, 51, 87, 0.1);
+}
+
+/* ==========================================================================
+   Tabs
+   ========================================================================== */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
+    gap: var(--spacing-xs);
+}
+
+.tab-button {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    font-family: var(--font-family-body);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.tab-button:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.tab-button.active,
+.tab-button:focus {
+    background-color: var(--color-primary-dark);
+    color: var(--color-white);
+    outline: none;
+    box-shadow: 0 2px 8px rgba(5, 51, 87, 0.15);
+}
+
+.tab-content {
+    display: none;
+}
+
+.active-tab {
+    display: block;
+}
+
+/* ==========================================================================
+   Library Headers
+   ========================================================================== */
+.library-headers {
+    display: grid;
+    grid-template-columns: 1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--library-card-bg);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-2xs);
+    white-space: nowrap;
+}
+
+.technique-headers {
+    grid-template-columns: 1.5fr 0.8fr 0.8fr 1fr 1fr 1fr;
+}
+
+.technique-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.technique-headers .col:nth-child(6) {
+    justify-content: flex-end;
+}
+
+.library-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.library-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.library-headers .col:nth-child(7) {
+    justify-content: flex-end;
+}
+
+.sort-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.library-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+}
+
+.library-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+/* ==========================================================================
+   Library List & Cards
+   ========================================================================== */
+.library-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.library-card {
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+}
+
+.library-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.library-header {
+    display: grid;
+    grid-template-columns: 1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    align-items: center;
+    position: relative;
+}
+
+.library-header.technique-header {
+    grid-template-columns: 1.5fr 0.8fr 0.8fr 1fr 1fr 1fr;
+}
+
+.library-header .col {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.expand-icon {
+    position: absolute;
+    right: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-700);
+    transition: transform var(--transition-fast);
+}
+
+.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.library-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-base), padding var(--transition-base);
+    padding: 0 var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+.expanded .library-body {
+    max-height: 2000px;
+    padding: var(--spacing-md);
+}
+
+.library-description {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    font-style: italic;
+    color: var(--color-text);
+}
+
+.library-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.library-details .detail-field {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--font-size-base);
+}
+
+.library-details .detail-field label {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-700);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.library-details .detail-field span {
+    color: var(--color-text);
+}
+
+.library-parts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+}
+
+/* ==========================================================================
+   Library Part Chips (Expandable)
+   ========================================================================== */
+.part-chip {
+    display: inline-flex;
+    flex-direction: column;
+    background: var(--color-accent-chip);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-1) var(--spacing-2);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: var(--transition-all);
+    max-width: 200px;
+}
+
+.part-chip.has-tp {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+.part-chip .chip-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+.part-chip .chip-name {
+    font-weight: var(--font-weight-semibold);
+}
+
+.part-chip .chip-cost {
+    font-size: var(--font-size-2xs);
+    opacity: 0.8;
+}
+
+.part-chip .chip-expand {
+    margin-left: auto;
+    font-size: var(--font-size-2xs);
+    transition: transform var(--transition-fast);
+}
+
+.part-chip.expanded .chip-expand {
+    transform: rotate(180deg);
+}
+
+.part-chip .chip-details {
+    display: none;
+    margin-top: var(--spacing-1);
+    padding-top: var(--spacing-1);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: var(--font-size-2xs);
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.part-chip.expanded .chip-details {
+    display: block;
+}
+
+.part-chip.has-tp .chip-details {
+    border-top-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ==========================================================================
+   Library Part Cards (Legacy support)
+   ========================================================================== */
+.part-card {
+    background: var(--color-gray-100);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    flex: 1 1 300px;
+}
+
+.part-card h4 {
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-primary);
+}
+
+.part-card .part-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+}
+
+.part-card .part-detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.part-card .part-detail label {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-700);
+    font-size: var(--font-size-sm);
+}
+
+/* Search & Filters use core/listing-shared.css for shared controls */
+
+/* ==========================================================================
+   No Results
+   ========================================================================== */
+.no-results {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-gray-700);
+    font-style: italic;
+}
+
+/* ==========================================================================
+   Creature Stat Block (Library Creature Tab)
+   ========================================================================== */
+.creature-stat-block {
+    background: var(--color-accent-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.creature-stat-block .creature-name {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-xl);
+    color: var(--color-primary);
+    margin: 0 0 var(--spacing-xs) 0;
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: var(--spacing-xs);
+}
+
+.creature-stat-block .creature-type {
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.creature-stat-block .stat-row {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+}
+
+.creature-stat-block .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 50px;
+}
+
+.creature-stat-block .stat-label {
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    text-transform: uppercase;
+}
+
+.creature-stat-block .stat-value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+}
+
+.creature-stat-block .stat-section {
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.creature-stat-block .stat-section-title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.creature-stat-block .abilities-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--spacing-xs);
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.creature-stat-block .ability-item {
+    background: var(--color-white);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-1);
+}
+
+.creature-stat-block .ability-name {
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+}
+
+.creature-stat-block .ability-score {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+}
+
+.creature-stat-block .ability-mod {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Creature Cards (Grid Display)
+   ========================================================================== */
+.creatures-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.creature-card {
+    background: var(--color-white);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
+}
+
+.creature-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.creature-card.expanded .creature-statblock-content {
+    display: block;
+}
+
+.creature-card .creature-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: var(--color-white);
+    cursor: pointer;
+    user-select: none;
+}
+
+.creature-card .creature-header:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+}
+
+.creature-card .creature-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.creature-card .creature-name {
+    font-family: var(--font-family-title);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+}
+
+.creature-card .creature-info {
+    font-size: var(--font-size-sm);
+    opacity: 0.9;
+}
+
+.creature-card .expand-toggle {
+    font-size: var(--font-size-sm);
+    transition: transform var(--transition-fast);
+}
+
+.creature-card.expanded .expand-toggle {
+    transform: rotate(180deg);
+}
+
+.creature-card .creature-statblock-content {
+    display: none;
+    padding: var(--spacing-md);
+}
+
+.creature-card .statblock-separator {
+    height: 1px;
+    background: var(--color-border-light);
+    margin: var(--spacing-sm) 0;
+}
+
+.creature-card .statblock-section {
+    margin-bottom: var(--spacing-sm);
+}
+
+.creature-card .statblock-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Core stats row */
+.creature-card .statblock-section:first-child {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.creature-card .statblock-attribute {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.creature-card .attr-label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    text-transform: uppercase;
+}
+
+.creature-card .attr-value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+}
+
+/* Abilities grid */
+.creature-card .statblock-abilities {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--spacing-xs);
+    text-align: center;
+}
+
+.creature-card .ability-score {
+    background: var(--color-accent-light);
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+.creature-card .ability-score strong {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--color-primary);
+    margin-bottom: 2px;
+}
+
+/* Defenses grid */
+.creature-card .statblock-defenses {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xs);
+    text-align: center;
+}
+
+.creature-card .statblock-defenses > div {
+    background: var(--color-gray-100);
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+.creature-card .statblock-defenses strong {
+    display: block;
+    font-size: var(--font-size-2xs);
+    color: var(--color-primary);
+    margin-bottom: 2px;
+}
+
+/* Info rows (skills, languages, etc.) */
+.creature-card .statblock-info-row {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.creature-card .statblock-info-row strong {
+    color: var(--color-primary);
+}
+
+/* Sections like Powers, Techniques, etc. */
+.creature-card .statblock-subsection {
+    margin-top: var(--spacing-sm);
+}
+
+.creature-card .statblock-subsection-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: var(--spacing-2xs);
+    margin-bottom: var(--spacing-xs);
+}
+
+.creature-card .statblock-item {
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--color-primary);
+}
+
+.creature-card .statblock-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: var(--spacing-2xs);
+}
+
+.creature-card .statblock-item-name {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary-dark);
+}
+
+.creature-card .statblock-item-meta {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.creature-card .statblock-item-stats {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.creature-card .statblock-item-desc {
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+}
+
+/* Feats display */
+.creature-card .statblock-feats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+}
+
+.creature-card .feat-chip {
+    display: inline-block;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    background: var(--color-accent-light);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-primary-dark);
+}
+
+/* Action buttons for creature cards */
+.creature-card .creature-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-gray-100);
+    border-top: 1px solid var(--color-border-light);
+}
+
+.creature-card .creature-actions button {
+    flex: 1;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-body);
+    transition: background-color var(--transition-fast);
+}
+
+.creature-card .edit-creature-btn {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.creature-card .edit-creature-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.creature-card .delete-creature-btn {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.creature-card .delete-creature-btn:hover {
+    background-color: var(--color-danger-dark);
+}
+
+/* ==========================================================================
+   Action Buttons
+   ========================================================================== */
+.library-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.edit-btn,
+.delete-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family-body);
+    transition: background-color var(--transition-fast);
+}
+
+.edit-btn {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+.edit-btn:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.delete-btn {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+}
+
+.delete-btn:hover {
+    background-color: var(--color-danger-dark);
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+@media (max-width: 992px) {
+    .library-headers,
+    .library-header {
+        grid-template-columns: 1.5fr 0.8fr 1fr 1fr 1fr;
+    }
+    
+    .library-headers .col:nth-child(5),
+    .library-headers .col:nth-child(7),
+    .library-header .col:nth-child(5),
+    .library-header .col:nth-child(7) {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        flex: 1 1 100%;
+    }
+    
+    .library-headers,
+    .library-header {
+        grid-template-columns: 1.5fr 1fr 1fr;
+    }
+    
+    .library-headers .col:nth-child(n+4),
+    .library-header .col:nth-child(n+4) {
+        display: none;
+    }
+    
+    .tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-button {
+        flex: 1 1 auto;
+        min-width: 100px;
+    }
+    
+    .part-card .part-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: var(--spacing-xs);
+    }
+    
+    .library-headers,
+    .library-header {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .library-headers .col:nth-child(n+3),
+    .library-header .col:nth-child(n+3) {
+        display: none;
+    }
+    
+    .library-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   Creature Stat Block Styling
+   ========================================================================== */
+
+/* Creature-specific grid layout */
+.creature-headers {
+    grid-template-columns: 1.5fr 0.8fr 1fr 1fr;
+}
+
+.creature-headers .col {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.creature-headers .col:nth-child(1) {
+    justify-content: flex-start;
+}
+
+.creature-headers .col:nth-child(4) {
+    justify-content: flex-end;
+}
+
+.creature-headers .sort {
+    font-size: var(--font-size-xs);
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.creature-headers .sort:hover {
+    color: var(--color-primary);
+}
+
+.creature-header {
+    grid-template-columns: 1.5fr 0.8fr 1fr 1fr;
+}
+
+.creatures-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-md);
+}
+
+.creature-card.expanded {
+    border-color: var(--color-primary);
+}
+
+.creature-statblock-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out;
+    padding: 0 var(--spacing-md);
+}
+
+.creature-card.expanded .creature-statblock-content {
+    max-height: 5000px;
+    transition: max-height 0.6s ease-in;
+    padding: 0 var(--spacing-md) var(--spacing-md) var(--spacing-md);
+}
+
+.creature-statblock {
+    background: var(--color-white);
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-md);
+    font-family: var(--font-family-body);
+    color: var(--color-text);
+    page-break-inside: avoid;
+}
+
+.statblock-header {
+    margin-bottom: var(--spacing-xs);
+}
+
+.statblock-title h2 {
+    color: var(--color-primary);
+    font-size: var(--font-size-2xl);
+    margin: 0 0 var(--spacing-2xs) 0;
+    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-title);
+}
+
+.statblock-subtitle {
+    color: var(--color-gray-600);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    margin-bottom: var(--spacing-2xs);
+}
+
+.statblock-separator {
+    height: 2px;
+    background: linear-gradient(to right, var(--color-primary), var(--color-primary-light), var(--color-primary));
+    margin: var(--spacing-sm) 0;
+}
+
+.statblock-section {
+    margin: var(--spacing-xs) 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+.statblock-attribute {
+    display: inline-block;
+    margin-right: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xs);
+}
+
+.attr-label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+}
+
+.attr-value {
+    margin-left: var(--spacing-2xs);
+    font-weight: var(--font-weight-normal);
+}
+
+.statblock-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: space-around;
+}
+
+.ability-score {
+    text-align: center;
+    min-width: 50px;
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-sm);
+}
+
+.ability-score strong {
+    display: block;
+    color: var(--color-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+}
+
+.statblock-defenses {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+}
+
+.statblock-defenses div {
+    text-align: center;
+    padding: var(--spacing-2xs);
+    background: var(--color-accent-light);
+    border-radius: var(--radius-sm);
+}
+
+.statblock-trait {
+    margin: var(--spacing-2xs) 0;
+    text-indent: -1em;
+    padding-left: 1em;
+}
+
+.statblock-trait strong {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.statblock-two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin: var(--spacing-xs) 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+.statblock-column-left,
+.statblock-column-right {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2xs);
+}
+
+.statblock-equipment-section {
+    margin-bottom: var(--spacing-sm);
+}
+
+.statblock-armor,
+.statblock-weapon {
+    margin: var(--spacing-2xs) 0;
+    line-height: 1.5;
+}
+
+.statblock-armor strong,
+.statblock-weapon strong {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.properties-list {
+    margin-top: var(--spacing-2xs);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2xs);
+}
+
+.property-chip {
+    display: inline-block;
+    background: var(--color-accent-chip);
+    color: var(--color-primary);
+    padding: 2px var(--spacing-xs);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    cursor: help;
+    transition: background var(--transition-fast);
+}
+
+.property-chip:hover {
+    background: var(--color-accent-medium);
+}
+
+/* Expandable sections for features */
+.statblock-expandable-section {
+    margin: var(--spacing-xs) 0;
+    border-left: 3px solid var(--color-primary-light);
+    padding-left: var(--spacing-sm);
+    background: var(--color-accent-light);
+    border-radius: var(--radius-sm);
+}
+
+.statblock-expandable-header {
+    cursor: pointer;
+    padding: var(--spacing-xs) var(--spacing-2xs);
+    color: var(--color-primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: background var(--transition-fast);
+    font-weight: var(--font-weight-semibold);
+}
+
+.statblock-expandable-header:hover {
+    background: rgba(26, 115, 232, 0.08);
+}
+
+.expand-count {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    font-weight: var(--font-weight-normal);
+}
+
+.expand-toggle {
+    font-size: var(--font-size-sm);
+    transition: transform var(--transition-base);
+    color: var(--color-primary);
+}
+
+.statblock-expandable-section.expanded .expand-toggle {
+    transform: rotate(180deg);
+}
+
+.statblock-expandable-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-base) ease-out;
+    margin-top: var(--spacing-2xs);
+}
+
+.statblock-expandable-section.expanded .statblock-expandable-body {
+    max-height: 2000px;
+    transition: max-height 0.5s ease-in;
+}
+
+.statblock-feature-item {
+    padding: var(--spacing-2xs) var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.statblock-feature-item:last-child {
+    border-bottom: none;
+}
+
+.statblock-feature-item strong {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.statblock-feature-name {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+    display: block;
+    margin-bottom: var(--spacing-2xs);
+    cursor: pointer;
+}
+
+.statblock-feature-name:hover {
+    text-decoration: underline;
+}
+
+.statblock-feature-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-base) ease-out;
+    padding-left: var(--spacing-sm);
+    color: var(--color-gray-600);
+    font-size: var(--font-size-sm);
+}
+
+.statblock-feature-item.expanded .statblock-feature-details {
+    max-height: 500px;
+    transition: max-height 0.4s ease-in;
+    margin-top: var(--spacing-2xs);
+}
+
+.statblock-feature-detail-line {
+    margin: 2px 0;
+}
+
+.statblock-description {
+    font-style: italic;
+    color: var(--color-gray-600);
+    padding: var(--spacing-xs);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--color-primary-light);
+}
