@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Search, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import {
   ChipSelect,
@@ -18,6 +18,12 @@ import {
   FilterSection,
   type AbilityRequirement,
 } from '@/components/codex';
+import {
+  SearchInput,
+  SortHeader,
+  LoadingSpinner as LoadingState,
+  ErrorDisplay as ErrorState,
+} from '@/components/shared';
 import { 
   useRTDBFeats, 
   useRTDBSkills, 
@@ -236,24 +242,11 @@ function FeatsTab() {
     <div>
       {/* Search Bar */}
       <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={filters.search}
-            onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
-            placeholder="Search names, tags, descriptions..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          />
-          {filters.search && (
-            <button
-              onClick={() => setFilters(f => ({ ...f, search: '' }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
+          placeholder="Search names, tags, descriptions..."
+        />
       </div>
 
       {/* Filters Panel */}
@@ -1523,77 +1516,3 @@ function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends 
   );
 }
 
-// =============================================================================
-// SHARED COMPONENTS
-// =============================================================================
-
-function SearchInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
-  return (
-    <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-      />
-      {value && (
-        <button
-          onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      )}
-    </div>
-  );
-}
-
-function SortHeader({ 
-  label, 
-  col, 
-  sortState, 
-  onSort 
-}: { 
-  label: string; 
-  col: string; 
-  sortState: { col: string; dir: 1 | -1 }; 
-  onSort: (col: string) => void;
-}) {
-  const isActive = sortState.col === col;
-  
-  return (
-    <button
-      onClick={() => onSort(col)}
-      className="flex items-center gap-1 text-left hover:text-gray-900"
-    >
-      {label}
-      {isActive && (
-        sortState.dir === 1 ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-      )}
-    </button>
-  );
-}
-
-function LoadingState() {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-    </div>
-  );
-}
-
-function ErrorState({ message }: { message: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="w-12 h-12 mb-4 text-red-500">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-        </svg>
-      </div>
-      <p className="text-red-500 font-medium">{message}</p>
-      <p className="text-gray-500 text-sm mt-1">Please try again later</p>
-    </div>
-  );
-}

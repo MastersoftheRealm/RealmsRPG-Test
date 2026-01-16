@@ -55,5 +55,6 @@ export type { TraitData, TraitCategory, SpeciesTraitCardProps, TraitGroupProps }
 export { LoadingState } from './loading-state';
 export { ErrorState } from './error-state';
 
-// Auth prompts
+// Modals
 export { LoginPromptModal } from './login-prompt-modal';
+export { DeleteConfirmModal } from './delete-confirm-modal';

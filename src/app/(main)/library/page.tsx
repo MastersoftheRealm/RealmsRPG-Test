@@ -1,24 +1,32 @@
-﻿/**
+/**
  * Library Page
  * =============
  * User's personal library of created powers, techniques, items, and creatures.
  * Uses unified AbilityCard component with CRUD operations.
+ * Styled consistently with the Codex page.
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Wand2, Swords, Shield, Users, Search, SortAsc, SortDesc } from 'lucide-react';
-import { cn, transformPowerToCardData, transformTechniqueToCardData } from '@/lib/utils';
+import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
+import { cn, transformPowerToCardData, transformTechniqueToCardData, transformArmamentToCardData } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
-import { ItemList, CreatureStatBlock, AbilityCard } from '@/components/shared';
-import type { PartChip } from '@/components/shared';
 import { 
-  transformWeapon,
-  transformArmor,
-  transformEquipment,
-} from '@/lib/item-transformers';
+  AbilityCard, 
+  CreatureStatBlock, 
+  DeleteConfirmModal,
+  SearchInput,
+  SortHeader,
+  ResultsCount,
+  ColumnHeaders,
+  ListContainer,
+  LoadingSpinner,
+  ErrorDisplay,
+  ListEmptyState,
+} from '@/components/shared';
+import type { PartChip } from '@/components/shared';
 import {
   derivePowerDisplay,
   formatPowerDamage,
@@ -39,7 +47,7 @@ import {
   useTechniqueParts,
   useItemProperties,
 } from '@/hooks';
-import type { DisplayItem, SortOption, ItemActions, ItemStat, ItemDetail } from '@/types';
+import type { DisplayItem } from '@/types';
 
 type TabId = 'powers' | 'techniques' | 'items' | 'creatures';
 
@@ -76,6 +84,12 @@ function LibraryContent() {
   const { data: items = [] } = useUserItems();
   const { data: creatures = [] } = useUserCreatures();
   
+  // Delete mutations
+  const deletePower = useDeletePower();
+  const deleteTechnique = useDeleteTechnique();
+  const deleteItem = useDeleteItem();
+  const deleteCreature = useDeleteCreature();
+  
   const counts: Record<TabId, number> = {
     powers: powers.length,
     techniques: techniques.length,
@@ -85,46 +99,76 @@ function LibraryContent() {
   
   const currentTab = TABS.find(t => t.id === activeTab)!;
   
+  const isDeleting = deletePower.isPending || deleteTechnique.isPending || 
+                     deleteItem.isPending || deleteCreature.isPending;
+  
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+    
+    try {
+      switch (deleteConfirm.type) {
+        case 'powers':
+          await deletePower.mutateAsync(deleteConfirm.item.id);
+          break;
+        case 'techniques':
+          await deleteTechnique.mutateAsync(deleteConfirm.item.id);
+          break;
+        case 'items':
+          await deleteItem.mutateAsync(deleteConfirm.item.id);
+          break;
+        case 'creatures':
+          await deleteCreature.mutateAsync(deleteConfirm.item.id);
+          break;
+      }
+      setDeleteConfirm(null);
+    } catch (error) {
+      console.error('Failed to delete:', error);
+    }
+  };
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">My Library</h1>
-          <p className="text-muted-foreground mt-1">
-            Your custom powers, techniques, items, and creatures
-          </p>
+      {/* Header - Matching Codex style */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">My Library</h1>
+            <p className="text-gray-600 mt-1">
+              Your custom powers, techniques, armaments, and creatures
+            </p>
+          </div>
+          <Link
+            href={currentTab.createHref}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">{currentTab.createLabel}</span>
+            <span className="sm:hidden">New</span>
+          </Link>
         </div>
-        <Link
-          href={currentTab.createHref}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          {currentTab.createLabel}
-        </Link>
       </div>
       
-      {/* Tab Navigation */}
-      <div className="border-b border-border mb-6">
-        <nav className="flex gap-2 overflow-x-auto">
+      {/* Tab Navigation - Matching Codex style */}
+      <div className="border-b border-gray-200 mb-6">
+        <nav className="flex gap-1 overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
+                'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
                 activeTab === tab.id
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                  ? 'border-primary-600 text-primary-600 bg-primary-50'
+                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               )}
             >
               {tab.icon}
-              {tab.label}
+              <span>{tab.label}</span>
               <span className={cn(
                 'px-1.5 py-0.5 text-xs rounded-full',
                 activeTab === tab.id
-                  ? 'bg-primary/20 text-primary'
-                  : 'bg-muted text-muted-foreground'
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-100 text-gray-600'
               )}>
                 {counts[tab.id]}
               </span>
@@ -142,8 +186,10 @@ function LibraryContent() {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <DeleteConfirmModal
-          type={deleteConfirm.type}
-          item={deleteConfirm.item}
+          itemName={deleteConfirm.item.name}
+          itemType={deleteConfirm.type.slice(0, -1)}
+          isDeleting={isDeleting}
+          onConfirm={handleDelete}
           onClose={() => setDeleteConfirm(null)}
         />
       )}
@@ -152,20 +198,18 @@ function LibraryContent() {
 }
 
 // =============================================================================
-// Tab Components
+// Powers Tab
 // =============================================================================
 
-const POWER_SORTS = [
-  { id: 'name', label: 'Name' },
-  { id: 'energy', label: 'Energy' },
-  { id: 'tp', label: 'TP' },
-];
+interface TabProps {
+  onDelete: (item: DisplayItem) => void;
+}
 
-function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
+function PowersTab({ onDelete }: TabProps) {
   const { data: powers, isLoading, error } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
   const [search, setSearch] = useState('');
-  const [sortState, setSortState] = useState<{ field: string; dir: 1 | -1 }>({ field: 'name', dir: 1 });
+  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
   // Transform powers to AbilityCard format
   const cardData = useMemo(() => {
@@ -197,7 +241,6 @@ function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
   const filteredData = useMemo(() => {
     let result = cardData;
     
-    // Search filter
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(p => 
@@ -206,73 +249,75 @@ function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
       );
     }
     
-    // Sort
     result = [...result].sort((a, b) => {
-      if (sortState.field === 'name') {
-        return sortState.dir * a.name.localeCompare(b.name);
-      }
-      if (sortState.field === 'energy') {
-        return sortState.dir * (a.energy - b.energy);
-      }
-      if (sortState.field === 'tp') {
-        return sortState.dir * (a.tp - b.tp);
-      }
+      if (sortState.col === 'name') return sortState.dir * a.name.localeCompare(b.name);
+      if (sortState.col === 'energy') return sortState.dir * (a.energy - b.energy);
+      if (sortState.col === 'tp') return sortState.dir * (a.tp - b.tp);
       return 0;
     });
     
     return result;
   }, [cardData, search, sortState]);
   
+  const handleSort = useCallback((col: string) => {
+    setSortState(prev => ({
+      col,
+      dir: prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1,
+    }));
+  }, []);
+  
   if (error) {
-    return <ErrorState message="Failed to load powers" />;
+    return <ErrorDisplay message="Failed to load powers" subMessage="Please try again later" />;
   }
   
   if (!isLoading && cardData.length === 0) {
-    return <EmptyState type="powers" href="/power-creator" />;
+    return (
+      <ListEmptyState
+        icon={<Wand2 className="w-8 h-8" />}
+        title="No powers yet"
+        message="Create your first power to see it here in your library."
+        action={
+          <Link
+            href="/power-creator"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Power
+          </Link>
+        }
+      />
+    );
   }
   
   return (
-    <div className="space-y-4">
-      {/* Search and Sort Controls */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search powers..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={sortState.field}
-            onChange={(e) => setSortState(prev => ({ ...prev, field: e.target.value }))}
-            className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm"
-          >
-            {POWER_SORTS.map(opt => (
-              <option key={opt.id} value={opt.id}>{opt.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setSortState(prev => ({ ...prev, dir: prev.dir === 1 ? -1 : 1 }))}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
-          >
-            {sortState.dir === 1 ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-            <span>{sortState.dir === 1 ? 'Asc' : 'Desc'}</span>
-          </button>
-        </div>
+    <div>
+      {/* Search Bar */}
+      <div className="mb-4">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search powers..." 
+        />
       </div>
       
-      {/* Results count */}
-      <div className="text-sm text-gray-500">
-        {isLoading ? 'Loading...' : `${filteredData.length} power${filteredData.length !== 1 ? 's' : ''} found`}
-      </div>
+      {/* Column Headers */}
+      <ColumnHeaders
+        columns={[
+          { key: 'name', label: 'Name', width: '2fr' },
+          { key: 'energy', label: 'Energy', width: '1fr' },
+          { key: 'tp', label: 'TP', width: '1fr' },
+        ]}
+        sortState={sortState}
+        onSort={handleSort}
+        className="grid-cols-3"
+      />
+      
+      {/* Results Count */}
+      <ResultsCount count={filteredData.length} itemLabel="power" isLoading={isLoading} />
       
       {/* Power Cards */}
       {isLoading ? (
-        <div className="py-12 text-center text-gray-500">Loading powers...</div>
+        <LoadingSpinner />
       ) : filteredData.length === 0 ? (
         <div className="py-12 text-center text-gray-500">No powers match your search.</div>
       ) : (
@@ -301,19 +346,16 @@ function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
   );
 }
 
-const TECHNIQUE_SORTS = [
-  { id: 'name', label: 'Name' },
-  { id: 'energy', label: 'Energy' },
-  { id: 'tp', label: 'TP' },
-];
+// =============================================================================
+// Techniques Tab
+// =============================================================================
 
-function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
+function TechniquesTab({ onDelete }: TabProps) {
   const { data: techniques, isLoading, error } = useUserTechniques();
   const { data: partsDb = [] } = useTechniqueParts();
   const [search, setSearch] = useState('');
-  const [sortState, setSortState] = useState<{ field: string; dir: 1 | -1 }>({ field: 'name', dir: 1 });
+  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
-  // Transform techniques to AbilityCard format
   const cardData = useMemo(() => {
     if (!techniques || !partsDb.length) return [];
     
@@ -340,7 +382,6 @@ function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) 
     });
   }, [techniques, partsDb]);
   
-  // Filter and sort
   const filteredData = useMemo(() => {
     let result = cardData;
     
@@ -354,71 +395,70 @@ function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) 
     }
     
     result = [...result].sort((a, b) => {
-      if (sortState.field === 'name') {
-        return sortState.dir * a.name.localeCompare(b.name);
-      }
-      if (sortState.field === 'energy') {
-        return sortState.dir * (a.energy - b.energy);
-      }
-      if (sortState.field === 'tp') {
-        return sortState.dir * (a.tp - b.tp);
-      }
+      if (sortState.col === 'name') return sortState.dir * a.name.localeCompare(b.name);
+      if (sortState.col === 'energy') return sortState.dir * (a.energy - b.energy);
+      if (sortState.col === 'tp') return sortState.dir * (a.tp - b.tp);
       return 0;
     });
     
     return result;
   }, [cardData, search, sortState]);
   
+  const handleSort = useCallback((col: string) => {
+    setSortState(prev => ({
+      col,
+      dir: prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1,
+    }));
+  }, []);
+  
   if (error) {
-    return <ErrorState message="Failed to load techniques" />;
+    return <ErrorDisplay message="Failed to load techniques" subMessage="Please try again later" />;
   }
   
   if (!isLoading && cardData.length === 0) {
-    return <EmptyState type="techniques" href="/technique-creator" />;
+    return (
+      <ListEmptyState
+        icon={<Swords className="w-8 h-8" />}
+        title="No techniques yet"
+        message="Create your first technique to see it here in your library."
+        action={
+          <Link
+            href="/technique-creator"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Technique
+          </Link>
+        }
+      />
+    );
   }
   
   return (
-    <div className="space-y-4">
-      {/* Search and Sort Controls */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search techniques..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={sortState.field}
-            onChange={(e) => setSortState(prev => ({ ...prev, field: e.target.value }))}
-            className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm"
-          >
-            {TECHNIQUE_SORTS.map(opt => (
-              <option key={opt.id} value={opt.id}>{opt.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setSortState(prev => ({ ...prev, dir: prev.dir === 1 ? -1 : 1 }))}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
-          >
-            {sortState.dir === 1 ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-            <span>{sortState.dir === 1 ? 'Asc' : 'Desc'}</span>
-          </button>
-        </div>
+    <div>
+      <div className="mb-4">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search techniques..." 
+        />
       </div>
       
-      {/* Results count */}
-      <div className="text-sm text-gray-500">
-        {isLoading ? 'Loading...' : `${filteredData.length} technique${filteredData.length !== 1 ? 's' : ''} found`}
-      </div>
+      <ColumnHeaders
+        columns={[
+          { key: 'name', label: 'Name', width: '2fr' },
+          { key: 'energy', label: 'Energy', width: '1fr' },
+          { key: 'tp', label: 'TP', width: '1fr' },
+        ]}
+        sortState={sortState}
+        onSort={handleSort}
+        className="grid-cols-3"
+      />
       
-      {/* Technique Cards */}
+      <ResultsCount count={filteredData.length} itemLabel="technique" isLoading={isLoading} />
+      
       {isLoading ? (
-        <div className="py-12 text-center text-gray-500">Loading techniques...</div>
+        <LoadingSpinner />
       ) : filteredData.length === 0 ? (
         <div className="py-12 text-center text-gray-500">No techniques match your search.</div>
       ) : (
@@ -447,96 +487,178 @@ function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) 
   );
 }
 
-const ITEM_SORTS: SortOption[] = [
-  { id: 'name', label: 'Name', field: 'name', type: 'string' },
-  { id: 'type', label: 'Type', field: 'type', type: 'string' },
-];
+// =============================================================================
+// Items Tab - Using AbilityCard with property chips
+// =============================================================================
 
-function ItemsTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
+function ItemsTab({ onDelete }: TabProps) {
   const { data: items, isLoading, error } = useUserItems();
-  // Properties loaded for future enrichment (property ID to name lookup)
-  useItemProperties();
+  const { data: propertiesDb = [] } = useItemProperties();
+  const [search, setSearch] = useState('');
+  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
-  const displayItems = useMemo((): DisplayItem[] => {
+  // Transform items to AbilityCard format with property chips
+  const cardData = useMemo(() => {
     if (!items) return [];
+    
     return items.map(item => {
-      // Convert property objects to string names
-      const propertyNames = (item.properties || []).map(p => 
-        typeof p === 'string' ? p : (p.name || String(p.id || ''))
-      ).filter(Boolean);
+      // Build properties with full data from the database
+      const properties = (item.properties || []).map(prop => {
+        const propId = typeof prop === 'string' ? null : prop.id;
+        const propName = typeof prop === 'string' ? prop : prop.name || '';
+        const optLevel = typeof prop === 'string' ? 1 : prop.op_1_lvl || 1;
+        
+        // Find property in database
+        const dbProp = propId 
+          ? propertiesDb.find(p => String(p.id) === String(propId))
+          : propertiesDb.find(p => p.name.toLowerCase() === propName.toLowerCase());
+        
+        const tpCost = dbProp?.base_tp ?? dbProp?.tp_cost ?? 0;
+        
+        return {
+          id: propId || propName,
+          name: dbProp?.name || propName,
+          description: dbProp?.description || '',
+          tpCost: tpCost * optLevel,
+          optionLevels: { opt1: optLevel > 1 ? optLevel : undefined },
+        };
+      });
       
-      if (item.type === 'weapon') {
-        return transformWeapon({
-          id: item.docId,
-          name: item.name,
-          description: item.description,
+      // Calculate total TP
+      const totalTP = properties.reduce((sum, p) => sum + (p.tpCost || 0), 0);
+      
+      // Determine item type label
+      const typeLabel = item.type === 'weapon' ? 'Weapon' 
+        : item.type === 'armor' ? 'Armor' 
+        : 'Equipment';
+      
+      return transformArmamentToCardData(
+        item.docId,
+        item.name,
+        item.description || '',
+        properties,
+        {
           damage: item.damage,
-          properties: propertyNames,
-          type: 'weapon',
-        });
-      } else if (item.type === 'armor') {
-        return transformArmor({
-          id: item.docId,
-          name: item.name,
-          description: item.description,
           defense: item.armorValue,
-          properties: propertyNames,
-          type: 'armor',
-        });
-      } else {
-        return transformEquipment({
-          id: item.docId,
-          name: item.name,
-          description: item.description,
-          type: item.type,
-        });
-      }
+          type: typeLabel,
+        },
+        totalTP
+      );
     });
-  }, [items]);
+  }, [items, propertiesDb]);
   
-  const actions: ItemActions = {
-    onEdit: (item) => {
-      window.location.href = `/item-creator?edit=${item.id}`;
-    },
-    onDelete,
-    onDuplicate: (item) => {
-      window.location.href = `/item-creator?copy=${item.id}`;
-    },
-  };
+  const filteredData = useMemo(() => {
+    let result = cardData;
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(item => 
+        item.name.toLowerCase().includes(searchLower) ||
+        item.description.toLowerCase().includes(searchLower) ||
+        item.parts.some(p => p.name.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    result = [...result].sort((a, b) => {
+      if (sortState.col === 'name') return sortState.dir * a.name.localeCompare(b.name);
+      if (sortState.col === 'tp') return sortState.dir * (a.totalTP - b.totalTP);
+      return 0;
+    });
+    
+    return result;
+  }, [cardData, search, sortState]);
+  
+  const handleSort = useCallback((col: string) => {
+    setSortState(prev => ({
+      col,
+      dir: prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1,
+    }));
+  }, []);
   
   if (error) {
-    return <ErrorState message="Failed to load items" />;
+    return <ErrorDisplay message="Failed to load armaments" subMessage="Please try again later" />;
   }
   
-  if (!isLoading && displayItems.length === 0) {
-    return <EmptyState type="items" href="/item-creator" />;
+  if (!isLoading && cardData.length === 0) {
+    return (
+      <ListEmptyState
+        icon={<Shield className="w-8 h-8" />}
+        title="No armaments yet"
+        message="Create your first weapon, armor, or equipment to see it here."
+        action={
+          <Link
+            href="/item-creator"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Armament
+          </Link>
+        }
+      />
+    );
   }
   
   return (
-    <ItemList
-      items={displayItems}
-      mode="manage"
-      layout="list"
-      actions={actions}
-      sortOptions={ITEM_SORTS}
-      searchPlaceholder="Search items..."
-      loading={isLoading}
-      emptyMessage="No items found"
-    />
+    <div>
+      <div className="mb-4">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search armaments..." 
+        />
+      </div>
+      
+      <ColumnHeaders
+        columns={[
+          { key: 'name', label: 'Name', width: '2fr' },
+          { key: 'tp', label: 'TP', width: '1fr' },
+        ]}
+        sortState={sortState}
+        onSort={handleSort}
+        className="grid-cols-2"
+      />
+      
+      <ResultsCount count={filteredData.length} itemLabel="armament" isLoading={isLoading} />
+      
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : filteredData.length === 0 ? (
+        <div className="py-12 text-center text-gray-500">No armaments match your search.</div>
+      ) : (
+        <div className="space-y-3">
+          {filteredData.map(item => (
+            <AbilityCard
+              key={item.id}
+              id={item.id}
+              name={item.name}
+              description={item.description}
+              type="armament"
+              stats={item.stats}
+              parts={item.parts}
+              partsLabel="Properties & Proficiencies"
+              totalTP={item.totalTP}
+              damage={item.damage}
+              showActions
+              onEdit={() => window.location.href = `/item-creator?edit=${item.id}`}
+              onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
+              onDuplicate={() => window.location.href = `/item-creator?copy=${item.id}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-const CREATURE_SORTS: SortOption[] = [
-  { id: 'name', label: 'Name', field: 'name', type: 'string' },
-  { id: 'level', label: 'Level', field: 'level', type: 'number' },
-];
+// =============================================================================
+// Creatures Tab
+// =============================================================================
 
-function CreaturesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
+function CreaturesTab({ onDelete }: TabProps) {
   const { data: creatures, isLoading, error } = useUserCreatures();
   const [search, setSearch] = useState('');
-  const [sortState, setSortState] = useState<{ field: string; dir: 1 | -1 }>({ field: 'name', dir: 1 });
+  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
-  // Filter and sort creatures
   const filteredCreatures = useMemo(() => {
     if (!creatures) return [];
     
@@ -551,64 +673,69 @@ function CreaturesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
         );
       })
       .sort((a, b) => {
-        const { field, dir } = sortState;
-        if (field === 'name') return dir * (a.name || '').localeCompare(b.name || '');
-        if (field === 'level') return dir * ((a.level ?? 0) - (b.level ?? 0));
+        const { col, dir } = sortState;
+        if (col === 'name') return dir * (a.name || '').localeCompare(b.name || '');
+        if (col === 'level') return dir * ((a.level ?? 0) - (b.level ?? 0));
         return 0;
       });
   }, [creatures, search, sortState]);
   
+  const handleSort = useCallback((col: string) => {
+    setSortState(prev => ({
+      col,
+      dir: prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1,
+    }));
+  }, []);
+  
   if (error) {
-    return <ErrorState message="Failed to load creatures" />;
+    return <ErrorDisplay message="Failed to load creatures" subMessage="Please try again later" />;
   }
   
   if (!isLoading && (!creatures || creatures.length === 0)) {
-    return <EmptyState type="creatures" href="/creature-creator" />;
+    return (
+      <ListEmptyState
+        icon={<Users className="w-8 h-8" />}
+        title="No creatures yet"
+        message="Create your first creature to see it here in your library."
+        action={
+          <Link
+            href="/creature-creator"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Creature
+          </Link>
+        }
+      />
+    );
   }
   
   return (
-    <div className="space-y-4">
-      {/* Search and Sort Controls */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search creatures..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={sortState.field}
-            onChange={(e) => setSortState(prev => ({ ...prev, field: e.target.value }))}
-            className="px-3 py-2 rounded-lg border border-border bg-background text-sm"
-          >
-            {CREATURE_SORTS.map(opt => (
-              <option key={opt.id} value={opt.field}>{opt.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => setSortState(prev => ({ ...prev, dir: prev.dir === 1 ? -1 : 1 }))}
-            className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground"
-          >
-            {sortState.dir === 1 ? '↑ Asc' : '↓ Desc'}
-          </button>
-        </div>
+    <div>
+      <div className="mb-4">
+        <SearchInput 
+          value={search} 
+          onChange={setSearch} 
+          placeholder="Search creatures..." 
+        />
       </div>
       
-      {/* Results count */}
-      <div className="text-sm text-muted-foreground">
-        {isLoading ? 'Loading...' : `${filteredCreatures.length} creature${filteredCreatures.length !== 1 ? 's' : ''} found`}
-      </div>
+      <ColumnHeaders
+        columns={[
+          { key: 'name', label: 'Name', width: '2fr' },
+          { key: 'level', label: 'Level', width: '1fr' },
+        ]}
+        sortState={sortState}
+        onSort={handleSort}
+        className="grid-cols-2"
+      />
       
-      {/* Creature Stat Blocks */}
+      <ResultsCount count={filteredCreatures.length} itemLabel="creature" isLoading={isLoading} />
+      
       {isLoading ? (
-        <div className="py-12 text-center text-muted-foreground">Loading creatures...</div>
+        <LoadingSpinner />
       ) : filteredCreatures.length === 0 ? (
-        <div className="py-12 text-center text-muted-foreground">No creatures match your search.</div>
+        <div className="py-12 text-center text-gray-500">No creatures match your search.</div>
       ) : (
         <div className="space-y-3">
           {filteredCreatures.map(creature => (
@@ -648,115 +775,6 @@ function CreaturesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-// =============================================================================
-// Helper Components
-// =============================================================================
-
-function EmptyState({ type, href }: { type: string; href: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
-        {type === 'powers' && <Wand2 className="w-8 h-8 text-muted-foreground" />}
-        {type === 'techniques' && <Swords className="w-8 h-8 text-muted-foreground" />}
-        {type === 'items' && <Shield className="w-8 h-8 text-muted-foreground" />}
-        {type === 'creatures' && <Users className="w-8 h-8 text-muted-foreground" />}
-      </div>
-      <h3 className="text-lg font-medium text-foreground mb-2">
-        No {type} yet
-      </h3>
-      <p className="text-muted-foreground mb-6 max-w-sm">
-        Create your first {type.slice(0, -1)} to see it here in your library.
-      </p>
-      <Link
-        href={href}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm"
-      >
-        <Plus className="w-4 h-4" />
-        Create {type.slice(0, -1)}
-      </Link>
-    </div>
-  );
-}
-
-function ErrorState({ message }: { message: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <p className="text-destructive font-medium">{message}</p>
-      <p className="text-muted-foreground text-sm mt-1">Please try again later</p>
-    </div>
-  );
-}
-
-function DeleteConfirmModal({ 
-  type, 
-  item, 
-  onClose 
-}: { 
-  type: TabId; 
-  item: DisplayItem; 
-  onClose: () => void;
-}) {
-  const deletePower = useDeletePower();
-  const deleteTechnique = useDeleteTechnique();
-  const deleteItem = useDeleteItem();
-  const deleteCreature = useDeleteCreature();
-  
-  const isDeleting = deletePower.isPending || deleteTechnique.isPending || 
-                     deleteItem.isPending || deleteCreature.isPending;
-  
-  const handleDelete = async () => {
-    try {
-      switch (type) {
-        case 'powers':
-          await deletePower.mutateAsync(item.id);
-          break;
-        case 'techniques':
-          await deleteTechnique.mutateAsync(item.id);
-          break;
-        case 'items':
-          await deleteItem.mutateAsync(item.id);
-          break;
-        case 'creatures':
-          await deleteCreature.mutateAsync(item.id);
-          break;
-      }
-      onClose();
-    } catch (error) {
-      console.error('Failed to delete:', error);
-    }
-  };
-  
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-card rounded-xl shadow-xl border border-border p-6 max-w-md mx-4">
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Delete {item.name}?
-        </h3>
-        <p className="text-muted-foreground mb-6">
-          This action cannot be undone. This will permanently delete the {type.slice(0, -1)} from your library.
-        </p>
-        <div className="flex items-center justify-end gap-3">
-          <button
-            onClick={onClose}
-            disabled={isDeleting}
-            className="px-4 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
-          >
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
