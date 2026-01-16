@@ -6,14 +6,18 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAuth } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, calculateHealthEnergyPool } from '@/lib/game/formulas';
+import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
+import { LoginPromptModal } from '@/components/shared';
+
+// Health-Energy pool for new characters (18 at level 1, +2 per level)
+const BASE_HE_POOL = 18;
 
 interface ValidationIssue {
   emoji: string;
@@ -94,6 +98,140 @@ function ValidationModal({
   );
 }
 
+function HealthEnergyAllocation() {
+  const { draft, updateDraft } = useCharacterCreatorStore();
+  
+  // Calculate base values
+  const abilities = draft.abilities || {};
+  const archetype = { 
+    type: draft.archetype?.type, 
+    pow_abil: draft.pow_abil, 
+    mart_abil: draft.mart_abil 
+  };
+  const baseHealth = getBaseHealth(archetype, abilities);
+  const baseEnergy = getBaseEnergy(archetype, abilities);
+  
+  // HE pool is 18 at level 1, +2 per level
+  const level = draft.level || 1;
+  const hePool = BASE_HE_POOL + (level - 1) * 2;
+  
+  // Current allocations (stored as absolute values, subtract base to get allocation)
+  const currentHealth = draft.healthPoints || baseHealth;
+  const currentEnergy = draft.energyPoints || baseEnergy;
+  
+  // How many points above base have been allocated
+  const healthAllocation = currentHealth - baseHealth;
+  const energyAllocation = currentEnergy - baseEnergy;
+  const usedHEPoints = healthAllocation + energyAllocation;
+  const remainingHEPoints = hePool - usedHEPoints;
+  
+  const handleHealthChange = (delta: number) => {
+    const newHealth = currentHealth + delta;
+    if (newHealth < baseHealth) return; // Can't go below base
+    if (delta > 0 && remainingHEPoints <= 0) return; // No points left
+    
+    updateDraft({ healthPoints: newHealth });
+  };
+  
+  const handleEnergyChange = (delta: number) => {
+    const newEnergy = currentEnergy + delta;
+    if (newEnergy < baseEnergy) return; // Can't go below base
+    if (delta > 0 && remainingHEPoints <= 0) return; // No points left
+    
+    updateDraft({ energyPoints: newEnergy });
+  };
+  
+  return (
+    <div className="bg-gradient-to-br from-rose-50 to-violet-50 rounded-xl p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-gray-900">Health & Energy</h3>
+        <span className={cn(
+          'px-3 py-1 rounded-full text-sm font-medium',
+          remainingHEPoints > 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+        )}>
+          {remainingHEPoints} points remaining
+        </span>
+      </div>
+      
+      <p className="text-sm text-gray-600 mb-4">
+        Allocate your {hePool} Health-Energy points. Base values come from your abilities.
+      </p>
+      
+      <div className="grid grid-cols-2 gap-6">
+        {/* Health */}
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xl">❤️</span>
+            <span className="font-medium text-gray-900">Health</span>
+          </div>
+          <div className="text-xs text-gray-500 mb-3">Base: {baseHealth}</div>
+          
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => handleHealthChange(-1)}
+              disabled={currentHealth <= baseHealth}
+              className="btn-stepper btn-stepper-danger !w-8 !h-8"
+            >
+              −
+            </button>
+            <span className="text-2xl font-bold text-rose-600 w-12 text-center">
+              {currentHealth}
+            </span>
+            <button
+              onClick={() => handleHealthChange(1)}
+              disabled={remainingHEPoints <= 0}
+              className="btn-stepper btn-stepper-success !w-8 !h-8"
+            >
+              +
+            </button>
+          </div>
+          
+          {healthAllocation > 0 && (
+            <div className="text-xs text-center text-gray-500 mt-2">
+              +{healthAllocation} allocated
+            </div>
+          )}
+        </div>
+        
+        {/* Energy */}
+        <div className="bg-white rounded-lg p-4 border border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xl">⚡</span>
+            <span className="font-medium text-gray-900">Energy</span>
+          </div>
+          <div className="text-xs text-gray-500 mb-3">Base: {baseEnergy}</div>
+          
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => handleEnergyChange(-1)}
+              disabled={currentEnergy <= baseEnergy}
+              className="btn-stepper btn-stepper-danger !w-8 !h-8"
+            >
+              −
+            </button>
+            <span className="text-2xl font-bold text-violet-600 w-12 text-center">
+              {currentEnergy}
+            </span>
+            <button
+              onClick={() => handleEnergyChange(1)}
+              disabled={remainingHEPoints <= 0}
+              className="btn-stepper btn-stepper-success !w-8 !h-8"
+            >
+              +
+            </button>
+          </div>
+          
+          {energyAllocation > 0 && (
+            <div className="text-xs text-center text-gray-500 mt-2">
+              +{energyAllocation} allocated
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FinalizeStep() {
   const router = useRouter();
   const { user } = useAuth();
@@ -102,6 +240,7 @@ export function FinalizeStep() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // Calculate validation issues
   const validationIssues = useMemo(() => {
@@ -135,15 +274,10 @@ export function FinalizeStep() {
       });
     }
     
-    // 4. Ability points
+    // 4. Ability points - Simple sum like vanilla site (7 - sum of all values)
     const maxAbilityPoints = calculateAbilityPoints(level);
     const usedAbilityPoints = draft.abilities 
-      ? Object.values(draft.abilities).reduce((sum, val) => {
-          // Cost is 1 for values 0-3, 2 for values 4+
-          if (val <= 0) return sum;
-          if (val <= 3) return sum + val;
-          return sum + 3 + (val - 3) * 2;
-        }, 0)
+      ? Object.values(draft.abilities).reduce((sum, val) => sum + (val || 0), 0)
       : 0;
     const remainingAbilityPoints = maxAbilityPoints - usedAbilityPoints;
     
@@ -186,11 +320,21 @@ export function FinalizeStep() {
       });
     }
     
-    // 6. Health/Energy points
-    const hePool = calculateHealthEnergyPool(level, 'PLAYER');
-    const usedHealthPoints = draft.healthPoints || 0;
-    const usedEnergyPoints = draft.energyPoints || 0;
-    const remainingHEPoints = hePool - (usedHealthPoints + usedEnergyPoints);
+    // 6. Health/Energy points - base HE pool is 18 at level 1 (+2 per level)
+    const abilities = draft.abilities || {};
+    const archetype = { 
+      type: draft.archetype?.type, 
+      pow_abil: draft.pow_abil, 
+      mart_abil: draft.mart_abil 
+    };
+    const baseHealth = getBaseHealth(archetype, abilities);
+    const baseEnergy = getBaseEnergy(archetype, abilities);
+    const hePool = BASE_HE_POOL + (level - 1) * 2;
+    
+    const healthAllocation = (draft.healthPoints || 0) - baseHealth;
+    const energyAllocation = (draft.energyPoints || 0) - baseEnergy;
+    const usedHEPoints = Math.max(0, healthAllocation) + Math.max(0, energyAllocation);
+    const remainingHEPoints = hePool - usedHEPoints;
     
     if (remainingHEPoints > 0) {
       issues.push({
@@ -227,16 +371,19 @@ export function FinalizeStep() {
       });
     }
     
-    // 9. Archetype feats
+    // 9. Archetype feats - stored in draft.feats with type: 'archetype'
     const archetypeType = draft.archetype?.type;
-    const archetypeFeats = draft.archetypeFeats || [];
-    let expectedFeatCount = 0;
-    if (archetypeType === 'power') expectedFeatCount = 1;
-    else if (archetypeType === 'powered-martial') expectedFeatCount = 2;
-    else if (archetypeType === 'martial') expectedFeatCount = 3;
+    const allFeats = draft.feats || [];
+    const archetypeFeats = allFeats.filter(f => f.type === 'archetype');
+    const characterFeats = allFeats.filter(f => f.type === 'character');
     
-    if (archetypeFeats.length < expectedFeatCount) {
-      const diff = expectedFeatCount - archetypeFeats.length;
+    let expectedArchetypeFeatCount = 0;
+    if (archetypeType === 'power') expectedArchetypeFeatCount = 1;
+    else if (archetypeType === 'powered-martial') expectedArchetypeFeatCount = 2;
+    else if (archetypeType === 'martial') expectedArchetypeFeatCount = 3;
+    
+    if (archetypeFeats.length < expectedArchetypeFeatCount) {
+      const diff = expectedArchetypeFeatCount - archetypeFeats.length;
       issues.push({
         emoji: '💪',
         message: `You need to select ${diff} more archetype feat${diff === 1 ? '' : 's'}!`,
@@ -244,8 +391,7 @@ export function FinalizeStep() {
       });
     }
     
-    // 10. Character feat (stored in feats array)
-    const characterFeats = draft.feats || [];
+    // 10. Character feat
     if (characterFeats.length < 1) {
       issues.push({
         emoji: '🌠',
@@ -263,7 +409,8 @@ export function FinalizeStep() {
   
   const handleSave = async () => {
     if (!user) {
-      setError('You must be logged in to save a character');
+      // Show login prompt modal instead of error
+      setShowLoginPrompt(true);
       return;
     }
     
@@ -385,6 +532,9 @@ export function FinalizeStep() {
         )}
       </div>
       
+      {/* Health & Energy Allocation */}
+      <HealthEnergyAllocation />
+      
       {/* Description (Optional) */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -488,6 +638,14 @@ export function FinalizeStep() {
         onClose={() => setShowValidation(false)}
         issues={validationIssues}
         onContinueAnyway={validationIssues.every(i => i.severity !== 'error') ? handleSave : undefined}
+      />
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        returnPath="/characters/new"
+        contentType="character"
       />
     </div>
   );

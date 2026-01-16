@@ -9,7 +9,6 @@
 
 import { useState, useCallback, useMemo, useEffect, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/layout';
 import { Save, GripVertical } from 'lucide-react';
 
 const STORAGE_KEY = 'realms-encounter-tracker';
@@ -1359,10 +1358,8 @@ function CombatantCard({
 
 export default function EncounterTrackerPage() {
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <EncounterTrackerContent />
-      </div>
-    </ProtectedRoute>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <EncounterTrackerContent />
+    </div>
   );
 }

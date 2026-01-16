@@ -2,17 +2,18 @@
  * Library Page
  * =============
  * User's personal library of created powers, techniques, items, and creatures.
- * Uses unified ItemList component with CRUD operations.
+ * Uses unified AbilityCard component with CRUD operations.
  */
 
 'use client';
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, Wand2, Swords, Shield, Users, Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Plus, Wand2, Swords, Shield, Users, Search, SortAsc, SortDesc } from 'lucide-react';
+import { cn, transformPowerToCardData, transformTechniqueToCardData } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
-import { ItemList, CreatureStatBlock } from '@/components/shared';
+import { ItemList, CreatureStatBlock, AbilityCard } from '@/components/shared';
+import type { PartChip } from '@/components/shared';
 import { 
   transformWeapon,
   transformArmor,
@@ -96,7 +97,7 @@ function LibraryContent() {
         </div>
         <Link
           href={currentTab.createHref}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
           {currentTab.createLabel}
@@ -154,20 +155,23 @@ function LibraryContent() {
 // Tab Components
 // =============================================================================
 
-const POWER_SORTS: SortOption[] = [
-  { id: 'name', label: 'Name', field: 'name', type: 'string' },
-  { id: 'cost', label: 'Energy', field: 'cost', type: 'number' },
+const POWER_SORTS = [
+  { id: 'name', label: 'Name' },
+  { id: 'energy', label: 'Energy' },
+  { id: 'tp', label: 'TP' },
 ];
 
 function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
   const { data: powers, isLoading, error } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
+  const [search, setSearch] = useState('');
+  const [sortState, setSortState] = useState<{ field: string; dir: 1 | -1 }>({ field: 'name', dir: 1 });
   
-  const displayItems = useMemo((): DisplayItem[] => {
+  // Transform powers to AbilityCard format
+  const cardData = useMemo(() => {
     if (!powers || !partsDb.length) return [];
     
     return powers.map(power => {
-      // Use derivePowerDisplay to calculate all values from parts
       const display = derivePowerDisplay(
         {
           name: power.name,
@@ -178,103 +182,142 @@ function PowersTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
         partsDb
       );
       
-      // Format damage string
       const damageStr = formatPowerDamage(power.damage);
-      
-      // Build stats array for column display
-      const stats: ItemStat[] = [
-        { label: 'Energy', value: String(display.energy) },
-        { label: 'Action', value: display.actionType },
-        { label: 'Duration', value: display.duration },
-        { label: 'Range', value: display.range },
-        { label: 'Area', value: display.area },
-      ];
-      if (damageStr) {
-        stats.push({ label: 'Damage', value: damageStr });
-      }
-      
-      // Build details for expanded view
-      const details: ItemDetail[] = [];
-      if (display.tp > 0) {
-        details.push({ label: 'Training Points', value: String(display.tp) });
-      }
-      if (display.tpSources.length > 0) {
-        details.push({ label: 'TP Breakdown', value: display.tpSources });
-      }
-      
-      // Add part details with descriptions
-      if (display.partChips.length > 0) {
-        display.partChips.forEach(chip => {
-          details.push({ 
-            label: chip.text.split(' |')[0], // Part name without TP suffix
-            value: chip.description || 'No description available'
-          });
-        });
-      }
+      const cardInfo = transformPowerToCardData(power.docId, display, damageStr);
       
       return {
-        id: power.docId,
-        name: power.name,
-        description: power.description,
-        category: 'power',
-        cost: display.energy,
-        costLabel: 'EN',
-        stats,
-        details,
-        badges: [],
-        sourceData: power as unknown as Record<string, unknown>,
-      } as DisplayItem;
+        ...cardInfo,
+        energy: display.energy,
+        tp: display.tp,
+      };
     });
   }, [powers, partsDb]);
   
-  const actions: ItemActions = {
-    onEdit: (item) => {
-      // Navigate to power creator with this power loaded
-      window.location.href = `/power-creator?edit=${item.id}`;
-    },
-    onDelete,
-    onDuplicate: (item) => {
-      // Navigate to power creator with copy of this power
-      window.location.href = `/power-creator?copy=${item.id}`;
-    },
-  };
+  // Filter and sort
+  const filteredData = useMemo(() => {
+    let result = cardData;
+    
+    // Search filter
+    if (search) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(searchLower) ||
+        p.description.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Sort
+    result = [...result].sort((a, b) => {
+      if (sortState.field === 'name') {
+        return sortState.dir * a.name.localeCompare(b.name);
+      }
+      if (sortState.field === 'energy') {
+        return sortState.dir * (a.energy - b.energy);
+      }
+      if (sortState.field === 'tp') {
+        return sortState.dir * (a.tp - b.tp);
+      }
+      return 0;
+    });
+    
+    return result;
+  }, [cardData, search, sortState]);
   
   if (error) {
     return <ErrorState message="Failed to load powers" />;
   }
   
-  if (!isLoading && displayItems.length === 0) {
+  if (!isLoading && cardData.length === 0) {
     return <EmptyState type="powers" href="/power-creator" />;
   }
   
   return (
-    <ItemList
-      items={displayItems}
-      mode="manage"
-      layout="list"
-      actions={actions}
-      sortOptions={POWER_SORTS}
-      searchPlaceholder="Search powers..."
-      loading={isLoading}
-      emptyMessage="No powers found"
-    />
+    <div className="space-y-4">
+      {/* Search and Sort Controls */}
+      <div className="flex flex-wrap gap-4">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search powers..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortState.field}
+            onChange={(e) => setSortState(prev => ({ ...prev, field: e.target.value }))}
+            className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm"
+          >
+            {POWER_SORTS.map(opt => (
+              <option key={opt.id} value={opt.id}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setSortState(prev => ({ ...prev, dir: prev.dir === 1 ? -1 : 1 }))}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
+          >
+            {sortState.dir === 1 ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+            <span>{sortState.dir === 1 ? 'Asc' : 'Desc'}</span>
+          </button>
+        </div>
+      </div>
+      
+      {/* Results count */}
+      <div className="text-sm text-gray-500">
+        {isLoading ? 'Loading...' : `${filteredData.length} power${filteredData.length !== 1 ? 's' : ''} found`}
+      </div>
+      
+      {/* Power Cards */}
+      {isLoading ? (
+        <div className="py-12 text-center text-gray-500">Loading powers...</div>
+      ) : filteredData.length === 0 ? (
+        <div className="py-12 text-center text-gray-500">No powers match your search.</div>
+      ) : (
+        <div className="space-y-3">
+          {filteredData.map(power => (
+            <AbilityCard
+              key={power.id}
+              id={power.id}
+              name={power.name}
+              description={power.description}
+              type="power"
+              stats={power.stats}
+              parts={power.parts}
+              partsLabel="Parts & Proficiencies"
+              totalTP={power.totalTP}
+              damage={power.damage}
+              showActions
+              onEdit={() => window.location.href = `/power-creator?edit=${power.id}`}
+              onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
+              onDuplicate={() => window.location.href = `/power-creator?copy=${power.id}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-const TECHNIQUE_SORTS: SortOption[] = [
-  { id: 'name', label: 'Name', field: 'name', type: 'string' },
-  { id: 'cost', label: 'TP', field: 'cost', type: 'number' },
+const TECHNIQUE_SORTS = [
+  { id: 'name', label: 'Name' },
+  { id: 'energy', label: 'Energy' },
+  { id: 'tp', label: 'TP' },
 ];
 
 function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
   const { data: techniques, isLoading, error } = useUserTechniques();
   const { data: partsDb = [] } = useTechniqueParts();
+  const [search, setSearch] = useState('');
+  const [sortState, setSortState] = useState<{ field: string; dir: 1 | -1 }>({ field: 'name', dir: 1 });
   
-  const displayItems = useMemo((): DisplayItem[] => {
+  // Transform techniques to AbilityCard format
+  const cardData = useMemo(() => {
     if (!techniques || !partsDb.length) return [];
     
     return techniques.map(tech => {
-      // Use deriveTechniqueDisplay to calculate all values from parts
       const display = deriveTechniqueDisplay(
         {
           name: tech.name,
@@ -286,77 +329,121 @@ function TechniquesTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) 
         partsDb
       );
       
-      // Build stats array for column display
-      const stats: ItemStat[] = [
-        { label: 'Energy', value: String(display.energy) },
-        { label: 'TP', value: String(display.tp) },
-        { label: 'Action', value: display.actionType },
-        { label: 'Weapon', value: display.weaponName },
-      ];
-      if (display.damageStr) {
-        stats.push({ label: 'Damage', value: display.damageStr });
-      }
-      
-      // Build details for expanded view
-      const details: ItemDetail[] = [];
-      if (display.tpSources.length > 0) {
-        details.push({ label: 'TP Breakdown', value: display.tpSources });
-      }
-      
-      // Add part details with descriptions
-      if (display.partChips.length > 0) {
-        display.partChips.forEach(chip => {
-          details.push({ 
-            label: chip.text.split(' |')[0], // Part name without TP suffix
-            value: chip.description || 'No description available'
-          });
-        });
-      }
+      const cardInfo = transformTechniqueToCardData(tech.docId, display);
       
       return {
-        id: tech.docId,
-        name: tech.name,
-        description: tech.description,
-        category: 'technique',
-        cost: display.tp,
-        costLabel: 'TP',
-        stats,
-        details,
-        badges: display.weaponName !== 'Unarmed' ? [{ label: display.weaponName, variant: 'default' as const }] : [],
-        sourceData: tech as unknown as Record<string, unknown>,
-      } as DisplayItem;
+        ...cardInfo,
+        energy: display.energy,
+        tp: display.tp,
+        weaponName: display.weaponName,
+      };
     });
   }, [techniques, partsDb]);
   
-  const actions: ItemActions = {
-    onEdit: (item) => {
-      window.location.href = `/technique-creator?edit=${item.id}`;
-    },
-    onDelete,
-    onDuplicate: (item) => {
-      window.location.href = `/technique-creator?copy=${item.id}`;
-    },
-  };
+  // Filter and sort
+  const filteredData = useMemo(() => {
+    let result = cardData;
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      result = result.filter(t => 
+        t.name.toLowerCase().includes(searchLower) ||
+        t.description.toLowerCase().includes(searchLower) ||
+        t.weaponName.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    result = [...result].sort((a, b) => {
+      if (sortState.field === 'name') {
+        return sortState.dir * a.name.localeCompare(b.name);
+      }
+      if (sortState.field === 'energy') {
+        return sortState.dir * (a.energy - b.energy);
+      }
+      if (sortState.field === 'tp') {
+        return sortState.dir * (a.tp - b.tp);
+      }
+      return 0;
+    });
+    
+    return result;
+  }, [cardData, search, sortState]);
   
   if (error) {
     return <ErrorState message="Failed to load techniques" />;
   }
   
-  if (!isLoading && displayItems.length === 0) {
+  if (!isLoading && cardData.length === 0) {
     return <EmptyState type="techniques" href="/technique-creator" />;
   }
   
   return (
-    <ItemList
-      items={displayItems}
-      mode="manage"
-      layout="list"
-      actions={actions}
-      sortOptions={TECHNIQUE_SORTS}
-      searchPlaceholder="Search techniques..."
-      loading={isLoading}
-      emptyMessage="No techniques found"
-    />
+    <div className="space-y-4">
+      {/* Search and Sort Controls */}
+      <div className="flex flex-wrap gap-4">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search techniques..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={sortState.field}
+            onChange={(e) => setSortState(prev => ({ ...prev, field: e.target.value }))}
+            className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm"
+          >
+            {TECHNIQUE_SORTS.map(opt => (
+              <option key={opt.id} value={opt.id}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setSortState(prev => ({ ...prev, dir: prev.dir === 1 ? -1 : 1 }))}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
+          >
+            {sortState.dir === 1 ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+            <span>{sortState.dir === 1 ? 'Asc' : 'Desc'}</span>
+          </button>
+        </div>
+      </div>
+      
+      {/* Results count */}
+      <div className="text-sm text-gray-500">
+        {isLoading ? 'Loading...' : `${filteredData.length} technique${filteredData.length !== 1 ? 's' : ''} found`}
+      </div>
+      
+      {/* Technique Cards */}
+      {isLoading ? (
+        <div className="py-12 text-center text-gray-500">Loading techniques...</div>
+      ) : filteredData.length === 0 ? (
+        <div className="py-12 text-center text-gray-500">No techniques match your search.</div>
+      ) : (
+        <div className="space-y-3">
+          {filteredData.map(tech => (
+            <AbilityCard
+              key={tech.id}
+              id={tech.id}
+              name={tech.name}
+              description={tech.description}
+              type="technique"
+              stats={tech.stats}
+              parts={tech.parts}
+              partsLabel="Parts & Proficiencies"
+              totalTP={tech.totalTP}
+              damage={tech.damage}
+              showActions
+              onEdit={() => window.location.href = `/technique-creator?edit=${tech.id}`}
+              onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
+              onDuplicate={() => window.location.href = `/technique-creator?copy=${tech.id}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -581,7 +668,7 @@ function EmptyState({ type, href }: { type: string; href: string }) {
       </p>
       <Link
         href={href}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm"
       >
         <Plus className="w-4 h-4" />
         Create {type.slice(0, -1)}

@@ -73,7 +73,7 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
     <div className="mb-4">
       <h4 className={cn(
         'font-semibold text-sm uppercase tracking-wide mb-2',
-        isFlaw ? 'text-red-700' : 'text-gray-700'
+        isFlaw ? 'text-purple-700' : 'text-gray-700'
       )}>
         {title}
       </h4>
@@ -84,7 +84,7 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
             className={cn(
               'p-3 rounded-lg border',
               isFlaw 
-                ? 'bg-red-50 border-red-200' 
+                ? 'bg-purple-50 border-purple-200' 
                 : 'bg-gray-50 border-gray-200',
               selectable && 'cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors',
               !trait.found && 'opacity-60'
@@ -93,19 +93,14 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
             <div className="flex items-start gap-2">
               <span className={cn(
                 'font-medium text-sm',
-                isFlaw ? 'text-red-800' : 'text-gray-900'
+                isFlaw ? 'text-purple-800' : 'text-gray-900'
               )}>
                 {trait.name}
               </span>
-              {selectable && (
-                <span className="ml-auto text-xs text-primary-600 font-medium">
-                  (selectable)
-                </span>
-              )}
             </div>
             <p className={cn(
               'text-xs mt-1',
-              isFlaw ? 'text-red-600' : 'text-gray-600'
+              isFlaw ? 'text-purple-600' : 'text-gray-600'
             )}>
               {trait.description}
             </p>
@@ -143,7 +138,7 @@ export function SpeciesModal({
     : species.size || 'Medium';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" title={species.name}>
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" title={species.name}>
       <div className="p-6">
         {/* Header */}
         <div className="mb-4">
@@ -194,7 +189,48 @@ export function SpeciesModal({
           </div>
         )}
 
-        {/* Trait Sections */}
+        {/* Skills and Languages - Main Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Species Skills */}
+          {species.skills && species.skills.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-sm uppercase tracking-wide text-gray-700 mb-2">
+                Species Skills
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {species.skills.map(skill => (
+                  <span 
+                    key={skill}
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Languages */}
+          {species.languages && species.languages.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-sm uppercase tracking-wide text-gray-700 mb-2">
+                Languages
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {species.languages.map(lang => (
+                  <span 
+                    key={lang}
+                    className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium"
+                  >
+                    {lang}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Trait Sections - Order: Species Traits, Ancestry, Characteristics, Flaws */}
         {resolvedTraits && (
           <>
             <TraitSection 
@@ -204,39 +240,17 @@ export function SpeciesModal({
             <TraitSection 
               title="Ancestry Traits" 
               traits={resolvedTraits.ancestryTraits}
-              selectable
+            />
+            <TraitSection 
+              title="Characteristics" 
+              traits={resolvedTraits.characteristics}
             />
             <TraitSection 
               title="Flaws" 
               traits={resolvedTraits.flaws}
               isFlaw
-              selectable
-            />
-            <TraitSection 
-              title="Characteristics" 
-              traits={resolvedTraits.characteristics}
-              selectable
             />
           </>
-        )}
-
-        {/* Languages */}
-        {species.languages && species.languages.length > 0 && (
-          <div className="mb-6">
-            <h4 className="font-semibold text-sm uppercase tracking-wide text-gray-700 mb-2">
-              Languages
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {species.languages.map(lang => (
-                <span 
-                  key={lang}
-                  className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium"
-                >
-                  {lang}
-                </span>
-              ))}
-            </div>
-          </div>
         )}
 
         {/* Action Buttons */}

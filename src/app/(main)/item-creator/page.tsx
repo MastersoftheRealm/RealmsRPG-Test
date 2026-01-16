@@ -16,8 +16,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/layout';
 import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
+import { LoginPromptModal } from '@/components/shared';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import { useAuthStore } from '@/stores';
@@ -91,6 +91,9 @@ const ARMOR_ABILITY_REQUIREMENTS = [
   { id: PROPERTY_IDS.ARMOR_AGILITY_REQUIREMENT, name: 'Armor Agility Requirement', label: 'AGI' },
   { id: PROPERTY_IDS.ARMOR_VITALITY_REQUIREMENT, name: 'Armor Vitality Requirement', label: 'VIT' },
 ];
+
+// LocalStorage key for caching item creator state
+const ITEM_CREATOR_CACHE_KEY = 'realms-item-creator-cache';
 
 // =============================================================================
 // Subcomponents
@@ -226,10 +229,34 @@ function PropertyCard({
 // Main Component
 // =============================================================================
 
+// Cache interface for localStorage
+interface ItemCreatorCache {
+  name: string;
+  description: string;
+  armamentType: ArmamentType;
+  selectedProperties: Array<{
+    propertyId: string | number;
+    op_1_lvl: number;
+  }>;
+  damage: DamageConfig;
+  isTwoHanded: boolean;
+  rangeLevel: number;
+  damageReduction: number;
+  agilityReduction: number;
+  criticalRangeIncrease: number;
+  shieldDR: { amount: number; size: number };
+  hasShieldDamage: boolean;
+  shieldDamage: { amount: number; size: number };
+  abilityRequirement: { id: number; name: string; level: number } | null;
+  timestamp: number;
+}
+
 function ItemCreatorContent() {
   const { user } = useAuthStore();
   
   // State
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [armamentType, setArmamentType] = useState<ArmamentType>('Weapon');
@@ -244,6 +271,7 @@ function ItemCreatorContent() {
   // Armor-specific state
   const [damageReduction, setDamageReduction] = useState(0); // Armor damage reduction (default 0)
   const [agilityReduction, setAgilityReduction] = useState(0); // Armor agility reduction
+  const [criticalRangeIncrease, setCriticalRangeIncrease] = useState(0); // Armor critical range increase (default 0)
   
   // Shield-specific state - dice-based like weapon damage
   const [shieldDR, setShieldDR] = useState<{ amount: number; size: number }>({ amount: 1, size: 4 }); // Shield damage reduction (1d4 base)
@@ -256,12 +284,90 @@ function ItemCreatorContent() {
   // Fetch item properties
   const { data: itemProperties = [], isLoading, error } = useItemProperties();
 
-  // Fetch user's saved items
+  // Fetch user's saved items (only if user is logged in)
   const { 
     data: userItems = [], 
     isLoading: loadingUserItems, 
     error: userItemsError 
   } = useUserItems();
+
+  // Load cached state from localStorage on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(ITEM_CREATOR_CACHE_KEY);
+      if (cached && itemProperties.length > 0) {
+        const parsed: ItemCreatorCache = JSON.parse(cached);
+        // Only use cache if it's less than 30 days old
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        if (Date.now() - parsed.timestamp < thirtyDays) {
+          setName(parsed.name || '');
+          setDescription(parsed.description || '');
+          setArmamentType(parsed.armamentType || 'Weapon');
+          setDamage(parsed.damage || { amount: 1, size: 4, type: 'slashing' });
+          setIsTwoHanded(parsed.isTwoHanded || false);
+          setRangeLevel(parsed.rangeLevel || 0);
+          setDamageReduction(parsed.damageReduction || 0);
+          setAgilityReduction(parsed.agilityReduction || 0);
+          setCriticalRangeIncrease(parsed.criticalRangeIncrease || 0);
+          setShieldDR(parsed.shieldDR || { amount: 1, size: 4 });
+          setHasShieldDamage(parsed.hasShieldDamage || false);
+          setShieldDamage(parsed.shieldDamage || { amount: 1, size: 4 });
+          setAbilityRequirement(parsed.abilityRequirement || null);
+          
+          // Restore selected properties by finding them in itemProperties
+          if (parsed.selectedProperties && parsed.selectedProperties.length > 0) {
+            const restoredProps: SelectedProperty[] = [];
+            for (const savedProp of parsed.selectedProperties) {
+              const foundProp = itemProperties.find(p => String(p.id) === String(savedProp.propertyId));
+              if (foundProp) {
+                restoredProps.push({
+                  property: foundProp,
+                  op_1_lvl: savedProp.op_1_lvl,
+                });
+              }
+            }
+            setSelectedProperties(restoredProps);
+          }
+        } else {
+          localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load item creator cache:', e);
+    }
+    setIsInitialized(true);
+  }, [itemProperties]);
+
+  // Auto-save to localStorage when state changes
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    try {
+      const cache: ItemCreatorCache = {
+        name,
+        description,
+        armamentType,
+        selectedProperties: selectedProperties.map(sp => ({
+          propertyId: sp.property.id,
+          op_1_lvl: sp.op_1_lvl,
+        })),
+        damage,
+        isTwoHanded,
+        rangeLevel,
+        damageReduction,
+        agilityReduction,
+        criticalRangeIncrease,
+        shieldDR,
+        hasShieldDamage,
+        shieldDamage,
+        abilityRequirement,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(ITEM_CREATOR_CACHE_KEY, JSON.stringify(cache));
+    } catch (e) {
+      console.error('Failed to save item creator cache:', e);
+    }
+  }, [isInitialized, name, description, armamentType, selectedProperties, damage, isTwoHanded, rangeLevel, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement]);
 
   // When armament type changes, filter out incompatible properties
   useEffect(() => {
@@ -361,6 +467,14 @@ function ItemCreatorContent() {
           baseProps.push({ id: Number(arProp.id), name: arProp.name, op_1_lvl: agilityReduction - 1 });
         }
       }
+      
+      // Add Critical Range Increase property (ID: 22) if any
+      if (criticalRangeIncrease > 0) {
+        const critProp = itemProperties.find(p => p.name === 'Critical Range +1' || Number(p.id) === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1);
+        if (critProp) {
+          baseProps.push({ id: Number(critProp.id), name: critProp.name, op_1_lvl: criticalRangeIncrease - 1 });
+        }
+      }
     }
     
     // === SHIELD PROPERTIES ===
@@ -406,7 +520,7 @@ function ItemCreatorContent() {
     }
     
     return baseProps;
-  }, [selectedProperties, armamentType, isTwoHanded, rangeLevel, itemProperties, damageReduction, agilityReduction, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement, damage]);
+  }, [selectedProperties, armamentType, isTwoHanded, rangeLevel, itemProperties, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage, abilityRequirement, damage]);
 
   // Calculate costs
   const costs = useMemo(
@@ -469,7 +583,8 @@ function ItemCreatorContent() {
       return;
     }
     if (!user) {
-      setSaveMessage({ type: 'error', text: 'You must be logged in to save' });
+      // Show login prompt modal instead of error message
+      setShowLoginPrompt(true);
       return;
     }
 
@@ -543,7 +658,22 @@ function ItemCreatorContent() {
     setArmamentType('Weapon');
     setSelectedProperties([]);
     setDamage({ amount: 1, size: 6, type: 'slashing' });
+    setIsTwoHanded(false);
+    setRangeLevel(0);
+    setDamageReduction(0);
+    setAgilityReduction(0);
+    setCriticalRangeIncrease(0);
+    setShieldDR({ amount: 1, size: 4 });
+    setHasShieldDamage(false);
+    setShieldDamage({ amount: 1, size: 4 });
+    setAbilityRequirement(null);
     setSaveMessage(null);
+    // Clear localStorage cache
+    try {
+      localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
+    } catch (e) {
+      console.error('Failed to clear item creator cache:', e);
+    }
   };
 
   // Load an item from the library
@@ -638,8 +768,14 @@ function ItemCreatorContent() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowLoadModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+              user 
+                ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                : "bg-gray-100 text-gray-400 cursor-pointer"
+            )}
+            title={user ? "Load from library" : "Log in to load from library"}
           >
             <FolderOpen className="w-5 h-5" />
             Load
@@ -662,7 +798,7 @@ function ItemCreatorContent() {
                 : 'bg-green-600 text-white hover:bg-green-700'
             )}
           >
-            {saving ? 'Saving...' : 'Save Armament'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
@@ -846,7 +982,7 @@ function ItemCreatorContent() {
           {armamentType === 'Armor' && (
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Armor Configuration</h3>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 {/* Damage Reduction */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -855,7 +991,7 @@ function ItemCreatorContent() {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => setDamageReduction(Math.max(1, damageReduction - 1))}
+                      onClick={() => setDamageReduction(Math.max(0, damageReduction - 1))}
                       className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
                     >
                       −
@@ -888,7 +1024,7 @@ function ItemCreatorContent() {
                       −
                     </button>
                     <span className="w-12 text-center text-2xl font-bold text-gray-900">
-                      {agilityReduction || 'None'}
+                      {agilityReduction}
                     </span>
                     <button
                       type="button"
@@ -899,6 +1035,33 @@ function ItemCreatorContent() {
                     </button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Reduces Agility for wearing this armor</p>
+                </div>
+                
+                {/* Critical Range Increase */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Critical Range Increase
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCriticalRangeIncrease(Math.max(0, criticalRangeIncrease - 1))}
+                      className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
+                    >
+                      −
+                    </button>
+                    <span className="w-12 text-center text-2xl font-bold text-gray-900">
+                      {criticalRangeIncrease}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCriticalRangeIncrease(Math.min(6, criticalRangeIncrease + 1))}
+                      className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Increases critical hit range</p>
                 </div>
               </div>
             </div>
@@ -991,56 +1154,47 @@ function ItemCreatorContent() {
 
           {/* Ability Requirement (Optional) */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Ability Requirement (Optional)</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Ability Requirement</h3>
             <p className="text-sm text-gray-600 mb-4">
               Require a minimum ability score to use this {armamentType.toLowerCase()} effectively.
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-              {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (
-                <button
-                  key={req.id}
-                  type="button"
-                  onClick={() => {
-                    if (abilityRequirement?.id === req.id) {
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <select
+                  value={abilityRequirement?.id || ''}
+                  onChange={(e) => {
+                    if (!e.target.value) {
                       setAbilityRequirement(null);
                     } else {
-                      setAbilityRequirement({ id: req.id, name: req.name, level: 1 });
+                      const reqs = armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS;
+                      const req = reqs.find(r => r.id === parseInt(e.target.value));
+                      if (req) {
+                        setAbilityRequirement({ id: req.id, name: req.name, level: 1 });
+                      }
                     }
                   }}
-                  className={cn(
-                    'px-4 py-2 rounded-lg font-medium transition-colors',
-                    abilityRequirement?.id === req.id
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  )}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 >
-                  {req.label}
-                </button>
-              ))}
-            </div>
-            {abilityRequirement && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700">Required Level:</span>
-                <button
-                  type="button"
-                  onClick={() => setAbilityRequirement(prev => prev ? { ...prev, level: Math.max(1, prev.level - 1) } : null)}
-                  disabled={abilityRequirement.level <= 1}
-                  className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  -
-                </button>
-                <span className="w-8 text-center text-lg font-bold text-gray-900">
-                  {abilityRequirement.level}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setAbilityRequirement(prev => prev ? { ...prev, level: Math.min(6, prev.level + 1) } : null)}
-                  className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-                >
-                  +
-                </button>
+                  <option value="">None</option>
+                  {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (
+                    <option key={req.id} value={req.id}>
+                      {req.label} ({req.name.replace(/Weapon |Armor /g, '').replace(' Requirement', '')})
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
+              {abilityRequirement && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">Level:</span>
+                  <NumberStepper
+                    value={abilityRequirement.level}
+                    onChange={(v) => setAbilityRequirement(prev => prev ? { ...prev, level: v } : null)}
+                    min={1}
+                    max={6}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Item Properties */}
@@ -1199,16 +1353,22 @@ function ItemCreatorContent() {
           </div>
         </div>
       </div>
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        returnPath="/item-creator"
+        contentType="armament"
+      />
     </div>
   );
 }
 
 export default function ItemCreatorPage() {
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <ItemCreatorContent />
-      </div>
-    </ProtectedRoute>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <ItemCreatorContent />
+    </div>
   );
 }

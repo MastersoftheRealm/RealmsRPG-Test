@@ -154,9 +154,14 @@ export function AncestryStep() {
     );
   }
 
+  // Format sizes display
+  const sizesDisplay = Array.isArray(selectedSpecies.sizes) && selectedSpecies.sizes.length > 0
+    ? selectedSpecies.sizes.join(' / ')
+    : selectedSpecies.size || 'Medium';
+
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex items-start justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Ancestry Traits</h1>
           <p className="text-gray-600">
@@ -169,6 +174,60 @@ export function AncestryStep() {
         >
           Change Species
         </button>
+      </div>
+
+      {/* Species Info Summary */}
+      <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div>
+            <span className="block text-xs text-gray-500 uppercase">Size</span>
+            <span className="font-bold text-gray-900 capitalize">{sizesDisplay}</span>
+          </div>
+          <div>
+            <span className="block text-xs text-gray-500 uppercase">Type</span>
+            <span className="font-bold text-gray-900 capitalize">{selectedSpecies.type || 'Humanoid'}</span>
+          </div>
+          {selectedSpecies.ave_height && (
+            <div>
+              <span className="block text-xs text-gray-500 uppercase">Avg Height</span>
+              <span className="font-bold text-gray-900">{selectedSpecies.ave_height} cm</span>
+            </div>
+          )}
+          {selectedSpecies.ave_weight && (
+            <div>
+              <span className="block text-xs text-gray-500 uppercase">Avg Weight</span>
+              <span className="font-bold text-gray-900">{selectedSpecies.ave_weight} kg</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Skills and Languages */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+          {selectedSpecies.skills && selectedSpecies.skills.length > 0 && (
+            <div>
+              <span className="text-xs text-gray-500 uppercase">Species Skills:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {selectedSpecies.skills.map(skill => (
+                  <span key={skill} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {selectedSpecies.languages && selectedSpecies.languages.length > 0 && (
+            <div>
+              <span className="text-xs text-gray-500 uppercase">Languages:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {selectedSpecies.languages.map(lang => (
+                  <span key={lang} className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs">
+                    {lang}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Selection Summary */}
@@ -218,7 +277,7 @@ export function AncestryStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedFlaw
-            ? 'bg-red-50 border-red-300'
+            ? 'bg-purple-50 border-purple-300'
             : 'bg-gray-50 border-gray-200'
         )}>
           <div className="flex items-center justify-between mb-1">
@@ -226,7 +285,7 @@ export function AncestryStep() {
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedFlaw
-                ? 'bg-red-200 text-red-800'
+                ? 'bg-purple-200 text-purple-800'
                 : 'bg-gray-200 text-gray-600'
             )}>
               {selectedFlaw ? '1' : '0'} / 1
@@ -361,10 +420,10 @@ function TraitSection({
       check: 'bg-blue-600 border-blue-600',
     },
     flaw: {
-      border: 'border-red-200',
-      header: 'bg-red-50',
-      selected: 'border-red-400 bg-red-50',
-      check: 'bg-red-600 border-red-600',
+      border: 'border-purple-200',
+      header: 'bg-purple-50',
+      selected: 'border-purple-400 bg-purple-50',
+      check: 'bg-purple-600 border-purple-600',
     },
   };
 

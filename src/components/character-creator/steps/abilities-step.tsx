@@ -9,8 +9,7 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { calculateAbilityPoints, getAbilityIncreaseCost, canIncreaseAbility, canDecreaseAbility } from '@/lib/game/formulas';
-import { ABILITY_LIMITS } from '@/lib/game/constants';
+import { calculateAbilityPoints } from '@/lib/game/formulas';
 import type { AbilityName } from '@/types';
 
 const ABILITY_INFO: Record<AbilityName, { name: string; description: string; defenseLink: string }> = {
@@ -61,23 +60,21 @@ export function AbilitiesStep() {
   };
   
   // Calculate total points and spent
+  // Vanilla formula: 7 - sum of all ability values
   const totalPoints = useMemo(() => calculateAbilityPoints(level), [level]);
+  
+  // Simple sum of all ability values (positive adds, negative subtracts)
   const spentPoints = useMemo(() => {
     return ABILITY_ORDER.reduce((sum, ability) => {
-      const value = abilities[ability] || 0;
-      let cost = 0;
-      
-      // Calculate cost for positive values
-      for (let i = 1; i <= value; i++) {
-        cost += i > ABILITY_LIMITS.COST_INCREASE_THRESHOLD ? 2 : 1;
-      }
-      
-      // Negative values give points back (1 per negative)
-      if (value < 0) {
-        cost = value; // Negative number = negative cost
-      }
-      
-      return sum + cost;
+      return sum + (abilities[ability] || 0);
+    }, 0);
+  }, [abilities]);
+  
+  // Calculate sum of all negative ability values
+  const negativeSum = useMemo(() => {
+    return ABILITY_ORDER.reduce((sum, ability) => {
+      const val = abilities[ability] || 0;
+      return val < 0 ? sum + val : sum;
     }, 0);
   }, [abilities]);
   
@@ -85,19 +82,22 @@ export function AbilitiesStep() {
 
   const handleIncrease = (ability: AbilityName) => {
     const current = abilities[ability] || 0;
-    const cost = getAbilityIncreaseCost(current);
+    // Max ability is 3 at creation
+    if (current >= 3) return;
+    // Check if we have points to spend
+    if (remainingPoints <= 0) return;
     
-    if (canIncreaseAbility(current, remainingPoints, true)) {
-      updateAbility(ability, current + 1);
-    }
+    updateAbility(ability, current + 1);
   };
 
   const handleDecrease = (ability: AbilityName) => {
     const current = abilities[ability] || 0;
+    // Min ability is -2
+    if (current <= -2) return;
+    // Check if decreasing would exceed -3 total negative sum
+    if (negativeSum <= -3 && current <= 0) return;
     
-    if (canDecreaseAbility(current)) {
-      updateAbility(ability, current - 1);
-    }
+    updateAbility(ability, current - 1);
   };
 
   const canContinue = remainingPoints >= 0;
@@ -145,7 +145,6 @@ export function AbilitiesStep() {
         {ABILITY_ORDER.map((ability) => {
           const value = abilities[ability] || 0;
           const info = ABILITY_INFO[ability];
-          const cost = getAbilityIncreaseCost(value);
           const isArchetypeAbility = 
             draft.pow_abil === ability || draft.mart_abil === ability;
           
@@ -166,7 +165,7 @@ export function AbilitiesStep() {
                     </span>
                   )}
                 </div>
-                <span className="text-xs text-gray-400">→ {info.defenseLink}</span>
+                <span className="text-xs text-gray-500">Defense: {info.defenseLink}</span>
               </div>
               
               <p className="text-xs text-gray-500 mb-3">{info.description}</p>
@@ -174,7 +173,7 @@ export function AbilitiesStep() {
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => handleDecrease(ability)}
-                  disabled={!canDecreaseAbility(value)}
+                  disabled={value <= -2 || (negativeSum <= -3 && value <= 0)}
                   className="btn-stepper btn-stepper-danger"
                 >
                   −
@@ -189,14 +188,11 @@ export function AbilitiesStep() {
                   )}>
                     {value >= 0 ? `+${value}` : value}
                   </div>
-                  <div className="text-xs text-gray-400">
-                    Cost: {cost}
-                  </div>
                 </div>
                 
                 <button
                   onClick={() => handleIncrease(ability)}
-                  disabled={!canIncreaseAbility(value, remainingPoints, true)}
+                  disabled={value >= 3 || remainingPoints <= 0}
                   className="btn-stepper btn-stepper-success"
                 >
                   +

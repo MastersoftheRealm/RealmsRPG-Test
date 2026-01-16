@@ -9,6 +9,36 @@ export { ItemCard } from './item-card';
 export { ItemList } from './item-list';
 export { ItemSelectionModal } from './item-selection-modal';
 
+// Ability display components (powers, techniques, armaments)
+export { AbilityCard } from './ability-card';
+export type { PartChip, AbilityStat, AbilityCardProps } from './ability-card';
+
+// List components (shared between Codex and Library)
+export {
+  SearchInput,
+  SortHeader,
+  FilterSection,
+  ResultsCount,
+  ColumnHeaders,
+  ListContainer,
+  ExpandableCard,
+  EmptyState as ListEmptyState,
+  LoadingSpinner,
+  ErrorDisplay,
+} from './list-components';
+export type { 
+  SearchInputProps, 
+  SortState, 
+  SortHeaderProps, 
+  FilterSectionProps,
+  ResultsCountProps,
+  ColumnHeaderProps,
+  ListContainerProps,
+  ExpandableCardProps,
+  EmptyStateProps,
+  ErrorDisplayProps,
+} from './list-components';
+
 // Creator components
 export { PartCard } from './part-card';
 export type { BasePartData, SelectedPartState, PartCardProps, CreatorType } from './part-card';
@@ -24,3 +54,6 @@ export type { TraitData, TraitCategory, SpeciesTraitCardProps, TraitGroupProps }
 // State display components
 export { LoadingState } from './loading-state';
 export { ErrorState } from './error-state';
+
+// Auth prompts
+export { LoginPromptModal } from './login-prompt-modal';

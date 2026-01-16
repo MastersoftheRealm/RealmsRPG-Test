@@ -7,11 +7,11 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn, formatDamageDisplay } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/layout';
+import { LoginPromptModal } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
@@ -817,6 +817,12 @@ function LoadCreatureModal({
 }
 
 // =============================================================================
+// LocalStorage Cache
+// =============================================================================
+
+const CREATURE_CREATOR_CACHE_KEY = 'realms-creature-creator-cache';
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -824,6 +830,8 @@ function CreatureCreatorContent() {
   const { user } = useAuthStore();
   const { data: creatureFeatsData = [] } = useCreatureFeats();
   const { data: skillsData = [] } = useRTDBSkills();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
   const [saving, setSaving] = useState(false);
   const [showPowerModal, setShowPowerModal] = useState(false);
@@ -832,6 +840,41 @@ function CreatureCreatorContent() {
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
+
+  // Load cached state from localStorage on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(CREATURE_CREATOR_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Only use cache if it's less than 30 days old
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        if (parsed.timestamp && Date.now() - parsed.timestamp < thirtyDays) {
+          setCreature(parsed.creature || initialState);
+        } else {
+          localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load creature creator cache:', e);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Auto-save to localStorage when creature changes
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    try {
+      const cache = {
+        creature,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(CREATURE_CREATOR_CACHE_KEY, JSON.stringify(cache));
+    } catch (e) {
+      console.error('Failed to save creature creator cache:', e);
+    }
+  }, [isInitialized, creature]);
   
   // Create lookup map for feat point costs by ID
   const featPointsMap = useMemo(() => {
@@ -1041,12 +1084,13 @@ function CreatureCreatorContent() {
 
   // Save creature to Firestore
   const handleSave = async () => {
-    if (!user) {
-      alert('Please log in to save creatures');
-      return;
-    }
     if (!creature.name.trim()) {
       alert('Please enter a creature name');
+      return;
+    }
+    if (!user) {
+      // Show login prompt modal instead of alert
+      setShowLoginPrompt(true);
       return;
     }
     
@@ -1082,6 +1126,12 @@ function CreatureCreatorContent() {
   const handleReset = () => {
     if (confirm('Reset all creature data?')) {
       setCreature(initialState);
+      // Clear localStorage cache
+      try {
+        localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
+      } catch (e) {
+        console.error('Failed to clear creature creator cache:', e);
+      }
     }
   };
 
@@ -1136,10 +1186,16 @@ function CreatureCreatorContent() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setShowLoadModal(true)}
-            className="px-4 py-2 rounded-lg border border-primary-600 text-primary-600 hover:bg-primary-50"
+            onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
+            className={cn(
+              "px-4 py-2 rounded-lg border transition-colors",
+              user 
+                ? "border-primary-600 text-primary-600 hover:bg-primary-50"
+                : "border-gray-300 text-gray-400 cursor-pointer"
+            )}
+            title={user ? "Load from library" : "Log in to load from library"}
           >
-            Load Creature
+            Load
           </button>
           <button
             onClick={handleReset}
@@ -1152,7 +1208,7 @@ function CreatureCreatorContent() {
             disabled={saving}
             className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
           >
-            {saving ? 'Saving...' : 'Save Creature'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
@@ -2016,16 +2072,22 @@ function CreatureCreatorContent() {
         onClose={() => setShowLoadModal(false)}
         onSelect={(loadedCreature) => setCreature(loadedCreature)}
       />
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        returnPath="/creature-creator"
+        contentType="creature"
+      />
     </div>
   );
 }
 
 export default function CreatureCreatorPage() {
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <CreatureCreatorContent />
-      </div>
-    </ProtectedRoute>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <CreatureCreatorContent />
+    </div>
   );
 }

@@ -148,7 +148,7 @@ export function PowersStep() {
           <div className="flex items-center justify-center gap-4">
             <Link
               href="/power-creator"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm"
             >
               <Plus className="w-4 h-4" />
               Create Power
@@ -184,7 +184,7 @@ export function PowersStep() {
             <button
               onClick={() => setShowPowerModal(true)}
               disabled={userPowers.length === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
               Add Powers

@@ -49,6 +49,17 @@
   /* Fonts */
   --font-sans: "Nunito", system-ui, sans-serif;
   --font-display: "Nova Flat", system-ui, sans-serif;
+  
+  /* Semantic colors for components */
+  --color-primary-foreground: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+  --color-destructive: #dc3545;
+  --color-destructive-foreground: #ffffff;
+  --color-card: #ffffff;
+  --color-card-foreground: #333333;
+  --color-border: #dee2e6;
+  --color-on-primary: #ffffff;
 }
 
 @layer base {
@@ -57,6 +68,11 @@
     --foreground: #333333;
     --card-bg: #ffffff;
     --border: #dee2e6;
+    --primary-foreground: #ffffff;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --destructive: #dc3545;
+    --destructive-foreground: #ffffff;
   }
   
   body {

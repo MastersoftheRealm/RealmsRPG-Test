@@ -81,3 +81,12 @@ export {
 
 // Auto-save
 export { useAutoSave } from './use-auto-save';
+
+// Creator Cache (localStorage persistence for guest users)
+export { 
+  useCreatorCache, 
+  useCreatorCacheValue,
+  clearAllCreatorCaches,
+  getCreatorCacheInfo,
+  type CreatorType,
+} from './use-creator-cache';

@@ -240,6 +240,63 @@ export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: Arche
   return getArchetypeConfig(type || 'power').innateEnergy;
 }
 
+/**
+ * Get the archetype ability score (the highest ability linked to archetype abilities).
+ * For powered-martial: max of power and martial ability scores
+ * For power/martial: the single archetype ability score
+ */
+export function getArchetypeAbility(
+  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
+  abilities: Partial<Abilities>
+): number {
+  if (!archetype?.type) return 0;
+  
+  if (archetype.type === 'powered-martial') {
+    const pow = archetype.pow_abil?.toLowerCase() as keyof Abilities;
+    const mar = archetype.mart_abil?.toLowerCase() as keyof Abilities;
+    const powVal = pow ? (abilities[pow] || 0) : 0;
+    const marVal = mar ? (abilities[mar] || 0) : 0;
+    return Math.max(powVal, marVal);
+  }
+  
+  // For power or martial, use pow_abil or mart_abil (whichever is set)
+  const abilityKey = (archetype.pow_abil || archetype.mart_abil)?.toLowerCase() as keyof Abilities;
+  return abilityKey ? (abilities[abilityKey] || 0) : 0;
+}
+
+/**
+ * Get base health for a character.
+ * Formula: 8 + vitality (or strength if vitality is archetype ability)
+ */
+export function getBaseHealth(
+  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
+  abilities: Partial<Abilities>
+): number {
+  const vitality = abilities.vitality || 0;
+  
+  // If vitality is an archetype ability, use strength instead
+  const isVitalityArchetype = 
+    archetype?.pow_abil?.toLowerCase() === 'vitality' ||
+    archetype?.mart_abil?.toLowerCase() === 'vitality';
+  
+  if (isVitalityArchetype) {
+    return 8 + (abilities.strength || 0);
+  }
+  
+  return 8 + vitality;
+}
+
+/**
+ * Get base energy for a character.
+ * Formula: 0 + archetype ability score
+ */
+export function getBaseEnergy(
+  archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
+  abilities: Partial<Abilities>
+): number {
+  return getArchetypeAbility(archetype, abilities);
+}
+
 // =============================================================================
 // Skill Helpers
 // =============================================================================

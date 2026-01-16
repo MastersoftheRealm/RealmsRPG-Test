@@ -95,13 +95,13 @@ export function ItemCard({
               className={`
                 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors
                 ${item.isSelected 
-                  ? 'bg-primary border-primary' 
+                  ? 'bg-primary-400 border-primary-400' 
                   : 'border-muted-foreground/40'
                 }
                 ${item.isDisabled ? 'opacity-50' : ''}
               `}
             >
-              {item.isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+              {item.isSelected && <Check className="w-3 h-3 text-white" />}
             </div>
           )}
           

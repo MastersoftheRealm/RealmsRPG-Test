@@ -6,6 +6,7 @@
  */
 
 import type { DisplayItem, TransformContext, ItemBadge, ItemStat, ItemDetail } from '@/types/items';
+import { formatDamageDisplay } from '@/lib/utils/string';
 
 // Helper: Format number with sign
 export function formatBonus(value: number): string {
@@ -86,7 +87,8 @@ export function transformPower(raw: RawPower, context?: TransformContext): Displ
     details.push({ label: 'Targets', value: raw.targets });
   }
   if (raw.damage) {
-    details.push({ label: 'Damage', value: raw.damage });
+    const formattedDamage = formatDamageDisplay(raw.damage);
+    if (formattedDamage) details.push({ label: 'Damage', value: formattedDamage });
   }
   if (raw.healing) {
     details.push({ label: 'Healing', value: raw.healing });
@@ -162,7 +164,8 @@ export function transformTechnique(raw: RawTechnique, context?: TransformContext
 
   // Details
   if (raw.damage) {
-    details.push({ label: 'Damage', value: raw.damage });
+    const formattedDamage = formatDamageDisplay(raw.damage);
+    if (formattedDamage) details.push({ label: 'Damage', value: formattedDamage });
   }
   if (raw.effects?.length) {
     details.push({ label: 'Effects', value: raw.effects });
@@ -209,7 +212,8 @@ export function transformWeapon(raw: RawWeapon, context?: TransformContext): Dis
 
   // Damage
   if (raw.damage) {
-    stats.push({ label: 'Damage', value: raw.damage });
+    const formattedDamage = formatDamageDisplay(raw.damage);
+    if (formattedDamage) stats.push({ label: 'Damage', value: formattedDamage });
   }
 
   // Damage type

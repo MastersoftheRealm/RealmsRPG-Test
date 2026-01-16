@@ -2,12 +2,12 @@
  * Character Creator Page
  * ======================
  * Multi-step character creation wizard
+ * Allows guest access with localStorage persistence
+ * Login is required only for saving
  */
 
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import {
@@ -36,16 +36,8 @@ const STEP_COMPONENTS = {
 };
 
 export default function CharacterCreatorPage() {
-  const router = useRouter();
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   const { currentStep } = useCharacterCreatorStore();
-  
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login?redirect=/characters/new');
-    }
-  }, [loading, user, router]);
   
   if (loading) {
     return (
@@ -56,10 +48,6 @@ export default function CharacterCreatorPage() {
         </div>
       </div>
     );
-  }
-  
-  if (!user) {
-    return null; // Will redirect
   }
   
   const StepComponent = STEP_COMPONENTS[currentStep];

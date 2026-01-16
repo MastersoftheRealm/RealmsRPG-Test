@@ -170,6 +170,7 @@ export interface EquipmentItem {
   name: string;
   type: 'weapon' | 'armor' | 'equipment';
   subtype?: string;
+  category?: string;
   description: string;
   damage?: string;
   armor_value?: number;
@@ -491,6 +492,7 @@ async function fetchEquipment(): Promise<EquipmentItem[]> {
         name: (equip.name as string) || '',
         type: ((equip.type as string) || 'equipment') as 'weapon' | 'armor' | 'equipment',
         subtype: equip.subtype as string | undefined,
+        category: (equip.category as string) || undefined,
         description: (equip.description as string) || '',
         damage: equip.damage as string | undefined,
         armor_value: parseInt(equip.armor_value as string) || undefined,

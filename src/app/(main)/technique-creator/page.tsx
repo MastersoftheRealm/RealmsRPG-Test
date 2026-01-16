@@ -12,14 +12,14 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, FolderOpen } from 'lucide-react';
 import { collection, addDoc, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/layout';
 import { useTechniqueParts, useUserTechniques, useUserItems, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
+import { LoginPromptModal } from '@/components/shared';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
@@ -77,6 +77,9 @@ const DIE_SIZES = [4, 6, 8, 10, 12];
 const DEFAULT_WEAPON_OPTIONS: WeaponConfig[] = [
   { id: 0, name: 'Unarmed Prowess', tp: 0 },
 ];
+
+// LocalStorage key for caching technique creator state
+const TECHNIQUE_CREATOR_CACHE_KEY = 'realms-technique-creator-cache';
 
 // =============================================================================
 // Subcomponents
@@ -318,10 +321,30 @@ function PartCard({
 // Main Component
 // =============================================================================
 
+// Cache interface for localStorage
+interface TechniqueCreatorCache {
+  name: string;
+  description: string;
+  selectedParts: Array<{
+    partId: string | number;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+    selectedCategory: string;
+  }>;
+  actionType: string;
+  isReaction: boolean;
+  damage: DamageConfig;
+  weaponId: string | number;
+  timestamp: number;
+}
+
 function TechniqueCreatorContent() {
   const { user } = useAuthStore();
   
   // State
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
@@ -336,7 +359,7 @@ function TechniqueCreatorContent() {
   // Fetch technique parts
   const { data: techniqueParts = [], isLoading, error } = useTechniqueParts();
   
-  // Fetch user's saved techniques for loading
+  // Fetch user's saved techniques for loading (only if user is logged in)
   const { data: userTechniques, isLoading: loadingUserTechniques, error: userTechniquesError } = useUserTechniques();
 
   // Fetch user's saved items (weapons)
@@ -355,6 +378,81 @@ function TechniqueCreatorContent() {
     
     return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
   }, [userItems]);
+
+  // Load cached state from localStorage on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(TECHNIQUE_CREATOR_CACHE_KEY);
+      if (cached && techniqueParts.length > 0) {
+        const parsed: TechniqueCreatorCache = JSON.parse(cached);
+        // Only use cache if it's less than 30 days old
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        if (Date.now() - parsed.timestamp < thirtyDays) {
+          setName(parsed.name || '');
+          setDescription(parsed.description || '');
+          setActionType(parsed.actionType || 'basic');
+          setIsReaction(parsed.isReaction || false);
+          setDamage(parsed.damage || { amount: 0, size: 6, type: 'none' });
+          
+          // Restore weapon selection
+          if (parsed.weaponId) {
+            const foundWeapon = allWeaponOptions.find(w => String(w.id) === String(parsed.weaponId));
+            if (foundWeapon) setWeapon(foundWeapon);
+          }
+          
+          // Restore selected parts by finding them in techniqueParts
+          if (parsed.selectedParts && parsed.selectedParts.length > 0) {
+            const restoredParts: SelectedPart[] = [];
+            for (const savedPart of parsed.selectedParts) {
+              const foundPart = techniqueParts.find(p => String(p.id) === String(savedPart.partId));
+              if (foundPart) {
+                restoredParts.push({
+                  part: foundPart,
+                  op_1_lvl: savedPart.op_1_lvl,
+                  op_2_lvl: savedPart.op_2_lvl,
+                  op_3_lvl: savedPart.op_3_lvl,
+                  selectedCategory: savedPart.selectedCategory,
+                });
+              }
+            }
+            setSelectedParts(restoredParts);
+          }
+        } else {
+          localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load technique creator cache:', e);
+    }
+    setIsInitialized(true);
+  }, [techniqueParts, allWeaponOptions]);
+
+  // Auto-save to localStorage when state changes
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    try {
+      const cache: TechniqueCreatorCache = {
+        name,
+        description,
+        selectedParts: selectedParts.map(sp => ({
+          partId: sp.part.id,
+          op_1_lvl: sp.op_1_lvl,
+          op_2_lvl: sp.op_2_lvl,
+          op_3_lvl: sp.op_3_lvl,
+          selectedCategory: sp.selectedCategory,
+        })),
+        actionType,
+        isReaction,
+        damage,
+        weaponId: weapon.id,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(TECHNIQUE_CREATOR_CACHE_KEY, JSON.stringify(cache));
+    } catch (e) {
+      console.error('Failed to save technique creator cache:', e);
+    }
+  }, [isInitialized, name, description, selectedParts, actionType, isReaction, damage, weapon]);
 
   // Build mechanic parts from action type, damage, and weapon selections
   const mechanicParts = useMemo(
@@ -399,7 +497,7 @@ function TechniqueCreatorContent() {
   );
 
   const damageDisplay = useMemo(
-    () => formatTechniqueDamage(damage.type !== 'none' && damage.amount > 0 ? damage : undefined),
+    () => formatTechniqueDamage(damage.amount > 0 ? damage : undefined),
     [damage]
   );
 
@@ -434,7 +532,8 @@ function TechniqueCreatorContent() {
       return;
     }
     if (!user) {
-      setSaveMessage({ type: 'error', text: 'You must be logged in to save' });
+      // Show login prompt modal instead of error message
+      setShowLoginPrompt(true);
       return;
     }
 
@@ -453,8 +552,8 @@ function TechniqueCreatorContent() {
 
       // Format damage
       const damageToSave =
-        damage.type !== 'none' && damage.amount > 0
-          ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
+        damage.amount > 0
+          ? [{ amount: damage.amount, size: damage.size }]
           : [];
 
       const techniqueData = {
@@ -511,6 +610,12 @@ function TechniqueCreatorContent() {
     setDamage({ amount: 0, size: 6, type: 'none' });
     setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
     setSaveMessage(null);
+    // Clear localStorage cache
+    try {
+      localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
+    } catch (e) {
+      console.error('Failed to clear technique creator cache:', e);
+    }
   };
 
   // Load a technique from the library
@@ -611,8 +716,14 @@ function TechniqueCreatorContent() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowLoadModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+              user 
+                ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                : "bg-gray-100 text-gray-400 cursor-pointer"
+            )}
+            title={user ? "Load from library" : "Log in to load from library"}
           >
             <FolderOpen className="w-5 h-5" />
             Load
@@ -635,7 +746,7 @@ function TechniqueCreatorContent() {
                 : 'bg-green-600 text-white hover:bg-green-700'
             )}
           >
-            {saving ? 'Saving...' : 'Save Technique'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
@@ -793,7 +904,10 @@ function TechniqueCreatorContent() {
 
           {/* Additional Damage */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Damage (Optional)</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Damage</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.
+            </p>
             <div className="flex flex-wrap items-center gap-4">
               <NumberStepper
                 value={damage.amount}
@@ -816,21 +930,10 @@ function TechniqueCreatorContent() {
                   ))}
                 </select>
               </div>
-              <select
-                value={damage.type}
-                onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                {DAMAGE_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type === 'none' ? 'No additional damage' : type.charAt(0).toUpperCase() + type.slice(1)}
-                  </option>
-                ))}
-              </select>
             </div>
-            {damage.type !== 'none' && damage.amount > 0 && (
+            {damage.amount > 0 && (
               <p className="mt-2 text-sm text-gray-600">
-                Additional Damage: <strong>{damage.amount}d{damage.size} {damage.type}</strong>
+                Additional Damage: <strong>+{damage.amount}d{damage.size}</strong>
               </p>
             )}
           </div>
@@ -901,16 +1004,22 @@ function TechniqueCreatorContent() {
           </div>
         </div>
       </div>
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        returnPath="/technique-creator"
+        contentType="technique"
+      />
     </div>
   );
 }
 
 export default function TechniqueCreatorPage() {
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <TechniqueCreatorContent />
-      </div>
-    </ProtectedRoute>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <TechniqueCreatorContent />
+    </div>
   );
 }

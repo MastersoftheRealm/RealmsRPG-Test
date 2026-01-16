@@ -111,17 +111,22 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       },
       
       canNavigateToStep: (step) => {
-        const targetIndex = STEP_ORDER.indexOf(step);
-        const currentIndex = STEP_ORDER.indexOf(get().currentStep);
-        const completed = get().completedSteps;
+        const draft = get().draft;
         
-        // Can always go back
-        if (targetIndex <= currentIndex) return true;
+        // Only lock specific steps based on prerequisites:
+        // - ancestry: requires species to be selected
+        // - skills: requires species to be selected (for species skills)
+        // All other steps are freely navigable
         
-        // Can only go forward if all previous steps are complete
-        for (let i = 0; i < targetIndex; i++) {
-          if (!completed.includes(STEP_ORDER[i])) return false;
+        if (step === 'ancestry') {
+          return Boolean(draft.ancestry?.id);
         }
+        
+        if (step === 'skills') {
+          return Boolean(draft.ancestry?.id);
+        }
+        
+        // All other steps are always accessible
         return true;
       },
       
@@ -205,23 +210,33 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         const allocatedHealth = draft.healthPoints || 0;
         const allocatedEnergy = draft.energyPoints || 0;
         
+        // Build archetype without undefined fields (Firebase doesn't allow undefined)
+        const archetype = draft.archetype ? {
+          id: draft.archetype.id,
+          name: draft.archetype.name,
+          type: draft.archetype.type,
+          ability: draft.archetype.ability,
+          ...(draft.archetype.pow_abil && { pow_abil: draft.archetype.pow_abil }),
+          ...(draft.archetype.mart_abil && { mart_abil: draft.archetype.mart_abil }),
+        } : undefined;
+        
         return {
           name: draft.name || 'Unnamed Character',
           level: draft.level || 1,
           abilities: draft.abilities || { ...DEFAULT_ABILITIES },
-          archetype: draft.archetype,
-          pow_abil: draft.pow_abil,
-          mart_abil: draft.mart_abil,
+          ...(archetype && { archetype }),
+          ...(draft.pow_abil && { pow_abil: draft.pow_abil }),
+          ...(draft.mart_abil && { mart_abil: draft.mart_abil }),
           // Match vanilla naming
           species: draft.ancestry?.name || '',
           ancestry: draft.ancestry,
-          skills: draft.skills,
+          skills: draft.skills || {},
           defenseSkills: draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
           defenseVals: draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
           feats: draft.feats || [],
           powers: draft.powers || [],
           techniques: draft.techniques || [],
-          equipment: draft.equipment || [],
+          equipment: draft.equipment || {},
           // Health/Energy tracking
           health_energy_points: {
             health: allocatedHealth,
@@ -229,11 +244,11 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           },
           currentHealth: baseHealth + allocatedHealth,
           currentEnergy: baseEnergy + allocatedEnergy,
-          // Optional fields
-          description: draft.description || '',
-          notes: draft.notes || '',
-          appearance: draft.appearance || '',
-          portrait: draft.portrait || '',
+          // Optional fields - only include if defined
+          ...(draft.description && { description: draft.description }),
+          ...(draft.notes && { notes: draft.notes }),
+          ...(draft.appearance && { appearance: draft.appearance }),
+          ...(draft.portrait && { portrait: draft.portrait }),
           status: 'complete' as const,
         };
       },

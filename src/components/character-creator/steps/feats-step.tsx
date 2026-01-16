@@ -137,6 +137,7 @@ export function FeatsStep() {
 
   const checkRequirements = (feat: RTDBFeat): { met: boolean; reason?: string } => {
     const abilities = draft.abilities || {};
+    const skills = draft.skills || {};
     
     // Check ability requirements
     for (let i = 0; i < feat.ability_req.length; i++) {
@@ -147,6 +148,22 @@ export function FeatsStep() {
       if (charValue < reqValue) {
         return { met: false, reason: `Requires ${feat.ability_req[i]} ${reqValue}+` };
       }
+    }
+    
+    // Check skill requirements
+    for (let i = 0; i < feat.skill_req.length; i++) {
+      const reqSkill = feat.skill_req[i];
+      const reqValue = feat.skill_req_val[i] || 1;
+      const charValue = skills[reqSkill] || 0;
+      
+      if (charValue < reqValue) {
+        return { met: false, reason: `Requires ${reqSkill} ${reqValue}+` };
+      }
+    }
+    
+    // Check martial ability requirement (for martial archetype feats)
+    if (feat.mart_abil_req && draft.archetype?.mart_abil !== feat.mart_abil_req) {
+      return { met: false, reason: `Requires ${feat.mart_abil_req} martial ability` };
     }
     
     return { met: true };

@@ -10,8 +10,10 @@ import { useState, useMemo } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, type EquipmentItem } from '@/hooks';
-import { calculateTrainingPoints } from '@/lib/game/formulas';
 import type { Item } from '@/types';
+
+// Starting currency for new characters at level 1 is 200
+const STARTING_CURRENCY = 200;
 
 // Selected item type for our internal state
 interface SelectedItem {
@@ -30,16 +32,13 @@ export function EquipmentStep() {
   const [activeTab, setActiveTab] = useState<'weapon' | 'armor' | 'equipment'>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Get highest archetype ability for TP calculation
-  const highestAbility = useMemo(() => {
-    const abilities = draft.abilities || {};
-    // Try to get archetype-related ability, fallback to highest
-    const abilityValues = Object.values(abilities).filter((v): v is number => typeof v === 'number');
-    return Math.max(...abilityValues, 0);
-  }, [draft.abilities]);
-
-  // Calculate starting currency
-  const startingCurrency = calculateTrainingPoints(draft.level || 1, highestAbility) * 10;
+  // Calculate starting currency - base 200 for level 1
+  // For higher levels: 200 * 1.45^(level-1)
+  const startingCurrency = useMemo(() => {
+    const level = draft.level || 1;
+    if (level <= 1) return STARTING_CURRENCY;
+    return Math.round(STARTING_CURRENCY * Math.pow(1.45, level - 1));
+  }, [draft.level]);
   
   // Get selected equipment from draft - use inventory array
   const selectedItems = useMemo((): SelectedItem[] => {

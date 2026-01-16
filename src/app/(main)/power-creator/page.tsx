@@ -12,14 +12,14 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Wand2, Zap, Target, Info, FolderOpen } from 'lucide-react';
 import { collection, addDoc, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/layout';
 import { usePowerParts, useUserPowers, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
+import { LoginPromptModal } from '@/components/shared';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
@@ -174,6 +174,9 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string
   'Special': { bg: 'bg-amber-100', border: 'border-amber-300', text: 'text-amber-800', hoverBg: 'hover:bg-amber-200' },
   'Restriction': { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', hoverBg: 'hover:bg-red-200' },
 };
+
+// LocalStorage key for caching power creator state
+const POWER_CREATOR_CACHE_KEY = 'realms-power-creator-cache';
 
 // =============================================================================
 // Subcomponents
@@ -455,12 +458,10 @@ function AdvancedChip({
         colors.border,
         colors.hoverBg
       )}
+      onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center justify-between gap-2">
-        <span
-          className={cn('text-sm font-medium', colors.text)}
-          onClick={() => setExpanded(!expanded)}
-        >
+        <span className={cn('text-sm font-medium', colors.text)}>
           {part.name}
         </span>
         <button
@@ -524,16 +525,14 @@ function AddedAdvancedChip({
   return (
     <div
       className={cn(
-        'rounded-lg border px-3 py-2 transition-all',
+        'rounded-lg border px-3 py-2 transition-all cursor-pointer',
         colors.bg,
         colors.border
       )}
+      onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center justify-between gap-2">
-        <span
-          className={cn('text-sm font-medium cursor-pointer', colors.text)}
-          onClick={() => setExpanded(!expanded)}
-        >
+        <span className={cn('text-sm font-medium', colors.text)}>
           {part.name}
           {(advPart.op_1_lvl > 0 || advPart.op_2_lvl > 0 || advPart.op_3_lvl > 0) && (
             <span className="ml-2 text-xs opacity-75">
@@ -553,7 +552,7 @@ function AddedAdvancedChip({
         </button>
       </div>
       {expanded && (
-        <div className="mt-2 pt-2 border-t border-current/20 text-sm space-y-2">
+        <div className="mt-2 pt-2 border-t border-current/20 text-sm space-y-2" onClick={(e) => e.stopPropagation()}>
           <p className={colors.text}>{part.description}</p>
           
           {hasOption(1) && (
@@ -703,15 +702,15 @@ function AdvancedMechanicsSection({
             </div>
           )}
 
-          {/* Category Grids */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Category Grids - max 5 items per row, expand horizontally */}
+          <div className="space-y-4">
             {ADVANCED_CATEGORIES.map((category) => {
               const parts = getPartsForCategory(category);
               if (parts.length === 0) return null;
               return (
                 <div key={category}>
                   <h4 className="text-sm font-bold text-gray-700 mb-2">{category}</h4>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                     {parts.map((part) => (
                       <AdvancedChip
                         key={part.id}
@@ -734,10 +733,40 @@ function AdvancedMechanicsSection({
 // Main Component
 // =============================================================================
 
+// Cache interface for localStorage
+interface PowerCreatorCache {
+  name: string;
+  description: string;
+  selectedParts: Array<{
+    partId: string | number;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+    applyDuration: boolean;
+    selectedCategory: string;
+  }>;
+  selectedAdvancedParts: Array<{
+    partId: string | number;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+    applyDuration: boolean;
+  }>;
+  actionType: string;
+  isReaction: boolean;
+  damage: DamageConfig;
+  range: RangeConfig;
+  area: AreaConfig;
+  duration: DurationConfig;
+  timestamp: number;
+}
+
 function PowerCreatorContent() {
   const { user } = useAuthStore();
   
   // State
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedParts, setSelectedParts] = useState<SelectedPart[]>([]);
@@ -765,8 +794,116 @@ function PowerCreatorContent() {
   // Fetch power parts
   const { data: powerParts = [], isLoading, error } = usePowerParts();
   
-  // Fetch user's saved powers for loading
+  // Fetch user's saved powers for loading (only if user is logged in)
   const { data: userPowers, isLoading: loadingUserPowers, error: userPowersError } = useUserPowers();
+
+  // Load cached state from localStorage on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(POWER_CREATOR_CACHE_KEY);
+      if (cached && powerParts.length > 0) {
+        const parsed: PowerCreatorCache = JSON.parse(cached);
+        // Only use cache if it's less than 30 days old
+        const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+        if (Date.now() - parsed.timestamp < thirtyDays) {
+          setName(parsed.name || '');
+          setDescription(parsed.description || '');
+          setActionType(parsed.actionType || 'basic');
+          setIsReaction(parsed.isReaction || false);
+          setDamage(parsed.damage || { amount: 0, size: 6, type: 'none' });
+          setRange(parsed.range || { steps: 0, applyDuration: false });
+          setArea(parsed.area || { type: 'none', level: 1, applyDuration: false });
+          setDuration(parsed.duration || {
+            type: 'instant',
+            value: 1,
+            focus: false,
+            noHarm: false,
+            endsOnActivation: false,
+            sustain: 0,
+          });
+          
+          // Restore selected parts by finding them in powerParts
+          if (parsed.selectedParts && parsed.selectedParts.length > 0) {
+            const restoredParts: SelectedPart[] = [];
+            for (const savedPart of parsed.selectedParts) {
+              const foundPart = powerParts.find(p => String(p.id) === String(savedPart.partId));
+              if (foundPart) {
+                restoredParts.push({
+                  part: foundPart,
+                  op_1_lvl: savedPart.op_1_lvl,
+                  op_2_lvl: savedPart.op_2_lvl,
+                  op_3_lvl: savedPart.op_3_lvl,
+                  applyDuration: savedPart.applyDuration,
+                  selectedCategory: savedPart.selectedCategory,
+                });
+              }
+            }
+            setSelectedParts(restoredParts);
+          }
+          
+          // Restore advanced parts
+          if (parsed.selectedAdvancedParts && parsed.selectedAdvancedParts.length > 0) {
+            const restoredAdvanced: AdvancedPart[] = [];
+            for (const savedPart of parsed.selectedAdvancedParts) {
+              const foundPart = powerParts.find(p => String(p.id) === String(savedPart.partId));
+              if (foundPart) {
+                restoredAdvanced.push({
+                  part: foundPart,
+                  op_1_lvl: savedPart.op_1_lvl,
+                  op_2_lvl: savedPart.op_2_lvl,
+                  op_3_lvl: savedPart.op_3_lvl,
+                  applyDuration: savedPart.applyDuration,
+                });
+              }
+            }
+            setSelectedAdvancedParts(restoredAdvanced);
+          }
+        } else {
+          localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load power creator cache:', e);
+    }
+    setIsInitialized(true);
+  }, [powerParts]);
+
+  // Auto-save to localStorage when state changes
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    try {
+      const cache: PowerCreatorCache = {
+        name,
+        description,
+        selectedParts: selectedParts.map(sp => ({
+          partId: sp.part.id,
+          op_1_lvl: sp.op_1_lvl,
+          op_2_lvl: sp.op_2_lvl,
+          op_3_lvl: sp.op_3_lvl,
+          applyDuration: sp.applyDuration,
+          selectedCategory: sp.selectedCategory,
+        })),
+        selectedAdvancedParts: selectedAdvancedParts.map(ap => ({
+          partId: ap.part.id,
+          op_1_lvl: ap.op_1_lvl,
+          op_2_lvl: ap.op_2_lvl,
+          op_3_lvl: ap.op_3_lvl,
+          applyDuration: ap.applyDuration,
+        })),
+        actionType,
+        isReaction,
+        damage,
+        range,
+        area,
+        duration,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(POWER_CREATOR_CACHE_KEY, JSON.stringify(cache));
+    } catch (e) {
+      console.error('Failed to save power creator cache:', e);
+    }
+  }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damage, range, area, duration]);
 
   // Filter out mechanic parts for the "Add Part" dropdown
   // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
@@ -895,7 +1032,8 @@ function PowerCreatorContent() {
       return;
     }
     if (!user) {
-      setSaveMessage({ type: 'error', text: 'You must be logged in to save' });
+      // Show login prompt modal instead of error message
+      setShowLoginPrompt(true);
       return;
     }
 
@@ -1010,6 +1148,12 @@ function PowerCreatorContent() {
       sustain: 0,
     });
     setSaveMessage(null);
+    // Clear localStorage cache
+    try {
+      localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
+    } catch (e) {
+      console.error('Failed to clear power creator cache:', e);
+    }
   };
 
   // Load a power from the library
@@ -1181,8 +1325,14 @@ function PowerCreatorContent() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowLoadModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+            onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+              user 
+                ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                : "bg-gray-100 text-gray-400 cursor-pointer"
+            )}
+            title={user ? "Load from library" : "Log in to load from library"}
           >
             <FolderOpen className="w-5 h-5" />
             Load
@@ -1205,7 +1355,7 @@ function PowerCreatorContent() {
                 : 'bg-green-600 text-white hover:bg-green-700'
             )}
           >
-            {saving ? 'Saving...' : 'Save Power'}
+            {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
@@ -1584,16 +1734,22 @@ function PowerCreatorContent() {
           </div>
         </div>
       </div>
+
+      {/* Login Prompt Modal */}
+      <LoginPromptModal
+        isOpen={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        returnPath="/power-creator"
+        contentType="power"
+      />
     </div>
   );
 }
 
 export default function PowerCreatorPage() {
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <PowerCreatorContent />
-      </div>
-    </ProtectedRoute>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <PowerCreatorContent />
+    </div>
   );
 }

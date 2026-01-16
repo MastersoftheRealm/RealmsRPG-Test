@@ -314,8 +314,8 @@ export function ItemList({
                 onClick={() => setCurrentLayout('list')}
                 className={`p-2 transition-colors ${
                   currentLayout === 'list' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary-400 text-white' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-gray-100'
                 }`}
                 title="List view"
               >
@@ -325,8 +325,8 @@ export function ItemList({
                 onClick={() => setCurrentLayout('grid')}
                 className={`p-2 transition-colors ${
                   currentLayout === 'grid' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary-400 text-white' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-gray-100'
                 }`}
                 title="Grid view"
               >

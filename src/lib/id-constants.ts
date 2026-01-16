@@ -55,7 +55,7 @@ export const PART_IDS = {
   EXCLUDE_AREA: 238,
 
   // Power Range
-  POWER_RANGE: 292,
+  POWER_RANGE: 383,
 
   // Power Damage Types
   MAGIC_DAMAGE: 294,
