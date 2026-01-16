@@ -145,7 +145,10 @@ export function AddLibraryItemModal({
         id: i.id,
         name: i.name,
         description: i.description || '',
-        properties: i.properties || [],
+        // Convert properties to string names for Item type compatibility
+        properties: (i.properties || [])
+          .map(p => typeof p === 'string' ? p : p.name)
+          .filter((name): name is string => typeof name === 'string'),
         damage: i.damage || '',
         armor: i.armorValue || 0,
         equipped: false,

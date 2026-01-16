@@ -700,8 +700,10 @@ function LoadArmamentModal({
                   armor: 'Armor',
                   equipment: 'Accessory',
                 };
-                // Convert property names to ItemPropertyPayload format
-                const propertyPayloads = (item.properties || []).map((propName: string) => ({ name: propName }));
+                // Convert properties (which may be objects with name property) to ItemPropertyPayload format
+                const propertyPayloads = (item.properties || []).map((prop) => ({ 
+                  name: typeof prop === 'string' ? prop : prop.name 
+                }));
                 const itemDoc = {
                   name: item.name,
                   description: item.description,

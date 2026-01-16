@@ -379,11 +379,14 @@ function TechniqueCreatorContent() {
     return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
   }, [userItems]);
 
-  // Load cached state from localStorage on mount
+  // Load cached state from localStorage on mount (only once when parts are available)
   useEffect(() => {
+    // Only load once - when we have parts and haven't initialized yet
+    if (isInitialized || techniqueParts.length === 0) return;
+    
     try {
       const cached = localStorage.getItem(TECHNIQUE_CREATOR_CACHE_KEY);
-      if (cached && techniqueParts.length > 0) {
+      if (cached) {
         const parsed: TechniqueCreatorCache = JSON.parse(cached);
         // Only use cache if it's less than 30 days old
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
@@ -425,7 +428,7 @@ function TechniqueCreatorContent() {
       console.error('Failed to load technique creator cache:', e);
     }
     setIsInitialized(true);
-  }, [techniqueParts, allWeaponOptions]);
+  }, [techniqueParts, allWeaponOptions, isInitialized]);
 
   // Auto-save to localStorage when state changes
   useEffect(() => {

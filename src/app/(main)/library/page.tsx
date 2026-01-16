@@ -460,13 +460,18 @@ function ItemsTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
   const displayItems = useMemo((): DisplayItem[] => {
     if (!items) return [];
     return items.map(item => {
+      // Convert property objects to string names
+      const propertyNames = (item.properties || []).map(p => 
+        typeof p === 'string' ? p : (p.name || String(p.id || ''))
+      ).filter(Boolean);
+      
       if (item.type === 'weapon') {
         return transformWeapon({
           id: item.docId,
           name: item.name,
           description: item.description,
           damage: item.damage,
-          properties: item.properties,
+          properties: propertyNames,
           type: 'weapon',
         });
       } else if (item.type === 'armor') {
@@ -475,7 +480,7 @@ function ItemsTab({ onDelete }: { onDelete: (item: DisplayItem) => void }) {
           name: item.name,
           description: item.description,
           defense: item.armorValue,
-          properties: item.properties,
+          properties: propertyNames,
           type: 'armor',
         });
       } else {

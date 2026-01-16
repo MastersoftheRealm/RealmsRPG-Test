@@ -230,6 +230,11 @@ export function enrichItems(
     const libraryItem = findInLibrary(userItemLibrary, charItem);
     
     if (libraryItem) {
+      // Convert properties from SavedProperty objects to string names
+      const propertyNames = (libraryItem.properties || [])
+        .map(p => typeof p === 'string' ? p : p.name)
+        .filter((name): name is string => typeof name === 'string');
+      
       return {
         id: libraryItem.id,
         name: libraryItem.name,
@@ -238,7 +243,7 @@ export function enrichItems(
         equipped,
         damage: libraryItem.damage,
         armorValue: libraryItem.armorValue,
-        properties: libraryItem.properties || [],
+        properties: propertyNames,
         libraryItem,
       };
     }

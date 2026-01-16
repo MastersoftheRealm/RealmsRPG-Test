@@ -293,9 +293,12 @@ function ItemCreatorContent() {
 
   // Load cached state from localStorage on mount
   useEffect(() => {
+    // Prevent re-running after initial load to avoid overwriting user input
+    if (isInitialized || itemProperties.length === 0) return;
+    
     try {
       const cached = localStorage.getItem(ITEM_CREATOR_CACHE_KEY);
-      if (cached && itemProperties.length > 0) {
+      if (cached) {
         const parsed: ItemCreatorCache = JSON.parse(cached);
         // Only use cache if it's less than 30 days old
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
@@ -336,7 +339,7 @@ function ItemCreatorContent() {
       console.error('Failed to load item creator cache:', e);
     }
     setIsInitialized(true);
-  }, [itemProperties]);
+  }, [itemProperties, isInitialized]);
 
   // Auto-save to localStorage when state changes
   useEffect(() => {

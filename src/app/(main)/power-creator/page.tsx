@@ -799,9 +799,12 @@ function PowerCreatorContent() {
 
   // Load cached state from localStorage on mount
   useEffect(() => {
+    // Prevent re-running after initial load to avoid overwriting user input
+    if (isInitialized || powerParts.length === 0) return;
+    
     try {
       const cached = localStorage.getItem(POWER_CREATOR_CACHE_KEY);
-      if (cached && powerParts.length > 0) {
+      if (cached) {
         const parsed: PowerCreatorCache = JSON.parse(cached);
         // Only use cache if it's less than 30 days old
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
@@ -866,7 +869,7 @@ function PowerCreatorContent() {
       console.error('Failed to load power creator cache:', e);
     }
     setIsInitialized(true);
-  }, [powerParts]);
+  }, [powerParts, isInitialized]);
 
   // Auto-save to localStorage when state changes
   useEffect(() => {

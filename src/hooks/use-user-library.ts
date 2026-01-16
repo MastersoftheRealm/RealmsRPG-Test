@@ -60,13 +60,19 @@ export interface UserTechnique {
   updatedAt?: Date;
 }
 
+export interface SavedProperty {
+  id?: number;
+  name?: string;
+  op_1_lvl?: number;
+}
+
 export interface UserItem {
   id: string;
   docId: string;
   name: string;
   description?: string;
   type: 'weapon' | 'armor' | 'equipment';
-  properties: string[];
+  properties: SavedProperty[];
   damage?: string;
   armorValue?: number;
   createdAt?: Date;
