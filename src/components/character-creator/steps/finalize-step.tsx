@@ -29,12 +29,16 @@ function ValidationModal({
   isOpen, 
   onClose, 
   issues, 
-  onContinueAnyway 
+  onContinueAnyway,
+  onSave,
+  isSaving,
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
   issues: ValidationIssue[];
   onContinueAnyway?: () => void;
+  onSave?: () => void;
+  isSaving?: boolean;
 }) {
   if (!isOpen) return null;
   
@@ -57,7 +61,7 @@ function ValidationModal({
         <div className="p-4 overflow-y-auto max-h-[50vh]">
           {isValid ? (
             <p className="text-gray-600 text-center py-8">
-              Your character is complete and ready for adventure! Click &quot;Create Character&quot; to save.
+              Your character is complete and ready for adventure!
             </p>
           ) : (
             <div className="space-y-3">
@@ -80,16 +84,36 @@ function ValidationModal({
         <div className="p-4 border-t flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+            disabled={isSaving}
+            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
           >
-            {isValid ? 'Close' : 'Go Back & Fix'}
+            {isValid ? 'Cancel' : 'Go Back & Fix'}
           </button>
+          {/* Show Save button when valid */}
+          {isValid && onSave && (
+            <button
+              onClick={onSave}
+              disabled={isSaving}
+              className="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>✓ Create Character</>
+              )}
+            </button>
+          )}
+          {/* Show Continue Anyway when there are warnings but no errors */}
           {!hasErrors && !isValid && onContinueAnyway && (
             <button
               onClick={onContinueAnyway}
-              className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600"
+              disabled={isSaving}
+              className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50"
             >
-              Continue Anyway
+              Save Anyway
             </button>
           )}
         </div>
@@ -226,6 +250,127 @@ function HealthEnergyAllocation() {
               +{energyAllocation} allocated
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Portrait Upload Component
+// =============================================================================
+
+function PortraitUpload() {
+  const { draft, updateDraft } = useCharacterCreatorStore();
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image must be smaller than 2MB');
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    try {
+      // Convert to base64 for storage
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        updateDraft({ portrait: base64 });
+        setIsUploading(false);
+      };
+      reader.onerror = () => {
+        alert('Failed to read image file');
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      alert('Failed to process image');
+      setIsUploading(false);
+    }
+  };
+  
+  const handleRemove = () => {
+    updateDraft({ portrait: undefined });
+  };
+  
+  return (
+    <div className="mb-6">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Character Portrait (Optional)
+      </label>
+      
+      <div className="flex items-start gap-4">
+        {/* Portrait Preview */}
+        <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+          {draft.portrait ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={draft.portrait}
+                alt="Character portrait"
+                className="w-full h-full object-cover"
+              />
+              <button
+                onClick={handleRemove}
+                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs hover:bg-red-600"
+                title="Remove portrait"
+              >
+                ×
+              </button>
+            </>
+          ) : (
+            <div className="text-center p-2">
+              <span className="text-3xl text-gray-400">📷</span>
+              <p className="text-xs text-gray-500 mt-1">No image</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Upload Controls */}
+        <div className="flex-1">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+            id="portrait-upload"
+            disabled={isUploading}
+          />
+          <label
+            htmlFor="portrait-upload"
+            className={cn(
+              'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
+              isUploading
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'border-primary-300 text-primary-600 hover:bg-primary-50'
+            )}
+          >
+            {isUploading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                📤 {draft.portrait ? 'Change Image' : 'Upload Image'}
+              </>
+            )}
+          </label>
+          <p className="text-xs text-gray-500 mt-2">
+            JPG, PNG, or GIF. Max 2MB. Portrait images (3:4 ratio) work best.
+          </p>
         </div>
       </div>
     </div>
@@ -425,11 +570,28 @@ export function FinalizeStep() {
       setShowValidation(false);
       
       const characterData = getCharacter();
+      // Remove any undefined values (Firestore rejects undefined in documents)
+      const sanitize = (val: any): any => {
+        if (val === undefined) return undefined;
+        if (val === null) return null;
+        if (Array.isArray(val)) return val.map(sanitize).filter((v) => v !== undefined);
+        if (typeof val === 'object') {
+          const out: any = {};
+          Object.entries(val).forEach(([k, v]) => {
+            const s = sanitize(v);
+            if (s !== undefined) out[k] = s;
+          });
+          return out;
+        }
+        return val;
+      };
+
+      const sanitizedCharacter = sanitize(characterData);
       
       const docRef = await addDoc(
         collection(db, 'users', user.uid, 'character'),
         {
-          ...characterData,
+          ...sanitizedCharacter,
           userId: user.uid,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
@@ -469,6 +631,9 @@ export function FinalizeStep() {
           className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors"
         />
       </div>
+      
+      {/* Character Portrait (Optional) */}
+      <PortraitUpload />
       
       {/* Character Summary */}
       <div className="bg-gray-50 rounded-xl p-6 mb-6">
@@ -637,7 +802,9 @@ export function FinalizeStep() {
         isOpen={showValidation}
         onClose={() => setShowValidation(false)}
         issues={validationIssues}
+        onSave={handleSave}
         onContinueAnyway={validationIssues.every(i => i.severity !== 'error') ? handleSave : undefined}
+        isSaving={saving}
       />
 
       {/* Login Prompt Modal */}

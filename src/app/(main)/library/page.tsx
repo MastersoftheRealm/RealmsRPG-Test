@@ -300,6 +300,9 @@ function PowersTab({ onDelete }: TabProps) {
         />
       </div>
       
+      {/* Results Count - Above headers to match Codex */}
+      <ResultsCount count={filteredData.length} itemLabel="power" isLoading={isLoading} />
+      
       {/* Column Headers */}
       <ColumnHeaders
         columns={[
@@ -311,9 +314,6 @@ function PowersTab({ onDelete }: TabProps) {
         onSort={handleSort}
         className="grid-cols-3"
       />
-      
-      {/* Results Count */}
-      <ResultsCount count={filteredData.length} itemLabel="power" isLoading={isLoading} />
       
       {/* Power Cards */}
       {isLoading ? (
@@ -444,6 +444,9 @@ function TechniquesTab({ onDelete }: TabProps) {
         />
       </div>
       
+      {/* Results Count - Above headers to match Codex */}
+      <ResultsCount count={filteredData.length} itemLabel="technique" isLoading={isLoading} />
+      
       <ColumnHeaders
         columns={[
           { key: 'name', label: 'Name', width: '2fr' },
@@ -454,8 +457,6 @@ function TechniquesTab({ onDelete }: TabProps) {
         onSort={handleSort}
         className="grid-cols-3"
       />
-      
-      <ResultsCount count={filteredData.length} itemLabel="technique" isLoading={isLoading} />
       
       {isLoading ? (
         <LoadingSpinner />
@@ -490,6 +491,37 @@ function TechniquesTab({ onDelete }: TabProps) {
 // =============================================================================
 // Items Tab - Using AbilityCard with property chips
 // =============================================================================
+
+// Helper to format damage from various formats (string or object)
+function formatDamageValue(damage: unknown): string {
+  if (!damage) return '';
+  
+  // If it's already a string, return it
+  if (typeof damage === 'string') {
+    return damage;
+  }
+  
+  // If it's an object with {size, amount, type}, format it
+  if (typeof damage === 'object' && damage !== null) {
+    const d = damage as { size?: number | string; amount?: number | string; type?: string };
+    const parts: string[] = [];
+    
+    // Format as "XdY type" (e.g., "2d6 fire")
+    if (d.amount && d.size) {
+      parts.push(`${d.amount}d${d.size}`);
+    } else if (d.amount) {
+      parts.push(String(d.amount));
+    }
+    
+    if (d.type) {
+      parts.push(String(d.type));
+    }
+    
+    return parts.join(' ');
+  }
+  
+  return '';
+}
 
 function ItemsTab({ onDelete }: TabProps) {
   const { data: items, isLoading, error } = useUserItems();
@@ -532,13 +564,16 @@ function ItemsTab({ onDelete }: TabProps) {
         : item.type === 'armor' ? 'Armor' 
         : 'Equipment';
       
+      // Format damage (handle both string and object formats)
+      const formattedDamage = formatDamageValue(item.damage);
+      
       return transformArmamentToCardData(
         item.docId,
         item.name,
         item.description || '',
         properties,
         {
-          damage: item.damage,
+          damage: formattedDamage,
           defense: item.armorValue,
           type: typeLabel,
         },
@@ -608,6 +643,9 @@ function ItemsTab({ onDelete }: TabProps) {
         />
       </div>
       
+      {/* Results Count - Above headers to match Codex */}
+      <ResultsCount count={filteredData.length} itemLabel="armament" isLoading={isLoading} />
+      
       <ColumnHeaders
         columns={[
           { key: 'name', label: 'Name', width: '2fr' },
@@ -617,8 +655,6 @@ function ItemsTab({ onDelete }: TabProps) {
         onSort={handleSort}
         className="grid-cols-2"
       />
-      
-      <ResultsCount count={filteredData.length} itemLabel="armament" isLoading={isLoading} />
       
       {isLoading ? (
         <LoadingSpinner />
@@ -720,6 +756,9 @@ function CreaturesTab({ onDelete }: TabProps) {
         />
       </div>
       
+      {/* Results Count - Above headers to match Codex */}
+      <ResultsCount count={filteredCreatures.length} itemLabel="creature" isLoading={isLoading} />
+      
       <ColumnHeaders
         columns={[
           { key: 'name', label: 'Name', width: '2fr' },
@@ -729,8 +768,6 @@ function CreaturesTab({ onDelete }: TabProps) {
         onSort={handleSort}
         className="grid-cols-2"
       />
-      
-      <ResultsCount count={filteredCreatures.length} itemLabel="creature" isLoading={isLoading} />
       
       {isLoading ? (
         <LoadingSpinner />

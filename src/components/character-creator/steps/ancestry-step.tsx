@@ -178,6 +178,13 @@ export function AncestryStep() {
 
       {/* Species Info Summary */}
       <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+        {/* Species Description */}
+        {selectedSpecies.description && (
+          <p className="text-gray-700 text-sm mb-4 leading-relaxed">
+            {selectedSpecies.description}
+          </p>
+        )}
+        
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
             <span className="block text-xs text-gray-500 uppercase">Size</span>

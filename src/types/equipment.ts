@@ -49,6 +49,7 @@ export interface Item {
   id: number | string;
   name: string;
   description?: string;
+  type?: 'weapon' | 'armor' | 'equipment' | string;
   rarity?: ItemRarity;
   cost?: number;
   weight?: number;

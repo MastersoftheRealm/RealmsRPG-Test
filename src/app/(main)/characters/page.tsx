@@ -76,28 +76,38 @@ function CharactersContent() {
     );
   }
 
+  // Check if we have characters to show
+  const hasCharacters = characters && characters.length > 0;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Characters</h1>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {characters?.map((character) => (
-          <CharacterCard
-            key={character.id}
-            character={character}
-            onDelete={handleDeleteCharacter}
-            isDeleting={deletingId === character.id}
-          />
-        ))}
-        
-        <AddCharacterCard onClick={handleCreateCharacter} />
-      </div>
-
-      {characters?.length === 0 ? (
-        <p className="text-center text-gray-500 mt-8">
-          You have no saved characters yet. Click &quot;Add Character&quot; to create your first one!
-        </p>
-      ) : null}
+      {hasCharacters ? (
+        // Grid layout when we have characters
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {characters.map((character) => (
+            <CharacterCard
+              key={character.id}
+              character={character}
+              onDelete={handleDeleteCharacter}
+              isDeleting={deletingId === character.id}
+            />
+          ))}
+          
+          <AddCharacterCard onClick={handleCreateCharacter} />
+        </div>
+      ) : (
+        // Centered layout when no characters
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-full max-w-sm">
+            <AddCharacterCard onClick={handleCreateCharacter} />
+          </div>
+          <p className="text-center text-gray-500 mt-6">
+            You have no saved characters yet. Click &quot;Add Character&quot; to create your first one!
+          </p>
+        </div>
+      )}
     </div>
   );
 }
