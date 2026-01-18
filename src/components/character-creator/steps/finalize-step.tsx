@@ -10,7 +10,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { useAuth } from '@/hooks';
+import { useAuth, useRTDBSkills } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
@@ -381,6 +381,7 @@ export function FinalizeStep() {
   const router = useRouter();
   const { user } = useAuth();
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
+  const { data: rtdbSkills } = useRTDBSkills();
   
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -570,6 +571,48 @@ export function FinalizeStep() {
       setShowValidation(false);
       
       const characterData = getCharacter();
+      
+      // Convert skills from Record<string, number> to array format
+      // Character sheet expects: Array<{ id, name, category, skill_val, prof }>
+      if (characterData.skills && typeof characterData.skills === 'object' && !Array.isArray(characterData.skills)) {
+        const skillsRecord = characterData.skills as Record<string, number>;
+        const skillsArray: Array<{
+          id: string;
+          name: string;
+          category?: string;
+          skill_val: number;
+          prof: boolean;
+        }> = [];
+        
+        // Convert each skill allocation to array format
+        Object.entries(skillsRecord).forEach(([skillId, points]) => {
+          if (points > 0) {
+            // Find skill details from RTDB
+            const skillData = rtdbSkills?.find(s => s.id === skillId || s.name === skillId);
+            if (skillData) {
+              skillsArray.push({
+                id: skillData.id,
+                name: skillData.name,
+                category: skillData.category || 'other',
+                skill_val: points,
+                prof: true, // All selected skills are proficient
+              });
+            } else {
+              // Fallback if skill not found in RTDB
+              skillsArray.push({
+                id: skillId,
+                name: skillId,
+                category: 'other',
+                skill_val: points,
+                prof: true,
+              });
+            }
+          }
+        });
+        
+        characterData.skills = skillsArray as any;
+      }
+      
       // Remove any undefined values (Firestore rejects undefined in documents)
       const sanitize = (val: any): any => {
         if (val === undefined) return undefined;
