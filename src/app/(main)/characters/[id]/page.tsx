@@ -641,6 +641,25 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
+  // Equipment quantity change handler (+/-)
+  const handleEquipmentQuantityChange = useCallback((itemId: string | number, delta: number) => {
+    if (!character) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      const items = ((prev.equipment?.items as Item[]) || []).map(item => {
+        if (item.id === itemId || String(item.id) === String(itemId)) {
+          const newQty = Math.max(1, (item.quantity || 1) + delta);
+          return { ...item, quantity: newQty };
+        }
+        return item;
+      });
+      return {
+        ...prev,
+        equipment: { ...prev.equipment, items }
+      };
+    });
+  }, [character]);
+  
   // Currency change handler
   const handleCurrencyChange = useCallback((value: number) => {
     if (!character) return;
@@ -985,6 +1004,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onToggleEquipArmor={handleToggleEquipArmor}
                   onAddEquipment={() => setAddModalType('equipment')}
                   onRemoveEquipment={handleRemoveEquipment}
+                  onEquipmentQuantityChange={handleEquipmentQuantityChange}
                   onCurrencyChange={handleCurrencyChange}
                   // Notes tab props
                   weight={character.weight}

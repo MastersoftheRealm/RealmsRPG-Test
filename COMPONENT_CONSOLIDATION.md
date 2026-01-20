@@ -171,12 +171,12 @@ Track vanilla site features and their React implementation status:
 - [ ] Notification dot on edit button (green pulsing)
 - [ ] Section edit toggles (pencil icons)
 - [x] Ability +/- allocation
-- [ ] Ability 2-point cost for 4+
-- [ ] Defense value allocation
+- [x] Ability 2-point cost for 4+ ✅ (2025-01-20)
+- [x] Defense value allocation ✅ (2025-01-20)
 - [ ] Health-Energy allocation panel
 - [x] Skill +/- allocation
-- [ ] Remove skill (✕) button
-- [ ] Proficiency +/- editing (mart_prof, pow_prof)
+- [x] Remove skill (✕) button ✅ (2025-01-20)
+- [x] Proficiency +/- editing (mart_prof, pow_prof) ✅ (2025-01-20)
 
 ### Powers Tab
 - [x] Power cards with name/description
@@ -184,14 +184,14 @@ Track vanilla site features and their React implementation status:
 - [x] Innate badge
 - [x] Toggle innate checkbox (edit mode)
 - [x] Use button (deducts energy)
-- [ ] **Parts chips** (expandable)
+- [x] **Parts chips** (expandable) ✅ (2025-01-20)
 - [ ] Innate vs Regular separation
 
 ### Techniques Tab
 - [x] Technique cards with name/description
 - [x] Energy cost display
 - [x] Use button (deducts energy)
-- [ ] **Parts chips** (expandable)
+- [x] **Parts chips** (expandable) ✅ (2025-01-20)
 - [ ] Weapon requirement display
 
 ### Inventory Tab
@@ -199,23 +199,25 @@ Track vanilla site features and their React implementation status:
 - [x] Armor with damage reduction
 - [x] Equipment with quantities
 - [x] Equip/unequip toggle
-- [ ] **Property chips** (expandable)
-- [ ] Currency +/- input
+- [x] **Property chips** (expandable) ✅ (2025-01-20)
+- [x] Currency +/- input ✅ (2025-01-20)
 - [ ] Armament proficiency box
+- [x] Equipment quantity +/- ✅ (2025-01-20)
+- [x] Unarmed Prowess display ✅ (2025-01-20)
 
 ### Archetype Section
 - [x] Martial/Power proficiency display
 - [x] Attack Bonuses table (Prof/Unprof)
 - [x] Power Potency display
-- [ ] Proficiency +/- editing
+- [x] Proficiency +/- editing ✅ (2025-01-20)
 - [ ] Archetype choices (mixed archetypes)
+- [x] Traits section (ancestry, flaw, characteristic) ✅ (2025-01-20)
 
 ### Feats Section
 - [x] Feat cards with description
 - [x] Add feat button
-- [ ] Uses +/- controls
-- [ ] Recovery display
-- [ ] **Traits section** (ancestry, flaw, characteristic)
+- [x] Uses +/- controls ✅ (2025-01-20)
+- [x] Recovery display ✅ (2025-01-20)
 
 ### Dice Rolling
 - [x] Roll log panel

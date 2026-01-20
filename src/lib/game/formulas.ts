@@ -225,6 +225,21 @@ export function getArmamentMax(archetype: ArchetypeCategory | { type?: Archetype
 }
 
 /**
+ * Calculate armament proficiency (max training points for weapons/armor) based on martial proficiency.
+ * Formula:
+ *   0 martial prof = 3 TP
+ *   1 martial prof = 8 TP
+ *   2 martial prof = 12 TP
+ *   3+ martial prof = 12 + 3 * (martialProf - 2) = 15, 18, 21, etc.
+ */
+export function calculateArmamentProficiency(martialProf: number): number {
+  if (martialProf === 0) return 3;
+  if (martialProf === 1) return 8;
+  if (martialProf === 2) return 12;
+  return 12 + (3 * (martialProf - 2)); // 15, 18, 21, etc.
+}
+
+/**
  * Get the archetype feat limit.
  */
 export function getArchetypeFeatLimit(archetype: ArchetypeCategory | { type?: ArchetypeCategory }): number {

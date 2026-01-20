@@ -15,6 +15,7 @@ import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { PartChipList, type PartData } from '@/components/shared/part-chip';
+import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
 
 // Helper to convert power/technique parts to PartData format
@@ -86,6 +87,7 @@ interface LibrarySectionProps {
   onToggleEquipArmor?: (id: string | number) => void;
   onAddEquipment?: () => void;
   onRemoveEquipment?: (id: string | number) => void;
+  onEquipmentQuantityChange?: (id: string | number, delta: number) => void;
   onCurrencyChange?: (value: number) => void;
   // Notes tab props
   weight?: number;
@@ -102,6 +104,7 @@ interface LibrarySectionProps {
   // Proficiencies tab props
   level?: number;
   archetypeAbility?: number;
+  martialProficiency?: number; // For armament proficiency display
 }
 
 type TabType = 'powers' | 'techniques' | 'weapons' | 'armor' | 'equipment' | 'proficiencies' | 'notes';
@@ -303,9 +306,10 @@ interface ItemCardProps {
   onToggleEquip?: () => void;
   onRollAttack?: () => void;
   onRollDamage?: () => void;
+  onQuantityChange?: (delta: number) => void;
 }
 
-function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttack, onRollDamage }: ItemCardProps) {
+function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttack, onRollDamage, onQuantityChange }: ItemCardProps) {
   const [expanded, setExpanded] = useState(false);
   
   // Convert properties to PartData format for chips
@@ -341,7 +345,40 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
               <span className="text-green-600">✓</span>
             )}
             <span className="font-medium text-gray-800">{item.name}</span>
-            {item.quantity && item.quantity > 1 && (
+            {/* Quantity display with optional +/- controls for equipment */}
+            {type === 'equipment' && (item.quantity || 1) >= 1 && (
+              isEditMode && onQuantityChange ? (
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onQuantityChange(-1); }}
+                    disabled={(item.quantity || 1) <= 1}
+                    className={cn(
+                      'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
+                      (item.quantity || 1) > 1
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    )}
+                    title="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span className="text-xs text-gray-600 min-w-[1.5rem] text-center">×{item.quantity || 1}</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onQuantityChange(1); }}
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
+                    title="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+              ) : (
+                (item.quantity || 1) > 1 && (
+                  <span className="text-xs text-gray-500">×{item.quantity}</span>
+                )
+              )
+            )}
+            {/* For weapons/armor, show quantity only if > 1 */}
+            {type !== 'equipment' && item.quantity && item.quantity > 1 && (
               <span className="text-xs text-gray-500">×{item.quantity}</span>
             )}
           </div>
@@ -433,6 +470,7 @@ export function LibrarySection({
   onToggleEquipArmor,
   onAddEquipment,
   onRemoveEquipment,
+  onEquipmentQuantityChange,
   onCurrencyChange,
   // Notes props
   weight = 70,
@@ -453,6 +491,20 @@ export function LibrarySection({
   const [activeTab, setActiveTab] = useState<TabType>('powers');
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
   const rollContext = useRollsOptional();
+  
+  // Calculate unarmed prowess - always present weapon option
+  const unarmedProwess = useMemo((): Item | null => {
+    if (!abilities) return null;
+    const str = abilities.strength || 0;
+    const unarmedDamage = Math.ceil(str / 2);
+    return {
+      id: '__unarmed_prowess__',
+      name: 'Unarmed Prowess',
+      description: 'Your bare fists. Damage is based on your Strength score.',
+      damage: `${unarmedDamage} Bludgeoning`,
+      equipped: true, // Always "equipped" since you always have fists
+    };
+  }, [abilities]);
 
   const tabs: { id: TabType; label: string; count?: number; onAdd?: () => void }[] = [
     { id: 'powers', label: 'Powers', count: powers.length, onAdd: onAddPower },
@@ -583,29 +635,67 @@ export function LibrarySection({
         )}
 
         {activeTab === 'weapons' && (
-          weapons.length > 0 ? (
-            weapons.map((item, i) => {
-              // Calculate attack bonus - typically martial ability + proficiency
-              // For now we'll use 0 as a baseline (character sheet page should calculate this)
-              const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
-              return (
-                <ItemCard 
-                  key={item.id || i} 
-                  item={item} 
-                  type="weapon"
-                  isEditMode={isEditMode}
-                  onRemove={onRemoveWeapon ? () => onRemoveWeapon(item.id || String(i)) : undefined}
-                  onToggleEquip={onToggleEquipWeapon ? () => onToggleEquipWeapon(item.id || String(i)) : undefined}
-                  onRollAttack={rollContext ? () => rollContext.rollAttack(item.name, attackBonus) : undefined}
-                  onRollDamage={rollContext && item.damage ? () => rollContext.rollDamage(item.damage as string) : undefined}
-                />
-              );
-            })
-          ) : (
-            <p className="text-gray-400 text-sm italic text-center py-4">
-              No weapons equipped
-            </p>
-          )
+          <>
+            {/* Unarmed Prowess - always first */}
+            {unarmedProwess && (
+              <div className="border border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50/50 mb-2">
+                <div className="flex items-center">
+                  <div className="flex-1 flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400">👊</span>
+                      <span className="font-medium text-gray-600">{unarmedProwess.name}</span>
+                      <span className="text-xs text-gray-400 italic">Always available</span>
+                    </div>
+                    <span className="text-red-500 font-medium text-sm">{unarmedProwess.damage}</span>
+                  </div>
+                  {rollContext && (
+                    <div className="flex items-center gap-1 pr-2">
+                      <button
+                        onClick={() => rollContext.rollAttack('Unarmed', abilities?.strength || 0)}
+                        className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                        title="Roll unarmed attack"
+                      >
+                        ⚔️ Atk
+                      </button>
+                      <button
+                        onClick={() => rollContext.rollDamage(`${unarmedProwess.damage} bludgeoning`)}
+                        className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
+                        title="Roll unarmed damage"
+                      >
+                        💥 Dmg
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {/* Other weapons */}
+            {weapons.length > 0 ? (
+              weapons.map((item, i) => {
+                // Calculate attack bonus - typically martial ability + proficiency
+                // For now we'll use 0 as a baseline (character sheet page should calculate this)
+                const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
+                return (
+                  <ItemCard 
+                    key={item.id || i} 
+                    item={item} 
+                    type="weapon"
+                    isEditMode={isEditMode}
+                    onRemove={onRemoveWeapon ? () => onRemoveWeapon(item.id || String(i)) : undefined}
+                    onToggleEquip={onToggleEquipWeapon ? () => onToggleEquipWeapon(item.id || String(i)) : undefined}
+                    onRollAttack={rollContext ? () => rollContext.rollAttack(item.name, attackBonus) : undefined}
+                    onRollDamage={rollContext && item.damage ? () => rollContext.rollDamage(item.damage as string) : undefined}
+                  />
+                );
+              })
+            ) : (
+              !unarmedProwess && (
+                <p className="text-gray-400 text-sm italic text-center py-4">
+                  No weapons equipped
+                </p>
+              )
+            )}
+          </>
         )}
 
         {activeTab === 'armor' && (
@@ -636,6 +726,7 @@ export function LibrarySection({
                 type="equipment"
                 isEditMode={isEditMode}
                 onRemove={onRemoveEquipment ? () => onRemoveEquipment(item.id || String(i)) : undefined}
+                onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id || String(i), delta) : undefined}
               />
             ))
           ) : (
