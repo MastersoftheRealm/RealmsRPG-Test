@@ -1,8 +1,64 @@
 # Comprehensive Vanilla vs React Character Sheet Analysis
 
+**Last Updated**: January 20, 2026
+
 This document provides an exhaustive analysis of all character sheet functionality in the vanilla JavaScript implementation vs the React implementation, identifying gaps, missing features, and components that can be reused.
 
 Priorities for implimentation: In the entire codebase always look for ways to consolidate code, create resuable components, or use other components from across thre react site to accomplish goals. For instance, the library pages power/technique/armament cards all work similalry, their part/property chips all work the same essentially, I want these same compnents reused wherever possible in the character sheet, made to work in all contexts, etc creating or extracting compnents where needed for more utility and use across THE ENTIRE react ttrpg website. this is how I always want to approach our feature implimentation, since it's scalable, ui friendly, intuitive for users who have seen the same things and know how they work across the site, etc. Continue implimentation as you go and keep this goal at the top of our prioerties right below ensuring we migrate/capture all of the vanilla sites functioanlty in the react site. Ensure progress is tracked in a seperate document or in the same file as vanilla character sheet analysis so we know what we've done, know what needs doing, know what components we can reuse, need to create, or need to parese out to make more useful in broader context and so on. nothing should fall through the cracks, this is a slow/quality project, not quantity/speed.
+
+---
+
+## IMPLEMENTATION PROGRESS TRACKER
+
+### Completed Features (2025-01-20)
+- ✅ **Equipment Quantity Controls** - Added +/- buttons for equipment quantity (min 1)
+- ✅ **Unarmed Prowess Display** - Shows computed unarmed attack option (damage = ceil(str/2) Bludgeoning)
+- ✅ **Ability 2-Point Cost** - High abilities (4→5, etc.) already correctly cost 2 points
+- ✅ **Defense Value Editing** - Defense allocation already implemented with 2 skill point cost
+- ✅ **Currency +/- Support** - Currency input already supports typing +5, -10, or absolute values
+- ✅ **Armament Proficiency Display** - Shows max training points based on martial proficiency
+- ✅ **Parts Chips** - Shared chip components created and used across power/technique displays
+- ✅ **Feat Uses +/-** - Use buttons implemented for feats with use tracking
+- ✅ **Recovery Display** - Feat recovery periods shown in feat cards
+- ✅ **Proficiency Editing** - Martial/Power proficiency editing with +/- buttons in archetype section
+- ✅ **Innate vs Regular Power Separation** - Powers visually separated into Innate and Regular sections with headers
+- ✅ **Health-Energy Allocation Panel** - Full H/E point allocation UI in header with +/- controls and visual bars
+
+### Partially Implemented Features
+- ⚠️ **Innate Energy Tracking** - Shows innate energy value, needs threshold/pools/current/max breakdown in powers section
+- ⚠️ **Power/Technique Parts Display** - Part chips exist but need RTDB data enrichment for full details
+- ⚠️ **Proficiencies Tab** - Shows basic structure but incomplete TP calculations and part lookups
+- ⚠️ **Weapon Requirement Display** - Techniques show weapon type but not specific requirements
+- ⚠️ **Energy Deduction** - Use buttons exist but need to actually deduct energy on use
+
+### Features In Progress
+- 🔄 **Health-Energy Allocation Panel** - Needs collapsible panel with +/- controls in header
+- 🔄 **Archetype Milestone Choices** - Mixed archetype level choice UI needed
+
+### High Priority Missing Features
+1. **Edit Mode Toggle System** - No unified edit mode toggle with notification dot
+2. **Resource Allocation UI** - Health/Energy allocation panel needed
+3. **Innate Energy Tracking** - Threshold/Pools display for innate powers
+4. **Technique/Power Use Buttons** - "Use (X)" buttons to deduct energy
+5. **Trait Recovery Display** - Traits need recovery period info
+6. **Archetype Bonuses Table** - Missing prof/unprof attack bonuses grid
+7. **Power Potency Display** - Not calculated/displayed
+8. **Archetype Milestone Choices** - No UI for mixed archetype level choices
+
+### Medium Priority Missing Features
+9. **Pencil Icon Color States** - No green/blue/red coloring based on points
+10. **Skill Ability Selector** - Cannot change ability used for skills
+11. **Speed/Evasion Base Editing** - Cannot modify base values in edit mode
+12. **Defense Max Validation** - Missing level + 10 cap
+13. **Feat Requirement Checking** - Partial - needs ability, skill checks
+14. **Point Overspending Indicators** - No red coloring when overspent
+
+### Low Priority Missing Features
+15. **Data Cleaning Before Save** - Not stripping computed fields properly
+16. **Save Notifications** - No toast notifications for save operations
+17. **Show Eligible Only** - Feat modal missing "show only eligible" filter
+18. **Archetype Abilities Text** - Header missing "Power: Charisma • Martial: Strength" display
+19. **Remove Buttons** - Some sections missing remove/delete functionality
 
 ---
 
@@ -1222,15 +1278,15 @@ body.edit-mode { /* Edit mode active */ }
 | 6 Defense boxes | ✅ | ❌ | 🔴 Missing | Defenses in header only |
 | Defense roll on click | ✅ | ✅ | ✓ Complete | In header |
 | Edit mode +/- buttons | ✅ | ✅ | ✓ Complete | |
-| Point cost display | ✅ | ❌ | 🔴 Missing | 1pt vs 2pt cost not shown |
-| 2-point cost for 4+ | ✅ | ❌ | 🔴 Missing | High ability costs not implemented |
+| Point cost display | ✅ | ✅ | ✓ Complete | ✓ Verified 2025-01-20 |
+| 2-point cost for 4+ | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
 | Resource tracker bar | ✅ | ⚠️ | ⚠️ Partial | Shows remaining but no bar |
 | Max ability by level | ✅ | ❌ | 🔴 Missing | No cap enforcement |
 | Negative sum limit (-3) | ✅ | ❌ | 🔴 Missing | No validation |
 | Min ability (-2) | ✅ | ❌ | 🔴 Missing | No lower bound |
 | Archetype/Martial/Power badges | ✅ | ✅ | ✓ Complete | Color-coded badges |
-| Defense skill allocation | ✅ | ❌ | 🔴 Missing | Cannot edit defense vals |
-| Defense 2-point cost | ✅ | ❌ | 🔴 Missing | |
+| Defense skill allocation | ✅ | ✅ | ✓ Complete | ✓ Already implemented with +/- buttons |
+| Defense 2-point cost | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
 
 ### Skills Section (skills-section.tsx)
 
@@ -1256,16 +1312,16 @@ body.edit-mode { /* Edit mode active */ }
 |---------|---------|-------|--------|-------|
 | Martial proficiency box | ✅ | ✅ | ✓ Complete | Meter display |
 | Power proficiency box | ✅ | ✅ | ✓ Complete | Meter display |
-| Proficiency edit +/- | ✅ | ❌ | 🔴 Missing | Cannot edit profs |
+| Proficiency edit +/- | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
 | Attack bonuses table | ✅ | ❌ | 🔴 Missing | Prof/Unprof grid |
 | Power Potency display | ✅ | ❌ | 🔴 Missing | 10 + pow_prof + pow_abil |
 | Weapons table | ✅ | ❌ | 🔴 Missing | In LibrarySection instead |
-| Unarmed Prowess | ✅ | ❌ | 🔴 Missing | Always-show unarmed |
+| Unarmed Prowess | ✅ | ✅ | ✓ Complete | ✓ Implemented in LibrarySection 2025-01-20 |
 | Armor table | ✅ | ❌ | 🔴 Missing | In LibrarySection instead |
 | Archetype choices (mixed) | ✅ | ❌ | 🔴 Missing | Milestone level selection |
 | Feats in archetype | ❌ | ✅ | React only | Feats displayed here |
 | Feat collapsible cards | ✅ | ✅ | ✓ Complete | |
-| Feat uses +/- | ✅ | ⚠️ | ⚠️ Partial | Use button but no +/- |
+| Feat uses +/- | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
 
 ### Library Section (library-section.tsx)
 
@@ -1277,31 +1333,33 @@ body.edit-mode { /* Edit mode active */ }
 | - Archetype feats | ✅ | ⚠️ | ⚠️ Partial | Combined in archetype |
 | - Character feats | ✅ | ⚠️ | ⚠️ Partial | Combined in archetype |
 | - State feats | ✅ | ❌ | 🔴 Missing | |
-| - Uses tracking +/- | ✅ | ❌ | 🔴 Missing | |
-| - Recovery display | ✅ | ❌ | 🔴 Missing | |
+| - Uses tracking +/- | ✅ | ✅ | ✓ Complete | ✓ Implemented 2025-01-20 |
+| - Recovery display | ✅ | ✅ | ✓ Complete | ✓ Implemented 2025-01-20 |
 | - Unmet req warning | ✅ | ❌ | 🔴 Missing | |
 | **Techniques Tab** | | | | |
 | - Name, Action, Weapon | ✅ | ⚠️ | ⚠️ Partial | Less columns |
 | - Energy cost display | ✅ | ✅ | ✓ Complete | |
-| - Use (X) button | ✅ | ❌ | 🔴 Missing | Deduct energy |
+| - Use (X) button | ✅ | ⚠️ | ⚠️ Partial | Use button exists, needs energy deduction |
 | - Collapsible desc | ✅ | ✅ | ✓ Complete | |
-| - Parts chips | ✅ | ❌ | 🔴 Missing | ExpandableChip available |
+| - Parts chips | ✅ | ⚠️ | ⚠️ Partial | ✓ Chips implemented 2025-01-20, needs RTDB enrichment |
+| - Weapon requirement | ✅ | ⚠️ | ⚠️ Partial | Shows weapon type, not specific req |
 | **Powers Tab** | | | | |
-| - Innate vs Regular split | ✅ | ⚠️ | ⚠️ Partial | Badge only, no separation |
-| - Innate energy tracking | ✅ | ❌ | 🔴 Missing | Threshold/Pools display |
-| - Toggle innate checkbox | ✅ | ❌ | 🔴 Missing | |
-| - Use button | ✅ | ❌ | 🔴 Missing | |
-| - Parts chips | ✅ | ❌ | 🔴 Missing | |
+| - Innate vs Regular split | ✅ | ✅ | ✓ Complete | ✓ Implemented 2025-01-20 with section headers |
+| - Innate energy tracking | ✅ | ⚠️ | ⚠️ Partial | Shows innate energy value, needs threshold/pools breakdown |
+| - Toggle innate checkbox | ✅ | ✅ | ✓ Complete | Star button toggle in edit mode |
+| - Use button | ✅ | ⚠️ | ⚠️ Partial | Use button exists, needs energy deduction |
+| - Parts chips | ✅ | ⚠️ | ⚠️ Partial | ✓ Chips implemented 2025-01-20, needs RTDB enrichment |
 | **Inventory Tab** | | | | |
-| - Armament Prof box | ✅ | ❌ | 🔴 Missing | |
-| - Currency +/- input | ✅ | ❌ | 🔴 Missing | |
+| - Armament Prof box | ✅ | ✅ | ✓ Complete | ✓ Implemented 2025-01-20 |
+| - Currency +/- input | ✅ | ✅ | ✓ Complete | ✓ Verified 2025-01-20 |
 | - Weapons list | ✅ | ✅ | ✓ Complete | |
+| - Unarmed Prowess | ✅ | ✅ | ✓ Complete | ✓ Implemented 2025-01-20 |
 | - Attack/Damage rolls | ✅ | ✅ | ✓ Complete | |
 | - Armor list | ✅ | ✅ | ✓ Complete | |
 | - Damage Reduction calc | ✅ | ❌ | 🔴 Missing | |
 | - Critical Range calc | ✅ | ❌ | 🔴 Missing | |
 | - Equipment list | ✅ | ✅ | ✓ Complete | |
-| - Quantity +/- | ✅ | ❌ | 🔴 Missing | |
+| - Quantity +/- | ✅ | ✅ | ✓ Complete | ✓ Implemented 2025-01-20 |
 | - Equip/unequip checkbox | ✅ | ✅ | ✓ Complete | |
 | - Properties chips | ✅ | ⚠️ | ⚠️ Partial | Shows but not expandable |
 | **Proficiencies Tab** | | | | |

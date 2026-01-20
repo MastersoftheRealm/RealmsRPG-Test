@@ -487,6 +487,7 @@ export function LibrarySection({
   // Proficiencies props
   level = 1,
   archetypeAbility = 0,
+  martialProficiency,
 }: LibrarySectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>('powers');
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
@@ -548,6 +549,17 @@ export function LibrarySection({
         ))}
       </div>
 
+      {/* Armament Proficiency Display - only for weapons/armor/equipment tabs */}
+      {['weapons', 'armor', 'equipment'].includes(activeTab) && martialProficiency !== undefined && (
+        <div className="mb-3 px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">⚔️ Armament Proficiency:</span>
+            <span className="font-bold text-orange-600">{calculateArmamentProficiency(martialProficiency)} TP</span>
+            <span className="text-xs text-gray-500">(Max training points)</span>
+          </div>
+        </div>
+      )}
+
       {/* Currency + Add Button Row - only show for inventory-related tabs */}
       {['powers', 'techniques', 'weapons', 'armor', 'equipment'].includes(activeTab) && (
         <div className="flex justify-between items-center mb-3">
@@ -595,24 +607,71 @@ export function LibrarySection({
       {/* Content */}
       <div className="space-y-2 max-h-[400px] overflow-y-auto">
         {activeTab === 'powers' && (
-          powers.length > 0 ? (
-            powers.map((power, i) => (
-              <PowerCard 
-                key={power.id || i} 
-                power={power} 
-                innateEnergy={innateEnergy}
-                currentEnergy={currentEnergy}
-                isEditMode={isEditMode}
-                onRemove={onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
-                onToggleInnate={onTogglePowerInnate ? (isInnate) => onTogglePowerInnate(power.id || String(i), isInnate) : undefined}
-                onUse={onUsePower && power.cost ? () => onUsePower(power.id || String(i), power.cost!) : undefined}
-              />
-            ))
-          ) : (
-            <p className="text-gray-400 text-sm italic text-center py-4">
-              No powers learned
-            </p>
-          )
+          <>
+            {/* Innate Powers Section */}
+            {powers.filter(p => p.innate === true).length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 px-2 py-1 bg-purple-50 border border-purple-200 rounded">
+                  <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
+                    ★ Innate Powers
+                  </span>
+                  {innateEnergy !== undefined && (
+                    <span className="text-xs text-purple-600">
+                      (Innate Energy: {innateEnergy})
+                    </span>
+                  )}
+                </div>
+                {powers
+                  .filter(p => p.innate === true)
+                  .map((power, i) => (
+                    <PowerCard 
+                      key={power.id || `innate-${i}`} 
+                      power={power} 
+                      innateEnergy={innateEnergy}
+                      currentEnergy={currentEnergy}
+                      isEditMode={isEditMode}
+                      onRemove={onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
+                      onToggleInnate={onTogglePowerInnate ? (isInnate) => onTogglePowerInnate(power.id || String(i), isInnate) : undefined}
+                      onUse={onUsePower && power.cost ? () => onUsePower(power.id || String(i), power.cost!) : undefined}
+                    />
+                  ))}
+              </div>
+            )}
+
+            {/* Regular Powers Section */}
+            {powers.filter(p => p.innate !== true).length > 0 && (
+              <div className="space-y-2">
+                {powers.filter(p => p.innate === true).length > 0 && (
+                  <div className="flex items-center gap-2 px-2 py-1 bg-blue-50 border border-blue-200 rounded">
+                    <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                      Regular Powers
+                    </span>
+                  </div>
+                )}
+                {powers
+                  .filter(p => p.innate !== true)
+                  .map((power, i) => (
+                    <PowerCard 
+                      key={power.id || `regular-${i}`} 
+                      power={power} 
+                      innateEnergy={innateEnergy}
+                      currentEnergy={currentEnergy}
+                      isEditMode={isEditMode}
+                      onRemove={onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
+                      onToggleInnate={onTogglePowerInnate ? (isInnate) => onTogglePowerInnate(power.id || String(i), isInnate) : undefined}
+                      onUse={onUsePower && power.cost ? () => onUsePower(power.id || String(i), power.cost!) : undefined}
+                    />
+                  ))}
+              </div>
+            )}
+
+            {/* Empty state */}
+            {powers.length === 0 && (
+              <p className="text-gray-400 text-sm italic text-center py-4">
+                No powers learned
+              </p>
+            )}
+          </>
         )}
 
         {activeTab === 'techniques' && (

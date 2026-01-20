@@ -988,6 +988,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   currency={character.currency}
                   innateEnergy={character.innateEnergy}
                   currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
+                  martialProficiency={character.mart_prof}
                   isEditMode={isEditMode}
                   onAddPower={() => setAddModalType('power')}
                   onRemovePower={handleRemovePower}
