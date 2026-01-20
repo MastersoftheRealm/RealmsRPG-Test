@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import type { Abilities } from '@/types';
 
@@ -27,6 +27,7 @@ interface SkillsSectionProps {
   abilities: Abilities;
   isEditMode?: boolean;
   onSkillChange?: (skillId: string, updates: Partial<Skill>) => void;
+  onRemoveSkill?: (skillId: string) => void;
   onAddSkill?: () => void;
   onAddSubSkill?: () => void;
 }
@@ -44,12 +45,14 @@ function SkillRow({
   isEditMode,
   onToggleProf,
   onValueChange,
+  onRemove,
   onRoll,
 }: {
   skill: Skill;
   isEditMode?: boolean;
   onToggleProf?: () => void;
   onValueChange?: (value: number) => void;
+  onRemove?: () => void;
   onRoll?: () => void;
 }) {
   const isSubSkill = Boolean(skill.baseSkill);
@@ -102,22 +105,37 @@ function SkillRow({
 
       <div className="flex items-center gap-2">
         {isEditMode ? (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => onValueChange?.(skill.skill_val - 1)}
-              className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm"
-              disabled={skill.skill_val <= 0}
-            >
-              −
-            </button>
-            <span className="w-8 text-center font-mono">{skill.skill_val}</span>
-            <button
-              onClick={() => onValueChange?.(skill.skill_val + 1)}
-              className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm"
-            >
-              +
-            </button>
-          </div>
+          <>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => onValueChange?.(skill.skill_val - 1)}
+                className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm"
+                disabled={skill.skill_val <= 0}
+              >
+                −
+              </button>
+              <span className="w-8 text-center font-mono">{skill.skill_val}</span>
+              <button
+                onClick={() => onValueChange?.(skill.skill_val + 1)}
+                className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm"
+              >
+                +
+              </button>
+            </div>
+            {/* Remove skill button */}
+            {onRemove && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove();
+                }}
+                className="p-1 rounded hover:bg-red-100 text-red-500 transition-colors"
+                title="Remove skill"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </>
         ) : (
           <span className={cn(
             'font-bold min-w-[40px] text-right',
@@ -136,6 +154,7 @@ export function SkillsSection({
   abilities,
   isEditMode = false,
   onSkillChange,
+  onRemoveSkill,
   onAddSkill,
   onAddSubSkill,
 }: SkillsSectionProps) {
@@ -225,6 +244,7 @@ export function SkillsSection({
                         isEditMode={isEditMode}
                         onToggleProf={() => onSkillChange?.(skill.id, { prof: !skill.prof })}
                         onValueChange={(val) => onSkillChange?.(skill.id, { skill_val: val })}
+                        onRemove={isEditMode && onRemoveSkill ? () => onRemoveSkill(skill.id) : undefined}
                         onRoll={rollContext ? () => rollContext.rollSkill(skill.name, totalBonus) : undefined}
                       />
                     );

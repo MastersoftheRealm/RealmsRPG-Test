@@ -35,4 +35,5 @@ export interface CharacterFeat {
   stacks?: number; // Number of times stacked
   maxUses?: number; // Per-rest uses
   currentUses?: number; // Remaining uses
+  recovery?: string; // Recovery period (e.g., 'Full Recovery', 'Short Rest')
 }

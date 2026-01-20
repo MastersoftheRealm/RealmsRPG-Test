@@ -2,6 +2,8 @@
 
 This document provides an exhaustive analysis of all character sheet functionality in the vanilla JavaScript implementation vs the React implementation, identifying gaps, missing features, and components that can be reused.
 
+Priorities for implimentation: In the entire codebase always look for ways to consolidate code, create resuable components, or use other components from across thre react site to accomplish goals. For instance, the library pages power/technique/armament cards all work similalry, their part/property chips all work the same essentially, I want these same compnents reused wherever possible in the character sheet, made to work in all contexts, etc creating or extracting compnents where needed for more utility and use across THE ENTIRE react ttrpg website. this is how I always want to approach our feature implimentation, since it's scalable, ui friendly, intuitive for users who have seen the same things and know how they work across the site, etc. Continue implimentation as you go and keep this goal at the top of our prioerties right below ensuring we migrate/capture all of the vanilla sites functioanlty in the react site. Ensure progress is tracked in a seperate document or in the same file as vanilla character sheet analysis so we know what we've done, know what needs doing, know what components we can reuse, need to create, or need to parese out to make more useful in broader context and so on. nothing should fall through the cracks, this is a slow/quality project, not quantity/speed.
+
 ---
 
 ## EXECUTIVE SUMMARY: REACT CHARACTER SHEET GAPS

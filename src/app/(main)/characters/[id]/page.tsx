@@ -480,6 +480,34 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
+  // Toggle power innate handler
+  const handleTogglePowerInnate = useCallback((powerId: string | number, isInnate: boolean) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      powers: (prev.powers || []).map(p => 
+        (p.id === powerId || String(p.id) === String(powerId)) 
+          ? { ...p, innate: isInnate } 
+          : p
+      )
+    } : null);
+  }, [character]);
+  
+  // Use power handler (deducts energy)
+  const handleUsePower = useCallback((powerId: string | number, energyCost: number) => {
+    if (!character || !calculatedStats) return;
+    const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
+    if (currentEnergy < energyCost) return;
+    
+    setCharacter(prev => prev ? {
+      ...prev,
+      energy: { 
+        current: currentEnergy - energyCost, 
+        max: prev.energy?.max ?? calculatedStats.maxEnergy 
+      }
+    } : null);
+  }, [character, calculatedStats]);
+  
   // Add technique handler
   const handleAddTechniques = useCallback((techniques: CharacterTechnique[]) => {
     if (!character) return;
@@ -497,6 +525,21 @@ export default function CharacterSheetPage({ params }: PageParams) {
       techniques: (prev.techniques || []).filter(t => t.id !== techId && String(t.id) !== String(techId))
     } : null);
   }, [character]);
+  
+  // Use technique handler (deducts energy)
+  const handleUseTechnique = useCallback((techId: string | number, energyCost: number) => {
+    if (!character || !calculatedStats) return;
+    const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
+    if (currentEnergy < energyCost) return;
+    
+    setCharacter(prev => prev ? {
+      ...prev,
+      energy: { 
+        current: currentEnergy - energyCost, 
+        max: prev.energy?.max ?? calculatedStats.maxEnergy 
+      }
+    } : null);
+  }, [character, calculatedStats]);
   
   // Add weapon handler
   const handleAddWeapons = useCallback((items: Item[]) => {
@@ -655,6 +698,73 @@ export default function CharacterSheetPage({ params }: PageParams) {
       };
     });
     setSkillModalType(null);
+  }, [character]);
+  
+  // Remove skill handler
+  const handleRemoveSkill = useCallback((skillId: string) => {
+    if (!character) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      const currentSkills = (prev.skills || []) as unknown as Array<{ id: string }>;
+      return {
+        ...prev,
+        skills: currentSkills.filter(s => s.id !== skillId) as unknown as typeof prev.skills
+      };
+    });
+  }, [character]);
+  
+  // Martial proficiency change handler
+  const handleMartialProfChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      mart_prof: Math.max(0, Math.min(6, value)),
+      martialProficiency: Math.max(0, Math.min(6, value)),
+    } : null);
+  }, [character]);
+  
+  // Power proficiency change handler
+  const handlePowerProfChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      pow_prof: Math.max(0, Math.min(6, value)),
+      powerProficiency: Math.max(0, Math.min(6, value)),
+    } : null);
+  }, [character]);
+  
+  // Feat uses change handler (+/- buttons for feat tracking)
+  const handleFeatUsesChange = useCallback((featId: string, delta: number) => {
+    if (!character) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      
+      // Update archetype feats
+      const updatedArchetypeFeats = (prev.archetypeFeats || []).map(feat => {
+        if (String(feat.id) === featId && feat.maxUses) {
+          const currentUses = feat.currentUses ?? feat.maxUses;
+          const newUses = Math.max(0, Math.min(feat.maxUses, currentUses + delta));
+          return { ...feat, currentUses: newUses };
+        }
+        return feat;
+      });
+      
+      // Update character feats
+      const updatedCharFeats = (prev.feats || []).map(feat => {
+        if (String(feat.id) === featId && feat.maxUses) {
+          const currentUses = feat.currentUses ?? feat.maxUses;
+          const newUses = Math.max(0, Math.min(feat.maxUses, currentUses + delta));
+          return { ...feat, currentUses: newUses };
+        }
+        return feat;
+      });
+      
+      return {
+        ...prev,
+        archetypeFeats: updatedArchetypeFeats,
+        feats: updatedCharFeats,
+      };
+    });
   }, [character]);
   
   // Handle modal item add based on type
@@ -831,6 +941,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   skills={skills}
                   abilities={character.abilities}
                   isEditMode={isEditMode}
+                  onRemoveSkill={handleRemoveSkill}
                   onAddSkill={() => setSkillModalType('skill')}
                   onAddSubSkill={() => setSkillModalType('subskill')}
                 />
@@ -842,6 +953,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   isEditMode={isEditMode}
                   onAddArchetypeFeat={() => setFeatModalType('archetype')}
                   onAddCharacterFeat={() => setFeatModalType('character')}
+                  onMartialProfChange={handleMartialProfChange}
+                  onPowerProfChange={handlePowerProfChange}
+                  onFeatUsesChange={handleFeatUsesChange}
                 />
               </div>
               
@@ -854,11 +968,15 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   equipment={enrichedData?.equipment || (character.equipment?.items || []) as Item[]}
                   currency={character.currency}
                   innateEnergy={character.innateEnergy}
+                  currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
                   isEditMode={isEditMode}
                   onAddPower={() => setAddModalType('power')}
                   onRemovePower={handleRemovePower}
+                  onTogglePowerInnate={handleTogglePowerInnate}
+                  onUsePower={handleUsePower}
                   onAddTechnique={() => setAddModalType('technique')}
                   onRemoveTechnique={handleRemoveTechnique}
+                  onUseTechnique={handleUseTechnique}
                   onAddWeapon={() => setAddModalType('weapon')}
                   onRemoveWeapon={handleRemoveWeapon}
                   onToggleEquipWeapon={handleToggleEquipWeapon}

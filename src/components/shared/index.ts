@@ -13,6 +13,10 @@ export { ItemSelectionModal } from './item-selection-modal';
 export { AbilityCard } from './ability-card';
 export type { PartChip, AbilityStat, AbilityCardProps } from './ability-card';
 
+// Part/Property chip components (reusable across Library, Character Sheet, Codex)
+export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';
+export type { PartData } from './part-chip';
+
 // List components (shared between Codex and Library)
 export {
   SearchInput,

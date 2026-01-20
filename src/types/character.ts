@@ -24,6 +24,7 @@ export interface CharacterPower {
   level?: number;
   cost?: number;
   description?: string;
+  innate?: boolean; // Whether this power is marked as innate
   // Parts can be either just names (string[]) or full part data with TP info
   parts?: Array<string | {
     id?: string;
@@ -151,6 +152,9 @@ export interface Character {
   // Proficiency
   martialProficiency?: number;
   powerProficiency?: number;
+  // Legacy aliases (vanilla site uses these)
+  mart_prof?: number;
+  pow_prof?: number;
   
   // Training points tracking
   trainingPointsSpent?: number;

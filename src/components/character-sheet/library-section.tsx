@@ -8,13 +8,57 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
+import { PartChipList, type PartData } from '@/components/shared/part-chip';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
+
+// Helper to convert power/technique parts to PartData format
+function partsToPartData(parts?: CharacterPower['parts'] | CharacterTechnique['parts']): PartData[] {
+  if (!parts || parts.length === 0) return [];
+  
+  return parts.map(part => {
+    if (typeof part === 'string') {
+      return { name: part };
+    }
+    
+    // Full part data with TP info
+    const tpCost = (part.base_tp ?? 0) + 
+                   (part.op_1_tp ?? 0) + 
+                   (part.op_2_tp ?? 0) + 
+                   (part.op_3_tp ?? 0);
+    
+    return {
+      name: part.name || part.id || 'Unknown Part',
+      tpCost,
+      optionLevels: {
+        opt1: part.op_1_lvl,
+        opt2: part.op_2_lvl,
+        opt3: part.op_3_lvl,
+      },
+    };
+  });
+}
+
+// Helper to convert item properties to PartData format
+function propertiesToPartData(properties?: Item['properties']): PartData[] {
+  if (!properties || properties.length === 0) return [];
+  
+  return properties.map(prop => {
+    if (typeof prop === 'string') {
+      return { name: prop, category: 'property' };
+    }
+    // ItemProperty has id, name, value - no description
+    return { 
+      name: prop.name, 
+      category: 'property' 
+    };
+  });
+}
 
 interface LibrarySectionProps {
   powers: CharacterPower[];
@@ -24,12 +68,16 @@ interface LibrarySectionProps {
   equipment: Item[];
   currency?: number;
   innateEnergy?: number;
+  currentEnergy?: number; // Current energy for use button validation
   isEditMode?: boolean;
   // Power/Technique/Equipment callbacks
   onAddPower?: () => void;
   onRemovePower?: (id: string | number) => void;
+  onTogglePowerInnate?: (id: string | number, isInnate: boolean) => void;
+  onUsePower?: (id: string | number, energyCost: number) => void;
   onAddTechnique?: () => void;
   onRemoveTechnique?: (id: string | number) => void;
+  onUseTechnique?: (id: string | number, energyCost: number) => void;
   onAddWeapon?: () => void;
   onRemoveWeapon?: (id: string | number) => void;
   onToggleEquipWeapon?: (id: string | number) => void;
@@ -61,13 +109,22 @@ type TabType = 'powers' | 'techniques' | 'weapons' | 'armor' | 'equipment' | 'pr
 interface PowerCardProps {
   power: CharacterPower;
   innateEnergy?: number;
+  currentEnergy?: number;
   isEditMode?: boolean;
   onRemove?: () => void;
+  onToggleInnate?: (isInnate: boolean) => void;
+  onUse?: () => void;
 }
 
-function PowerCard({ power, innateEnergy, isEditMode, onRemove }: PowerCardProps) {
+function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, onRemove, onToggleInnate, onUse }: PowerCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const isInnate = power.cost !== undefined && innateEnergy !== undefined && power.cost <= innateEnergy;
+  const isInnate = power.innate === true;
+  const energyCost = power.cost ?? 0;
+  const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
+  
+  // Convert parts to PartData format for chips
+  const partChips = useMemo(() => partsToPartData(power.parts), [power.parts]);
+  const hasExpandableContent = power.description || partChips.length > 0;
 
   return (
     <div className={cn(
@@ -75,6 +132,21 @@ function PowerCard({ power, innateEnergy, isEditMode, onRemove }: PowerCardProps
       isInnate ? 'border-purple-300 bg-purple-50' : 'border-gray-200 bg-white'
     )}>
       <div className="flex items-center">
+        {/* Innate toggle checkbox in edit mode */}
+        {isEditMode && onToggleInnate && (
+          <button
+            onClick={() => onToggleInnate(!isInnate)}
+            className={cn(
+              'px-2 py-2 transition-colors border-r',
+              isInnate 
+                ? 'text-purple-600 bg-purple-100 hover:bg-purple-200' 
+                : 'text-gray-400 hover:bg-gray-100'
+            )}
+            title={isInnate ? 'Remove from innate' : 'Set as innate'}
+          >
+            {isInnate ? '★' : '☆'}
+          </button>
+        )}
         <button
           onClick={() => setExpanded(!expanded)}
           className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-gray-50 text-left"
@@ -89,14 +161,32 @@ function PowerCard({ power, innateEnergy, isEditMode, onRemove }: PowerCardProps
             )}
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            {power.cost !== undefined && (
-              <span className="text-blue-600 font-medium">{power.cost} EP</span>
+            {energyCost > 0 && (
+              <span className="text-blue-600 font-medium">{energyCost} EP</span>
             )}
             {power.level && (
               <span>Lvl {power.level}</span>
             )}
           </div>
         </button>
+        
+        {/* Use button - only show when not in edit mode and has energy cost */}
+        {!isEditMode && onUse && energyCost > 0 && (
+          <button
+            onClick={onUse}
+            disabled={!canUse}
+            className={cn(
+              'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
+              canUse 
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            )}
+            title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
+          >
+            Use ({energyCost})
+          </button>
+        )}
+        
         {isEditMode && onRemove && (
           <button
             onClick={onRemove}
@@ -108,9 +198,18 @@ function PowerCard({ power, innateEnergy, isEditMode, onRemove }: PowerCardProps
         )}
       </div>
 
-      {expanded && power.description && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-          <p className="text-sm text-gray-600">{power.description}</p>
+      {expanded && hasExpandableContent && (
+        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-3">
+          {power.description && (
+            <p className="text-sm text-gray-600">{power.description}</p>
+          )}
+          {partChips.length > 0 && (
+            <PartChipList 
+              parts={partChips} 
+              label="Parts" 
+              size="sm"
+            />
+          )}
         </div>
       )}
     </div>
@@ -119,12 +218,20 @@ function PowerCard({ power, innateEnergy, isEditMode, onRemove }: PowerCardProps
 
 interface TechniqueCardProps {
   technique: CharacterTechnique;
+  currentEnergy?: number;
   isEditMode?: boolean;
   onRemove?: () => void;
+  onUse?: () => void;
 }
 
-function TechniqueCard({ technique, isEditMode, onRemove }: TechniqueCardProps) {
+function TechniqueCard({ technique, currentEnergy, isEditMode, onRemove, onUse }: TechniqueCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const energyCost = technique.cost ?? 0;
+  const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
+  
+  // Convert parts to PartData format for chips
+  const partChips = useMemo(() => partsToPartData(technique.parts), [technique.parts]);
+  const hasExpandableContent = technique.description || partChips.length > 0;
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
@@ -137,10 +244,28 @@ function TechniqueCard({ technique, isEditMode, onRemove }: TechniqueCardProps) 
             {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
             <span className="font-medium text-gray-800">{technique.name}</span>
           </div>
-          {technique.cost !== undefined && (
-            <span className="text-sm text-blue-600 font-medium">{technique.cost} EP</span>
+          {energyCost > 0 && (
+            <span className="text-sm text-blue-600 font-medium">{energyCost} EP</span>
           )}
         </button>
+        
+        {/* Use button - only show when not in edit mode and has energy cost */}
+        {!isEditMode && onUse && energyCost > 0 && (
+          <button
+            onClick={onUse}
+            disabled={!canUse}
+            className={cn(
+              'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
+              canUse 
+                ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            )}
+            title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
+          >
+            Use ({energyCost})
+          </button>
+        )}
+        
         {isEditMode && onRemove && (
           <button
             onClick={onRemove}
@@ -152,9 +277,18 @@ function TechniqueCard({ technique, isEditMode, onRemove }: TechniqueCardProps) 
         )}
       </div>
 
-      {expanded && technique.description && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-          <p className="text-sm text-gray-600">{technique.description}</p>
+      {expanded && hasExpandableContent && (
+        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-3">
+          {technique.description && (
+            <p className="text-sm text-gray-600">{technique.description}</p>
+          )}
+          {partChips.length > 0 && (
+            <PartChipList 
+              parts={partChips} 
+              label="Parts" 
+              size="sm"
+            />
+          )}
         </div>
       )}
     </div>
@@ -173,6 +307,10 @@ interface ItemCardProps {
 
 function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttack, onRollDamage }: ItemCardProps) {
   const [expanded, setExpanded] = useState(false);
+  
+  // Convert properties to PartData format for chips
+  const propertyChips = useMemo(() => propertiesToPartData(item.properties), [item.properties]);
+  const hasExpandableContent = item.description || propertyChips.length > 0;
 
   return (
     <div className={cn(
@@ -252,19 +390,17 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
         )}
       </div>
 
-      {expanded && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
+      {expanded && hasExpandableContent && (
+        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-3">
           {item.description && (
-            <p className="text-sm text-gray-600 mb-1">{item.description}</p>
+            <p className="text-sm text-gray-600">{item.description}</p>
           )}
-          {item.properties && item.properties.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {item.properties.map((prop, i) => (
-                <span key={i} className="text-xs px-1.5 py-0.5 bg-gray-200 rounded">
-                  {typeof prop === 'string' ? prop : prop.name}
-                </span>
-              ))}
-            </div>
+          {propertyChips.length > 0 && (
+            <PartChipList 
+              parts={propertyChips} 
+              label="Properties" 
+              size="sm"
+            />
           )}
         </div>
       )}
@@ -280,11 +416,15 @@ export function LibrarySection({
   equipment,
   currency = 0,
   innateEnergy = 0,
+  currentEnergy = 0,
   isEditMode = false,
   onAddPower,
   onRemovePower,
+  onTogglePowerInnate,
+  onUsePower,
   onAddTechnique,
   onRemoveTechnique,
+  onUseTechnique,
   onAddWeapon,
   onRemoveWeapon,
   onToggleEquipWeapon,
@@ -409,8 +549,11 @@ export function LibrarySection({
                 key={power.id || i} 
                 power={power} 
                 innateEnergy={innateEnergy}
+                currentEnergy={currentEnergy}
                 isEditMode={isEditMode}
                 onRemove={onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
+                onToggleInnate={onTogglePowerInnate ? (isInnate) => onTogglePowerInnate(power.id || String(i), isInnate) : undefined}
+                onUse={onUsePower && power.cost ? () => onUsePower(power.id || String(i), power.cost!) : undefined}
               />
             ))
           ) : (
@@ -426,8 +569,10 @@ export function LibrarySection({
               <TechniqueCard 
                 key={tech.id || i} 
                 technique={tech}
+                currentEnergy={currentEnergy}
                 isEditMode={isEditMode}
                 onRemove={onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
+                onUse={onUseTechnique && tech.cost ? () => onUseTechnique(tech.id || String(i), tech.cost!) : undefined}
               />
             ))
           ) : (

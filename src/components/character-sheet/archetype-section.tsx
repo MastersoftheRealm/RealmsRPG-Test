@@ -1,7 +1,7 @@
 /**
  * Archetype Section
  * =================
- * Displays character archetype, proficiencies, and feats
+ * Displays character archetype, proficiencies, attack bonuses, power potency, traits, and feats
  */
 
 'use client';
@@ -9,26 +9,36 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import type { Character, CharacterFeat } from '@/types';
+import { useRollsOptional } from './roll-context';
+import { SpeciesTraitCard } from '@/components/shared/species-trait-card';
+import type { Character, CharacterFeat, Abilities } from '@/types';
 
 interface ArchetypeSectionProps {
   character: Character;
   isEditMode?: boolean;
-  onFeatUse?: (featId: string, currentUses: number) => void;
+  onFeatUsesChange?: (featId: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
+  onMartialProfChange?: (value: number) => void;
+  onPowerProfChange?: (value: number) => void;
 }
 
 function ProficiencyMeter({ 
   label, 
   value, 
   maxValue = 6,
-  color = 'blue' 
+  color = 'blue',
+  isEditMode = false,
+  onIncrease,
+  onDecrease,
 }: { 
   label: string; 
   value: number; 
   maxValue?: number;
   color?: 'blue' | 'purple' | 'red';
+  isEditMode?: boolean;
+  onIncrease?: () => void;
+  onDecrease?: () => void;
 }) {
   const colorClasses = {
     blue: 'bg-blue-500',
@@ -40,7 +50,29 @@ function ProficiencyMeter({
     <div className="flex flex-col gap-1">
       <div className="flex justify-between text-sm">
         <span className="text-gray-600">{label}</span>
-        <span className="font-bold">{value}</span>
+        <div className="flex items-center gap-1">
+          {isEditMode && (
+            <button
+              onClick={onDecrease}
+              disabled={value <= 0}
+              className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
+              title="Decrease proficiency"
+            >
+              −
+            </button>
+          )}
+          <span className="font-bold w-4 text-center">{value}</span>
+          {isEditMode && (
+            <button
+              onClick={onIncrease}
+              disabled={value >= maxValue}
+              className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
+              title="Increase proficiency"
+            >
+              +
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex gap-1">
         {Array.from({ length: maxValue }).map((_, i) => (
@@ -57,17 +89,98 @@ function ProficiencyMeter({
   );
 }
 
+// Attack Bonuses Table - displays Prof/Unprof bonuses for each ability
+function AttackBonusesTable({
+  abilities,
+  martialProf,
+  powerProf,
+  onRollBonus,
+}: {
+  abilities: Abilities;
+  martialProf: number;
+  powerProf: number;
+  onRollBonus?: (name: string, bonus: number) => void;
+}) {
+  const formatBonus = (val: number) => val >= 0 ? `+${val}` : `${val}`;
+  
+  // Calculate bonuses for each ability
+  // Prof = ability + martial_prof, Unprof = ability only (or ability/2 rounded up for negative)
+  const bonuses = {
+    strength: {
+      prof: (abilities.strength ?? 0) + martialProf,
+      unprof: abilities.strength ?? 0,
+    },
+    agility: {
+      prof: (abilities.agility ?? 0) + martialProf,
+      unprof: abilities.agility ?? 0,
+    },
+    acuity: {
+      prof: (abilities.acuity ?? 0) + martialProf,
+      unprof: abilities.acuity ?? 0,
+    },
+    power: {
+      prof: (abilities[('charisma')] ?? 0) + powerProf, // Using default power ability
+      unprof: abilities[('charisma')] ?? 0,
+    },
+  };
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Attack Bonuses</h4>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-xs text-gray-500">
+            <th className="text-left py-1"></th>
+            <th className="text-center py-1">Prof.</th>
+            <th className="text-center py-1">Unprof.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(['strength', 'agility', 'acuity', 'power'] as const).map((key) => (
+            <tr key={key}>
+              <td className="py-1 font-medium text-gray-700 capitalize">{key}</td>
+              <td className="text-center py-1">
+                <button
+                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, bonuses[key].prof)}
+                  className="px-2 py-0.5 bg-white border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-300 transition-colors font-mono text-sm"
+                  title={`Roll ${key} (proficient)`}
+                >
+                  {formatBonus(bonuses[key].prof)}
+                </button>
+              </td>
+              <td className="text-center py-1">
+                <button
+                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, bonuses[key].unprof)}
+                  className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 transition-colors font-mono text-sm text-gray-600"
+                  title={`Roll ${key} (unproficient)`}
+                >
+                  {formatBonus(bonuses[key].unprof)}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function FeatCard({ 
   feat, 
-  isEditMode,
-  onUse 
+  onUsesChange 
 }: { 
   feat: CharacterFeat; 
-  isEditMode?: boolean;
-  onUse?: () => void;
+  onUsesChange?: (delta: number) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const hasUsesRemaining = feat.maxUses && (feat.currentUses ?? feat.maxUses) > 0;
+  const currentUses = feat.currentUses ?? feat.maxUses ?? 0;
+  const hasUsesRemaining = feat.maxUses && currentUses > 0;
+  const canIncrement = feat.maxUses && currentUses < feat.maxUses;
+
+  const handleUsesChange = (e: React.MouseEvent, delta: number) => {
+    e.stopPropagation();
+    onUsesChange?.(delta);
+  };
 
   return (
     <div 
@@ -91,13 +204,42 @@ function FeatCard({
             </span>
           )}
         </div>
+        {/* Uses +/- controls (always visible when feat has maxUses) */}
         {feat.maxUses && (
-          <span className={cn(
-            'text-sm font-medium',
-            hasUsesRemaining ? 'text-green-600' : 'text-gray-400'
-          )}>
-            {feat.currentUses ?? feat.maxUses}/{feat.maxUses}
-          </span>
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={(e) => handleUsesChange(e, -1)}
+              disabled={!hasUsesRemaining}
+              className={cn(
+                'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
+                hasUsesRemaining
+                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              )}
+              title="Use ability"
+            >
+              −
+            </button>
+            <span className={cn(
+              'text-sm font-medium min-w-[3rem] text-center',
+              hasUsesRemaining ? 'text-green-600' : 'text-gray-400'
+            )}>
+              {currentUses}/{feat.maxUses}
+            </span>
+            <button
+              onClick={(e) => handleUsesChange(e, 1)}
+              disabled={!canIncrement}
+              className={cn(
+                'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
+                canIncrement
+                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+              )}
+              title="Recover use"
+            >
+              +
+            </button>
+          </div>
         )}
       </button>
 
@@ -107,22 +249,11 @@ function FeatCard({
             {feat.description || 'No description available.'}
           </p>
           
-          {feat.maxUses && isEditMode && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onUse?.();
-              }}
-              disabled={!hasUsesRemaining}
-              className={cn(
-                'px-3 py-1 rounded text-sm font-medium transition-colors',
-                hasUsesRemaining 
-                  ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              )}
-            >
-              Use Ability
-            </button>
+          {/* Recovery period display */}
+          {feat.maxUses && (
+            <div className="text-xs text-gray-500">
+              <span className="font-medium">Recovery:</span> {feat.recovery || 'Full Recovery'}
+            </div>
           )}
         </div>
       )}
@@ -133,18 +264,31 @@ function FeatCard({
 export function ArchetypeSection({
   character,
   isEditMode = false,
-  onFeatUse,
+  onFeatUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
+  onMartialProfChange,
+  onPowerProfChange,
 }: ArchetypeSectionProps) {
-  const martialProf = character.martialProficiency ?? 0;
-  const powerProf = character.powerProficiency ?? 0;
+  const martialProf = character.mart_prof ?? character.martialProficiency ?? 0;
+  const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
+  const rollContext = useRollsOptional();
+  
+  // Calculate Power Potency: 10 + pow_prof + pow_abil value
+  const powAbilName = character.pow_abil?.toLowerCase() || 'charisma';
+  const powAbilValue = character.abilities?.[powAbilName as keyof Abilities] ?? 0;
+  const powerPotency = 10 + powerProf + powAbilValue;
   
   // Combine archetype and character feats
   const allFeats = [
     ...(character.archetypeFeats || []).map(f => ({ ...f, type: 'archetype' as const })),
     ...(character.feats || []).map(f => ({ ...f, type: 'character' as const })),
   ];
+  
+  // Handle attack bonus roll
+  const handleRollBonus = (name: string, bonus: number) => {
+    rollContext?.rollAttack(name, bonus);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
@@ -161,18 +305,42 @@ export function ArchetypeSection({
       </div>
 
       {/* Proficiencies */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <ProficiencyMeter 
           label="Martial" 
           value={martialProf}
           color="red"
+          isEditMode={isEditMode}
+          onIncrease={() => onMartialProfChange?.(martialProf + 1)}
+          onDecrease={() => onMartialProfChange?.(martialProf - 1)}
         />
         <ProficiencyMeter 
           label="Power" 
           value={powerProf}
           color="purple"
+          isEditMode={isEditMode}
+          onIncrease={() => onPowerProfChange?.(powerProf + 1)}
+          onDecrease={() => onPowerProfChange?.(powerProf - 1)}
         />
       </div>
+      
+      {/* Power Potency */}
+      <div className="bg-purple-50 rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
+        <span className="text-sm font-medium text-purple-700">Power Potency</span>
+        <span className="text-xl font-bold text-purple-800" title="10 + Power Prof + Power Ability">
+          {powerPotency}
+        </span>
+      </div>
+      
+      {/* Attack Bonuses Table */}
+      {character.abilities && (
+        <AttackBonusesTable
+          abilities={character.abilities}
+          martialProf={martialProf}
+          powerProf={powerProf}
+          onRollBonus={handleRollBonus}
+        />
+      )}
 
       {/* Abilities used */}
       <div className="flex flex-wrap gap-2 mb-4">
@@ -187,6 +355,46 @@ export function ArchetypeSection({
           </span>
         )}
       </div>
+
+      {/* Traits Section */}
+      {(character.ancestry?.selectedTraits?.length || 
+        character.ancestry?.selectedFlaw || 
+        character.ancestry?.selectedCharacteristic) && (
+        <div className="border-t border-gray-200 pt-4 mb-4">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            Traits
+          </h3>
+          <div className="space-y-2">
+            {/* Ancestry Traits */}
+            {character.ancestry?.selectedTraits?.map((traitName, index) => (
+              <SpeciesTraitCard
+                key={`ancestry-${index}`}
+                trait={{ name: traitName }}
+                category="ancestry"
+                compact
+              />
+            ))}
+            
+            {/* Flaw */}
+            {character.ancestry?.selectedFlaw && (
+              <SpeciesTraitCard
+                trait={{ name: character.ancestry.selectedFlaw }}
+                category="flaw"
+                compact
+              />
+            )}
+            
+            {/* Characteristic */}
+            {character.ancestry?.selectedCharacteristic && (
+              <SpeciesTraitCard
+                trait={{ name: character.ancestry.selectedCharacteristic }}
+                category="characteristic"
+                compact
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Feats */}
       <div className="border-t border-gray-200 pt-4">
@@ -220,8 +428,7 @@ export function ArchetypeSection({
               <FeatCard
                 key={feat.id || index}
                 feat={feat}
-                isEditMode={isEditMode}
-                onUse={() => onFeatUse?.(String(feat.id), (feat.currentUses ?? feat.maxUses ?? 1) - 1)}
+                onUsesChange={(delta) => onFeatUsesChange?.(String(feat.id), delta)}
               />
             ))}
           </div>
