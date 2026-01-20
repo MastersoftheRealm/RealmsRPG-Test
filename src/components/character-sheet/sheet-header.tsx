@@ -30,6 +30,8 @@ interface SheetHeaderProps {
   isEditMode?: boolean;
   onHealthChange?: (value: number) => void;
   onEnergyChange?: (value: number) => void;
+  onHealthPointsChange?: (value: number) => void;
+  onEnergyPointsChange?: (value: number) => void;
   onPortraitChange?: (file: File) => void;
   isUploadingPortrait?: boolean;
 }
@@ -149,6 +151,8 @@ export function SheetHeader({
   isEditMode = false,
   onHealthChange,
   onEnergyChange,
+  onHealthPointsChange,
+  onEnergyPointsChange,
   onPortraitChange,
   isUploadingPortrait = false,
 }: SheetHeaderProps) {
@@ -163,6 +167,13 @@ export function SheetHeader({
   const xp = character.experience ?? 0;
   const level = character.level || 1;
   const canLevelUp = xp >= (level * 4);
+
+  // Calculate H/E pool (vanilla formula: 18 + 12*(level-1))
+  const totalHEPool = 18 + 12 * (level - 1);
+  const healthPoints = character.healthPoints ?? 0;
+  const energyPoints = character.energyPoints ?? 0;
+  const spentHEPoints = healthPoints + energyPoints;
+  const remainingHEPoints = totalHEPool - spentHEPoints;
 
   // Handle portrait file selection
   const handlePortraitClick = () => {
@@ -286,6 +297,114 @@ export function SheetHeader({
             showControls={true}
             onChange={onEnergyChange}
           />
+          
+          {/* Health-Energy Pool Allocation (edit mode only) */}
+          {isEditMode && onHealthPointsChange && onEnergyPointsChange && (
+            <div className="mt-4 p-3 bg-gradient-to-r from-red-50 to-blue-50 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  H/E Pool Allocation
+                </span>
+                <span className={cn(
+                  'text-xs font-bold px-2 py-0.5 rounded-full',
+                  remainingHEPoints > 0 ? 'bg-green-100 text-green-700' :
+                  remainingHEPoints < 0 ? 'bg-red-100 text-red-700' :
+                  'bg-gray-100 text-gray-600'
+                )}>
+                  {remainingHEPoints} / {totalHEPool} remaining
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                {/* Health Points */}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-red-600 font-medium">Health +</span>
+                    <span className="text-xs text-gray-500">{healthPoints} pts</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onHealthPointsChange(Math.max(0, healthPoints - 1))}
+                      disabled={healthPoints <= 0}
+                      className={cn(
+                        'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+                        healthPoints > 0
+                          ? 'bg-red-100 hover:bg-red-200 text-red-600'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      )}
+                    >
+                      −
+                    </button>
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-red-500 transition-all duration-200"
+                        style={{ width: `${(healthPoints / totalHEPool) * 100}%` }}
+                      />
+                    </div>
+                    <button
+                      onClick={() => onHealthPointsChange(healthPoints + 1)}
+                      disabled={remainingHEPoints <= 0}
+                      className={cn(
+                        'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+                        remainingHEPoints > 0
+                          ? 'bg-red-100 hover:bg-red-200 text-red-600'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      )}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Divider */}
+                <div className="w-px h-10 bg-gray-300" />
+                
+                {/* Energy Points */}
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-blue-600 font-medium">Energy +</span>
+                    <span className="text-xs text-gray-500">{energyPoints} pts</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onEnergyPointsChange(Math.max(0, energyPoints - 1))}
+                      disabled={energyPoints <= 0}
+                      className={cn(
+                        'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+                        energyPoints > 0
+                          ? 'bg-blue-100 hover:bg-blue-200 text-blue-600'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      )}
+                    >
+                      −
+                    </button>
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-200"
+                        style={{ width: `${(energyPoints / totalHEPool) * 100}%` }}
+                      />
+                    </div>
+                    <button
+                      onClick={() => onEnergyPointsChange(energyPoints + 1)}
+                      disabled={remainingHEPoints <= 0}
+                      className={cn(
+                        'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+                        remainingHEPoints > 0
+                          ? 'bg-blue-100 hover:bg-blue-200 text-blue-600'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      )}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-[10px] text-gray-400 mt-2 text-center">
+                Total pool: 18 + 12 × (level - 1) = {totalHEPool}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

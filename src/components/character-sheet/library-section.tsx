@@ -138,7 +138,7 @@ function TechniqueCard({ technique, isEditMode, onRemove }: TechniqueCardProps) 
             <span className="font-medium text-gray-800">{technique.name}</span>
           </div>
           {technique.cost !== undefined && (
-            <span className="text-sm text-red-600 font-medium">{technique.cost} SP</span>
+            <span className="text-sm text-blue-600 font-medium">{technique.cost} EP</span>
           )}
         </button>
         {isEditMode && onRemove && (
@@ -211,8 +211,8 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
             {type === 'weapon' && item.damage && (
               <span className="text-red-600 font-medium">{formatDamageDisplay(item.damage)}</span>
             )}
-            {type === 'armor' && item.armor && (
-              <span className="text-blue-600 font-medium">+{item.armor} AR</span>
+            {type === 'armor' && item.armor !== undefined && (
+              <span className="text-blue-600 font-medium">DR {item.armor}</span>
             )}
           </div>
         </button>
@@ -363,11 +363,24 @@ export function LibrarySection({
             <span className="text-sm text-gray-600">💰</span>
             {isEditMode && onCurrencyChange ? (
               <input
-                type="number"
+                type="text"
                 value={currencyInput}
                 onChange={(e) => setCurrencyInput(e.target.value)}
                 onBlur={handleCurrencyBlur}
-                className="w-24 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const raw = currencyInput.trim();
+                    let newValue = currency;
+                    if (raw.startsWith('+')) newValue = currency + (parseInt(raw.substring(1)) || 0);
+                    else if (raw.startsWith('-')) newValue = currency - (parseInt(raw.substring(1)) || 0);
+                    else newValue = parseInt(raw) || 0;
+                    newValue = Math.max(0, newValue);
+                    setCurrencyInput(String(newValue));
+                    onCurrencyChange?.(newValue);
+                  }
+                }}
+                className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500"
+                title="Use +5, -10, or a number"
               />
             ) : (
               <span className="font-bold text-amber-600">{currency.toLocaleString()}</span>

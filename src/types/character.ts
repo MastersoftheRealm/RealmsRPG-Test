@@ -65,6 +65,14 @@ export interface ResourcePool {
   temporary?: number;
 }
 
+/** Condition effect on character */
+export interface CharacterCondition {
+  name: string;
+  level: number; // For stacking/decaying conditions (e.g., Bleeding 3)
+  decaying: boolean; // Does this condition decay by 1 each turn?
+  description?: string;
+}
+
 /** Combat bonuses */
 export interface CombatBonuses {
   martial: number;
@@ -136,6 +144,9 @@ export interface Character {
   evasion?: number;
   evasionBase?: number;
   armor?: number;
+  
+  // Conditions
+  conditions?: CharacterCondition[];
   
   // Proficiency
   martialProficiency?: number;

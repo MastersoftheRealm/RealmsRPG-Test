@@ -21,6 +21,7 @@ import {
   SkillsSection,
   ArchetypeSection,
   LibrarySection,
+  ConditionsPanel,
   RollLog,
   RollProvider,
   AddLibraryItemModal,
@@ -29,7 +30,7 @@ import {
   AddSubSkillModal,
   LevelUpModal,
 } from '@/components/character-sheet';
-import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
+import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat, CharacterCondition } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
 type AddModalType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null;
@@ -174,6 +175,58 @@ export default function CharacterSheetPage({ params }: PageParams) {
     return calculateStats(character);
   }, [character]);
   
+  // Calculate point budgets for edit mode
+  const pointBudgets = useMemo(() => {
+    if (!character) return null;
+    
+    const level = character.level || 1;
+    const abilities = character.abilities || {};
+    
+    // Total ability points: 7 base, +1 every 3 levels starting at level 3
+    // Formula: 7 + floor((level - 1) / 3)
+    const bonusPoints = level < 3 ? 0 : Math.floor((level - 1) / 3);
+    const totalAbilityPoints = 7 + bonusPoints;
+    
+    // Calculate spent ability points (with 2-point cost for 4+)
+    let spentAbilityPoints = 0;
+    Object.values(abilities).forEach((value) => {
+      const val = value || 0;
+      if (val > 0) {
+        for (let i = 1; i <= val; i++) {
+          spentAbilityPoints += i >= 4 ? 2 : 1;
+        }
+      } else if (val < 0) {
+        // Negative values refund 1 point each
+        spentAbilityPoints += val;
+      }
+    });
+    
+    // Skill points: 2 + (level * 3)
+    const totalSkillPoints = 2 + (level * 3);
+    
+    // Calculate spent skill points
+    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string }>;
+    let spentSkillPoints = skills.reduce((sum, skill) => {
+      let cost = skill.skill_val || 0;
+      if (skill.prof && !skill.baseSkill) cost += 1;
+      return sum + cost;
+    }, 0);
+    
+    // Defense skills cost 2 per point
+    const defenseSkills = character.defenseSkills || {};
+    const spentDefensePoints = Object.values(defenseSkills).reduce((sum: number, val) => sum + ((val as number || 0) * 2), 0);
+    spentSkillPoints += spentDefensePoints;
+    
+    return {
+      totalAbilityPoints,
+      spentAbilityPoints,
+      availableAbilityPoints: totalAbilityPoints - spentAbilityPoints,
+      totalSkillPoints,
+      spentSkillPoints,
+      availableSkillPoints: totalSkillPoints - spentSkillPoints,
+    };
+  }, [character]);
+  
   // Calculate if character has unapplied points (for notification dot)
   const hasUnappliedPoints = useMemo(() => {
     if (!character) return false;
@@ -182,20 +235,20 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const xp = character.experience ?? 0;
     const canLevelUp = xp >= (level * 4);
     
-    // Calculate ability points: 6 base + level
-    const totalAbilityPoints = 6 + level;
+    // Calculate ability points: 7 base, +1 every 3 levels starting at level 3
+    const bonusAbilityPoints = level < 3 ? 0 : Math.floor((level - 1) / 3);
+    const totalAbilityPoints = 7 + bonusAbilityPoints;
     const currentAbilities = character.abilities || {};
     const spentAbilityPoints = Object.values(currentAbilities).reduce((sum, val) => sum + (val || 0), 0);
     const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
     
-    // Calculate health/energy points: vitality + level
-    const vitality = currentAbilities.vitality || 0;
-    const totalHEPoints = vitality + level;
+    // Calculate health/energy pool: 18 + 12 * (level - 1)
+    const totalHEPoints = 18 + 12 * (level - 1);
     const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
     const hePointsRemaining = totalHEPoints - spentHEPoints;
     
-    // Calculate skill points: 12 + (4 * level)
-    const totalSkillPoints = 12 + (4 * level);
+    // Calculate skill points: 2 + (level * 3)
+    const totalSkillPoints = 2 + (level * 3);
     const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string }>;
     const spentSkillPoints = skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;
@@ -332,15 +385,56 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
+  // Defense skill change handler
+  const handleDefenseChange = useCallback((defense: string, value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      defenseSkills: { 
+        ...DEFAULT_DEFENSE_SKILLS,
+        ...(prev.defenseSkills || {}), 
+        [defense]: Math.max(0, value) 
+      }
+    } : null);
+  }, [character]);
+  
+  // Health points allocation handler
+  const handleHealthPointsChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      healthPoints: Math.max(0, value)
+    } : null);
+  }, [character]);
+  
+  // Energy points allocation handler
+  const handleEnergyPointsChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      energyPoints: Math.max(0, value)
+    } : null);
+  }, [character]);
+  
+  // Conditions change handler
+  const handleConditionsChange = useCallback((conditions: CharacterCondition[]) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      conditions
+    } : null);
+  }, [character]);
+  
   // Long rest handler
   const handleLongRest = useCallback(() => {
     if (!character || !calculatedStats) return;
     
-    if (confirm('Take a long rest? This will restore all health and energy to maximum.')) {
+    if (confirm('Take a long rest? This will restore all health and energy to maximum and clear all conditions.')) {
       setCharacter(prev => prev ? {
         ...prev,
         health: { current: calculatedStats.maxHealth, max: calculatedStats.maxHealth },
-        energy: { current: calculatedStats.maxEnergy, max: calculatedStats.maxEnergy }
+        energy: { current: calculatedStats.maxEnergy, max: calculatedStats.maxEnergy },
+        conditions: [] // Clear all conditions on rest
       } : null);
     }
   }, [character, calculatedStats]);
@@ -701,18 +795,35 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 isEditMode={isEditMode}
                 onHealthChange={handleHealthChange}
                 onEnergyChange={handleEnergyChange}
+                onHealthPointsChange={handleHealthPointsChange}
+                onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}
                 isUploadingPortrait={uploadingPortrait}
               />
               
+              {/* Conditions Panel - shows active buffs/debuffs */}
+              <ConditionsPanel
+                conditions={character.conditions || []}
+                isEditMode={isEditMode}
+                onConditionsChange={handleConditionsChange}
+                compact={false}
+              />
+              
               <AbilitiesSection
-              abilities={character.abilities}
-              archetypeAbility={character.archetype?.ability as AbilityName}
-              martialAbility={character.mart_abil}
-              powerAbility={character.pow_abil}
-              isEditMode={isEditMode}
-              onAbilityChange={handleAbilityChange}
-            />
+                abilities={character.abilities}
+                defenseSkills={character.defenseSkills}
+                level={character.level || 1}
+                archetypeAbility={character.archetype?.ability as AbilityName}
+                martialAbility={character.mart_abil}
+                powerAbility={character.pow_abil}
+                isEditMode={isEditMode}
+                totalAbilityPoints={pointBudgets?.totalAbilityPoints}
+                spentAbilityPoints={pointBudgets?.spentAbilityPoints}
+                totalSkillPoints={pointBudgets?.totalSkillPoints}
+                spentSkillPoints={pointBudgets?.spentSkillPoints}
+                onAbilityChange={handleAbilityChange}
+                onDefenseChange={handleDefenseChange}
+              />
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-1">
