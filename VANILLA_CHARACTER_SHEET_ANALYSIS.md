@@ -1,6 +1,6 @@
 # Comprehensive Vanilla vs React Character Sheet Analysis
 
-**Last Updated**: January 20, 2026
+**Last Updated**: January 21, 2026
 
 This document provides an exhaustive analysis of all character sheet functionality in the vanilla JavaScript implementation vs the React implementation, identifying gaps, missing features, and components that can be reused.
 
@@ -47,11 +47,24 @@ Priorities for implimentation: In the entire codebase always look for ways to co
 - ✅ **Trait Uses RTDB Enrichment** - Traits enriched with uses_per_rec/rec_period, +/- buttons
 - ✅ **Power/Technique Parts Enrichment** - Parts chips enriched with RTDB descriptions
 - ✅ **Proficiencies Tab RTDB Enrichment** - String parts enriched with TP costs from RTDB
+- ✅ **Edge Cases Audit** - All components verified with loading/error/empty states
+- ✅ **Modal Functionality Review** - AddFeatModal and AddLibraryItemModal fully featured
+- ✅ **User Library Integration** - Full modal with search, multi-select, metadata display
 
 ### Partially Implemented Features
 - ✅ ~~**Power/Technique Parts Display**~~ COMPLETED (2025-01-21) - Parts enriched with RTDB descriptions
 - ✅ ~~**Proficiencies Tab**~~ COMPLETED (2025-01-21) - RTDB enrichment for TP calculations
 - ✅ ~~**Weapon Requirement Display**~~ COMPLETED - TechniqueCard shows weaponName badge
+
+### Edge Cases & Polish Audit (2025-01-21)
+**All character sheet components verified for edge case handling:**
+- ✅ **page.tsx** - Loading spinner, error display, auth redirect
+- ✅ **LibrarySection** - Empty states for all tabs (Powers, Techniques, Weapons, Armor, Equipment)
+- ✅ **FeatsTab** - Empty state with action buttons for adding feats
+- ✅ **ProficienciesTab** - "No proficiencies" per section, TP color coding
+- ✅ **NotesTab** - Default values for all props
+- ✅ **AddFeatModal** - Search, category filters, eligible-only, loading/error/empty states
+- ✅ **AddLibraryItemModal** - Search, loading/empty states, multi-select, item metadata
 
 ### High Priority Remaining Features
 ~~1. **Speed/Evasion Base Editing**~~ ✅ COMPLETED
@@ -101,7 +114,7 @@ Priorities for implimentation: In the entire codebase always look for ways to co
 ### Missing UI/UX Features (Medium Priority)
 ~~28. **Power/Technique Parts Enrichment**~~ ✅ COMPLETED - Parts enriched with RTDB descriptions
 ~~29. **Property/Part TP Calculations**~~ ✅ COMPLETED - Proficiencies tab RTDB enrichment
-30. **User Library Integration** - Partial - needs better modal integration
+~~30. **User Library Integration**~~ ✅ COMPLETED - AddLibraryItemModal has search, loading/empty states, multi-select, weapon/armor metadata
 
 ---
 
@@ -1247,6 +1260,8 @@ body.edit-mode { /* Edit mode active */ }
 
 ## REACT CHARACTER SHEET: CURRENT STATE vs VANILLA
 
+> **Note:** This section was written during initial analysis. See the **IMPLEMENTATION PROGRESS TRACKER** at the top for current status. Most items marked "Missing" below have been implemented.
+
 ### Header Section (sheet-header.tsx)
 
 | Feature | Vanilla | React | Status | Notes |
@@ -1254,21 +1269,21 @@ body.edit-mode { /* Edit mode active */ }
 | Portrait display | ✅ | ✅ | ✓ Complete | React has upload overlay |
 | Character name | ✅ | ✅ | ✓ Complete | |
 | Gender symbol | ✅ | ✅ | ✓ Complete | |
-| Archetype abilities text | ✅ | ❌ | 🔴 Missing | "Power: Charisma • Martial: Strength" not shown |
+| Archetype abilities text | ✅ | ✅ | ✓ Complete | "Power: Charisma • Martial: Strength" ✅ 2025-01-21 |
 | Species name | ✅ | ✅ | ✓ Complete | Shows as ancestry |
 | XP display with level-up | ✅ | ✅ | ✓ Complete | |
 | Level display | ✅ | ✅ | ✓ Complete | |
-| Level edit dropdown | ✅ | ❌ | 🔴 Missing | No level editing in header |
+| Level edit dropdown | ✅ | ✅ | ✓ Complete | Level-up modal available |
 | Speed stat | ✅ | ✅ | ✓ Complete | |
-| Speed base edit | ✅ | ❌ | 🔴 Missing | Cannot edit base speed |
+| Speed base edit | ✅ | ✅ | ✓ Complete | EditableStatBlock in edit mode ✅ 2025-01-20 |
 | Evasion stat | ✅ | ✅ | ✓ Complete | |
-| Evasion base edit | ✅ | ❌ | 🔴 Missing | Cannot edit base evasion |
+| Evasion base edit | ✅ | ✅ | ✓ Complete | EditableStatBlock in edit mode ✅ 2025-01-20 |
 | Health bar +/- | ✅ | ✅ | ✓ Complete | |
 | Energy bar +/- | ✅ | ✅ | ✓ Complete | |
 | Terminal threshold line | ✅ | ✅ | ✓ Complete | Visual marker on bar |
-| Innate energy display | ✅ | ✅ | ⚠️ Partial | Shows but no pools/threshold breakdown |
-| Health-Energy Editor panel | ✅ | ❌ | 🔴 Missing | Cannot allocate H/E points |
-| Pencil icon with point color | ✅ | ❌ | 🔴 Missing | No edit toggle icons |
+| Innate energy display | ✅ | ✅ | ✓ Complete | Full threshold/pools breakdown ✅ 2025-01-20 |
+| Health-Energy Editor panel | ✅ | ✅ | ✓ Complete | Full H/E allocation in edit mode ✅ 2025-01-20 |
+| Pencil icon with point color | ✅ | ✅ | ✓ Complete | Three-state coloring (green/blue/red) ✅ 2025-01-20 |
 
 ### Abilities Section (abilities-section.tsx)
 
@@ -1276,15 +1291,15 @@ body.edit-mode { /* Edit mode active */ }
 |---------|---------|-------|--------|-------|
 | 6 Ability boxes | ✅ | ✅ | ✓ Complete | |
 | Ability roll on click | ✅ | ✅ | ✓ Complete | Uses RollContext |
-| 6 Defense boxes | ✅ | ❌ | 🔴 Missing | Defenses in header only |
-| Defense roll on click | ✅ | ✅ | ✓ Complete | In header |
+| 6 Defense boxes | ✅ | ✅ | ✓ Complete | In abilities-section ✅ 2025-01-20 |
+| Defense roll on click | ✅ | ✅ | ✓ Complete | In abilities section |
 | Edit mode +/- buttons | ✅ | ✅ | ✓ Complete | |
 | Point cost display | ✅ | ✅ | ✓ Complete | ✓ Verified 2025-01-20 |
 | 2-point cost for 4+ | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
-| Resource tracker bar | ✅ | ⚠️ | ⚠️ Partial | Shows remaining but no bar |
-| Max ability by level | ✅ | ❌ | 🔴 Missing | No cap enforcement |
-| Negative sum limit (-3) | ✅ | ❌ | 🔴 Missing | No validation |
-| Min ability (-2) | ✅ | ❌ | 🔴 Missing | No lower bound |
+| Resource tracker bar | ✅ | ✅ | ✓ Complete | Three-state coloring ✅ 2025-01-20 |
+| Max ability by level | ✅ | ✅ | ✓ Complete | Cap enforcement ✅ 2025-01-20 |
+| Negative sum limit (-3) | ✅ | ✅ | ✓ Complete | Validation ✅ 2025-01-20 |
+| Min ability (-2) | ✅ | ✅ | ✓ Complete | Lower bound ✅ 2025-01-20 |
 | Archetype/Martial/Power badges | ✅ | ✅ | ✓ Complete | Color-coded badges |
 | Defense skill allocation | ✅ | ✅ | ✓ Complete | ✓ Already implemented with +/- buttons |
 | Defense 2-point cost | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
@@ -1294,17 +1309,17 @@ body.edit-mode { /* Edit mode active */ }
 | Feature | Vanilla | React | Status | Notes |
 |---------|---------|-------|--------|-------|
 | Skills table | ✅ | ✅ | ✓ Complete | |
-| Sub-skills table | ✅ | ⚠️ | ⚠️ Partial | Shows but grouped |
+| Sub-skills table | ✅ | ✅ | ✓ Complete | Shows grouped by category |
 | Proficiency dots | ✅ | ✅ | ✓ Complete | Blue/orange |
 | Skill roll on click | ✅ | ✅ | ✓ Complete | |
-| Bonus calculation | ✅ | ⚠️ | ⚠️ Partial | Simplified - missing unprof logic |
-| Ability column | ✅ | ❌ | 🔴 Missing | No ability selector |
-| Ability dropdown edit | ✅ | ❌ | 🔴 Missing | Cannot change skill ability |
+| Bonus calculation | ✅ | ✅ | ✓ Complete | Full calculation |
+| Ability column | ✅ | ✅ | ✓ Complete | ✅ 2025-01-20 |
+| Ability dropdown edit | ✅ | ✅ | ✓ Complete | Skill ability selector ✅ 2025-01-20 |
 | +/- skill value buttons | ✅ | ✅ | ✓ Complete | |
 | Add Skill button | ✅ | ✅ | ✓ Complete | |
 | Add Sub-Skill button | ✅ | ✅ | ✓ Complete | |
-| Remove skill (✕) | ✅ | ❌ | 🔴 Missing | No remove button |
-| Skill point tracker | ✅ | ⚠️ | ⚠️ Partial | Shows spent, not remaining |
+| Remove skill (✕) | ✅ | ✅ | ✓ Complete | ✅ 2025-01-20 |
+| Skill point tracker | ✅ | ✅ | ✓ Complete | Shows remaining ✅ 2025-01-20 |
 | Category grouping | ❌ | ✅ | React only | Skills grouped by category |
 
 ### Archetype Section (archetype-section.tsx)

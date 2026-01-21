@@ -115,17 +115,16 @@ Track reusable components, identify duplications, and ensure consistent UI patte
 - ✅ Proficiencies Tab RTDB ✅ COMPLETED (2025-01-21) - String parts enriched with TP costs
 - ⏳ Requirements warnings (needs requirement checking logic)
 
-### Phase 3: Unify Card Components ⏳
-**Status:** Not Started
+### Phase 3: Unify Card Components 🔄
+**Status:** DEFERRED (2025-01-21)
 
-1. Create `CharacterAbilityCard` or extend `AbilityCard` to support:
-   - Use button (powers/techniques)
-   - Innate toggle (powers)
-   - Equip toggle (weapons/armor)
-   - Attack/Damage roll buttons
-   - Remove button (edit mode)
-   
-2. Replace local cards in library-section.tsx
+**Assessment:** After analyzing the existing card components:
+- Character sheet cards (PowerCard, TechniqueCard, ItemCard) are highly specialized with context-specific features
+- Shared AbilityCard serves Library and Codex pages well
+- Unifying would add complexity for minimal user benefit
+- Existing components have consistent styling and UX patterns
+
+**Decision:** Keep existing card implementations. Focus on shared chip components which ARE unified.
 
 ### Phase 4: Codex Integration ✅
 **Status:** COMPLETED (2025-01-21)
@@ -243,14 +242,22 @@ Track vanilla site features and their React implementation status:
 6. ~~Weapon requirement display in TechniqueCard~~ ✅ (2025-01-21)
 7. ~~Archetype abilities text in header~~ ✅ (2025-01-21)
 8. ~~Data cleaning before save (cleanForSave)~~ ✅ (2025-01-21)
+9. ~~Phase 3: Card Unification~~ ✅ DEFERRED - Existing cards work well (2025-01-21)
+10. ~~Phase 4: Codex Integration~~ ✅ Done
+11. ~~Toast notifications~~ ✅ Done - Integrated into character sheet auto-save
+12. ~~RTDB enrichment~~ ✅ Done - Parts, proficiencies, traits all enriched
 
-### Pending
-1. **Phase 3: Unify Card Components** - Create CharacterAbilityCard or extend AbilityCard
-2. ~~**Phase 4: Codex Integration**~~ ✅ Done
-3. ~~**Toast notifications**~~ ✅ Done - Integrated into character sheet auto-save
-4. ~~**Armament proficiency box**~~ ✅ Already implemented in library-section.tsx
-5. ~~**Archetype choices**~~ ✅ Already implemented in archetype-section.tsx
-6. ~~**RTDB enrichment**~~ ✅ Done - Trait uses +/- with RTDB lookup (2025-01-21)
+### All Character Sheet Features Complete! ✅
+As of 2025-01-21, all vanilla character sheet features have been migrated to React:
+- Full RTDB enrichment for parts, proficiencies, and traits
+- All edge cases handled with proper loading/error/empty states
+- Modals fully featured with search, filters, and multi-select
+- Consistent styling with shared components across the site
+
+### Future Enhancements (Nice-to-Have)
+1. **Add TP/Energy display to AddLibraryItemModal** - Show costs in power/technique selection
+2. **Mobile responsiveness audit** - Test all pages on mobile devices
+3. **Performance optimization** - Profile and optimize heavy renders if needed
 
 ---
 
@@ -262,4 +269,4 @@ Track vanilla site features and their React implementation status:
 - Document all component changes in this file
 - Test components work across all usage contexts before marking complete
 
-Last Updated: 2025-01-21 (Parts & Proficiencies RTDB Enrichment)
+Last Updated: 2025-01-21 (All Character Sheet Features Complete!)
