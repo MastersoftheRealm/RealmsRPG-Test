@@ -83,7 +83,9 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
       
       const partData = part;
       if (!partData.name) return;
-      
+
+      const partName = partData.name;
+
       const lvl1 = partData.op_1_lvl || 0;
       const lvl2 = partData.op_2_lvl || 0;
       const lvl3 = partData.op_3_lvl || 0;
@@ -95,7 +97,7 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
       const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
       if (Math.floor(rawTP) <= 0) return;
       
-      const key = partData.name;
+      const key = partName;
       if (profs.has(key)) {
         const ex = profs.get(key)!;
         ex.op1Lvl = Math.max(ex.op1Lvl, lvl1);
@@ -103,9 +105,9 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
         ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
       } else {
         // Try to get description from RTDB
-        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partData.name.toLowerCase());
+        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
         profs.set(key, {
-          name: partData.name,
+          name: partName,
           description: rtdbPart?.description,
           baseTP,
           op1Lvl: lvl1,
@@ -150,7 +152,9 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
       
       const partData = part;
       if (!partData.name) return;
-      
+
+      const partName = partData.name;
+
       const lvl1 = partData.op_1_lvl || 0;
       const lvl2 = partData.op_2_lvl || 0;
       const lvl3 = partData.op_3_lvl || 0;
@@ -162,7 +166,7 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
       const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
       if (Math.floor(rawTP) <= 0) return;
       
-      const key = partData.name;
+      const key = partName;
       if (profs.has(key)) {
         const ex = profs.get(key)!;
         ex.op1Lvl = Math.max(ex.op1Lvl, lvl1);
@@ -170,9 +174,9 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
         ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
       } else {
         // Try to get description from RTDB
-        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partData.name.toLowerCase());
+        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
         profs.set(key, {
-          name: partData.name,
+          name: partName,
           description: rtdbPart?.description,
           baseTP,
           op1Lvl: lvl1,

@@ -831,7 +831,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
       const currentUses = prev.traitUses?.[traitName] ?? 0;
       // Find the trait in traitsDb to get maxUses
       const traitData = traitsDb.find(t => t.name?.toLowerCase() === traitName.toLowerCase());
-      const maxUses = traitData?.uses_per_rec ?? 999;
+      // RTDB trait objects may include `uses_per_rec`; cast to any to avoid strict type mismatch
+      const maxUses = (traitData as any)?.uses_per_rec ?? 999;
       const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
       return {
         ...prev,
@@ -1090,7 +1091,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   powerPartsDb={powerPartsDb}
                   techniquePartsDb={techniquePartsDb}
                   // Feats tab props
-                  ancestry={character.ancestry}
+                  // Cast ancestry to any to accommodate nullable fields from RTDB (selectedFlaw may be null)
+                  ancestry={character.ancestry as any}
                   archetypeFeats={character.archetypeFeats}
                   characterFeats={character.feats}
                   onFeatUsesChange={handleFeatUsesChange}
