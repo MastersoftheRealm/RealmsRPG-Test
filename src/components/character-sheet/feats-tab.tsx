@@ -144,20 +144,6 @@ function FeatCard({ feat, onUsesChange, isEditMode }: FeatCardProps) {
   const currentUses = feat.currentUses ?? feat.maxUses ?? 0;
   const maxUses = feat.maxUses ?? 0;
   const hasLimitedUses = maxUses > 0;
-  
-  // Color coding based on feat type
-  const getBadgeClass = () => {
-    switch (feat.type) {
-      case 'archetype':
-        return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'character':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'state':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
 
   const handleUsesChange = (e: React.MouseEvent, delta: number) => {
     e.stopPropagation();
@@ -165,72 +151,73 @@ function FeatCard({ feat, onUsesChange, isEditMode }: FeatCardProps) {
   };
 
   return (
-    <div className={cn(
-      'border rounded-lg overflow-hidden transition-colors',
-      getBadgeClass()
-    )}>
+    <div className="border border-gray-200 rounded-lg overflow-hidden transition-colors bg-white">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-black/5 text-left"
+        className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50 text-left"
       >
         <div className="flex items-center gap-2">
           {expanded ? (
-            <ChevronUp className="w-4 h-4 opacity-50" />
+            <ChevronUp className="w-4 h-4 text-gray-400" />
           ) : (
-            <ChevronDown className="w-4 h-4 opacity-50" />
+            <ChevronDown className="w-4 h-4 text-gray-400" />
           )}
-          <span className="font-medium">{feat.name}</span>
+          <span className="font-medium text-gray-800">{feat.name}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Type as plain text subtext instead of colored badge */}
           {feat.type && (
-            <span className="text-xs opacity-60 capitalize">
-              ({feat.type})
+            <span className="text-xs text-gray-400 italic capitalize">
+              {feat.type}
             </span>
+          )}
+
+          {/* Uses tracking */}
+          {hasLimitedUses && (
+            <div 
+              className="flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={(e) => handleUsesChange(e, -1)}
+                disabled={currentUses <= 0}
+                className={cn(
+                  'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
+                  currentUses > 0
+                    ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                )}
+                title="Spend use"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className={cn(
+                'min-w-[2rem] text-center text-sm font-medium',
+                currentUses === 0 ? 'text-red-600' : 'text-gray-600'
+              )}>
+                {currentUses}/{maxUses}
+              </span>
+              <button
+                onClick={(e) => handleUsesChange(e, 1)}
+                disabled={currentUses >= maxUses}
+                className={cn(
+                  'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
+                  currentUses < maxUses
+                    ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                )}
+                title="Recover use"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
           )}
         </div>
-
-        {/* Uses tracking */}
-        {hasLimitedUses && (
-          <div 
-            className="flex items-center gap-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={(e) => handleUsesChange(e, -1)}
-              disabled={currentUses <= 0}
-              className={cn(
-                'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                currentUses > 0
-                  ? 'bg-white/50 hover:bg-white/80 text-gray-700'
-                  : 'bg-white/20 text-gray-300 cursor-not-allowed'
-              )}
-              title="Spend use"
-            >
-              <Minus className="w-3 h-3" />
-            </button>
-            <span className={cn(
-              'min-w-[2rem] text-center text-sm font-medium',
-              currentUses === 0 && 'text-red-600'
-            )}>
-              {currentUses}/{maxUses}
-            </span>
-            <button
-              onClick={(e) => handleUsesChange(e, 1)}
-              disabled={currentUses >= maxUses}
-              className={cn(
-                'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                currentUses < maxUses
-                  ? 'bg-white/50 hover:bg-white/80 text-gray-700'
-                  : 'bg-white/20 text-gray-300 cursor-not-allowed'
-              )}
-              title="Recover use"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
-          </div>
-        )}
       </button>
 
       {expanded && (
-        <div className="px-3 py-2 bg-white/50 border-t border-current/10">
+        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
           <p className="text-sm text-gray-600 mb-2">
             {feat.description || 'No description available.'}
           </p>
@@ -266,10 +253,18 @@ export function FeatsTab({
   onAddCharacterFeat,
 }: FeatsTabProps) {
   // Helper to find trait in RTDB and enrich with uses data
-  const enrichTrait = (traitName: string) => {
-    const dbTrait = traitsDb.find(t => t.name.toLowerCase() === traitName.toLowerCase());
+  // Supports lookup by name OR by ID (in case traits are stored as IDs)
+  const enrichTrait = (traitNameOrId: string) => {
+    // Try to find by name first
+    let dbTrait = traitsDb.find(t => t.name.toLowerCase() === traitNameOrId.toLowerCase());
+    
+    // If not found by name, try by ID
+    if (!dbTrait) {
+      dbTrait = traitsDb.find(t => t.id === traitNameOrId);
+    }
+    
     return {
-      name: traitName,
+      name: dbTrait?.name || traitNameOrId, // Use enriched name if found, otherwise original
       description: dbTrait?.description,
       maxUses: dbTrait?.uses_per_rec ?? 0,
       recoveryPeriod: dbTrait?.rec_period,

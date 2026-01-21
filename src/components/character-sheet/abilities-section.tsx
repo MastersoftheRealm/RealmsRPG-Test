@@ -1,16 +1,17 @@
 /**
  * Abilities Section
  * =================
- * Displays and manages the six core ability scores and defenses
- * - Clicking an ability in view mode rolls a d20 + modifier
- * - Edit mode shows +/- with point costs (2 pts for 4+)
- * - Includes defense value editing with 2 skill points per point
- * - Enforces constraints: min -2, max by level, negative sum limit -3
+ * Displays the six core ability scores in a row with clickable roll buttons,
+ * followed by a separate defenses row with defense scores and roll buttons.
+ * 
+ * Layout matches vanilla site:
+ * - Row 1: 6 abilities with gradient roll buttons showing bonus
+ * - Row 2: 6 defenses with score and gradient roll buttons for bonus
  */
 
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
@@ -27,12 +28,10 @@ interface AbilitiesSectionProps {
   martialAbility?: AbilityName;
   powerAbility?: AbilityName;
   isEditMode?: boolean;
-  // Point tracking (optional - component can calculate defaults if needed)
   totalAbilityPoints?: number;
   spentAbilityPoints?: number;
   totalSkillPoints?: number;
   spentSkillPoints?: number;
-  // Handlers
   onAbilityChange?: (ability: AbilityName, value: number) => void;
   onDefenseChange?: (defense: keyof DefenseSkills, value: number) => void;
 }
@@ -40,6 +39,8 @@ interface AbilitiesSectionProps {
 // =============================================================================
 // Constants
 // =============================================================================
+
+const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
 
 const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; defenseKey: keyof DefenseSkills }> = {
   strength: { name: 'Strength', shortName: 'STR', defenseKey: 'might' },
@@ -50,19 +51,16 @@ const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; defen
   charisma: { name: 'Charisma', shortName: 'CHA', defenseKey: 'resolve' },
 };
 
-const DEFENSE_INFO: Record<keyof DefenseSkills, { name: string; shortName: string; ability: AbilityName }> = {
-  might: { name: 'Might', shortName: 'MGT', ability: 'strength' },
-  fortitude: { name: 'Fortitude', shortName: 'FOR', ability: 'vitality' },
-  reflex: { name: 'Reflex', shortName: 'REF', ability: 'agility' },
-  discernment: { name: 'Discernment', shortName: 'DIS', ability: 'acuity' },
-  mentalFortitude: { name: 'Mental Fort', shortName: 'MNT', ability: 'intelligence' },
-  resolve: { name: 'Resolve', shortName: 'RES', ability: 'charisma' },
+const DEFENSE_INFO: Record<keyof DefenseSkills, { name: string; shortName: string }> = {
+  might: { name: 'Might', shortName: 'MGT' },
+  fortitude: { name: 'Fortitude', shortName: 'FOR' },
+  reflex: { name: 'Reflex', shortName: 'REF' },
+  discernment: { name: 'Discernment', shortName: 'DIS' },
+  mentalFortitude: { name: 'Mental Fort.', shortName: 'MNT' },
+  resolve: { name: 'Resolve', shortName: 'RES' },
 };
 
-const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
-const DEFENSE_ORDER: (keyof DefenseSkills)[] = ['might', 'fortitude', 'reflex', 'discernment', 'mentalFortitude', 'resolve'];
-
-// Ability constraints matching vanilla site
+// Ability constraints
 const ABILITY_CONSTRAINTS = {
   MIN_ABILITY: -2,
   MAX_NEGATIVE_SUM: -3,
@@ -75,7 +73,6 @@ const ABILITY_CONSTRAINTS = {
     if (level <= 15) return 8;
     return 9;
   },
-  // Defense skill value cannot exceed level
   getMaxDefenseSkill: (level: number): number => level,
 };
 
@@ -83,26 +80,20 @@ const ABILITY_CONSTRAINTS = {
 // Helper Functions
 // =============================================================================
 
+function formatBonus(value: number): string {
+  return value >= 0 ? `+${value}` : `${value}`;
+}
+
 function getAbilityIncreaseCost(currentValue: number): number {
   return currentValue >= 4 ? 2 : 1;
 }
 
-function getAbilityDecreaseRefund(currentValue: number): number {
-  return currentValue > 4 ? 2 : 1;
-}
-
-function canDecreaseAbility(
-  abilities: Abilities,
-  abilityName: AbilityName
-): { canDecrease: boolean; refund: number; reason: string | null } {
+function canDecreaseAbility(abilities: Abilities, abilityName: AbilityName): boolean {
   const currentValue = abilities[abilityName] ?? 0;
   const newValue = currentValue - 1;
-  const refund = getAbilityDecreaseRefund(currentValue);
-
-  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) {
-    return { canDecrease: false, refund: 0, reason: `Cannot go below ${ABILITY_CONSTRAINTS.MIN_ABILITY}` };
-  }
-
+  
+  if (newValue < ABILITY_CONSTRAINTS.MIN_ABILITY) return false;
+  
   // Check negative sum constraint
   if (newValue < 0) {
     const currentNegSum = Object.values(abilities)
@@ -115,317 +106,88 @@ function canDecreaseAbility(
     } else {
       newNegSum = currentNegSum + newValue;
     }
-
-    if (newNegSum < ABILITY_CONSTRAINTS.MAX_NEGATIVE_SUM) {
-      return { canDecrease: false, refund: 0, reason: `Negative sum cannot exceed ${ABILITY_CONSTRAINTS.MAX_NEGATIVE_SUM}` };
-    }
+    
+    if (newNegSum < ABILITY_CONSTRAINTS.MAX_NEGATIVE_SUM) return false;
   }
-
-  return { canDecrease: true, refund, reason: null };
+  
+  return true;
 }
 
 // =============================================================================
-// Sub-Components
+// Roll Button Component - Styled like vanilla site
 // =============================================================================
 
-interface AbilityCardProps {
-  ability: AbilityName;
-  value: number;
-  defenseValue: number;
-  defenseBonus: number;
-  defenseScore: number;
-  isArchetypeAbility?: boolean;
-  isMartialAbility?: boolean;
-  isPowerAbility?: boolean;
-  isEditMode?: boolean;
-  level: number;
-  availableAbilityPoints: number;
-  abilities: Abilities;
-  onIncrease?: () => void;
-  onDecrease?: () => void;
-  onDefenseIncrease?: () => void;
-  onDefenseDecrease?: () => void;
-  onRollAbility?: () => void;
-  onRollDefense?: () => void;
+interface RollButtonProps {
+  value: string;
+  onClick?: () => void;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'unproficient';
+  disabled?: boolean;
+  title?: string;
 }
 
-function AbilityCard({
-  ability,
-  value,
-  defenseValue,
-  defenseBonus,
-  defenseScore,
-  isArchetypeAbility,
-  isMartialAbility,
-  isPowerAbility,
-  isEditMode,
-  level,
-  availableAbilityPoints,
-  abilities,
-  onIncrease,
-  onDecrease,
-  onDefenseIncrease,
-  onDefenseDecrease,
-  onRollAbility,
-  onRollDefense,
-}: AbilityCardProps) {
-  const info = ABILITY_INFO[ability];
-  const defenseInfo = DEFENSE_INFO[info.defenseKey];
-  const formattedValue = value >= 0 ? `+${value}` : `${value}`;
-  const formattedDefenseBonus = defenseBonus >= 0 ? `+${defenseBonus}` : `${defenseBonus}`;
-
-  // Check constraints
-  const maxAbility = ABILITY_CONSTRAINTS.getMaxAbility(level);
-  const cost = getAbilityIncreaseCost(value);
-  const canIncrease = value < maxAbility;
-  const decreaseInfo = canDecreaseAbility(abilities, ability);
-
-  // Determine styling based on ability role
-  let borderClass = 'border-gray-200';
-  let badgeText = '';
-  let badgeClass = '';
-
-  if (isPowerAbility && isMartialAbility) {
-    borderClass = 'border-amber-400 border-2';
-    badgeText = 'Archetype';
-    badgeClass = 'bg-amber-100 text-amber-700';
-  } else if (isPowerAbility) {
-    borderClass = 'border-purple-400 border-2';
-    badgeText = 'Power';
-    badgeClass = 'bg-purple-100 text-purple-700';
-  } else if (isMartialAbility) {
-    borderClass = 'border-red-400 border-2';
-    badgeText = 'Martial';
-    badgeClass = 'bg-red-100 text-red-700';
-  } else if (isArchetypeAbility) {
-    borderClass = 'border-amber-400 border-2';
-    badgeText = 'Archetype';
-    badgeClass = 'bg-amber-100 text-amber-700';
-  }
-
+function RollButton({ value, onClick, size = 'md', variant = 'primary', disabled, title }: RollButtonProps) {
+  const sizeClasses = {
+    sm: 'px-3 py-1 text-sm min-w-[48px]',
+    md: 'px-4 py-2 text-xl min-w-[60px]',
+    lg: 'px-5 py-3 text-2xl min-w-[72px]',
+  };
+  
+  const variantClasses = {
+    primary: 'bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 shadow-md hover:shadow-lg',
+    unproficient: 'bg-gradient-to-br from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700',
+  };
+  
   return (
-    <div className={cn(
-      'relative flex flex-col bg-white rounded-xl shadow-sm border overflow-hidden',
-      borderClass
-    )}>
-      {/* Role badge */}
-      {badgeText && (
-        <div className={cn(
-          'absolute -top-0.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-b-lg text-[9px] font-bold uppercase z-10',
-          badgeClass
-        )}>
-          {badgeText}
-        </div>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={cn(
+        'text-white font-bold rounded-lg transition-all duration-200',
+        'hover:scale-105 active:scale-95 cursor-pointer',
+        'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
+        sizeClasses[size],
+        variantClasses[variant]
       )}
-
-      {/* Ability Section */}
-      <div
-        onClick={!isEditMode && onRollAbility ? onRollAbility : undefined}
-        className={cn(
-          'flex flex-col items-center p-3 pt-4 transition-all',
-          !isEditMode && onRollAbility && 'cursor-pointer hover:bg-gray-50 active:scale-[0.98]'
-        )}
-        role={!isEditMode && onRollAbility ? 'button' : undefined}
-        title={!isEditMode ? `Click to roll ${info.name} check` : undefined}
-      >
-        <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">
-          {info.name}
-        </span>
-
-        <div className="flex items-center gap-1 my-1">
-          {isEditMode && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onDecrease?.(); }}
-              disabled={!decreaseInfo.canDecrease}
-              className={cn(
-                'w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                decreaseInfo.canDecrease
-                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                  : 'bg-gray-50 text-gray-300 cursor-not-allowed'
-              )}
-              title={decreaseInfo.reason || `Refund ${decreaseInfo.refund} point(s)`}
-            >
-              −
-            </button>
-          )}
-          <span className={cn(
-            'text-2xl font-bold min-w-[48px] text-center',
-            value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-gray-700'
-          )}>
-            {formattedValue}
-          </span>
-          {isEditMode && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onIncrease?.(); }}
-              disabled={!canIncrease}
-              className={cn(
-                'w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                canIncrease
-                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                  : 'bg-gray-50 text-gray-300 cursor-not-allowed'
-              )}
-              title={canIncrease ? `Cost: ${cost} point(s)` : `Max at level ${level} is ${maxAbility}`}
-            >
-              +
-            </button>
-          )}
-        </div>
-
-        {/* Cost indicator in edit mode */}
-        {isEditMode && (
-          <span className={cn(
-            'text-[9px] font-medium',
-            cost > 1 ? 'text-amber-600' : 'text-gray-400'
-          )}>
-            {cost > 1 ? `+${cost}pt` : '+1pt'}
-          </span>
-        )}
-      </div>
-
-      {/* Defense Section */}
-      <div
-        onClick={!isEditMode && onRollDefense ? onRollDefense : undefined}
-        className={cn(
-          'flex flex-col items-center p-2 bg-gradient-to-b from-gray-50 to-gray-100 border-t border-gray-200 transition-all',
-          !isEditMode && onRollDefense && 'cursor-pointer hover:bg-gray-100 active:scale-[0.98]'
-        )}
-        role={!isEditMode && onRollDefense ? 'button' : undefined}
-        title={!isEditMode ? `Click to roll ${defenseInfo.name} save` : undefined}
-      >
-        <span className="text-[9px] text-gray-400 uppercase tracking-wider font-medium">
-          {defenseInfo.name}
-        </span>
-
-        <div className="flex items-center gap-1">
-          {isEditMode && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onDefenseDecrease?.(); }}
-              disabled={defenseValue <= 0}
-              className={cn(
-                'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
-                defenseValue > 0
-                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-                  : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-              )}
-            >
-              −
-            </button>
-          )}
-          <div className="flex flex-col items-center">
-            <span className="text-lg font-bold text-gray-800">{defenseScore}</span>
-            <span className="text-[10px] text-gray-500">{formattedDefenseBonus}</span>
-          </div>
-          {isEditMode && (
-            (() => {
-              const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
-              const canIncreaseDefense = defenseValue < maxDefenseSkill;
-              return (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDefenseIncrease?.(); }}
-                  disabled={!canIncreaseDefense}
-                  className={cn(
-                    'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
-                    canIncreaseDefense
-                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-                      : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                  )}
-                  title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max defense skill at level ${level}: +${maxDefenseSkill}`}
-                >
-                  +
-                </button>
-              );
-            })()
-          )}
-        </div>
-
-        {/* Defense skill points in edit mode */}
-        {isEditMode && defenseValue > 0 && (
-          <span className="text-[9px] text-blue-600 font-medium">
-            +{defenseValue} ({defenseValue * 2}sp)
-          </span>
-        )}
-      </div>
-    </div>
+    >
+      {value}
+    </button>
   );
 }
 
-// Point Tracker Sub-component with three-state color system:
-// - Green (has-points): Points remaining to spend
-// - Blue (no-points): All points spent perfectly
-// - Red (over-budget): Overspent
+// =============================================================================
+// Point Tracker Component
+// =============================================================================
+
 interface PointTrackerProps {
   label: string;
   spent: number;
   total: number;
-  color: 'amber' | 'blue' | 'green';
 }
 
-function PointTracker({ label, spent, total, color }: PointTrackerProps) {
+function PointTracker({ label, spent, total }: PointTrackerProps) {
   const remaining = total - spent;
-  const percentage = total > 0 ? (spent / total) * 100 : 0;
-
-  // Three-state color system based on remaining points
-  const getStateColor = () => {
-    if (remaining > 0) {
-      // Has points remaining - green
-      return {
-        text: 'text-green-600',
-        badge: 'bg-green-100 text-green-700',
-      };
-    } else if (remaining < 0) {
-      // Over-budget - red
-      return {
-        text: 'text-red-600',
-        badge: 'bg-red-100 text-red-700',
-      };
-    } else {
-      // No points remaining (perfect) - blue
-      return {
-        text: 'text-blue-600',
-        badge: 'bg-blue-100 text-blue-700',
-      };
-    }
+  
+  const getStateClasses = () => {
+    if (remaining > 0) return 'bg-green-100 text-green-700 border-green-200';
+    if (remaining < 0) return 'bg-red-100 text-red-700 border-red-200';
+    return 'bg-blue-100 text-blue-700 border-blue-200';
   };
-
-  const stateColor = getStateColor();
-
-  const colorClasses = {
-    amber: {
-      bg: 'bg-amber-100',
-      fill: remaining < 0 ? 'bg-red-500' : 'bg-amber-500',
-    },
-    blue: {
-      bg: 'bg-blue-100',
-      fill: remaining < 0 ? 'bg-red-500' : 'bg-blue-500',
-    },
-    green: {
-      bg: 'bg-green-100',
-      fill: remaining < 0 ? 'bg-red-500' : 'bg-green-500',
-    },
-  };
-
-  const classes = colorClasses[color];
-
+  
   return (
-    <div className="flex-1">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-gray-600 font-medium">{label}</span>
-        <span className={cn('text-xs font-bold px-1.5 py-0.5 rounded', stateColor.badge)}>
-          {remaining} / {total}
-        </span>
-      </div>
-      <div className={cn('h-2 rounded-full overflow-hidden', classes.bg)}>
-        <div
-          className={cn('h-full transition-all duration-300 rounded-full', classes.fill)}
-          style={{ width: `${Math.min(percentage, 100)}%` }}
-        />
-      </div>
+    <div className={cn(
+      'flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-semibold',
+      getStateClasses()
+    )}>
+      <span>{label}:</span>
+      <span>{remaining} / {total}</span>
     </div>
   );
 }
 
 // =============================================================================
-// Main Component Export
+// Main Component
 // =============================================================================
 
 export function AbilitiesSection({
@@ -443,123 +205,248 @@ export function AbilitiesSection({
   onAbilityChange,
   onDefenseChange,
 }: AbilitiesSectionProps) {
-  const abilityOrder: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
   const rollContext = useRollsOptional();
-
-  // Calculate defense values
-  const getDefenseValue = (defenseKey: string): number => {
-    return defenseSkills?.[defenseKey as keyof DefenseSkills] ?? 0;
+  
+  // Calculate ability points spent
+  const calculatedSpentAbilityPoints = useMemo(() => {
+    let spent = 0;
+    ABILITY_ORDER.forEach(ability => {
+      const value = abilities[ability] ?? 0;
+      if (value > 0) {
+        for (let i = 1; i <= value; i++) {
+          spent += i >= 4 ? 2 : 1;
+        }
+      } else if (value < 0) {
+        spent += value;
+      }
+    });
+    return spent;
+  }, [abilities]);
+  
+  // Calculate defense skill points spent (2 per point)
+  const calculatedDefenseSpent = useMemo(() => {
+    if (!defenseSkills) return 0;
+    return Object.values(defenseSkills).reduce((sum, val) => sum + ((val || 0) * 2), 0);
+  }, [defenseSkills]);
+  
+  const getDefenseValue = (defenseKey: keyof DefenseSkills): number => {
+    return defenseSkills?.[defenseKey] ?? 0;
   };
-
+  
   const getDefenseBonus = (ability: AbilityName): number => {
     const abilityValue = abilities[ability] ?? 0;
     const defenseKey = ABILITY_INFO[ability].defenseKey;
     const defenseValue = getDefenseValue(defenseKey);
     return abilityValue + defenseValue;
   };
-
+  
   const getDefenseScore = (ability: AbilityName): number => {
     return 10 + getDefenseBonus(ability);
   };
-
-  // Calculate ability point cost (for display)
-  const calculateAbilityPointsSpent = (): number => {
-    let spent = 0;
-    abilityOrder.forEach(ability => {
-      const value = abilities[ability] ?? 0;
-      // Points spent = sum of costs for each point above 0, minus refunds for negatives
-      if (value > 0) {
-        for (let i = 1; i <= value; i++) {
-          spent += i >= 4 ? 2 : 1;
-        }
-      } else if (value < 0) {
-        // Negative values give points back (1 per negative, max -2, total sum max -3)
-        spent += value; // value is already negative
-      }
-    });
-    return spent;
-  };
-
+  
+  const maxAbility = ABILITY_CONSTRAINTS.getMaxAbility(level);
+  const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
+  
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-4">
       {/* Header with Point Trackers */}
-      <div className="flex flex-col gap-3 mb-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-800">Abilities & Defenses</h2>
-        </div>
-
-        {/* Point Trackers - only show in edit mode */}
-        {isEditMode && (
-          <div className="flex gap-4 p-3 bg-gray-50 rounded-lg">
-            {totalAbilityPoints !== undefined && (
-              <PointTracker
-                label="Ability Points"
-                spent={spentAbilityPoints ?? calculateAbilityPointsSpent()}
-                total={totalAbilityPoints}
-                color="amber"
-              />
-            )}
-            {totalSkillPoints !== undefined && (
-              <PointTracker
-                label="Skill Points (Defenses)"
-                spent={spentSkillPoints ?? 0}
-                total={totalSkillPoints}
-                color="blue"
-              />
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Abilities Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {abilityOrder.map((ability) => {
-          const defenseKey = ABILITY_INFO[ability].defenseKey;
-          const defenseValue = getDefenseValue(defenseKey);
-
-          return (
-            <AbilityCard
-              key={ability}
-              ability={ability}
-              value={abilities[ability] ?? 0}
-              defenseValue={defenseValue}
-              defenseBonus={getDefenseBonus(ability)}
-              defenseScore={getDefenseScore(ability)}
-              isArchetypeAbility={archetypeAbility?.toLowerCase() === ability}
-              isMartialAbility={martialAbility?.toLowerCase() === ability}
-              isPowerAbility={powerAbility?.toLowerCase() === ability}
-              isEditMode={isEditMode}
-              level={level}
-              availableAbilityPoints={(totalAbilityPoints ?? 0) - (spentAbilityPoints ?? 0)}
-              abilities={abilities}
-              onIncrease={() => onAbilityChange?.(ability, (abilities[ability] ?? 0) + 1)}
-              onDecrease={() => onAbilityChange?.(ability, (abilities[ability] ?? 0) - 1)}
-              onDefenseIncrease={() => onDefenseChange?.(defenseKey, defenseValue + 1)}
-              onDefenseDecrease={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
-              onRollAbility={rollContext ? () => rollContext.rollAbility(ability, abilities[ability] ?? 0) : undefined}
-              onRollDefense={rollContext ? () => rollContext.rollDefense?.(defenseKey, getDefenseBonus(ability)) : undefined}
+      {isEditMode && (
+        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+          {totalAbilityPoints !== undefined && (
+            <PointTracker
+              label="Ability Points"
+              spent={spentAbilityPoints ?? calculatedSpentAbilityPoints}
+              total={totalAbilityPoints}
             />
+          )}
+          {totalSkillPoints !== undefined && (
+            <PointTracker
+              label="Skill Points (Defenses)"
+              spent={(spentSkillPoints ?? 0) + calculatedDefenseSpent}
+              total={totalSkillPoints}
+            />
+          )}
+          <div className="flex-1" />
+          <div className="text-xs text-gray-500 self-center">
+            Max ability: +{maxAbility} | Defense skill: 2sp each (max +{maxDefenseSkill})
+          </div>
+        </div>
+      )}
+      
+      {/* Abilities Row */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4 mb-6">
+        {ABILITY_ORDER.map((ability) => {
+          const value = abilities[ability] ?? 0;
+          const info = ABILITY_INFO[ability];
+          const isPower = powerAbility?.toLowerCase() === ability;
+          const isMartial = martialAbility?.toLowerCase() === ability;
+          const isArchetype = archetypeAbility?.toLowerCase() === ability || isPower || isMartial;
+          const cost = getAbilityIncreaseCost(value);
+          const canIncrease = value < maxAbility;
+          const canDecrease = canDecreaseAbility(abilities, ability);
+          
+          return (
+            <div
+              key={ability}
+              className={cn(
+                'flex flex-col items-center p-3 bg-gradient-to-b from-gray-50 to-gray-100 rounded-xl border-2 transition-all',
+                isArchetype ? 'border-amber-400' : 'border-gray-200',
+                !isEditMode && 'hover:shadow-md'
+              )}
+            >
+              {/* Ability badge for power/martial */}
+              {isArchetype && (
+                <span className={cn(
+                  'text-[9px] font-bold uppercase px-1.5 py-0.5 rounded mb-1',
+                  isPower && isMartial ? 'bg-amber-100 text-amber-700' :
+                  isPower ? 'bg-purple-100 text-purple-700' :
+                  isMartial ? 'bg-red-100 text-red-700' :
+                  'bg-amber-100 text-amber-700'
+                )}>
+                  {isPower && isMartial ? 'Archetype' : isPower ? 'Power' : isMartial ? 'Martial' : 'Archetype'}
+                </span>
+              )}
+              
+              {/* Ability Name */}
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                {info.name}
+              </span>
+              
+              {/* Ability Value / Roll Button */}
+              {isEditMode ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => onAbilityChange?.(ability, value - 1)}
+                    disabled={!canDecrease}
+                    className={cn(
+                      'w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold transition-colors',
+                      canDecrease
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    )}
+                  >
+                    −
+                  </button>
+                  <span className={cn(
+                    'text-2xl font-bold min-w-[56px] text-center',
+                    value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-gray-700'
+                  )}>
+                    {formatBonus(value)}
+                  </span>
+                  <button
+                    onClick={() => onAbilityChange?.(ability, value + 1)}
+                    disabled={!canIncrease}
+                    title={canIncrease ? `Cost: ${cost} point${cost > 1 ? 's' : ''}` : `Max at level ${level}`}
+                    className={cn(
+                      'w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold transition-colors',
+                      canIncrease
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    )}
+                  >
+                    +
+                  </button>
+                </div>
+              ) : (
+                <RollButton
+                  value={formatBonus(value)}
+                  onClick={() => rollContext?.rollAbility?.(ability, value)}
+                  size="md"
+                  title={`Roll ${info.name} check`}
+                />
+              )}
+              
+              {/* Cost indicator in edit mode */}
+              {isEditMode && value >= 3 && (
+                <span className="text-[10px] text-amber-600 font-medium mt-1">
+                  Next: {cost + (value >= 3 ? 1 : 0)}pt
+                </span>
+              )}
+            </div>
           );
         })}
       </div>
-
-      {/* Constraint hints in edit mode */}
-      {isEditMode && (
-        <div className="mt-4 flex flex-wrap gap-2 text-[10px] text-gray-500">
-          <span className="px-2 py-1 bg-gray-100 rounded">
-            Max ability at level {level}: +{ABILITY_CONSTRAINTS.getMaxAbility(level)}
-          </span>
-          <span className="px-2 py-1 bg-gray-100 rounded">
-            Min ability: {ABILITY_CONSTRAINTS.MIN_ABILITY}
-          </span>
-          <span className="px-2 py-1 bg-amber-50 text-amber-700 rounded">
-            Abilities 4+ cost 2 points
-          </span>
-          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">
-            Defense skills: max +{ABILITY_CONSTRAINTS.getMaxDefenseSkill(level)} (2sp each)
-          </span>
+      
+      {/* Defenses Row - Separate from abilities */}
+      <div className="border-t-2 border-gray-200 pt-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4">
+          {ABILITY_ORDER.map((ability) => {
+            const info = ABILITY_INFO[ability];
+            const defenseKey = info.defenseKey;
+            const defenseInfo = DEFENSE_INFO[defenseKey];
+            const defenseValue = getDefenseValue(defenseKey);
+            const defenseBonus = getDefenseBonus(ability);
+            const defenseScore = getDefenseScore(ability);
+            const canIncreaseDefense = defenseValue < maxDefenseSkill;
+            const canDecreaseDefense = defenseValue > 0;
+            
+            return (
+              <div
+                key={defenseKey}
+                className="flex flex-col items-center p-3 bg-gray-50 rounded-lg"
+              >
+                {/* Defense Name */}
+                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                  {defenseInfo.name}
+                </span>
+                
+                {/* Defense Score */}
+                <span className="text-lg font-bold text-gray-800 mb-1">
+                  {defenseScore}
+                </span>
+                
+                {/* Defense Bonus Roll Button / Edit Controls */}
+                {isEditMode ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
+                      disabled={!canDecreaseDefense}
+                      className={cn(
+                        'w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+                        canDecreaseDefense
+                          ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      )}
+                    >
+                      −
+                    </button>
+                    <span className="text-sm font-bold min-w-[36px] text-center text-blue-600">
+                      {formatBonus(defenseBonus)}
+                    </span>
+                    <button
+                      onClick={() => onDefenseChange?.(defenseKey, defenseValue + 1)}
+                      disabled={!canIncreaseDefense}
+                      title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max at level ${level}`}
+                      className={cn(
+                        'w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+                        canIncreaseDefense
+                          ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                      )}
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <RollButton
+                    value={formatBonus(defenseBonus)}
+                    onClick={() => rollContext?.rollDefense?.(defenseKey, defenseBonus)}
+                    size="sm"
+                    title={`Roll ${defenseInfo.name} save`}
+                  />
+                )}
+                
+                {/* Defense skill allocation indicator */}
+                {isEditMode && defenseValue > 0 && (
+                  <span className="text-[9px] text-blue-600 font-medium mt-0.5">
+                    +{defenseValue} ({defenseValue * 2}sp)
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -39,6 +39,9 @@ interface SheetHeaderProps {
   evasionBase?: number;
   onSpeedBaseChange?: (value: number) => void;
   onEvasionBaseChange?: (value: number) => void;
+  // Innate info from archetype progression
+  innateThreshold?: number;
+  innatePools?: number;
 }
 
 function ResourceBar({
@@ -135,6 +138,7 @@ function EditableStatBlock({
   label, 
   value, 
   baseValue,
+  defaultBase,
   subValue, 
   isEditMode,
   onChange,
@@ -144,12 +148,16 @@ function EditableStatBlock({
   label: string; 
   value: number | string; 
   baseValue?: number;
+  defaultBase?: number;
   subValue?: string;
   isEditMode?: boolean;
   onChange?: (newBase: number) => void;
   minBase?: number;
   maxBase?: number;
 }) {
+  // Check if base is overridden from default
+  const isOverridden = defaultBase !== undefined && baseValue !== undefined && baseValue !== defaultBase;
+  
   if (isEditMode && onChange && baseValue !== undefined) {
     return (
       <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg min-w-[70px]">
@@ -168,8 +176,11 @@ function EditableStatBlock({
           >
             −
           </button>
-          <span className="text-xs text-gray-600 min-w-[2rem] text-center">
-            base: {baseValue}
+          <span className={cn(
+            'text-xs min-w-[2.5rem] text-center',
+            isOverridden ? 'text-red-600 font-bold' : 'text-gray-600'
+          )}>
+            Base: {baseValue}
           </span>
           <button
             onClick={() => onChange(Math.min(maxBase, baseValue + 1))}
@@ -232,6 +243,8 @@ export function SheetHeader({
   evasionBase = 10,
   onSpeedBaseChange,
   onEvasionBaseChange,
+  innateThreshold = 0,
+  innatePools = 0,
 }: SheetHeaderProps) {
   const currentHealth = character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
@@ -365,7 +378,7 @@ export function SheetHeader({
             label="Speed" 
             value={calculatedStats.speed}
             baseValue={speedBase}
-            subValue={isEditMode ? undefined : undefined}
+            defaultBase={6}
             isEditMode={isEditMode}
             onChange={onSpeedBaseChange}
             minBase={1}
@@ -375,14 +388,20 @@ export function SheetHeader({
             label="Evasion" 
             value={calculatedStats.evasion}
             baseValue={evasionBase}
+            defaultBase={10}
             isEditMode={isEditMode}
             onChange={onEvasionBaseChange}
             minBase={0}
             maxBase={20}
           />
           <StatBlock label="Armor" value={calculatedStats.armor} />
-          {character.innateEnergy !== undefined && character.innateEnergy > 0 && (
-            <StatBlock label="Innate" value={character.innateEnergy} />
+          <StatBlock label="Terminal" value={calculatedStats.terminal} subValue="HP ÷ 4" />
+          {innateThreshold > 0 && (
+            <StatBlock 
+              label="Innate" 
+              value={innateThreshold} 
+              subValue={innatePools > 0 ? `${innatePools} pools` : undefined} 
+            />
           )}
         </div>
 
@@ -513,27 +532,6 @@ export function SheetHeader({
               </p>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Defenses */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-          Defenses
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(defenseLabels).map(([key, label]) => {
-            const bonus = calculatedStats.defenseBonuses[key] ?? 0;
-            return (
-              <DefenseBlock
-                key={key}
-                name={label}
-                bonus={bonus}
-                score={calculatedStats.defenseScores[key] ?? 10}
-                onRoll={rollContext ? () => rollContext.rollDefense(label, bonus) : undefined}
-              />
-            );
-          })}
         </div>
       </div>
     </div>

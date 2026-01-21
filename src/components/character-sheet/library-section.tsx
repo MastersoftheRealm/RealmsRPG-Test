@@ -172,7 +172,7 @@ interface LibrarySectionProps {
   onAddCharacterFeat?: () => void;
 }
 
-type TabType = 'powers' | 'techniques' | 'weapons' | 'armor' | 'equipment' | 'feats' | 'proficiencies' | 'notes';
+type TabType = 'powers' | 'techniques' | 'inventory' | 'feats' | 'proficiencies' | 'notes';
 
 interface PowerCardProps {
   power: CharacterPower;
@@ -613,9 +613,7 @@ export function LibrarySection({
   const tabs: { id: TabType; label: string; count?: number; onAdd?: () => void }[] = [
     { id: 'powers', label: 'Powers', count: powers.length, onAdd: onAddPower },
     { id: 'techniques', label: 'Techniques', count: techniques.length, onAdd: onAddTechnique },
-    { id: 'weapons', label: 'Weapons', count: weapons.length, onAdd: onAddWeapon },
-    { id: 'armor', label: 'Armor', count: armor.length, onAdd: onAddArmor },
-    { id: 'equipment', label: 'Equipment', count: equipment.length, onAdd: onAddEquipment },
+    { id: 'inventory', label: 'Inventory', count: weapons.length + armor.length + equipment.length },
     { id: 'feats', label: 'Feats', count: archetypeFeats.length + characterFeats.length },
     { id: 'proficiencies', label: 'Proficiencies' },
     { id: 'notes', label: 'Notes' },
@@ -654,7 +652,7 @@ export function LibrarySection({
       </div>
 
       {/* Armament Proficiency Display - only for weapons/armor/equipment tabs */}
-      {['weapons', 'armor', 'equipment'].includes(activeTab) && martialProficiency !== undefined && (
+      {activeTab === 'inventory' && martialProficiency !== undefined && (
         <div className="mb-3 px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">⚔️ Armament Proficiency:</span>
@@ -665,34 +663,31 @@ export function LibrarySection({
       )}
 
       {/* Currency + Add Button Row - only show for inventory-related tabs */}
-      {['powers', 'techniques', 'weapons', 'armor', 'equipment'].includes(activeTab) && (
+      {['powers', 'techniques', 'inventory'].includes(activeTab) && (
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">💰</span>
-            {isEditMode && onCurrencyChange ? (
-              <input
-                type="text"
-                value={currencyInput}
-                onChange={(e) => setCurrencyInput(e.target.value)}
-                onBlur={handleCurrencyBlur}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const raw = currencyInput.trim();
-                    let newValue = currency;
-                    if (raw.startsWith('+')) newValue = currency + (parseInt(raw.substring(1)) || 0);
-                    else if (raw.startsWith('-')) newValue = currency - (parseInt(raw.substring(1)) || 0);
-                    else newValue = parseInt(raw) || 0;
-                    newValue = Math.max(0, newValue);
-                    setCurrencyInput(String(newValue));
-                    onCurrencyChange?.(newValue);
-                  }
-                }}
-                className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500"
-                title="Use +5, -10, or a number"
-              />
-            ) : (
-              <span className="font-bold text-amber-600">{currency.toLocaleString()}</span>
-            )}
+            {/* Currency is ALWAYS editable, not just in edit mode */}
+            <input
+              type="text"
+              value={currencyInput}
+              onChange={(e) => setCurrencyInput(e.target.value)}
+              onBlur={handleCurrencyBlur}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const raw = currencyInput.trim();
+                  let newValue = currency;
+                  if (raw.startsWith('+')) newValue = currency + (parseInt(raw.substring(1)) || 0);
+                  else if (raw.startsWith('-')) newValue = currency - (parseInt(raw.substring(1)) || 0);
+                  else newValue = parseInt(raw) || 0;
+                  newValue = Math.max(0, newValue);
+                  setCurrencyInput(String(newValue));
+                  onCurrencyChange?.(newValue);
+                }
+              }}
+              className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500"
+              title="Use +5, -10, or a number"
+            />
             <span className="text-sm text-gray-600">currency</span>
           </div>
           
@@ -827,106 +822,139 @@ export function LibrarySection({
           )
         )}
 
-        {activeTab === 'weapons' && (
-          <>
-            {/* Unarmed Prowess - always first */}
-            {unarmedProwess && (
-              <div className="border border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50/50 mb-2">
-                <div className="flex items-center">
-                  <div className="flex-1 flex items-center justify-between px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400">👊</span>
-                      <span className="font-medium text-gray-600">{unarmedProwess.name}</span>
-                      <span className="text-xs text-gray-400 italic">Always available</span>
-                    </div>
-                    <span className="text-red-500 font-medium text-sm">{unarmedProwess.damage}</span>
-                  </div>
-                  {rollContext && (
-                    <div className="flex items-center gap-1 pr-2">
-                      <button
-                        onClick={() => rollContext.rollAttack('Unarmed', abilities?.strength || 0)}
-                        className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-                        title="Roll unarmed attack"
-                      >
-                        ⚔️ Atk
-                      </button>
-                      <button
-                        onClick={() => rollContext.rollDamage(`${unarmedProwess.damage} bludgeoning`)}
-                        className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
-                        title="Roll unarmed damage"
-                      >
-                        💥 Dmg
-                      </button>
-                    </div>
-                  )}
-                </div>
+        {activeTab === 'inventory' && (
+          <div className="space-y-6">
+            {/* Weapons Section */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Weapons</h4>
+                {isEditMode && onAddWeapon && (
+                  <button
+                    onClick={onAddWeapon}
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add
+                  </button>
+                )}
               </div>
-            )}
-            {/* Other weapons */}
-            {weapons.length > 0 ? (
-              weapons.map((item, i) => {
-                // Calculate attack bonus - typically martial ability + proficiency
-                // For now we'll use 0 as a baseline (character sheet page should calculate this)
-                const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
-                return (
+              {/* Unarmed Prowess - always first */}
+              {unarmedProwess && (
+                <div className="border border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50/50 mb-2">
+                  <div className="flex items-center">
+                    <div className="flex-1 flex items-center justify-between px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">👊</span>
+                        <span className="font-medium text-gray-600">{unarmedProwess.name}</span>
+                        <span className="text-xs text-gray-400 italic">Always available</span>
+                      </div>
+                      <span className="text-red-500 font-medium text-sm">{unarmedProwess.damage}</span>
+                    </div>
+                    {rollContext && (
+                      <div className="flex items-center gap-1 pr-2">
+                        <button
+                          onClick={() => rollContext.rollAttack('Unarmed', abilities?.strength || 0)}
+                          className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                          title="Roll unarmed attack"
+                        >
+                          ⚔️ Atk
+                        </button>
+                        <button
+                          onClick={() => rollContext.rollDamage(`${unarmedProwess.damage} bludgeoning`)}
+                          className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
+                          title="Roll unarmed damage"
+                        >
+                          💥 Dmg
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Other weapons */}
+              {weapons.length > 0 ? (
+                weapons.map((item, i) => {
+                  const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
+                  return (
+                    <ItemCard 
+                      key={item.id || i} 
+                      item={item} 
+                      type="weapon"
+                      isEditMode={isEditMode}
+                      onRemove={onRemoveWeapon ? () => onRemoveWeapon(item.id || String(i)) : undefined}
+                      onToggleEquip={onToggleEquipWeapon ? () => onToggleEquipWeapon(item.id || String(i)) : undefined}
+                      onRollAttack={rollContext ? () => rollContext.rollAttack(item.name, attackBonus) : undefined}
+                      onRollDamage={rollContext && item.damage ? () => rollContext.rollDamage(item.damage as string) : undefined}
+                    />
+                  );
+                })
+              ) : (
+                !unarmedProwess && (
+                  <p className="text-gray-400 text-sm italic text-center py-2">No weapons</p>
+                )
+              )}
+            </div>
+            
+            {/* Armor Section */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Armor</h4>
+                {isEditMode && onAddArmor && (
+                  <button
+                    onClick={onAddArmor}
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add
+                  </button>
+                )}
+              </div>
+              {armor.length > 0 ? (
+                armor.map((item, i) => (
                   <ItemCard 
                     key={item.id || i} 
                     item={item} 
-                    type="weapon"
+                    type="armor"
                     isEditMode={isEditMode}
-                    onRemove={onRemoveWeapon ? () => onRemoveWeapon(item.id || String(i)) : undefined}
-                    onToggleEquip={onToggleEquipWeapon ? () => onToggleEquipWeapon(item.id || String(i)) : undefined}
-                    onRollAttack={rollContext ? () => rollContext.rollAttack(item.name, attackBonus) : undefined}
-                    onRollDamage={rollContext && item.damage ? () => rollContext.rollDamage(item.damage as string) : undefined}
+                    onRemove={onRemoveArmor ? () => onRemoveArmor(item.id || String(i)) : undefined}
+                    onToggleEquip={onToggleEquipArmor ? () => onToggleEquipArmor(item.id || String(i)) : undefined}
                   />
-                );
-              })
-            ) : (
-              !unarmedProwess && (
-                <p className="text-gray-400 text-sm italic text-center py-4">
-                  No weapons equipped
-                </p>
-              )
-            )}
-          </>
-        )}
-
-        {activeTab === 'armor' && (
-          armor.length > 0 ? (
-            armor.map((item, i) => (
-              <ItemCard 
-                key={item.id || i} 
-                item={item} 
-                type="armor"
-                isEditMode={isEditMode}
-                onRemove={onRemoveArmor ? () => onRemoveArmor(item.id || String(i)) : undefined}
-                onToggleEquip={onToggleEquipArmor ? () => onToggleEquipArmor(item.id || String(i)) : undefined}
-              />
-            ))
-          ) : (
-            <p className="text-gray-400 text-sm italic text-center py-4">
-              No armor equipped
-            </p>
-          )
-        )}
-
-        {activeTab === 'equipment' && (
-          equipment.length > 0 ? (
-            equipment.map((item, i) => (
-              <ItemCard 
-                key={item.id || i} 
-                item={item} 
-                type="equipment"
-                isEditMode={isEditMode}
-                onRemove={onRemoveEquipment ? () => onRemoveEquipment(item.id || String(i)) : undefined}
-                onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id || String(i), delta) : undefined}
-              />
-            ))
-          ) : (
-            <p className="text-gray-400 text-sm italic text-center py-4">
-              No equipment in inventory
-            </p>
-          )
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm italic text-center py-2">No armor</p>
+              )}
+            </div>
+            
+            {/* Equipment Section */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Equipment</h4>
+                {isEditMode && onAddEquipment && (
+                  <button
+                    onClick={onAddEquipment}
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add
+                  </button>
+                )}
+              </div>
+              {equipment.length > 0 ? (
+                equipment.map((item, i) => (
+                  <ItemCard 
+                    key={item.id || i} 
+                    item={item} 
+                    type="equipment"
+                    isEditMode={isEditMode}
+                    onRemove={onRemoveEquipment ? () => onRemoveEquipment(item.id || String(i)) : undefined}
+                    onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id || String(i), delta) : undefined}
+                  />
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm italic text-center py-2">No equipment</p>
+              )}
+            </div>
+          </div>
         )}
 
         {activeTab === 'feats' && (

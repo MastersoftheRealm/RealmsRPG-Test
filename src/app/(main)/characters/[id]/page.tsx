@@ -22,7 +22,6 @@ import {
   SkillsSection,
   ArchetypeSection,
   LibrarySection,
-  ConditionsPanel,
   RollLog,
   RollProvider,
   AddLibraryItemModal,
@@ -32,7 +31,7 @@ import {
   LevelUpModal,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
-import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat, CharacterCondition } from '@/types';
+import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
 type AddModalType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null;
@@ -438,15 +437,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setCharacter(prev => prev ? {
       ...prev,
       energyPoints: Math.max(0, value)
-    } : null);
-  }, [character]);
-  
-  // Conditions change handler
-  const handleConditionsChange = useCallback((conditions: CharacterCondition[]) => {
-    if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      conditions
     } : null);
   }, [character]);
   
@@ -990,14 +980,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 evasionBase={character.evasionBase ?? 10}
                 onSpeedBaseChange={(v) => setCharacter(prev => prev ? { ...prev, speedBase: v } : null)}
                 onEvasionBaseChange={(v) => setCharacter(prev => prev ? { ...prev, evasionBase: v } : null)}
-              />
-              
-              {/* Conditions Panel - shows active buffs/debuffs */}
-              <ConditionsPanel
-                conditions={character.conditions || []}
-                isEditMode={isEditMode}
-                onConditionsChange={handleConditionsChange}
-                compact={false}
+                innateThreshold={archetypeProgression?.innateThreshold || 0}
+                innatePools={archetypeProgression?.innatePools || 0}
               />
               
               <AbilitiesSection
@@ -1033,11 +1017,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 <ArchetypeSection
                   character={character}
                   isEditMode={isEditMode}
-                  onAddArchetypeFeat={() => setFeatModalType('archetype')}
-                  onAddCharacterFeat={() => setFeatModalType('character')}
                   onMartialProfChange={handleMartialProfChange}
                   onPowerProfChange={handlePowerProfChange}
-                  onFeatUsesChange={handleFeatUsesChange}
                   onMilestoneChoiceChange={handleMilestoneChoiceChange}
                 />
               </div>

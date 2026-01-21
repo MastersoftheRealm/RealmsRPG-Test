@@ -260,43 +260,85 @@ function HealthEnergyAllocation() {
 // Portrait Upload Component
 // =============================================================================
 
+// Helper to compress and resize image for base64 storage
+async function compressImage(file: File, maxWidth = 400, maxHeight = 400, quality = 0.7): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Calculate new dimensions maintaining aspect ratio
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      // Convert to JPEG for smaller size
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      resolve(dataUrl);
+    };
+    
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 function PortraitUpload() {
   const { draft, updateDraft } = useCharacterCreatorStore();
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
+    setError(null);
+    
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      setError('Please select an image file');
       return;
     }
     
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be smaller than 2MB');
+    // Validate file size (max 5MB before compression)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be smaller than 5MB');
       return;
     }
     
     setIsUploading(true);
     
     try {
-      // Convert to base64 for storage
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        updateDraft({ portrait: base64 });
+      // Compress and resize the image
+      const compressedBase64 = await compressImage(file, 400, 400, 0.7);
+      
+      // Check compressed size (Firebase limit is ~1MB for a field)
+      // Base64 adds ~33% overhead, so limit to ~700KB compressed
+      if (compressedBase64.length > 700 * 1024) {
+        setError('Image is still too large after compression. Please use a smaller image.');
         setIsUploading(false);
-      };
-      reader.onerror = () => {
-        alert('Failed to read image file');
-        setIsUploading(false);
-      };
-      reader.readAsDataURL(file);
+        return;
+      }
+      
+      updateDraft({ portrait: compressedBase64 });
+      setIsUploading(false);
     } catch {
-      alert('Failed to process image');
+      setError('Failed to process image');
       setIsUploading(false);
     }
   };
@@ -369,8 +411,11 @@ function PortraitUpload() {
             )}
           </label>
           <p className="text-xs text-gray-500 mt-2">
-            JPG, PNG, or GIF. Max 2MB. Portrait images (3:4 ratio) work best.
+            JPG, PNG, or GIF. Max 5MB. Images will be compressed automatically.
           </p>
+          {error && (
+            <p className="text-xs text-red-600 mt-1 font-medium">{error}</p>
+          )}
         </div>
       </div>
     </div>

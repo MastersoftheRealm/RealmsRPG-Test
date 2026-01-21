@@ -1,7 +1,9 @@
 /**
  * Equipment Step
  * ===============
- * Select starting equipment with real data from Firebase RTDB
+ * Select starting equipment with real data from Firebase
+ * - Weapons and Armor come from user's Firestore item library
+ * - General equipment comes from RTDB items
  * Supports quantity selection for equipment items
  */
 
@@ -10,10 +12,26 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, type EquipmentItem } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
+import { deriveItemDisplay } from '@/lib/calculators/item-calc';
 import { SearchInput } from '@/components/shared';
-import { Plus, Minus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Minus, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import type { Item } from '@/types';
+
+// Unified item type for display in equipment step
+interface UnifiedEquipmentItem {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'equipment';
+  description: string;
+  damage?: string;
+  armor_value?: number;
+  gold_cost: number;
+  currency: number;
+  properties: string[];
+  rarity?: string;
+  source: 'library' | 'rtdb'; // Track where item came from
+}
 
 // Starting currency for new characters at level 1 is 200
 const STARTING_CURRENCY = 200;
@@ -32,10 +50,100 @@ interface SelectedItem {
 
 export function EquipmentStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
-  const { data: equipment, isLoading, error } = useEquipment();
+  // Fetch user's item library (weapons/armor) from Firestore
+  const { data: userItems, isLoading: userItemsLoading } = useUserItems();
+  // Fetch general equipment from RTDB
+  const { data: rtdbEquipment, isLoading: rtdbLoading, error: rtdbError } = useEquipment();
+  // Fetch item properties for deriving display data from user items
+  const { data: itemProperties } = useItemProperties();
+  
   const [activeTab, setActiveTab] = useState<'weapon' | 'armor' | 'equipment'>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+
+  const isLoading = userItemsLoading || rtdbLoading;
+  const error = rtdbError;
+
+  // Combine user library items (weapons/armor) with RTDB general equipment
+  const allEquipment = useMemo((): UnifiedEquipmentItem[] => {
+    const items: UnifiedEquipmentItem[] = [];
+    
+    // Add weapons and armor from user's item library
+    if (userItems && itemProperties) {
+      for (const userItem of userItems) {
+        // Get the raw armamentType from Firestore data
+        const rawData = userItem as Record<string, unknown>;
+        const armamentType = rawData.armamentType as string;
+        
+        // Skip items that aren't weapons, shields, or armor
+        if (!armamentType || !['Weapon', 'Shield', 'Armor'].includes(armamentType)) {
+          continue;
+        }
+        
+        // Derive display data using item-calc
+        const display = deriveItemDisplay(
+          {
+            name: userItem.name,
+            description: userItem.description,
+            armamentType: armamentType as 'Weapon' | 'Armor' | 'Shield',
+            properties: userItem.properties?.map(p => ({
+              id: p.id,
+              name: p.name,
+              op_1_lvl: p.op_1_lvl,
+            })),
+            damage: rawData.damage as { amount: number; size: number; type: string }[] | undefined,
+          },
+          itemProperties
+        );
+        
+        // Map armamentType to our tab types
+        let type: 'weapon' | 'armor' | 'equipment';
+        if (armamentType === 'Weapon' || armamentType === 'Shield') {
+          type = 'weapon';
+        } else if (armamentType === 'Armor') {
+          type = 'armor';
+        } else {
+          type = 'equipment';
+        }
+        
+        items.push({
+          id: userItem.id,
+          name: display.name,
+          type,
+          description: display.description,
+          damage: display.damage || undefined,
+          armor_value: display.damageReduction || undefined,
+          gold_cost: display.currencyCost,
+          currency: display.currencyCost,
+          properties: display.proficiencies.map(p => p.name),
+          rarity: display.rarity,
+          source: 'library',
+        });
+      }
+    }
+    
+    // Add general equipment from RTDB
+    if (rtdbEquipment) {
+      for (const item of rtdbEquipment) {
+        // RTDB items are general equipment only (no weapons/armor)
+        items.push({
+          id: item.id,
+          name: item.name,
+          type: 'equipment', // RTDB items are always general equipment
+          description: item.description || '',
+          damage: item.damage,
+          armor_value: item.armor_value,
+          gold_cost: item.gold_cost || 0,
+          currency: item.currency || item.gold_cost || 0,
+          properties: item.properties || [],
+          rarity: item.rarity,
+          source: 'rtdb',
+        });
+      }
+    }
+    
+    return items;
+  }, [userItems, rtdbEquipment, itemProperties]);
 
   // Calculate starting currency - base 200 for level 1
   // For higher levels: 200 * 1.45^(level-1)
@@ -70,8 +178,7 @@ export function EquipmentStep() {
 
   // Filter equipment by type and search
   const filteredEquipment = useMemo(() => {
-    if (!equipment) return [];
-    return equipment.filter(item => {
+    return allEquipment.filter(item => {
       if (item.type !== activeTab) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -82,10 +189,10 @@ export function EquipmentStep() {
       }
       return true;
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [equipment, activeTab, searchTerm]);
+  }, [allEquipment, activeTab, searchTerm]);
 
   // Add item to inventory
-  const addItem = useCallback((item: EquipmentItem) => {
+  const addItem = useCallback((item: UnifiedEquipmentItem) => {
     const cost = item.gold_cost || item.currency || 0;
     if (cost > remainingCurrency) return;
     
@@ -230,7 +337,7 @@ export function EquipmentStep() {
       {/* Type Tabs */}
       <div className="flex gap-2 mb-4">
         {(['weapon', 'armor', 'equipment'] as const).map(type => {
-          const count = equipment?.filter(e => e.type === type).length || 0;
+          const count = allEquipment.filter(e => e.type === type).length;
           return (
             <button
               key={type}
@@ -272,7 +379,21 @@ export function EquipmentStep() {
       <div className="border border-gray-200 rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-gray-200">
         {filteredEquipment.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No {activeTab}s found.
+            {activeTab === 'weapon' || activeTab === 'armor' ? (
+              <div className="flex flex-col items-center gap-2">
+                <AlertCircle className="w-8 h-8 text-gray-400" />
+                <p>No {activeTab}s found in your library.</p>
+                <p className="text-sm">
+                  Create {activeTab}s using the{' '}
+                  <a href="/item-creator" className="text-primary-600 hover:underline">
+                    Item Creator
+                  </a>{' '}
+                  to add them here.
+                </p>
+              </div>
+            ) : (
+              <p>No {activeTab}s found.</p>
+            )}
           </div>
         ) : (
           filteredEquipment.map(item => {

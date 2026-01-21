@@ -227,6 +227,20 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           ...(archetype && { archetype }),
           ...(draft.pow_abil && { pow_abil: draft.pow_abil }),
           ...(draft.mart_abil && { mart_abil: draft.mart_abil }),
+          // Proficiency allocation - set based on archetype type
+          mart_prof: draft.mart_prof ?? (
+            draft.archetype?.type === 'martial' ? 2 : 
+            draft.archetype?.type === 'powered-martial' ? 1 : 0
+          ),
+          pow_prof: draft.pow_prof ?? (
+            draft.archetype?.type === 'power' ? 2 : 
+            draft.archetype?.type === 'powered-martial' ? 1 : 0
+          ),
+          // Health/Energy point allocations from character creation
+          healthPoints: draft.healthPoints || 0,
+          energyPoints: draft.energyPoints || 0,
+          // Currency remaining from equipment purchases
+          currency: draft.currency ?? 500,
           // Match vanilla naming
           species: draft.ancestry?.name || '',
           ancestry: draft.ancestry,

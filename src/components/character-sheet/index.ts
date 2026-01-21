@@ -9,7 +9,6 @@ export { AbilitiesSection } from './abilities-section';
 export { SkillsSection } from './skills-section';
 export { ArchetypeSection } from './archetype-section';
 export { LibrarySection } from './library-section';
-export { ConditionsPanel } from './conditions-panel';
 export { NotesTab } from './notes-tab';
 export { ProficienciesTab } from './proficiencies-tab';
 export { DiceRoller, type DieRoll } from './dice-roller';

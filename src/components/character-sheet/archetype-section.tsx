@@ -1,25 +1,19 @@
 /**
  * Archetype Section
  * =================
- * Displays character archetype, proficiencies, attack bonuses, power potency, traits, and feats
+ * Displays character archetype, proficiencies, attack bonuses, power potency, weapons, and armor
  */
 
 'use client';
 
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
-import { SpeciesTraitCard } from '@/components/shared/species-trait-card';
-import type { Character, CharacterFeat, Abilities } from '@/types';
+import type { Character, Abilities, Item } from '@/types';
 
 interface ArchetypeSectionProps {
   character: Character;
   isEditMode?: boolean;
-  onFeatUsesChange?: (featId: string, delta: number) => void;
-  onAddArchetypeFeat?: () => void;
-  onAddCharacterFeat?: () => void;
   onMartialProfChange?: (value: number) => void;
   onPowerProfChange?: (value: number) => void;
   onMilestoneChoiceChange?: (level: number, choice: 'innate' | 'feat') => void;
@@ -167,98 +161,216 @@ function AttackBonusesTable({
   );
 }
 
-function FeatCard({ 
-  feat, 
-  onUsesChange 
-}: { 
-  feat: CharacterFeat; 
-  onUsesChange?: (delta: number) => void;
+// Weapons Section - displays equipped weapons with attack/damage rolls
+function WeaponsSection({
+  character,
+  martialProf,
+  onRollAttack,
+  onRollDamage,
+}: {
+  character: Character;
+  martialProf: number;
+  onRollAttack?: (name: string, bonus: number) => void;
+  onRollDamage?: (damageStr: string, bonus: number) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const currentUses = feat.currentUses ?? feat.maxUses ?? 0;
-  const hasUsesRemaining = feat.maxUses && currentUses > 0;
-  const canIncrement = feat.maxUses && currentUses < feat.maxUses;
-
-  const handleUsesChange = (e: React.MouseEvent, delta: number) => {
-    e.stopPropagation();
-    onUsesChange?.(delta);
-  };
+  const formatBonus = (val: number) => val >= 0 ? `+${val}` : `${val}`;
+  const abilities = character.abilities || {};
+  
+  // Get equipped weapons from character
+  const weapons = (character.equipment?.weapons || character.weapons || []) as Item[];
+  const equippedWeapons = weapons.filter(w => w.equipped);
+  
+  // Calculate bonuses for attack
+  const strBonus = (abilities.strength ?? 0) + martialProf;
+  const agiBonus = (abilities.agility ?? 0) + martialProf;
+  const acuBonus = (abilities.acuity ?? 0) + martialProf;
+  
+  // Unproficient unarmed: strength only (or double negative)
+  const str = abilities.strength ?? 0;
+  const unprofBonus = str < 0 ? str * 2 : Math.ceil(str / 2);
+  const unarmedDamage = Math.max(1, Math.ceil(str / 2));
 
   return (
-    <div 
-      className={cn(
-        'border border-gray-200 rounded-lg overflow-hidden transition-all',
-        expanded && 'shadow-md'
-      )}
-    >
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2 bg-white hover:bg-gray-50 text-left"
-      >
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-800">{feat.name}</span>
-          {feat.type && (
-            <span className={cn(
-              'text-xs px-1.5 py-0.5 rounded',
-              feat.type === 'archetype' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
-            )}>
-              {feat.type}
-            </span>
-          )}
-        </div>
-        {/* Uses +/- controls (always visible when feat has maxUses) */}
-        {feat.maxUses && (
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={(e) => handleUsesChange(e, -1)}
-              disabled={!hasUsesRemaining}
-              className={cn(
-                'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                hasUsesRemaining
-                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-              )}
-              title="Use ability"
-            >
-              −
-            </button>
-            <span className={cn(
-              'text-sm font-medium min-w-[3rem] text-center',
-              hasUsesRemaining ? 'text-green-600' : 'text-gray-400'
-            )}>
-              {currentUses}/{feat.maxUses}
-            </span>
-            <button
-              onClick={(e) => handleUsesChange(e, 1)}
-              disabled={!canIncrement}
-              className={cn(
-                'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                canIncrement
-                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-              )}
-              title="Recover use"
-            >
-              +
-            </button>
-          </div>
-        )}
-      </button>
+    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Weapons</h4>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-xs text-gray-500">
+            <th className="text-left py-1">Name</th>
+            <th className="text-center py-1">Attack</th>
+            <th className="text-center py-1">Damage</th>
+            <th className="text-center py-1">Range</th>
+          </tr>
+        </thead>
+        <tbody>
+          {equippedWeapons.map((weapon, idx) => {
+            // Determine attack bonus based on weapon properties
+            const props = (weapon.properties || []).map(p => typeof p === 'string' ? p : p.name || '');
+            let attackBonus = strBonus;
+            if (props.includes('Finesse')) {
+              attackBonus = agiBonus;
+            } else if (props.includes('Range') || weapon.range) {
+              attackBonus = acuBonus;
+            }
+            
+            // Build damage string
+            let damageStr = '-';
+            if (weapon.damage) {
+              if (Array.isArray(weapon.damage)) {
+                damageStr = weapon.damage
+                  .filter((d: { amount?: number; size?: number; type?: string }) => d && d.amount && d.size)
+                  .map((d: { amount?: number; size?: number; type?: string }) => `${d.amount}d${d.size}${d.type && d.type !== 'none' ? ` ${d.type}` : ''}`)
+                  .join(', ') || '-';
+              } else {
+                damageStr = String(weapon.damage);
+              }
+            }
+            
+            // Show non-excluded properties below
+            const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
+            const displayProps = props.filter(p => p && !excludedProps.includes(p));
+            
+            return (
+              <tr key={weapon.id || idx} className="border-b border-gray-100 last:border-0">
+                <td className="py-1 font-medium text-gray-700">
+                  {weapon.name}
+                  {displayProps.length > 0 && (
+                    <div className="text-xs text-gray-400 font-normal">
+                      {displayProps.map(p => `• ${p}`).join(' ')}
+                    </div>
+                  )}
+                </td>
+                <td className="text-center py-1">
+                  <button
+                    onClick={() => onRollAttack?.(weapon.name || 'Attack', attackBonus)}
+                    className="px-2 py-0.5 bg-gradient-to-b from-blue-500 to-blue-600 text-white rounded hover:from-blue-600 hover:to-blue-700 transition-colors font-mono text-sm shadow-sm"
+                  >
+                    {formatBonus(attackBonus)}
+                  </button>
+                </td>
+                <td className="text-center py-1">
+                  <button
+                    onClick={() => onRollDamage?.(damageStr, attackBonus)}
+                    className="px-2 py-0.5 bg-gradient-to-b from-red-500 to-red-600 text-white rounded hover:from-red-600 hover:to-red-700 transition-colors font-mono text-sm shadow-sm"
+                  >
+                    {damageStr}
+                  </button>
+                </td>
+                <td className="text-center py-1 text-gray-600">
+                  {weapon.range || 'Melee'}
+                </td>
+              </tr>
+            );
+          })}
+          {/* Unarmed Prowess - always shown */}
+          <tr className="border-t border-gray-200">
+            <td className="py-1 font-medium text-gray-500 italic">Unarmed Prowess</td>
+            <td className="text-center py-1">
+              <button
+                onClick={() => onRollAttack?.('Unarmed Prowess', unprofBonus)}
+                className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors font-mono text-sm"
+              >
+                {formatBonus(unprofBonus)}
+              </button>
+            </td>
+            <td className="text-center py-1">
+              <button
+                onClick={() => onRollDamage?.(`${unarmedDamage} Bludgeoning`, unprofBonus)}
+                className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors font-mono text-sm"
+              >
+                {unarmedDamage} Bludg.
+              </button>
+            </td>
+            <td className="text-center py-1 text-gray-500">Melee</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
-      {expanded && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-          <p className="text-sm text-gray-600 mb-2">
-            {feat.description || 'No description available.'}
-          </p>
-          
-          {/* Recovery period display */}
-          {feat.maxUses && (
-            <div className="text-xs text-gray-500">
-              <span className="font-medium">Recovery:</span> {feat.recovery || 'Full Recovery'}
-            </div>
+// Armor Section - displays equipped armor with stats
+function ArmorSection({
+  character,
+}: {
+  character: Character;
+}) {
+  const abilities = character.abilities || {};
+  const agility = abilities.agility ?? 0;
+  const baseEvasion = 10 + agility;
+  
+  // Get equipped armor from character
+  const armor = (character.equipment?.armor || character.armor || []) as Item[];
+  const armorArray = Array.isArray(armor) ? armor : [armor].filter(Boolean);
+  const equippedArmor = armorArray.filter((a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true);
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Armor</h4>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-xs text-gray-500">
+            <th className="text-left py-1">Name</th>
+            <th className="text-center py-1">DMG Red.</th>
+            <th className="text-center py-1">Crit Rng</th>
+            <th className="text-center py-1">Abl Req.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {equippedArmor.length > 0 ? (
+            equippedArmor.map((armorItem, idx) => {
+              // Extract properties
+              const properties = armorItem.properties || [];
+              let damageReduction = 0;
+              let critRangeBonus = 0;
+              const abilityReqs: string[] = [];
+              
+              properties.forEach(prop => {
+                if (!prop) return;
+                const propName = typeof prop === 'string' ? prop : prop.name || '';
+                const op1Lvl = (typeof prop === 'object' && 'op_1_lvl' in prop ? prop.op_1_lvl : 0) || 0;
+                
+                if (propName === 'Damage Reduction') damageReduction = 1 + op1Lvl;
+                if (propName === 'Critical Range +1') critRangeBonus = 1 + op1Lvl;
+                if (propName === 'Armor Strength Requirement') abilityReqs.push(`STR ${1 + op1Lvl}`);
+                if (propName === 'Armor Agility Requirement') abilityReqs.push(`AGI ${1 + op1Lvl}`);
+                if (propName === 'Armor Vitality Requirement') abilityReqs.push(`VIT ${1 + op1Lvl}`);
+              });
+              
+              const critRange = baseEvasion + 10 + critRangeBonus;
+              
+              // Properties to exclude from display
+              const excludedProps = [
+                'Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 
+                'Armor Base', 'Weapon Damage', 'Critical Range +1',
+                'Armor Strength Requirement', 'Armor Agility Requirement', 'Armor Vitality Requirement'
+              ];
+              const propNames = properties.map(p => typeof p === 'string' ? p : p.name || '');
+              const displayProps = propNames.filter(n => n && !excludedProps.includes(n));
+              
+              return (
+                <tr key={armorItem.id || idx} className="border-b border-gray-100 last:border-0">
+                  <td className="py-1 font-medium text-gray-700">
+                    {armorItem.name}
+                    {displayProps.length > 0 && (
+                      <div className="text-xs text-gray-400 font-normal">
+                        {displayProps.map(p => `• ${p}`).join(' ')}
+                      </div>
+                    )}
+                  </td>
+                  <td className="text-center py-1 font-mono">{damageReduction}</td>
+                  <td className="text-center py-1 font-mono">{critRange}</td>
+                  <td className="text-center py-1 text-xs">{abilityReqs.join(', ') || 'None'}</td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan={4} className="py-2 text-center text-gray-400 italic">No armor equipped</td>
+            </tr>
           )}
-        </div>
-      )}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -266,9 +378,6 @@ function FeatCard({
 export function ArchetypeSection({
   character,
   isEditMode = false,
-  onFeatUsesChange,
-  onAddArchetypeFeat,
-  onAddCharacterFeat,
   onMartialProfChange,
   onPowerProfChange,
   onMilestoneChoiceChange,
@@ -300,15 +409,14 @@ export function ArchetypeSection({
   const powAbilValue = character.abilities?.[powAbilName as keyof Abilities] ?? 0;
   const powerPotency = 10 + powerProf + powAbilValue;
   
-  // Combine archetype and character feats
-  const allFeats = [
-    ...(character.archetypeFeats || []).map(f => ({ ...f, type: 'archetype' as const })),
-    ...(character.feats || []).map(f => ({ ...f, type: 'character' as const })),
-  ];
-  
   // Handle attack bonus roll
   const handleRollBonus = (name: string, bonus: number) => {
     rollContext?.rollAttack(name, bonus);
+  };
+  
+  // Handle damage roll
+  const handleRollDamage = (damageStr: string, bonus: number) => {
+    rollContext?.rollDamage?.(damageStr, bonus);
   };
 
   return (
@@ -448,86 +556,16 @@ export function ArchetypeSection({
         )}
       </div>
 
-      {/* Traits Section */}
-      {(character.ancestry?.selectedTraits?.length || 
-        character.ancestry?.selectedFlaw || 
-        character.ancestry?.selectedCharacteristic) && (
-        <div className="border-t border-gray-200 pt-4 mb-4">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Traits
-          </h3>
-          <div className="space-y-2">
-            {/* Ancestry Traits */}
-            {character.ancestry?.selectedTraits?.map((traitName, index) => (
-              <SpeciesTraitCard
-                key={`ancestry-${index}`}
-                trait={{ name: traitName }}
-                category="ancestry"
-                compact
-              />
-            ))}
-            
-            {/* Flaw */}
-            {character.ancestry?.selectedFlaw && (
-              <SpeciesTraitCard
-                trait={{ name: character.ancestry.selectedFlaw }}
-                category="flaw"
-                compact
-              />
-            )}
-            
-            {/* Characteristic */}
-            {character.ancestry?.selectedCharacteristic && (
-              <SpeciesTraitCard
-                trait={{ name: character.ancestry.selectedCharacteristic }}
-                category="characteristic"
-                compact
-              />
-            )}
-          </div>
-        </div>
-      )}
+      {/* Weapons Section */}
+      <WeaponsSection
+        character={character}
+        martialProf={martialProf}
+        onRollAttack={handleRollBonus}
+        onRollDamage={handleRollDamage}
+      />
 
-      {/* Feats */}
-      <div className="border-t border-gray-200 pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-            Feats ({allFeats.length})
-          </h3>
-          {isEditMode && (
-            <div className="flex gap-2">
-              <button
-                onClick={onAddArchetypeFeat}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                Archetype
-              </button>
-              <button
-                onClick={onAddCharacterFeat}
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-                Character
-              </button>
-            </div>
-          )}
-        </div>
-        
-        {allFeats.length > 0 ? (
-          <div className="space-y-2">
-            {allFeats.map((feat, index) => (
-              <FeatCard
-                key={feat.id || index}
-                feat={feat}
-                onUsesChange={(delta) => onFeatUsesChange?.(String(feat.id), delta)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-400 text-sm italic">No feats selected</p>
-        )}
-      </div>
+      {/* Armor Section */}
+      <ArmorSection character={character} />
     </div>
   );
 }
