@@ -1065,3 +1065,85 @@ css/
 9. **Error handling** - Use retry logic for RTDB fetches, handle offline/permission errors
 
 10. **Type safety** - Consider adding TypeScript interfaces matching the data structures above
+
+---
+
+## React Implementation Progress
+
+### Completed Features ✅
+
+#### Character Sheet Components
+| Feature | Component | Notes |
+|---------|-----------|-------|
+| Equipment Quantity Controls | `library-section.tsx` | +/- buttons for equipment in edit mode |
+| Unarmed Prowess | `library-section.tsx` | Always-available weapon with STR-based damage |
+| Ability 2-Point Cost | `abilities-section.tsx` | Abilities 4+ cost 2 points to increase |
+| Defense Value Editing | `abilities-section.tsx` | +/- controls with 2 skill point cost |
+| Defense Max Validation | `abilities-section.tsx` | Defense skill capped at level |
+| Currency +/- Support | `library-section.tsx` | Input supports +5, -10 or direct values |
+| Armament Proficiency Display | `library-section.tsx` | Shows max TP for weapons/armor tabs |
+| Parts Chips | `library-section.tsx` | PartChipList for power/technique parts |
+| Feat Uses +/- | `archetype-section.tsx` | Limited-use feat tracking |
+| Recovery Display | `archetype-section.tsx` | Shows recovery period for feats |
+| Proficiency Editing | `archetype-section.tsx` | Martial/Power proficiency +/- |
+| Innate vs Regular Powers | `library-section.tsx` | Separate sections with purple styling |
+| Health-Energy Allocation | `sheet-header.tsx` | Pool allocation with point tracking |
+| Innate Energy Tracking | `library-section.tsx` | Threshold × Pools breakdown display |
+| Power Potency Display | `archetype-section.tsx` | 10 + pow_prof + pow_abil |
+| Attack Bonuses Table | `archetype-section.tsx` | Clickable roll buttons for bonuses |
+| Power/Technique Use Buttons | `library-section.tsx` | Energy cost deduction on use |
+| Three-State Point Colors | `abilities-section.tsx`, `skills-section.tsx`, `archetype-section.tsx` | Green (remaining), Blue (perfect), Red (over) |
+| Skill Ability Selector | `skills-section.tsx` | Dropdown to change skill's governing ability |
+| Archetype Milestone Choices | `archetype-section.tsx` | Innate/Feat selection for mixed archetypes |
+| Feats Tab in Library | `feats-tab.tsx` | Combined Traits + Feats with collapsible sections |
+| Speed/Evasion Base Editing | `sheet-header.tsx` | EditableStatBlock for base values |
+| Ability Constraints | `abilities-section.tsx` | Min -2, max by level, negative sum -3 limit |
+
+#### Core Systems
+| Feature | Location | Notes |
+|---------|----------|-------|
+| Archetype Progression | `formulas.ts` | `calculateArchetypeProgression()` function |
+| archetypeChoices Type | `character.ts` | TypeScript interface for milestone choices |
+| Level Progression | `formulas.ts` | Health/Energy pool, ability points, skill points, etc. |
+| Defense Calculations | `page.tsx` | Uses vanilla formulas for defense bonuses/scores |
+
+### Partially Implemented ⚠️
+
+| Feature | Status | Blocker |
+|---------|--------|---------|
+| Power/Technique Parts Display | Parts shown as chips | Missing RTDB enrichment for TP data |
+| Proficiencies Tab | Basic structure exists | String parts don't have TP values |
+| Weapon Requirement Display | Shows weapon type | Need specific requirement text |
+
+### Not Yet Implemented ❌
+
+| Feature | Priority | Notes |
+|---------|----------|-------|
+| Part RTDB Enrichment | High | Load full part data from RTDB for TP calculations |
+| Creature Creator | Medium | Not started |
+| Encounter Tracker | Medium | Not started |
+
+### Shared Components
+
+| Component | Location | Used By |
+|-----------|----------|---------|
+| `SpeciesTraitCard` | `shared/species-trait-card.tsx` | Archetype section, Feats tab |
+| `PartChipList` | `shared/part-chip.tsx` | Library section (powers/techniques) |
+| `ItemCard` (shared) | `shared/item-card.tsx` | Codex, Library |
+| `CollapsibleSection` | `feats-tab.tsx` | Feats tab (could be extracted) |
+
+### Architecture Decisions
+
+1. **Component-local cards** - PowerCard, TechniqueCard, ItemCard kept in library-section.tsx since they have highly specific behaviors (innate toggle, equip toggle, roll buttons)
+
+2. **Three-state color system** - Consistent pattern across all point trackers:
+   - Green (`text-green-600`, `bg-green-100`): Points remaining
+   - Blue (`text-blue-600`, `bg-blue-100`): Points perfectly spent
+   - Red (`text-red-600`, `bg-red-100`): Over budget
+
+3. **Editable stats pattern** - EditableStatBlock shows value with +/- controls for base in edit mode
+
+4. **Formula centralization** - All game formulas in `src/lib/game/formulas.ts`
+
+5. **Type safety** - Character type extended with `archetypeChoices`, `speedBase`, `evasionBase`, etc.
+

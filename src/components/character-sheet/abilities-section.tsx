@@ -75,6 +75,8 @@ const ABILITY_CONSTRAINTS = {
     if (level <= 15) return 8;
     return 9;
   },
+  // Defense skill value cannot exceed level
+  getMaxDefenseSkill: (level: number): number => level,
 };
 
 // =============================================================================
@@ -314,13 +316,25 @@ function AbilityCard({
             <span className="text-[10px] text-gray-500">{formattedDefenseBonus}</span>
           </div>
           {isEditMode && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onDefenseIncrease?.(); }}
-              className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600 transition-colors"
-              title="Cost: 2 skill points"
-            >
-              +
-            </button>
+            (() => {
+              const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
+              const canIncreaseDefense = defenseValue < maxDefenseSkill;
+              return (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDefenseIncrease?.(); }}
+                  disabled={!canIncreaseDefense}
+                  className={cn(
+                    'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
+                    canIncreaseDefense
+                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                      : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                  )}
+                  title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max defense skill at level ${level}: +${maxDefenseSkill}`}
+                >
+                  +
+                </button>
+              );
+            })()
           )}
         </div>
 
@@ -335,7 +349,10 @@ function AbilityCard({
   );
 }
 
-// Point Tracker Sub-component
+// Point Tracker Sub-component with three-state color system:
+// - Green (has-points): Points remaining to spend
+// - Blue (no-points): All points spent perfectly
+// - Red (over-budget): Overspent
 interface PointTrackerProps {
   label: string;
   spent: number;
@@ -347,21 +364,43 @@ function PointTracker({ label, spent, total, color }: PointTrackerProps) {
   const remaining = total - spent;
   const percentage = total > 0 ? (spent / total) * 100 : 0;
 
+  // Three-state color system based on remaining points
+  const getStateColor = () => {
+    if (remaining > 0) {
+      // Has points remaining - green
+      return {
+        text: 'text-green-600',
+        badge: 'bg-green-100 text-green-700',
+      };
+    } else if (remaining < 0) {
+      // Over-budget - red
+      return {
+        text: 'text-red-600',
+        badge: 'bg-red-100 text-red-700',
+      };
+    } else {
+      // No points remaining (perfect) - blue
+      return {
+        text: 'text-blue-600',
+        badge: 'bg-blue-100 text-blue-700',
+      };
+    }
+  };
+
+  const stateColor = getStateColor();
+
   const colorClasses = {
     amber: {
       bg: 'bg-amber-100',
-      fill: 'bg-amber-500',
-      text: remaining >= 0 ? 'text-amber-700' : 'text-red-600',
+      fill: remaining < 0 ? 'bg-red-500' : 'bg-amber-500',
     },
     blue: {
       bg: 'bg-blue-100',
-      fill: 'bg-blue-500',
-      text: remaining >= 0 ? 'text-blue-700' : 'text-red-600',
+      fill: remaining < 0 ? 'bg-red-500' : 'bg-blue-500',
     },
     green: {
       bg: 'bg-green-100',
-      fill: 'bg-green-500',
-      text: remaining >= 0 ? 'text-green-700' : 'text-red-600',
+      fill: remaining < 0 ? 'bg-red-500' : 'bg-green-500',
     },
   };
 
@@ -371,7 +410,7 @@ function PointTracker({ label, spent, total, color }: PointTrackerProps) {
     <div className="flex-1">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-gray-600 font-medium">{label}</span>
-        <span className={cn('text-xs font-bold', classes.text)}>
+        <span className={cn('text-xs font-bold px-1.5 py-0.5 rounded', stateColor.badge)}>
           {remaining} / {total}
         </span>
       </div>
@@ -517,7 +556,7 @@ export function AbilitiesSection({
             Abilities 4+ cost 2 points
           </span>
           <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded">
-            Defense skills cost 2 skill points each
+            Defense skills: max +{ABILITY_CONSTRAINTS.getMaxDefenseSkill(level)} (2sp each)
           </span>
         </div>
       )}

@@ -320,3 +320,157 @@ export function enrichCharacterData(
     ),
   };
 }
+
+// =============================================================================
+// Data Cleaning for Save
+// =============================================================================
+
+/**
+ * Fields that should be saved to Firestore (minimal data).
+ * Mirrors vanilla site's SAVEABLE_FIELDS in main.js cleanForSave().
+ */
+const SAVEABLE_FIELDS = [
+  // Identity
+  'name', 'species', 'gender', 'portrait', 'xp', 'level',
+  // Core stats (user-set values only)
+  'abilities', 'defenseSkills', 'baseAbilities', 'ancestryAbilities',
+  'health', 'energy', 'healthPoints', 'energyPoints', 'innateEnergy',
+  'speedBase', 'evasionBase',
+  // Skills (user selections)
+  'skills',
+  // Archetype/Build
+  'archetype', 'archetypeName', 'archetypeAbility',
+  // Proficiency data
+  'mart_prof', 'pow_prof', 'mart_abil', 'pow_abil', 'archetypeChoices',
+  // References (names only, not full objects)
+  'feats', 'techniques', 'powers', 'traits',
+  // Trait uses tracking
+  'traitUses',
+  // Inventory (names/equipped status only, not full item data)
+  'equipment', 'currency',
+  // Notes and misc user data
+  'notes', 'backstory', 'appearance', 'archetypeDesc', 'allies', 'organizations',
+  // Ancestry data
+  'ancestry', 'ancestryId', 'ancestryTraits',
+  // Conditions
+  'conditions',
+  // Timestamps
+  'createdAt', 'updatedAt',
+] as const;
+
+/**
+ * Removes temporary and computed fields from character data before saving.
+ * Only keeps the minimal data needed - everything else is calculated on load.
+ * Mirrors the vanilla site's cleanForSave() function.
+ */
+export function cleanForSave(data: Character): Partial<Character> {
+  const cleaned: Record<string, unknown> = {};
+
+  // Only copy saveable fields
+  for (const field of SAVEABLE_FIELDS) {
+    if (data[field as keyof Character] !== undefined) {
+      cleaned[field] = data[field as keyof Character];
+    }
+  }
+
+  // Clean up feats - only save name, type, and currentUses
+  if (Array.isArray(cleaned.feats)) {
+    cleaned.feats = cleaned.feats.map((f: unknown) => {
+      if (typeof f === 'string') return { name: f };
+      if (f && typeof f === 'object' && 'name' in f) {
+        const feat = f as { name: string; type?: string; currentUses?: number };
+        const cleanFeat: { name: string; type?: string; currentUses?: number } = { name: feat.name };
+        if (feat.type) cleanFeat.type = feat.type;
+        if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
+        return cleanFeat;
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  // Clean up powers - save name and innate flag only
+  if (Array.isArray(cleaned.powers)) {
+    cleaned.powers = cleaned.powers.map((p: unknown) => {
+      if (typeof p === 'string') return { name: p, innate: false };
+      if (p && typeof p === 'object' && 'name' in p) {
+        const power = p as { name: string; innate?: boolean };
+        return { name: power.name, innate: !!power.innate };
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  // Clean up techniques - save name only
+  if (Array.isArray(cleaned.techniques)) {
+    cleaned.techniques = cleaned.techniques.map((t: unknown) => {
+      if (typeof t === 'string') return t;
+      if (t && typeof t === 'object' && 'name' in t) {
+        return (t as { name: string }).name;
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  // Clean up traits - save name only
+  if (Array.isArray(cleaned.traits)) {
+    cleaned.traits = cleaned.traits.map((t: unknown) => {
+      if (typeof t === 'string') return t;
+      if (t && typeof t === 'object' && 'name' in t) {
+        return (t as { name: string }).name;
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  // Clean up equipment items - only save name and equipped/quantity status
+  if (cleaned.equipment && typeof cleaned.equipment === 'object') {
+    const equip = cleaned.equipment as {
+      weapons?: unknown[];
+      armor?: unknown[];
+      items?: unknown[];
+    };
+
+    if (Array.isArray(equip.weapons)) {
+      equip.weapons = equip.weapons.map((w: unknown) => {
+        if (typeof w === 'string') return { name: w };
+        if (w && typeof w === 'object' && 'name' in w) {
+          const weapon = w as { name: string; equipped?: boolean };
+          const clean: { name: string; equipped?: boolean } = { name: weapon.name };
+          if (weapon.equipped) clean.equipped = true;
+          return clean;
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    if (Array.isArray(equip.armor)) {
+      equip.armor = equip.armor.map((a: unknown) => {
+        if (typeof a === 'string') return { name: a };
+        if (a && typeof a === 'object' && 'name' in a) {
+          const armor = a as { name: string; equipped?: boolean };
+          const clean: { name: string; equipped?: boolean } = { name: armor.name };
+          if (armor.equipped) clean.equipped = true;
+          return clean;
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    if (Array.isArray(equip.items)) {
+      equip.items = equip.items.map((e: unknown) => {
+        if (typeof e === 'string') return { name: e };
+        if (e && typeof e === 'object' && 'name' in e) {
+          const item = e as { name: string; quantity?: number };
+          const clean: { name: string; quantity?: number } = { name: item.name };
+          if (item.quantity && item.quantity !== 1) clean.quantity = item.quantity;
+          return clean;
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    cleaned.equipment = equip;
+  }
+
+  return cleaned as Partial<Character>;
+}

@@ -12,9 +12,10 @@ import Link from 'next/link';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
-import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems } from '@/hooks';
+import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts } from '@/hooks';
 import { cn } from '@/lib/utils';
-import { enrichCharacterData } from '@/lib/data-enrichment';
+import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
+import { calculateArchetypeProgression, calculateSkillPoints } from '@/lib/game/formulas';
 import {
   SheetHeader,
   AbilitiesSection,
@@ -30,6 +31,7 @@ import {
   AddSubSkillModal,
   LevelUpModal,
 } from '@/components/character-sheet';
+import { useToast } from '@/components/ui';
 import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat, CharacterCondition } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
@@ -118,6 +120,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { id } = use(params);
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,6 +137,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { data: userPowers = [] } = useUserPowers();
   const { data: userTechniques = [] } = useUserTechniques();
   const { data: userItems = [] } = useUserItems();
+  const { data: traitsDb = [] } = useTraits();
+  
+  // RTDB parts data for enrichment (descriptions, TP costs)
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
   
   // Enrich character data with full library objects
   const enrichedData = useMemo(() => {
@@ -227,6 +235,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
     };
   }, [character]);
   
+  // Calculate archetype progression (innate energy, threshold, pools, bonus feats)
+  const archetypeProgression = useMemo(() => {
+    if (!character) return null;
+    return calculateArchetypeProgression(
+      character.level || 1,
+      character.mart_prof || 0,
+      character.pow_prof || 0,
+      character.archetypeChoices || {}
+    );
+  }, [character]);
+  
   // Calculate if character has unapplied points (for notification dot)
   const hasUnappliedPoints = useMemo(() => {
     if (!character) return false;
@@ -286,8 +305,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
       setSaving(true);
       try {
         const docRef = doc(db, 'users', user.uid, 'character', id);
+        // Clean data before saving - removes computed/enriched fields
+        const cleanedData = cleanForSave(data);
         await updateDoc(docRef, {
-          ...data,
+          ...cleanedData,
           updatedAt: Timestamp.now(),
         });
       } finally {
@@ -297,10 +318,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
     delay: 2000,
     enabled: isEditMode,
     onSaveStart: () => setSaving(true),
-    onSaveComplete: () => setSaving(false),
+    onSaveComplete: () => {
+      setSaving(false);
+      showToast('Character saved', 'success', 2000);
+    },
     onSaveError: (err) => {
       console.error('Auto-save failed:', err);
       setSaving(false);
+      showToast('Failed to save character', 'error');
     },
   });
   
@@ -752,6 +777,18 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
+  // Mixed archetype milestone choice handler
+  const handleMilestoneChoiceChange = useCallback((level: number, choice: 'innate' | 'feat') => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      archetypeChoices: {
+        ...(prev.archetypeChoices || {}),
+        [level]: choice,
+      },
+    } : null);
+  }, [character]);
+  
   // Feat uses change handler (+/- buttons for feat tracking)
   const handleFeatUsesChange = useCallback((featId: string, delta: number) => {
     if (!character) return;
@@ -785,6 +822,26 @@ export default function CharacterSheetPage({ params }: PageParams) {
       };
     });
   }, [character]);
+  
+  // Trait uses change handler (+/- buttons for trait tracking)
+  const handleTraitUsesChange = useCallback((traitName: string, delta: number) => {
+    if (!character) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      const currentUses = prev.traitUses?.[traitName] ?? 0;
+      // Find the trait in traitsDb to get maxUses
+      const traitData = traitsDb.find(t => t.name?.toLowerCase() === traitName.toLowerCase());
+      const maxUses = traitData?.uses_per_rec ?? 999;
+      const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
+      return {
+        ...prev,
+        traitUses: {
+          ...(prev.traitUses || {}),
+          [traitName]: newUses,
+        },
+      };
+    });
+  }, [character, traitsDb]);
   
   // Handle modal item add based on type
   const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique[] | Item[]) => {
@@ -928,6 +985,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}
                 isUploadingPortrait={uploadingPortrait}
+                speedBase={character.speedBase ?? 6}
+                evasionBase={character.evasionBase ?? 10}
+                onSpeedBaseChange={(v) => setCharacter(prev => prev ? { ...prev, speedBase: v } : null)}
+                onEvasionBaseChange={(v) => setCharacter(prev => prev ? { ...prev, evasionBase: v } : null)}
               />
               
               {/* Conditions Panel - shows active buffs/debuffs */}
@@ -960,6 +1021,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   skills={skills}
                   abilities={character.abilities}
                   isEditMode={isEditMode}
+                  totalSkillPoints={calculateSkillPoints(character.level || 1)}
                   onRemoveSkill={handleRemoveSkill}
                   onAddSkill={() => setSkillModalType('skill')}
                   onAddSubSkill={() => setSkillModalType('subskill')}
@@ -975,6 +1037,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onMartialProfChange={handleMartialProfChange}
                   onPowerProfChange={handlePowerProfChange}
                   onFeatUsesChange={handleFeatUsesChange}
+                  onMilestoneChoiceChange={handleMilestoneChoiceChange}
                 />
               </div>
               
@@ -986,7 +1049,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   armor={enrichedData?.armor || (character.equipment?.armor || []) as Item[]}
                   equipment={enrichedData?.equipment || (character.equipment?.items || []) as Item[]}
                   currency={character.currency}
-                  innateEnergy={character.innateEnergy}
+                  innateEnergy={archetypeProgression?.innateEnergy || 0}
+                  innateThreshold={archetypeProgression?.innateThreshold || 0}
+                  innatePools={archetypeProgression?.innatePools || 0}
                   currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof}
                   isEditMode={isEditMode}
@@ -1022,6 +1087,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   // Proficiencies tab props
                   level={character.level}
                   archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
+                  powerPartsDb={powerPartsDb}
+                  techniquePartsDb={techniquePartsDb}
+                  // Feats tab props
+                  ancestry={character.ancestry}
+                  archetypeFeats={character.archetypeFeats}
+                  characterFeats={character.feats}
+                  onFeatUsesChange={handleFeatUsesChange}
+                  onAddArchetypeFeat={() => setFeatModalType('archetype')}
+                  onAddCharacterFeat={() => setFeatModalType('character')}
+                  // Traits enrichment props
+                  traitsDb={traitsDb}
+                  traitUses={character.traitUses}
+                  onTraitUsesChange={handleTraitUsesChange}
                 />
               </div>
             </div>

@@ -20,12 +20,23 @@ interface Skill {
   skill_val: number;
   prof?: boolean;
   baseSkill?: string;
+  ability?: string; // Associated ability for this skill
 }
+
+const ABILITY_OPTIONS = [
+  { value: 'strength', label: 'STR' },
+  { value: 'vitality', label: 'VIT' },
+  { value: 'agility', label: 'AGI' },
+  { value: 'acuity', label: 'ACU' },
+  { value: 'intelligence', label: 'INT' },
+  { value: 'charisma', label: 'CHA' },
+];
 
 interface SkillsSectionProps {
   skills: Skill[];
   abilities: Abilities;
   isEditMode?: boolean;
+  totalSkillPoints?: number; // Total available skill points for the character
   onSkillChange?: (skillId: string, updates: Partial<Skill>) => void;
   onRemoveSkill?: (skillId: string) => void;
   onAddSkill?: () => void;
@@ -45,6 +56,7 @@ function SkillRow({
   isEditMode,
   onToggleProf,
   onValueChange,
+  onAbilityChange,
   onRemove,
   onRoll,
 }: {
@@ -52,6 +64,7 @@ function SkillRow({
   isEditMode?: boolean;
   onToggleProf?: () => void;
   onValueChange?: (value: number) => void;
+  onAbilityChange?: (ability: string) => void;
   onRemove?: () => void;
   onRoll?: () => void;
 }) {
@@ -101,6 +114,28 @@ function SkillRow({
           {isSubSkill && '└ '}
           {skill.name}
         </span>
+        
+        {/* Ability indicator/selector */}
+        {isEditMode && onAbilityChange ? (
+          <select
+            value={skill.ability || 'strength'}
+            onChange={(e) => {
+              e.stopPropagation();
+              onAbilityChange(e.target.value);
+            }}
+            className="text-xs px-1 py-0.5 rounded border border-gray-300 bg-gray-50 text-gray-600 cursor-pointer"
+            title="Select ability for this skill"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {ABILITY_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        ) : skill.ability && (
+          <span className="text-[10px] text-gray-400 uppercase">
+            {skill.ability.slice(0, 3)}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
@@ -153,6 +188,7 @@ export function SkillsSection({
   skills,
   abilities,
   isEditMode = false,
+  totalSkillPoints,
   onSkillChange,
   onRemoveSkill,
   onAddSkill,
@@ -173,6 +209,17 @@ export function SkillsSection({
   const totalSpent = skills.reduce((sum, skill) => {
     return sum + skill.skill_val + (skill.prof ? 1 : 0);
   }, 0);
+
+  // Calculate remaining points if total is provided
+  const remaining = totalSkillPoints !== undefined ? totalSkillPoints - totalSpent : undefined;
+
+  // Three-state color system for point display
+  const getPointColorClasses = () => {
+    if (remaining === undefined) return 'bg-gray-100 text-gray-600';
+    if (remaining > 0) return 'bg-green-100 text-green-700'; // Has points
+    if (remaining < 0) return 'bg-red-100 text-red-700'; // Over budget
+    return 'bg-blue-100 text-blue-700'; // Perfect
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
@@ -197,8 +244,8 @@ export function SkillsSection({
                 <Plus size={14} />
                 Sub-Skill
               </button>
-              <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm">
-                {totalSpent} points spent
+              <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getPointColorClasses())}>
+                {remaining !== undefined ? `${remaining} / ${totalSkillPoints}` : `${totalSpent} spent`}
               </span>
             </>
           )}
@@ -244,6 +291,7 @@ export function SkillsSection({
                         isEditMode={isEditMode}
                         onToggleProf={() => onSkillChange?.(skill.id, { prof: !skill.prof })}
                         onValueChange={(val) => onSkillChange?.(skill.id, { skill_val: val })}
+                        onAbilityChange={(ability) => onSkillChange?.(skill.id, { ability })}
                         onRemove={isEditMode && onRemoveSkill ? () => onRemoveSkill(skill.id) : undefined}
                         onRoll={rollContext ? () => rollContext.rollSkill(skill.name, totalBonus) : undefined}
                       />

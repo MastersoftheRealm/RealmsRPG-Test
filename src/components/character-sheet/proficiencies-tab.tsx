@@ -10,6 +10,17 @@
 import { useMemo } from 'react';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
+/** RTDB part data for enrichment */
+interface RTDBPart {
+  id: string;
+  name: string;
+  description?: string;
+  base_tp?: number;
+  op_1_tp?: number;
+  op_2_tp?: number;
+  op_3_tp?: number;
+}
+
 interface ProficiencyData {
   name: string;
   description?: string;
@@ -30,6 +41,9 @@ interface ProficienciesTabProps {
   armor: Item[];
   level: number;
   archetypeAbility: number; // The archetype's key ability score value
+  // RTDB parts data for enrichment
+  powerPartsDb?: RTDBPart[];
+  techniquePartsDb?: RTDBPart[];
 }
 
 // Calculate TP for a proficiency
@@ -41,8 +55,8 @@ function calculateProfTP(prof: ProficiencyData): number {
   return Math.floor(rawTP);
 }
 
-// Extract proficiencies from powers (simplified - real version loads from RTDB)
-function extractPowerProficiencies(powers: CharacterPower[]): Map<string, ProficiencyData> {
+// Extract proficiencies from powers - with RTDB enrichment for string parts
+function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart[] = []): Map<string, ProficiencyData> {
   const profs = new Map<string, ProficiencyData>();
   
   powers.forEach(power => {
@@ -51,14 +65,17 @@ function extractPowerProficiencies(powers: CharacterPower[]): Map<string, Profic
     power.parts.forEach((part) => {
       // Parts can be strings (just names) or objects with full data
       if (typeof part === 'string') {
-        // String parts don't have TP data - would need to load from RTDB
-        // For now, just list them with 0 TP
+        // String parts - look up in RTDB for TP data
+        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
         if (!profs.has(part)) {
           profs.set(part, {
             name: part,
-            baseTP: 0,
+            description: rtdbPart?.description,
+            baseTP: rtdbPart?.base_tp || 0,
             op1Lvl: 0,
-            op1TP: 0,
+            op1TP: rtdbPart?.op_1_tp || 0,
+            op2TP: rtdbPart?.op_2_tp || 0,
+            op3TP: rtdbPart?.op_3_tp || 0,
           });
         }
         return;
@@ -85,8 +102,11 @@ function extractPowerProficiencies(powers: CharacterPower[]): Map<string, Profic
         ex.op2Lvl = Math.max(ex.op2Lvl || 0, lvl2);
         ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
       } else {
+        // Try to get description from RTDB
+        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partData.name.toLowerCase());
         profs.set(key, {
           name: partData.name,
+          description: rtdbPart?.description,
           baseTP,
           op1Lvl: lvl1,
           op1TP,
@@ -102,8 +122,8 @@ function extractPowerProficiencies(powers: CharacterPower[]): Map<string, Profic
   return profs;
 }
 
-// Extract proficiencies from techniques
-function extractTechniqueProficiencies(techniques: CharacterTechnique[]): Map<string, ProficiencyData> {
+// Extract proficiencies from techniques - with RTDB enrichment for string parts
+function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbParts: RTDBPart[] = []): Map<string, ProficiencyData> {
   const profs = new Map<string, ProficiencyData>();
   
   techniques.forEach(tech => {
@@ -112,13 +132,17 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[]): Map<st
     tech.parts.forEach((part) => {
       // Parts can be strings (just names) or objects with full data
       if (typeof part === 'string') {
-        // String parts don't have TP data - would need to load from RTDB
+        // String parts - look up in RTDB for TP data
+        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
         if (!profs.has(part)) {
           profs.set(part, {
             name: part,
-            baseTP: 0,
+            description: rtdbPart?.description,
+            baseTP: rtdbPart?.base_tp || 0,
             op1Lvl: 0,
-            op1TP: 0,
+            op1TP: rtdbPart?.op_1_tp || 0,
+            op2TP: rtdbPart?.op_2_tp || 0,
+            op3TP: rtdbPart?.op_3_tp || 0,
           });
         }
         return;
@@ -145,8 +169,11 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[]): Map<st
         ex.op2Lvl = Math.max(ex.op2Lvl || 0, lvl2);
         ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
       } else {
+        // Try to get description from RTDB
+        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partData.name.toLowerCase());
         profs.set(key, {
           name: partData.name,
+          description: rtdbPart?.description,
           baseTP,
           op1Lvl: lvl1,
           op1TP,
@@ -254,10 +281,12 @@ export function ProficienciesTab({
   armor,
   level,
   archetypeAbility,
+  powerPartsDb = [],
+  techniquePartsDb = [],
 }: ProficienciesTabProps) {
-  // Extract all proficiencies
-  const powerProfs = useMemo(() => extractPowerProficiencies(powers), [powers]);
-  const techniqueProfs = useMemo(() => extractTechniqueProficiencies(techniques), [techniques]);
+  // Extract all proficiencies - with RTDB enrichment
+  const powerProfs = useMemo(() => extractPowerProficiencies(powers, powerPartsDb), [powers, powerPartsDb]);
+  const techniqueProfs = useMemo(() => extractTechniqueProficiencies(techniques, techniquePartsDb), [techniques, techniquePartsDb]);
   const weaponProfs = useMemo(() => extractEquipmentProficiencies(weapons, []), [weapons]);
   const armorProfs = useMemo(() => extractEquipmentProficiencies([], armor), [armor]);
 

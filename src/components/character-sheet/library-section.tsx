@@ -14,28 +14,53 @@ import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
+import { FeatsTab } from './feats-tab';
 import { PartChipList, type PartData } from '@/components/shared/part-chip';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
 
-// Helper to convert power/technique parts to PartData format
-function partsToPartData(parts?: CharacterPower['parts'] | CharacterTechnique['parts']): PartData[] {
+/** RTDB part data for enrichment */
+interface RTDBPart {
+  id: string;
+  name: string;
+  description?: string;
+  base_tp?: number;
+  op_1_tp?: number;
+  op_2_tp?: number;
+  op_3_tp?: number;
+}
+
+// Helper to convert power/technique parts to PartData format, with optional RTDB enrichment
+function partsToPartData(
+  parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
+  rtdbParts: RTDBPart[] = []
+): PartData[] {
   if (!parts || parts.length === 0) return [];
   
   return parts.map(part => {
     if (typeof part === 'string') {
-      return { name: part };
+      // String-only part - look up in RTDB for description
+      const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
+      return { 
+        name: part,
+        description: rtdbPart?.description,
+        tpCost: rtdbPart?.base_tp,
+      };
     }
     
-    // Full part data with TP info
+    // Full part data with TP info - still try to get description from RTDB
+    const partName = part.name || part.id || 'Unknown Part';
+    const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
+    
     const tpCost = (part.base_tp ?? 0) + 
-                   (part.op_1_tp ?? 0) + 
-                   (part.op_2_tp ?? 0) + 
-                   (part.op_3_tp ?? 0);
+                   (part.op_1_tp ?? 0) * (part.op_1_lvl ?? 0) + 
+                   (part.op_2_tp ?? 0) * (part.op_2_lvl ?? 0) + 
+                   (part.op_3_tp ?? 0) * (part.op_3_lvl ?? 0);
     
     return {
-      name: part.name || part.id || 'Unknown Part',
-      tpCost,
+      name: partName,
+      description: rtdbPart?.description,
+      tpCost: tpCost > 0 ? tpCost : undefined,
       optionLevels: {
         opt1: part.op_1_lvl,
         opt2: part.op_2_lvl,
@@ -69,6 +94,9 @@ interface LibrarySectionProps {
   equipment: Item[];
   currency?: number;
   innateEnergy?: number;
+  innateThreshold?: number; // Innate energy threshold per pool
+  innatePools?: number; // Number of innate pools
+  currentInnateEnergy?: number; // Current innate energy (if tracked separately)
   currentEnergy?: number; // Current energy for use button validation
   isEditMode?: boolean;
   // Power/Technique/Equipment callbacks
@@ -105,28 +133,66 @@ interface LibrarySectionProps {
   level?: number;
   archetypeAbility?: number;
   martialProficiency?: number; // For armament proficiency display
+  // Parts RTDB data for enrichment (descriptions, TP costs)
+  powerPartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
+  techniquePartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
+  // Feats tab props
+  ancestry?: {
+    selectedTraits?: string[];
+    selectedFlaw?: string;
+    selectedCharacteristic?: string;
+  };
+  traitsDb?: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    uses_per_rec?: number;
+    rec_period?: string;
+  }>;
+  traitUses?: Record<string, number>;
+  archetypeFeats?: Array<{
+    id?: string | number;
+    name: string;
+    description?: string;
+    maxUses?: number;
+    currentUses?: number;
+    recovery?: string;
+  }>;
+  characterFeats?: Array<{
+    id?: string | number;
+    name: string;
+    description?: string;
+    maxUses?: number;
+    currentUses?: number;
+    recovery?: string;
+  }>;
+  onFeatUsesChange?: (featId: string, delta: number) => void;
+  onTraitUsesChange?: (traitName: string, delta: number) => void;
+  onAddArchetypeFeat?: () => void;
+  onAddCharacterFeat?: () => void;
 }
 
-type TabType = 'powers' | 'techniques' | 'weapons' | 'armor' | 'equipment' | 'proficiencies' | 'notes';
+type TabType = 'powers' | 'techniques' | 'weapons' | 'armor' | 'equipment' | 'feats' | 'proficiencies' | 'notes';
 
 interface PowerCardProps {
   power: CharacterPower;
   innateEnergy?: number;
   currentEnergy?: number;
   isEditMode?: boolean;
+  partsDb?: RTDBPart[];
   onRemove?: () => void;
   onToggleInnate?: (isInnate: boolean) => void;
   onUse?: () => void;
 }
 
-function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, onRemove, onToggleInnate, onUse }: PowerCardProps) {
+function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [], onRemove, onToggleInnate, onUse }: PowerCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isInnate = power.innate === true;
   const energyCost = power.cost ?? 0;
   const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
   
-  // Convert parts to PartData format for chips
-  const partChips = useMemo(() => partsToPartData(power.parts), [power.parts]);
+  // Convert parts to PartData format for chips, enriched with RTDB descriptions
+  const partChips = useMemo(() => partsToPartData(power.parts, partsDb), [power.parts, partsDb]);
   const hasExpandableContent = power.description || partChips.length > 0;
 
   return (
@@ -223,18 +289,19 @@ interface TechniqueCardProps {
   technique: CharacterTechnique;
   currentEnergy?: number;
   isEditMode?: boolean;
+  partsDb?: RTDBPart[];
   onRemove?: () => void;
   onUse?: () => void;
 }
 
-function TechniqueCard({ technique, currentEnergy, isEditMode, onRemove, onUse }: TechniqueCardProps) {
+function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onRemove, onUse }: TechniqueCardProps) {
   const [expanded, setExpanded] = useState(false);
   const energyCost = technique.cost ?? 0;
   const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
   
-  // Convert parts to PartData format for chips
-  const partChips = useMemo(() => partsToPartData(technique.parts), [technique.parts]);
-  const hasExpandableContent = technique.description || partChips.length > 0;
+  // Convert parts to PartData format for chips, enriched with RTDB descriptions
+  const partChips = useMemo(() => partsToPartData(technique.parts, partsDb), [technique.parts, partsDb]);
+  const hasExpandableContent = technique.description || partChips.length > 0 || technique.weaponName || technique.actionType;
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
@@ -246,6 +313,12 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, onRemove, onUse }
           <div className="flex items-center gap-2">
             {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
             <span className="font-medium text-gray-800">{technique.name}</span>
+            {/* Weapon requirement badge */}
+            {technique.weaponName && technique.weaponName !== 'Unarmed' && (
+              <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">
+                ⚔️ {technique.weaponName}
+              </span>
+            )}
           </div>
           {energyCost > 0 && (
             <span className="text-sm text-blue-600 font-medium">{energyCost} EP</span>
@@ -282,6 +355,21 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, onRemove, onUse }
 
       {expanded && hasExpandableContent && (
         <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-3">
+          {/* Action Type and Weapon info */}
+          {(technique.actionType || technique.weaponName) && (
+            <div className="flex flex-wrap gap-2 text-xs">
+              {technique.actionType && (
+                <span className="px-2 py-1 rounded bg-blue-100 text-blue-700">
+                  ⚡ {technique.actionType}
+                </span>
+              )}
+              {technique.weaponName && (
+                <span className="px-2 py-1 rounded bg-orange-100 text-orange-700">
+                  ⚔️ {technique.weaponName}
+                </span>
+              )}
+            </div>
+          )}
           {technique.description && (
             <p className="text-sm text-gray-600">{technique.description}</p>
           )}
@@ -453,6 +541,9 @@ export function LibrarySection({
   equipment,
   currency = 0,
   innateEnergy = 0,
+  innateThreshold = 0,
+  innatePools = 0,
+  currentInnateEnergy,
   currentEnergy = 0,
   isEditMode = false,
   onAddPower,
@@ -488,6 +579,18 @@ export function LibrarySection({
   level = 1,
   archetypeAbility = 0,
   martialProficiency,
+  powerPartsDb = [],
+  techniquePartsDb = [],
+  // Feats props
+  ancestry,
+  traitsDb = [],
+  traitUses = {},
+  archetypeFeats = [],
+  characterFeats = [],
+  onFeatUsesChange,
+  onTraitUsesChange,
+  onAddArchetypeFeat,
+  onAddCharacterFeat,
 }: LibrarySectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>('powers');
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
@@ -513,6 +616,7 @@ export function LibrarySection({
     { id: 'weapons', label: 'Weapons', count: weapons.length, onAdd: onAddWeapon },
     { id: 'armor', label: 'Armor', count: armor.length, onAdd: onAddArmor },
     { id: 'equipment', label: 'Equipment', count: equipment.length, onAdd: onAddEquipment },
+    { id: 'feats', label: 'Feats', count: archetypeFeats.length + characterFeats.length },
     { id: 'proficiencies', label: 'Proficiencies' },
     { id: 'notes', label: 'Notes' },
   ];
@@ -608,6 +712,35 @@ export function LibrarySection({
       <div className="space-y-2 max-h-[400px] overflow-y-auto">
         {activeTab === 'powers' && (
           <>
+            {/* Innate Energy Tracking Box - shows when character has innate energy */}
+            {innateEnergy > 0 && (
+              <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg mb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-purple-700">✨ Innate Energy</span>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded">
+                        Threshold: {innateThreshold}
+                      </span>
+                      <span className="text-gray-400">×</span>
+                      <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded">
+                        Pools: {innatePools}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-purple-600">
+                      {currentInnateEnergy !== undefined ? currentInnateEnergy : innateEnergy}
+                    </span>
+                    <span className="text-sm text-gray-500">/ {innateEnergy}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Innate powers use this energy pool instead of regular energy
+                </p>
+              </div>
+            )}
+
             {/* Innate Powers Section */}
             {powers.filter(p => p.innate === true).length > 0 && (
               <div className="space-y-2">
@@ -615,11 +748,9 @@ export function LibrarySection({
                   <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
                     ★ Innate Powers
                   </span>
-                  {innateEnergy !== undefined && (
-                    <span className="text-xs text-purple-600">
-                      (Innate Energy: {innateEnergy})
-                    </span>
-                  )}
+                  <span className="text-xs text-purple-600">
+                    ({powers.filter(p => p.innate === true).length} power{powers.filter(p => p.innate === true).length !== 1 ? 's' : ''})
+                  </span>
                 </div>
                 {powers
                   .filter(p => p.innate === true)
@@ -630,6 +761,7 @@ export function LibrarySection({
                       innateEnergy={innateEnergy}
                       currentEnergy={currentEnergy}
                       isEditMode={isEditMode}
+                      partsDb={powerPartsDb}
                       onRemove={onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                       onToggleInnate={onTogglePowerInnate ? (isInnate) => onTogglePowerInnate(power.id || String(i), isInnate) : undefined}
                       onUse={onUsePower && power.cost ? () => onUsePower(power.id || String(i), power.cost!) : undefined}
@@ -657,6 +789,7 @@ export function LibrarySection({
                       innateEnergy={innateEnergy}
                       currentEnergy={currentEnergy}
                       isEditMode={isEditMode}
+                      partsDb={powerPartsDb}
                       onRemove={onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                       onToggleInnate={onTogglePowerInnate ? (isInnate) => onTogglePowerInnate(power.id || String(i), isInnate) : undefined}
                       onUse={onUsePower && power.cost ? () => onUsePower(power.id || String(i), power.cost!) : undefined}
@@ -682,6 +815,7 @@ export function LibrarySection({
                 technique={tech}
                 currentEnergy={currentEnergy}
                 isEditMode={isEditMode}
+                partsDb={techniquePartsDb}
                 onRemove={onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
                 onUse={onUseTechnique && tech.cost ? () => onUseTechnique(tech.id || String(i), tech.cost!) : undefined}
               />
@@ -795,6 +929,21 @@ export function LibrarySection({
           )
         )}
 
+        {activeTab === 'feats' && (
+          <FeatsTab
+            ancestry={ancestry}
+            traitsDb={traitsDb}
+            traitUses={traitUses}
+            archetypeFeats={archetypeFeats}
+            characterFeats={characterFeats}
+            isEditMode={isEditMode}
+            onFeatUsesChange={onFeatUsesChange}
+            onTraitUsesChange={onTraitUsesChange}
+            onAddArchetypeFeat={onAddArchetypeFeat}
+            onAddCharacterFeat={onAddCharacterFeat}
+          />
+        )}
+
         {activeTab === 'proficiencies' && (
           <ProficienciesTab
             powers={powers}
@@ -803,6 +952,8 @@ export function LibrarySection({
             armor={armor}
             level={level}
             archetypeAbility={archetypeAbility}
+            powerPartsDb={powerPartsDb}
+            techniquePartsDb={techniquePartsDb}
           />
         )}
 

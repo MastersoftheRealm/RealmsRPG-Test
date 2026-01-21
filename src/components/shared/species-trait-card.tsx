@@ -5,9 +5,10 @@
  * ===================================================
  * Consistent trait display for species modal, codex, and character creator.
  * Supports all trait categories with appropriate color coding.
+ * Supports limited uses tracking with +/- controls.
  */
 
-import { Heart, Star, Sparkles, AlertTriangle, Check } from 'lucide-react';
+import { Heart, Star, Sparkles, AlertTriangle, Check, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 // =============================================================================
@@ -20,6 +21,10 @@ export interface TraitData {
   id?: string;
   name: string;
   description?: string;
+  /** Max uses per recovery period (0 = unlimited) */
+  maxUses?: number;
+  /** Recovery period text (e.g., "Full Recovery", "Short Rest") */
+  recoveryPeriod?: string;
 }
 
 export interface SpeciesTraitCardProps {
@@ -37,6 +42,10 @@ export interface SpeciesTraitCardProps {
   compact?: boolean;
   /** Custom class name */
   className?: string;
+  /** Current uses remaining (for limited use traits) */
+  currentUses?: number;
+  /** Callback to change uses (+1 or -1) */
+  onUsesChange?: (delta: number) => void;
 }
 
 // =============================================================================
@@ -118,10 +127,17 @@ export function SpeciesTraitCard({
   disabled = false,
   compact = false,
   className,
+  currentUses,
+  onUsesChange,
 }: SpeciesTraitCardProps) {
   const config = CATEGORY_CONFIG[category];
   const Icon = config.icon;
   const { colors } = config;
+  
+  // Uses tracking
+  const maxUses = trait.maxUses ?? 0;
+  const hasLimitedUses = maxUses > 0;
+  const usesRemaining = currentUses ?? maxUses;
   
   const handleClick = () => {
     if (selectable && !disabled && onToggle) {
@@ -178,19 +194,71 @@ export function SpeciesTraitCard({
         
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h4 className={cn(
-            'font-medium',
-            compact ? 'text-sm' : '',
-            colors.text
-          )}>
-            {trait.name}
-          </h4>
+          <div className="flex items-center justify-between gap-2">
+            <h4 className={cn(
+              'font-medium',
+              compact ? 'text-sm' : '',
+              colors.text
+            )}>
+              {trait.name}
+            </h4>
+            
+            {/* Uses tracking controls */}
+            {hasLimitedUses && (
+              <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                {onUsesChange && (
+                  <button
+                    onClick={() => onUsesChange(-1)}
+                    disabled={usesRemaining <= 0}
+                    className={cn(
+                      'w-5 h-5 flex items-center justify-center rounded transition-colors',
+                      usesRemaining > 0
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    )}
+                    title="Use trait"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                )}
+                <span className={cn(
+                  'text-xs font-medium min-w-[36px] text-center',
+                  usesRemaining === 0 ? 'text-red-600' : 'text-gray-600'
+                )}>
+                  {usesRemaining}/{maxUses}
+                </span>
+                {onUsesChange && (
+                  <button
+                    onClick={() => onUsesChange(1)}
+                    disabled={usesRemaining >= maxUses}
+                    className={cn(
+                      'w-5 h-5 flex items-center justify-center rounded transition-colors',
+                      usesRemaining < maxUses
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    )}
+                    title="Restore use"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          
           {trait.description && (
             <p className={cn(
               'text-gray-600 mt-1',
               compact ? 'text-xs' : 'text-sm'
             )}>
               {trait.description}
+            </p>
+          )}
+          
+          {/* Recovery period */}
+          {hasLimitedUses && trait.recoveryPeriod && (
+            <p className="text-xs text-gray-400 mt-1 italic">
+              🔄 {trait.recoveryPeriod}
             </p>
           )}
         </div>

@@ -240,6 +240,137 @@ export function calculateArmamentProficiency(martialProf: number): number {
 }
 
 /**
+ * Get archetype type based on martial and power proficiency.
+ */
+export function getArchetypeType(martialProf: number, powerProf: number): 'power' | 'martial' | 'mixed' | 'none' {
+  if (martialProf === 0 && powerProf > 0) return 'power';
+  if (powerProf === 0 && martialProf > 0) return 'martial';
+  if (martialProf > 0 && powerProf > 0) return 'mixed';
+  return 'none';
+}
+
+/**
+ * Calculate base innate threshold for pure power archetype.
+ * Formula: 8 at level 1, +1 every 3 levels starting at level 4
+ */
+export function calculateBaseInnateThreshold(level: number): number {
+  if (level < 4) return 8;
+  const bonuses = Math.floor((level - 1) / 3);
+  return 8 + bonuses;
+}
+
+/**
+ * Calculate base innate pools for pure power archetype.
+ * Formula: 2 at level 1, +1 every 3 levels starting at level 4
+ */
+export function calculateBaseInnatePools(level: number): number {
+  if (level < 4) return 2;
+  const bonuses = Math.floor((level - 1) / 3);
+  return 2 + bonuses;
+}
+
+/**
+ * Calculate bonus archetype feats for pure martial archetype.
+ * Formula: 2 at level 1, +1 every 3 levels starting at level 4
+ */
+export function calculateBonusArchetypeFeats(level: number): number {
+  if (level < 4) return 2;
+  const bonuses = Math.floor((level - 1) / 3);
+  return 2 + bonuses;
+}
+
+/**
+ * Get milestone levels for mixed archetype choices.
+ * Milestones occur at levels 4, 7, 10, 13, 16, etc.
+ */
+export function getArchetypeMilestoneLevels(currentLevel: number): number[] {
+  const milestones: number[] = [];
+  for (let lvl = 4; lvl <= currentLevel; lvl += 3) {
+    milestones.push(lvl);
+  }
+  return milestones;
+}
+
+export interface ArchetypeProgression {
+  archetype: 'power' | 'martial' | 'mixed' | 'none';
+  armamentProficiency: number;
+  innateThreshold: number;
+  innatePools: number;
+  innateEnergy: number;
+  bonusArchetypeFeats: number;
+  availableMilestones: number[];
+}
+
+/**
+ * Calculate complete archetype progression based on proficiencies and choices.
+ */
+export function calculateArchetypeProgression(
+  level: number,
+  martialProf: number,
+  powerProf: number,
+  archetypeChoices: Record<number, 'innate' | 'feat'> = {}
+): ArchetypeProgression {
+  const archetype = getArchetypeType(martialProf, powerProf);
+  const armamentProficiency = calculateArmamentProficiency(martialProf);
+  
+  let innateThreshold = 0;
+  let innatePools = 0;
+  let innateEnergy = 0;
+  let bonusArchetypeFeats = 0;
+  
+  switch (archetype) {
+    case 'power':
+      innateThreshold = calculateBaseInnateThreshold(level);
+      innatePools = calculateBaseInnatePools(level);
+      innateEnergy = innateThreshold * innatePools;
+      break;
+      
+    case 'martial':
+      bonusArchetypeFeats = calculateBonusArchetypeFeats(level);
+      break;
+      
+    case 'mixed':
+      innateThreshold = 6;
+      innatePools = 1;
+      bonusArchetypeFeats = 1;
+      
+      const milestones = getArchetypeMilestoneLevels(level);
+      for (const milestoneLevel of milestones) {
+        const choice = archetypeChoices[milestoneLevel];
+        if (choice === 'innate') {
+          innateThreshold += 1;
+          innatePools += 1;
+        } else if (choice === 'feat') {
+          bonusArchetypeFeats += 1;
+        }
+      }
+      
+      innateEnergy = innateThreshold * innatePools;
+      break;
+      
+    default:
+      break;
+  }
+  
+  return {
+    archetype,
+    armamentProficiency,
+    innateThreshold,
+    innatePools,
+    innateEnergy,
+    bonusArchetypeFeats,
+    availableMilestones: archetype === 'mixed' ? getArchetypeMilestoneLevels(level) : [],
+  };
+}
+
+/**
+ * Calculate power potency: 10 + power proficiency + power ability score.
+ */
+export function calculatePowerPotency(powerProf: number, powerAbilityScore: number): number {
+  return 10 + powerProf + powerAbilityScore;
+}
+
+/**
  * Get the archetype feat limit.
  */
 export function getArchetypeFeatLimit(archetype: ArchetypeCategory | { type?: ArchetypeCategory }): number {

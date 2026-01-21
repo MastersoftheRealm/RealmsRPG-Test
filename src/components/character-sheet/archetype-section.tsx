@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
+import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
 import { SpeciesTraitCard } from '@/components/shared/species-trait-card';
 import type { Character, CharacterFeat, Abilities } from '@/types';
@@ -21,6 +22,7 @@ interface ArchetypeSectionProps {
   onAddCharacterFeat?: () => void;
   onMartialProfChange?: (value: number) => void;
   onPowerProfChange?: (value: number) => void;
+  onMilestoneChoiceChange?: (level: number, choice: 'innate' | 'feat') => void;
 }
 
 function ProficiencyMeter({ 
@@ -269,10 +271,29 @@ export function ArchetypeSection({
   onAddCharacterFeat,
   onMartialProfChange,
   onPowerProfChange,
+  onMilestoneChoiceChange,
 }: ArchetypeSectionProps) {
   const martialProf = character.mart_prof ?? character.martialProficiency ?? 0;
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
   const rollContext = useRollsOptional();
+  
+  // Calculate proficiency points
+  const level = character.level || 1;
+  const totalProfPoints = calculateProficiency(level);
+  const spentProfPoints = martialProf + powerProf;
+  const remainingProfPoints = totalProfPoints - spentProfPoints;
+  
+  // Determine archetype type for milestone UI
+  const archetypeType = getArchetypeType(martialProf, powerProf);
+  const milestoneLevels = getArchetypeMilestoneLevels(level);
+  const archetypeChoices = character.archetypeChoices || {};
+  
+  // Three-state color for proficiency points
+  const getProfPointsColorClass = () => {
+    if (remainingProfPoints > 0) return 'bg-green-100 text-green-700'; // Has points
+    if (remainingProfPoints < 0) return 'bg-red-100 text-red-700'; // Over budget
+    return 'bg-blue-100 text-blue-700'; // Perfect
+  };
   
   // Calculate Power Potency: 10 + pow_prof + pow_abil value
   const powAbilName = character.pow_abil?.toLowerCase() || 'charisma';
@@ -323,6 +344,77 @@ export function ArchetypeSection({
           onDecrease={() => onPowerProfChange?.(powerProf - 1)}
         />
       </div>
+      
+      {/* Proficiency Points Display - three-state coloring */}
+      {isEditMode && (
+        <div className="mb-4 flex justify-center">
+          <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getProfPointsColorClass())}>
+            {remainingProfPoints} / {totalProfPoints} prof. points
+          </span>
+        </div>
+      )}
+      
+      {/* Mixed Archetype Milestone Choices */}
+      {archetypeType === 'mixed' && milestoneLevels.length > 0 && (
+        <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-purple-50 border border-amber-200 rounded-lg">
+          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+            Milestone Choices
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {milestoneLevels.map((milestoneLevel) => {
+              const currentChoice = archetypeChoices[milestoneLevel];
+              return (
+                <div key={milestoneLevel} className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500 min-w-[32px]">Lv.{milestoneLevel}:</span>
+                  {isEditMode && onMilestoneChoiceChange ? (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => onMilestoneChoiceChange(milestoneLevel, 'innate')}
+                        className={cn(
+                          'px-2 py-0.5 text-xs rounded transition-colors',
+                          currentChoice === 'innate'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                        )}
+                        title="Gain +1 Innate Threshold & +1 Innate Pools"
+                      >
+                        ✨ Innate
+                      </button>
+                      <button
+                        onClick={() => onMilestoneChoiceChange(milestoneLevel, 'feat')}
+                        className={cn(
+                          'px-2 py-0.5 text-xs rounded transition-colors',
+                          currentChoice === 'feat'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-red-100 text-red-600 hover:bg-red-200'
+                        )}
+                        title="Gain +1 Bonus Archetype Feat"
+                      >
+                        🎯 Feat
+                      </button>
+                    </div>
+                  ) : (
+                    <span className={cn(
+                      'px-2 py-0.5 text-xs rounded',
+                      currentChoice === 'innate'
+                        ? 'bg-purple-100 text-purple-700'
+                        : currentChoice === 'feat'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-500 italic'
+                    )}>
+                      {currentChoice === 'innate' ? '✨ Innate' : 
+                       currentChoice === 'feat' ? '🎯 Feat' : 'Not chosen'}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-gray-400 mt-2">
+            Mixed archetypes choose at levels 4, 7, 10, etc.: +1 Innate (Threshold & Pools) OR +1 Bonus Feat
+          </p>
+        </div>
+      )}
       
       {/* Power Potency */}
       <div className="bg-purple-50 rounded-lg px-4 py-2 mb-4 flex items-center justify-between">

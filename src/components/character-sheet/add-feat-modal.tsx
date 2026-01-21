@@ -143,6 +143,7 @@ export function AddFeatModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedFeats, setSelectedFeats] = useState<Feat[]>([]);
+  const [showEligibleOnly, setShowEligibleOnly] = useState(false);
 
   // Load feats from RTDB
   useEffect(() => {
@@ -178,6 +179,7 @@ export function AddFeatModal({
       setSelectedFeats([]);
       setSearchQuery('');
       setSelectedCategory('');
+      setShowEligibleOnly(false);
     }
   }, [isOpen]);
 
@@ -190,33 +192,7 @@ export function AddFeatModal({
     return Array.from(cats).sort();
   }, [feats]);
 
-  // Filter feats based on type, search, category
-  const filteredFeats = useMemo(() => {
-    return feats.filter(feat => {
-      // Filter by feat type
-      if (featType === 'character' && !feat.char_feat) return false;
-      if (featType === 'archetype' && feat.char_feat) return false;
-      
-      // Exclude already owned feats
-      if (existingFeatIds.includes(feat.id) || existingFeatIds.includes(feat.name)) return false;
-      
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!feat.name.toLowerCase().includes(query) && 
-            !feat.description?.toLowerCase().includes(query)) {
-          return false;
-        }
-      }
-      
-      // Category filter
-      if (selectedCategory && feat.category !== selectedCategory) return false;
-      
-      return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [feats, featType, existingFeatIds, searchQuery, selectedCategory]);
-
-  // Check if feat requirements are met
+  // Check if feat requirements are met (must be defined before filteredFeats useMemo)
   const checkRequirements = (feat: Feat): { meets: boolean; warning?: string } => {
     const warnings: string[] = [];
     
@@ -257,6 +233,37 @@ export function AddFeatModal({
       warning: warnings.join(', '),
     };
   };
+
+  // Filter feats based on type, search, category, and eligibility
+  const filteredFeats = useMemo(() => {
+    return feats.filter(feat => {
+      // Filter by feat type
+      if (featType === 'character' && !feat.char_feat) return false;
+      if (featType === 'archetype' && feat.char_feat) return false;
+      
+      // Exclude already owned feats
+      if (existingFeatIds.includes(feat.id) || existingFeatIds.includes(feat.name)) return false;
+      
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (!feat.name.toLowerCase().includes(query) && 
+            !feat.description?.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+      
+      // Category filter
+      if (selectedCategory && feat.category !== selectedCategory) return false;
+      
+      // Show eligible only filter
+      if (showEligibleOnly && !checkRequirements(feat).meets) return false;
+      
+      return true;
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  // Note: checkRequirements uses character which may change, so we include it implicitly
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feats, featType, existingFeatIds, searchQuery, selectedCategory, showEligibleOnly, character]);
 
   const toggleFeat = (feat: Feat) => {
     setSelectedFeats(prev => {
@@ -334,10 +341,17 @@ export function AddFeatModal({
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+            
+            {/* Show Eligible Only toggle */}
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showEligibleOnly}
+                onChange={(e) => setShowEligibleOnly(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="text-gray-600">Show eligible only</span>
+            </label>
           {loading && (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />

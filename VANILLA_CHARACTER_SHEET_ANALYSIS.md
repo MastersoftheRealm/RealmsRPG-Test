@@ -23,83 +23,84 @@ Priorities for implimentation: In the entire codebase always look for ways to co
 - ✅ **Proficiency Editing** - Martial/Power proficiency editing with +/- buttons in archetype section
 - ✅ **Innate vs Regular Power Separation** - Powers visually separated into Innate and Regular sections with headers
 - ✅ **Health-Energy Allocation Panel** - Full H/E point allocation UI in header with +/- controls and visual bars
+- ✅ **Innate Energy Tracking** - Full display with threshold × pools breakdown, current/max values in powers tab
+- ✅ **Power Potency Display** - Shows 10 + pow_prof + pow_abil in archetype section with styled box
+- ✅ **Archetype Bonuses Table** - Full prof/unprof attack bonuses grid with clickable roll buttons
+- ✅ **Power/Technique Use Buttons** - "Use (X)" buttons that deduct energy when clicked
+- ✅ **calculateArchetypeProgression** - Full archetype progression calculation (innate threshold/pools/energy, bonus feats)
+- ✅ **archetypeChoices Type** - Added Character type support for mixed archetype milestone choices
+- ✅ **Three-State Point Colors** - Green (has points) / Blue (no points) / Red (over budget) coloring for all point displays
+- ✅ **Skill Ability Selector** - Dropdown to change ability associated with each skill in edit mode
+- ✅ **Proficiency Points Display** - Shows remaining/total prof points with three-state coloring in archetype section
+- ✅ **Ability Constraints Validation** - min -2, max by level, negative sum limit -3 validation in abilities-section.tsx
+- ✅ **Archetype Milestone Choices UI** - Full UI for mixed archetypes to select Innate/Feat at levels 4, 7, 10, etc.
+- ✅ **Speed/Evasion Base Editing** - EditableStatBlock in sheet-header.tsx for base value editing in edit mode
+- ✅ **Defense Max Validation** - getMaxDefenseSkill constraint (max = level) with disabled button and hint
+- ✅ **Feats Tab in Library** - New FeatsTab component with Traits + Archetype/Character Feats sections
+
+### Completed Features (2025-01-21)
+- ✅ **Save Notifications (Toast)** - Toast feedback on auto-save success/failure
+- ✅ **Feat Modal Eligible Filter** - "Show eligible only" checkbox in AddFeatModal
+- ✅ **Archetype Abilities Text** - Header displays "Power: Charisma • Martial: Strength"
+- ✅ **Weapon Requirement Display** - TechniqueCard shows weaponName badge
+- ✅ **Data Cleaning Before Save** - cleanForSave() strips computed fields
+- ✅ **Trait Uses RTDB Enrichment** - Traits enriched with uses_per_rec/rec_period, +/- buttons
+- ✅ **Power/Technique Parts Enrichment** - Parts chips enriched with RTDB descriptions
+- ✅ **Proficiencies Tab RTDB Enrichment** - String parts enriched with TP costs from RTDB
 
 ### Partially Implemented Features
-- ⚠️ **Innate Energy Tracking** - Shows innate energy value, needs threshold/pools/current/max breakdown in powers section
-- ⚠️ **Power/Technique Parts Display** - Part chips exist but need RTDB data enrichment for full details
-- ⚠️ **Proficiencies Tab** - Shows basic structure but incomplete TP calculations and part lookups
-- ⚠️ **Weapon Requirement Display** - Techniques show weapon type but not specific requirements
-- ⚠️ **Energy Deduction** - Use buttons exist but need to actually deduct energy on use
+- ✅ ~~**Power/Technique Parts Display**~~ COMPLETED (2025-01-21) - Parts enriched with RTDB descriptions
+- ✅ ~~**Proficiencies Tab**~~ COMPLETED (2025-01-21) - RTDB enrichment for TP calculations
+- ✅ ~~**Weapon Requirement Display**~~ COMPLETED - TechniqueCard shows weaponName badge
 
-### Features In Progress
-- 🔄 **Health-Energy Allocation Panel** - Needs collapsible panel with +/- controls in header
-- 🔄 **Archetype Milestone Choices** - Mixed archetype level choice UI needed
+### High Priority Remaining Features
+~~1. **Speed/Evasion Base Editing**~~ ✅ COMPLETED
+~~2. **Defense Max Validation**~~ ✅ COMPLETED
+~~3. **Traits Section**~~ ✅ COMPLETED (FeatsTab includes traits)
 
-### High Priority Missing Features
-1. **Edit Mode Toggle System** - No unified edit mode toggle with notification dot
-2. **Resource Allocation UI** - Health/Energy allocation panel needed
-3. **Innate Energy Tracking** - Threshold/Pools display for innate powers
-4. **Technique/Power Use Buttons** - "Use (X)" buttons to deduct energy
-5. **Trait Recovery Display** - Traits need recovery period info
-6. **Archetype Bonuses Table** - Missing prof/unprof attack bonuses grid
-7. **Power Potency Display** - Not calculated/displayed
-8. **Archetype Milestone Choices** - No UI for mixed archetype level choices
-
-### Medium Priority Missing Features
-9. **Pencil Icon Color States** - No green/blue/red coloring based on points
-10. **Skill Ability Selector** - Cannot change ability used for skills
-11. **Speed/Evasion Base Editing** - Cannot modify base values in edit mode
-12. **Defense Max Validation** - Missing level + 10 cap
-13. **Feat Requirement Checking** - Partial - needs ability, skill checks
-14. **Point Overspending Indicators** - No red coloring when overspent
-
-### Low Priority Missing Features
-15. **Data Cleaning Before Save** - Not stripping computed fields properly
-16. **Save Notifications** - No toast notifications for save operations
-17. **Show Eligible Only** - Feat modal missing "show only eligible" filter
-18. **Archetype Abilities Text** - Header missing "Power: Charisma • Martial: Strength" display
-19. **Remove Buttons** - Some sections missing remove/delete functionality
+### Medium Priority Remaining Features
+4. ~~**Feat Requirement Checking**~~ ✅ COMPLETED - Already implemented in AddFeatModal with ability/skill/level checks
+5. ~~**Data Cleaning Before Save**~~ ✅ COMPLETED (2025-01-21) - cleanForSave() in data-enrichment.ts
+6. ~~**Save Notifications**~~ ✅ COMPLETED (2025-01-21) - Toast notifications for auto-save
+7. ~~**Show Eligible Only**~~ ✅ COMPLETED (2025-01-21) - Feat modal filter checkbox
+8. ~~**Archetype Abilities Text**~~ ✅ COMPLETED (2025-01-21) - Header displays "Power: Charisma • Martial: Strength"
+9. ~~**Weapon Requirement Display**~~ ✅ COMPLETED (2025-01-21) - TechniqueCard shows weaponName badge
+10. ~~**Trait Uses RTDB Enrichment**~~ ✅ COMPLETED (2025-01-21) - Traits enriched with uses_per_rec/rec_period from RTDB, +/- buttons for tracking
 
 ---
 
 ## EXECUTIVE SUMMARY: REACT CHARACTER SHEET GAPS
 
-### Critical Missing Features (High Priority)
-1. **Edit Mode Toggle System** - No unified edit mode toggle with notification dot
-2. **Resource Allocation UI** - No Health/Energy point allocation panel
-3. **Ability Point Costs** - Missing 2-point cost for high abilities (4→5, etc.)
-4. **Defense Value Editing** - Cannot allocate skill points to defenses
-5. **Archetype Milestone Choices** - No UI for mixed archetype level choices
-6. **Power Innate Toggle** - Cannot mark powers as innate
-7. **Technique/Power Use Buttons** - No "Use (X)" buttons to deduct energy
-8. **Feat Uses System** - Missing +/- buttons for feat uses tracking
-9. **Trait Recovery Display** - Traits missing recovery period info
-10. **Unarmed Prowess** - Not showing the always-present unarmed attack option
-11. **Archetype Bonuses Table** - Missing the full prof/unprof attack bonuses grid
-12. **Power Potency Display** - Not calculated/displayed
+### Critical Missing Features (High Priority) - UPDATED
+✅ **All critical features now complete!**
+- ~~Speed/Evasion Base Editing~~ ✅ COMPLETED
+- ~~Defense Max Validation~~ ✅ COMPLETED
+- ~~Traits Section in Library~~ ✅ COMPLETED (FeatsTab)
+
+### Previously Listed as Missing (Now Complete)
+- ~~Edit Mode Toggle System~~ ✅ Exists with notification dot
+- ~~Resource Allocation UI~~ ✅ Full H/E allocation panel
+- ~~Ability Point Costs~~ ✅ 2-point cost for 4+ implemented
+- ~~Defense Value Editing~~ ✅ Full editing with skill point cost
+- ~~Power Innate Toggle~~ ✅ Star button toggle
+- ~~Technique/Power Use Buttons~~ ✅ Use buttons with energy deduction
+- ~~Feat Uses System~~ ✅ +/- buttons for use tracking
+- ~~Trait Recovery Display~~ ✅ Recovery periods shown
+- ~~Unarmed Prowess~~ ✅ Always-present unarmed option
+- ~~Archetype Bonuses Table~~ ✅ Full prof/unprof grid
+- ~~Power Potency Display~~ ✅ Calculated and displayed
+- ~~Equipment Quantity Controls~~ ✅ +/- buttons
+- ~~Armament Proficiency Display~~ ✅ Shown in inventory
+- ~~Currency +/- Support~~ ✅ Supports +5, -10 input
+- ~~Pencil Icon Color States~~ ✅ Three-state coloring (green/blue/red) for all point displays
+- ~~Skill Ability Selector~~ ✅ Dropdown to change skill ability
+- ~~Ability Constraints~~ ✅ min -2, max by level, negative sum limit -3
+- ~~Point Overspending Indicators~~ ✅ Red coloring when overspent
+- ~~Archetype Milestone Choices UI~~ ✅ Full UI for mixed archetype level 4/7/10 choices
 
 ### Missing UI/UX Features (Medium Priority)
-13. **Pencil Icon Color States** - No green/blue/red coloring based on points
-14. **Skill Ability Selector** - Cannot change ability used for skills
-15. **Sub-Skill Proficiency Logic** - Incomplete bonus calculations
-16. **Equipment Quantity Controls** - Missing +/- quantity buttons
-17. **Armament Proficiency Display** - Not calculated/shown in inventory
-18. **Currency +/- Support** - Cannot type +5 or -10 to adjust currency
-19. **Long Rest Button** - Present but less prominent
-20. **Speed/Evasion Base Editing** - Cannot modify base values in edit mode
-21. **Weight/Height in Notes** - Editable but not fully connected
-22. **Fall Damage Roll Button** - Working but could be more prominent
-
-### Missing Validation/Constraints (Medium Priority)
-23. **Ability Constraints** - Missing min -2, max by level, negative sum limit
-24. **Point Overspending Indicators** - No red coloring when overspent
-25. **Feat Requirement Checking** - Partial - needs level, ability, skill checks
-26. **Defense Max Validation** - Missing level + 10 cap
-
-### Missing Data Operations (High Priority)
-27. **Data Cleaning Before Save** - Not stripping computed fields properly
-28. **Power/Technique Parts Enrichment** - Parts not fully loaded from RTDB
-29. **Property/Part TP Calculations** - Proficiencies tab incomplete
+~~28. **Power/Technique Parts Enrichment**~~ ✅ COMPLETED - Parts enriched with RTDB descriptions
+~~29. **Property/Part TP Calculations**~~ ✅ COMPLETED - Proficiencies tab RTDB enrichment
 30. **User Library Integration** - Partial - needs better modal integration
 
 ---
@@ -1313,12 +1314,12 @@ body.edit-mode { /* Edit mode active */ }
 | Martial proficiency box | ✅ | ✅ | ✓ Complete | Meter display |
 | Power proficiency box | ✅ | ✅ | ✓ Complete | Meter display |
 | Proficiency edit +/- | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
-| Attack bonuses table | ✅ | ❌ | 🔴 Missing | Prof/Unprof grid |
-| Power Potency display | ✅ | ❌ | 🔴 Missing | 10 + pow_prof + pow_abil |
+| Attack bonuses table | ✅ | ✅ | ✓ Complete | ✓ Full prof/unprof grid with roll buttons |
+| Power Potency display | ✅ | ✅ | ✓ Complete | ✓ Shows 10 + pow_prof + pow_abil in styled box |
 | Weapons table | ✅ | ❌ | 🔴 Missing | In LibrarySection instead |
 | Unarmed Prowess | ✅ | ✅ | ✓ Complete | ✓ Implemented in LibrarySection 2025-01-20 |
 | Armor table | ✅ | ❌ | 🔴 Missing | In LibrarySection instead |
-| Archetype choices (mixed) | ✅ | ❌ | 🔴 Missing | Milestone level selection |
+| Archetype choices (mixed) | ✅ | ⚠️ | ⚠️ Partial | Backend done, needs UI for selection |
 | Feats in archetype | ❌ | ✅ | React only | Feats displayed here |
 | Feat collapsible cards | ✅ | ✅ | ✓ Complete | |
 | Feat uses +/- | ✅ | ✅ | ✓ Complete | ✓ Already implemented |
@@ -1339,13 +1340,13 @@ body.edit-mode { /* Edit mode active */ }
 | **Techniques Tab** | | | | |
 | - Name, Action, Weapon | ✅ | ⚠️ | ⚠️ Partial | Less columns |
 | - Energy cost display | ✅ | ✅ | ✓ Complete | |
-| - Use (X) button | ✅ | ⚠️ | ⚠️ Partial | Use button exists, needs energy deduction |
+| - Use (X) button | ✅ | ✅ | ✓ Complete | ✓ Use button deducts energy |
 | - Collapsible desc | ✅ | ✅ | ✓ Complete | |
 | - Parts chips | ✅ | ⚠️ | ⚠️ Partial | ✓ Chips implemented 2025-01-20, needs RTDB enrichment |
 | - Weapon requirement | ✅ | ⚠️ | ⚠️ Partial | Shows weapon type, not specific req |
 | **Powers Tab** | | | | |
 | - Innate vs Regular split | ✅ | ✅ | ✓ Complete | ✓ Implemented 2025-01-20 with section headers |
-| - Innate energy tracking | ✅ | ⚠️ | ⚠️ Partial | Shows innate energy value, needs threshold/pools breakdown |
+| - Innate energy tracking | ✅ | ✅ | ✓ Complete | ✓ Full threshold × pools display with current/max |
 | - Toggle innate checkbox | ✅ | ✅ | ✓ Complete | Star button toggle in edit mode |
 | - Use button | ✅ | ⚠️ | ⚠️ Partial | Use button exists, needs energy deduction |
 | - Parts chips | ✅ | ⚠️ | ⚠️ Partial | ✓ Chips implemented 2025-01-20, needs RTDB enrichment |

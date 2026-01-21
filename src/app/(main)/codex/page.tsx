@@ -23,6 +23,7 @@ import {
   SortHeader,
   LoadingSpinner as LoadingState,
   ErrorDisplay as ErrorState,
+  PropertyChipList,
 } from '@/components/shared';
 import { 
   useRTDBFeats, 
@@ -984,6 +985,7 @@ interface EquipmentFilters {
 
 function EquipmentTab() {
   const { data: equipment, isLoading, error } = useEquipment();
+  const { data: propertiesDb = [] } = useItemProperties();
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   const [filters, setFilters] = useState<EquipmentFilters>({
     search: '',
@@ -1079,7 +1081,7 @@ function EquipmentTab() {
           <div className="p-8 text-center text-gray-500">No equipment found.</div>
         ) : (
           filteredEquipment.map(item => (
-            <EquipmentCard key={item.id} item={item as Equipment} />
+            <EquipmentCard key={item.id} item={item as Equipment} propertiesDb={propertiesDb} />
           ))
         )}
       </div>
@@ -1087,9 +1089,18 @@ function EquipmentTab() {
   );
 }
 
-function EquipmentCard({ item }: { item: Equipment }) {
+function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertiesDb?: ItemProperty[] }) {
   const [expanded, setExpanded] = useState(false);
   const cost = item.currency ?? item.gold_cost ?? 0;
+  
+  // Enrich property strings with full data from RTDB
+  const enrichedProperties = useMemo(() => {
+    if (!item.properties || item.properties.length === 0) return [];
+    return item.properties.map(propName => {
+      const match = propertiesDb.find(p => p.name.toLowerCase() === propName.toLowerCase());
+      return match ? { name: match.name, description: match.description } : { name: propName };
+    });
+  }, [item.properties, propertiesDb]);
 
   return (
     <div className="bg-white">
@@ -1127,10 +1138,13 @@ function EquipmentCard({ item }: { item: Equipment }) {
             {item.damage && <span><strong>Damage:</strong> {formatDamageDisplay(item.damage)}</span>}
             {item.armor_value !== undefined && <span><strong>Armor:</strong> {item.armor_value}</span>}
             {item.weight !== undefined && <span><strong>Weight:</strong> {item.weight} kg</span>}
-            {item.properties && item.properties.length > 0 && (
-              <span><strong>Properties:</strong> {item.properties.join(', ')}</span>
-            )}
           </div>
+          
+          {enrichedProperties.length > 0 && (
+            <div className="mt-3">
+              <PropertyChipList properties={enrichedProperties} label="Properties" size="sm" />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -110,7 +110,9 @@ Track reusable components, identify duplications, and ensure consistent UI patte
 6. ✅ Traits section using SpeciesTraitCard
 
 **Pending (requires data enrichment):**
-- ⏳ Trait uses +/- (traits stored as strings, need database lookup for uses_per_rec)
+- ✅ Trait uses +/- ✅ COMPLETED (2025-01-21) - RTDB lookup for uses_per_rec/rec_period with +/- buttons
+- ✅ Parts RTDB enrichment ✅ COMPLETED (2025-01-21) - Power/technique parts enriched with descriptions
+- ✅ Proficiencies Tab RTDB ✅ COMPLETED (2025-01-21) - String parts enriched with TP costs
 - ⏳ Requirements warnings (needs requirement checking logic)
 
 ### Phase 3: Unify Card Components ⏳
@@ -125,11 +127,12 @@ Track reusable components, identify duplications, and ensure consistent UI patte
    
 2. Replace local cards in library-section.tsx
 
-### Phase 4: Codex Integration ⏳
-**Status:** Not Started
+### Phase 4: Codex Integration ✅
+**Status:** COMPLETED (2025-01-21)
 
-1. Update EquipmentCard to use PartChipList for properties
-2. Ensure consistent styling with Library and Character Sheet
+1. ✅ Updated EquipmentCard to use PropertyChipList for expandable properties
+2. ✅ Properties enriched from RTDB with descriptions
+3. ✅ Consistent styling with Library and Character Sheet
 
 ---
 
@@ -168,12 +171,12 @@ Track vanilla site features and their React implementation status:
 
 ### Edit Mode Features
 - [x] Global edit toggle
-- [ ] Notification dot on edit button (green pulsing)
+- [x] Notification dot on edit button (green pulsing) ✅ Already implemented (red pulsing)
 - [ ] Section edit toggles (pencil icons)
 - [x] Ability +/- allocation
 - [x] Ability 2-point cost for 4+ ✅ (2025-01-20)
 - [x] Defense value allocation ✅ (2025-01-20)
-- [ ] Health-Energy allocation panel
+- [x] Health-Energy allocation panel ✅ Already implemented in sheet-header.tsx
 - [x] Skill +/- allocation
 - [x] Remove skill (✕) button ✅ (2025-01-20)
 - [x] Proficiency +/- editing (mart_prof, pow_prof) ✅ (2025-01-20)
@@ -185,14 +188,15 @@ Track vanilla site features and their React implementation status:
 - [x] Toggle innate checkbox (edit mode)
 - [x] Use button (deducts energy)
 - [x] **Parts chips** (expandable) ✅ (2025-01-20)
-- [ ] Innate vs Regular separation
+- [x] Innate vs Regular separation ✅ Already implemented
 
 ### Techniques Tab
 - [x] Technique cards with name/description
 - [x] Energy cost display
 - [x] Use button (deducts energy)
 - [x] **Parts chips** (expandable) ✅ (2025-01-20)
-- [ ] Weapon requirement display
+- [x] Weapon requirement display ✅ (2025-01-21)
+- [x] Action type display ✅ (2025-01-21)
 
 ### Inventory Tab
 - [x] Weapons with attack/damage rolls
@@ -201,7 +205,7 @@ Track vanilla site features and their React implementation status:
 - [x] Equip/unequip toggle
 - [x] **Property chips** (expandable) ✅ (2025-01-20)
 - [x] Currency +/- input ✅ (2025-01-20)
-- [ ] Armament proficiency box
+- [x] Armament proficiency box ✅ Already implemented
 - [x] Equipment quantity +/- ✅ (2025-01-20)
 - [x] Unarmed Prowess display ✅ (2025-01-20)
 
@@ -210,7 +214,7 @@ Track vanilla site features and their React implementation status:
 - [x] Attack Bonuses table (Prof/Unprof)
 - [x] Power Potency display
 - [x] Proficiency +/- editing ✅ (2025-01-20)
-- [ ] Archetype choices (mixed archetypes)
+- [x] Archetype choices (mixed archetypes) ✅ Already implemented
 - [x] Traits section (ancestry, flaw, characteristic) ✅ (2025-01-20)
 
 ### Feats Section
@@ -230,11 +234,23 @@ Track vanilla site features and their React implementation status:
 
 ## NEXT ACTIONS
 
-1. **Create `src/components/shared/part-chip.tsx`** with extracted chip components
-2. **Add parts data** to character powers/techniques (need transformer)
-3. **Update library-section.tsx** to display parts chips
-4. Add remove skill button
-5. Add proficiency editing
+### Completed ✅
+1. ~~Create `src/components/shared/part-chip.tsx`~~ ✅ Done
+2. ~~Add parts data to character powers/techniques~~ ✅ Done via PartChipList
+3. ~~Update library-section.tsx to display parts chips~~ ✅ Done
+4. ~~Add remove skill button~~ ✅ Done
+5. ~~Add proficiency editing~~ ✅ Done
+6. ~~Weapon requirement display in TechniqueCard~~ ✅ (2025-01-21)
+7. ~~Archetype abilities text in header~~ ✅ (2025-01-21)
+8. ~~Data cleaning before save (cleanForSave)~~ ✅ (2025-01-21)
+
+### Pending
+1. **Phase 3: Unify Card Components** - Create CharacterAbilityCard or extend AbilityCard
+2. ~~**Phase 4: Codex Integration**~~ ✅ Done
+3. ~~**Toast notifications**~~ ✅ Done - Integrated into character sheet auto-save
+4. ~~**Armament proficiency box**~~ ✅ Already implemented in library-section.tsx
+5. ~~**Archetype choices**~~ ✅ Already implemented in archetype-section.tsx
+6. ~~**RTDB enrichment**~~ ✅ Done - Trait uses +/- with RTDB lookup (2025-01-21)
 
 ---
 
@@ -246,4 +262,4 @@ Track vanilla site features and their React implementation status:
 - Document all component changes in this file
 - Test components work across all usage contexts before marking complete
 
-Last Updated: 2025-01-20
+Last Updated: 2025-01-21 (Parts & Proficiencies RTDB Enrichment)

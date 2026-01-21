@@ -45,6 +45,8 @@ export interface CharacterTechnique {
   name: string;
   cost?: number;
   description?: string;
+  weaponName?: string; // Required weapon type (e.g., "Sword", "Unarmed")
+  actionType?: string; // e.g., "Basic Action", "Free Action"
   // Parts can be either just names (string[]) or full part data with TP info
   parts?: Array<string | {
     id?: string;
@@ -155,6 +157,12 @@ export interface Character {
   // Legacy aliases (vanilla site uses these)
   mart_prof?: number;
   pow_prof?: number;
+  
+  // Mixed archetype milestone choices (level -> 'innate' | 'feat')
+  archetypeChoices?: Record<number, 'innate' | 'feat'>;
+  
+  // Trait uses tracking (trait name -> currentUses)
+  traitUses?: Record<string, number>;
   
   // Training points tracking
   trainingPointsSpent?: number;

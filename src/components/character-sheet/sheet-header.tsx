@@ -34,6 +34,11 @@ interface SheetHeaderProps {
   onEnergyPointsChange?: (value: number) => void;
   onPortraitChange?: (file: File) => void;
   isUploadingPortrait?: boolean;
+  // Speed/Evasion base editing
+  speedBase?: number;
+  evasionBase?: number;
+  onSpeedBaseChange?: (value: number) => void;
+  onEvasionBaseChange?: (value: number) => void;
 }
 
 function ResourceBar({
@@ -125,6 +130,74 @@ function StatBlock({ label, value, subValue }: { label: string; value: number | 
   );
 }
 
+// Editable stat block for speed/evasion base values
+function EditableStatBlock({ 
+  label, 
+  value, 
+  baseValue,
+  subValue, 
+  isEditMode,
+  onChange,
+  minBase = 0,
+  maxBase = 20,
+}: { 
+  label: string; 
+  value: number | string; 
+  baseValue?: number;
+  subValue?: string;
+  isEditMode?: boolean;
+  onChange?: (newBase: number) => void;
+  minBase?: number;
+  maxBase?: number;
+}) {
+  if (isEditMode && onChange && baseValue !== undefined) {
+    return (
+      <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg min-w-[70px]">
+        <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
+        <span className="text-xl font-bold text-gray-800">{value}</span>
+        <div className="flex items-center gap-1 mt-1">
+          <button
+            onClick={() => onChange(Math.max(minBase, baseValue - 1))}
+            disabled={baseValue <= minBase}
+            className={cn(
+              'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
+              baseValue > minBase
+                ? 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            )}
+          >
+            −
+          </button>
+          <span className="text-xs text-gray-600 min-w-[2rem] text-center">
+            base: {baseValue}
+          </span>
+          <button
+            onClick={() => onChange(Math.min(maxBase, baseValue + 1))}
+            disabled={baseValue >= maxBase}
+            className={cn(
+              'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
+              baseValue < maxBase
+                ? 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            )}
+          >
+            +
+          </button>
+        </div>
+        {subValue && <span className="text-xs text-gray-500 mt-0.5">{subValue}</span>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg min-w-[60px]">
+      <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
+      <span className="text-xl font-bold text-gray-800">{value}</span>
+      {subValue && <span className="text-xs text-gray-500">{subValue}</span>}
+    </div>
+  );
+}
+
 function DefenseBlock({ name, bonus, score, onRoll }: { name: string; bonus: number; score: number; onRoll?: () => void }) {
   const formattedBonus = bonus >= 0 ? `+${bonus}` : `${bonus}`;
   
@@ -155,6 +228,10 @@ export function SheetHeader({
   onEnergyPointsChange,
   onPortraitChange,
   isUploadingPortrait = false,
+  speedBase = 6,
+  evasionBase = 10,
+  onSpeedBaseChange,
+  onEvasionBaseChange,
 }: SheetHeaderProps) {
   const currentHealth = character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
@@ -250,6 +327,20 @@ export function SheetHeader({
             <p className="text-gray-500 text-sm">
               {character.archetype?.name || 'No Archetype'}
             </p>
+            {/* Archetype Abilities Display */}
+            {(character.pow_abil || character.mart_abil) && (
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                {character.pow_abil && (
+                  <span className="text-purple-600">Power: {character.pow_abil}</span>
+                )}
+                {character.pow_abil && character.mart_abil && (
+                  <span className="text-gray-300">•</span>
+                )}
+                {character.mart_abil && (
+                  <span className="text-red-600">Martial: {character.mart_abil}</span>
+                )}
+              </p>
+            )}
             {/* XP Display with Level Up indicator */}
             <p className="text-gray-500 text-sm flex items-center gap-1">
               <span>XP: {character.experience ?? 0}</span>
@@ -270,8 +361,25 @@ export function SheetHeader({
 
         {/* Core Stats */}
         <div className="flex flex-wrap gap-2 items-start">
-          <StatBlock label="Speed" value={calculatedStats.speed} />
-          <StatBlock label="Evasion" value={calculatedStats.evasion} />
+          <EditableStatBlock 
+            label="Speed" 
+            value={calculatedStats.speed}
+            baseValue={speedBase}
+            subValue={isEditMode ? undefined : undefined}
+            isEditMode={isEditMode}
+            onChange={onSpeedBaseChange}
+            minBase={1}
+            maxBase={20}
+          />
+          <EditableStatBlock 
+            label="Evasion" 
+            value={calculatedStats.evasion}
+            baseValue={evasionBase}
+            isEditMode={isEditMode}
+            onChange={onEvasionBaseChange}
+            minBase={0}
+            maxBase={20}
+          />
           <StatBlock label="Armor" value={calculatedStats.armor} />
           {character.innateEnergy !== undefined && character.innateEnergy > 0 && (
             <StatBlock label="Innate" value={character.innateEnergy} />
