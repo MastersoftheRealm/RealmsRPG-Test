@@ -747,6 +747,25 @@ export default function CharacterSheetPage({ params }: PageParams) {
     });
   }, [character]);
   
+  // Skill change handler (for editing skill values, proficiency, ability)
+  const handleSkillChange = useCallback((skillId: string, updates: Partial<{ skill_val: number; prof: boolean; ability: string }>) => {
+    if (!character) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      const currentSkills = (prev.skills || []) as unknown as Array<{ id: string; skill_val?: number; prof?: boolean; ability?: string }>;
+      const updatedSkills = currentSkills.map(skill => {
+        if (skill.id === skillId) {
+          return { ...skill, ...updates };
+        }
+        return skill;
+      });
+      return {
+        ...prev,
+        skills: updatedSkills as unknown as typeof prev.skills
+      };
+    });
+  }, [character]);
+  
   // Martial proficiency change handler
   const handleMartialProfChange = useCallback((value: number) => {
     if (!character) return;
@@ -1007,6 +1026,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   abilities={character.abilities}
                   isEditMode={isEditMode}
                   totalSkillPoints={calculateSkillPoints(character.level || 1)}
+                  onSkillChange={handleSkillChange}
                   onRemoveSkill={handleRemoveSkill}
                   onAddSkill={() => setSkillModalType('skill')}
                   onAddSubSkill={() => setSkillModalType('subskill')}

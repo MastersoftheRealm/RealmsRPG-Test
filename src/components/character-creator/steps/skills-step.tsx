@@ -2,7 +2,7 @@
  * Skills Step
  * ============
  * Allocate skill points with real data from Firebase RTDB
- * Skills are grouped by the 6 abilities, with a 7th section for sub-skills
+ * Skills are grouped by the 6 abilities, with sub-skills nested under their base skills
  */
 
 'use client';
@@ -38,22 +38,32 @@ export function SkillsStep() {
   const remainingPoints = totalSkillPoints - usedPoints;
 
   // Group skills by ability - some skills appear in multiple ability categories
-  // Also create a separate sub-skills group
-  const { groupedSkills, subSkills } = useMemo(() => {
-    if (!skills) return { groupedSkills: {}, subSkills: [] };
+  // Sub-skills are grouped with their base skills in each ability section
+  const { groupedSkills, subSkillsByBase } = useMemo(() => {
+    if (!skills) return { groupedSkills: {}, subSkillsByBase: {} };
     
     const groups: Record<string, RTDBSkill[]> = {};
-    const subs: RTDBSkill[] = [];
+    const subsByBase: Record<string, RTDBSkill[]> = {};
     
     // Initialize ability groups
     ABILITY_ORDER.forEach(ability => {
       groups[ability] = [];
     });
     
+    // First pass: identify all sub-skills and group by base skill
     skills.forEach(skill => {
-      // Sub-skills require a base skill
       if (skill.base_skill) {
-        subs.push(skill);
+        if (!subsByBase[skill.base_skill]) {
+          subsByBase[skill.base_skill] = [];
+        }
+        subsByBase[skill.base_skill].push(skill);
+      }
+    });
+    
+    // Second pass: group main skills by ability
+    skills.forEach(skill => {
+      // Skip sub-skills - they'll be nested under their base skill
+      if (skill.base_skill) {
         return;
       }
       
@@ -82,7 +92,7 @@ export function SkillsStep() {
       }
     });
     
-    return { groupedSkills: groups, subSkills: subs };
+    return { groupedSkills: groups, subSkillsByBase: subsByBase };
   }, [skills]);
 
   const handleAllocate = useCallback((skillId: string, delta: number) => {
@@ -155,9 +165,22 @@ export function SkillsStep() {
           const categorySkills = groupedSkills[ability] || [];
           if (categorySkills.length === 0) return null;
           
-          const categoryPoints = categorySkills.reduce(
-            (sum, s) => sum + (allocations[s.id] || 0), 0
-          );
+          // Count points for base skills and their sub-skills
+          let categoryPoints = 0;
+          categorySkills.forEach(skill => {
+            categoryPoints += allocations[skill.id] || 0;
+            // Add sub-skill points
+            const subs = subSkillsByBase[skill.id] || [];
+            subs.forEach(sub => {
+              categoryPoints += allocations[sub.id] || 0;
+            });
+          });
+          
+          // Count sub-skills in this category
+          const subSkillCount = categorySkills.reduce((count, skill) => {
+            return count + (subSkillsByBase[skill.id]?.length || 0);
+          }, 0);
+          
           const isExpanded = expandedCategories.has(ability);
           
           return (
@@ -169,7 +192,7 @@ export function SkillsStep() {
                 <div className="flex items-center gap-3">
                   <h3 className="font-bold text-gray-900">{ability}</h3>
                   <span className="text-sm text-gray-500">
-                    {categorySkills.length} skills
+                    {categorySkills.length} skills{subSkillCount > 0 && `, ${subSkillCount} sub-skills`}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -188,96 +211,49 @@ export function SkillsStep() {
               </button>
               
               {isExpanded && (
-                <div className="p-4 grid md:grid-cols-2 gap-3">
-                  {categorySkills.map(skill => (
-                    <SkillAllocator
-                      key={`${ability}-${skill.id}`}
-                      skill={skill}
-                      value={allocations[skill.id] || 0}
-                      onAllocate={(delta) => handleAllocate(skill.id, delta)}
-                      canIncrease={remainingPoints > 0}
-                    />
-                  ))}
+                <div className="p-4 space-y-3">
+                  {categorySkills.map(skill => {
+                    const skillSubSkills = subSkillsByBase[skill.id] || [];
+                    const hasSubSkills = skillSubSkills.length > 0;
+                    const baseSkillValue = allocations[skill.id] || 0;
+                    
+                    return (
+                      <div key={`${ability}-${skill.id}`}>
+                        {/* Base Skill */}
+                        <SkillAllocator
+                          skill={skill}
+                          value={baseSkillValue}
+                          onAllocate={(delta) => handleAllocate(skill.id, delta)}
+                          canIncrease={remainingPoints > 0}
+                        />
+                        
+                        {/* Sub-Skills (nested under base skill) */}
+                        {hasSubSkills && (
+                          <div className="ml-6 mt-2 pl-3 border-l-2 border-gray-200 space-y-2">
+                            {skillSubSkills.map(subSkill => {
+                              const isUnlocked = baseSkillValue > 0;
+                              return (
+                                <SubSkillAllocator
+                                  key={subSkill.id}
+                                  skill={subSkill}
+                                  value={allocations[subSkill.id] || 0}
+                                  onAllocate={(delta) => handleAllocate(subSkill.id, delta)}
+                                  canIncrease={remainingPoints > 0}
+                                  isUnlocked={isUnlocked}
+                                  baseSkillName={skill.name}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
           );
         })}
-        
-        {/* Sub-Skills Section */}
-        {subSkills.length > 0 && (
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <button
-              onClick={() => toggleCategory('sub-skills')}
-              className="w-full px-4 py-3 flex items-center justify-between bg-gray-100 hover:bg-gray-200 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <h3 className="font-bold text-gray-700">Sub-Skills</h3>
-                <span className="text-sm text-gray-500">
-                  {subSkills.length} skills (require base skill)
-                </span>
-              </div>
-              <span className={cn(
-                'transition-transform',
-                expandedCategories.has('sub-skills') && 'rotate-180'
-              )}>
-                ▼
-              </span>
-            </button>
-            
-            {expandedCategories.has('sub-skills') && (
-              <div className="p-4 grid md:grid-cols-2 gap-3">
-                {subSkills.map(skill => {
-                  const hasBaseSkill = allocations[skill.base_skill || ''] > 0;
-                  return (
-                    <div
-                      key={skill.id}
-                      className={cn(
-                        'p-3 rounded-lg border',
-                        hasBaseSkill ? 'bg-gray-50 border-gray-200' : 'bg-gray-100 border-gray-200 opacity-60'
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="font-medium text-gray-900">{skill.name}</span>
-                          <span className="text-xs text-gray-500 ml-2">
-                            (Requires: {skill.base_skill})
-                          </span>
-                        </div>
-                        {hasBaseSkill ? (
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleAllocate(skill.id, -1)}
-                              disabled={(allocations[skill.id] || 0) === 0}
-                              className="btn-stepper btn-stepper-danger !w-7 !h-7 text-sm"
-                            >
-                              −
-                            </button>
-                            <span className={cn(
-                              'w-8 text-center font-bold',
-                              (allocations[skill.id] || 0) > 0 ? 'text-primary-700' : 'text-gray-400'
-                            )}>
-                              {allocations[skill.id] || 0}
-                            </span>
-                            <button
-                              onClick={() => handleAllocate(skill.id, 1)}
-                              disabled={remainingPoints <= 0}
-                              className="btn-stepper btn-stepper-success !w-7 !h-7 text-sm"
-                            >
-                              +
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-500 italic">Locked</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
       </div>
       
       {(!skills || skills.length === 0) && (
@@ -363,6 +339,69 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
           {skill.description}
         </p>
       )}
+    </div>
+  );
+}
+
+interface SubSkillAllocatorProps {
+  skill: RTDBSkill;
+  value: number;
+  onAllocate: (delta: number) => void;
+  canIncrease: boolean;
+  isUnlocked: boolean;
+  baseSkillName: string;
+}
+
+function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, baseSkillName }: SubSkillAllocatorProps) {
+  return (
+    <div className={cn(
+      'p-2 rounded-lg border transition-colors text-sm',
+      !isUnlocked && 'opacity-50 bg-gray-100 border-gray-200',
+      isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
+      isUnlocked && value === 0 && 'bg-gray-50 border-gray-200'
+    )}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">↳</span>
+          <span className={cn(
+            'font-medium',
+            isUnlocked ? 'text-gray-900' : 'text-gray-500'
+          )}>
+            {skill.name}
+          </span>
+        </div>
+        
+        {isUnlocked ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onAllocate(-1)}
+              disabled={value === 0}
+              className="btn-stepper btn-stepper-danger !w-6 !h-6 text-xs"
+            >
+              −
+            </button>
+            
+            <span className={cn(
+              'w-6 text-center font-bold text-sm',
+              value > 0 ? 'text-primary-700' : 'text-gray-400'
+            )}>
+              {value}
+            </span>
+            
+            <button
+              onClick={() => onAllocate(1)}
+              disabled={!canIncrease}
+              className="btn-stepper btn-stepper-success !w-6 !h-6 text-xs"
+            >
+              +
+            </button>
+          </div>
+        ) : (
+          <span className="text-xs text-gray-400 italic">
+            Requires {baseSkillName}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

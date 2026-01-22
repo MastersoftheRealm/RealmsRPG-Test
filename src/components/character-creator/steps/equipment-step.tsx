@@ -72,7 +72,7 @@ export function EquipmentStep() {
     if (userItems && itemProperties) {
       for (const userItem of userItems) {
         // Get the raw armamentType from Firestore data
-        const rawData = userItem as Record<string, unknown>;
+        const rawData = userItem as unknown as Record<string, unknown>;
         const armamentType = rawData.armamentType as string;
         
         // Skip items that aren't weapons, shields, or armor
@@ -273,6 +273,15 @@ export function EquipmentStep() {
     const item = selectedItems.find(i => i.id === itemId);
     return item?.quantity || 0;
   }, [selectedItems]);
+
+  // Save currency and proceed to next step
+  const handleContinue = useCallback(() => {
+    // Save the remaining currency to the draft
+    updateDraft({
+      currency: remainingCurrency,
+    });
+    nextStep();
+  }, [remainingCurrency, updateDraft, nextStep]);
 
   if (isLoading) {
     return (
@@ -516,7 +525,7 @@ export function EquipmentStep() {
           ← Back
         </button>
         <button
-          onClick={nextStep}
+          onClick={handleContinue}
           className="btn-continue"
         >
           Continue →

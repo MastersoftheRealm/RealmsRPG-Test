@@ -176,8 +176,8 @@ function WeaponsSection({
   const formatBonus = (val: number) => val >= 0 ? `+${val}` : `${val}`;
   const abilities = character.abilities || {};
   
-  // Get equipped weapons from character
-  const weapons = (character.equipment?.weapons || character.weapons || []) as Item[];
+  // Get equipped weapons from character equipment
+  const weapons = (character.equipment?.weapons || []) as Item[];
   const equippedWeapons = weapons.filter(w => w.equipped);
   
   // Calculate bonuses for attack
@@ -328,8 +328,8 @@ function ArmorSection({
               properties.forEach(prop => {
                 if (!prop) return;
                 const propName = typeof prop === 'string' ? prop : prop.name || '';
-                const op1Lvl = (typeof prop === 'object' && 'op_1_lvl' in prop ? prop.op_1_lvl : 0) || 0;
-                
+                const op1Lvl = Number((typeof prop === 'object' && 'op_1_lvl' in prop ? (prop as any).op_1_lvl : 0) || 0);
+
                 if (propName === 'Damage Reduction') damageReduction = 1 + op1Lvl;
                 if (propName === 'Critical Range +1') critRangeBonus = 1 + op1Lvl;
                 if (propName === 'Armor Strength Requirement') abilityReqs.push(`STR ${1 + op1Lvl}`);
