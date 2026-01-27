@@ -8,4 +8,3 @@ export { cn } from './cn';
 export * from './string';
 export * from './number';
 export * from './array';
-export * from './ability-display';

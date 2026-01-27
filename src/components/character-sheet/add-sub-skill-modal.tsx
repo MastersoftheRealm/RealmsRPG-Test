@@ -3,6 +3,7 @@
  * ===================
  * Modal for adding sub-skills from RTDB
  * Only shows sub-skills where the character has proficiency in the base skill
+ * Uses unified GridListRow component for consistent styling.
  */
 
 'use client';
@@ -12,6 +13,7 @@ import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X, Search } from 'lucide-react';
+import { GridListRow } from '@/components/shared';
 
 interface SubSkill {
   id: string;
@@ -45,34 +47,23 @@ function SubSkillRow({
 }) {
   const abilityStr = Array.isArray(skill.ability) ? skill.ability.join(', ') : '';
 
+  // Build columns for base skill and ability info
+  const columns = [
+    { key: 'Base', value: skill.base_skill },
+    ...(abilityStr ? [{ key: 'Ability', value: abilityStr }] : []),
+  ];
+
   return (
-    <div
-      className={cn(
-        'flex items-center justify-between px-3 py-2 border rounded-lg transition-all',
-        isSelected ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:bg-gray-50'
-      )}
-    >
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onToggle}
-          className={cn(
-            'w-6 h-6 rounded-full flex items-center justify-center transition-colors',
-            isSelected ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-          )}
-        >
-          {isSelected ? '✓' : '+'}
-        </button>
-        <div>
-          <span className="font-medium text-gray-800">{skill.name}</span>
-          <span className="ml-2 text-xs text-gray-500">
-            ({skill.base_skill})
-          </span>
-          {abilityStr && (
-            <span className="ml-1 text-xs text-gray-400">{abilityStr}</span>
-          )}
-        </div>
-      </div>
-    </div>
+    <GridListRow
+      id={skill.id}
+      name={skill.name}
+      description={skill.description}
+      columns={columns}
+      selectable
+      isSelected={isSelected}
+      onSelect={onToggle}
+      compact
+    />
   );
 }
 

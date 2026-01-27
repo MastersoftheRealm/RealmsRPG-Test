@@ -174,6 +174,8 @@ export interface ColumnHeaderProps {
   sortState: SortState;
   onSort: (col: string) => void;
   className?: string;
+  /** Grid template columns CSS override */
+  gridColumns?: string;
 }
 
 export function ColumnHeaders({ 
@@ -181,15 +183,16 @@ export function ColumnHeaders({
   sortState, 
   onSort,
   className,
+  gridColumns,
 }: ColumnHeaderProps) {
   return (
     <div 
       className={cn(
-        'hidden lg:grid gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700',
+        'hidden lg:grid gap-2 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700',
         className
       )}
       style={{ 
-        gridTemplateColumns: columns.map(c => c.width || '1fr').join(' ') 
+        gridTemplateColumns: gridColumns || columns.map(c => c.width || '1fr').join(' ') 
       }}
     >
       {columns.map(col => (

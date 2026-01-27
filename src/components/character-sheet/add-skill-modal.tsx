@@ -2,6 +2,7 @@
  * Add Skill Modal
  * ===============
  * Modal for adding base skills from RTDB
+ * Uses unified GridListRow component for consistent styling.
  */
 
 'use client';
@@ -11,6 +12,7 @@ import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X, Search } from 'lucide-react';
+import { GridListRow } from '@/components/shared';
 
 interface Skill {
   id: string;
@@ -39,36 +41,27 @@ function SkillRow({
 }) {
   const abilityStr = Array.isArray(skill.ability) ? skill.ability.join(', ') : '';
 
+  // Build badges from category
+  const badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' }> = [];
+  if (skill.category) {
+    badges.push({ label: skill.category, color: 'gray' });
+  }
+
+  // Build columns for ability info
+  const columns = abilityStr ? [{ key: 'Ability', value: abilityStr }] : [];
+
   return (
-    <div
-      className={cn(
-        'flex items-center justify-between px-3 py-2 border rounded-lg transition-all',
-        isSelected ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:bg-gray-50'
-      )}
-    >
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onToggle}
-          className={cn(
-            'w-6 h-6 rounded-full flex items-center justify-center transition-colors',
-            isSelected ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-          )}
-        >
-          {isSelected ? '✓' : '+'}
-        </button>
-        <div>
-          <span className="font-medium text-gray-800">{skill.name}</span>
-          {abilityStr && (
-            <span className="ml-2 text-xs text-gray-500">({abilityStr})</span>
-          )}
-        </div>
-      </div>
-      {skill.category && (
-        <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-          {skill.category}
-        </span>
-      )}
-    </div>
+    <GridListRow
+      id={skill.id}
+      name={skill.name}
+      description={skill.description}
+      columns={columns}
+      badges={badges}
+      selectable
+      isSelected={isSelected}
+      onSelect={onToggle}
+      compact
+    />
   );
 }
 

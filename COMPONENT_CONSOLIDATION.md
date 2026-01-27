@@ -31,17 +31,19 @@ Track reusable components, identify duplications, and ensure consistent UI patte
 
 | Component | Purpose | Used In | Notes |
 |-----------|---------|---------|-------|
-| **AbilityCard** | Powers/Techniques/Armaments display | Library page | ✅ **Best candidate for char sheet** |
+| **GridListRow** | UNIFIED expandable row for all list views | Library, Codex, Character Sheet Modals | ✅ Primary list row component |
 | **ItemCard** | Generic item display | ItemList, ItemSelectionModal | Different from char sheet ItemCard |
 | **SpeciesTraitCard** | Trait display with uses | Character Creator, Codex | ✅ Use for Traits section |
 | **CreatureStatBlock** | Full creature display | Library page | Specific to creatures |
 | **DeleteConfirmModal** | Confirm delete dialogs | Library page | ✅ Can use across site |
 | **LoadingState/ErrorState** | Loading/error display | Library page | ✅ Can use across site |
 | **SearchInput/SortHeader** | List utilities | Library, Codex | ✅ List components |
+| **ColumnHeaders** | Grid-aligned sortable headers | Library, Codex | ✅ Supports custom grid columns |
 
-### AbilityCard Sub-Components (Extractable)
-- **PartChipButton** - Clickable chip with TP badge (lines 270-295)
-- **PartChipDetails** - Expanded chip detail panel (lines 297-340)
+### Removed Components (Dead Code Cleanup - 2025-01-27)
+- ~~`AbilityCard`~~ - Removed (was never used)
+- ~~`ability-display.ts`~~ - Removed (utility for AbilityCard, never used)
+- ~~`LibraryListCard`~~ - Replaced by unified GridListRow component
 
 ---
 
@@ -51,14 +53,13 @@ Track reusable components, identify duplications, and ensure consistent UI patte
 
 | Location | Component | Features | Parts Chips? |
 |----------|-----------|----------|--------------|
-| `shared/ability-card.tsx` | AbilityCard | Full-featured, stats, parts chips | ✅ Yes |
-| `character-sheet/library-section.tsx` | PowerCard | Innate toggle, use button, energy display | ❌ No |
-| `character-sheet/library-section.tsx` | TechniqueCard | Use button, energy display | ❌ No |
-| `character-sheet/library-section.tsx` | ItemCard | Equip toggle, attack/damage rolls | ❌ Basic only |
+| `shared/grid-list-row.tsx` | GridListRow | UNIFIED: Grid-aligned rows, selection mode, action buttons, chips, badges | ✅ Yes |
+| `character-sheet/library-section.tsx` | PowerCard | Innate toggle, use button, energy display | ✅ Via PartChipList |
+| `character-sheet/library-section.tsx` | TechniqueCard | Use button, energy display | ✅ Via PartChipList |
+| `character-sheet/library-section.tsx` | ItemCard | Equip toggle, attack/damage rolls | ✅ Via PropertyChipList |
 | `shared/item-card.tsx` | ItemCard | Selection mode, manage mode, badges | ❌ No parts |
-| `codex/page.tsx` | EquipmentCard | Properties as comma-separated text | ⚠️ Basic |
 
-**Action:** Extend AbilityCard OR create CharacterAbilityCard that shares chip components
+**Status:** All list views (Library, Codex, Modals) now use unified GridListRow component.
 
 ### 2. Part/Property Chip Patterns
 
@@ -133,20 +134,47 @@ Track reusable components, identify duplications, and ensure consistent UI patte
 2. ✅ Properties enriched from RTDB with descriptions
 3. ✅ Consistent styling with Library and Character Sheet
 
+### Phase 5: Library-Codex Alignment ✅
+**Status:** COMPLETED (2025-01-27)
+
+**Goal:** Align Library page list items with Codex styling for visual consistency.
+
+**Completed:**
+1. ✅ Created `LibraryListCard` component (`src/components/shared/library-list-card.tsx`)
+   - Grid-aligned expandable rows matching Codex card pattern
+   - Collapsed view shows data aligned with column headers
+   - Expanded view shows description, parts chips, and action buttons (Edit, Duplicate, Delete)
+   - Moved action buttons from collapsed to expanded view for cleaner UI
+   
+2. ✅ Updated Library Powers tab:
+   - Headers: NAME, ENERGY, ACTION, DURATION, RANGE, AREA, DAMAGE (matching vanilla site)
+   - Grid columns match header alignment exactly
+   
+3. ✅ Updated Library Techniques tab:
+   - Headers: NAME, ENERGY, TP, ACTION, WEAPON, DAMAGE (matching vanilla site)
+   - Grid columns match header alignment exactly
+   
+4. ✅ Updated Library Armaments tab:
+   - Headers: NAME, TYPE, RARITY, CURRENCY, TP, RANGE, DAMAGE (matching vanilla site)
+   - Added currency cost and rarity calculations
+   - Grid columns match header alignment exactly
+
+5. ✅ Enhanced `ColumnHeaders` component to support custom `gridColumns` CSS override
+
 ---
 
 ## COMPONENT USAGE MATRIX
 
 Where each reusable component should be used:
 
-| Component | Library Page | Character Sheet | Codex | Creators |
-|-----------|-------------|-----------------|-------|----------|
-| PartChip | ✅ Via AbilityCard | 🔄 Add | 🔄 Add | N/A |
-| PartChipList | ✅ Via AbilityCard | 🔄 Add | 🔄 Add | N/A |
-| ExpandableChip | ❌ | 🔄 Consider | ❌ | ✅ creature |
-| AbilityCard | ✅ | 🔄 Consider | 🔄 Consider | N/A |
-| SpeciesTraitCard | ❌ | 🔄 Add for Traits | ✅ | ✅ species |
-| Toast | 🔄 Add | 🔄 Add | 🔄 Add | 🔄 Add |
+| Component | Library Page | Character Sheet | Codex | Modals | Creators |
+|-----------|-------------|-----------------|-------|--------|----------|
+| GridListRow | ✅ Powers/Techniques/Armaments | ❌ (own cards) | ✅ All tabs | ✅ Add Feat/Skill | 🔄 Part selection |
+| PartChip | ✅ Via GridListRow | ✅ Via PartChipList | ✅ Via GridListRow | N/A | N/A |
+| PartChipList | ✅ Via GridListRow | ✅ | ✅ | N/A | N/A |
+| ExpandableChip | ❌ | 🔄 Consider | ❌ | ❌ | ✅ creature |
+| SpeciesTraitCard | ❌ | ✅ | ✅ | N/A | ✅ species |
+| Toast | 🔄 Add | ✅ | 🔄 Add | N/A | 🔄 Add |
 
 Legend: ✅ = Currently used, 🔄 = Should add, ❌ = Not applicable
 
@@ -246,6 +274,7 @@ Track vanilla site features and their React implementation status:
 10. ~~Phase 4: Codex Integration~~ ✅ Done
 11. ~~Toast notifications~~ ✅ Done - Integrated into character sheet auto-save
 12. ~~RTDB enrichment~~ ✅ Done - Parts, proficiencies, traits all enriched
+13. ~~Phase 5: Library-Codex Alignment~~ ✅ Done (2025-01-27) - LibraryListCard with grid alignment
 
 ### All Character Sheet Features Complete! ✅
 As of 2025-01-21, all vanilla character sheet features have been migrated to React:
@@ -254,8 +283,55 @@ As of 2025-01-21, all vanilla character sheet features have been migrated to Rea
 - Modals fully featured with search, filters, and multi-select
 - Consistent styling with shared components across the site
 
+### Library-Codex Alignment Complete! ✅
+As of 2025-01-27, Library page now matches Codex styling:
+- Grid-aligned expandable rows using new `LibraryListCard` component
+- Column headers match vanilla site (NAME, ENERGY, ACTION, DURATION, RANGE, AREA, DAMAGE for powers)
+- Action buttons moved to expanded view for cleaner collapsed state
+- Consistent visual language across Library and Codex pages
+
+### Phase 6: Full Component Unification ✅
+**Status:** COMPLETED (2025-01-27)
+
+**Created unified `GridListRow` component (`src/components/shared/grid-list-row.tsx`):**
+- Single source of truth for ALL expandable list rows across the site
+- Supports grid columns (aligned with headers) or flex layout
+- Selection mode for modals (with check/plus icons)
+- Action buttons (Edit, Delete, Duplicate) for editable content
+- Chips with costs for parts/properties display
+- Badges for categories/types
+- Requirements display
+- Custom expanded content via render prop
+- Controlled and uncontrolled expansion states
+- Compact mode for modals
+- Warning messages for requirement mismatches
+- Mobile responsive with summary rows
+
+**Migrated components to GridListRow:**
+1. ✅ Codex FeatCard - Uses grid columns, badges, chips for tags
+2. ✅ Codex SkillCard - Uses expandedContent for sub-skill info
+3. ✅ Codex EquipmentCard - Uses chips for properties
+4. ✅ Codex PropertyCard - Uses columns for IP/TP/Cost
+5. ✅ Codex PartCard - Uses badges for mechanic indicator
+6. ✅ Library Powers tab - Uses action buttons, chips for parts
+7. ✅ Library Techniques tab - Uses action buttons, chips for parts
+8. ✅ Library Armaments tab - Uses action buttons, chips for properties
+9. ✅ Add Feat Modal FeatRow - Uses selectable mode with compact styling
+10. ✅ Add Skill Modal SkillRow - Uses selectable mode with compact styling
+11. ✅ Add Sub-Skill Modal SubSkillRow - Uses selectable mode with compact styling
+
+**Removed deprecated components:**
+- ~~`LibraryListCard`~~ - Replaced by GridListRow
+- ~~`AbilityCard`~~ - Was never used
+
+**Benefits achieved:**
+- Users see same visual patterns across entire site ("learn it once")
+- Single component to maintain instead of 10+ similar implementations
+- Consistent accessibility and responsive behavior
+- Shared styling constants (BADGE_COLORS, CHIP_STYLES)
+
 ### Future Enhancements (Nice-to-Have)
-1. **Add TP/Energy display to AddLibraryItemModal** - Show costs in power/technique selection
+1. **Add GridListRow to Creator pages** - Part selection could use the same pattern
 2. **Mobile responsiveness audit** - Test all pages on mobile devices
 3. **Performance optimization** - Profile and optimize heavy renders if needed
 
@@ -269,4 +345,4 @@ As of 2025-01-21, all vanilla character sheet features have been migrated to Rea
 - Document all component changes in this file
 - Test components work across all usage contexts before marking complete
 
-Last Updated: 2025-01-21 (All Character Sheet Features Complete!)
+Last Updated: 2025-01-27 (Full Component Unification Complete with GridListRow!)

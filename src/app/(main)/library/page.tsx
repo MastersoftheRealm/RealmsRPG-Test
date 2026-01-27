@@ -2,7 +2,7 @@
  * Library Page
  * =============
  * User's personal library of created powers, techniques, items, and creatures.
- * Uses unified AbilityCard component with CRUD operations.
+ * Uses unified GridListRow component with grid-aligned rows matching Codex style.
  * Styled consistently with the Codex page.
  */
 
@@ -10,30 +10,36 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
-import { cn, transformPowerToCardData, transformTechniqueToCardData, transformArmamentToCardData } from '@/lib/utils';
+import { Plus, Wand2, Swords, Shield, Users, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { 
-  AbilityCard, 
+  GridListRow,
   CreatureStatBlock, 
   DeleteConfirmModal,
   SearchInput,
   SortHeader,
   ResultsCount,
-  ColumnHeaders,
   ListContainer,
   LoadingSpinner,
   ErrorDisplay,
   ListEmptyState,
+  type ChipData,
 } from '@/components/shared';
-import type { PartChip } from '@/components/shared';
 import {
   derivePowerDisplay,
   formatPowerDamage,
 } from '@/lib/calculators/power-calc';
 import {
   deriveTechniqueDisplay,
+  formatTechniqueDamage,
 } from '@/lib/calculators/technique-calc';
+import {
+  calculateItemCosts,
+  calculateCurrencyCostAndRarity,
+  formatRange as formatItemRange,
+  formatDamage as formatItemDamage,
+} from '@/lib/calculators/item-calc';
 import {
   useUserPowers,
   useUserTechniques,
@@ -65,6 +71,11 @@ const TABS: Tab[] = [
   { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armament' },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
 ];
+
+// Grid column definitions matching vanilla site
+const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
+const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
+const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 
 export default function LibraryPage() {
   return (
@@ -198,12 +209,23 @@ function LibraryContent() {
 }
 
 // =============================================================================
-// Powers Tab
+// Powers Tab - Grid-aligned rows matching vanilla site
 // =============================================================================
 
 interface TabProps {
   onDelete: (item: DisplayItem) => void;
 }
+
+// Power header columns matching vanilla site
+const POWER_COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'energy', label: 'Energy' },
+  { key: 'action', label: 'Action' },
+  { key: 'duration', label: 'Duration' },
+  { key: 'range', label: 'Range' },
+  { key: 'area', label: 'Area' },
+  { key: 'damage', label: 'Damage' },
+];
 
 function PowersTab({ onDelete }: TabProps) {
   const { data: powers, isLoading, error } = useUserPowers();
@@ -211,7 +233,7 @@ function PowersTab({ onDelete }: TabProps) {
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
-  // Transform powers to AbilityCard format
+  // Transform powers to display format
   const cardData = useMemo(() => {
     if (!powers || !partsDb.length) return [];
     
@@ -227,12 +249,27 @@ function PowersTab({ onDelete }: TabProps) {
       );
       
       const damageStr = formatPowerDamage(power.damage);
-      const cardInfo = transformPowerToCardData(power.docId, display, damageStr);
+      
+      // Transform parts to ChipData format
+      const parts: ChipData[] = display.partChips.map(chip => ({
+        name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
+        description: chip.description,
+        cost: chip.finalTP,
+        costLabel: 'TP',
+      }));
       
       return {
-        ...cardInfo,
+        id: power.docId,
+        name: display.name,
+        description: display.description,
         energy: display.energy,
+        action: display.actionType,
+        duration: display.duration,
+        range: display.range,
+        area: display.area,
+        damage: damageStr,
         tp: display.tp,
+        parts,
       };
     });
   }, [powers, partsDb]);
@@ -250,9 +287,16 @@ function PowersTab({ onDelete }: TabProps) {
     }
     
     result = [...result].sort((a, b) => {
-      if (sortState.col === 'name') return sortState.dir * a.name.localeCompare(b.name);
-      if (sortState.col === 'energy') return sortState.dir * (a.energy - b.energy);
-      if (sortState.col === 'tp') return sortState.dir * (a.tp - b.tp);
+      const col = sortState.col;
+      const aVal = a[col as keyof typeof a];
+      const bVal = b[col as keyof typeof b];
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortState.dir * (aVal - bVal);
+      }
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortState.dir * aVal.localeCompare(bVal);
+      }
       return 0;
     });
     
@@ -300,55 +344,76 @@ function PowersTab({ onDelete }: TabProps) {
         />
       </div>
       
-      {/* Results Count - Above headers to match Codex */}
+      {/* Results Count */}
       <ResultsCount count={filteredData.length} itemLabel="power" isLoading={isLoading} />
       
-      {/* Column Headers */}
-      <ColumnHeaders
-        columns={[
-          { key: 'name', label: 'Name', width: '2fr' },
-          { key: 'energy', label: 'Energy', width: '1fr' },
-          { key: 'tp', label: 'TP', width: '1fr' },
-        ]}
-        sortState={sortState}
-        onSort={handleSort}
-        className="grid-cols-3"
-      />
+      {/* Column Headers - Grid aligned */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700"
+        style={{ gridTemplateColumns: POWER_GRID_COLUMNS }}
+      >
+        {POWER_COLUMNS.map(col => (
+          <SortHeader
+            key={col.key}
+            label={col.label.toUpperCase()}
+            col={col.key}
+            sortState={sortState}
+            onSort={handleSort}
+          />
+        ))}
+        <div></div> {/* Expand icon column */}
+      </div>
       
-      {/* Power Cards */}
-      {isLoading ? (
-        <LoadingSpinner />
-      ) : filteredData.length === 0 ? (
-        <div className="py-12 text-center text-gray-500">No powers match your search.</div>
-      ) : (
-        <div className="space-y-3">
-          {filteredData.map(power => (
-            <AbilityCard
+      {/* Power List */}
+      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : filteredData.length === 0 ? (
+          <div className="py-12 text-center text-gray-500">No powers match your search.</div>
+        ) : (
+          filteredData.map(power => (
+            <GridListRow
               key={power.id}
               id={power.id}
               name={power.name}
               description={power.description}
-              type="power"
-              stats={power.stats}
-              parts={power.parts}
-              partsLabel="Parts & Proficiencies"
-              totalTP={power.totalTP}
-              damage={power.damage}
-              showActions
-              onEdit={() => window.location.href = `/power-creator?edit=${power.id}`}
+              gridColumns={POWER_GRID_COLUMNS}
+              columns={[
+                { key: 'Energy', value: power.energy, highlight: true },
+                { key: 'Action', value: power.action },
+                { key: 'Duration', value: power.duration },
+                { key: 'Range', value: power.range },
+                { key: 'Area', value: power.area },
+                { key: 'Damage', value: power.damage },
+              ]}
+              chips={power.parts}
+              chipsLabel="Parts & Proficiencies"
+              totalCost={power.tp}
+              costLabel="TP"
+              onEdit={() => { window.location.href = `/power-creator?edit=${power.id}`; }}
               onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-              onDuplicate={() => window.location.href = `/power-creator?copy=${power.id}`}
+              onDuplicate={() => { window.location.href = `/power-creator?copy=${power.id}`; }}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
 
 // =============================================================================
-// Techniques Tab
+// Techniques Tab - Grid-aligned rows matching vanilla site
 // =============================================================================
+
+// Technique header columns matching vanilla site
+const TECHNIQUE_COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'energy', label: 'Energy' },
+  { key: 'tp', label: 'TP' },
+  { key: 'action', label: 'Action' },
+  { key: 'weapon', label: 'Weapon' },
+  { key: 'damage', label: 'Damage' },
+];
 
 function TechniquesTab({ onDelete }: TabProps) {
   const { data: techniques, isLoading, error } = useUserTechniques();
@@ -371,13 +436,26 @@ function TechniquesTab({ onDelete }: TabProps) {
         partsDb
       );
       
-      const cardInfo = transformTechniqueToCardData(tech.docId, display);
+      const damageStr = formatTechniqueDamage(tech.damage);
+      
+      // Transform parts to ChipData format
+      const parts: ChipData[] = display.partChips.map(chip => ({
+        name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
+        description: chip.description,
+        cost: chip.finalTP,
+        costLabel: 'TP',
+      }));
       
       return {
-        ...cardInfo,
+        id: tech.docId,
+        name: display.name,
+        description: display.description,
         energy: display.energy,
         tp: display.tp,
-        weaponName: display.weaponName,
+        action: display.actionType,
+        weapon: display.weaponName || '-',
+        damage: damageStr,
+        parts,
       };
     });
   }, [techniques, partsDb]);
@@ -390,14 +468,21 @@ function TechniquesTab({ onDelete }: TabProps) {
       result = result.filter(t => 
         t.name.toLowerCase().includes(searchLower) ||
         t.description.toLowerCase().includes(searchLower) ||
-        t.weaponName.toLowerCase().includes(searchLower)
+        t.weapon.toLowerCase().includes(searchLower)
       );
     }
     
     result = [...result].sort((a, b) => {
-      if (sortState.col === 'name') return sortState.dir * a.name.localeCompare(b.name);
-      if (sortState.col === 'energy') return sortState.dir * (a.energy - b.energy);
-      if (sortState.col === 'tp') return sortState.dir * (a.tp - b.tp);
+      const col = sortState.col;
+      const aVal = a[col as keyof typeof a];
+      const bVal = b[col as keyof typeof b];
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortState.dir * (aVal - bVal);
+      }
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortState.dir * aVal.localeCompare(bVal);
+      }
       return 0;
     });
     
@@ -444,53 +529,76 @@ function TechniquesTab({ onDelete }: TabProps) {
         />
       </div>
       
-      {/* Results Count - Above headers to match Codex */}
+      {/* Results Count */}
       <ResultsCount count={filteredData.length} itemLabel="technique" isLoading={isLoading} />
       
-      <ColumnHeaders
-        columns={[
-          { key: 'name', label: 'Name', width: '2fr' },
-          { key: 'energy', label: 'Energy', width: '1fr' },
-          { key: 'tp', label: 'TP', width: '1fr' },
-        ]}
-        sortState={sortState}
-        onSort={handleSort}
-        className="grid-cols-3"
-      />
+      {/* Column Headers - Grid aligned */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700"
+        style={{ gridTemplateColumns: TECHNIQUE_GRID_COLUMNS }}
+      >
+        {TECHNIQUE_COLUMNS.map(col => (
+          <SortHeader
+            key={col.key}
+            label={col.label.toUpperCase()}
+            col={col.key}
+            sortState={sortState}
+            onSort={handleSort}
+          />
+        ))}
+        <div></div> {/* Expand icon column */}
+      </div>
       
-      {isLoading ? (
-        <LoadingSpinner />
-      ) : filteredData.length === 0 ? (
-        <div className="py-12 text-center text-gray-500">No techniques match your search.</div>
-      ) : (
-        <div className="space-y-3">
-          {filteredData.map(tech => (
-            <AbilityCard
+      {/* Technique List */}
+      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : filteredData.length === 0 ? (
+          <div className="py-12 text-center text-gray-500">No techniques match your search.</div>
+        ) : (
+          filteredData.map(tech => (
+            <GridListRow
               key={tech.id}
               id={tech.id}
               name={tech.name}
               description={tech.description}
-              type="technique"
-              stats={tech.stats}
-              parts={tech.parts}
-              partsLabel="Parts & Proficiencies"
-              totalTP={tech.totalTP}
-              damage={tech.damage}
-              showActions
-              onEdit={() => window.location.href = `/technique-creator?edit=${tech.id}`}
+              gridColumns={TECHNIQUE_GRID_COLUMNS}
+              columns={[
+                { key: 'Energy', value: tech.energy, highlight: true },
+                { key: 'TP', value: tech.tp },
+                { key: 'Action', value: tech.action },
+                { key: 'Weapon', value: tech.weapon },
+                { key: 'Damage', value: tech.damage },
+              ]}
+              chips={tech.parts}
+              chipsLabel="Parts & Proficiencies"
+              totalCost={tech.tp}
+              costLabel="TP"
+              onEdit={() => { window.location.href = `/technique-creator?edit=${tech.id}`; }}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() => window.location.href = `/technique-creator?copy=${tech.id}`}
+              onDuplicate={() => { window.location.href = `/technique-creator?copy=${tech.id}`; }}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
 
 // =============================================================================
-// Items Tab - Using AbilityCard with property chips
+// Items Tab - Grid-aligned rows matching vanilla site
 // =============================================================================
+
+// Armament header columns matching vanilla site
+const ARMAMENT_COLUMNS = [
+  { key: 'name', label: 'Name' },
+  { key: 'type', label: 'Type' },
+  { key: 'rarity', label: 'Rarity' },
+  { key: 'currency', label: 'Currency' },
+  { key: 'tp', label: 'TP' },
+  { key: 'range', label: 'Range' },
+  { key: 'damage', label: 'Damage' },
+];
 
 // Helper to format damage from various formats (string or object)
 function formatDamageValue(damage: unknown): string {
@@ -529,13 +637,20 @@ function ItemsTab({ onDelete }: TabProps) {
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
-  // Transform items to AbilityCard format with property chips
+  // Transform items to display format with property chips
   const cardData = useMemo(() => {
     if (!items) return [];
     
     return items.map(item => {
-      // Build properties with full data from the database
-      const properties = (item.properties || []).map(prop => {
+      // Calculate item costs for currency and rarity
+      const costs = calculateItemCosts(item.properties || [], propertiesDb);
+      const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
+      
+      // Format range from properties
+      const rangeStr = formatItemRange(item.properties || []);
+      
+      // Build property chips from the database
+      const parts: ChipData[] = (item.properties || []).map(prop => {
         const propId = typeof prop === 'string' ? null : prop.id;
         const propName = typeof prop === 'string' ? prop : prop.name || '';
         const optLevel = typeof prop === 'string' ? 1 : prop.op_1_lvl || 1;
@@ -543,42 +658,44 @@ function ItemsTab({ onDelete }: TabProps) {
         // Find property in database
         const dbProp = propId 
           ? propertiesDb.find(p => String(p.id) === String(propId))
-          : propertiesDb.find(p => p.name.toLowerCase() === propName.toLowerCase());
+          : propertiesDb.find(p => p.name?.toLowerCase() === propName.toLowerCase());
         
-        const tpCost = dbProp?.base_tp ?? dbProp?.tp_cost ?? 0;
+        const baseTp = dbProp?.base_tp ?? dbProp?.tp_cost ?? 0;
         
         return {
-          id: propId || propName,
           name: dbProp?.name || propName,
           description: dbProp?.description || '',
-          tpCost: tpCost * optLevel,
-          optionLevels: { opt1: optLevel > 1 ? optLevel : undefined },
+          cost: baseTp * optLevel,
+          costLabel: 'TP',
+          level: optLevel > 1 ? optLevel : undefined,
         };
       });
       
       // Calculate total TP
-      const totalTP = properties.reduce((sum, p) => sum + (p.tpCost || 0), 0);
+      const totalTP = parts.reduce((sum, p) => sum + (p.cost || 0), 0);
       
       // Determine item type label
       const typeLabel = item.type === 'weapon' ? 'Weapon' 
         : item.type === 'armor' ? 'Armor' 
-        : 'Equipment';
+        : item.armamentType || 'Equipment';
       
       // Format damage (handle both string and object formats)
-      const formattedDamage = formatDamageValue(item.damage);
+      const formattedDamage = item.damage 
+        ? formatItemDamage(Array.isArray(item.damage) ? item.damage : [item.damage])
+        : formatDamageValue(item.damage);
       
-      return transformArmamentToCardData(
-        item.docId,
-        item.name,
-        item.description || '',
-        properties,
-        {
-          damage: formattedDamage,
-          defense: item.armorValue,
-          type: typeLabel,
-        },
-        totalTP
-      );
+      return {
+        id: item.docId,
+        name: item.name,
+        description: item.description || '',
+        type: typeLabel,
+        rarity: rarity,
+        currency: Math.round(currencyCost),
+        tp: Math.round(totalTP),
+        range: rangeStr || '-',
+        damage: formattedDamage || '-',
+        parts,
+      };
     });
   }, [items, propertiesDb]);
   
@@ -595,8 +712,16 @@ function ItemsTab({ onDelete }: TabProps) {
     }
     
     result = [...result].sort((a, b) => {
-      if (sortState.col === 'name') return sortState.dir * a.name.localeCompare(b.name);
-      if (sortState.col === 'tp') return sortState.dir * (a.totalTP - b.totalTP);
+      const col = sortState.col;
+      const aVal = a[col as keyof typeof a];
+      const bVal = b[col as keyof typeof b];
+      
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortState.dir * (aVal - bVal);
+      }
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortState.dir * aVal.localeCompare(bVal);
+      }
       return 0;
     });
     
@@ -643,45 +768,59 @@ function ItemsTab({ onDelete }: TabProps) {
         />
       </div>
       
-      {/* Results Count - Above headers to match Codex */}
+      {/* Results Count */}
       <ResultsCount count={filteredData.length} itemLabel="armament" isLoading={isLoading} />
       
-      <ColumnHeaders
-        columns={[
-          { key: 'name', label: 'Name', width: '2fr' },
-          { key: 'tp', label: 'TP', width: '1fr' },
-        ]}
-        sortState={sortState}
-        onSort={handleSort}
-        className="grid-cols-2"
-      />
+      {/* Column Headers - Grid aligned */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700"
+        style={{ gridTemplateColumns: ARMAMENT_GRID_COLUMNS }}
+      >
+        {ARMAMENT_COLUMNS.map(col => (
+          <SortHeader
+            key={col.key}
+            label={col.label.toUpperCase()}
+            col={col.key}
+            sortState={sortState}
+            onSort={handleSort}
+          />
+        ))}
+        <div></div> {/* Expand icon column */}
+      </div>
       
-      {isLoading ? (
-        <LoadingSpinner />
-      ) : filteredData.length === 0 ? (
-        <div className="py-12 text-center text-gray-500">No armaments match your search.</div>
-      ) : (
-        <div className="space-y-3">
-          {filteredData.map(item => (
-            <AbilityCard
+      {/* Armament List */}
+      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : filteredData.length === 0 ? (
+          <div className="py-12 text-center text-gray-500">No armaments match your search.</div>
+        ) : (
+          filteredData.map(item => (
+            <GridListRow
               key={item.id}
               id={item.id}
               name={item.name}
               description={item.description}
-              type="armament"
-              stats={item.stats}
-              parts={item.parts}
-              partsLabel="Properties & Proficiencies"
-              totalTP={item.totalTP}
-              damage={item.damage}
-              showActions
-              onEdit={() => window.location.href = `/item-creator?edit=${item.id}`}
+              gridColumns={ARMAMENT_GRID_COLUMNS}
+              columns={[
+                { key: 'Type', value: item.type },
+                { key: 'Rarity', value: item.rarity },
+                { key: 'Currency', value: item.currency },
+                { key: 'TP', value: item.tp, highlight: true },
+                { key: 'Range', value: item.range },
+                { key: 'Damage', value: item.damage },
+              ]}
+              chips={item.parts}
+              chipsLabel="Properties & Proficiencies"
+              totalCost={item.tp}
+              costLabel="TP"
+              onEdit={() => { window.location.href = `/item-creator?edit=${item.id}`; }}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-              onDuplicate={() => window.location.href = `/item-creator?copy=${item.id}`}
+              onDuplicate={() => { window.location.href = `/item-creator?copy=${item.id}`; }}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }

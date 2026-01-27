@@ -9,9 +9,16 @@ export { ItemCard } from './item-card';
 export { ItemList } from './item-list';
 export { ItemSelectionModal } from './item-selection-modal';
 
-// Ability display components (powers, techniques, armaments)
-export { AbilityCard } from './ability-card';
-export type { PartChip, AbilityStat, AbilityCardProps } from './ability-card';
+// ============================================================================
+// GridListRow - UNIFIED expandable list row component
+// ============================================================================
+// Use this for ALL expandable list rows across the site:
+// - Library page (powers, techniques, armaments)
+// - Codex page (feats, skills, species, equipment, properties, parts)
+// - Character sheet modals (add feat, add power, add technique)
+// - Creator pages (part selection)
+export { GridListRow } from './grid-list-row';
+export type { ColumnValue, ChipData, GridListRowProps } from './grid-list-row';
 
 // Part/Property chip components (reusable across Library, Character Sheet, Codex)
 export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';

@@ -24,6 +24,8 @@ import {
   LoadingSpinner as LoadingState,
   ErrorDisplay as ErrorState,
   PropertyChipList,
+  GridListRow,
+  type ChipData,
 } from '@/components/shared';
 import { 
   useRTDBFeats, 
@@ -378,81 +380,70 @@ function FeatsTab() {
   );
 }
 
+// Grid columns for feats list
+const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
+
 function FeatCard({ feat }: { feat: Feat }) {
-  const [expanded, setExpanded] = useState(false);
+  // Build badges from feat type flags
+  const badges: Array<{ label: string; color: 'blue' | 'purple' | 'gray' }> = [];
+  if (feat.char_feat) badges.push({ label: 'Character Feat', color: 'blue' });
+  if (feat.state_feat) badges.push({ label: 'State Feat', color: 'purple' });
+  if (feat.category) badges.push({ label: feat.category, color: 'gray' });
+  
+  // Build tag chips
+  const tagChips = feat.tags?.map(tag => ({
+    name: tag,
+    category: 'tag' as const,
+  })) || [];
 
-  return (
-    <div className="bg-white">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-      >
-        <div className="font-medium text-gray-900">{feat.name}</div>
-        <div className="text-gray-600 text-sm lg:text-base">{feat.lvl_req || '-'}</div>
-        <div className="text-gray-600 text-sm lg:text-base hidden lg:block">{feat.category || '-'}</div>
-        <div className="text-gray-600 text-sm lg:text-base hidden lg:block">{feat.ability || '-'}</div>
-        <div className="text-gray-600 text-sm lg:text-base hidden lg:block">-</div>
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 text-sm lg:text-base">{feat.uses_per_rec || '-'}</span>
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
+  // Build requirements content
+  const requirementsContent = (
+    <div className="space-y-1 text-sm">
+      {feat.ability_req?.length > 0 && (
+        <div>
+          <span className="font-medium text-gray-700">Ability Requirements:</span>{' '}
+          <span className="text-gray-600">
+            {feat.ability_req.map((a, i) => {
+              const val = feat.abil_req_val?.[i];
+              return `${a}${typeof val === 'number' ? ` ${val}` : ''}`;
+            }).join(', ')}
+          </span>
         </div>
-      </button>
-      
-      {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
-          {feat.description && (
-            <p className="text-gray-700 mb-3">{feat.description}</p>
-          )}
-          
-          <div className="flex flex-wrap gap-2 mb-3">
-            {feat.char_feat && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">Character Feat</span>
-            )}
-            {feat.state_feat && (
-              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm">State Feat</span>
-            )}
-            {feat.category && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm">{feat.category}</span>
-            )}
-          </div>
-
-          {/* Requirements */}
-          <div className="space-y-1 text-sm">
-            {feat.ability_req?.length > 0 && (
-              <div>
-                <span className="font-medium text-gray-700">Ability Requirements:</span>{' '}
-                <span className="text-gray-600">
-                  {feat.ability_req.map((a, i) => {
-                    const val = feat.abil_req_val?.[i];
-                    return `${a}${typeof val === 'number' ? ` ${val}` : ''}`;
-                  }).join(', ')}
-                </span>
-              </div>
-            )}
-            {feat.skill_req?.length > 0 && (
-              <div>
-                <span className="font-medium text-gray-700">Skill Requirements:</span>{' '}
-                <span className="text-gray-600">
-                  {feat.skill_req.map((s, i) => {
-                    const val = feat.skill_req_val?.[i];
-                    return `${s}${typeof val === 'number' ? ` ${val}` : ''}`;
-                  }).join(', ')}
-                </span>
-              </div>
-            )}
-            {feat.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {feat.tags.map(tag => (
-                  <span key={tag} className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+      )}
+      {feat.skill_req?.length > 0 && (
+        <div>
+          <span className="font-medium text-gray-700">Skill Requirements:</span>{' '}
+          <span className="text-gray-600">
+            {feat.skill_req.map((s, i) => {
+              const val = feat.skill_req_val?.[i];
+              return `${s}${typeof val === 'number' ? ` ${val}` : ''}`;
+            }).join(', ')}
+          </span>
         </div>
       )}
     </div>
+  );
+
+  const hasRequirements = (feat.ability_req?.length ?? 0) > 0 || (feat.skill_req?.length ?? 0) > 0;
+
+  return (
+    <GridListRow
+      id={feat.id}
+      name={feat.name}
+      description={feat.description}
+      gridColumns={FEAT_GRID_COLUMNS}
+      columns={[
+        { key: 'Req. Level', value: feat.lvl_req || '-' },
+        { key: 'Category', value: feat.category || '-' },
+        { key: 'Ability', value: feat.ability || '-' },
+        { key: 'Recovery', value: feat.rec_period || '-' },
+        { key: 'Uses', value: feat.uses_per_rec || '-' },
+      ]}
+      badges={badges}
+      chips={tagChips}
+      chipsLabel="Tags"
+      requirements={hasRequirements ? requirementsContent : undefined}
+    />
   );
 }
 
@@ -466,6 +457,7 @@ interface SkillFilters {
   baseSkill: string;
   subSkillMode: 'all' | 'only' | 'hide';
 }
+
 
 function SkillsTab() {
   const { data: skills, isLoading, error } = useRTDBSkills();
@@ -641,40 +633,39 @@ function SkillsTab() {
   );
 }
 
-function SkillCard({ skill }: { skill: Skill }) {
-  const [expanded, setExpanded] = useState(false);
-  const isSubSkill = Boolean(skill.base_skill);
+// Grid columns for skills list
+const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
 
-  return (
-    <div className="bg-white">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          {isSubSkill && <span className="text-xs text-gray-400">↳</span>}
-          <span className={cn('font-medium', isSubSkill ? 'text-gray-700' : 'text-gray-900')}>{skill.name}</span>
-        </div>
-        <div className="text-gray-600 capitalize">{skill.ability || '-'}</div>
-        <div className="hidden lg:flex items-center justify-between">
-          <span className={cn('text-gray-600', isSubSkill && 'text-primary-600')}>
-            {skill.base_skill || '-'}
-          </span>
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
-        </div>
-      </button>
-      
-      {expanded && skill.description && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
-          <p className="text-gray-700">{skill.description}</p>
-          {skill.base_skill && (
-            <p className="text-sm text-primary-600 mt-2">
-              Sub-skill of: <strong>{skill.base_skill}</strong>
-            </p>
-          )}
-        </div>
+function SkillCard({ skill }: { skill: Skill }) {
+  const isSubSkill = Boolean(skill.base_skill);
+  
+  // Build custom expanded content for sub-skill info
+  const expandedContent = skill.description ? (
+    <div>
+      <p className="text-gray-700 text-sm mb-2 p-3 bg-gray-100 rounded-lg">{skill.description}</p>
+      {skill.base_skill && (
+        <p className="text-sm text-primary-600">
+          Sub-skill of: <strong>{skill.base_skill}</strong>
+        </p>
       )}
     </div>
+  ) : undefined;
+  
+  // Custom name display with sub-skill indicator
+  const displayName = isSubSkill ? `↳ ${skill.name}` : skill.name;
+
+  return (
+    <GridListRow
+      id={skill.id}
+      name={displayName}
+      description={!skill.description ? undefined : undefined} // Use expandedContent instead
+      gridColumns={SKILL_GRID_COLUMNS}
+      columns={[
+        { key: 'Ability', value: skill.ability || '-', highlight: false },
+        { key: 'Base Skill', value: skill.base_skill || '-', highlight: isSubSkill },
+      ]}
+      expandedContent={expandedContent}
+    />
   );
 }
 
@@ -1089,65 +1080,51 @@ function EquipmentTab() {
   );
 }
 
+// Grid columns for equipment list
+const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
+
 function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertiesDb?: ItemProperty[] }) {
-  const [expanded, setExpanded] = useState(false);
   const cost = item.currency ?? item.gold_cost ?? 0;
   
   // Enrich property strings with full data from RTDB
-  const enrichedProperties = useMemo(() => {
+  const propertyChips = useMemo(() => {
     if (!item.properties || item.properties.length === 0) return [];
     return item.properties.map(propName => {
       const match = propertiesDb.find(p => p.name.toLowerCase() === propName.toLowerCase());
-      return match ? { name: match.name, description: match.description } : { name: propName };
+      return { 
+        name: match?.name || propName, 
+        description: match?.description,
+        category: 'default' as const,
+      };
     });
   }, [item.properties, propertiesDb]);
 
-  return (
-    <div className="bg-white">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-      >
-        <div className="font-medium text-gray-900">{item.name}</div>
-        <div className="text-gray-600 capitalize hidden lg:block">{item.category || '-'}</div>
-        <div className="text-amber-600 font-medium hidden lg:block">{cost > 0 ? `${cost}c` : '-'}</div>
-        <div className="hidden lg:flex items-center justify-between">
-          <span className="text-purple-600 capitalize">{item.rarity || '-'}</span>
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} />
-        </div>
-        {/* Mobile view */}
-        <div className="lg:hidden flex items-center justify-end">
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} />
-        </div>
-      </button>
-      
-      {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
-          {item.description && (
-            <p className="text-gray-700 mb-2">{item.description}</p>
-          )}
-          
-          {/* Show details on mobile */}
-          <div className="lg:hidden grid grid-cols-2 gap-2 text-sm mb-3">
-            <div><span className="font-medium">Category:</span> {item.category || '-'}</div>
-            <div><span className="font-medium">Cost:</span> {cost > 0 ? `${cost}c` : '-'}</div>
-            <div><span className="font-medium">Rarity:</span> {item.rarity || '-'}</div>
-          </div>
-          
-          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-            {item.damage && <span><strong>Damage:</strong> {formatDamageDisplay(item.damage)}</span>}
-            {item.armor_value !== undefined && <span><strong>Armor:</strong> {item.armor_value}</span>}
-            {item.weight !== undefined && <span><strong>Weight:</strong> {item.weight} kg</span>}
-          </div>
-          
-          {enrichedProperties.length > 0 && (
-            <div className="mt-3">
-              <PropertyChipList properties={enrichedProperties} label="Properties" size="sm" />
-            </div>
-          )}
-        </div>
-      )}
+  // Build additional info for expanded view
+  const statsContent = (
+    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+      {item.damage && <span><strong>Damage:</strong> {formatDamageDisplay(item.damage)}</span>}
+      {item.armor_value !== undefined && <span><strong>Armor:</strong> {item.armor_value}</span>}
+      {item.weight !== undefined && <span><strong>Weight:</strong> {item.weight} kg</span>}
     </div>
+  );
+
+  const hasStats = item.damage || item.armor_value !== undefined || item.weight !== undefined;
+
+  return (
+    <GridListRow
+      id={item.id}
+      name={item.name}
+      description={item.description}
+      gridColumns={EQUIPMENT_GRID_COLUMNS}
+      columns={[
+        { key: 'Category', value: item.category || '-' },
+        { key: 'Cost', value: cost > 0 ? `${cost}c` : '-', highlight: true },
+        { key: 'Rarity', value: item.rarity || '-' },
+      ]}
+      chips={propertyChips}
+      chipsLabel="Properties"
+      requirements={hasStats ? statsContent : undefined}
+    />
   );
 }
 
@@ -1251,61 +1228,42 @@ function PropertiesTab() {
   );
 }
 
+// Grid columns for property list
+const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
+
 function PropertyCard({ property }: { property: ItemProperty }) {
-  const [expanded, setExpanded] = useState(false);
   const ip = property.base_ip ?? 0;
   const tp = property.base_tp ?? property.tp_cost ?? 0;
   const cost = property.base_c ?? property.gold_cost ?? 0;
 
-  return (
-    <div className="bg-white">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-      >
-        <div className="font-medium text-gray-900">{property.name}</div>
-        <div className="text-gray-600 capitalize hidden lg:block">{property.type || 'General'}</div>
-        <div className="text-blue-600 hidden lg:block">{ip > 0 ? ip : '-'}</div>
-        <div className="text-purple-600 hidden lg:block">{tp > 0 ? tp : '-'}</div>
-        <div className="hidden lg:flex items-center justify-between">
-          <span className="text-amber-600">{cost > 0 ? `×${cost}` : '-'}</span>
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} />
-        </div>
-        {/* Mobile view */}
-        <div className="lg:hidden flex items-center justify-end">
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} />
-        </div>
-      </button>
-      
-      {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
-          {property.description && (
-            <p className="text-gray-700 mb-3">{property.description}</p>
-          )}
-          
-          {/* Show costs on mobile */}
-          <div className="lg:hidden grid grid-cols-2 gap-2 text-sm mb-3">
-            <div><span className="font-medium">Type:</span> {property.type || 'General'}</div>
-            <div><span className="font-medium">Item Points:</span> {ip > 0 ? ip : '-'}</div>
-            <div><span className="font-medium">Training Points:</span> {tp > 0 ? tp : '-'}</div>
-            <div><span className="font-medium">Currency Multiplier:</span> {cost > 0 ? `×${cost}` : '-'}</div>
-          </div>
-          
-          {property.op_1_desc && (
-            <div className="mt-3 p-2 bg-gray-100 rounded text-sm">
-              <strong>Option:</strong> {property.op_1_desc}
-              {(property.op_1_ip !== undefined || property.op_1_tp !== undefined || property.op_1_c !== undefined) && (
-                <span className="text-gray-500 ml-2">
-                  ({property.op_1_ip !== undefined && property.op_1_ip !== 0 && `+${property.op_1_ip} IP`}
-                  {property.op_1_tp !== undefined && property.op_1_tp !== 0 && ` +${property.op_1_tp} TP`}
-                  {property.op_1_c !== undefined && property.op_1_c !== 0 && ` ×${property.op_1_c}`})
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+  // Build option info for expanded view if present
+  const optionContent = property.op_1_desc ? (
+    <div className="mt-3 p-2 bg-gray-100 rounded text-sm">
+      <strong>Option:</strong> {property.op_1_desc}
+      {(property.op_1_ip !== undefined || property.op_1_tp !== undefined || property.op_1_c !== undefined) && (
+        <span className="text-gray-500 ml-2">
+          ({property.op_1_ip !== undefined && property.op_1_ip !== 0 && `+${property.op_1_ip} IP`}
+          {property.op_1_tp !== undefined && property.op_1_tp !== 0 && ` +${property.op_1_tp} TP`}
+          {property.op_1_c !== undefined && property.op_1_c !== 0 && ` ×${property.op_1_c}`})
+        </span>
       )}
     </div>
+  ) : undefined;
+
+  return (
+    <GridListRow
+      id={property.id}
+      name={property.name}
+      description={property.description}
+      gridColumns={PROPERTY_GRID_COLUMNS}
+      columns={[
+        { key: 'Type', value: property.type || 'General' },
+        { key: 'IP', value: ip > 0 ? ip : '-', className: 'text-blue-600' },
+        { key: 'TP', value: tp > 0 ? tp : '-', className: 'text-purple-600' },
+        { key: 'Cost', value: cost > 0 ? `×${cost}` : '-', highlight: true },
+      ]}
+      expandedContent={optionContent}
+    />
   );
 }
 
@@ -1443,90 +1401,81 @@ function PartsTab() {
   );
 }
 
+// Grid columns for parts list
+const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+
+// Format energy cost - handle percentage parts
+function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {
+  if (en === undefined || en === 0) return '-';
+  if (isPercentage) {
+    // Convert multiplier to percentage (1.25 = "+25%", 0.875 = "-12.5%")
+    const percentChange = (en - 1) * 100;
+    const sign = percentChange >= 0 ? '+' : '';
+    return `${sign}${percentChange.toFixed(percentChange % 1 === 0 ? 0 : 1)}%`;
+  }
+  return String(en);
+}
+
 function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends (infer T)[] | undefined ? T : never }) {
-  const [expanded, setExpanded] = useState(false);
-  
-  // Format energy cost - handle percentage parts
-  const formatEnergyCost = (en: number | undefined, isPercentage: boolean | undefined): string => {
-    if (en === undefined || en === 0) return '-';
-    if (isPercentage) {
-      // Convert multiplier to percentage (1.25 = "+25%", 0.875 = "-12.5%")
-      const percentChange = (en - 1) * 100;
-      const sign = percentChange >= 0 ? '+' : '';
-      return `${sign}${percentChange.toFixed(percentChange % 1 === 0 ? 0 : 1)}%`;
-    }
-    return String(en);
-  };
+  // Build badges array
+  const badges: Array<{ text: string; color: 'amber' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink' | 'default' }> = [];
+  if (part.mechanic) badges.push({ text: 'Mechanic', color: 'orange' });
 
-  return (
-    <div className="bg-white">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-      >
-        <div className="font-medium text-gray-900 flex items-center gap-2">
-          {part.name}
-          {part.mechanic && (
-            <span className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs">Mechanic</span>
-          )}
-        </div>
-        <div className="text-gray-600">{part.category || '-'}</div>
-        <div className="text-blue-600 hidden lg:block">{formatEnergyCost(part.base_en, part.percentage)}</div>
-        <div className="hidden lg:flex items-center justify-between">
-          <span className="text-purple-600">{part.base_tp ? part.base_tp : '-'}</span>
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform', expanded && 'rotate-180')} />
-        </div>
-      </button>
-      
-      {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
-          {part.description && <p className="text-gray-700 mb-3">{part.description}</p>}
-          
-          {/* Show type as a chip in expanded view */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            <span className={cn(
-              'px-2 py-1 rounded text-sm',
-              part.type === 'power' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'
-            )}>
-              {part.type === 'power' ? 'Power' : 'Technique'}
-            </span>
-            {part.mechanic && (
-              <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-sm">Mechanic</span>
-            )}
-            {part.percentage && (
-              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">Percentage Cost</span>
-            )}
-          </div>
+  // Build chips for expanded view
+  const typeChips: ChipData[] = [
+    {
+      name: part.type === 'power' ? 'Power' : 'Technique',
+      category: part.type === 'power' ? 'archetype' : 'skill',
+    },
+  ];
+  if (part.mechanic) typeChips.push({ name: 'Mechanic', category: 'default' });
+  if (part.percentage) typeChips.push({ name: 'Percentage Cost', category: 'archetype' });
 
-          {(part.op_1_desc || part.op_2_desc || part.op_3_desc) && (
-            <div className="space-y-2 text-sm">
-              <div className="font-medium text-gray-700">Options:</div>
-              {part.op_1_desc && (
-                <div className="pl-4 text-gray-600">
-                  1. {part.op_1_desc} 
-                  {part.op_1_en !== undefined && part.op_1_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_1_en, part.percentage)})`}
-                  {part.op_1_tp !== undefined && part.op_1_tp !== 0 && ` (TP: ${part.op_1_tp})`}
-                </div>
-              )}
-              {part.op_2_desc && (
-                <div className="pl-4 text-gray-600">
-                  2. {part.op_2_desc}
-                  {part.op_2_en !== undefined && part.op_2_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_2_en, part.percentage)})`}
-                  {part.op_2_tp !== undefined && part.op_2_tp !== 0 && ` (TP: ${part.op_2_tp})`}
-                </div>
-              )}
-              {part.op_3_desc && (
-                <div className="pl-4 text-gray-600">
-                  3. {part.op_3_desc}
-                  {part.op_3_en !== undefined && part.op_3_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_3_en, part.percentage)})`}
-                  {part.op_3_tp !== undefined && part.op_3_tp !== 0 && ` (TP: ${part.op_3_tp})`}
-                </div>
-              )}
-            </div>
-          )}
+  // Build options content for expanded view
+  const hasOptions = part.op_1_desc || part.op_2_desc || part.op_3_desc;
+  const optionsContent = hasOptions ? (
+    <div className="space-y-2 text-sm mt-3">
+      <div className="font-medium text-gray-700">Options:</div>
+      {part.op_1_desc && (
+        <div className="pl-4 text-gray-600">
+          1. {part.op_1_desc} 
+          {part.op_1_en !== undefined && part.op_1_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_1_en, part.percentage)})`}
+          {part.op_1_tp !== undefined && part.op_1_tp !== 0 && ` (TP: ${part.op_1_tp})`}
+        </div>
+      )}
+      {part.op_2_desc && (
+        <div className="pl-4 text-gray-600">
+          2. {part.op_2_desc}
+          {part.op_2_en !== undefined && part.op_2_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_2_en, part.percentage)})`}
+          {part.op_2_tp !== undefined && part.op_2_tp !== 0 && ` (TP: ${part.op_2_tp})`}
+        </div>
+      )}
+      {part.op_3_desc && (
+        <div className="pl-4 text-gray-600">
+          3. {part.op_3_desc}
+          {part.op_3_en !== undefined && part.op_3_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_3_en, part.percentage)})`}
+          {part.op_3_tp !== undefined && part.op_3_tp !== 0 && ` (TP: ${part.op_3_tp})`}
         </div>
       )}
     </div>
+  ) : undefined;
+
+  return (
+    <GridListRow
+      id={part.id}
+      name={part.name}
+      description={part.description}
+      gridColumns={PART_GRID_COLUMNS}
+      columns={[
+        { key: 'Category', value: part.category || '-' },
+        { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-blue-600' },
+        { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-purple-600' },
+      ]}
+      badges={badges}
+      chips={typeChips}
+      chipsLabel="Type"
+      expandedContent={optionsContent}
+    />
   );
 }
 

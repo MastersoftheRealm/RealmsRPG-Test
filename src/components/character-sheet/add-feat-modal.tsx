@@ -2,6 +2,7 @@
  * Add Feat Modal
  * ==============
  * Modal for adding archetype or character feats from RTDB
+ * Uses unified GridListRow component for consistent styling.
  */
 
 'use client';
@@ -10,7 +11,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { X, Search, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Search } from 'lucide-react';
+import { GridListRow } from '@/components/shared';
 import type { Character } from '@/types';
 
 interface Feat {
@@ -71,61 +73,31 @@ function FeatRow({
   meetsRequirements: boolean;
   requirementWarning?: string;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  // Build badges from category
+  const badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' }> = [];
+  if (feat.category) {
+    badges.push({ label: feat.category, color: 'gray' });
+  }
+
+  // Build columns for level requirement
+  const columns = feat.lvl_req && feat.lvl_req > 1
+    ? [{ key: 'Level', value: `${feat.lvl_req}+` }]
+    : [];
 
   return (
-    <div
-      className={cn(
-        'border rounded-lg overflow-hidden transition-all',
-        isSelected ? 'border-primary-500 bg-primary-50' : 'border-gray-200',
-        !meetsRequirements && 'opacity-50'
-      )}
-    >
-      <div className="flex items-center">
-        <button
-          onClick={onToggle}
-          disabled={!meetsRequirements}
-          className={cn(
-            'w-8 h-8 flex items-center justify-center border-r',
-            isSelected ? 'bg-primary-500 text-white' : 'bg-gray-50 text-gray-400',
-            !meetsRequirements && 'cursor-not-allowed'
-          )}
-        >
-          {isSelected ? '✓' : '+'}
-        </button>
-        
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-gray-50 text-left"
-        >
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-800">{feat.name}</span>
-            {feat.category && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
-                {feat.category}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {feat.lvl_req && feat.lvl_req > 1 && (
-              <span className="text-xs text-gray-500">Lvl {feat.lvl_req}+</span>
-            )}
-            {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-          </div>
-        </button>
-      </div>
-
-      {expanded && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100">
-          <p className="text-sm text-gray-600">
-            {feat.description || feat.effect || 'No description available.'}
-          </p>
-          {requirementWarning && (
-            <p className="text-xs text-amber-600 mt-2">⚠️ {requirementWarning}</p>
-          )}
-        </div>
-      )}
-    </div>
+    <GridListRow
+      id={feat.id}
+      name={feat.name}
+      description={feat.description || feat.effect || 'No description available.'}
+      columns={columns}
+      badges={badges}
+      selectable
+      isSelected={isSelected}
+      onSelect={onToggle}
+      disabled={!meetsRequirements}
+      warningMessage={requirementWarning}
+      compact
+    />
   );
 }
 

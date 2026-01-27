@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn, formatDamageDisplay } from '@/lib/utils';
-import { LoginPromptModal } from '@/components/shared';
+import { LoginPromptModal, GridListRow } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
@@ -289,44 +289,23 @@ function ExpandableChipList({
   color?: string;
   descriptions: Record<string, string>;
 }) {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  
   if (items.length === 0) return <p className="text-sm text-gray-400 italic">None</p>;
   
   return (
     <div className="flex flex-col gap-2">
       {items.map(item => {
-        const isExpanded = expanded[item];
         const description = descriptions[item];
         
         return (
-          <div key={item} className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className={cn('px-3 py-2 flex items-center justify-between', color)}>
-              <div className="flex items-center gap-2 flex-1">
-                {description && (
-                  <button
-                    onClick={() => setExpanded(prev => ({ ...prev, [item]: !prev[item] }))}
-                    className="text-gray-600 hover:text-gray-800 transition-transform"
-                    style={{ transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }}
-                  >
-                    ▶
-                  </button>
-                )}
-                <span className="font-medium">{item}</span>
-              </div>
-              <button 
-                onClick={() => onRemove(item)} 
-                className="text-gray-500 hover:text-red-500 ml-2"
-              >
-                ×
-              </button>
-            </div>
-            {isExpanded && description && (
-              <div className="px-3 py-2 bg-gray-50 text-sm text-gray-600 border-t border-gray-200">
-                {description}
-              </div>
-            )}
-          </div>
+          <GridListRow
+            key={item}
+            id={item}
+            name={item}
+            description={description}
+            onDelete={() => onRemove(item)}
+            compact
+            className={color}
+          />
         );
       })}
     </div>
