@@ -22,6 +22,14 @@ export interface Feat {
   benefits?: string[];
   level?: number; // Required level
   stackable?: boolean;
+  // Additional fields from database
+  ability?: string; // Associated ability
+  rec_period?: string; // Recovery period
+  uses_per_rec?: number; // Uses per recovery
+  lvl_req?: number; // Level requirement
+  ability_req?: string[]; // Ability requirements
+  skill_req?: string[]; // Skill requirements
+  tags?: string[]; // Tags/categories
 }
 
 /** Character's selected feat */

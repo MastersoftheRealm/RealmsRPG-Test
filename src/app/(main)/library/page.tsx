@@ -10,7 +10,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Wand2, Swords, Shield, Users, ChevronDown } from 'lucide-react';
+import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { 
@@ -19,6 +19,7 @@ import {
   DeleteConfirmModal,
   SearchInput,
   SortHeader,
+  ColumnHeaders,
   ResultsCount,
   ListContainer,
   LoadingSpinner,
@@ -436,7 +437,7 @@ function TechniquesTab({ onDelete }: TabProps) {
         partsDb
       );
       
-      const damageStr = formatTechniqueDamage(tech.damage);
+      const damageStr = formatTechniqueDamage(tech.damage?.[0]);
       
       // Transform parts to ChipData format
       const parts: ChipData[] = display.partChips.map(chip => ({
@@ -677,12 +678,10 @@ function ItemsTab({ onDelete }: TabProps) {
       // Determine item type label
       const typeLabel = item.type === 'weapon' ? 'Weapon' 
         : item.type === 'armor' ? 'Armor' 
-        : item.armamentType || 'Equipment';
+        : 'Equipment';
       
-      // Format damage (handle both string and object formats)
-      const formattedDamage = item.damage 
-        ? formatItemDamage(Array.isArray(item.damage) ? item.damage : [item.damage])
-        : formatDamageValue(item.damage);
+      // Format damage
+      const formattedDamage = formatDamageValue(item.damage);
       
       return {
         id: item.docId,

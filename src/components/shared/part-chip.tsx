@@ -4,9 +4,9 @@
  * Unified chip components for displaying parts (powers/techniques) and 
  * properties (items) with expandable descriptions and TP cost badges.
  * 
- * Used in: Library page, Character Sheet, Codex
+ * Used in: Library page (via GridListRow), Character Sheet, Codex (via GridListRow)
  * 
- * Pattern extracted from AbilityCard for reuse across the site.
+ * These components handle detailed part/property display with category-based styling.
  */
 
 'use client';

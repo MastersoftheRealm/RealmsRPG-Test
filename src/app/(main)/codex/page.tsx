@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import {
   ChipSelect,
@@ -1418,8 +1418,8 @@ function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefi
 
 function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends (infer T)[] | undefined ? T : never }) {
   // Build badges array
-  const badges: Array<{ text: string; color: 'amber' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink' | 'default' }> = [];
-  if (part.mechanic) badges.push({ text: 'Mechanic', color: 'orange' });
+  const badges: Array<{ label: string; color?: 'blue' | 'gray' | 'green' | 'purple' | 'red' | 'amber' }> = [];
+  if (part.mechanic) badges.push({ label: 'Mechanic', color: 'amber' });
 
   // Build chips for expanded view
   const typeChips: ChipData[] = [

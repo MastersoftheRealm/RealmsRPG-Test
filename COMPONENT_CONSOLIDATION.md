@@ -97,7 +97,7 @@ Track reusable components, identify duplications, and ensure consistent UI patte
    - `PropertyChipList` - Simplified variant for item properties
    
 2. ✅ Updated character sheet library-section to use PartChipList
-3. ⏳ TODO: Update AbilityCard to use new shared components (for consistency)
+3. ~~TODO: Update AbilityCard~~ - N/A (AbilityCard was removed as dead code)
 
 ### Phase 2: Enhance Character Sheet Cards ✅
 **Status:** COMPLETED (2025-01-20)
@@ -116,16 +116,14 @@ Track reusable components, identify duplications, and ensure consistent UI patte
 - ✅ Proficiencies Tab RTDB ✅ COMPLETED (2025-01-21) - String parts enriched with TP costs
 - ⏳ Requirements warnings (needs requirement checking logic)
 
-### Phase 3: Unify Card Components 🔄
-**Status:** DEFERRED (2025-01-21)
+### Phase 3: Unify Card Components ✅
+**Status:** COMPLETED (2025-01-27) - via GridListRow
 
 **Assessment:** After analyzing the existing card components:
-- Character sheet cards (PowerCard, TechniqueCard, ItemCard) are highly specialized with context-specific features
-- Shared AbilityCard serves Library and Codex pages well
-- Unifying would add complexity for minimal user benefit
-- Existing components have consistent styling and UX patterns
-
-**Decision:** Keep existing card implementations. Focus on shared chip components which ARE unified.
+- Character sheet cards (PowerCard, TechniqueCard, ItemCard) remain specialized for context-specific features
+- All list display rows now use unified `GridListRow` component
+- Codex, Library, and modal list rows share same visual patterns
+- ~~AbilityCard~~ was removed (never used)
 
 ### Phase 4: Codex Integration ✅
 **Status:** COMPLETED (2025-01-21)

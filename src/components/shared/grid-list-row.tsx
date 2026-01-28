@@ -33,6 +33,8 @@ export interface ColumnValue {
   value: string | number | ReactNode;
   /** Optional highlight styling (primary color) */
   highlight?: boolean;
+  /** Custom className for styling */
+  className?: string;
   /** Hide on mobile */
   hideOnMobile?: boolean;
 }
@@ -49,7 +51,7 @@ export interface ChipData {
   /** Optional level indicator */
   level?: number;
   /** Chip category for styling */
-  category?: 'default' | 'cost' | 'tag' | 'warning' | 'success';
+  category?: 'default' | 'cost' | 'tag' | 'warning' | 'success' | 'archetype' | 'skill';
 }
 
 export interface GridListRowProps {
@@ -129,6 +131,8 @@ const CHIP_STYLES = {
   tag: 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100',
   warning: 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100',
   success: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100',
+  archetype: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100',
+  skill: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
 };
 
 // =============================================================================
@@ -272,7 +276,8 @@ export function GridListRow({
               className={cn(
                 'text-sm truncate',
                 col.hideOnMobile !== false && 'hidden lg:block',
-                col.highlight ? 'text-primary-600 font-medium' : 'text-gray-600'
+                col.highlight ? 'text-primary-600 font-medium' : 'text-gray-600',
+                col.className
               )}
             >
               {col.value ?? '-'}
@@ -285,7 +290,7 @@ export function GridListRow({
               {columns.slice(0, 3).map((col) => (
                 <span key={col.key} className="whitespace-nowrap">
                   <span className="text-gray-400">{col.key}:</span>{' '}
-                  <span className={cn(col.highlight && 'text-primary-600 font-medium')}>
+                  <span className={cn(col.highlight && 'text-primary-600 font-medium', col.className)}>
                     {col.value ?? '-'}
                   </span>
                 </span>

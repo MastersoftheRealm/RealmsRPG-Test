@@ -237,52 +237,6 @@ export function ListContainer({
 }
 
 // =============================================================================
-// Expandable Card
-// =============================================================================
-
-export interface ExpandableCardProps {
-  /** Collapsed header content */
-  header: React.ReactNode;
-  /** Expanded content */
-  children: React.ReactNode;
-  /** Is currently expanded */
-  isExpanded: boolean;
-  /** Toggle expansion */
-  onToggle: () => void;
-  /** Additional className */
-  className?: string;
-}
-
-export function ExpandableCard({ 
-  header, 
-  children, 
-  isExpanded, 
-  onToggle,
-  className,
-}: ExpandableCardProps) {
-  return (
-    <div className={cn('bg-white', className)}>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-      >
-        {header}
-        {isExpanded 
-          ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> 
-          : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-        }
-      </button>
-      
-      {isExpanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// =============================================================================
 // Empty State
 // =============================================================================
 

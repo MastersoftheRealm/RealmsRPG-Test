@@ -120,6 +120,7 @@ export interface Feat {
   skill_req: string[];
   skill_req_val: number[];
   lvl_req: number;
+  rec_period?: string;
   uses_per_rec: number;
   mart_abil_req?: string;
   char_feat: boolean;
