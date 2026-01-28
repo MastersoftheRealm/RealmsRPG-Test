@@ -27,6 +27,7 @@ import {
   GridListRow,
   type ChipData,
 } from '@/components/shared';
+import { PageContainer, PageHeader, TabNavigation, Spinner } from '@/components/ui';
 import { 
   useRTDBFeats, 
   useRTDBSkills, 
@@ -57,36 +58,28 @@ const TABS: { id: TabId; label: string; labelMobile?: string }[] = [
 export default function CodexPage() {
   const [activeTab, setActiveTab] = useState<TabId>('feats');
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Codex</h1>
-        <p className="text-gray-600">
-          Complete reference for the Realms RPG system.
-        </p>
-      </div>
+  const tabs = TABS.map(tab => ({
+    id: tab.id,
+    label: tab.label,
+    labelMobile: tab.labelMobile,
+  }));
 
-      {/* Tab Navigation - Matches vanilla site */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex gap-1 overflow-x-auto">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                activeTab === tab.id
-                  ? 'border-primary-600 text-primary-600 bg-primary-50'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              )}
-            >
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.labelMobile || tab.label}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
+  return (
+    <PageContainer size="xl">
+      {/* Header */}
+      <PageHeader
+        title="Codex"
+        description="Complete reference for the Realms RPG system."
+      />
+
+      {/* Tab Navigation */}
+      <TabNavigation
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+        variant="underline"
+        className="mb-6"
+      />
 
       {/* Tab Content */}
       {activeTab === 'feats' && <FeatsTab />}
@@ -95,7 +88,7 @@ export default function CodexPage() {
       {activeTab === 'equipment' && <EquipmentTab />}
       {activeTab === 'properties' && <PropertiesTab />}
       {activeTab === 'parts' && <PartsTab />}
-    </div>
+    </PageContainer>
   );
 }
 
@@ -258,7 +251,7 @@ function FeatsTab() {
           {/* Required Level */}
           {/* Required Level - Input filter */}
           <div className="filter-group">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               Max Required Level
             </label>
             <input
@@ -270,9 +263,9 @@ function FeatsTab() {
                 maxLevel: e.target.value ? parseInt(e.target.value) : null 
               }))}
               placeholder="No limit"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-border rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
-            <p className="text-xs text-gray-500 mt-1">Hide feats requiring higher levels</p>
+            <p className="text-xs text-text-muted mt-1">Hide feats requiring higher levels</p>
           </div>
 
           {/* Ability/Defense Requirement */}
@@ -350,12 +343,12 @@ function FeatsTab() {
       </FilterSection>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-500 mb-4">
+      <div className="text-sm text-text-muted mb-4">
         {isLoading ? 'Loading...' : `${filteredFeats.length} feats found`}
       </div>
 
       {/* Column Headers */}
-      <div className="hidden lg:grid grid-cols-6 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
+      <div className="hidden lg:grid grid-cols-6 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="REQ. LEVEL" col="lvl_req" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
@@ -365,11 +358,11 @@ function FeatsTab() {
       </div>
 
       {/* Feat List */}
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingState />
         ) : filteredFeats.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No feats match your filters.</div>
+          <div className="p-8 text-center text-text-muted">No feats match your filters.</div>
         ) : (
           filteredFeats.map(feat => (
             <FeatCard key={feat.id} feat={feat} />
@@ -401,8 +394,8 @@ function FeatCard({ feat }: { feat: Feat }) {
     <div className="space-y-1 text-sm">
       {feat.ability_req?.length > 0 && (
         <div>
-          <span className="font-medium text-gray-700">Ability Requirements:</span>{' '}
-          <span className="text-gray-600">
+          <span className="font-medium text-text-secondary">Ability Requirements:</span>{' '}
+          <span className="text-text-muted">
             {feat.ability_req.map((a, i) => {
               const val = feat.abil_req_val?.[i];
               return `${a}${typeof val === 'number' ? ` ${val}` : ''}`;
@@ -412,8 +405,8 @@ function FeatCard({ feat }: { feat: Feat }) {
       )}
       {feat.skill_req?.length > 0 && (
         <div>
-          <span className="font-medium text-gray-700">Skill Requirements:</span>{' '}
-          <span className="text-gray-600">
+          <span className="font-medium text-text-secondary">Skill Requirements:</span>{' '}
+          <span className="text-text-muted">
             {feat.skill_req.map((s, i) => {
               const val = feat.skill_req_val?.[i];
               return `${s}${typeof val === 'number' ? ` ${val}` : ''}`;
@@ -606,23 +599,23 @@ function SkillsTab() {
       </FilterSection>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-500 mb-4">
+      <div className="text-sm text-text-muted mb-4">
         {isLoading ? 'Loading...' : `${filteredSkills.length} skills found`}
       </div>
 
       {/* Column Headers */}
-      <div className="hidden lg:grid grid-cols-3 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
+      <div className="hidden lg:grid grid-cols-3 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
         <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
       </div>
 
       {/* Skill List */}
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingState />
         ) : filteredSkills.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No skills match your filters.</div>
+          <div className="p-8 text-center text-text-muted">No skills match your filters.</div>
         ) : (
           filteredSkills.map(skill => (
             <SkillCard key={skill.id} skill={skill} />
@@ -642,7 +635,7 @@ function SkillCard({ skill }: { skill: Skill }) {
   // Build custom expanded content for sub-skill info
   const expandedContent = skill.description ? (
     <div>
-      <p className="text-gray-700 text-sm mb-2 p-3 bg-gray-100 rounded-lg">{skill.description}</p>
+      <p className="text-text-secondary text-sm mb-2 p-3 bg-surface-alt rounded-lg">{skill.description}</p>
       {skill.base_skill && (
         <p className="text-sm text-primary-600">
           Sub-skill of: <strong>{skill.base_skill}</strong>
@@ -797,22 +790,22 @@ function SpeciesTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-gray-500 mb-4">
+      <div className="text-sm text-text-muted mb-4">
         {isLoading ? 'Loading...' : `${filteredSpecies.length} species found`}
       </div>
 
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
+      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
         <SortHeader label="SIZES" col="sizes" sortState={sortState} onSort={handleSort} />
         <div>DESCRIPTION</div>
       </div>
 
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingState />
         ) : filteredSpecies.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No species match your filters.</div>
+          <div className="p-8 text-center text-text-muted">No species match your filters.</div>
         ) : (
           filteredSpecies.map(s => (
             <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} />
@@ -845,24 +838,24 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
   );
 
   return (
-    <div className="bg-white">
+    <div className="bg-surface">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+        className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-surface-alt transition-colors"
       >
-        <div className="font-medium text-gray-900">{species.name}</div>
-        <div className="text-gray-600">{species.type || '-'}</div>
-        <div className="text-gray-600 hidden lg:block">{species.sizes?.join(', ') || '-'}</div>
+        <div className="font-medium text-text-primary">{species.name}</div>
+        <div className="text-text-secondary">{species.type || '-'}</div>
+        <div className="text-text-secondary hidden lg:block">{species.sizes?.join(', ') || '-'}</div>
         <div className="hidden lg:flex items-center justify-between">
-          <span className="text-gray-600 truncate">{species.description?.substring(0, 50)}...</span>
-          <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform flex-shrink-0', expanded && 'rotate-180')} />
+          <span className="text-text-secondary truncate">{species.description?.substring(0, 50)}...</span>
+          <ChevronDown className={cn('w-4 h-4 text-text-muted transition-transform flex-shrink-0', expanded && 'rotate-180')} />
         </div>
       </button>
       
       {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50 space-y-4">
+        <div className="px-4 pb-4 pt-2 border-t border-border bg-surface-alt space-y-4">
           {species.description && (
-            <p className="text-gray-700">{species.description}</p>
+            <p className="text-text-secondary">{species.description}</p>
           )}
           
           {/* Stats Section - unified format including skills */}
@@ -883,13 +876,13 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
 
           {speciesTraits.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">Species Traits</h4>
+              <h4 className="font-medium text-text-primary mb-2">Species Traits</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {speciesTraits.map(trait => (
-                  <div key={trait.id} className="p-2 bg-blue-50 border border-blue-200 rounded">
-                    <span className="font-medium text-blue-800">{trait.name}</span>
+                  <div key={trait.id} className="p-2 bg-info-50 border border-info-200 rounded">
+                    <span className="font-medium text-info-800">{trait.name}</span>
                     {trait.description && (
-                      <p className="text-sm text-blue-700 mt-1">{trait.description}</p>
+                      <p className="text-sm text-info-700 mt-1">{trait.description}</p>
                     )}
                   </div>
                 ))}
@@ -899,13 +892,13 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
 
           {ancestryTraits.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">Ancestry Traits</h4>
+              <h4 className="font-medium text-text-primary mb-2">Ancestry Traits</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {ancestryTraits.map(trait => (
-                  <div key={trait.id} className="p-2 bg-green-50 border border-green-200 rounded">
-                    <span className="font-medium text-green-800">{trait.name}</span>
+                  <div key={trait.id} className="p-2 bg-success-50 border border-success-200 rounded">
+                    <span className="font-medium text-success-800">{trait.name}</span>
                     {trait.description && (
-                      <p className="text-sm text-green-700 mt-1">{trait.description}</p>
+                      <p className="text-sm text-success-700 mt-1">{trait.description}</p>
                     )}
                   </div>
                 ))}
@@ -915,13 +908,13 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
 
           {flaws.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">Flaws</h4>
+              <h4 className="font-medium text-text-primary mb-2">Flaws</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {flaws.map(trait => (
-                  <div key={trait.id} className="p-2 bg-red-50 border border-red-200 rounded">
-                    <span className="font-medium text-red-800">{trait.name}</span>
+                  <div key={trait.id} className="p-2 bg-danger-50 border border-danger-200 rounded">
+                    <span className="font-medium text-danger-800">{trait.name}</span>
                     {trait.description && (
-                      <p className="text-sm text-red-700 mt-1">{trait.description}</p>
+                      <p className="text-sm text-danger-700 mt-1">{trait.description}</p>
                     )}
                   </div>
                 ))}
@@ -931,7 +924,7 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
 
           {characteristics.length > 0 && (
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">Characteristics</h4>
+              <h4 className="font-medium text-text-primary mb-2">Characteristics</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {characteristics.map(trait => (
                   <div key={trait.id} className="p-2 bg-purple-50 border border-purple-200 rounded">
@@ -1053,23 +1046,23 @@ function EquipmentTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-gray-500 mb-4">
+      <div className="text-sm text-text-muted mb-4">
         {isLoading ? 'Loading...' : `${filteredEquipment.length} items found`}
       </div>
 
       {/* Header Row - Matching style of other tabs */}
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
+      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <SortHeader label="COST" col="cost" sortState={sortState} onSort={handleSort} />
         <SortHeader label="RARITY" col="rarity" sortState={sortState} onSort={handleSort} />
       </div>
         
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingState />
         ) : filteredEquipment.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No equipment found.</div>
+          <div className="p-8 text-center text-text-muted">No equipment found.</div>
         ) : (
           filteredEquipment.map(item => (
             <EquipmentCard key={item.id} item={item as Equipment} propertiesDb={propertiesDb} />
@@ -1101,7 +1094,7 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
 
   // Build additional info for expanded view
   const statsContent = (
-    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+    <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
       {item.damage && <span><strong>Damage:</strong> {formatDamageDisplay(item.damage)}</span>}
       {item.armor_value !== undefined && <span><strong>Armor:</strong> {item.armor_value}</span>}
       {item.weight !== undefined && <span><strong>Weight:</strong> {item.weight} kg</span>}
@@ -1200,12 +1193,12 @@ function PropertiesTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-gray-500 mb-4">
+      <div className="text-sm text-text-muted mb-4">
         {isLoading ? 'Loading...' : `${filteredProperties.length} properties found`}
       </div>
 
       {/* Header Row - Matching style of other tabs */}
-      <div className="hidden lg:grid grid-cols-5 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
+      <div className="hidden lg:grid grid-cols-5 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ITEM POINTS" col="ip" sortState={sortState} onSort={handleSort} />
@@ -1213,11 +1206,11 @@ function PropertiesTab() {
         <SortHeader label="CURRENCY MULTIPLIER" col="cost" sortState={sortState} onSort={handleSort} />
       </div>
         
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingState />
         ) : filteredProperties.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No properties found.</div>
+          <div className="p-8 text-center text-text-muted">No properties found.</div>
         ) : (
           filteredProperties.map(prop => (
             <PropertyCard key={prop.id} property={prop} />
@@ -1238,10 +1231,10 @@ function PropertyCard({ property }: { property: ItemProperty }) {
 
   // Build option info for expanded view if present
   const optionContent = property.op_1_desc ? (
-    <div className="mt-3 p-2 bg-gray-100 rounded text-sm">
+    <div className="mt-3 p-2 bg-surface-alt rounded text-sm">
       <strong>Option:</strong> {property.op_1_desc}
       {(property.op_1_ip !== undefined || property.op_1_tp !== undefined || property.op_1_c !== undefined) && (
-        <span className="text-gray-500 ml-2">
+        <span className="text-text-muted ml-2">
           ({property.op_1_ip !== undefined && property.op_1_ip !== 0 && `+${property.op_1_ip} IP`}
           {property.op_1_tp !== undefined && property.op_1_tp !== 0 && ` +${property.op_1_tp} TP`}
           {property.op_1_c !== undefined && property.op_1_c !== 0 && ` ×${property.op_1_c}`})
@@ -1375,22 +1368,22 @@ function PartsTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-gray-500 mb-4">
+      <div className="text-sm text-text-muted mb-4">
         {isLoading ? 'Loading...' : `${filteredParts.length} parts found`}
       </div>
 
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700">
+      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <div>ENERGY</div>
         <div>TRAINING POINTS</div>
       </div>
 
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingState />
         ) : filteredParts.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">No parts found.</div>
+          <div className="p-8 text-center text-text-muted">No parts found.</div>
         ) : (
           filteredParts.map(part => (
             <PartCard key={part.id} part={part} />
@@ -1435,23 +1428,23 @@ function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends 
   const hasOptions = part.op_1_desc || part.op_2_desc || part.op_3_desc;
   const optionsContent = hasOptions ? (
     <div className="space-y-2 text-sm mt-3">
-      <div className="font-medium text-gray-700">Options:</div>
+      <div className="font-medium text-text-secondary">Options:</div>
       {part.op_1_desc && (
-        <div className="pl-4 text-gray-600">
+        <div className="pl-4 text-text-muted">
           1. {part.op_1_desc} 
           {part.op_1_en !== undefined && part.op_1_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_1_en, part.percentage)})`}
           {part.op_1_tp !== undefined && part.op_1_tp !== 0 && ` (TP: ${part.op_1_tp})`}
         </div>
       )}
       {part.op_2_desc && (
-        <div className="pl-4 text-gray-600">
+        <div className="pl-4 text-text-muted">
           2. {part.op_2_desc}
           {part.op_2_en !== undefined && part.op_2_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_2_en, part.percentage)})`}
           {part.op_2_tp !== undefined && part.op_2_tp !== 0 && ` (TP: ${part.op_2_tp})`}
         </div>
       )}
       {part.op_3_desc && (
-        <div className="pl-4 text-gray-600">
+        <div className="pl-4 text-text-muted">
           3. {part.op_3_desc}
           {part.op_3_en !== undefined && part.op_3_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_3_en, part.percentage)})`}
           {part.op_3_tp !== undefined && part.op_3_tp !== 0 && ` (TP: ${part.op_3_tp})`}

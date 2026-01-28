@@ -113,26 +113,26 @@ export interface GridListRowProps {
 }
 
 // =============================================================================
-// Badge Color Map
+// Badge Color Map (using design tokens)
 // =============================================================================
 
 const BADGE_COLORS = {
-  blue: 'bg-blue-100 text-blue-800',
+  blue: 'bg-info-100 text-info-700',
   purple: 'bg-purple-100 text-purple-800',
-  green: 'bg-green-100 text-green-700',
+  green: 'bg-success-100 text-success-700',
   amber: 'bg-amber-100 text-amber-800',
-  gray: 'bg-gray-100 text-gray-700',
-  red: 'bg-red-100 text-red-700',
+  gray: 'bg-neutral-100 text-neutral-700',
+  red: 'bg-danger-100 text-danger-700',
 };
 
 const CHIP_STYLES = {
   default: 'bg-primary-50 border-primary-200 text-primary-700 hover:bg-primary-100',
   cost: 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100',
-  tag: 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100',
-  warning: 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100',
-  success: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100',
+  tag: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
+  warning: 'bg-danger-50 border-danger-200 text-danger-700 hover:bg-danger-100',
+  success: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
   archetype: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100',
-  skill: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
+  skill: 'bg-info-50 border-info-200 text-info-700 hover:bg-info-100',
 };
 
 // =============================================================================
@@ -198,7 +198,7 @@ export function GridListRow({
 
   // Determine row styling based on state
   const rowStyles = cn(
-    'bg-white transition-all',
+    'bg-surface transition-all',
     isSelected && 'bg-primary-50 border-l-4 border-l-primary-500',
     disabled && 'opacity-50',
     className
@@ -224,7 +224,7 @@ export function GridListRow({
               'w-10 flex-shrink-0 flex items-center justify-center border-r transition-colors',
               isSelected 
                 ? 'bg-primary-500 text-white' 
-                : 'bg-gray-50 text-gray-400 hover:bg-gray-100',
+                : 'bg-surface-alt text-text-muted hover:bg-neutral-100',
               disabled && 'cursor-not-allowed'
             )}
             aria-label={isSelected ? 'Deselect' : 'Select'}
@@ -239,7 +239,7 @@ export function GridListRow({
           disabled={disabled && !showExpander}
           className={cn(
             'flex-1 text-left transition-colors',
-            showExpander && 'hover:bg-gray-50',
+            showExpander && 'hover:bg-surface-alt',
             compact ? 'px-3 py-2' : 'px-4 py-3',
             disabled && 'cursor-default'
           )}
@@ -247,7 +247,7 @@ export function GridListRow({
         >
           {/* Name column */}
           <div className={cn(
-            'font-medium text-gray-900 truncate',
+            'font-medium text-text-primary truncate',
             useFlex && 'flex-1'
           )}>
             {name}
@@ -276,7 +276,7 @@ export function GridListRow({
               className={cn(
                 'text-sm truncate',
                 col.hideOnMobile !== false && 'hidden lg:block',
-                col.highlight ? 'text-primary-600 font-medium' : 'text-gray-600',
+                col.highlight ? 'text-primary-600 font-medium' : 'text-text-secondary',
                 col.className
               )}
             >
@@ -286,10 +286,10 @@ export function GridListRow({
           
           {/* Flex mode: show key stats inline */}
           {useFlex && columns.length > 0 && (
-            <div className="hidden md:flex items-center gap-4 text-sm text-gray-600">
+            <div className="hidden md:flex items-center gap-4 text-sm text-text-secondary">
               {columns.slice(0, 3).map((col) => (
                 <span key={col.key} className="whitespace-nowrap">
-                  <span className="text-gray-400">{col.key}:</span>{' '}
+                  <span className="text-text-muted">{col.key}:</span>{' '}
                   <span className={cn(col.highlight && 'text-primary-600 font-medium', col.className)}>
                     {col.value ?? '-'}
                   </span>
@@ -300,7 +300,7 @@ export function GridListRow({
           
           {/* Warning indicator */}
           {warningMessage && (
-            <div className="flex items-center text-amber-500" title={warningMessage}>
+            <div className="flex items-center text-warning-500" title={warningMessage}>
               <AlertCircle className="w-4 h-4" />
             </div>
           )}
@@ -310,7 +310,7 @@ export function GridListRow({
             <div className={cn('flex items-center justify-end', useFlex && 'ml-2')}>
               <ChevronDown 
                 className={cn(
-                  'w-4 h-4 text-gray-400 transition-transform',
+                  'w-4 h-4 text-text-muted transition-transform',
                   isExpanded && 'rotate-180'
                 )} 
               />
@@ -321,11 +321,11 @@ export function GridListRow({
 
       {/* Mobile summary row (only when grid mode with columns) */}
       {gridColumns && columns.length > 0 && (
-        <div className="lg:hidden px-4 pb-2 flex flex-wrap gap-2 text-xs text-gray-600">
+        <div className="lg:hidden px-4 pb-2 flex flex-wrap gap-2 text-xs text-text-secondary">
           {columns.slice(0, 3).map((col) => (
             col.value && (
               <span key={col.key} className="flex items-center gap-1">
-                <span className="text-gray-400">{col.key}:</span>
+                <span className="text-text-muted">{col.key}:</span>
                 <span className={cn(col.highlight && 'text-primary-600 font-medium')}>
                   {col.value}
                 </span>
@@ -338,7 +338,7 @@ export function GridListRow({
       {/* Expanded Content */}
       {isExpanded && hasDetails && (
         <div className={cn(
-          'border-t border-gray-100 bg-gray-50',
+          'border-t border-border bg-surface-alt',
           compact ? 'px-3 pb-3 pt-2' : 'px-4 pb-4 pt-2',
           selectable && 'ml-10' // Indent when selection button present
         )}>
@@ -349,14 +349,14 @@ export function GridListRow({
             <>
               {/* Description */}
               {description && (
-                <p className="text-gray-700 text-sm mb-4 p-3 bg-gray-100 rounded-lg">
+                <p className="text-text-secondary text-sm mb-4 p-3 bg-surface rounded-lg">
                   {description}
                 </p>
               )}
               
               {/* Warning message */}
               {warningMessage && (
-                <p className="text-xs text-amber-600 mb-3 flex items-center gap-1">
+                <p className="text-xs text-warning-600 mb-3 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   {warningMessage}
                 </p>
@@ -384,8 +384,8 @@ export function GridListRow({
                 <div className="lg:hidden grid grid-cols-2 gap-2 mb-4 text-sm">
                   {columns.map((col) => (
                     <div key={col.key} className="flex items-center gap-2">
-                      <span className="text-gray-500 capitalize">{col.key}:</span>
-                      <span className={cn('font-medium text-gray-900', col.highlight && 'text-primary-600')}>
+                      <span className="text-text-muted capitalize">{col.key}:</span>
+                      <span className={cn('font-medium text-text-primary', col.highlight && 'text-primary-600')}>
                         {col.value ?? '-'}
                       </span>
                     </div>
@@ -413,7 +413,7 @@ export function GridListRow({
               {/* Chips Section */}
               {chips.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                     {chipsLabel}
                   </h4>
 
@@ -452,9 +452,9 @@ export function GridListRow({
 
                   {/* Expanded Chip Details */}
                   {expandedChipIndex !== null && chips[expandedChipIndex] && (
-                    <div className="mt-2 p-3 rounded-lg bg-white border border-gray-200 shadow-sm">
+                    <div className="mt-2 p-3 rounded-lg bg-surface border border-border shadow-sm">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h5 className="font-semibold text-gray-900">{chips[expandedChipIndex].name}</h5>
+                        <h5 className="font-semibold text-text-primary">{chips[expandedChipIndex].name}</h5>
                         {(chips[expandedChipIndex].cost ?? 0) > 0 && (
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
                             <Zap className="w-3 h-3" />
@@ -463,7 +463,7 @@ export function GridListRow({
                         )}
                       </div>
                       {chips[expandedChipIndex].description && (
-                        <p className="text-sm text-gray-600">{chips[expandedChipIndex].description}</p>
+                        <p className="text-sm text-text-secondary">{chips[expandedChipIndex].description}</p>
                       )}
                     </div>
                   )}
@@ -472,11 +472,11 @@ export function GridListRow({
 
               {/* Action Buttons */}
               {showActions && (
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
                   {onEdit && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-secondary bg-surface border border-border hover:bg-surface-alt transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                       Edit
@@ -485,7 +485,7 @@ export function GridListRow({
                   {onDuplicate && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-secondary bg-surface border border-border hover:bg-surface-alt transition-colors"
                     >
                       <Copy className="w-4 h-4" />
                       Duplicate
@@ -494,7 +494,7 @@ export function GridListRow({
                   {onDelete && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 transition-colors"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-danger-600 bg-surface border border-danger-200 hover:bg-danger-50 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       Delete

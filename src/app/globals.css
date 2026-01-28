@@ -1,125 +1,452 @@
 ﻿@import "tailwindcss";
 
-/* RealmsRPG Design System - Tailwind v4 Theme */
+/* =============================================================================
+   RealmsRPG Design System - Unified Color Palette
+   Based on Figma Mockup + Best Practices
+   ============================================================================= */
+
 @theme {
-  /* Primary Color Scale (Blue) */
-  --color-primary-50: #e6f0f9;
-  --color-primary-100: #cce1f3;
-  --color-primary-200: #99c3e7;
-  --color-primary-300: #66a5db;
-  --color-primary-400: #3387cf;
-  --color-primary-500: #0a4a7a;
+  /* ---------------------------------------------------------------------------
+     PRIMARY COLORS (Deep Blue - Main Brand Color)
+     Figma reference: #053357 for buttons/primary actions
+     --------------------------------------------------------------------------- */
+  --color-primary-50: #e8f1f8;
+  --color-primary-100: #c5dbee;
+  --color-primary-200: #9ec3e3;
+  --color-primary-300: #77abd8;
+  --color-primary-400: #4f94cd;
+  --color-primary-500: #1a6aa8;
   --color-primary-600: #0a4a7a;
   --color-primary-700: #053357;
   --color-primary-800: #042845;
-  --color-primary-900: #001f3f;
+  --color-primary-900: #091d2d;
   
-  /* Legacy primary aliases */
-  --color-primary-darkest: #001f3f;
-  --color-primary-dark: #053357;
-  --color-primary: #0a4a7a;
-  --color-primary-light: #1a5c94;
-  --color-primary-lighter: #1a73e8;
-  --color-primary-accent: #4a9eff;
+  /* Primary semantic aliases */
+  --color-primary: #053357;
+  --color-primary-dark: #091d2d;
+  --color-primary-light: #1a6aa8;
+  --color-primary-accent: #4584b6;
+  --color-primary-foreground: #f9f9f9;
+  --color-on-primary: #f9f9f9;
+
+  /* ---------------------------------------------------------------------------
+     ACCENT / GOLD COLORS (Warm accent for highlights)
+     Figma reference: #C79956, #D99735
+     --------------------------------------------------------------------------- */
+  --color-accent-50: #fef8f0;
+  --color-accent-100: #fdf0dc;
+  --color-accent-200: #fbe3c0;
+  --color-accent-300: #f5d094;
+  --color-accent-400: #d99735;
+  --color-accent-500: #c79956;
+  --color-accent-600: #b3863c;
+  --color-accent-700: #8f6a2f;
+  --color-accent-800: #6b4f23;
+  --color-accent-900: #473517;
   
-  /* Accent Colors */
-  --color-accent-light: #e6f7ff;
-  --color-accent-medium: #b3e0ff;
-  --color-accent-chip: #d4edff;
-  --color-accent-dark: #0a4a7a;
+  /* Accent semantic aliases */
+  --color-accent-gold: #c79956;
+  --color-accent-bronze: #d99735;
+  --color-accent-chip: #fef8f0;
+  --color-accent-light: #fdf0dc;
+  --color-accent-medium: #f5d094;
+  --color-accent-dark: #b3863c;
+
+  /* ---------------------------------------------------------------------------
+     SECONDARY / UTILITY COLORS (Cool blue for utilities)
+     Figma reference: #4584B6, #407CB6, #86C0E8, #C3E8FB
+     --------------------------------------------------------------------------- */
+  --color-utility-50: #f0f7fc;
+  --color-utility-100: #c3e8fb;
+  --color-utility-200: #86c0e8;
+  --color-utility-300: #4584b6;
+  --color-utility-400: #407cb6;
+  --color-utility-500: #3a6d9e;
+  --color-utility-600: #2e5a82;
+  --color-utility-700: #224766;
+  --color-utility-800: #103457;
+  --color-utility-900: #0d2a45;
+
+  /* ---------------------------------------------------------------------------
+     NEUTRAL COLORS (Grays for text, borders, backgrounds)
+     Figma reference: #707070 borders, #5A5645 titles, #091D2D paragraph
+     --------------------------------------------------------------------------- */
+  --color-neutral-50: #f9f9f9;
+  --color-neutral-100: #f6f6f6;
+  --color-neutral-200: #dad9d9;
+  --color-neutral-300: #c5c5c5;
+  --color-neutral-400: #9b988a;
+  --color-neutral-500: #767568;
+  --color-neutral-600: #707070;
+  --color-neutral-700: #5a5645;
+  --color-neutral-800: #41464a;
+  --color-neutral-900: #302e33;
   
-  /* Status Colors */
-  --color-success: #28a745;
-  --color-success-hover: #218838;
-  --color-success-light: #d4edda;
+  /* Neutral semantic aliases */
+  --color-text-primary: #091d2d;
+  --color-text-secondary: #41464a;
+  --color-text-muted: #707070;
+  --color-text-on-dark: #f9f9f9;
+  --color-title: #5a5645;
+  --color-border: #707070;
+  --color-border-light: #dad9d9;
+  --color-divider: #707070;
+
+  /* ---------------------------------------------------------------------------
+     SURFACE / BACKGROUND COLORS
+     --------------------------------------------------------------------------- */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f9f9f9;
+  --color-surface-secondary: #f6f6f6;
+  --color-surface-dark: #302e33;
+  --color-background: #f6f6f6;
+  --color-card: #ffffff;
+  --color-card-foreground: #091d2d;
+
+  /* ---------------------------------------------------------------------------
+     STATUS COLORS (Success, Danger, Warning, Info)
+     Figma reference: Deep green #055745, Deep red #570705
+     --------------------------------------------------------------------------- */
+  /* Success */
+  --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-200: #a7f3d0;
+  --color-success-300: #6ee7b7;
+  --color-success-400: #34d399;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #055745;
+  --color-success-800: #064e3b;
+  --color-success-900: #053d2f;
   
-  --color-danger: #dc3545;
-  --color-danger-hover: #c82333;
-  --color-danger-dark: #a71d2a;
-  --color-danger-light: #f8d7da;
+  --color-success: #059669;
+  --color-success-hover: #055745;
+  --color-success-light: #d1fae5;
+  --color-success-dark: #055745;
+
+  /* Danger */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #570705;
   
-  --color-warning: #ffc107;
-  --color-warning-hover: #e0a800;
-  --color-warning-light: #fff3cd;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-danger-light: #fee2e2;
+  --color-danger-dark: #570705;
+
+  /* Warning */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
   
-  --color-info: #17a2b8;
-  --color-info-hover: #138496;
-  --color-info-light: #d1ecf1;
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-warning-light: #fef3c7;
+
+  /* Info */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
   
-  /* Fonts */
+  --color-info: #3b82f6;
+  --color-info-hover: #2563eb;
+  --color-info-light: #dbeafe;
+
+  /* ---------------------------------------------------------------------------
+     CATEGORY COLORS (For chips, badges, content types)
+     Consistent across all components
+     --------------------------------------------------------------------------- */
+  --color-category-action: #e7f0ff;
+  --color-category-action-text: #0b5ed7;
+  --color-category-action-border: #bcd4ff;
+  
+  --color-category-activation: #e6fffa;
+  --color-category-activation-text: #0f766e;
+  --color-category-activation-border: #b3f0e7;
+  
+  --color-category-area: #eafbe7;
+  --color-category-area-text: #166534;
+  --color-category-area-border: #c7efc1;
+  
+  --color-category-duration: #f3e8ff;
+  --color-category-duration-text: #6b21a8;
+  --color-category-duration-border: #e3d0ff;
+  
+  --color-category-target: #fff4e5;
+  --color-category-target-text: #9a3412;
+  --color-category-target-border: #ffd8a8;
+  
+  --color-category-special: #fffbe6;
+  --color-category-special-text: #854d0e;
+  --color-category-special-border: #ffe58f;
+  
+  --color-category-restriction: #ffe5e5;
+  --color-category-restriction-text: #b91c1c;
+  --color-category-restriction-border: #ffb3b3;
+
+  /* ---------------------------------------------------------------------------
+     TYPOGRAPHY
+     --------------------------------------------------------------------------- */
   --font-sans: "Nunito", system-ui, sans-serif;
   --font-display: "Nova Flat", system-ui, sans-serif;
   
-  /* Semantic colors for components */
-  --color-primary-foreground: #ffffff;
+  /* ---------------------------------------------------------------------------
+     SEMANTIC COMPONENT COLORS (Backwards compatibility)
+     --------------------------------------------------------------------------- */
   --color-muted: #f1f5f9;
   --color-muted-foreground: #64748b;
-  --color-destructive: #dc3545;
+  --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
-  --color-card: #ffffff;
-  --color-card-foreground: #333333;
-  --color-border: #dee2e6;
-  --color-on-primary: #ffffff;
 }
 
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
 @layer base {
   :root {
-    --background: #f8f9fa;
-    --foreground: #333333;
+    --background: #f6f6f6;
+    --foreground: #091d2d;
     --card-bg: #ffffff;
-    --border: #dee2e6;
-    --primary-foreground: #ffffff;
+    --border: #707070;
+    --border-light: #dad9d9;
+    --primary-foreground: #f9f9f9;
     --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-    --destructive: #dc3545;
+    --muted-foreground: #707070;
+    --destructive: #dc2626;
     --destructive-foreground: #ffffff;
   }
   
   body {
-    @apply bg-[var(--background)] text-[var(--foreground)] antialiased;
+    @apply bg-surface-secondary text-text-primary antialiased;
     font-family: var(--font-sans);
+  }
+  
+  /* Consistent heading styles */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-title font-semibold;
   }
 }
 
+/* =============================================================================
+   COMPONENT CLASSES - Unified Design System
+   ============================================================================= */
 @layer components {
+  /* ---------------------------------------------------------------------------
+     LAYOUT COMPONENTS
+     --------------------------------------------------------------------------- */
   .container-main {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
   }
   
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+  
+  .page-container-wide {
+    @apply max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24 py-8;
+  }
+  
+  .page-container-narrow {
+    @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  /* ---------------------------------------------------------------------------
+     PAGE HEADER COMPONENT
+     --------------------------------------------------------------------------- */
+  .page-header {
+    @apply mb-8;
+  }
+  
+  .page-header-title {
+    @apply text-3xl font-bold text-text-primary mb-2;
+  }
+  
+  .page-header-description {
+    @apply text-text-muted text-lg;
+  }
+
+  /* ---------------------------------------------------------------------------
+     BUTTON COMPONENTS - Unified styling with gradients
+     --------------------------------------------------------------------------- */
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-lg font-semibold 
-           bg-gradient-to-b from-primary-light to-primary text-white 
-           px-5 py-2.5 transition-all hover:shadow-lg 
+           bg-gradient-to-b from-primary-500 to-primary-700 text-primary-foreground 
+           px-5 py-2.5 transition-all 
+           hover:from-primary-400 hover:to-primary-600 hover:shadow-lg 
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
+           disabled:pointer-events-none disabled:opacity-50 disabled:from-neutral-400 disabled:to-neutral-500;
   }
   
   .btn-secondary {
     @apply inline-flex items-center justify-center rounded-lg font-semibold
-           bg-gray-200 text-gray-800 px-5 py-2.5 transition-all hover:bg-gray-300
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2
+           bg-neutral-200 text-text-secondary px-5 py-2.5 transition-all 
+           hover:bg-neutral-300 border border-neutral-300
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2
            disabled:pointer-events-none disabled:opacity-50;
   }
   
   .btn-danger {
     @apply inline-flex items-center justify-center rounded-lg font-semibold
-           bg-danger text-white px-5 py-2.5 transition-all hover:bg-danger-hover
+           bg-gradient-to-b from-danger-600 to-danger-dark text-white 
+           px-5 py-2.5 transition-all hover:shadow-lg
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2
            disabled:pointer-events-none disabled:opacity-50;
   }
   
+  .btn-success {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold
+           bg-gradient-to-b from-success-500 to-success-dark text-white 
+           px-5 py-2.5 transition-all hover:shadow-lg
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-lg font-semibold
+           bg-transparent border-2 border-primary-700 text-primary-700
+           px-5 py-2.5 transition-all hover:bg-primary-50
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg font-medium
+           text-text-secondary px-4 py-2 transition-all hover:bg-neutral-100
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-utility {
+    @apply inline-flex items-center justify-center rounded-md font-medium
+           bg-utility-300 text-white px-3 py-1.5 text-sm transition-all 
+           hover:bg-utility-400
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-utility-300 focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+  
+  .btn-icon {
+    @apply inline-flex items-center justify-center rounded-full p-2
+           text-text-muted transition-colors hover:bg-neutral-100 hover:text-text-primary
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2;
+  }
+
+  /* ---------------------------------------------------------------------------
+     CARD COMPONENTS
+     --------------------------------------------------------------------------- */
   .card {
-    @apply bg-[var(--card-bg)] rounded-xl border border-[var(--border)] shadow-sm p-6;
+    @apply bg-surface rounded-xl border border-border-light shadow-sm;
   }
   
+  .card-padded {
+    @apply bg-surface rounded-xl border border-border-light shadow-sm p-6;
+  }
+  
+  .card-interactive {
+    @apply bg-surface rounded-xl border border-border-light shadow-sm
+           transition-all duration-200 cursor-pointer
+           hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5;
+  }
+  
+  .card-selected {
+    @apply border-primary-600 bg-primary-50 shadow-md ring-2 ring-primary-200;
+  }
+
+  /* ---------------------------------------------------------------------------
+     CHIP / BADGE COMPONENTS
+     --------------------------------------------------------------------------- */
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full bg-accent-chip text-primary-dark 
-           px-3 py-1 text-sm font-medium;
+    @apply inline-flex items-center gap-1.5 rounded-full 
+           bg-accent-chip text-primary-700 
+           px-3 py-1 text-sm font-medium border border-transparent;
   }
   
+  .chip-removable {
+    @apply inline-flex items-center gap-1.5 rounded-full 
+           bg-accent-chip text-primary-700 
+           pr-2 py-1 text-sm font-medium border border-transparent;
+  }
+  
+  .chip-small {
+    @apply px-2 py-0.5 text-xs;
+  }
+  
+  .chip-large {
+    @apply px-4 py-1.5 text-base;
+  }
+
+  /* Category-based chip variants */
+  .chip-action {
+    @apply bg-category-action text-category-action-text border-category-action-border;
+  }
+  
+  .chip-activation {
+    @apply bg-category-activation text-category-activation-text border-category-activation-border;
+  }
+  
+  .chip-area {
+    @apply bg-category-area text-category-area-text border-category-area-border;
+  }
+  
+  .chip-duration {
+    @apply bg-category-duration text-category-duration-text border-category-duration-border;
+  }
+  
+  .chip-target {
+    @apply bg-category-target text-category-target-text border-category-target-border;
+  }
+  
+  .chip-special {
+    @apply bg-category-special text-category-special-text border-category-special-border;
+  }
+  
+  .chip-restriction {
+    @apply bg-category-restriction text-category-restriction-text border-category-restriction-border;
+  }
+
+  /* Status chip variants */
+  .chip-success {
+    @apply bg-success-light text-success-700 border-success-300;
+  }
+  
+  .chip-danger {
+    @apply bg-danger-light text-danger-700 border-danger-300;
+  }
+  
+  .chip-warning {
+    @apply bg-warning-light text-warning-700 border-warning-300;
+  }
+  
+  .chip-info {
+    @apply bg-info-light text-info-700 border-info-300;
+  }
+
+  /* ---------------------------------------------------------------------------
+     FORM INPUT COMPONENTS
+     --------------------------------------------------------------------------- */
   .input-field {
-    @apply w-full rounded-lg border border-[var(--border)] bg-white px-4 py-2.5
-           text-[var(--foreground)] placeholder:text-gray-400
+    @apply w-full rounded-lg border border-border-light bg-surface px-4 py-2.5
+           text-text-primary placeholder:text-text-muted
            focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-accent/20
            disabled:cursor-not-allowed disabled:opacity-50;
   }
@@ -221,47 +548,81 @@
 }
 
 /* =============================================================================
-   PHASE 1 FIX: Button Visibility & Interactive Elements
+   TAB NAVIGATION - Unified across site
    ============================================================================= */
 
 @layer components {
+  /* Generic tab navigation for Codex, Library, etc. */
+  .tab-nav {
+    @apply border-b border-border-light;
+  }
+  
+  .tab-nav-list {
+    @apply flex gap-1 overflow-x-auto;
+  }
+  
+  .tab-nav-trigger {
+    @apply px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
+           border-transparent text-text-muted hover:text-text-primary hover:bg-neutral-100;
+  }
+  
+  .tab-nav-trigger-active {
+    @apply border-primary-600 text-primary-700 bg-primary-50;
+  }
+  
+  /* Pill-style tabs (wizard steps, settings) */
+  .tab-pill-list {
+    @apply inline-flex items-center p-1 rounded-lg bg-neutral-100 gap-1;
+  }
+  
+  .tab-pill-trigger {
+    @apply px-4 py-2 text-sm font-medium rounded-md transition-colors
+           text-text-muted hover:text-text-primary;
+  }
+  
+  .tab-pill-trigger-active {
+    @apply bg-surface text-text-primary shadow-sm;
+  }
+
   /* Stepper buttons for +/- controls across all creators */
   .btn-stepper {
     @apply flex items-center justify-center w-10 h-10 rounded-full 
            bg-primary-100 text-primary-700 font-bold text-xl
            border-2 border-primary-200
            hover:bg-primary-200 hover:border-primary-300 active:bg-primary-300
-           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200 disabled:cursor-not-allowed
+           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed
            transition-colors duration-150;
   }
 
   .btn-stepper-danger {
-    @apply bg-red-100 text-red-700 border-red-200
-           hover:bg-red-200 hover:border-red-300 active:bg-red-300
-           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200;
+    @apply bg-danger-light text-danger-700 border-danger-200
+           hover:bg-danger-200 hover:border-danger-300 active:bg-danger-300
+           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200;
   }
 
   .btn-stepper-success {
-    @apply bg-green-100 text-green-700 border-green-200
-           hover:bg-green-200 hover:border-green-300 active:bg-green-300
-           disabled:bg-gray-100 disabled:text-gray-300 disabled:border-gray-200;
+    @apply bg-success-light text-success-700 border-success-200
+           hover:bg-success-200 hover:border-success-300 active:bg-success-300
+           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200;
   }
 
   /* Large prominent continue/action buttons */
   .btn-continue {
-    @apply bg-primary-600 text-white font-bold px-8 py-3 rounded-xl
-           shadow-md border-2 border-primary-700
-           hover:bg-primary-700 hover:shadow-lg
-           active:bg-primary-800
-           disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-400 disabled:shadow-none disabled:cursor-not-allowed
+    @apply bg-gradient-to-b from-primary-600 to-primary-700 text-primary-foreground 
+           font-bold px-8 py-3 rounded-xl
+           shadow-md border border-primary-800
+           hover:from-primary-500 hover:to-primary-600 hover:shadow-lg
+           active:from-primary-700 active:to-primary-800
+           disabled:from-neutral-300 disabled:to-neutral-400 disabled:text-neutral-500 
+           disabled:border-neutral-400 disabled:shadow-none disabled:cursor-not-allowed
            transition-all duration-150;
   }
 
   /* Secondary back/cancel buttons */
   .btn-back {
     @apply px-6 py-3 rounded-xl font-medium 
-           text-gray-600 bg-gray-100 border-2 border-gray-200
-           hover:bg-gray-200 hover:text-gray-800 hover:border-gray-300
+           text-text-secondary bg-neutral-100 border-2 border-neutral-200
+           hover:bg-neutral-200 hover:text-text-primary hover:border-neutral-300
            transition-colors duration-150;
   }
 
@@ -274,12 +635,12 @@
   /* Selection card styling */
   .selection-card {
     @apply rounded-xl border-2 p-4 transition-all duration-200 cursor-pointer
-           bg-white border-gray-200
+           bg-surface border-neutral-200
            hover:border-primary-300 hover:shadow-md hover:-translate-y-0.5;
   }
 
   .selection-card--selected {
-    @apply border-primary-600 bg-primary-50 shadow-md;
+    @apply border-primary-600 bg-primary-50 shadow-md ring-2 ring-primary-200;
   }
 
   /* Tab navigation styles for creator wizard */
@@ -288,29 +649,29 @@
   }
 
   .creator-tab--active {
-    @apply bg-primary-600 text-white shadow-md;
+    @apply bg-primary-700 text-primary-foreground shadow-md;
   }
 
   .creator-tab--completed {
-    @apply bg-green-100 text-green-700 hover:bg-green-200;
+    @apply bg-success-light text-success-700 hover:bg-success-200;
   }
 
   .creator-tab--upcoming {
-    @apply bg-white text-gray-600 hover:bg-gray-50;
+    @apply bg-surface text-text-muted hover:bg-neutral-100;
   }
 
   .creator-tab--disabled {
-    @apply bg-gray-200 text-gray-400 cursor-not-allowed;
+    @apply bg-neutral-200 text-neutral-400 cursor-not-allowed;
   }
 
   /* Trait/feature chips */
   .trait-chip {
     @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium
-           bg-accent-chip text-primary-dark;
+           bg-accent-chip text-primary-700;
   }
 
   .trait-chip--flaw {
-    @apply bg-red-100 text-red-700;
+    @apply bg-danger-light text-danger-700;
   }
 
   .trait-chip--selectable {
@@ -318,7 +679,143 @@
   }
 
   .trait-chip--selected {
-    @apply bg-primary-600 text-white;
+    @apply bg-primary-700 text-primary-foreground;
+  }
+  
+  /* ---------------------------------------------------------------------------
+     SEARCH INPUT - Unified component style
+     --------------------------------------------------------------------------- */
+  .search-input-wrapper {
+    @apply relative;
+  }
+  
+  .search-input-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted pointer-events-none;
+  }
+  
+  .search-input {
+    @apply w-full pl-10 pr-4 py-2.5 rounded-lg border border-border-light bg-surface
+           text-text-primary placeholder:text-text-muted
+           focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-accent/20;
+  }
+  
+  .search-input-clear {
+    @apply absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
+           text-text-muted hover:text-text-primary hover:bg-neutral-100 transition-colors;
+  }
+
+  /* ---------------------------------------------------------------------------
+     LOADING STATES
+     --------------------------------------------------------------------------- */
+  .loading-spinner {
+    @apply w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin;
+  }
+  
+  .loading-spinner-sm {
+    @apply w-5 h-5 border-2;
+  }
+  
+  .loading-spinner-lg {
+    @apply w-12 h-12 border-4;
+  }
+  
+  .skeleton {
+    @apply rounded;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  .skeleton-text {
+    @apply h-4 rounded;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  .skeleton-title {
+    @apply h-6 rounded;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  .skeleton-card {
+    @apply h-32 rounded-xl;
+    background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ---------------------------------------------------------------------------
+     ALERT / ERROR STATES
+     --------------------------------------------------------------------------- */
+  .alert {
+    @apply p-4 rounded-lg border flex items-start gap-3;
+  }
+  
+  .alert-error {
+    @apply bg-danger-light border-danger-300 text-danger-700;
+  }
+  
+  .alert-success {
+    @apply bg-success-light border-success-300 text-success-700;
+  }
+  
+  .alert-warning {
+    @apply bg-warning-light border-warning-300 text-warning-700;
+  }
+  
+  .alert-info {
+    @apply bg-info-light border-info-300 text-info-700;
+  }
+  
+  .alert-icon {
+    @apply w-5 h-5 flex-shrink-0 mt-0.5;
+  }
+  
+  .alert-content {
+    @apply flex-1 text-sm;
+  }
+
+  /* ---------------------------------------------------------------------------
+     RANGE SLIDER
+     --------------------------------------------------------------------------- */
+  .range-slider {
+    @apply w-full h-2 rounded-full appearance-none cursor-pointer;
+  }
+  
+  .range-slider::-webkit-slider-thumb {
+    @apply appearance-none w-6 h-6 rounded-full bg-white border-2 border-primary-500 shadow-md cursor-pointer;
+    -webkit-appearance: none;
+    margin-top: -2px;
+  }
+  
+  .range-slider::-moz-range-thumb {
+    @apply w-6 h-6 rounded-full bg-white border-2 border-primary-500 shadow-md cursor-pointer;
+    border: none;
+  }
+  
+  .range-slider::-webkit-slider-runnable-track {
+    @apply h-2 rounded-full;
+  }
+  
+  .range-slider::-moz-range-track {
+    @apply h-2 rounded-full;
+  }
+
+  /* ---------------------------------------------------------------------------
+     DIVIDERS / SEPARATORS
+     --------------------------------------------------------------------------- */
+  .divider {
+    @apply border-t border-divider;
+  }
+  
+  .divider-light {
+    @apply border-t border-border-light;
+  }
+  
+  .divider-vertical {
+    @apply border-l border-divider h-full;
   }
 }
-

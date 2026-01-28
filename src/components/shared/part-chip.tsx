@@ -40,18 +40,18 @@ export interface PartData {
   category?: string;
 }
 
-// Category-specific colors matching vanilla site
+// Category-specific colors using design tokens from globals.css
 const categoryStyles: Record<string, string> = {
-  action: 'bg-[#e7f0ff] text-[#0b5ed7] border-[#b6d4fe]',
-  activation: 'bg-[#e6fffa] text-[#0f766e] border-[#99f6e4]',
-  area: 'bg-[#eafbe7] text-[#166534] border-[#bbf7d0]',
-  duration: 'bg-[#f3e8ff] text-[#6b21a8] border-[#e9d5ff]',
-  target: 'bg-[#fff4e5] text-[#9a3412] border-[#fed7aa]',
-  special: 'bg-[#fffbe6] text-[#854d0e] border-[#fef08a]',
-  restriction: 'bg-[#ffe5e5] text-[#b91c1c] border-[#fecaca]',
-  cost: 'bg-[#e7f0ff] text-[#0b5ed7] border-[#b6d4fe]',
+  action: 'bg-category-action-bg text-category-action-text border-category-action-border',
+  activation: 'bg-category-activation-bg text-category-activation-text border-category-activation-border',
+  area: 'bg-category-area-bg text-category-area-text border-category-area-border',
+  duration: 'bg-category-duration-bg text-category-duration-text border-category-duration-border',
+  target: 'bg-category-target-bg text-category-target-text border-category-target-border',
+  special: 'bg-category-special-bg text-category-special-text border-category-special-border',
+  restriction: 'bg-category-restriction-bg text-category-restriction-text border-category-restriction-border',
+  cost: 'bg-category-action-bg text-category-action-text border-category-action-border',
   proficiency: 'bg-amber-50 text-amber-800 border-amber-200',
-  property: 'bg-slate-50 text-slate-700 border-slate-200',
+  property: 'bg-neutral-50 text-neutral-700 border-neutral-200',
   default: 'bg-primary-50 text-primary-700 border-primary-200',
 };
 
@@ -143,11 +143,11 @@ export function PartChipDetails({ part, className }: PartChipDetailsProps) {
 
   return (
     <div className={cn(
-      'mt-2 p-3 rounded-lg bg-white border border-gray-200 shadow-sm',
+      'mt-2 p-3 rounded-lg bg-surface border border-border shadow-sm',
       className
     )}>
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h5 className="font-semibold text-gray-900">{part.name}</h5>
+        <h5 className="font-semibold text-text-primary">{part.name}</h5>
         {(part.tpCost ?? 0) > 0 && (
           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
             <Zap className="w-3 h-3" />
@@ -157,23 +157,23 @@ export function PartChipDetails({ part, className }: PartChipDetailsProps) {
       </div>
 
       {part.description && (
-        <p className="text-sm text-gray-600 mb-2">{part.description}</p>
+        <p className="text-sm text-text-secondary mb-2">{part.description}</p>
       )}
 
       {hasOptions && part.optionLevels && (
         <div className="flex flex-wrap gap-2 text-xs">
           {(part.optionLevels.opt1 ?? 0) > 0 && (
-            <span className="px-2 py-1 rounded bg-gray-100 text-gray-700">
+            <span className="px-2 py-1 rounded bg-surface-alt text-text-secondary">
               Option 1: Level {part.optionLevels.opt1}
             </span>
           )}
           {(part.optionLevels.opt2 ?? 0) > 0 && (
-            <span className="px-2 py-1 rounded bg-gray-100 text-gray-700">
+            <span className="px-2 py-1 rounded bg-surface-alt text-text-secondary">
               Option 2: Level {part.optionLevels.opt2}
             </span>
           )}
           {(part.optionLevels.opt3 ?? 0) > 0 && (
-            <span className="px-2 py-1 rounded bg-gray-100 text-gray-700">
+            <span className="px-2 py-1 rounded bg-surface-alt text-text-secondary">
               Option 3: Level {part.optionLevels.opt3}
             </span>
           )}
@@ -212,7 +212,7 @@ export function PartChipList({
   return (
     <div className={cn('space-y-2', className)}>
       {label && (
-        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
           {label}
         </h4>
       )}

@@ -49,7 +49,7 @@ export interface SpeciesTraitCardProps {
 }
 
 // =============================================================================
-// Category Configuration
+// Category Configuration (using design tokens)
 // =============================================================================
 
 const CATEGORY_CONFIG: Record<TraitCategory, {
@@ -68,36 +68,36 @@ const CATEGORY_CONFIG: Record<TraitCategory, {
     icon: Heart,
     label: 'Species Trait',
     colors: {
-      bg: 'bg-blue-50',
-      border: 'border-blue-200',
-      text: 'text-blue-800',
-      iconColor: 'text-blue-500',
-      selectedBg: 'bg-blue-100',
-      selectedBorder: 'border-blue-400',
+      bg: 'bg-info-50',
+      border: 'border-info-200',
+      text: 'text-info-800',
+      iconColor: 'text-info-500',
+      selectedBg: 'bg-info-100',
+      selectedBorder: 'border-info-400',
     },
   },
   ancestry: {
     icon: Star,
     label: 'Ancestry Trait',
     colors: {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      text: 'text-green-800',
-      iconColor: 'text-green-500',
-      selectedBg: 'bg-green-100',
-      selectedBorder: 'border-green-400',
+      bg: 'bg-success-50',
+      border: 'border-success-200',
+      text: 'text-success-800',
+      iconColor: 'text-success-500',
+      selectedBg: 'bg-success-100',
+      selectedBorder: 'border-success-400',
     },
   },
   flaw: {
     icon: AlertTriangle,
     label: 'Flaw',
     colors: {
-      bg: 'bg-red-50',
-      border: 'border-red-200',
-      text: 'text-red-800',
-      iconColor: 'text-red-500',
-      selectedBg: 'bg-red-100',
-      selectedBorder: 'border-red-400',
+      bg: 'bg-danger-50',
+      border: 'border-danger-200',
+      text: 'text-danger-800',
+      iconColor: 'text-danger-500',
+      selectedBg: 'bg-danger-100',
+      selectedBorder: 'border-danger-400',
     },
   },
   characteristic: {
@@ -160,7 +160,7 @@ export function SpeciesTraitCard({
         selected ? colors.selectedBg : colors.bg,
         selected ? colors.selectedBorder : colors.border,
         selectable && !disabled && 'cursor-pointer hover:shadow-sm',
-        selectable && !disabled && !selected && 'hover:border-gray-400',
+        selectable && !disabled && !selected && 'hover:border-neutral-400',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
@@ -178,8 +178,8 @@ export function SpeciesTraitCard({
             className={cn(
               'mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
               selected 
-                ? 'bg-primary border-primary' 
-                : 'border-gray-300 bg-white',
+                ? 'bg-primary-600 border-primary-600' 
+                : 'border-neutral-300 bg-surface',
               disabled && 'opacity-50'
             )}
           >
@@ -213,8 +213,8 @@ export function SpeciesTraitCard({
                     className={cn(
                       'w-5 h-5 flex items-center justify-center rounded transition-colors',
                       usesRemaining > 0
-                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                     )}
                     title="Use trait"
                   >
@@ -223,7 +223,7 @@ export function SpeciesTraitCard({
                 )}
                 <span className={cn(
                   'text-xs font-medium min-w-[36px] text-center',
-                  usesRemaining === 0 ? 'text-red-600' : 'text-gray-600'
+                  usesRemaining === 0 ? 'text-danger-600' : 'text-text-secondary'
                 )}>
                   {usesRemaining}/{maxUses}
                 </span>
@@ -234,8 +234,8 @@ export function SpeciesTraitCard({
                     className={cn(
                       'w-5 h-5 flex items-center justify-center rounded transition-colors',
                       usesRemaining < maxUses
-                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                     )}
                     title="Restore use"
                   >
@@ -248,7 +248,7 @@ export function SpeciesTraitCard({
           
           {trait.description && (
             <p className={cn(
-              'text-gray-600 mt-1',
+              'text-text-secondary mt-1',
               compact ? 'text-xs' : 'text-sm'
             )}>
               {trait.description}
@@ -257,7 +257,7 @@ export function SpeciesTraitCard({
           
           {/* Recovery period */}
           {hasLimitedUses && trait.recoveryPeriod && (
-            <p className="text-xs text-gray-400 mt-1 italic">
+            <p className="text-xs text-text-muted mt-1 italic">
               🔄 {trait.recoveryPeriod}
             </p>
           )}
@@ -315,15 +315,15 @@ export function TraitGroup({
         <div className="flex items-center gap-2">
           <Icon className={cn('w-5 h-5', colors.iconColor)} />
           <h3 className={cn('font-semibold', colors.text)}>{title}</h3>
-          <span className="text-sm text-gray-500">({traits.length})</span>
+          <span className="text-sm text-text-muted">({traits.length})</span>
         </div>
         {subtitle && (
-          <span className="text-sm text-gray-500">{subtitle}</span>
+          <span className="text-sm text-text-muted">{subtitle}</span>
         )}
         {selection && selection.maxSelections && (
           <span className={cn(
             'text-sm font-medium',
-            selectedCount >= (selection.maxSelections || 0) ? 'text-green-600' : 'text-gray-500'
+            selectedCount >= (selection.maxSelections || 0) ? 'text-success-600' : 'text-text-muted'
           )}>
             {selectedCount}/{selection.maxSelections} selected
           </span>
@@ -332,7 +332,7 @@ export function TraitGroup({
       
       {/* Traits */}
       {traits.length === 0 ? (
-        <p className="text-sm text-gray-500 italic">{emptyMessage}</p>
+        <p className="text-sm text-text-muted italic">{emptyMessage}</p>
       ) : (
         <div className={cn('grid gap-2', compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2')}>
           {traits.map((trait, idx) => {

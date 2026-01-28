@@ -20,14 +20,14 @@ interface ItemCardProps {
   className?: string;
 }
 
-// Badge variants with Tailwind classes
+// Badge variants with design token classes
 const badgeVariants = {
-  default: 'bg-muted text-muted-foreground',
-  primary: 'bg-primary/20 text-primary',
-  success: 'bg-green-500/20 text-green-400',
-  warning: 'bg-yellow-500/20 text-yellow-400',
-  danger: 'bg-red-500/20 text-red-400',
-  info: 'bg-blue-500/20 text-blue-400',
+  default: 'bg-neutral-100 text-neutral-600',
+  primary: 'bg-primary-100 text-primary-700',
+  success: 'bg-success-100 text-success-700',
+  warning: 'bg-warning-100 text-warning-700',
+  danger: 'bg-danger-100 text-danger-700',
+  info: 'bg-info-100 text-info-700',
 };
 
 export function ItemCard({ 
@@ -68,8 +68,8 @@ export function ItemCard({
       className={`
         rounded-lg border transition-all duration-200
         ${item.isSelected 
-          ? 'border-primary bg-primary/10 ring-1 ring-primary' 
-          : 'border-border bg-card hover:border-primary/50'
+          ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' 
+          : 'border-border bg-surface hover:border-primary-300'
         }
         ${item.isDisabled 
           ? 'opacity-50 cursor-not-allowed' 
@@ -95,8 +95,8 @@ export function ItemCard({
               className={`
                 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors
                 ${item.isSelected 
-                  ? 'bg-primary-400 border-primary-400' 
-                  : 'border-muted-foreground/40'
+                  ? 'bg-primary-500 border-primary-500' 
+                  : 'border-neutral-400'
                 }
                 ${item.isDisabled ? 'opacity-50' : ''}
               `}
@@ -107,11 +107,11 @@ export function ItemCard({
           
           {/* Name and subtitle */}
           <div className="min-w-0 flex-1">
-            <h3 className={`font-medium text-foreground truncate ${compact ? 'text-sm' : ''}`}>
+            <h3 className={`font-medium text-text-primary truncate ${compact ? 'text-sm' : ''}`}>
               {item.name}
             </h3>
             {item.subtitle && (
-              <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
+              <p className="text-xs text-text-muted truncate">{item.subtitle}</p>
             )}
           </div>
         </div>
@@ -120,11 +120,11 @@ export function ItemCard({
         <div className="flex items-center gap-2 flex-shrink-0">
           {/* Quick stats */}
           {!compact && item.stats && item.stats.length > 0 && (
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-text-secondary">
               {item.stats.slice(0, 3).map((stat, i) => (
                 <span key={i} className="whitespace-nowrap">
                   <span className="text-xs opacity-70">{stat.label}:</span>{' '}
-                  <span className="font-medium text-foreground">{stat.value}</span>
+                  <span className="font-medium text-text-primary">{stat.value}</span>
                 </span>
               ))}
             </div>
@@ -132,7 +132,7 @@ export function ItemCard({
           
           {/* Cost display */}
           {item.cost !== undefined && (
-            <span className="text-sm font-medium text-primary whitespace-nowrap">
+            <span className="text-sm font-medium text-primary-600 whitespace-nowrap">
               {item.cost} {item.costLabel}
             </span>
           )}
@@ -143,37 +143,37 @@ export function ItemCard({
               {actions?.onView && (
                 <button
                   onClick={() => actions.onView?.(item)}
-                  className="p-1.5 rounded hover:bg-muted transition-colors"
+                  className="p-1.5 rounded hover:bg-surface-alt transition-colors"
                   title="View"
                 >
-                  <Eye className="w-4 h-4 text-muted-foreground" />
+                  <Eye className="w-4 h-4 text-text-muted" />
                 </button>
               )}
               {actions?.onEdit && (
                 <button
                   onClick={() => actions.onEdit?.(item)}
-                  className="p-1.5 rounded hover:bg-muted transition-colors"
+                  className="p-1.5 rounded hover:bg-surface-alt transition-colors"
                   title="Edit"
                 >
-                  <Edit className="w-4 h-4 text-muted-foreground" />
+                  <Edit className="w-4 h-4 text-text-muted" />
                 </button>
               )}
               {actions?.onDuplicate && (
                 <button
                   onClick={() => actions.onDuplicate?.(item)}
-                  className="p-1.5 rounded hover:bg-muted transition-colors"
+                  className="p-1.5 rounded hover:bg-surface-alt transition-colors"
                   title="Duplicate"
                 >
-                  <Copy className="w-4 h-4 text-muted-foreground" />
+                  <Copy className="w-4 h-4 text-text-muted" />
                 </button>
               )}
               {actions?.onDelete && (
                 <button
                   onClick={() => actions.onDelete?.(item)}
-                  className="p-1.5 rounded hover:bg-destructive/20 transition-colors"
+                  className="p-1.5 rounded hover:bg-danger-50 transition-colors"
                   title="Delete"
                 >
-                  <Trash2 className="w-4 h-4 text-destructive" />
+                  <Trash2 className="w-4 h-4 text-danger-600" />
                 </button>
               )}
             </div>
@@ -182,15 +182,15 @@ export function ItemCard({
           {/* Expand/collapse indicator */}
           {hasDetails && !isManageable && (
             <button 
-              className="p-1 rounded hover:bg-muted transition-colors"
+              className="p-1 rounded hover:bg-surface-alt transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
             >
               {isExpanded 
-                ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> 
-                : <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                ? <ChevronUp className="w-4 h-4 text-text-muted" /> 
+                : <ChevronDown className="w-4 h-4 text-text-muted" />
               }
             </button>
           )}
@@ -217,7 +217,7 @@ export function ItemCard({
           {item.tags.map((tag, i) => (
             <span 
               key={i}
-              className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
+              className="text-xs px-1.5 py-0.5 rounded bg-surface-alt text-text-muted"
             >
               {tag}
             </span>
@@ -227,7 +227,7 @@ export function ItemCard({
       
       {/* Disabled reason */}
       {item.isDisabled && item.disabledReason && (
-        <div className="flex items-center gap-1.5 mt-2 text-xs text-destructive">
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-danger-600">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{item.disabledReason}</span>
         </div>
@@ -238,14 +238,14 @@ export function ItemCard({
         <div className="mt-3 pt-3 border-t border-border space-y-2">
           {/* Description */}
           {item.description && (
-            <p className="text-sm text-muted-foreground">{item.description}</p>
+            <p className="text-sm text-text-secondary">{item.description}</p>
           )}
           
           {/* Detail rows */}
           {item.details && item.details.map((detail, i) => (
             <div key={i} className="text-sm">
-              <span className="font-medium text-foreground">{detail.label}: </span>
-              <span className="text-muted-foreground">
+              <span className="font-medium text-text-primary">{detail.label}: </span>
+              <span className="text-text-secondary">
                 {Array.isArray(detail.value) 
                   ? detail.value.join(', ') 
                   : detail.value
@@ -257,12 +257,12 @@ export function ItemCard({
           {/* Requirements */}
           {item.requirements && item.requirements.length > 0 && (
             <div className="text-sm">
-              <span className="font-medium text-foreground">Requirements: </span>
-              <span className="text-muted-foreground">
+              <span className="font-medium text-text-primary">Requirements: </span>
+              <span className="text-text-secondary">
                 {item.requirements.map((req, i) => (
                   <span 
                     key={i}
-                    className={req.met ? 'text-green-400' : 'text-red-400'}
+                    className={req.met ? 'text-success-600' : 'text-danger-600'}
                   >
                     {req.name} {req.value}
                     {i < item.requirements!.length - 1 ? ', ' : ''}

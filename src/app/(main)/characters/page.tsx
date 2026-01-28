@@ -10,7 +10,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/layout';
 import { CharacterCard, AddCharacterCard } from '@/components/character';
+import { PageContainer, PageHeader, EmptyState } from '@/components/ui';
+import { Spinner } from '@/components/ui/spinner';
+import { Alert } from '@/components/ui/alert';
 import { useCharacters, useDeleteCharacter } from '@/hooks';
+import { UserPlus } from 'lucide-react';
 
 export default function CharactersPage() {
   return (
@@ -50,29 +54,29 @@ function CharactersContent() {
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Characters</h1>
+      <PageContainer>
+        <PageHeader title="Characters" />
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse">
-              <div className="aspect-[3/4] bg-gray-200 rounded-lg" />
-              <div className="mt-4 h-5 bg-gray-200 rounded w-3/4" />
-              <div className="mt-2 h-4 bg-gray-200 rounded w-1/2" />
+              <div className="aspect-[3/4] skeleton rounded-xl" />
+              <div className="mt-4 h-5 skeleton rounded w-3/4" />
+              <div className="mt-2 h-4 skeleton rounded w-1/2" />
             </div>
           ))}
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Characters</h1>
-        <div className="text-center py-12">
-          <p className="text-red-600">Error loading characters. Please try again.</p>
-        </div>
-      </div>
+      <PageContainer>
+        <PageHeader title="Characters" />
+        <Alert variant="danger" title="Error loading characters">
+          Something went wrong while loading your characters. Please try again.
+        </Alert>
+      </PageContainer>
     );
   }
 
@@ -80,8 +84,8 @@ function CharactersContent() {
   const hasCharacters = characters && characters.length > 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">Characters</h1>
+    <PageContainer>
+      <PageHeader title="Characters" />
       
       {hasCharacters ? (
         // Grid layout when we have characters
@@ -98,16 +102,17 @@ function CharactersContent() {
           <AddCharacterCard onClick={handleCreateCharacter} />
         </div>
       ) : (
-        // Centered layout when no characters
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="w-full max-w-sm">
-            <AddCharacterCard onClick={handleCreateCharacter} />
-          </div>
-          <p className="text-center text-gray-500 mt-6">
-            You have no saved characters yet. Click &quot;Add Character&quot; to create your first one!
-          </p>
-        </div>
+        // Empty state when no characters
+        <EmptyState
+          icon={<UserPlus className="w-10 h-10" />}
+          title="No characters yet"
+          description="Create your first character to begin your adventure in Realms RPG."
+          action={{
+            label: 'Create Character',
+            onClick: handleCreateCharacter,
+          }}
+        />
       )}
-    </div>
+    </PageContainer>
   );
 }

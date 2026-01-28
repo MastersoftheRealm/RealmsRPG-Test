@@ -87,7 +87,7 @@ export function Modal({
       {/* Modal */}
       <div
         className={cn(
-          'relative z-10 w-full rounded-2xl bg-white shadow-2xl',
+          'relative z-10 w-full rounded-2xl bg-surface shadow-2xl',
           'max-h-[90vh] overflow-auto',
           // Animation matching vanilla: scale + translateY
           'animate-modal-pop',
@@ -101,14 +101,14 @@ export function Modal({
       >
         {/* Header */}
         {(title || description) && (
-          <div className="border-b border-gray-200 px-6 py-4">
+          <div className="border-b border-border-light px-6 py-4">
             {title && (
-              <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
+              <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
                 {title}
               </h2>
             )}
             {description && (
-              <p id="modal-description" className="mt-1 text-sm text-gray-600">
+              <p id="modal-description" className="mt-1 text-sm text-text-muted">
                 {description}
               </p>
             )}
@@ -119,7 +119,7 @@ export function Modal({
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="absolute right-4 top-4 rounded-full p-2 text-text-muted hover:bg-neutral-100 hover:text-text-primary transition-colors"
             aria-label="Close modal"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

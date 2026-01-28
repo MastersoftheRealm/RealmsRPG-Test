@@ -32,9 +32,15 @@ import {
   CREATURE_TYPES,
   CREATURE_SIZES,
   CONDITIONS,
-  SKILLS,
   CREATOR_CACHE_KEYS,
 } from '@/lib/game/creator-constants';
+import {
+  HealthEnergyAllocator,
+  ArchetypeSelector,
+  CollapsibleSection,
+  CreatorSummaryPanel,
+  type ArchetypeType,
+} from '@/components/creator';
 
 // =============================================================================
 // Creature-specific Constants
@@ -169,6 +175,7 @@ interface CreatureState {
   type: string;
   size: string;
   description: string;
+  archetypeType: ArchetypeType;
   abilities: {
     strength: number;
     vitality: number;
@@ -201,6 +208,10 @@ interface CreatureState {
   techniques: CreatureTechnique[];
   feats: CreatureFeat[];
   armaments: CreatureArmament[];
+  // Optional section toggles
+  enablePowers: boolean;
+  enableTechniques: boolean;
+  enableArmaments: boolean;
 }
 
 const initialState: CreatureState = {
@@ -209,6 +220,7 @@ const initialState: CreatureState = {
   type: 'Humanoid',
   size: 'medium',
   description: '',
+  archetypeType: 'power',
   abilities: {
     strength: 0,
     vitality: 0,
@@ -229,6 +241,9 @@ const initialState: CreatureState = {
   energyPoints: 0,
   powerProficiency: 2,
   martialProficiency: 0,
+  enablePowers: false,
+  enableTechniques: false,
+  enableArmaments: false,
   resistances: [],
   weaknesses: [],
   immunities: [],
@@ -741,12 +756,16 @@ function LoadCreatureModal({
                       type: (c as unknown as CreatureState).type || 'Humanoid',
                       size: (c as unknown as CreatureState).size || 'medium',
                       description: c.description || '',
+                      archetypeType: (c as unknown as CreatureState).archetypeType || 'power',
                       abilities: (c as unknown as CreatureState).abilities || initialState.abilities,
                       defenses: (c as unknown as CreatureState).defenses || initialState.defenses,
                       hitPoints: (c as unknown as CreatureState).hitPoints || 0,
                       energyPoints: (c as unknown as CreatureState).energyPoints || 0,
                       powerProficiency: (c as unknown as CreatureState).powerProficiency || 0,
                       martialProficiency: (c as unknown as CreatureState).martialProficiency || 0,
+                      enablePowers: (c as unknown as CreatureState).enablePowers ?? ((c as unknown as CreatureState).powers?.length > 0),
+                      enableTechniques: (c as unknown as CreatureState).enableTechniques ?? ((c as unknown as CreatureState).techniques?.length > 0),
+                      enableArmaments: (c as unknown as CreatureState).enableArmaments ?? ((c as unknown as CreatureState).armaments?.length > 0),
                       resistances: (c as unknown as CreatureState).resistances || [],
                       weaknesses: (c as unknown as CreatureState).weaknesses || [],
                       immunities: (c as unknown as CreatureState).immunities || [],
@@ -1279,108 +1298,37 @@ function CreatureCreatorContent() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Power Prof</label>
-                <input
-                  type="number"
-                  value={creature.powerProficiency}
-                  onChange={(e) => updateCreature({ powerProficiency: Math.max(0, parseInt(e.target.value) || 0) })}
-                  min={0}
-                  className={cn(
-                    "w-full px-3 py-2 border rounded-lg",
-                    stats.proficiencyRemaining < 0 ? "border-red-500 bg-red-50" : "border-gray-300"
-                  )}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Martial Prof</label>
-                <input
-                  type="number"
-                  value={creature.martialProficiency}
-                  onChange={(e) => updateCreature({ martialProficiency: Math.max(0, parseInt(e.target.value) || 0) })}
-                  min={0}
-                  className={cn(
-                    "w-full px-3 py-2 border rounded-lg",
-                    stats.proficiencyRemaining < 0 ? "border-red-500 bg-red-50" : "border-gray-300"
-                  )}
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Proficiency Points</label>
-                <div className={cn(
-                  "px-3 py-2 rounded-lg text-sm font-medium",
-                  stats.proficiencyRemaining < 0 ? "bg-red-100 text-red-700" : stats.proficiencyRemaining === 0 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
-                )}>
-                  {stats.proficiencySpent} / {stats.maxProficiencyPoints} used
-                  {stats.proficiencyRemaining < 0 && <span className="ml-2">({stats.proficiencyRemaining} over!)</span>}
-                </div>
-              </div>
-              
-              {/* HP and EN in Basic Info */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  HP ({stats.maxHealth})
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateCreature({ hitPoints: Math.max(0, creature.hitPoints - 1) })}
-                    disabled={creature.hitPoints <= 0}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg font-medium text-sm',
-                      creature.hitPoints <= 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200'
-                    )}
-                  >
-                    −
-                  </button>
-                  <div className="flex-1 text-center">
-                    <span className="text-lg font-bold text-gray-900">+{creature.hitPoints}</span>
-                    <span className="text-sm text-gray-500 ml-1">bonus</span>
-                  </div>
-                  <button
-                    onClick={() => updateCreature({ hitPoints: creature.hitPoints + 1 })}
-                    className="px-3 py-1.5 rounded-lg font-medium text-sm bg-green-100 text-green-700 hover:bg-green-200"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Energy ({stats.maxEnergy})
-                </label>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateCreature({ energyPoints: Math.max(0, creature.energyPoints - 1) })}
-                    disabled={creature.energyPoints <= 0}
-                    className={cn(
-                      'px-3 py-1.5 rounded-lg font-medium text-sm',
-                      creature.energyPoints <= 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200'
-                    )}
-                  >
-                    −
-                  </button>
-                  <div className="flex-1 text-center">
-                    <span className="text-lg font-bold text-gray-900">+{creature.energyPoints}</span>
-                    <span className="text-sm text-gray-500 ml-1">bonus</span>
-                  </div>
-                  <button
-                    onClick={() => updateCreature({ energyPoints: creature.energyPoints + 1 })}
-                    className="px-3 py-1.5 rounded-lg font-medium text-sm bg-green-100 text-green-700 hover:bg-green-200"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
             </div>
-            
-            {/* HP/EN Pool Status */}
-            <div className={cn(
-              "mt-4 px-3 py-2 rounded-lg text-sm font-medium",
-              stats.heRemaining < 0 ? "bg-red-100 text-red-700" : stats.heRemaining === 0 ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
-            )}>
-              HP/EN Pool: {creature.hitPoints + creature.energyPoints} / {stats.hePool} used
-              {stats.heRemaining < 0 && <span className="ml-2">({stats.heRemaining} over!)</span>}
-            </div>
+          </div>
+
+          {/* Archetype Selection */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Archetype</h3>
+            <ArchetypeSelector
+              value={creature.archetypeType}
+              powerProficiency={creature.powerProficiency}
+              martialProficiency={creature.martialProficiency}
+              maxProficiency={stats.maxProficiencyPoints}
+              onTypeChange={(type) => updateCreature({ archetypeType: type })}
+              onProficiencyChange={(power, martial) => updateCreature({ 
+                powerProficiency: power, 
+                martialProficiency: martial 
+              })}
+            />
+          </div>
+
+          {/* HP/EN Allocation */}
+          <div className="bg-white rounded-xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Health & Energy</h3>
+            <HealthEnergyAllocator
+              hpBonus={creature.hitPoints}
+              energyBonus={creature.energyPoints}
+              poolTotal={stats.hePool}
+              maxHp={stats.maxHealth}
+              maxEnergy={stats.maxEnergy}
+              onHpChange={(val) => updateCreature({ hitPoints: val })}
+              onEnergyChange={(val) => updateCreature({ energyPoints: val })}
+            />
           </div>
 
           {/* Abilities */}
@@ -1680,9 +1628,17 @@ function CreatureCreatorContent() {
             </div>
           </div>
 
-          {/* Powers */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Powers</h3>
+          {/* Powers - Optional */}
+          <CollapsibleSection
+            title="Powers"
+            subtitle="Supernatural abilities and magical effects"
+            icon="✨"
+            optional
+            enabled={creature.enablePowers}
+            onEnabledChange={(enabled) => updateCreature({ enablePowers: enabled })}
+            itemCount={creature.powers.length}
+            defaultExpanded={creature.powers.length > 0}
+          >
             {creature.powers.length === 0 ? (
               <p className="text-sm text-gray-400 italic mb-4">No powers added</p>
             ) : (
@@ -1733,11 +1689,19 @@ function CreatureCreatorContent() {
             >
               Add Power
             </button>
-          </div>
+          </CollapsibleSection>
 
-          {/* Techniques */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Techniques</h3>
+          {/* Techniques - Optional */}
+          <CollapsibleSection
+            title="Techniques"
+            subtitle="Combat maneuvers and martial skills"
+            icon="⚔️"
+            optional
+            enabled={creature.enableTechniques}
+            onEnabledChange={(enabled) => updateCreature({ enableTechniques: enabled })}
+            itemCount={creature.techniques.length}
+            defaultExpanded={creature.techniques.length > 0}
+          >
             {creature.techniques.length === 0 ? (
               <p className="text-sm text-gray-400 italic mb-4">No techniques added</p>
             ) : (
@@ -1786,18 +1750,17 @@ function CreatureCreatorContent() {
             >
               Add Technique
             </button>
-          </div>
+          </CollapsibleSection>
 
-          {/* Feats */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Feats</h3>
-              {creature.feats.length > 0 && (
-                <span className="text-sm text-amber-600 font-medium">
-                  Total: {creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0)} pts
-                </span>
-              )}
-            </div>
+          {/* Feats - Always visible, collapsible */}
+          <CollapsibleSection
+            title="Feats"
+            subtitle="Special abilities and traits"
+            icon="⭐"
+            itemCount={creature.feats.length}
+            points={{ spent: stats.featSpent, total: stats.featPoints }}
+            defaultExpanded={true}
+          >
             {creature.feats.length === 0 ? (
               <p className="text-sm text-gray-400 italic mb-4">No feats added</p>
             ) : (
@@ -1832,11 +1795,19 @@ function CreatureCreatorContent() {
             >
               Add Feat
             </button>
-          </div>
+          </CollapsibleSection>
 
-          {/* Armaments */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Armaments</h3>
+          {/* Armaments - Optional */}
+          <CollapsibleSection
+            title="Armaments"
+            subtitle="Weapons, armor, and equipment"
+            icon="🛡️"
+            optional
+            enabled={creature.enableArmaments}
+            onEnabledChange={(enabled) => updateCreature({ enableArmaments: enabled })}
+            itemCount={creature.armaments.length}
+            defaultExpanded={creature.armaments.length > 0}
+          >
             {creature.armaments.length === 0 ? (
               <p className="text-sm text-gray-400 italic mb-4">No armaments added</p>
             ) : (
@@ -1883,7 +1854,7 @@ function CreatureCreatorContent() {
             >
               Add Armament
             </button>
-          </div>
+          </CollapsibleSection>
 
           {/* Description */}
           <div className="bg-white rounded-xl shadow-md p-6">
@@ -1898,101 +1869,23 @@ function CreatureCreatorContent() {
           </div>
         </div>
 
-        {/* Resource Summary Sidebar (scrolls with user) */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Resource Points</h3>
-            
-            <div className="space-y-3">
-              <div className={cn(
-                'flex justify-between p-3 rounded-lg',
-                stats.abilityRemaining < 0 ? 'bg-red-50' : 'bg-blue-50'
-              )}>
-                <span className="text-gray-700">Ability Points</span>
-                <span className={cn(
-                  'font-bold',
-                  stats.abilityRemaining < 0 ? 'text-red-600' : 'text-blue-600'
-                )}>
-                  {stats.abilityRemaining}
-                </span>
-              </div>
-              
-              <div className={cn(
-                'flex justify-between p-3 rounded-lg',
-                stats.heRemaining < 0 ? 'bg-red-50' : 'bg-blue-50'
-              )}>
-                <span className="text-gray-700">HP/EN Points</span>
-                <span className={cn(
-                  'font-bold',
-                  stats.heRemaining < 0 ? 'text-red-600' : 'text-blue-600'
-                )}>
-                  {stats.heRemaining}
-                </span>
-              </div>
-              
-              <div className={cn(
-                'flex justify-between p-3 rounded-lg',
-                stats.skillRemaining < 0 ? 'bg-red-50' : 'bg-blue-50'
-              )}>
-                <span className="text-gray-700">Skill Points</span>
-                <span className={cn(
-                  'font-bold',
-                  stats.skillRemaining < 0 ? 'text-red-600' : 'text-blue-600'
-                )}>
-                  {stats.skillRemaining}
-                </span>
-              </div>
-              
-              <div className={cn(
-                'flex justify-between p-3 rounded-lg',
-                stats.featRemaining < 0 ? 'bg-red-50' : 'bg-amber-50'
-              )}>
-                <span className="text-gray-700">Feat Points</span>
-                <span className={cn(
-                  'font-bold',
-                  stats.featRemaining < 0 ? 'text-red-600' : 'text-amber-600'
-                )}>
-                  {stats.featRemaining}
-                </span>
-              </div>
-              
-              <div className="flex justify-between p-3 bg-amber-50 rounded-lg">
-                <span className="text-gray-700">Training Points</span>
-                <span className="font-bold text-amber-600">{stats.trainingPoints}</span>
-              </div>
-              
-              <div className="flex justify-between p-3 bg-amber-50 rounded-lg">
-                <span className="text-gray-700">Currency</span>
-                <span className="font-bold text-amber-600">{stats.currency}c</span>
-              </div>
-
-              <hr className="my-4 border-gray-200" />
-
-              {/* Proficiency Points Section */}
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm font-medium text-gray-700 mb-2">Proficiency Allocation</div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Power Prof</span>
-                  <span className="font-medium">{creature.powerProficiency}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Martial Prof</span>
-                  <span className="font-medium">{creature.martialProficiency}</span>
-                </div>
-                <div className="flex justify-between text-sm mt-1 pt-1 border-t border-gray-200">
-                  <span className="text-gray-600">Total</span>
-                  <span className={cn(
-                    'font-bold',
-                    (creature.powerProficiency + creature.martialProficiency) > stats.proficiency
-                      ? 'text-red-600' : 'text-green-600'
-                  )}>
-                    {creature.powerProficiency + creature.martialProficiency} / {stats.proficiency}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Creature Summary Sidebar */}
+        <CreatorSummaryPanel
+          title="Creature Summary"
+          quickStats={[
+            { label: 'HP', value: stats.maxHealth, color: 'bg-red-50 text-red-600' },
+            { label: 'EN', value: stats.maxEnergy, color: 'bg-blue-50 text-blue-600' },
+            { label: 'SPD', value: stats.speed, color: 'bg-gray-100' },
+            { label: 'EVA', value: stats.evasion, color: 'bg-gray-100' },
+          ]}
+          items={[
+            { label: 'Ability Points', remaining: stats.abilityRemaining },
+            { label: 'Skill Points', remaining: stats.skillRemaining },
+            { label: 'Feat Points', remaining: stats.featRemaining, variant: 'warning' },
+            { label: 'Training Points', remaining: stats.trainingPoints, variant: 'warning' },
+            { label: 'Currency', remaining: stats.currency, variant: 'warning' },
+          ]}
+        />
       </div>
 
       {/* Modals */}

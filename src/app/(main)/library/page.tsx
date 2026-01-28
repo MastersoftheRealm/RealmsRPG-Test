@@ -55,6 +55,7 @@ import {
   useItemProperties,
 } from '@/hooks';
 import type { DisplayItem } from '@/types';
+import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
 
 type TabId = 'powers' | 'techniques' | 'items' | 'creatures';
 
@@ -138,56 +139,38 @@ function LibraryContent() {
     }
   };
   
+  const tabsWithCounts = TABS.map(tab => ({
+    id: tab.id,
+    label: tab.label,
+    icon: tab.icon,
+    badge: counts[tab.id].toString(),
+  }));
+  
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header - Matching Codex style */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Library</h1>
-            <p className="text-gray-600 mt-1">
-              Your custom powers, techniques, armaments, and creatures
-            </p>
-          </div>
-          <Link
-            href={currentTab.createHref}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">{currentTab.createLabel}</span>
-            <span className="sm:hidden">New</span>
+    <PageContainer size="xl">
+      {/* Header with Create Button */}
+      <PageHeader
+        title="My Library"
+        description="Your custom powers, techniques, armaments, and creatures"
+        actions={
+          <Link href={currentTab.createHref}>
+            <Button variant="primary">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">{currentTab.createLabel}</span>
+              <span className="sm:hidden">New</span>
+            </Button>
           </Link>
-        </div>
-      </div>
+        }
+      />
       
-      {/* Tab Navigation - Matching Codex style */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex gap-1 overflow-x-auto">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                activeTab === tab.id
-                  ? 'border-primary-600 text-primary-600 bg-primary-50'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              )}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              <span className={cn(
-                'px-1.5 py-0.5 text-xs rounded-full',
-                activeTab === tab.id
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'bg-gray-100 text-gray-600'
-              )}>
-                {counts[tab.id]}
-              </span>
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Tab Navigation */}
+      <TabNavigation
+        tabs={tabsWithCounts}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+        variant="underline"
+        className="mb-6"
+      />
       
       {/* Tab Content */}
       {activeTab === 'powers' && <PowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
@@ -205,7 +188,7 @@ function LibraryContent() {
           onClose={() => setDeleteConfirm(null)}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }
 
@@ -366,11 +349,11 @@ function PowersTab({ onDelete }: TabProps) {
       </div>
       
       {/* Power List */}
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">No powers match your search.</div>
+          <div className="py-12 text-center text-text-muted">No powers match your search.</div>
         ) : (
           filteredData.map(power => (
             <GridListRow
@@ -535,7 +518,7 @@ function TechniquesTab({ onDelete }: TabProps) {
       
       {/* Column Headers - Grid aligned */}
       <div 
-        className="hidden lg:grid gap-2 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700"
+        className="hidden lg:grid gap-2 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary"
         style={{ gridTemplateColumns: TECHNIQUE_GRID_COLUMNS }}
       >
         {TECHNIQUE_COLUMNS.map(col => (
@@ -551,11 +534,11 @@ function TechniquesTab({ onDelete }: TabProps) {
       </div>
       
       {/* Technique List */}
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">No techniques match your search.</div>
+          <div className="py-12 text-center text-text-muted">No techniques match your search.</div>
         ) : (
           filteredData.map(tech => (
             <GridListRow
@@ -772,7 +755,7 @@ function ItemsTab({ onDelete }: TabProps) {
       
       {/* Column Headers - Grid aligned */}
       <div 
-        className="hidden lg:grid gap-2 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700"
+        className="hidden lg:grid gap-2 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary"
         style={{ gridTemplateColumns: ARMAMENT_GRID_COLUMNS }}
       >
         {ARMAMENT_COLUMNS.map(col => (
@@ -788,11 +771,11 @@ function ItemsTab({ onDelete }: TabProps) {
       </div>
       
       {/* Armament List */}
-      <div className="divide-y divide-gray-200 border border-gray-200 rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-gray-500">No armaments match your search.</div>
+          <div className="py-12 text-center text-text-muted">No armaments match your search.</div>
         ) : (
           filteredData.map(item => (
             <GridListRow
@@ -910,7 +893,7 @@ function CreaturesTab({ onDelete }: TabProps) {
       {isLoading ? (
         <LoadingSpinner />
       ) : filteredCreatures.length === 0 ? (
-        <div className="py-12 text-center text-gray-500">No creatures match your search.</div>
+        <div className="py-12 text-center text-text-muted">No creatures match your search.</div>
       ) : (
         <div className="space-y-3">
           {filteredCreatures.map(creature => (

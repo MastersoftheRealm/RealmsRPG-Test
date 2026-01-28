@@ -133,20 +133,20 @@ export function ItemSelectionModal({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] m-4 flex flex-col bg-card rounded-xl shadow-xl border border-border overflow-hidden">
+      <div className="relative w-full max-w-4xl max-h-[90vh] m-4 flex flex-col bg-surface rounded-xl shadow-xl border border-border overflow-hidden">
         {/* Header */}
         <div className="flex items-start justify-between gap-4 p-4 border-b border-border">
           <div>
-            <h2 id="modal-title" className="text-xl font-semibold text-foreground">
+            <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
               {title}
             </h2>
             {description && (
-              <p className="text-sm text-muted-foreground mt-1">{description}</p>
+              <p className="text-sm text-text-muted mt-1">{description}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -169,30 +169,30 @@ export function ItemSelectionModal({
         </div>
         
         {/* Footer */}
-        <div className="flex items-center justify-between gap-4 p-4 border-t border-border bg-muted/30">
+        <div className="flex items-center justify-between gap-4 p-4 border-t border-border bg-surface-alt">
           {/* Selection count */}
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-text-muted">
             {selectedCount} selected
             {maxSelections && ` / ${maxSelections} max`}
           </div>
           
           {/* Validation error */}
           {validationError && (
-            <div className="text-sm text-destructive">{validationError}</div>
+            <div className="text-sm text-danger-600">{validationError}</div>
           )}
           
           {/* Actions */}
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="px-4 py-2 rounded-lg border border-border text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
               disabled={selectedCount === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="w-4 h-4" />
               Confirm Selection

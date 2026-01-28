@@ -47,7 +47,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#f6f6f6] border-b border-[#707070] h-20">
+    <header className="sticky top-0 z-50 w-full bg-surface-secondary border-b border-divider h-20">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24">
         <div className="flex items-center justify-between h-20 gap-14">
           {/* Logo */}
@@ -72,8 +72,8 @@ export function Header() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'font-semibold text-lg text-[#053357] hover:text-[#0a5a94] transition-colors whitespace-nowrap',
-                    pathname === item.href ? 'text-[#0a5a94]' : ''
+                    'font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors whitespace-nowrap',
+                    pathname === item.href ? 'text-primary-500' : ''
                   )}
                 >
                   {item.label}
@@ -93,13 +93,13 @@ export function Header() {
                 </button>
                 {/* Hover bridge: invisible pseudo-element to prevent dropdown from closing */}
                 <div className="hidden group-hover:block absolute right-0 top-full pt-4 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-4">
-                  <div className="w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
-                    <Link href="/my-account" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                  <div className="w-48 bg-surface rounded-lg shadow-lg border border-border-light py-2">
+                    <Link href="/my-account" className="block px-4 py-2 text-text-secondary hover:bg-neutral-100">
                       My Account
                     </Link>
                     <button
                       onClick={() => signOut()}
-                      className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="w-full text-left px-4 py-2 text-text-secondary hover:bg-neutral-100"
                     >
                       Sign Out
                     </button>
@@ -137,7 +137,7 @@ export function Header() {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen ? (
-        <div className="lg:hidden border-t border-gray-200 bg-white">
+        <div className="lg:hidden border-t border-border-light bg-surface">
           <nav className="px-4 py-4 space-y-2">
             {navLinks.map((item) => (
               item.dropdown ? (
@@ -169,20 +169,20 @@ interface DropdownItem {
 function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string }) {
   return (
     <div className="relative group">
-      <button className="font-semibold text-lg text-[#053357] hover:text-[#0a5a94] transition-colors flex items-center gap-1 whitespace-nowrap">
+      <button className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors flex items-center gap-1 whitespace-nowrap">
         {item.label}
         <ChevronDownIcon className="w-4 h-4 group-hover:rotate-180 transition-transform" />
       </button>
       {/* Hover bridge: invisible pseudo-element to prevent dropdown from closing when mouse moves from button to dropdown */}
       <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 pt-2 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-4">
-        <div className="w-48 bg-[#f6f6f6] rounded-lg shadow-lg border border-[#707070] py-2">
+        <div className="w-48 bg-surface-secondary rounded-lg shadow-lg border border-divider py-2">
           {item.dropdown?.map((subItem) => (
             <Link
               key={subItem.href}
               href={subItem.href}
               className={cn(
-                'block px-5 py-3 text-[#053357] hover:bg-gray-200 hover:text-[#0a5a94] transition-colors',
-                pathname === subItem.href ? 'bg-gray-100 text-[#0a5a94]' : ''
+                'block px-5 py-3 text-primary-700 hover:bg-neutral-200 hover:text-primary-500 transition-colors',
+                pathname === subItem.href ? 'bg-neutral-100 text-primary-500' : ''
               )}
             >
               {subItem.label}
@@ -200,7 +200,7 @@ function MobileDropdown({ item, pathname }: { item: DropdownItem; pathname: stri
   return (
     <div>
       <button
-        className="flex items-center justify-between w-full py-2 text-lg font-semibold text-[#053357]"
+        className="flex items-center justify-between w-full py-2 text-lg font-semibold text-primary-700"
         onClick={() => setOpen(!open)}
       >
         {item.label}
@@ -213,8 +213,8 @@ function MobileDropdown({ item, pathname }: { item: DropdownItem; pathname: stri
               key={subItem.href}
               href={subItem.href}
               className={cn(
-                'block py-2 text-[#053357]',
-                pathname === subItem.href ? 'text-[#0a5a94]' : ''
+                'block py-2 text-primary-700',
+                pathname === subItem.href ? 'text-primary-500' : ''
               )}
             >
               {subItem.label}

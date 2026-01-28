@@ -66,7 +66,7 @@ export function TabsList({ children, className }: TabsListProps) {
   return (
     <div
       className={cn(
-        'inline-flex h-10 items-center justify-center rounded-lg bg-gray-100 p-1',
+        'inline-flex h-10 items-center justify-center rounded-lg bg-neutral-100 p-1',
         className
       )}
       role="tablist"
@@ -105,8 +105,8 @@ export function TabsTrigger({
         'transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2',
         'disabled:pointer-events-none disabled:opacity-50',
         isActive
-          ? 'bg-white text-primary shadow-sm'
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+          ? 'bg-surface text-primary-700 shadow-sm'
+          : 'text-text-muted hover:bg-neutral-50 hover:text-text-primary',
         className
       )}
     >

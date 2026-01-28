@@ -9,6 +9,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores';
+import { LoadingState } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,21 +28,13 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 
   // Still initializing
   if (!initialized || loading) {
-    return fallback ?? <LoadingSpinner />;
+    return fallback ?? <LoadingState size="lg" padding="lg" />;
   }
 
   // Not authenticated
   if (!user) {
-    return fallback ?? <LoadingSpinner />;
+    return fallback ?? <LoadingState size="lg" padding="lg" />;
   }
 
   return <>{children}</>;
-}
-
-function LoadingSpinner() {
-  return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600" />
-    </div>
-  );
 }

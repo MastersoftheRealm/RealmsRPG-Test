@@ -7,6 +7,10 @@
  * Used by Library, Creature Creator, and other pages.
  */
 
+import { Modal } from '@/components/ui/modal';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
+
 interface DeleteConfirmModalProps {
   /** Name of the item being deleted */
   itemName: string;
@@ -28,33 +32,43 @@ export function DeleteConfirmModal({
   onClose,
 }: DeleteConfirmModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl border border-gray-200 p-6 max-w-md mx-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      size="sm"
+      showCloseButton={false}
+    >
+      <div className="flex flex-col items-center text-center">
+        <div className="w-12 h-12 rounded-full bg-danger-light flex items-center justify-center mb-4">
+          <AlertTriangle className="w-6 h-6 text-danger" />
+        </div>
+        <h3 className="text-lg font-semibold text-text-primary mb-2">
           Delete {itemName}?
         </h3>
-        <p className="text-gray-600 mb-6">
+        <p className="text-text-muted mb-6">
           This action cannot be undone. This will permanently delete the {itemType} from your library.
         </p>
-        <div className="flex items-center justify-end gap-3">
-          <button
+        <div className="flex items-center justify-center gap-3 w-full">
+          <Button
+            variant="secondary"
             onClick={onClose}
             disabled={isDeleting}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+            isLoading={isDeleting}
+            className="flex-1"
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 

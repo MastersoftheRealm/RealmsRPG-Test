@@ -11,24 +11,28 @@ import { cn } from '@/lib/utils/cn';
 import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        primary: 'bg-primary text-on-primary hover:bg-primary/90 focus-visible:ring-primary',
-        gradient: 'bg-gradient-to-r from-[#1a5c94] to-[#0a4a7a] text-white hover:from-[#1a6aa8] hover:to-[#0d5a94] focus-visible:ring-primary shadow-md',
-        secondary: 'bg-secondary text-on-secondary hover:bg-secondary/80',
-        danger: 'bg-danger text-white hover:bg-danger/90 focus-visible:ring-danger',
-        success: 'bg-success text-white hover:bg-success/90 focus-visible:ring-success',
-        ghost: 'hover:bg-surface-alt hover:text-on-surface',
-        link: 'text-primary underline-offset-4 hover:underline',
-        outline: 'border border-border bg-transparent hover:bg-surface-alt hover:text-on-surface',
+        primary: 'bg-gradient-to-b from-primary-500 to-primary-700 text-primary-foreground hover:from-primary-400 hover:to-primary-600 hover:shadow-lg focus-visible:ring-primary-accent',
+        gradient: 'bg-gradient-to-r from-primary-light to-primary text-primary-foreground hover:from-primary-500 hover:to-primary-600 focus-visible:ring-primary-accent shadow-md',
+        secondary: 'bg-neutral-200 text-text-secondary border border-neutral-300 hover:bg-neutral-300 focus-visible:ring-neutral-500',
+        danger: 'bg-gradient-to-b from-danger-600 to-danger-dark text-white hover:shadow-lg focus-visible:ring-danger',
+        success: 'bg-gradient-to-b from-success-500 to-success-dark text-white hover:shadow-lg focus-visible:ring-success',
+        ghost: 'text-text-secondary hover:bg-neutral-100 hover:text-text-primary focus-visible:ring-neutral-500',
+        link: 'text-primary-600 underline-offset-4 hover:underline focus-visible:ring-primary-accent',
+        outline: 'border-2 border-primary-700 text-primary-700 bg-transparent hover:bg-primary-50 focus-visible:ring-primary-accent',
+        utility: 'bg-utility-300 text-white hover:bg-utility-400 focus-visible:ring-utility-300',
       },
       size: {
         sm: 'h-8 px-3 text-xs',
         md: 'h-10 px-4 py-2',
         lg: 'h-12 px-6 text-base',
+        xl: 'h-14 px-8 text-lg',
         icon: 'h-10 w-10',
+        'icon-sm': 'h-8 w-8',
+        'icon-lg': 'h-12 w-12',
       },
     },
     defaultVariants: {
