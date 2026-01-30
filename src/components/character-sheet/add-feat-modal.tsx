@@ -12,6 +12,7 @@ import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X, Search } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { GridListRow } from '@/components/shared';
 import type { Character } from '@/types';
 
@@ -326,7 +327,7 @@ export function AddFeatModal({
             </label>
           {loading && (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <Spinner size="md" className="mx-auto mb-2" />
               <p className="text-text-muted">Loading feats...</p>
             </div>
           )}

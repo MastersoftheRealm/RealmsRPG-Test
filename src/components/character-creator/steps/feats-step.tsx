@@ -14,6 +14,7 @@
 
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBFeats, type RTDBFeat } from '@/hooks';
 import { getArchetypeFeatLimit } from '@/lib/game/formulas';
@@ -252,7 +253,7 @@ export function FeatsStep() {
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+        <Spinner size="md" />
       </div>
     );
   }

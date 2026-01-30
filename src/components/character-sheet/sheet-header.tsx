@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 import { useRollsOptional } from './roll-context';
 import { HealthEnergyAllocator } from '@/components/creator';
 import type { Character } from '@/types';
@@ -325,7 +326,7 @@ export function SheetHeader({
             {/* Loading spinner */}
             {isUploadingPortrait && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+                <Spinner size="md" variant="white" />
               </div>
             )}
           </div>

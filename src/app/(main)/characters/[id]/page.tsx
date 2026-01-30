@@ -14,6 +14,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
 import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts } from '@/hooks';
 import { cn } from '@/lib/utils';
+import { LoadingState } from '@/components/ui/spinner';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPoints } from '@/lib/game/formulas';
 import {
@@ -886,10 +887,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-text-secondary">Loading character...</p>
-        </div>
+        <LoadingState message="Loading character..." size="lg" />
       </div>
     );
   }

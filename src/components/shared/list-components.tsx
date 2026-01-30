@@ -25,7 +25,6 @@ export interface SearchInputProps {
   placeholder?: string;
   className?: string;
 }
-}
 
 // =============================================================================
 // Sort Header

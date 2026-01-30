@@ -13,6 +13,7 @@ import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X, Search } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { GridListRow } from '@/components/shared';
 
 interface SubSkill {
@@ -207,7 +208,7 @@ export function AddSubSkillModal({
         <div className="flex-1 overflow-y-auto p-4">
           {loading && (
             <div className="text-center py-8">
-              <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+              <Spinner size="md" className="mx-auto mb-2" />
               <p className="text-text-muted">Loading sub-skills...</p>
             </div>
           )}

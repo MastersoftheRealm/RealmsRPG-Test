@@ -9,6 +9,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Search, SortAsc, SortDesc, Filter, Grid, List, X } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { ItemCard } from './item-card';
 import type { DisplayItem, ListMode, ItemActions, FilterOption, SortOption, FilterState, SortState } from '@/types/items';
 
@@ -403,7 +404,7 @@ export function ItemList({
       {/* Loading state */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <Spinner size="md" />
         </div>
       )}
       

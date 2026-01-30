@@ -10,6 +10,7 @@
 import { useState, useCallback, useMemo, useEffect, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Save, GripVertical } from 'lucide-react';
+import { LoadingState } from '@/components/ui/spinner';
 
 const STORAGE_KEY = 'realms-encounter-tracker';
 
@@ -551,10 +552,7 @@ function EncounterTrackerContent() {
   if (!isLoaded) {
     return (
       <div className="max-w-7xl mx-auto flex items-center justify-center py-20">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-text-secondary">Loading encounter...</p>
-        </div>
+        <LoadingState message="Loading encounter..." size="lg" />
       </div>
     );
   }

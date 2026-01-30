@@ -15,6 +15,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
 import { SearchInput } from '@/components/shared';
+import { Spinner } from '@/components/ui/spinner';
 import { Plus, Minus, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import type { Item } from '@/types';
 
@@ -286,7 +287,7 @@ export function EquipmentStep() {
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+        <Spinner size="md" />
       </div>
     );
   }

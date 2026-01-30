@@ -20,13 +20,13 @@ export { ExpandableChip, ChipGroup, type ExpandableChipProps, type ChipGroupProp
 
 // Navigation components
 export { TabNavigation, type Tab } from './tab-navigation';
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
+// Note: tabs.tsx (Tabs, TabsList, TabsTrigger, TabsContent) was removed - use TabNavigation instead
 
 // Feedback components
 export { Modal } from './modal';
 export { ToastProvider, useToast } from './toast';
 export { Alert, type AlertProps } from './alert';
-export { Alert as AlertEnhanced } from './alert-enhanced';
+// Note: alert-enhanced.tsx was removed - use Alert instead
 
 // Collapsible components
 export { Collapsible, CollapsibleGroup, type CollapsibleProps, type CollapsibleGroupProps } from './collapsible';

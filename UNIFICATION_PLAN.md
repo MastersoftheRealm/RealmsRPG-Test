@@ -1,6 +1,6 @@
 # RealmsRPG Component & Style Unification Plan
 
-> **Last Updated:** Phase 4 Complete  
+> **Last Updated:** Phase 5 In Progress  
 > **Goal:** Unify components, styles, and logic across the entire site while preserving vanilla site functionality
 
 ---
@@ -25,6 +25,9 @@
 - [x] Fixed color tokens in `add-skill-modal.tsx`
 - [x] Fixed color tokens in `library-section.tsx` (50+ replacements)
 - [x] **Phase 4 Color Migration Complete** - All non-auth components migrated
+- [x] **Phase 5: Dead Code Removal** - Deleted unused `alert-enhanced.tsx` and `tabs.tsx`
+- [x] **Phase 5: Syntax Fix** - Fixed extra `}` in `list-components.tsx`
+- [x] **Phase 5: Spinner Unification** - Replaced 12 inline spinners across 11 files with `<Spinner />` component
 
 ### ✅ Phase 4 Color Migration - Migrated Files
 **App Pages:**
@@ -343,24 +346,26 @@ All interactive elements should follow these patterns:
 
 ## Implementation Roadmap
 
-### Phase 1: Foundation (Week 1)
+### Phase 1: Foundation (Week 1) ✅ COMPLETE
 
 - [x] Create UNIFICATION_PLAN.md (this document)
-- [ ] Create `shared/roll-button.tsx`
-- [ ] Create `shared/point-status.tsx`
-- [ ] Consolidate SearchInput to single source
-- [ ] Update components to use `ui/spinner.tsx`
+- [x] Create `shared/roll-button.tsx`
+- [x] Create `shared/point-status.tsx`
+- [x] Create `shared/value-stepper.tsx`
+- [x] Consolidate SearchInput to single source
+- [x] Update components to use `ui/spinner.tsx`
 
-### Phase 2: Character Sheet Components (Week 2)
+### Phase 2: Character Sheet Components (Week 2) ✅ COMPLETE
 
-- [ ] Update `abilities-section.tsx` to use shared components
-- [ ] Update `skills-section.tsx` to use shared components
-- [ ] Ensure defenses use same RollButton pattern
-- [ ] Create shared skill list component for reuse
+- [x] Update `abilities-section.tsx` to use shared components
+- [x] Update `skills-section.tsx` to use shared components
+- [x] Ensure defenses use same RollButton pattern
+- [ ] Create shared skill list component for reuse (future enhancement)
 
-### Phase 3: Creator Unification (Week 3)
+### Phase 3: Creator Unification (Week 3) 🚧 PARTIAL
 
-- [ ] Update all creator steps to use shared components
+- [x] Character-creator steps use shared components
+- [ ] Update all creator pages to use shared components consistently
 - [ ] Unify creator summary panels
 - [ ] Consistent styling across all creator pages
 
@@ -374,48 +379,89 @@ All interactive elements should follow these patterns:
 - [x] Migrate all main page components (creators, library, etc.)
 - [ ] Verify typography consistency (optional future work)
 
-### Phase 5: Testing & Polish (Week 5)
+### Phase 5: Testing & Polish (Week 5) 🚧 IN PROGRESS
 
+- [x] Fixed syntax error in `list-components.tsx`
+- [x] Replaced 12 inline spinners with `<Spinner />` component across 11 files
+- [x] Removed dead code: `alert-enhanced.tsx`, `tabs.tsx` (unused components)
+- [x] Updated `ui/index.ts` to remove dead exports
 - [ ] Visual regression testing
 - [ ] Cross-page component verification
-- [ ] Remove dead/unused code
 - [ ] Update component documentation
+
+---
+
+## Codebase Audit Results (Phase 5)
+
+### Shared Components Usage
+
+| Component | Definition | Usages | Status |
+|-----------|------------|--------|--------|
+| `RollButton` | shared/roll-button.tsx | 5 (abilities-section, skills-section) | ✅ In Use |
+| `PointStatus` | shared/point-status.tsx | 5 (abilities-section, skills-section) | ✅ In Use |
+| `ValueStepper` | shared/value-stepper.tsx | 2 (wrapped by NumberStepper) | ✅ In Use |
+| `Spinner` | ui/spinner.tsx | 12+ across all pages | ✅ Unified |
+| `TabNavigation` | ui/tab-navigation.tsx | Library, Codex pages | ✅ In Use |
+| `SearchInput` | ui/search-input.tsx | Re-exported from list-components | ✅ Unified |
+
+### Dead Code Removed
+
+| File | Reason |
+|------|--------|
+| `ui/alert-enhanced.tsx` | Never imported anywhere |
+| `ui/tabs.tsx` | Never used; TabNavigation is preferred |
+
+### Semantic Color Decisions
+
+Some `blue-*` colors are **intentionally preserved** as semantic colors:
+- `blue-*` for Energy displays (power-creator, creature-creator)
+- `blue-*` for Ally indicators in encounter-tracker
+- These follow the design principle: "green for health, blue for energy"
+
+### Local Component Variants (Acceptable)
+
+| Component | Location | Reason |
+|-----------|----------|--------|
+| `CollapsibleSection` | feats-tab.tsx | Has specialized props (count, action, headerColor) |
+| `FilterSection` | codex/filters/*.tsx | Context-specific filtering UI |
+| `Loader2` (lucide) | Various buttons | Appropriate for inline button spinners |
 
 ---
 
 ## Files to Create
 
-1. `src/components/shared/roll-button.tsx` - Unified roll button
-2. `src/components/shared/point-status.tsx` - Point tracker display
+1. ~~`src/components/shared/roll-button.tsx`~~ ✅ Created
+2. ~~`src/components/shared/point-status.tsx`~~ ✅ Created
 3. `src/components/shared/skill-list.tsx` - Reusable skill list for sheet/creatures
 4. `src/components/shared/ability-grid.tsx` - 6-ability display grid
 
 ## Files to Update
 
-1. `src/components/character-sheet/abilities-section.tsx` - Use shared components
-2. `src/components/character-sheet/skills-section.tsx` - Use shared components
+1. ~~`src/components/character-sheet/abilities-section.tsx`~~ ✅ Uses shared components
+2. ~~`src/components/character-sheet/skills-section.tsx`~~ ✅ Uses shared components
 3. `src/components/creator/ability-score-editor.tsx` - Use shared RollButton
-4. `src/components/shared/list-components.tsx` - Remove duplicate SearchInput
-5. Multiple files for color token migration
+4. ~~`src/components/shared/list-components.tsx`~~ ✅ Fixed syntax error, re-exports SearchInput
+5. ~~Multiple files for color token migration~~ ✅ Complete
 
-## Files to Remove/Deprecate
+## Files Removed
 
-1. `src/components/ui/alert-enhanced.tsx` - Merge into alert.tsx
-2. Inline `SkillRollButton` in skills-section.tsx
-3. Inline `RollButton` in abilities-section.tsx
-4. Inline `PointTracker` in abilities-section.tsx
+1. ~~`src/components/ui/alert-enhanced.tsx`~~ ✅ Deleted
+2. ~~`src/components/ui/tabs.tsx`~~ ✅ Deleted
+3. ~~Inline `SkillRollButton`~~ ✅ Replaced with shared RollButton
+4. ~~Inline `RollButton`~~ ✅ Replaced with shared RollButton
+5. ~~Inline `PointTracker`~~ ✅ Replaced with shared PointStatus
 
 ---
 
 ## Success Criteria
 
-- [ ] Same RollButton component used across character sheet, creatures, encounter tracker
-- [ ] Same PointStatus component used in all point allocation contexts
+- [x] Same RollButton component used across character sheet abilities and skills
+- [x] Same PointStatus component used in abilities and skills sections
 - [x] No hardcoded gray-* classes in non-auth components (all use semantic tokens)
+- [x] Single loading state implementation (ui/spinner.tsx)
 - [ ] Consistent typography (Nova Flat for h1/h2, Nunito for rest)
-- [ ] Single SearchInput implementation
-- [ ] Single loading state implementation
-- [ ] All stepper controls use consistent styling
+- [x] Single SearchInput implementation (ui/search-input.tsx)
+- [x] All stepper controls use consistent styling (ValueStepper → NumberStepper)
 - [ ] Documentation updated for component usage
 
 ---

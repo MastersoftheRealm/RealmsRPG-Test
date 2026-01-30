@@ -12,6 +12,7 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAuth, useRTDBSkills } from '@/hooks';
 import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
 import { LoginPromptModal } from '@/components/shared';
@@ -99,7 +100,7 @@ function ValidationModal({
             >
               {isSaving ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <Spinner size="sm" variant="white" />
                   Saving...
                 </>
               ) : (
@@ -319,7 +320,7 @@ function PortraitUpload() {
           >
             {isUploading ? (
               <>
-                <span className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                <Spinner size="sm" />
                 Uploading...
               </>
             ) : (
