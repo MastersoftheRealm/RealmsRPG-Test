@@ -85,15 +85,28 @@ Used for chips, badges, and content type indicators.
 // Use PageContainer for consistent page layout
 import { PageContainer, PageHeader } from '@/components/ui';
 
-<PageContainer size="lg"> {/* sm | md | lg | xl | full */}
+<PageContainer size="content"> {/* xs | sm | prose | md | content | lg | xl | full */}
   <PageHeader 
-    title="Page Title" 
+    title="Page Title"
+    icon={<IconComponent className="w-8 h-8 text-primary-600" />} {/* Optional icon */}
     description="Optional description"
     actions={<Button>Action</Button>}
   />
   {/* Page content */}
 </PageContainer>
 ```
+
+**PageContainer Sizes:**
+| Size | Max Width | Use Case |
+|------|-----------|----------|
+| `xs` | max-w-2xl | Login/account forms |
+| `sm` | max-w-3xl | Narrow forms |
+| `prose` | max-w-4xl | Privacy, terms, resources |
+| `md` | max-w-5xl | Medium content |
+| `content` | max-w-6xl | Creators, character wizard |
+| `lg` | max-w-7xl | Default, character sheet |
+| `xl` | max-w-[1440px] | Library, Codex |
+| `full` | max-w-none | Full width |
 
 CSS classes available:
 - `.page-container` - Standard page container

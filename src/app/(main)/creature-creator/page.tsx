@@ -27,7 +27,7 @@ import {
   calculateSkillPoints,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
-import { IconButton, SearchInput, Button, Input, Select, PageContainer } from '@/components/ui';
+import { IconButton, SearchInput, Button, Input, Select, PageContainer, PageHeader } from '@/components/ui';
 import { X, Trash2 } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import {
@@ -1156,35 +1156,36 @@ function CreatureCreatorContent() {
 
   return (
     <PageContainer size="full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary">Creature Creator</h1>
-          <p className="text-text-secondary">Design custom creatures, monsters, and NPCs</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-            title={user ? "Load from library" : "Log in to load from library"}
-          >
-            Load
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleReset}
-          >
-            Reset
-          </Button>
-          <Button
-            variant="success"
-            onClick={handleSave}
-            disabled={saving}
-            isLoading={saving}
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Creature Creator"
+        description="Design custom creatures, monsters, and NPCs"
+        actions={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
+              title={user ? "Load from library" : "Log in to load from library"}
+            >
+              Load
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleReset}
+            >
+              Reset
+            </Button>
+            <Button
+              variant="success"
+              onClick={handleSave}
+              disabled={saving}
+              isLoading={saving}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </>
+        }
+        className="mb-6"
+      />
 
       {/* Creature Summary Card (Top) */}
       <div className="bg-surface rounded-xl shadow-md p-4 mb-6">

@@ -9,7 +9,7 @@
 'use client';
 
 import { useAuth } from '@/hooks';
-import { LoadingState } from '@/components/ui/spinner';
+import { LoadingState, PageContainer } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import {
   CreatorTabBar,
@@ -52,7 +52,7 @@ export default function CharacterCreatorPage() {
   
   return (
     <div className="min-h-screen bg-background py-6">
-      <div className="max-w-6xl mx-auto px-4">
+      <PageContainer size="content">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-text-primary">Create New Character</h1>
           <p className="text-text-secondary mt-1">
@@ -65,7 +65,7 @@ export default function CharacterCreatorPage() {
         <div className="bg-surface rounded-xl shadow-md p-6 md:p-8">
           <StepComponent />
         </div>
-      </div>
+      </PageContainer>
     </div>
   );
 }

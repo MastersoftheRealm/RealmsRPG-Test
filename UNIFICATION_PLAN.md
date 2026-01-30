@@ -1,8 +1,8 @@
 # RealmsRPG Component & Style Unification Plan
 
-> **Last Updated:** January 30, 2025 - Phase 10E Complete  
+> **Last Updated:** January 30, 2025 - Phase 10G Complete  
 > **Goal:** Unify components, styles, and logic across the entire site while preserving vanilla site functionality
-> **Status:** ✅ Phase 10E Complete - Static Pages Fully Unified
+> **Status:** ✅ Phase 10G Complete - PageHeader Adopted Across Creators
 
 ---
 
@@ -323,6 +323,41 @@ These components exist but were **underutilized**:
 - [x] `rules/page.tsx` - Uses PageHeader with title + description
 
 **Result:** All static content pages now use consistent PageHeader + PageContainer pattern
+
+### ✅ Phase 10F: Creator Pages PageContainer Adoption (COMPLETE)
+
+**Creator Pages Migrated:**
+- [x] `power-creator/page.tsx` - 3 instances → `PageContainer size="content"`
+- [x] `technique-creator/page.tsx` - 3 instances → `PageContainer size="content"`
+- [x] `item-creator/page.tsx` - 3 instances → `PageContainer size="content"`
+- [x] `creature-creator/page.tsx` - 1 instance → `PageContainer size="full"`
+- [x] `encounter-tracker/page.tsx` - 2 instances → `PageContainer size="full"`
+
+**Impact:**
+- Removed 12 inline `max-w-6xl mx-auto` and `max-w-7xl mx-auto` divs
+- All creator tools now use consistent PageContainer component
+- Sizes used: `content` (max-w-6xl) for focused creators, `full` (max-w-7xl) for wide layouts
+
+### ✅ Phase 10G: PageHeader Adoption for Creators (COMPLETE)
+
+**PageHeader Component Enhancements:**
+- [x] Added `icon` prop for optional icon before title
+- [x] Changed description text color to `text-text-secondary` for consistency
+- [x] Changed flex alignment to `items-start` for better multi-line description handling
+
+**Creator Pages Migrated to PageHeader:**
+- [x] `power-creator/page.tsx` - Uses icon (Wand2), title, description, and action buttons
+- [x] `technique-creator/page.tsx` - Uses icon (Swords), title, description, and action buttons
+- [x] `item-creator/page.tsx` - Uses icon (Sword), title, description, and action buttons
+- [x] `creature-creator/page.tsx` - Uses title, description, and action buttons (no icon)
+- [x] `characters/new/page.tsx` - Now uses PageContainer size="content"
+
+**Intentionally Preserved (Specialized Headers):**
+- `encounter-tracker/page.tsx` - Has dynamic round display and auto-save indicator that require custom JSX
+- `characters/[id]/page.tsx` - Has sticky action bar with separate container requirements
+
+**Additional Migrations:**
+- [x] `creator-constants.ts` - RARITY_COLORS Common: `text-gray-600 bg-gray-100` → `text-text-secondary bg-neutral-100`
 
 ### ⚠️ Intentionally Preserved
 - Auth components (`login/`, `register/`, `forgot-password/`, `forgot-username/`) - Use dark theme gray-* styling

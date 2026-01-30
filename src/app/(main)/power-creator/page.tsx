@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { usePowerParts, useUserPowers, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
+import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
@@ -1244,42 +1244,38 @@ function PowerCreatorContent() {
 
   return (
     <PageContainer size="content">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-2">
-            <Wand2 className="w-8 h-8 text-primary-600" />
-            Power Creator
-          </h1>
-          <p className="text-text-secondary">
-            Design custom powers by combining power parts. Each part contributes to the total
-            energy cost and training point requirements.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-            title={user ? "Load from library" : "Log in to load from library"}
-          >
-            <FolderOpen className="w-5 h-5" />
-            Load
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleReset}
-          >
-            Reset
-          </Button>
-          <Button
-            variant="success"
-            onClick={handleSave}
-            disabled={saving || !name.trim()}
-            isLoading={saving}
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={<Wand2 className="w-8 h-8 text-primary-600" />}
+        title="Power Creator"
+        description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
+              title={user ? "Load from library" : "Log in to load from library"}
+            >
+              <FolderOpen className="w-5 h-5" />
+              Load
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleReset}
+            >
+              Reset
+            </Button>
+            <Button
+              variant="success"
+              onClick={handleSave}
+              disabled={saving || !name.trim()}
+              isLoading={saving}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </>
+        }
+        className="mb-6"
+      />
 
       {/* Load from Library Modal */}
       <LoadFromLibraryModal

@@ -18,7 +18,7 @@ import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, Fo
 import { cn } from '@/lib/utils';
 import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
 import { LoginPromptModal } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
+import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import { useAuthStore } from '@/stores';
@@ -749,42 +749,38 @@ function ItemCreatorContent() {
 
   return (
     <PageContainer size="content">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-2">
-            <Sword className="w-8 h-8 text-amber-600" />
-            Armament Creator
-          </h1>
-          <p className="text-text-secondary">
-            Design custom weapons, armor, and shields by combining item properties. 
-            Properties determine the item&apos;s rarity and cost.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-            title={user ? "Load from library" : "Log in to load from library"}
-          >
-            <FolderOpen className="w-5 h-5" />
-            Load
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={handleReset}
-          >
-            Reset
-          </Button>
-          <Button
-            variant="success"
-            onClick={handleSave}
-            disabled={saving || !name.trim()}
-            isLoading={saving}
-          >
-            {saving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        icon={<Sword className="w-8 h-8 text-amber-600" />}
+        title="Armament Creator"
+        description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
+              title={user ? "Load from library" : "Log in to load from library"}
+            >
+              <FolderOpen className="w-5 h-5" />
+              Load
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleReset}
+            >
+              Reset
+            </Button>
+            <Button
+              variant="success"
+              onClick={handleSave}
+              disabled={saving || !name.trim()}
+              isLoading={saving}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </>
+        }
+        className="mb-6"
+      />
 
       {/* Load from Library Modal */}
       <LoadFromLibraryModal

@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils/cn';
 interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Main page title */
   title: string;
+  /** Optional icon to display before the title */
+  icon?: React.ReactNode;
   /** Optional description below title */
   description?: string;
   /** Optional action buttons/elements to display on the right */
@@ -27,6 +29,7 @@ const titleSizeClasses = {
 
 export function PageHeader({
   title,
+  icon,
   description,
   actions,
   size = 'md',
@@ -35,13 +38,14 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div className={cn('mb-8', className)} {...props}>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h1 className={cn('font-bold text-text-primary', titleSizeClasses[size])}>
+          <h1 className={cn('font-bold text-text-primary flex items-center gap-2', titleSizeClasses[size])}>
+            {icon}
             {title}
           </h1>
           {description && (
-            <p className="mt-2 text-lg text-text-muted">
+            <p className="mt-2 text-text-secondary">
               {description}
             </p>
           )}

@@ -133,7 +133,7 @@ export const DURATION_VALUES: Record<string, { value: number; label: string }[]>
 // =============================================================================
 
 export const RARITY_COLORS: Record<string, string> = {
-  Common: 'text-gray-600 bg-gray-100',
+  Common: 'text-text-secondary bg-neutral-100',
   Uncommon: 'text-green-600 bg-green-100',
   Rare: 'text-blue-600 bg-blue-100',
   Epic: 'text-purple-600 bg-purple-100',
