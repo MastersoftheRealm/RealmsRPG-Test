@@ -94,12 +94,12 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
     <div className={cn('bg-white rounded-xl shadow-md p-4', className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900">🎲 Dice Roller</h3>
+        <h3 className="text-lg font-bold text-text-primary">🎲 Dice Roller</h3>
         <button
           onClick={() => setShowHistory(!showHistory)}
           className={cn(
             'p-2 rounded-lg transition-colors',
-            showHistory ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:bg-gray-100'
+            showHistory ? 'bg-primary-100 text-primary-700' : 'text-text-muted hover:bg-neutral-100'
           )}
           title="Roll history"
         >
@@ -119,7 +119,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                   'py-2 px-1 rounded-lg text-sm font-bold transition-colors',
                   dieType === die
                     ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
                 )}
               >
                 d{die}
@@ -132,7 +132,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setDieCount(Math.max(1, dieCount - 1))}
-                className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 font-bold"
+                className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 font-bold"
               >
                 −
               </button>
@@ -143,19 +143,19 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
               >
                 +
               </button>
-              <span className="text-sm text-gray-600">dice</span>
+              <span className="text-sm text-text-secondary">dice</span>
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setModifier(modifier - 1)}
-                className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 font-bold"
+                className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 font-bold"
               >
                 −
               </button>
               <span className={cn(
                 'w-10 text-center font-bold',
-                modifier > 0 ? 'text-green-600' : modifier < 0 ? 'text-red-600' : 'text-gray-600'
+                modifier > 0 ? 'text-green-600' : modifier < 0 ? 'text-red-600' : 'text-text-secondary'
               )}>
                 {formatModifier(modifier) || '±0'}
               </span>
@@ -165,7 +165,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
               >
                 +
               </button>
-              <span className="text-sm text-gray-600">mod</span>
+              <span className="text-sm text-text-secondary">mod</span>
             </div>
           </div>
 
@@ -179,19 +179,19 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
 
           {/* Last Roll Result */}
           {lastRoll && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-xl text-center">
-              <div className="text-sm text-gray-600 mb-1">
+            <div className="mt-4 p-4 bg-neutral-50 rounded-xl text-center">
+              <div className="text-sm text-text-secondary mb-1">
                 {lastRoll.count}d{lastRoll.dieType}{formatModifier(lastRoll.modifier)}
               </div>
               <div className="text-4xl font-bold text-primary-600 mb-2">
                 {lastRoll.total}
               </div>
-              <div className="flex items-center justify-center gap-1 text-sm text-gray-500">
+              <div className="flex items-center justify-center gap-1 text-sm text-text-muted">
                 {lastRoll.results.map((r, i) => (
                   <span key={i} className={cn(
                     'px-2 py-0.5 rounded',
                     r === lastRoll.dieType ? 'bg-green-200 text-green-800' :
-                    r === 1 ? 'bg-red-200 text-red-800' : 'bg-gray-200'
+                    r === 1 ? 'bg-red-200 text-red-800' : 'bg-neutral-200'
                   )}>
                     {r}
                   </span>
@@ -212,10 +212,10 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
         /* Roll History */
         <div className="space-y-2">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Recent Rolls</span>
+            <span className="text-sm text-text-secondary">Recent Rolls</span>
             <button
               onClick={clearHistory}
-              className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+              className="p-1 text-text-muted hover:text-red-500 transition-colors"
               title="Clear history"
             >
               <Trash2 className="w-4 h-4" />
@@ -223,21 +223,21 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           </div>
           
           {rollHistory.length === 0 ? (
-            <p className="text-center text-gray-400 py-4">No rolls yet</p>
+            <p className="text-center text-text-muted py-4">No rolls yet</p>
           ) : (
             <div className="max-h-[300px] overflow-y-auto space-y-2">
               {rollHistory.map((roll) => (
-                <div key={roll.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <div key={roll.id} className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
                   <div>
-                    <span className="font-medium text-gray-800">
+                    <span className="font-medium text-text-primary">
                       {roll.count}d{roll.dieType}{formatModifier(roll.modifier)}
                     </span>
                     {roll.label && (
-                      <span className="ml-2 text-xs text-gray-500">{roll.label}</span>
+                      <span className="ml-2 text-xs text-text-muted">{roll.label}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-text-muted">
                       [{roll.results.join(', ')}]
                     </span>
                     <span className="font-bold text-primary-600">= {roll.total}</span>

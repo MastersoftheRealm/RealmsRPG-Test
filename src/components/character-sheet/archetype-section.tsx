@@ -45,13 +45,13 @@ function ProficiencyMeter({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex justify-between text-sm">
-        <span className="text-gray-600">{label}</span>
+        <span className="text-text-secondary">{label}</span>
         <div className="flex items-center gap-1">
           {isEditMode && (
             <button
               onClick={onDecrease}
               disabled={value <= 0}
-              className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
+              className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
               title="Decrease proficiency"
             >
               −
@@ -62,7 +62,7 @@ function ProficiencyMeter({
             <button
               onClick={onIncrease}
               disabled={value >= maxValue}
-              className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
+              className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
               title="Increase proficiency"
             >
               +
@@ -76,7 +76,7 @@ function ProficiencyMeter({
             key={i}
             className={cn(
               'h-2 flex-1 rounded-full',
-              i < value ? colorClasses[color] : 'bg-gray-200'
+              i < value ? colorClasses[color] : 'bg-neutral-200'
             )}
           />
         ))}
@@ -121,11 +121,11 @@ function AttackBonusesTable({
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Attack Bonuses</h4>
+    <div className="bg-neutral-50 rounded-lg p-3 mb-4">
+      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Attack Bonuses</h4>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-xs text-gray-500">
+          <tr className="text-xs text-text-muted">
             <th className="text-left py-1"></th>
             <th className="text-center py-1">Prof.</th>
             <th className="text-center py-1">Unprof.</th>
@@ -134,11 +134,11 @@ function AttackBonusesTable({
         <tbody>
           {(['strength', 'agility', 'acuity', 'power'] as const).map((key) => (
             <tr key={key}>
-              <td className="py-1 font-medium text-gray-700 capitalize">{key}</td>
+              <td className="py-1 font-medium text-text-secondary capitalize">{key}</td>
               <td className="text-center py-1">
                 <button
                   onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, bonuses[key].prof)}
-                  className="px-2 py-0.5 bg-white border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-300 transition-colors font-mono text-sm"
+                  className="px-2 py-0.5 bg-white border border-neutral-300 rounded hover:bg-primary-50 hover:border-primary-300 transition-colors font-mono text-sm"
                   title={`Roll ${key} (proficient)`}
                 >
                   {formatBonus(bonuses[key].prof)}
@@ -147,7 +147,7 @@ function AttackBonusesTable({
               <td className="text-center py-1">
                 <button
                   onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, bonuses[key].unprof)}
-                  className="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 transition-colors font-mono text-sm text-gray-600"
+                  className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded hover:bg-neutral-200 transition-colors font-mono text-sm text-text-muted"
                   title={`Roll ${key} (unproficient)`}
                 >
                   {formatBonus(bonuses[key].unprof)}
@@ -191,11 +191,11 @@ function WeaponsSection({
   const unarmedDamage = Math.max(1, Math.ceil(str / 2));
 
   return (
-    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Weapons</h4>
+    <div className="bg-neutral-50 rounded-lg p-3 mb-4">
+      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Weapons</h4>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-xs text-gray-500">
+          <tr className="text-xs text-text-muted">
             <th className="text-left py-1">Name</th>
             <th className="text-center py-1">Attack</th>
             <th className="text-center py-1">Damage</th>
@@ -231,11 +231,11 @@ function WeaponsSection({
             const displayProps = props.filter(p => p && !excludedProps.includes(p));
             
             return (
-              <tr key={weapon.id || idx} className="border-b border-gray-100 last:border-0">
-                <td className="py-1 font-medium text-gray-700">
+              <tr key={weapon.id || idx} className="border-b border-neutral-100 last:border-0">
+                <td className="py-1 font-medium text-text-secondary">
                   {weapon.name}
                   {displayProps.length > 0 && (
-                    <div className="text-xs text-gray-400 font-normal">
+                    <div className="text-xs text-text-muted font-normal">
                       {displayProps.map(p => `• ${p}`).join(' ')}
                     </div>
                   )}
@@ -256,19 +256,19 @@ function WeaponsSection({
                     {damageStr}
                   </button>
                 </td>
-                <td className="text-center py-1 text-gray-600">
+                <td className="text-center py-1 text-text-muted">
                   {weapon.range || 'Melee'}
                 </td>
               </tr>
             );
           })}
           {/* Unarmed Prowess - always shown */}
-          <tr className="border-t border-gray-200">
-            <td className="py-1 font-medium text-gray-500 italic">Unarmed Prowess</td>
+          <tr className="border-t border-neutral-200">
+            <td className="py-1 font-medium text-text-muted italic">Unarmed Prowess</td>
             <td className="text-center py-1">
               <button
                 onClick={() => onRollAttack?.('Unarmed Prowess', unprofBonus)}
-                className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors font-mono text-sm"
+                className="px-2 py-0.5 bg-neutral-200 text-text-secondary rounded hover:bg-neutral-300 transition-colors font-mono text-sm"
               >
                 {formatBonus(unprofBonus)}
               </button>
@@ -276,12 +276,12 @@ function WeaponsSection({
             <td className="text-center py-1">
               <button
                 onClick={() => onRollDamage?.(`${unarmedDamage} Bludgeoning`, unprofBonus)}
-                className="px-2 py-0.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors font-mono text-sm"
+                className="px-2 py-0.5 bg-neutral-200 text-text-secondary rounded hover:bg-neutral-300 transition-colors font-mono text-sm"
               >
                 {unarmedDamage} Bludg.
               </button>
             </td>
-            <td className="text-center py-1 text-gray-500">Melee</td>
+            <td className="text-center py-1 text-text-muted">Melee</td>
           </tr>
         </tbody>
       </table>
@@ -305,11 +305,11 @@ function ArmorSection({
   const equippedArmor = armorArray.filter((a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true);
 
   return (
-    <div className="bg-gray-50 rounded-lg p-3 mb-4">
-      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Armor</h4>
+    <div className="bg-neutral-50 rounded-lg p-3 mb-4">
+      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Armor</h4>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-xs text-gray-500">
+          <tr className="text-xs text-text-muted">
             <th className="text-left py-1">Name</th>
             <th className="text-center py-1">DMG Red.</th>
             <th className="text-center py-1">Crit Rng</th>
@@ -349,11 +349,11 @@ function ArmorSection({
               const displayProps = propNames.filter(n => n && !excludedProps.includes(n));
               
               return (
-                <tr key={armorItem.id || idx} className="border-b border-gray-100 last:border-0">
-                  <td className="py-1 font-medium text-gray-700">
+                <tr key={armorItem.id || idx} className="border-b border-neutral-100 last:border-0">
+                  <td className="py-1 font-medium text-text-secondary">
                     {armorItem.name}
                     {displayProps.length > 0 && (
-                      <div className="text-xs text-gray-400 font-normal">
+                      <div className="text-xs text-text-muted font-normal">
                         {displayProps.map(p => `• ${p}`).join(' ')}
                       </div>
                     )}
@@ -366,7 +366,7 @@ function ArmorSection({
             })
           ) : (
             <tr>
-              <td colSpan={4} className="py-2 text-center text-gray-400 italic">No armor equipped</td>
+              <td colSpan={4} className="py-2 text-center text-text-muted italic">No armor equipped</td>
             </tr>
           )}
         </tbody>
@@ -423,11 +423,11 @@ export function ArchetypeSection({
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
       {/* Archetype Header */}
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-gray-800">
+        <h2 className="text-lg font-bold text-text-primary">
           {character.archetype?.name || 'No Archetype'}
         </h2>
         {character.archetype?.description && (
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-text-muted mt-1">
             {character.archetype.description}
           </p>
         )}
@@ -465,7 +465,7 @@ export function ArchetypeSection({
       {/* Mixed Archetype Milestone Choices */}
       {archetypeType === 'mixed' && milestoneLevels.length > 0 && (
         <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-purple-50 border border-amber-200 rounded-lg">
-          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+          <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">
             Milestone Choices
           </h4>
           <div className="flex flex-wrap gap-2">
@@ -473,7 +473,7 @@ export function ArchetypeSection({
               const currentChoice = archetypeChoices[milestoneLevel];
               return (
                 <div key={milestoneLevel} className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500 min-w-[32px]">Lv.{milestoneLevel}:</span>
+                  <span className="text-xs text-text-muted min-w-[32px]">Lv.{milestoneLevel}:</span>
                   {isEditMode && onMilestoneChoiceChange ? (
                     <div className="flex gap-1">
                       <button
@@ -508,7 +508,7 @@ export function ArchetypeSection({
                         ? 'bg-purple-100 text-purple-700'
                         : currentChoice === 'feat'
                           ? 'bg-red-100 text-red-700'
-                          : 'bg-gray-100 text-gray-500 italic'
+                          : 'bg-neutral-100 text-text-muted italic'
                     )}>
                       {currentChoice === 'innate' ? '✨ Innate' : 
                        currentChoice === 'feat' ? '🎯 Feat' : 'Not chosen'}
@@ -518,7 +518,7 @@ export function ArchetypeSection({
               );
             })}
           </div>
-          <p className="text-[10px] text-gray-400 mt-2">
+          <p className="text-[10px] text-text-muted mt-2">
             Mixed archetypes choose at levels 4, 7, 10, etc.: +1 Innate (Threshold & Pools) OR +1 Bonus Feat
           </p>
         </div>

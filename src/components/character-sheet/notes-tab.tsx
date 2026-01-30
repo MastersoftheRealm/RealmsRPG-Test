@@ -90,14 +90,14 @@ export function NotesTab({
     <div className="space-y-4">
       {/* Physical Attributes & Movement */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
           Physical Attributes & Movement
         </h3>
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {/* Weight */}
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Weight</span>
+              <span className="text-sm font-semibold text-text-secondary">Weight</span>
               {isEditMode && onWeightChange ? (
                 <div className="flex items-center gap-1">
                   <input
@@ -105,18 +105,18 @@ export function NotesTab({
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     onBlur={handleWeightBlur}
-                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+                    className="w-20 px-2 py-1 text-sm border border-neutral-300 rounded focus:ring-2 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-500">kg</span>
+                  <span className="text-sm text-text-muted">kg</span>
                 </div>
               ) : (
-                <span className="text-sm text-gray-600">{weight} kg</span>
+                <span className="text-sm text-text-secondary">{weight} kg</span>
               )}
             </div>
 
             {/* Height */}
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Height</span>
+              <span className="text-sm font-semibold text-text-secondary">Height</span>
               {isEditMode && onHeightChange ? (
                 <div className="flex items-center gap-1">
                   <input
@@ -124,58 +124,58 @@ export function NotesTab({
                     value={heightInput}
                     onChange={(e) => setHeightInput(e.target.value)}
                     onBlur={handleHeightBlur}
-                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+                    className="w-20 px-2 py-1 text-sm border border-neutral-300 rounded focus:ring-2 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-500">cm</span>
+                  <span className="text-sm text-text-muted">cm</span>
                 </div>
               ) : (
-                <span className="text-sm text-gray-600">{height} cm</span>
+                <span className="text-sm text-text-secondary">{height} cm</span>
               )}
             </div>
 
             {/* Jump - Horizontal */}
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Jump - Horizontal</span>
-              <span className="text-sm text-gray-600">{pluralize(jumpHorizontal, 'space', 'spaces')}</span>
+              <span className="text-sm font-semibold text-text-secondary">Jump - Horizontal</span>
+              <span className="text-sm text-text-secondary">{pluralize(jumpHorizontal, 'space', 'spaces')}</span>
             </div>
 
             {/* Jump - Vertical */}
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Jump - Vertical</span>
-              <span className="text-sm text-gray-600">{pluralize(jumpVertical, 'space', 'spaces')}</span>
+              <span className="text-sm font-semibold text-text-secondary">Jump - Vertical</span>
+              <span className="text-sm text-text-secondary">{pluralize(jumpVertical, 'space', 'spaces')}</span>
             </div>
 
             {/* Climb Speed */}
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Climb Speed</span>
+              <span className="text-sm font-semibold text-text-secondary">Climb Speed</span>
               <div className="flex flex-col">
-                <span className="text-sm text-gray-600">{pluralize(climbSpeed, 'space', 'spaces')}</span>
-                <span className="text-xs text-gray-400">Requires successful Athletics roll</span>
+                <span className="text-sm text-text-secondary">{pluralize(climbSpeed, 'space', 'spaces')}</span>
+                <span className="text-xs text-text-muted">Requires successful Athletics roll</span>
               </div>
             </div>
 
             {/* Swim Speed */}
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Swim Speed</span>
+              <span className="text-sm font-semibold text-text-secondary">Swim Speed</span>
               <div className="flex flex-col">
-                <span className="text-sm text-gray-600">{pluralize(swimSpeed, 'space', 'spaces')}</span>
-                <span className="text-xs text-gray-400">DC 10 Acrobatics or Athletics (Vitality)</span>
+                <span className="text-sm text-text-secondary">{pluralize(swimSpeed, 'space', 'spaces')}</span>
+                <span className="text-xs text-text-muted">DC 10 Acrobatics or Athletics (Vitality)</span>
               </div>
             </div>
 
             {/* Fall Damage */}
             <div className="flex flex-col gap-1 col-span-2 md:col-span-3">
-              <span className="text-sm font-semibold text-gray-700">Fall Damage</span>
+              <span className="text-sm font-semibold text-text-secondary">Fall Damage</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleRollFallDamage}
                   disabled={!rollContext}
-                  className="px-2 py-1 text-sm font-bold bg-gradient-to-b from-gray-50 to-indigo-50 border border-indigo-200 rounded-lg hover:shadow-sm transition-all disabled:opacity-50"
+                  className="px-2 py-1 text-sm font-bold bg-gradient-to-b from-neutral-50 to-indigo-50 border border-indigo-200 rounded-lg hover:shadow-sm transition-all disabled:opacity-50"
                   title={rollContext ? 'Click to roll' : 'Roll log not available'}
                 >
                   {fallDice}
                 </button>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-text-secondary">
                   bludgeoning per 2 spaces fallen ({weightCategory}kg weight category)
                 </span>
               </div>
@@ -186,7 +186,7 @@ export function NotesTab({
 
       {/* Appearance */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
           Appearance
         </h3>
         <textarea
@@ -194,14 +194,14 @@ export function NotesTab({
           onChange={(e) => onAppearanceChange?.(e.target.value)}
           readOnly={!isEditMode}
           placeholder="Describe your character's appearance..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-gray-50"
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-neutral-50"
           disabled={!isEditMode}
         />
       </div>
 
       {/* Archetype Description */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
           Archetype Description
         </h3>
         <textarea
@@ -209,14 +209,14 @@ export function NotesTab({
           onChange={(e) => onArchetypeDescChange?.(e.target.value)}
           readOnly={!isEditMode}
           placeholder="Describe your character's archetype background..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-gray-50"
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-neutral-50"
           disabled={!isEditMode}
         />
       </div>
 
       {/* Notes */}
       <div>
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
           Notes
         </h3>
         <textarea
@@ -224,7 +224,7 @@ export function NotesTab({
           onChange={(e) => onNotesChange?.(e.target.value)}
           readOnly={!isEditMode}
           placeholder="Additional notes, backstory, goals..."
-          className="w-full min-h-[120px] px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-gray-50"
+          className="w-full min-h-[120px] px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-neutral-50"
           disabled={!isEditMode}
         />
       </div>

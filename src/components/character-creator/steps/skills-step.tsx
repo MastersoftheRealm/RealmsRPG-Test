@@ -143,8 +143,8 @@ export function SkillsStep() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Allocate Skills</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Allocate Skills</h1>
+          <p className="text-text-secondary">
             Distribute your skill points to define your character&apos;s trained abilities.
             Skills are organized by their associated ability.
           </p>
@@ -187,11 +187,11 @@ export function SkillsStep() {
             <div key={ability} className="bg-white rounded-xl shadow-md overflow-hidden">
               <button
                 onClick={() => toggleCategory(ability)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between bg-neutral-50 hover:bg-neutral-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <h3 className="font-bold text-gray-900">{ability}</h3>
-                  <span className="text-sm text-gray-500">
+                  <h3 className="font-bold text-text-primary">{ability}</h3>
+                  <span className="text-sm text-text-muted">
                     {categorySkills.length} skills{subSkillCount > 0 && `, ${subSkillCount} sub-skills`}
                   </span>
                 </div>
@@ -229,7 +229,7 @@ export function SkillsStep() {
                         
                         {/* Sub-Skills (nested under base skill) */}
                         {hasSubSkills && (
-                          <div className="ml-6 mt-2 pl-3 border-l-2 border-gray-200 space-y-2">
+                          <div className="ml-6 mt-2 pl-3 border-l-2 border-neutral-200 space-y-2">
                             {skillSubSkills.map(subSkill => {
                               const isUnlocked = baseSkillValue > 0;
                               return (
@@ -295,17 +295,17 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
   return (
     <div className={cn(
       'p-3 rounded-lg border transition-colors',
-      value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-gray-50 border-gray-200'
+      value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-neutral-50 border-neutral-200'
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowDescription(!showDescription)}
-            className="text-gray-400 hover:text-gray-600 text-sm"
+            className="text-text-muted hover:text-text-secondary text-sm"
           >
             ℹ️
           </button>
-          <span className="font-medium text-gray-900">{skill.name}</span>
+          <span className="font-medium text-text-primary">{skill.name}</span>
         </div>
         
         <div className="flex items-center gap-2">
@@ -319,7 +319,7 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
           
           <span className={cn(
             'w-8 text-center font-bold',
-            value > 0 ? 'text-primary-700' : 'text-gray-400'
+            value > 0 ? 'text-primary-700' : 'text-text-muted'
           )}>
             {value}
           </span>
@@ -335,7 +335,7 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
       </div>
       
       {showDescription && skill.description && (
-        <p className="text-xs text-gray-600 mt-2 border-t border-gray-200 pt-2">
+        <p className="text-xs text-text-secondary mt-2 border-t border-neutral-200 pt-2">
           {skill.description}
         </p>
       )}
@@ -356,16 +356,16 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
   return (
     <div className={cn(
       'p-2 rounded-lg border transition-colors text-sm',
-      !isUnlocked && 'opacity-50 bg-gray-100 border-gray-200',
+      !isUnlocked && 'opacity-50 bg-neutral-100 border-neutral-200',
       isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
-      isUnlocked && value === 0 && 'bg-gray-50 border-gray-200'
+      isUnlocked && value === 0 && 'bg-neutral-50 border-neutral-200'
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400">↳</span>
+          <span className="text-xs text-text-muted">↳</span>
           <span className={cn(
             'font-medium',
-            isUnlocked ? 'text-gray-900' : 'text-gray-500'
+            isUnlocked ? 'text-text-primary' : 'text-text-muted'
           )}>
             {skill.name}
           </span>
@@ -383,7 +383,7 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
             
             <span className={cn(
               'w-6 text-center font-bold text-sm',
-              value > 0 ? 'text-primary-700' : 'text-gray-400'
+              value > 0 ? 'text-primary-700' : 'text-text-muted'
             )}>
               {value}
             </span>
@@ -397,7 +397,7 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
             </button>
           </div>
         ) : (
-          <span className="text-xs text-gray-400 italic">
+          <span className="text-xs text-text-muted italic">
             Requires {baseSkillName}
           </span>
         )}

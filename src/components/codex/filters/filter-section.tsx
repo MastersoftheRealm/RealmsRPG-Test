@@ -28,7 +28,7 @@ export function FilterSection({
     <div className={cn('mb-6', className)}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+        className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary mb-4 transition-colors"
       >
         <Filter className="w-4 h-4" />
         {isExpanded ? (
@@ -45,7 +45,7 @@ export function FilterSection({
       </button>
 
       {isExpanded && (
-        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
           {children}
         </div>
       )}

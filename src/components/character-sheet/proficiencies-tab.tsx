@@ -243,16 +243,16 @@ function ProficiencySection({ title, profs }: ProficiencySectionProps) {
 
   return (
     <div className="mb-4">
-      <div className="flex items-center justify-between px-3 py-2 bg-gray-100 rounded-t-lg border border-gray-200">
-        <span className="font-semibold text-sm text-gray-700">{title}</span>
-        <span className="text-sm text-gray-500">
+      <div className="flex items-center justify-between px-3 py-2 bg-neutral-100 rounded-t-lg border border-neutral-200">
+        <span className="font-semibold text-sm text-text-secondary">{title}</span>
+        <span className="text-sm text-text-muted">
           TP: <span className="font-semibold text-primary-600">{totalTP}</span>
         </span>
       </div>
       
-      <div className="border border-t-0 border-gray-200 rounded-b-lg p-3">
+      <div className="border border-t-0 border-neutral-200 rounded-b-lg p-3">
         {profs.size === 0 ? (
-          <p className="text-sm text-gray-400 italic text-center py-2">No proficiencies</p>
+          <p className="text-sm text-text-muted italic text-center py-2">No proficiencies</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {Array.from(profs.values()).map((prof, index) => {
@@ -314,14 +314,14 @@ export function ProficienciesTab({
     <div>
       {/* Training Points Box */}
       <div className="flex justify-center mb-6">
-        <div className="px-8 py-4 bg-gray-50 border border-gray-200 rounded-xl shadow-sm">
+        <div className="px-8 py-4 bg-neutral-50 border border-neutral-200 rounded-xl shadow-sm">
           <div className="text-center">
-            <span className="text-lg font-semibold text-gray-600">Training Points: </span>
+            <span className="text-lg font-semibold text-text-secondary">Training Points: </span>
             <span className={`text-2xl font-bold ${trainingPoints >= 0 ? 'text-primary-600' : 'text-red-600'}`}>
               {trainingPoints}
             </span>
           </div>
-          <div className="text-xs text-gray-400 text-center mt-1">
+          <div className="text-xs text-text-muted text-center mt-1">
             {baseTP} base + ({archetypeAbility} × {level}) + {2 * (level - 1)} bonus - {totalSpent} spent
           </div>
         </div>

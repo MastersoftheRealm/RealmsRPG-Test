@@ -888,7 +888,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading character...</p>
+          <p className="text-text-secondary">Loading character...</p>
         </div>
       </div>
     );
@@ -898,7 +898,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">
             {error || 'Character not found'}
           </h1>
           <Link
@@ -923,20 +923,20 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   return (
     <RollProvider>
-      <div className="min-h-screen bg-gray-50 pb-8">
+      <div className="min-h-screen bg-neutral-50 pb-8">
         {/* Action Bar */}
-        <div className="sticky top-20 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="sticky top-20 z-40 bg-white border-b border-neutral-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
             <Link
               href="/characters"
-              className="text-gray-600 hover:text-gray-900 flex items-center gap-1"
+              className="text-text-secondary hover:text-text-primary flex items-center gap-1"
             >
               ← Characters
             </Link>
             
             <div className="flex items-center gap-2">
               {(saving || isSaving) && (
-                <span className="text-sm text-gray-500">Saving...</span>
+                <span className="text-sm text-text-muted">Saving...</span>
               )}
               {hasUnsavedChanges && !saving && !isSaving && (
                 <span className="text-sm text-amber-600">Unsaved changes</span>
@@ -965,7 +965,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   'relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                   isEditMode
                     ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
                 )}
               >
                 {isEditMode ? '✓ Done' : '🖉 Edit'}

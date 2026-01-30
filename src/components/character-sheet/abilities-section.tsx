@@ -14,6 +14,7 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
+import { RollButton, PointStatus } from '@/components/shared';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 // =============================================================================
@@ -113,78 +114,7 @@ function canDecreaseAbility(abilities: Abilities, abilityName: AbilityName): boo
   return true;
 }
 
-// =============================================================================
-// Roll Button Component - Styled like vanilla site
-// =============================================================================
-
-interface RollButtonProps {
-  value: string;
-  onClick?: () => void;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'primary' | 'unproficient';
-  disabled?: boolean;
-  title?: string;
-}
-
-function RollButton({ value, onClick, size = 'md', variant = 'primary', disabled, title }: RollButtonProps) {
-  const sizeClasses = {
-    sm: 'px-3 py-1 text-sm min-w-[48px]',
-    md: 'px-4 py-2 text-xl min-w-[60px]',
-    lg: 'px-5 py-3 text-2xl min-w-[72px]',
-  };
-  
-  const variantClasses = {
-    primary: 'bg-gradient-to-br from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 shadow-md hover:shadow-lg',
-    unproficient: 'bg-gradient-to-br from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700',
-  };
-  
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={cn(
-        'text-white font-bold rounded-lg transition-all duration-200',
-        'hover:scale-105 active:scale-95 cursor-pointer',
-        'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
-        sizeClasses[size],
-        variantClasses[variant]
-      )}
-    >
-      {value}
-    </button>
-  );
-}
-
-// =============================================================================
-// Point Tracker Component
-// =============================================================================
-
-interface PointTrackerProps {
-  label: string;
-  spent: number;
-  total: number;
-}
-
-function PointTracker({ label, spent, total }: PointTrackerProps) {
-  const remaining = total - spent;
-  
-  const getStateClasses = () => {
-    if (remaining > 0) return 'bg-green-100 text-green-700 border-green-200';
-    if (remaining < 0) return 'bg-red-100 text-red-700 border-red-200';
-    return 'bg-blue-100 text-blue-700 border-blue-200';
-  };
-  
-  return (
-    <div className={cn(
-      'flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm font-semibold',
-      getStateClasses()
-    )}>
-      <span>{label}:</span>
-      <span>{remaining} / {total}</span>
-    </div>
-  );
-}
+// Note: RollButton and PointStatus are now imported from @/components/shared
 
 // =============================================================================
 // Main Component
@@ -251,23 +181,25 @@ export function AbilitiesSection({
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-4">
       {/* Header with Point Trackers */}
       {isEditMode && (
-        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-surface-secondary rounded-lg">
           {totalAbilityPoints !== undefined && (
-            <PointTracker
+            <PointStatus
               label="Ability Points"
               spent={spentAbilityPoints ?? calculatedSpentAbilityPoints}
               total={totalAbilityPoints}
+              variant="inline"
             />
           )}
           {totalSkillPoints !== undefined && (
-            <PointTracker
+            <PointStatus
               label="Skill Points (Defenses)"
               spent={(spentSkillPoints ?? 0) + calculatedDefenseSpent}
               total={totalSkillPoints}
+              variant="inline"
             />
           )}
           <div className="flex-1" />
-          <div className="text-xs text-gray-500 self-center">
+          <div className="text-xs text-text-muted self-center">
             Max ability: +{maxAbility} | Defense skill: 2sp each (max +{maxDefenseSkill})
           </div>
         </div>
@@ -289,8 +221,8 @@ export function AbilitiesSection({
             <div
               key={ability}
               className={cn(
-                'flex flex-col items-center p-3 bg-gradient-to-b from-gray-50 to-gray-100 rounded-xl border-2 transition-all',
-                isArchetype ? 'border-amber-400' : 'border-gray-200',
+                'flex flex-col items-center p-3 bg-gradient-to-b from-neutral-50 to-neutral-100 rounded-xl border-2 transition-all',
+                isArchetype ? 'border-amber-400' : 'border-neutral-200',
                 !isEditMode && 'hover:shadow-md'
               )}
             >
@@ -308,7 +240,7 @@ export function AbilitiesSection({
               )}
               
               {/* Ability Name */}
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              <span className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                 {info.name}
               </span>
               
@@ -321,15 +253,15 @@ export function AbilitiesSection({
                     className={cn(
                       'w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold transition-colors',
                       canDecrease
-                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                     )}
                   >
                     −
                   </button>
                   <span className={cn(
                     'text-2xl font-bold min-w-[56px] text-center',
-                    value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-gray-700'
+                    value > 0 ? 'text-success-600' : value < 0 ? 'text-danger-600' : 'text-text-secondary'
                   )}>
                     {formatBonus(value)}
                   </span>
@@ -340,8 +272,8 @@ export function AbilitiesSection({
                     className={cn(
                       'w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold transition-colors',
                       canIncrease
-                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                     )}
                   >
                     +
@@ -349,9 +281,9 @@ export function AbilitiesSection({
                 </div>
               ) : (
                 <RollButton
-                  value={formatBonus(value)}
+                  value={value}
                   onClick={() => rollContext?.rollAbility?.(ability, value)}
-                  size="md"
+                  size="lg"
                   title={`Roll ${info.name} check`}
                 />
               )}
@@ -368,7 +300,7 @@ export function AbilitiesSection({
       </div>
       
       {/* Defenses Row - Separate from abilities */}
-      <div className="border-t-2 border-gray-200 pt-4">
+      <div className="border-t-2 border-neutral-200 pt-4">
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4">
           {ABILITY_ORDER.map((ability) => {
             const info = ABILITY_INFO[ability];
@@ -383,15 +315,15 @@ export function AbilitiesSection({
             return (
               <div
                 key={defenseKey}
-                className="flex flex-col items-center p-3 bg-gray-50 rounded-lg"
+                className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg"
               >
                 {/* Defense Name */}
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
                   {defenseInfo.name}
                 </span>
                 
                 {/* Defense Score */}
-                <span className="text-lg font-bold text-gray-800 mb-1">
+                <span className="text-lg font-bold text-text-primary mb-1">
                   {defenseScore}
                 </span>
                 
@@ -404,8 +336,8 @@ export function AbilitiesSection({
                       className={cn(
                         'w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
                         canDecreaseDefense
-                          ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                          ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                       )}
                     >
                       −
@@ -420,8 +352,8 @@ export function AbilitiesSection({
                       className={cn(
                         'w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
                         canIncreaseDefense
-                          ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                          ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                       )}
                     >
                       +
@@ -429,7 +361,8 @@ export function AbilitiesSection({
                   </div>
                 ) : (
                   <RollButton
-                    value={formatBonus(defenseBonus)}
+                    value={defenseBonus}
+                    variant="defense"
                     onClick={() => rollContext?.rollDefense?.(defenseKey, defenseBonus)}
                     size="sm"
                     title={`Roll ${defenseInfo.name} save`}

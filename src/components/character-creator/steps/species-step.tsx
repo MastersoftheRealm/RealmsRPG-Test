@@ -48,8 +48,8 @@ export function SpeciesStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Species</h1>
-      <p className="text-gray-600 mb-6">
+      <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Species</h1>
+      <p className="text-text-secondary mb-6">
         Your species defines your character&apos;s physical traits and inherent abilities.
         Click on a species card to view full details.
       </p>
@@ -68,9 +68,9 @@ export function SpeciesStep() {
               )}
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-gray-900">{s.name}</h3>
+                <h3 className="font-bold text-text-primary">{s.name}</h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded capitalize">
+                  <span className="text-xs px-2 py-0.5 bg-neutral-100 text-text-secondary rounded capitalize">
                     {getSizesDisplay(s)}
                   </span>
                   {/* NO SPEED - species don't have speed values in RTDB */}
@@ -81,7 +81,7 @@ export function SpeciesStep() {
                   )}
                 </div>
               </div>
-              <p className="text-sm text-gray-600 line-clamp-2">{s.description}</p>
+              <p className="text-sm text-text-secondary line-clamp-2">{s.description}</p>
               
               {s.ability_bonuses && Object.keys(s.ability_bonuses).length > 0 && (
                 <div className="flex gap-1 mt-2">

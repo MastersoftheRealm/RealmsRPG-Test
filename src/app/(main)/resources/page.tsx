@@ -10,9 +10,9 @@ import Link from 'next/link';
 export default function ResourcesPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4 text-center">Resources</h1>
+      <h1 className="text-3xl font-bold text-text-primary mb-4 text-center">Resources</h1>
       
-      <p className="text-center text-gray-600 mb-10">
+      <p className="text-center text-text-secondary mb-10">
         Welcome to the Resources page. Here you can find various tools, downloads, and references 
         to enhance your Realms RPG experience. More resources will be added over time!
       </p>
@@ -25,8 +25,8 @@ export default function ResourcesPage() {
               <FileText className="w-8 h-8 text-amber-600" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Printable Character Sheet</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-xl font-bold text-text-primary mb-2">Printable Character Sheet</h2>
+              <p className="text-text-secondary mb-4">
                 Download the official Realms Character Sheet Alpha for easy character creation 
                 and tracking during gameplay.
               </p>
@@ -43,19 +43,19 @@ export default function ResourcesPage() {
         </section>
 
         {/* Coming Soon Section */}
-        <section className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Coming Soon</h2>
+        <section className="bg-neutral-50 rounded-xl p-6 border border-neutral-200">
+          <h2 className="text-xl font-bold text-text-primary mb-4">Coming Soon</h2>
           <ul className="space-y-3">
-            <li className="flex items-center gap-3 text-gray-600">
-              <BookOpen className="w-5 h-5 text-gray-400" />
+            <li className="flex items-center gap-3 text-text-secondary">
+              <BookOpen className="w-5 h-5 text-text-muted" />
               Quick Reference Guides
             </li>
-            <li className="flex items-center gap-3 text-gray-600">
-              <FileText className="w-5 h-5 text-gray-400" />
+            <li className="flex items-center gap-3 text-text-secondary">
+              <FileText className="w-5 h-5 text-text-muted" />
               Adventure Modules
             </li>
-            <li className="flex items-center gap-3 text-gray-600">
-              <Users className="w-5 h-5 text-gray-400" />
+            <li className="flex items-center gap-3 text-text-secondary">
+              <Users className="w-5 h-5 text-text-muted" />
               Community Creations
             </li>
           </ul>

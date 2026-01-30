@@ -333,7 +333,7 @@ function PowersTab({ onDelete }: TabProps) {
       
       {/* Column Headers - Grid aligned */}
       <div 
-        className="hidden lg:grid gap-2 px-4 py-2 bg-gray-100 rounded-t-lg font-medium text-sm text-gray-700"
+        className="hidden lg:grid gap-2 px-4 py-2 bg-neutral-100 rounded-t-lg font-medium text-sm text-text-secondary"
         style={{ gridTemplateColumns: POWER_GRID_COLUMNS }}
       >
         {POWER_COLUMNS.map(col => (

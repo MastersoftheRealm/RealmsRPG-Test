@@ -25,7 +25,7 @@ export function CreatorTabBar() {
   const { currentStep, completedSteps, setStep, canNavigateToStep, resetCreator } = useCharacterCreatorStore();
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-100 rounded-lg mb-4">
+    <div className="flex flex-wrap items-center gap-1 p-2 bg-neutral-100 rounded-lg mb-4">
       {STEP_ORDER.map((step) => {
         const isActive = currentStep === step;
         const isComplete = completedSteps.includes(step);
@@ -40,8 +40,8 @@ export function CreatorTabBar() {
               'px-3 py-2 rounded-lg text-sm font-medium transition-all',
               isActive && 'bg-primary-600 text-white shadow-md',
               !isActive && isComplete && 'bg-green-100 text-green-700 hover:bg-green-200',
-              !isActive && !isComplete && canNavigate && 'bg-white text-gray-600 hover:bg-gray-50',
-              !isActive && !isComplete && !canNavigate && 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              !isActive && !isComplete && canNavigate && 'bg-white text-text-secondary hover:bg-neutral-50',
+              !isActive && !isComplete && !canNavigate && 'bg-neutral-200 text-text-muted cursor-not-allowed'
             )}
           >
             {isComplete && !isActive && '✓ '}

@@ -62,7 +62,7 @@ export function ArchetypeStep() {
   if (isLocked) {
     return (
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Your Archetype</h1>
+        <h1 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h1>
         
         <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
           <h2 className="text-xl font-bold text-green-800 mb-2">
@@ -100,7 +100,7 @@ export function ArchetypeStep() {
               }
             });
           }}
-          className="text-gray-600 hover:text-gray-900 underline"
+          className="text-text-secondary hover:text-text-primary underline"
         >
           Choose a different archetype
         </button>
@@ -110,8 +110,8 @@ export function ArchetypeStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Archetype</h1>
-      <p className="text-gray-600 mb-6">
+      <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Archetype</h1>
+      <p className="text-text-secondary mb-6">
         Your archetype defines your character&apos;s approach to combat and supernatural abilities.
       </p>
       
@@ -130,11 +130,11 @@ export function ArchetypeStep() {
                 'p-6 rounded-xl border-2 text-left transition-all',
                 selectedType === type
                   ? 'border-primary-600 bg-primary-50 shadow-lg'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow'
+                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow'
               )}
             >
-              <h3 className="text-lg font-bold text-gray-900 mb-2">{info.title}</h3>
-              <p className="text-sm text-gray-600">{info.description}</p>
+              <h3 className="text-lg font-bold text-text-primary mb-2">{info.title}</h3>
+              <p className="text-sm text-text-secondary">{info.description}</p>
             </button>
           )
         )}
@@ -142,8 +142,8 @@ export function ArchetypeStep() {
       
       {/* Ability Selection */}
       {selectedType && (
-        <div className="bg-gray-50 rounded-xl p-6 mb-6">
-          <h3 className="font-bold text-gray-900 mb-4">
+        <div className="bg-neutral-50 rounded-xl p-6 mb-6">
+          <h3 className="font-bold text-text-primary mb-4">
             {selectedType === 'powered-martial' 
               ? 'Choose Your Power and Martial Abilities'
               : `Choose Your ${selectedType === 'power' ? 'Power' : 'Martial'} Ability`
@@ -165,8 +165,8 @@ export function ArchetypeStep() {
                         selectedAbility === ability
                           ? 'bg-purple-600 text-white'
                           : selectedMartialAbility === ability
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white border border-gray-200 hover:border-purple-400'
+                          ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
+                          : 'bg-white border border-neutral-200 hover:border-purple-400'
                       )}
                     >
                       {ability.charAt(0).toUpperCase() + ability.slice(1)}
@@ -188,8 +188,8 @@ export function ArchetypeStep() {
                         selectedMartialAbility === ability
                           ? 'bg-red-600 text-white'
                           : selectedAbility === ability
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white border border-gray-200 hover:border-red-400'
+                          ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
+                          : 'bg-white border border-neutral-200 hover:border-red-400'
                       )}
                     >
                       {ability.charAt(0).toUpperCase() + ability.slice(1)}
@@ -210,7 +210,7 @@ export function ArchetypeStep() {
                       ? selectedType === 'power' 
                         ? 'bg-purple-600 text-white'
                         : 'bg-red-600 text-white'
-                      : 'bg-white border border-gray-200 hover:border-gray-400'
+                      : 'bg-white border border-neutral-200 hover:border-neutral-400'
                   )}
                 >
                   {ability.charAt(0).toUpperCase() + ability.slice(1)}

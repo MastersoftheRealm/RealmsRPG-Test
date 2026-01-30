@@ -315,7 +315,7 @@ export function ItemList({
                 className={`p-2 transition-colors ${
                   currentLayout === 'list' 
                     ? 'bg-primary-400 text-white' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-gray-100'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
                 }`}
                 title="List view"
               >
@@ -326,7 +326,7 @@ export function ItemList({
                 className={`p-2 transition-colors ${
                   currentLayout === 'grid' 
                     ? 'bg-primary-400 text-white' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-gray-100'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
                 }`}
                 title="Grid view"
               >

@@ -44,13 +44,13 @@ export function TagFilter({
 
   return (
     <div className={`filter-group ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
       <div className="flex gap-2 items-center">
         <select
           onChange={handleChange}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 px-3 py-2 border border-neutral-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           defaultValue=""
         >
           <option value="">{placeholder}</option>
@@ -60,7 +60,7 @@ export function TagFilter({
             </option>
           ))}
         </select>
-        <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-md">
+        <div className="flex items-center gap-2 bg-neutral-100 px-3 py-2 rounded-md">
           <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="radio"

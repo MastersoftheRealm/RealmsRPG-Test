@@ -173,26 +173,26 @@ function PartCard({
     (part.op_3_tp || 0) * selectedPart.op_3_lvl;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-50 px-4 py-3 flex items-center justify-between">
+      <div className="bg-neutral-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-text-muted hover:text-text-secondary"
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
-          <span className="font-medium text-gray-900">{part.name}</span>
-          <span className="text-sm text-gray-500">
+          <span className="font-medium text-text-primary">{part.name}</span>
+          <span className="text-sm text-text-muted">
             EN: {partEnergy.toFixed(1)} | TP: {Math.floor(partTP)}
           </span>
         </div>
         <button
           type="button"
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-500"
+          className="text-text-muted hover:text-red-500"
         >
           <X className="w-5 h-5" />
         </button>
@@ -204,7 +204,7 @@ function PartCard({
           {/* Category and Part Selection */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 Category
               </label>
               <select
@@ -230,7 +230,7 @@ function PartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -240,7 +240,7 @@ function PartCard({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 Part
               </label>
               <select
@@ -257,7 +257,7 @@ function PartCard({
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
@@ -269,27 +269,27 @@ function PartCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600">{part.description}</p>
+          <p className="text-sm text-text-secondary">{part.description}</p>
 
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
-            <span className="text-gray-600">
+            <span className="text-text-secondary">
               Base Energy: <strong>{part.base_en}</strong>
             </span>
-            <span className="text-gray-600">
+            <span className="text-text-secondary">
               Base TP: <strong>{part.base_tp}</strong>
             </span>
           </div>
 
           {/* Options */}
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
-            <div className="space-y-3 pt-2 border-t border-gray-100">
+            <div className="space-y-3 pt-2 border-t border-neutral-100">
               {hasOption(1) && (
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-neutral-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 1:{' '}
-                      <span className="text-gray-500">
+                      <span className="text-text-muted">
                         EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP{' '}
                         {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
                       </span>
@@ -301,17 +301,17 @@ function PartCard({
                     />
                   </div>
                   {part.op_1_desc && (
-                    <p className="text-sm text-gray-600">{part.op_1_desc}</p>
+                    <p className="text-sm text-text-secondary">{part.op_1_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(2) && (
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-neutral-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 2:{' '}
-                      <span className="text-gray-500">
+                      <span className="text-text-muted">
                         EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP{' '}
                         {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
                       </span>
@@ -323,17 +323,17 @@ function PartCard({
                     />
                   </div>
                   {part.op_2_desc && (
-                    <p className="text-sm text-gray-600">{part.op_2_desc}</p>
+                    <p className="text-sm text-text-secondary">{part.op_2_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(3) && (
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-neutral-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 3:{' '}
-                      <span className="text-gray-500">
+                      <span className="text-text-muted">
                         EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP{' '}
                         {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
                       </span>
@@ -345,7 +345,7 @@ function PartCard({
                     />
                   </div>
                   {part.op_3_desc && (
-                    <p className="text-sm text-gray-600">{part.op_3_desc}</p>
+                    <p className="text-sm text-text-secondary">{part.op_3_desc}</p>
                   )}
                 </div>
               )}
@@ -358,9 +358,9 @@ function PartCard({
               type="checkbox"
               checked={selectedPart.applyDuration}
               onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
-              className="rounded border-gray-300"
+              className="rounded border-neutral-300"
             />
-            <span className="text-sm text-gray-700">Apply to Duration</span>
+            <span className="text-sm text-text-secondary">Apply to Duration</span>
           </label>
         </div>
       )}
@@ -422,17 +422,17 @@ function AdvancedChip({
         <div className="mt-2 pt-2 border-t border-current/20 text-sm space-y-1">
           <p className={colors.text}>{part.description || 'No description available.'}</p>
           {part.op_1_desc && (
-            <p className="text-gray-600">
+            <p className="text-text-secondary">
               <span className="font-medium">Option 1:</span> {part.op_1_desc}
             </p>
           )}
           {part.op_2_desc && (
-            <p className="text-gray-600">
+            <p className="text-text-secondary">
               <span className="font-medium">Option 2:</span> {part.op_2_desc}
             </p>
           )}
           {part.op_3_desc && (
-            <p className="text-gray-600">
+            <p className="text-text-secondary">
               <span className="font-medium">Option 3:</span> {part.op_3_desc}
             </p>
           )}
@@ -498,7 +498,7 @@ function AddedAdvancedChip({
           {hasOption(1) && (
             <div className="bg-white/50 rounded p-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-text-muted">
                   Option 1: EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
                 </span>
                 <NumberStepper
@@ -507,14 +507,14 @@ function AddedAdvancedChip({
                   label=""
                 />
               </div>
-              <p className="text-gray-600 mt-1">{part.op_1_desc}</p>
+              <p className="text-text-secondary mt-1">{part.op_1_desc}</p>
             </div>
           )}
           
           {hasOption(2) && (
             <div className="bg-white/50 rounded p-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-text-muted">
                   Option 2: EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
                 </span>
                 <NumberStepper
@@ -523,14 +523,14 @@ function AddedAdvancedChip({
                   label=""
                 />
               </div>
-              <p className="text-gray-600 mt-1">{part.op_2_desc}</p>
+              <p className="text-text-secondary mt-1">{part.op_2_desc}</p>
             </div>
           )}
           
           {hasOption(3) && (
             <div className="bg-white/50 rounded p-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-text-muted">
                   Option 3: EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
                 </span>
                 <NumberStepper
@@ -539,7 +539,7 @@ function AddedAdvancedChip({
                   label=""
                 />
               </div>
-              <p className="text-gray-600 mt-1">{part.op_3_desc}</p>
+              <p className="text-text-secondary mt-1">{part.op_3_desc}</p>
             </div>
           )}
           
@@ -548,9 +548,9 @@ function AddedAdvancedChip({
               type="checkbox"
               checked={advPart.applyDuration}
               onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
-              className="rounded border-gray-300"
+              className="rounded border-neutral-300"
             />
-            <span className="text-sm text-gray-700">Apply Duration</span>
+            <span className="text-sm text-text-secondary">Apply Duration</span>
           </label>
         </div>
       )}
@@ -589,15 +589,15 @@ function AdvancedMechanicsSection({
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-6 py-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between bg-neutral-50 hover:bg-neutral-100 transition-colors"
       >
         <div className="flex items-center gap-2">
           {expanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-500" />
+            <ChevronUp className="w-5 h-5 text-text-muted" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-gray-500" />
+            <ChevronDown className="w-5 h-5 text-text-muted" />
           )}
-          <span className="font-bold text-gray-900">Advanced Power Mechanics</span>
+          <span className="font-bold text-text-primary">Advanced Power Mechanics</span>
         </div>
         {!expanded && selectedAdvancedParts.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -613,7 +613,7 @@ function AdvancedMechanicsSection({
               );
             })}
             {selectedAdvancedParts.length > 5 && (
-              <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-600">
+              <span className="px-2 py-0.5 rounded text-xs font-medium bg-neutral-200 text-text-secondary">
                 +{selectedAdvancedParts.length - 5} more
               </span>
             )}
@@ -627,7 +627,7 @@ function AdvancedMechanicsSection({
           {/* Added Advanced Mechanics */}
           {selectedAdvancedParts.length > 0 && (
             <div>
-              <h4 className="text-sm font-bold text-gray-700 mb-3">Added Advanced Mechanics</h4>
+              <h4 className="text-sm font-bold text-text-secondary mb-3">Added Advanced Mechanics</h4>
               <div className="flex flex-wrap gap-2">
                 {selectedAdvancedParts.map((ap, idx) => (
                   <AddedAdvancedChip
@@ -649,7 +649,7 @@ function AdvancedMechanicsSection({
               if (parts.length === 0) return null;
               return (
                 <div key={category}>
-                  <h4 className="text-sm font-bold text-gray-700 mb-2">{category}</h4>
+                  <h4 className="text-sm font-bold text-text-secondary mb-2">{category}</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                     {parts.map((part) => (
                       <AdvancedChip
@@ -1234,9 +1234,9 @@ function PowerCreatorContent() {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-neutral-200 rounded w-1/3"></div>
+          <div className="h-4 bg-neutral-200 rounded w-2/3"></div>
+          <div className="h-64 bg-neutral-200 rounded"></div>
         </div>
       </div>
     );
@@ -1256,11 +1256,11 @@ function PowerCreatorContent() {
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-2">
             <Wand2 className="w-8 h-8 text-primary-600" />
             Power Creator
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Design custom powers by combining power parts. Each part contributes to the total
             energy cost and training point requirements.
           </p>
@@ -1272,8 +1272,8 @@ function PowerCreatorContent() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
               user 
-                ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                : "bg-gray-100 text-gray-400 cursor-pointer"
+                ? "bg-neutral-100 hover:bg-neutral-200 text-text-secondary"
+                : "bg-neutral-100 text-text-muted cursor-pointer"
             )}
             title={user ? "Load from library" : "Log in to load from library"}
           >
@@ -1283,7 +1283,7 @@ function PowerCreatorContent() {
           <button
             type="button"
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 transition-colors"
+            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-text-secondary transition-colors"
           >
             Reset
           </button>
@@ -1294,7 +1294,7 @@ function PowerCreatorContent() {
             className={cn(
               'px-4 py-2 rounded-lg font-medium transition-colors',
               saving || !name.trim()
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-neutral-300 text-text-muted cursor-not-allowed'
                 : 'bg-green-600 text-white hover:bg-green-700'
             )}
           >
@@ -1322,7 +1322,7 @@ function PowerCreatorContent() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Power Name *
                 </label>
                 <input
@@ -1330,11 +1330,11 @@ function PowerCreatorContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter power name..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Description
                 </label>
                 <textarea
@@ -1342,7 +1342,7 @@ function PowerCreatorContent() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe what your power does..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
             </div>
@@ -1350,12 +1350,12 @@ function PowerCreatorContent() {
 
           {/* Action Type */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Action Type</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Action Type</h3>
             <div className="flex flex-wrap gap-4">
               <select
                 value={actionType}
                 onChange={(e) => setActionType(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg"
+                className="px-4 py-2 border border-neutral-300 rounded-lg"
               >
                 {ACTION_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -1368,7 +1368,7 @@ function PowerCreatorContent() {
                   type="checkbox"
                   checked={isReaction}
                   onChange={(e) => setIsReaction(e.target.checked)}
-                  className="rounded border-gray-300"
+                  className="rounded border-neutral-300"
                 />
                 <span className="text-sm">Reaction</span>
               </label>
@@ -1377,7 +1377,7 @@ function PowerCreatorContent() {
 
           {/* Range */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Range</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Range</h3>
             <div className="flex flex-wrap items-center gap-4">
               <NumberStepper
                 value={range.steps}
@@ -1386,7 +1386,7 @@ function PowerCreatorContent() {
                 min={0}
                 max={10}
               />
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-text-secondary">
                 {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
               </span>
               <label className="flex items-center gap-2 ml-4">
@@ -1394,7 +1394,7 @@ function PowerCreatorContent() {
                   type="checkbox"
                   checked={range.applyDuration || false}
                   onChange={(e) => setRange((r) => ({ ...r, applyDuration: e.target.checked }))}
-                  className="rounded border-gray-300"
+                  className="rounded border-neutral-300"
                 />
                 <span className="text-sm">Apply Duration</span>
               </label>
@@ -1403,12 +1403,12 @@ function PowerCreatorContent() {
 
           {/* Area of Effect */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Area of Effect</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Area of Effect</h3>
             <div className="flex flex-wrap items-center gap-4">
               <select
                 value={area.type}
                 onChange={(e) => setArea((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
-                className="px-4 py-2 border border-gray-300 rounded-lg"
+                className="px-4 py-2 border border-neutral-300 rounded-lg"
               >
                 {AREA_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -1430,7 +1430,7 @@ function PowerCreatorContent() {
                       type="checkbox"
                       checked={area.applyDuration || false}
                       onChange={(e) => setArea((a) => ({ ...a, applyDuration: e.target.checked }))}
-                      className="rounded border-gray-300"
+                      className="rounded border-neutral-300"
                     />
                     <span className="text-sm">Apply Duration</span>
                   </label>
@@ -1441,7 +1441,7 @@ function PowerCreatorContent() {
 
           {/* Duration */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Duration</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Duration</h3>
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
                 value={duration.type}
@@ -1451,7 +1451,7 @@ function PowerCreatorContent() {
                   const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
                   setDuration((d) => ({ ...d, type: newType, value: newValue }));
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg"
+                className="px-4 py-2 border border-neutral-300 rounded-lg"
               >
                 {DURATION_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -1463,7 +1463,7 @@ function PowerCreatorContent() {
                 <select
                   value={duration.value}
                   onChange={(e) => setDuration((d) => ({ ...d, value: parseInt(e.target.value) }))}
-                  className="px-4 py-2 border border-gray-300 rounded-lg"
+                  className="px-4 py-2 border border-neutral-300 rounded-lg"
                 >
                   {DURATION_VALUES[duration.type].map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -1474,13 +1474,13 @@ function PowerCreatorContent() {
               )}
             </div>
             {/* Duration Modifiers */}
-            <div className="flex flex-wrap gap-4 pt-3 border-t border-gray-200">
+            <div className="flex flex-wrap gap-4 pt-3 border-t border-neutral-200">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={duration.focus || false}
                   onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
-                  className="rounded border-gray-300"
+                  className="rounded border-neutral-300"
                 />
                 <span className="text-sm">Focus</span>
               </label>
@@ -1489,7 +1489,7 @@ function PowerCreatorContent() {
                   type="checkbox"
                   checked={duration.noHarm || false}
                   onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
-                  className="rounded border-gray-300"
+                  className="rounded border-neutral-300"
                 />
                 <span className="text-sm">No Harm or Adaptation Parts</span>
               </label>
@@ -1498,7 +1498,7 @@ function PowerCreatorContent() {
                   type="checkbox"
                   checked={duration.endsOnActivation || false}
                   onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
-                  className="rounded border-gray-300"
+                  className="rounded border-neutral-300"
                 />
                 <span className="text-sm">Ends on Activation</span>
               </label>
@@ -1507,7 +1507,7 @@ function PowerCreatorContent() {
                 <select
                   value={duration.sustain || 0}
                   onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
-                  className="px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="px-2 py-1 border border-neutral-300 rounded text-sm"
                 >
                   <option value={0}>None</option>
                   <option value={1}>1 AP</option>
@@ -1522,7 +1522,7 @@ function PowerCreatorContent() {
           {/* Power Parts */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-text-primary">
                 Power Parts ({selectedParts.length})
               </h3>
               <button
@@ -1536,7 +1536,7 @@ function PowerCreatorContent() {
             </div>
 
             {selectedParts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-text-muted">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No parts added yet. Click &quot;Add Part&quot; to begin building your power.</p>
               </div>
@@ -1567,7 +1567,7 @@ function PowerCreatorContent() {
 
           {/* Damage (Optional) */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Damage (Optional)</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Damage (Optional)</h3>
             <div className="flex flex-wrap items-center gap-4">
               <NumberStepper
                 value={damage.amount}
@@ -1581,7 +1581,7 @@ function PowerCreatorContent() {
                 <select
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
+                  className="px-3 py-2 border border-neutral-300 rounded-lg"
                 >
                   {DIE_SIZES.map((size) => (
                     <option key={size} value={size}>
@@ -1593,7 +1593,7 @@ function PowerCreatorContent() {
               <select
                 value={damage.type}
                 onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-lg"
+                className="px-3 py-2 border border-neutral-300 rounded-lg"
               >
                 {DAMAGE_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -1603,7 +1603,7 @@ function PowerCreatorContent() {
               </select>
             </div>
             {damage.type !== 'none' && damage.amount > 0 && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-text-secondary">
                 Damage: <strong>{damage.amount}d{damage.size} {damage.type}</strong>
               </p>
             )}
@@ -1613,7 +1613,7 @@ function PowerCreatorContent() {
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Power Summary</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Power Summary</h3>
 
             {/* Cost Display */}
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1632,28 +1632,28 @@ function PowerCreatorContent() {
             {/* Derived Stats */}
             <div className="space-y-2 text-sm mb-6">
               <div className="flex justify-between">
-                <span className="text-gray-600">Action:</span>
+                <span className="text-text-secondary">Action:</span>
                 <span className="font-medium">{actionTypeDisplay}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Range:</span>
+                <span className="text-text-secondary">Range:</span>
                 <span className="font-medium">{rangeDisplay}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Area:</span>
+                <span className="text-text-secondary">Area:</span>
                 <span className="font-medium">{areaDisplay}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Duration:</span>
+                <span className="text-text-secondary">Duration:</span>
                 <span className="font-medium">{durationDisplay}</span>
               </div>
             </div>
 
             {/* TP Sources */}
             {costs.tpSources.length > 0 && (
-              <div className="border-t border-gray-100 pt-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">TP Breakdown</h4>
-                <ul className="text-xs text-gray-600 space-y-1">
+              <div className="border-t border-neutral-100 pt-4">
+                <h4 className="text-sm font-medium text-text-secondary mb-2">TP Breakdown</h4>
+                <ul className="text-xs text-text-secondary space-y-1">
                   {costs.tpSources.map((src, i) => (
                     <li key={i}>• {src}</li>
                   ))}
@@ -1691,7 +1691,7 @@ function PowerCreatorContent() {
 
 export default function PowerCreatorPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-neutral-50 py-8 px-4">
       <PowerCreatorContent />
     </div>
   );

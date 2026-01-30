@@ -121,25 +121,25 @@ export function LevelUpModal({
       <div className="space-y-6">
         {/* Level Selector */}
         <div className="text-center">
-          <p className="text-gray-600 mb-2">
+          <p className="text-text-secondary mb-2">
             {character.name} • Level {currentLevel}
           </p>
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={() => setTargetLevel(Math.max(currentLevel + 1, targetLevel - 1))}
               disabled={targetLevel <= currentLevel + 1}
-              className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-neutral-100 text-text-secondary hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               -
             </button>
             <div className="text-center">
               <div className="text-5xl font-bold text-primary-600">{targetLevel}</div>
-              <div className="text-sm text-gray-500">New Level</div>
+              <div className="text-sm text-text-muted">New Level</div>
             </div>
             <button
               onClick={() => setTargetLevel(Math.min(maxLevel, targetLevel + 1))}
               disabled={targetLevel >= maxLevel}
-              className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-neutral-100 text-text-secondary hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               +
             </button>
@@ -196,7 +196,7 @@ export function LevelUpModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-1 px-4 py-3 rounded-lg border border-neutral-300 text-text-secondary hover:bg-neutral-50 transition-colors"
           >
             Cancel
           </button>
@@ -222,13 +222,13 @@ interface GainCardProps {
 
 function GainCard({ icon, label, value, description }: GainCardProps) {
   return (
-    <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+    <div className="bg-neutral-50 rounded-lg p-3 border border-neutral-100">
       <div className="flex items-center gap-2 mb-1">
         {icon}
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+        <span className="text-sm font-medium text-text-secondary">{label}</span>
       </div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-xs text-gray-500">{description}</div>
+      <div className="text-2xl font-bold text-text-primary">{value}</div>
+      <div className="text-xs text-text-muted">{description}</div>
     </div>
   );
 }

@@ -11,17 +11,17 @@ import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 import { ChevronDown } from 'lucide-react';
 
-// Category-specific colors matching vanilla site
+// Category-specific colors matching vanilla site and design system
 const categoryStyles: Record<string, string> = {
-  action: 'bg-[#e7f0ff] text-[#0b5ed7]',
-  activation: 'bg-[#e6fffa] text-[#0f766e]',
-  area: 'bg-[#eafbe7] text-[#166534]',
-  duration: 'bg-[#f3e8ff] text-[#6b21a8]',
-  target: 'bg-[#fff4e5] text-[#9a3412]',
-  special: 'bg-[#fffbe6] text-[#854d0e]',
-  restriction: 'bg-[#ffe5e5] text-[#b91c1c]',
-  cost: 'bg-[#e7f0ff] text-[#0b5ed7]',
-  default: 'bg-gray-100 text-gray-700',
+  action: 'bg-category-action text-category-action-text',
+  activation: 'bg-category-activation text-category-activation-text',
+  area: 'bg-category-area text-category-area-text',
+  duration: 'bg-category-duration text-category-duration-text',
+  target: 'bg-category-target text-category-target-text',
+  special: 'bg-category-special text-category-special-text',
+  restriction: 'bg-category-restriction text-category-restriction-text',
+  cost: 'bg-category-action text-category-action-text',
+  default: 'bg-neutral-100 text-text-secondary',
 };
 
 export interface ExpandableChipProps {

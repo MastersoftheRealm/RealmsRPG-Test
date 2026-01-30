@@ -224,9 +224,9 @@ function AccountContent() {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-48 bg-gray-200 rounded"></div>
-          <div className="h-48 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-neutral-200 rounded w-1/3"></div>
+          <div className="h-48 bg-neutral-200 rounded"></div>
+          <div className="h-48 bg-neutral-200 rounded"></div>
         </div>
       </div>
     );
@@ -236,29 +236,29 @@ function AccountContent() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+        <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
           <User className="w-8 h-8 text-primary-600" />
           My Account
         </h1>
-        <p className="text-gray-600 mt-2">Manage your profile and account settings</p>
+        <p className="text-text-secondary mt-2">Manage your profile and account settings</p>
       </div>
 
       {/* Profile Info */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Profile Information</h2>
+        <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
         
         <div className="space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-gray-100">
-            <span className="text-gray-600">Username</span>
-            <span className="font-medium text-gray-900">{profile?.username || 'Not set'}</span>
+          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+            <span className="text-text-secondary">Username</span>
+            <span className="font-medium text-text-primary">{profile?.username || 'Not set'}</span>
           </div>
-          <div className="flex items-center justify-between py-2 border-b border-gray-100">
-            <span className="text-gray-600">Email</span>
-            <span className="font-medium text-gray-900">{profile?.email}</span>
+          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+            <span className="text-text-secondary">Email</span>
+            <span className="font-medium text-text-primary">{profile?.email}</span>
           </div>
           <div className="flex items-center justify-between py-2">
-            <span className="text-gray-600">Member Since</span>
-            <span className="font-medium text-gray-900">
+            <span className="text-text-secondary">Member Since</span>
+            <span className="font-medium text-text-primary">
               {profile?.createdAt?.toLocaleDateString() || 'Unknown'}
             </span>
           </div>
@@ -267,14 +267,14 @@ function AccountContent() {
 
       {/* Change Email */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Mail className="w-5 h-5 text-gray-600" />
+        <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+          <Mail className="w-5 h-5 text-text-secondary" />
           Change Email
         </h2>
         
         <form onSubmit={handleEmailChange} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               New Email Address
             </label>
             <input
@@ -282,12 +282,12 @@ function AccountContent() {
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter new email"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               Current Password
             </label>
             <input
@@ -295,7 +295,7 @@ function AccountContent() {
               value={emailPassword}
               onChange={(e) => setEmailPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter current password"
             />
           </div>
@@ -323,14 +323,14 @@ function AccountContent() {
 
       {/* Change Password */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Lock className="w-5 h-5 text-gray-600" />
+        <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+          <Lock className="w-5 h-5 text-text-secondary" />
           Change Password
         </h2>
         
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               Current Password
             </label>
             <input
@@ -338,12 +338,12 @@ function AccountContent() {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter current password"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               New Password
             </label>
             <input
@@ -352,12 +352,12 @@ function AccountContent() {
               onChange={(e) => setNewPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter new password"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               Confirm New Password
             </label>
             <input
@@ -366,7 +366,7 @@ function AccountContent() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Confirm new password"
             />
           </div>
@@ -408,7 +408,7 @@ function AccountContent() {
           Danger Zone
         </h2>
         
-        <p className="text-gray-600 mb-4">
+        <p className="text-text-secondary mb-4">
           Deleting your account is permanent and cannot be undone. All your characters, 
           creations, and data will be permanently deleted.
         </p>
@@ -473,7 +473,7 @@ function AccountContent() {
                   setDeleteConfirmText('');
                   setDeleteError(null);
                 }}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-text-secondary hover:text-text-primary"
               >
                 Cancel
               </button>
@@ -488,7 +488,7 @@ function AccountContent() {
 export default function MyAccountPage() {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="min-h-screen bg-neutral-50 py-8 px-4">
         <AccountContent />
       </div>
     </ProtectedRoute>

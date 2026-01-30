@@ -61,7 +61,7 @@ function ValidationModal({
         
         <div className="p-4 overflow-y-auto max-h-[50vh]">
           {isValid ? (
-            <p className="text-gray-600 text-center py-8">
+            <p className="text-text-secondary text-center py-8">
               Your character is complete and ready for adventure!
             </p>
           ) : (
@@ -75,7 +75,7 @@ function ValidationModal({
                   )}
                 >
                   <span className="text-xl flex-shrink-0">{issue.emoji}</span>
-                  <p className="text-gray-700">{issue.message}</p>
+                  <p className="text-text-secondary">{issue.message}</p>
                 </div>
               ))}
             </div>
@@ -86,7 +86,7 @@ function ValidationModal({
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-50 disabled:opacity-50"
           >
             {isValid ? 'Cancel' : 'Go Back & Fix'}
           </button>
@@ -156,8 +156,8 @@ function HealthEnergyAllocationSection() {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-gray-900">Health & Energy Allocation</h3>
-        <div className="text-xs text-gray-500">
+        <h3 className="font-bold text-text-primary">Health & Energy Allocation</h3>
+        <div className="text-xs text-text-muted">
           Base HP: {baseHealth} | Base EN: {baseEnergy}
         </div>
       </div>
@@ -267,13 +267,13 @@ function PortraitUpload() {
   
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-text-secondary mb-2">
         Character Portrait (Optional)
       </label>
       
       <div className="flex items-start gap-4">
         {/* Portrait Preview */}
-        <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+        <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-neutral-100 border-2 border-dashed border-neutral-300 flex items-center justify-center">
           {draft.portrait ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -292,8 +292,8 @@ function PortraitUpload() {
             </>
           ) : (
             <div className="text-center p-2">
-              <span className="text-3xl text-gray-400">📷</span>
-              <p className="text-xs text-gray-500 mt-1">No image</p>
+              <span className="text-3xl text-text-muted">📷</span>
+              <p className="text-xs text-text-muted mt-1">No image</p>
             </div>
           )}
         </div>
@@ -313,7 +313,7 @@ function PortraitUpload() {
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
               isUploading
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
                 : 'border-primary-300 text-primary-600 hover:bg-primary-50'
             )}
           >
@@ -328,7 +328,7 @@ function PortraitUpload() {
               </>
             )}
           </label>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-text-muted mt-2">
             JPG, PNG, or GIF. Max 5MB. Images will be compressed automatically.
           </p>
           {error && (
@@ -612,14 +612,14 @@ export function FinalizeStep() {
   
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Finalize Your Character</h1>
-      <p className="text-gray-600 mb-6">
+      <h1 className="text-2xl font-bold text-text-primary mb-2">Finalize Your Character</h1>
+      <p className="text-text-secondary mb-6">
         Add the final details to bring your character to life.
       </p>
       
       {/* Character Name */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text-secondary mb-2">
           Character Name *
         </label>
         <input
@@ -627,7 +627,7 @@ export function FinalizeStep() {
           value={draft.name || ''}
           onChange={(e) => updateDraft({ name: e.target.value })}
           placeholder="Enter your character's name"
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors"
+          className="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors"
         />
       </div>
       
@@ -635,17 +635,17 @@ export function FinalizeStep() {
       <PortraitUpload />
       
       {/* Character Summary */}
-      <div className="bg-gray-50 rounded-xl p-6 mb-6">
-        <h3 className="font-bold text-gray-900 mb-4">Character Summary</h3>
+      <div className="bg-neutral-50 rounded-xl p-6 mb-6">
+        <h3 className="font-bold text-text-primary mb-4">Character Summary</h3>
         
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-500">Level:</span>
+            <span className="text-text-muted">Level:</span>
             <span className="ml-2 font-medium">{draft.level || 1}</span>
           </div>
           
           <div>
-            <span className="text-gray-500">Archetype:</span>
+            <span className="text-text-muted">Archetype:</span>
             <span className="ml-2 font-medium">
               {draft.archetype?.type 
                 ? draft.archetype.type.charAt(0).toUpperCase() + draft.archetype.type.slice(1)
@@ -654,20 +654,20 @@ export function FinalizeStep() {
           </div>
           
           <div>
-            <span className="text-gray-500">Species:</span>
+            <span className="text-text-muted">Species:</span>
             <span className="ml-2 font-medium">{draft.ancestry?.name || 'Not selected'}</span>
           </div>
           
           {draft.pow_abil && (
             <div>
-              <span className="text-gray-500">Power Ability:</span>
+              <span className="text-text-muted">Power Ability:</span>
               <span className="ml-2 font-medium capitalize">{draft.pow_abil}</span>
             </div>
           )}
           
           {draft.mart_abil && (
             <div>
-              <span className="text-gray-500">Martial Ability:</span>
+              <span className="text-text-muted">Martial Ability:</span>
               <span className="ml-2 font-medium capitalize">{draft.mart_abil}</span>
             </div>
           )}
@@ -675,8 +675,8 @@ export function FinalizeStep() {
         
         {/* Abilities Summary */}
         {draft.abilities && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <span className="text-gray-500 text-sm">Abilities:</span>
+          <div className="mt-4 pt-4 border-t border-neutral-200">
+            <span className="text-text-muted text-sm">Abilities:</span>
             <div className="flex flex-wrap gap-2 mt-2">
               {Object.entries(draft.abilities).map(([ability, value]) => (
                 <span
@@ -685,7 +685,7 @@ export function FinalizeStep() {
                     'px-2 py-1 rounded text-sm font-medium',
                     value > 0 ? 'bg-green-100 text-green-700' :
                     value < 0 ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-600'
+                    'bg-neutral-100 text-text-secondary'
                   )}
                 >
                   {ability.charAt(0).toUpperCase()}: {value >= 0 ? `+${value}` : value}
@@ -701,7 +701,7 @@ export function FinalizeStep() {
       
       {/* Description (Optional) */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text-secondary mb-2">
           Description (Optional)
         </label>
         <textarea
@@ -709,13 +709,13 @@ export function FinalizeStep() {
           onChange={(e) => updateDraft({ description: e.target.value })}
           placeholder="Describe your character's appearance, personality, or background..."
           rows={4}
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
         />
       </div>
       
       {/* Notes (Optional) */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text-secondary mb-2">
           Notes (Optional)
         </label>
         <textarea
@@ -723,7 +723,7 @@ export function FinalizeStep() {
           onChange={(e) => updateDraft({ notes: e.target.value })}
           placeholder="Any additional notes about your character..."
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
         />
       </div>
       
@@ -751,7 +751,7 @@ export function FinalizeStep() {
               {' '}{validationIssues.filter(i => i.severity === 'warning').length} warning{validationIssues.filter(i => i.severity === 'warning').length !== 1 ? 's' : ''}
             </span>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-text-secondary">
             Click &quot;Review & Create&quot; to see all issues before saving.
           </p>
         </div>
@@ -773,7 +773,7 @@ export function FinalizeStep() {
           className={cn(
             'px-8 py-3 rounded-xl font-bold transition-colors flex items-center gap-2',
             saving
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              ? 'bg-neutral-200 text-text-muted cursor-not-allowed'
               : validationIssues.some(i => i.severity === 'error')
                 ? 'bg-amber-500 text-white hover:bg-amber-600'
                 : 'bg-green-600 text-white hover:bg-green-700'

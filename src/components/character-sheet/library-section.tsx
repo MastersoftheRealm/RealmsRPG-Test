@@ -198,7 +198,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
   return (
     <div className={cn(
       'border rounded-lg overflow-hidden',
-      isInnate ? 'border-purple-300 bg-purple-50' : 'border-gray-200 bg-white'
+      isInnate ? 'border-purple-300 bg-purple-50' : 'border-neutral-200 bg-white'
     )}>
       <div className="flex items-center">
         {/* Innate toggle checkbox in edit mode */}
@@ -209,7 +209,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
               'px-2 py-2 transition-colors border-r',
               isInnate 
                 ? 'text-purple-600 bg-purple-100 hover:bg-purple-200' 
-                : 'text-gray-400 hover:bg-gray-100'
+                : 'text-text-muted hover:bg-neutral-100'
             )}
             title={isInnate ? 'Remove from innate' : 'Set as innate'}
           >
@@ -218,18 +218,18 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
         )}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-gray-50 text-left"
+          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-neutral-50 text-left"
         >
           <div className="flex items-center gap-2">
-            {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-            <span className="font-medium text-gray-800">{power.name}</span>
+            {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+            <span className="font-medium text-text-primary">{power.name}</span>
             {isInnate && (
               <span className="text-xs px-1.5 py-0.5 rounded bg-purple-200 text-purple-700">
                 Innate
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-text-muted">
             {energyCost > 0 && (
               <span className="text-blue-600 font-medium">{energyCost} EP</span>
             )}
@@ -248,7 +248,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
               'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
               canUse 
                 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-neutral-100 text-text-muted cursor-not-allowed'
             )}
             title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
           >
@@ -268,9 +268,9 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
       </div>
 
       {expanded && hasExpandableContent && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-3">
+        <div className="px-3 py-2 bg-neutral-50 border-t border-neutral-100 space-y-3">
           {power.description && (
-            <p className="text-sm text-gray-600">{power.description}</p>
+            <p className="text-sm text-text-secondary">{power.description}</p>
           )}
           {partChips.length > 0 && (
             <PartChipList 
@@ -304,15 +304,15 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
   const hasExpandableContent = technique.description || partChips.length > 0 || technique.weaponName || technique.actionType;
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+    <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
       <div className="flex items-center">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-gray-50 text-left"
+          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-neutral-50 text-left"
         >
           <div className="flex items-center gap-2">
-            {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-            <span className="font-medium text-gray-800">{technique.name}</span>
+            {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
+            <span className="font-medium text-text-primary">{technique.name}</span>
             {/* Weapon requirement badge */}
             {technique.weaponName && technique.weaponName !== 'Unarmed' && (
               <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">
@@ -334,7 +334,7 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
               'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
               canUse 
                 ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-neutral-100 text-text-muted cursor-not-allowed'
             )}
             title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
           >
@@ -354,7 +354,7 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
       </div>
 
       {expanded && hasExpandableContent && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-3">
+        <div className="px-3 py-2 bg-neutral-50 border-t border-neutral-100 space-y-3">
           {/* Action Type and Weapon info */}
           {(technique.actionType || technique.weaponName) && (
             <div className="flex flex-wrap gap-2 text-xs">
@@ -371,7 +371,7 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
             </div>
           )}
           {technique.description && (
-            <p className="text-sm text-gray-600">{technique.description}</p>
+            <p className="text-sm text-text-secondary">{technique.description}</p>
           )}
           {partChips.length > 0 && (
             <PartChipList 
@@ -407,7 +407,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
   return (
     <div className={cn(
       'border rounded-lg overflow-hidden',
-      item.equipped ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-white'
+      item.equipped ? 'border-green-300 bg-green-50' : 'border-neutral-200 bg-white'
     )}>
       <div className="flex items-center">
         {isEditMode && onToggleEquip && (type === 'weapon' || type === 'armor') && (
@@ -417,7 +417,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
               'px-2 py-2 transition-colors',
               item.equipped 
                 ? 'text-green-600 bg-green-100 hover:bg-green-200' 
-                : 'text-gray-400 hover:bg-gray-100'
+                : 'text-text-muted hover:bg-neutral-100'
             )}
             title={item.equipped ? 'Unequip' : 'Equip'}
           >
@@ -426,13 +426,13 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
         )}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-gray-50 text-left"
+          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-neutral-50 text-left"
         >
           <div className="flex items-center gap-2">
             {!isEditMode && item.equipped && (
               <span className="text-green-600">✓</span>
             )}
-            <span className="font-medium text-gray-800">{item.name}</span>
+            <span className="font-medium text-text-primary">{item.name}</span>
             {/* Quantity display with optional +/- controls for equipment */}
             {type === 'equipment' && (item.quantity || 1) >= 1 && (
               isEditMode && onQuantityChange ? (
@@ -443,17 +443,17 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
                     className={cn(
                       'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
                       (item.quantity || 1) > 1
-                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                        : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                     )}
                     title="Decrease quantity"
                   >
                     −
                   </button>
-                  <span className="text-xs text-gray-600 min-w-[1.5rem] text-center">×{item.quantity || 1}</span>
+                  <span className="text-xs text-text-muted min-w-[1.5rem] text-center">×{item.quantity || 1}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); onQuantityChange(1); }}
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-neutral-200 hover:bg-neutral-300 text-text-secondary transition-colors"
                     title="Increase quantity"
                   >
                     +
@@ -461,16 +461,16 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
                 </div>
               ) : (
                 (item.quantity || 1) > 1 && (
-                  <span className="text-xs text-gray-500">×{item.quantity}</span>
+                  <span className="text-xs text-text-muted">×{item.quantity}</span>
                 )
               )
             )}
             {/* For weapons/armor, show quantity only if > 1 */}
             {type !== 'equipment' && item.quantity && item.quantity > 1 && (
-              <span className="text-xs text-gray-500">×{item.quantity}</span>
+              <span className="text-xs text-text-muted">×{item.quantity}</span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-text-muted">
             {type === 'weapon' && item.damage && (
               <span className="text-red-600 font-medium">{formatDamageDisplay(item.damage)}</span>
             )}
@@ -516,9 +516,9 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
       </div>
 
       {expanded && hasExpandableContent && (
-        <div className="px-3 py-2 bg-gray-50 border-t border-gray-100 space-y-3">
+        <div className="px-3 py-2 bg-neutral-50 border-t border-neutral-100 space-y-3">
           {item.description && (
-            <p className="text-sm text-gray-600">{item.description}</p>
+            <p className="text-sm text-text-secondary">{item.description}</p>
           )}
           {propertyChips.length > 0 && (
             <PartChipList 
@@ -631,7 +631,7 @@ export function LibrarySection({
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 mb-4 border-b border-gray-200 pb-2">
+      <div className="flex flex-wrap gap-1 mb-4 border-b border-neutral-200 pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -640,7 +640,7 @@ export function LibrarySection({
               'px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors',
               activeTab === tab.id
                 ? 'bg-primary-100 text-primary-700 border-b-2 border-primary-600'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                : 'text-text-muted hover:text-text-secondary hover:bg-neutral-100'
             )}
           >
             {tab.label}
@@ -655,9 +655,9 @@ export function LibrarySection({
       {activeTab === 'inventory' && martialProficiency !== undefined && (
         <div className="mb-3 px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">⚔️ Armament Proficiency:</span>
+            <span className="text-sm font-medium text-text-secondary">⚔️ Armament Proficiency:</span>
             <span className="font-bold text-orange-600">{calculateArmamentProficiency(martialProficiency)} TP</span>
-            <span className="text-xs text-gray-500">(Max training points)</span>
+            <span className="text-xs text-text-muted">(Max training points)</span>
           </div>
         </div>
       )}
@@ -666,7 +666,7 @@ export function LibrarySection({
       {['powers', 'techniques', 'inventory'].includes(activeTab) && (
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">💰</span>
+            <span className="text-sm text-text-muted">💰</span>
             {/* Currency is ALWAYS editable, not just in edit mode */}
             <input
               type="text"
@@ -688,7 +688,7 @@ export function LibrarySection({
               className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500"
               title="Use +5, -10, or a number"
             />
-            <span className="text-sm text-gray-600">currency</span>
+            <span className="text-sm text-text-muted">currency</span>
           </div>
           
           {isEditMode && activeTabData?.onAdd && (
@@ -717,7 +717,7 @@ export function LibrarySection({
                       <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded">
                         Threshold: {innateThreshold}
                       </span>
-                      <span className="text-gray-400">×</span>
+                      <span className="text-text-muted">×</span>
                       <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded">
                         Pools: {innatePools}
                       </span>
@@ -727,10 +727,10 @@ export function LibrarySection({
                     <span className="text-lg font-bold text-purple-600">
                       {currentInnateEnergy !== undefined ? currentInnateEnergy : innateEnergy}
                     </span>
-                    <span className="text-sm text-gray-500">/ {innateEnergy}</span>
+                    <span className="text-sm text-text-muted">/ {innateEnergy}</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   Innate powers use this energy pool instead of regular energy
                 </p>
               </div>
@@ -795,7 +795,7 @@ export function LibrarySection({
 
             {/* Empty state */}
             {powers.length === 0 && (
-              <p className="text-gray-400 text-sm italic text-center py-4">
+              <p className="text-text-muted text-sm italic text-center py-4">
                 No powers learned
               </p>
             )}
@@ -816,7 +816,7 @@ export function LibrarySection({
               />
             ))
           ) : (
-            <p className="text-gray-400 text-sm italic text-center py-4">
+            <p className="text-text-muted text-sm italic text-center py-4">
               No techniques learned
             </p>
           )
@@ -827,11 +827,11 @@ export function LibrarySection({
             {/* Weapons Section */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Weapons</h4>
+                <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Weapons</h4>
                 {isEditMode && onAddWeapon && (
                   <button
                     onClick={onAddWeapon}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200 transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     Add
@@ -840,13 +840,13 @@ export function LibrarySection({
               </div>
               {/* Unarmed Prowess - always first */}
               {unarmedProwess && (
-                <div className="border border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50/50 mb-2">
+                <div className="border border-dashed border-neutral-300 rounded-lg overflow-hidden bg-neutral-50/50 mb-2">
                   <div className="flex items-center">
                     <div className="flex-1 flex items-center justify-between px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400">👊</span>
-                        <span className="font-medium text-gray-600">{unarmedProwess.name}</span>
-                        <span className="text-xs text-gray-400 italic">Always available</span>
+                        <span className="text-text-muted">👊</span>
+                        <span className="font-medium text-text-secondary">{unarmedProwess.name}</span>
+                        <span className="text-xs text-text-muted italic">Always available</span>
                       </div>
                       <span className="text-red-500 font-medium text-sm">{unarmedProwess.damage}</span>
                     </div>
@@ -890,7 +890,7 @@ export function LibrarySection({
                 })
               ) : (
                 !unarmedProwess && (
-                  <p className="text-gray-400 text-sm italic text-center py-2">No weapons</p>
+                  <p className="text-text-muted text-sm italic text-center py-2">No weapons</p>
                 )
               )}
             </div>
@@ -898,11 +898,11 @@ export function LibrarySection({
             {/* Armor Section */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Armor</h4>
+                <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Armor</h4>
                 {isEditMode && onAddArmor && (
                   <button
                     onClick={onAddArmor}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200 transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     Add
@@ -921,18 +921,18 @@ export function LibrarySection({
                   />
                 ))
               ) : (
-                <p className="text-gray-400 text-sm italic text-center py-2">No armor</p>
+                <p className="text-text-muted text-sm italic text-center py-2">No armor</p>
               )}
             </div>
             
             {/* Equipment Section */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Equipment</h4>
+                <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Equipment</h4>
                 {isEditMode && onAddEquipment && (
                   <button
                     onClick={onAddEquipment}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200 transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     Add
@@ -951,7 +951,7 @@ export function LibrarySection({
                   />
                 ))
               ) : (
-                <p className="text-gray-400 text-sm italic text-center py-2">No equipment</p>
+                <p className="text-text-muted text-sm italic text-center py-2">No equipment</p>
               )}
             </div>
           </div>
@@ -1003,7 +1003,7 @@ export function LibrarySection({
         )}
 
         {activeTab === 'notes' && !abilities && (
-          <p className="text-gray-400 text-sm italic text-center py-4">
+          <p className="text-text-muted text-sm italic text-center py-4">
             Character abilities not loaded
           </p>
         )}

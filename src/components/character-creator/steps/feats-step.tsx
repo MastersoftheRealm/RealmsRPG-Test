@@ -183,7 +183,7 @@ export function FeatsStep() {
         key={feat.id}
         className={cn(
           'bg-white rounded-lg border overflow-hidden transition-all',
-          isSelected ? 'border-primary-400 bg-primary-50' : 'border-gray-200',
+          isSelected ? 'border-primary-400 bg-primary-50' : 'border-neutral-200',
           !requirements.met && 'opacity-60'
         )}
       >
@@ -196,8 +196,8 @@ export function FeatsStep() {
               isSelected
                 ? 'bg-primary-600 border-primary-600 text-white'
                 : requirements.met && canSelect
-                  ? 'border-gray-300 hover:border-primary-400 hover:bg-primary-50'
-                  : 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                  ? 'border-neutral-300 hover:border-primary-400 hover:bg-primary-50'
+                  : 'border-neutral-200 bg-neutral-100 cursor-not-allowed'
             )}
           >
             {isSelected && '✓'}
@@ -205,9 +205,9 @@ export function FeatsStep() {
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-gray-900">{feat.name}</span>
+              <span className="font-medium text-text-primary">{feat.name}</span>
               {feat.category && (
-                <span className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                <span className="px-1.5 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded">
                   {feat.category}
                 </span>
               )}
@@ -221,15 +221,15 @@ export function FeatsStep() {
           
           <button
             onClick={() => setExpandedFeat(isExpanded ? null : feat.id)}
-            className="text-gray-400 hover:text-gray-600 p-1"
+            className="text-text-muted hover:text-text-secondary p-1"
           >
             {isExpanded ? '▲' : '▼'}
           </button>
         </div>
         
         {isExpanded && (
-          <div className="px-3 pb-3 pt-2 border-t border-gray-100">
-            <p className="text-sm text-gray-700">{feat.description}</p>
+          <div className="px-3 pb-3 pt-2 border-t border-neutral-100">
+            <p className="text-sm text-text-secondary">{feat.description}</p>
             
             {feat.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -261,8 +261,8 @@ export function FeatsStep() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Select Feats</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Select Feats</h1>
+          <p className="text-text-secondary">
             Choose feats that grant special abilities and bonuses. Your archetype 
             ({archetypeType}) allows {maxArchetypeFeats} archetype feat{maxArchetypeFeats !== 1 ? 's' : ''} 
             {' '}and {maxCharacterFeats} character feat.
@@ -280,7 +280,7 @@ export function FeatsStep() {
             : 'bg-amber-50 border-amber-300'
         )}>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-gray-900">Archetype Feats</h3>
+            <h3 className="font-bold text-text-primary">Archetype Feats</h3>
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedArchetypeFeats.length === maxArchetypeFeats
@@ -292,7 +292,7 @@ export function FeatsStep() {
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedArchetypeFeats.length === 0 ? (
-              <span className="text-sm text-gray-500 italic">None selected</span>
+              <span className="text-sm text-text-muted italic">None selected</span>
             ) : (
               selectedArchetypeFeats.map(feat => (
                 <span
@@ -320,7 +320,7 @@ export function FeatsStep() {
             : 'bg-blue-50 border-blue-300'
         )}>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-gray-900">Character Feats</h3>
+            <h3 className="font-bold text-text-primary">Character Feats</h3>
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedCharacterFeats.length === maxCharacterFeats
@@ -332,7 +332,7 @@ export function FeatsStep() {
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedCharacterFeats.length === 0 ? (
-              <span className="text-sm text-gray-500 italic">None selected</span>
+              <span className="text-sm text-text-muted italic">None selected</span>
             ) : (
               selectedCharacterFeats.map(feat => (
                 <span
@@ -354,19 +354,19 @@ export function FeatsStep() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center border border-gray-200">
+      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center border border-neutral-200">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search feats..."
-          className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          className="flex-1 min-w-[200px] px-3 py-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
         />
         
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg"
+          className="px-3 py-2 border border-neutral-300 rounded-lg"
         >
           <option value="">All Categories</option>
           {categories.map(cat => (
@@ -381,7 +381,7 @@ export function FeatsStep() {
               'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               featTypeFilter === 'all'
                 ? 'bg-primary-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
             )}
           >
             All
@@ -392,7 +392,7 @@ export function FeatsStep() {
               'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               featTypeFilter === 'archetype'
                 ? 'bg-amber-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
             )}
           >
             Archetype
@@ -403,7 +403,7 @@ export function FeatsStep() {
               'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               featTypeFilter === 'character'
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
             )}
           >
             Character
@@ -416,17 +416,17 @@ export function FeatsStep() {
         {/* Archetype Feats Column */}
         {(featTypeFilter === 'all' || featTypeFilter === 'archetype') && (
           <div>
-            <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-lg text-text-primary mb-3 flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-amber-500"></span>
               Archetype Feats
-              <span className="text-sm font-normal text-gray-500">
+              <span className="text-sm font-normal text-text-muted">
                 ({selectedArchetypeFeats.length}/{maxArchetypeFeats})
               </span>
             </h3>
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
               {archetypeFeats.map(feat => renderFeatCard(feat, false))}
               {archetypeFeats.length === 0 && (
-                <div className="text-center py-4 text-gray-500">
+                <div className="text-center py-4 text-text-muted">
                   No archetype feats match your filters.
                 </div>
               )}
@@ -437,17 +437,17 @@ export function FeatsStep() {
         {/* Character Feats Column */}
         {(featTypeFilter === 'all' || featTypeFilter === 'character') && (
           <div>
-            <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-lg text-text-primary mb-3 flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-blue-500"></span>
               Character Feats
-              <span className="text-sm font-normal text-gray-500">
+              <span className="text-sm font-normal text-text-muted">
                 ({selectedCharacterFeats.length}/{maxCharacterFeats})
               </span>
             </h3>
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
               {characterFeats.map(feat => renderFeatCard(feat, true))}
               {characterFeats.length === 0 && (
-                <div className="text-center py-4 text-gray-500">
+                <div className="text-center py-4 text-text-muted">
                   No character feats match your filters.
                 </div>
               )}

@@ -144,20 +144,20 @@ export function AbilityScoreEditor({
           'flex items-center justify-center gap-4 p-3 rounded-xl',
           isOverspent ? 'bg-red-50 border border-red-200' :
           isComplete ? 'bg-green-50 border border-green-200' :
-          'bg-gray-50 border border-gray-200'
+          'bg-neutral-50 border border-neutral-200'
         )}>
           <div className="text-center">
-            <span className="text-xs text-gray-500 block">Total</span>
-            <span className="text-lg font-bold text-gray-900">{totalPoints}</span>
+            <span className="text-xs text-text-muted block">Total</span>
+            <span className="text-lg font-bold text-text-primary">{totalPoints}</span>
           </div>
-          <span className="text-2xl text-gray-300">−</span>
+          <span className="text-2xl text-neutral-300">−</span>
           <div className="text-center">
-            <span className="text-xs text-gray-500 block">Spent</span>
-            <span className="text-lg font-bold text-gray-900">{spentPoints}</span>
+            <span className="text-xs text-text-muted block">Spent</span>
+            <span className="text-lg font-bold text-text-primary">{spentPoints}</span>
           </div>
-          <span className="text-2xl text-gray-300">=</span>
+          <span className="text-2xl text-neutral-300">=</span>
           <div className="text-center">
-            <span className="text-xs text-gray-500 block">Remaining</span>
+            <span className="text-xs text-text-muted block">Remaining</span>
             <span className={cn(
               'text-lg font-bold',
               isOverspent ? 'text-red-600' :
@@ -190,12 +190,12 @@ export function AbilityScoreEditor({
                 'p-3 rounded-xl border-2 bg-white transition-all',
                 isHighlighted 
                   ? 'border-amber-400 bg-amber-50/50' 
-                  : 'border-gray-200',
+                  : 'border-neutral-200',
                 !isEditMode && 'opacity-75'
               )}
             >
               <div className="text-center mb-2">
-                <h4 className="font-bold text-sm text-gray-900 capitalize">
+                <h4 className="font-bold text-sm text-text-primary capitalize">
                   {compact ? info.shortName : info.name}
                 </h4>
                 {isHighlighted && (
@@ -204,7 +204,7 @@ export function AbilityScoreEditor({
               </div>
 
               {!compact && (
-                <p className="text-xs text-gray-500 text-center mb-2 line-clamp-1">
+                <p className="text-xs text-text-muted text-center mb-2 line-clamp-1">
                   {info.description}
                 </p>
               )}
@@ -217,8 +217,8 @@ export function AbilityScoreEditor({
                     className={cn(
                       'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors',
                       canDec
-                        ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                        ? 'bg-neutral-100 hover:bg-neutral-200 text-text-secondary'
+                        : 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
                     )}
                   >
                     −
@@ -227,9 +227,9 @@ export function AbilityScoreEditor({
 
                 <div className={cn(
                   'text-2xl font-bold min-w-[3rem] text-center',
-                  value > 0 ? 'text-green-600' :
-                  value < 0 ? 'text-red-600' :
-                  'text-gray-600'
+                  value > 0 ? 'text-success-600' :
+                  value < 0 ? 'text-danger-600' :
+                  'text-text-secondary'
                 )}>
                   {formatBonus(value)}
                 </div>
@@ -242,8 +242,8 @@ export function AbilityScoreEditor({
                     className={cn(
                       'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors',
                       canInc
-                        ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                        ? 'bg-neutral-100 hover:bg-neutral-200 text-text-secondary'
+                        : 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
                     )}
                   >
                     +

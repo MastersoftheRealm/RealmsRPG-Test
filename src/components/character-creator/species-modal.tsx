@@ -73,7 +73,7 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
     <div className="mb-4">
       <h4 className={cn(
         'font-semibold text-sm uppercase tracking-wide mb-2',
-        isFlaw ? 'text-purple-700' : 'text-gray-700'
+        isFlaw ? 'text-purple-700' : 'text-text-secondary'
       )}>
         {title}
       </h4>
@@ -85,7 +85,7 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
               'p-3 rounded-lg border',
               isFlaw 
                 ? 'bg-purple-50 border-purple-200' 
-                : 'bg-gray-50 border-gray-200',
+                : 'bg-neutral-50 border-neutral-200',
               selectable && 'cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors',
               !trait.found && 'opacity-60'
             )}
@@ -93,14 +93,14 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
             <div className="flex items-start gap-2">
               <span className={cn(
                 'font-medium text-sm',
-                isFlaw ? 'text-purple-800' : 'text-gray-900'
+                isFlaw ? 'text-purple-800' : 'text-text-primary'
               )}>
                 {trait.name}
               </span>
             </div>
             <p className={cn(
               'text-xs mt-1',
-              isFlaw ? 'text-purple-600' : 'text-gray-600'
+              isFlaw ? 'text-purple-600' : 'text-text-secondary'
             )}>
               {trait.description}
             </p>
@@ -142,30 +142,30 @@ export function SpeciesModal({
       <div className="p-6">
         {/* Header */}
         <div className="mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">{species.name}</h2>
-          <p className="text-gray-600 mt-1">{species.description}</p>
+          <h2 className="text-2xl font-bold text-text-primary">{species.name}</h2>
+          <p className="text-text-secondary mt-1">{species.description}</p>
         </div>
 
         {/* Stats Grid - NO SPEED (species don't have speed in RTDB) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-xl mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-neutral-50 rounded-xl mb-6">
           <div className="text-center">
-            <span className="block text-xs text-gray-500 uppercase tracking-wide">Size</span>
-            <span className="font-bold text-gray-900 capitalize">{sizesDisplay}</span>
+            <span className="block text-xs text-text-muted uppercase tracking-wide">Size</span>
+            <span className="font-bold text-text-primary capitalize">{sizesDisplay}</span>
           </div>
           <div className="text-center">
-            <span className="block text-xs text-gray-500 uppercase tracking-wide">Type</span>
-            <span className="font-bold text-gray-900 capitalize">{species.type || 'Humanoid'}</span>
+            <span className="block text-xs text-text-muted uppercase tracking-wide">Type</span>
+            <span className="font-bold text-text-primary capitalize">{species.type || 'Humanoid'}</span>
           </div>
           {species.ave_height && (
             <div className="text-center">
-              <span className="block text-xs text-gray-500 uppercase tracking-wide">Avg Height</span>
-              <span className="font-bold text-gray-900">{species.ave_height} cm</span>
+              <span className="block text-xs text-text-muted uppercase tracking-wide">Avg Height</span>
+              <span className="font-bold text-text-primary">{species.ave_height} cm</span>
             </div>
           )}
           {species.ave_weight && (
             <div className="text-center">
-              <span className="block text-xs text-gray-500 uppercase tracking-wide">Avg Weight</span>
-              <span className="font-bold text-gray-900">{species.ave_weight} kg</span>
+              <span className="block text-xs text-text-muted uppercase tracking-wide">Avg Weight</span>
+              <span className="font-bold text-text-primary">{species.ave_weight} kg</span>
             </div>
           )}
         </div>
@@ -173,7 +173,7 @@ export function SpeciesModal({
         {/* Ability Bonuses */}
         {species.ability_bonuses && Object.keys(species.ability_bonuses).length > 0 && (
           <div className="mb-6">
-            <h4 className="font-semibold text-sm uppercase tracking-wide text-gray-700 mb-2">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
               Ability Bonuses
             </h4>
             <div className="flex flex-wrap gap-2">
@@ -194,7 +194,7 @@ export function SpeciesModal({
           {/* Species Skills */}
           {species.skills && species.skills.length > 0 && (
             <div>
-              <h4 className="font-semibold text-sm uppercase tracking-wide text-gray-700 mb-2">
+              <h4 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
                 Species Skills
               </h4>
               <div className="flex flex-wrap gap-2">
@@ -213,7 +213,7 @@ export function SpeciesModal({
           {/* Languages */}
           {species.languages && species.languages.length > 0 && (
             <div>
-              <h4 className="font-semibold text-sm uppercase tracking-wide text-gray-700 mb-2">
+              <h4 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
                 Languages
               </h4>
               <div className="flex flex-wrap gap-2">
@@ -254,7 +254,7 @@ export function SpeciesModal({
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-4 mt-8 pt-4 border-t border-gray-200">
+        <div className="flex gap-4 mt-8 pt-4 border-t border-neutral-200">
           <button 
             onClick={onSelect} 
             className="btn-continue flex-1"

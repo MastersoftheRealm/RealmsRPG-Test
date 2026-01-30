@@ -172,13 +172,13 @@ export function AddSubSkillModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">Add Sub-Skill</h2>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+          <h2 className="text-lg font-bold text-text-primary">Add Sub-Skill</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-lg hover:bg-neutral-100 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-text-muted" />
           </button>
         </div>
 
@@ -190,15 +190,15 @@ export function AddSubSkillModal({
         </div>
 
         {/* Search */}
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-neutral-100">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search sub-skills..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full pl-9 pr-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
         </div>
@@ -208,7 +208,7 @@ export function AddSubSkillModal({
           {loading && (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-gray-500">Loading sub-skills...</p>
+              <p className="text-text-muted">Loading sub-skills...</p>
             </div>
           )}
 
@@ -219,13 +219,13 @@ export function AddSubSkillModal({
           )}
 
           {!loading && !error && proficientBaseSkills.length === 0 && (
-            <p className="text-center py-8 text-gray-500 italic">
+            <p className="text-center py-8 text-text-muted italic">
               You need at least one proficient skill to add sub-skills.
             </p>
           )}
 
           {!loading && !error && proficientBaseSkills.length > 0 && filteredSkills.length === 0 && (
-            <p className="text-center py-8 text-gray-500 italic">
+            <p className="text-center py-8 text-text-muted italic">
               No sub-skills available to add
             </p>
           )}
@@ -245,14 +245,14 @@ export function AddSubSkillModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
-          <span className="text-sm text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50">
+          <span className="text-sm text-text-muted">
             {selectedSkills.length} sub-skill{selectedSkills.length !== 1 ? 's' : ''} selected
           </span>
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-neutral-200 transition-colors"
             >
               Cancel
             </button>
@@ -263,7 +263,7 @@ export function AddSubSkillModal({
                 'px-4 py-2 rounded-lg font-medium transition-colors',
                 selectedSkills.length > 0
                   ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-neutral-200 text-text-muted cursor-not-allowed'
               )}
             >
               Add {selectedSkills.length > 0 ? `(${selectedSkills.length})` : ''}

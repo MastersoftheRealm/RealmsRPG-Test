@@ -28,7 +28,7 @@ export function CheckboxFilter({
 }: CheckboxFilterProps) {
   return (
     <div className={`filter-group ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
       <div className="flex flex-wrap gap-4">
@@ -41,9 +41,9 @@ export function CheckboxFilter({
               type="checkbox"
               checked={option.checked}
               onChange={(e) => onChange(option.id, e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              className="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
             />
-            <span className="text-sm text-gray-700">{option.label}</span>
+            <span className="text-sm text-text-secondary">{option.label}</span>
           </label>
         ))}
       </div>

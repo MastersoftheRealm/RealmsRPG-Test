@@ -100,29 +100,29 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={config.color}>{config.icon}</span>
-            <h2 className="text-xl font-bold text-gray-900">{displayTitle}</h2>
+            <h2 className="text-xl font-bold text-text-primary">{displayTitle}</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-text-muted hover:text-text-primary hover:bg-neutral-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="px-6 py-3 border-b border-gray-100">
+        <div className="px-6 py-3 border-b border-border-light">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={`Search ${itemType}s...`}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full pl-10 pr-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
         </div>
@@ -139,7 +139,7 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">
+              <p className="text-text-muted">
                 {items?.length === 0 ? config.emptyText : 'No matching items found.'}
               </p>
             </div>
@@ -150,17 +150,17 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
                   key={item.id}
                   onClick={() => handleSelect(item)}
                   className={cn(
-                    'w-full text-left p-4 rounded-lg border border-gray-200',
+                    'w-full text-left p-4 rounded-lg border border-border-light',
                     'hover:border-primary-300 hover:bg-primary-50 transition-colors',
                     'focus:outline-none focus:ring-2 focus:ring-primary-500'
                   )}
                 >
                   <div className="flex items-center gap-2">
                     <span className={cn('opacity-60', config.color)}>{config.icon}</span>
-                    <span className="font-semibold text-gray-900">{item.name}</span>
+                    <span className="font-semibold text-text-primary">{item.name}</span>
                   </div>
                   {item.description && (
-                    <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                    <p className="mt-1 text-sm text-text-secondary line-clamp-2">
                       {item.description}
                     </p>
                   )}
@@ -171,8 +171,8 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-500 text-center">
+        <div className="px-6 py-4 border-t border-border-light bg-surface-secondary">
+          <p className="text-sm text-text-muted text-center">
             {items?.length || 0} {itemType}(s) in your library
           </p>
         </div>

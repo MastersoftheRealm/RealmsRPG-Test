@@ -129,8 +129,8 @@ export function AncestryStep() {
   if (!selectedSpecies) {
     return (
       <div className="max-w-2xl mx-auto text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Ancestry Traits</h1>
-        <p className="text-gray-600 mb-6">
+        <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h1>
+        <p className="text-text-secondary mb-6">
           Customize your character with ancestry traits and an optional flaw.
         </p>
         
@@ -163,8 +163,8 @@ export function AncestryStep() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Ancestry Traits</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h1>
+          <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
           </p>
         </div>
@@ -177,42 +177,42 @@ export function AncestryStep() {
       </div>
 
       {/* Species Info Summary */}
-      <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+      <div className="bg-neutral-50 rounded-xl p-4 mb-6 border border-neutral-200">
         {/* Species Description */}
         {selectedSpecies.description && (
-          <p className="text-gray-700 text-sm mb-4 leading-relaxed">
+          <p className="text-text-secondary text-sm mb-4 leading-relaxed">
             {selectedSpecies.description}
           </p>
         )}
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <span className="block text-xs text-gray-500 uppercase">Size</span>
-            <span className="font-bold text-gray-900 capitalize">{sizesDisplay}</span>
+            <span className="block text-xs text-text-muted uppercase">Size</span>
+            <span className="font-bold text-text-primary capitalize">{sizesDisplay}</span>
           </div>
           <div>
-            <span className="block text-xs text-gray-500 uppercase">Type</span>
-            <span className="font-bold text-gray-900 capitalize">{selectedSpecies.type || 'Humanoid'}</span>
+            <span className="block text-xs text-text-muted uppercase">Type</span>
+            <span className="font-bold text-text-primary capitalize">{selectedSpecies.type || 'Humanoid'}</span>
           </div>
           {selectedSpecies.ave_height && (
             <div>
-              <span className="block text-xs text-gray-500 uppercase">Avg Height</span>
-              <span className="font-bold text-gray-900">{selectedSpecies.ave_height} cm</span>
+              <span className="block text-xs text-text-muted uppercase">Avg Height</span>
+              <span className="font-bold text-text-primary">{selectedSpecies.ave_height} cm</span>
             </div>
           )}
           {selectedSpecies.ave_weight && (
             <div>
-              <span className="block text-xs text-gray-500 uppercase">Avg Weight</span>
-              <span className="font-bold text-gray-900">{selectedSpecies.ave_weight} kg</span>
+              <span className="block text-xs text-text-muted uppercase">Avg Weight</span>
+              <span className="font-bold text-text-primary">{selectedSpecies.ave_weight} kg</span>
             </div>
           )}
         </div>
         
         {/* Skills and Languages */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-neutral-200">
           {selectedSpecies.skills && selectedSpecies.skills.length > 0 && (
             <div>
-              <span className="text-xs text-gray-500 uppercase">Species Skills:</span>
+              <span className="text-xs text-text-muted uppercase">Species Skills:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {selectedSpecies.skills.map(skill => (
                   <span key={skill} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
@@ -224,7 +224,7 @@ export function AncestryStep() {
           )}
           {selectedSpecies.languages && selectedSpecies.languages.length > 0 && (
             <div>
-              <span className="text-xs text-gray-500 uppercase">Languages:</span>
+              <span className="text-xs text-text-muted uppercase">Languages:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {selectedSpecies.languages.map(lang => (
                   <span key={lang} className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs">
@@ -246,7 +246,7 @@ export function AncestryStep() {
             : 'bg-amber-50 border-amber-300'
         )}>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-gray-900 text-sm">Ancestry Traits</span>
+            <span className="font-bold text-text-primary text-sm">Ancestry Traits</span>
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedTraitIds.length === maxAncestryTraits
@@ -256,7 +256,7 @@ export function AncestryStep() {
               {selectedTraitIds.length} / {maxAncestryTraits}
             </span>
           </div>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-text-secondary">
             {selectedFlaw ? 'Flaw grants +1 trait!' : 'Select a flaw for +1 trait'}
           </p>
         </div>
@@ -268,7 +268,7 @@ export function AncestryStep() {
             : 'bg-blue-50 border-blue-300'
         )}>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-gray-900 text-sm">Characteristic</span>
+            <span className="font-bold text-text-primary text-sm">Characteristic</span>
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedCharacteristic
@@ -278,27 +278,27 @@ export function AncestryStep() {
               {selectedCharacteristic ? '1' : '0'} / 1
             </span>
           </div>
-          <p className="text-xs text-gray-600">Optional bonus trait</p>
+          <p className="text-xs text-text-secondary">Optional bonus trait</p>
         </div>
 
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedFlaw
             ? 'bg-purple-50 border-purple-300'
-            : 'bg-gray-50 border-gray-200'
+            : 'bg-neutral-50 border-neutral-200'
         )}>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-gray-900 text-sm">Flaw</span>
+            <span className="font-bold text-text-primary text-sm">Flaw</span>
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedFlaw
                 ? 'bg-purple-200 text-purple-800'
-                : 'bg-gray-200 text-gray-600'
+                : 'bg-neutral-200 text-text-secondary'
             )}>
               {selectedFlaw ? '1' : '0'} / 1
             </span>
           </div>
-          <p className="text-xs text-gray-600">Optional, grants +1 trait</p>
+          <p className="text-xs text-text-secondary">Optional, grants +1 trait</p>
         </div>
       </div>
 
@@ -359,8 +359,8 @@ export function AncestryStep() {
 
       {/* No traits message */}
       {ancestryTraits.length === 0 && speciesTraits.length === 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6 text-center">
-          <p className="text-gray-600">
+        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-6 mb-6 text-center">
+          <p className="text-text-secondary">
             No specific ancestry traits defined for {selectedSpecies.name}.
             You may continue without selecting traits.
           </p>
@@ -409,8 +409,8 @@ function TraitSection({
 }: TraitSectionProps) {
   const variantStyles = {
     default: {
-      border: 'border-gray-200',
-      header: 'bg-gray-50',
+      border: 'border-neutral-200',
+      header: 'bg-neutral-50',
       selected: 'border-primary-400 bg-primary-50',
       check: 'bg-primary-600 border-primary-600',
     },
@@ -441,12 +441,12 @@ function TraitSection({
       <div className={cn('px-4 py-3 border-b flex items-center gap-2', styles.header, styles.border)}>
         {icon}
         <div>
-          <h3 className="font-bold text-gray-900">{title}</h3>
-          {subtitle && <p className="text-xs text-gray-600">{subtitle}</p>}
+          <h3 className="font-bold text-text-primary">{title}</h3>
+          {subtitle && <p className="text-xs text-text-secondary">{subtitle}</p>}
         </div>
       </div>
       
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-neutral-100">
         {traits.map(trait => {
           const isSelected = selectedIds.includes(trait.id);
           
@@ -456,7 +456,7 @@ function TraitSection({
               onClick={() => selectable && onToggle(trait.id)}
               className={cn(
                 'px-4 py-3 transition-colors',
-                selectable && 'cursor-pointer hover:bg-gray-50',
+                selectable && 'cursor-pointer hover:bg-neutral-50',
                 isSelected && styles.selected
               )}
             >
@@ -466,14 +466,14 @@ function TraitSection({
                     'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
                     isSelected
                       ? `${styles.check} text-white`
-                      : 'border-gray-300 bg-white'
+                      : 'border-neutral-300 bg-white'
                   )}>
                     {isSelected && <Check className="w-3 h-3" />}
                   </div>
                 )}
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{trait.name}</h4>
-                  <p className="text-sm text-gray-600 mt-1">{trait.description}</p>
+                  <h4 className="font-medium text-text-primary">{trait.name}</h4>
+                  <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
                 </div>
               </div>
             </div>

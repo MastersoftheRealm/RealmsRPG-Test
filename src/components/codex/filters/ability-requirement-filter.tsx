@@ -55,14 +55,14 @@ export function AbilityRequirementFilter({
 
   return (
     <div className={`filter-group ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
       <div className="flex gap-2">
         <select
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 px-3 py-2 border border-neutral-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         >
           <option value="">Choose ability</option>
           {availableAbilities.map(ability => (
@@ -78,7 +78,7 @@ export function AbilityRequirementFilter({
           onKeyPress={handleKeyPress}
           placeholder="Max"
           min="0"
-          className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="w-20 px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
         <button
           type="button"

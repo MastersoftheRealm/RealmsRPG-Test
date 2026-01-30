@@ -128,26 +128,26 @@ function PartCard({
     (part.op_3_tp || 0) * selectedPart.op_3_lvl;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-50 px-4 py-3 flex items-center justify-between">
+      <div className="bg-neutral-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-text-muted hover:text-text-secondary"
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
-          <span className="font-medium text-gray-900">{part.name}</span>
-          <span className="text-sm text-gray-500">
+          <span className="font-medium text-text-primary">{part.name}</span>
+          <span className="text-sm text-text-muted">
             En: {partEnergy.toFixed(1)} | TP: {Math.floor(partTP)}
           </span>
         </div>
         <button
           type="button"
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-500"
+          className="text-text-muted hover:text-red-500"
         >
           <X className="w-5 h-5" />
         </button>
@@ -159,7 +159,7 @@ function PartCard({
           {/* Category and Part Selection */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 Category
               </label>
               <select
@@ -182,7 +182,7 @@ function PartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -192,7 +192,7 @@ function PartCard({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 Part
               </label>
               <select
@@ -209,7 +209,7 @@ function PartCard({
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
@@ -221,27 +221,27 @@ function PartCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600">{part.description}</p>
+          <p className="text-sm text-text-secondary">{part.description}</p>
 
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
-            <span className="text-gray-600">
+            <span className="text-text-secondary">
               Base Energy: <strong>{part.base_en || 0}</strong>
             </span>
-            <span className="text-gray-600">
+            <span className="text-text-secondary">
               Base TP: <strong>{part.base_tp}</strong>
             </span>
           </div>
 
           {/* Options */}
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
-            <div className="space-y-3 pt-2 border-t border-gray-100">
+            <div className="space-y-3 pt-2 border-t border-neutral-100">
               {hasOption(1) && (
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-neutral-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 1:{' '}
-                      <span className="text-gray-500">
+                      <span className="text-text-muted">
                         En {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP{' '}
                         {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
                       </span>
@@ -253,17 +253,17 @@ function PartCard({
                     />
                   </div>
                   {part.op_1_desc && (
-                    <p className="text-sm text-gray-600">{part.op_1_desc}</p>
+                    <p className="text-sm text-text-secondary">{part.op_1_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(2) && (
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-neutral-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 2:{' '}
-                      <span className="text-gray-500">
+                      <span className="text-text-muted">
                         En {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP{' '}
                         {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
                       </span>
@@ -275,17 +275,17 @@ function PartCard({
                     />
                   </div>
                   {part.op_2_desc && (
-                    <p className="text-sm text-gray-600">{part.op_2_desc}</p>
+                    <p className="text-sm text-text-secondary">{part.op_2_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(3) && (
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-neutral-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 3:{' '}
-                      <span className="text-gray-500">
+                      <span className="text-text-muted">
                         En {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP{' '}
                         {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
                       </span>
@@ -297,7 +297,7 @@ function PartCard({
                     />
                   </div>
                   {part.op_3_desc && (
-                    <p className="text-sm text-gray-600">{part.op_3_desc}</p>
+                    <p className="text-sm text-text-secondary">{part.op_3_desc}</p>
                   )}
                 </div>
               )}
@@ -677,9 +677,9 @@ function TechniqueCreatorContent() {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-neutral-200 rounded w-1/3"></div>
+          <div className="h-4 bg-neutral-200 rounded w-2/3"></div>
+          <div className="h-64 bg-neutral-200 rounded"></div>
         </div>
       </div>
     );
@@ -699,11 +699,11 @@ function TechniqueCreatorContent() {
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-2">
             <Swords className="w-8 h-8 text-red-600" />
             Technique Creator
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Design custom martial techniques by combining technique parts. Each part contributes to the total
             energy cost and training point requirements.
           </p>
@@ -715,8 +715,8 @@ function TechniqueCreatorContent() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
               user 
-                ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                : "bg-gray-100 text-gray-400 cursor-pointer"
+                ? "bg-neutral-100 hover:bg-neutral-200 text-text-secondary"
+                : "bg-neutral-100 text-text-muted cursor-pointer"
             )}
             title={user ? "Load from library" : "Log in to load from library"}
           >
@@ -726,7 +726,7 @@ function TechniqueCreatorContent() {
           <button
             type="button"
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 transition-colors"
+            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-text-secondary transition-colors"
           >
             Reset
           </button>
@@ -737,7 +737,7 @@ function TechniqueCreatorContent() {
             className={cn(
               'px-4 py-2 rounded-lg font-medium transition-colors',
               saving || !name.trim()
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-neutral-300 text-text-muted cursor-not-allowed'
                 : 'bg-green-600 text-white hover:bg-green-700'
             )}
           >
@@ -765,7 +765,7 @@ function TechniqueCreatorContent() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Technique Name *
                 </label>
                 <input
@@ -773,11 +773,11 @@ function TechniqueCreatorContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter technique name..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Description
                 </label>
                 <textarea
@@ -785,7 +785,7 @@ function TechniqueCreatorContent() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe what your technique does..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                 />
               </div>
             </div>
@@ -793,10 +793,10 @@ function TechniqueCreatorContent() {
 
           {/* Weapon & Action Type */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Combat Configuration</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Combat Configuration</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Weapon
                 </label>
                 <select
@@ -806,7 +806,7 @@ function TechniqueCreatorContent() {
                     const selected = allWeaponOptions.find(w => String(w.id) === selectedId);
                     if (selected) setWeapon(selected);
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg"
                 >
                   {/* Default options */}
                   <optgroup label="General">
@@ -831,13 +831,13 @@ function TechniqueCreatorContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Action Type
                 </label>
                 <select
                   value={actionType}
                   onChange={(e) => setActionType(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg"
                 >
                   {ACTION_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -853,7 +853,7 @@ function TechniqueCreatorContent() {
                   type="checkbox"
                   checked={isReaction}
                   onChange={(e) => setIsReaction(e.target.checked)}
-                  className="rounded border-gray-300"
+                  className="rounded border-neutral-300"
                 />
                 <span className="text-sm">Can be used as a Reaction</span>
               </label>
@@ -863,7 +863,7 @@ function TechniqueCreatorContent() {
           {/* Technique Parts */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-text-primary">
                 Technique Parts ({selectedParts.length})
               </h3>
               <button
@@ -877,7 +877,7 @@ function TechniqueCreatorContent() {
             </div>
 
             {selectedParts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-text-muted">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No parts added yet. Click &quot;Add Part&quot; to begin building your technique.</p>
               </div>
@@ -899,8 +899,8 @@ function TechniqueCreatorContent() {
 
           {/* Additional Damage */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Damage</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-lg font-bold text-text-primary mb-4">Additional Damage</h3>
+            <p className="text-sm text-text-secondary mb-4">
               Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.
             </p>
             <div className="flex flex-wrap items-center gap-4">
@@ -916,7 +916,7 @@ function TechniqueCreatorContent() {
                 <select
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
+                  className="px-3 py-2 border border-neutral-300 rounded-lg"
                 >
                   {DIE_SIZES.map((size) => (
                     <option key={size} value={size}>
@@ -927,7 +927,7 @@ function TechniqueCreatorContent() {
               </div>
             </div>
             {damage.amount > 0 && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-text-secondary">
                 Additional Damage: <strong>+{damage.amount}d{damage.size}</strong>
               </p>
             )}
@@ -937,7 +937,7 @@ function TechniqueCreatorContent() {
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Technique Summary</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Technique Summary</h3>
 
             {/* Cost Display */}
             <div className="grid grid-cols-2 gap-4 mb-6">
@@ -956,16 +956,16 @@ function TechniqueCreatorContent() {
             {/* Derived Stats */}
             <div className="space-y-2 text-sm mb-6">
               <div className="flex justify-between">
-                <span className="text-gray-600">Action:</span>
+                <span className="text-text-secondary">Action:</span>
                 <span className="font-medium">{actionTypeDisplay}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Weapon:</span>
+                <span className="text-text-secondary">Weapon:</span>
                 <span className="font-medium">{weapon.name}</span>
               </div>
               {damageDisplay && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Damage:</span>
+                  <span className="text-text-secondary">Damage:</span>
                   <span className="font-medium">{damageDisplay}</span>
                 </div>
               )}
@@ -973,9 +973,9 @@ function TechniqueCreatorContent() {
 
             {/* TP Sources */}
             {costs.tpSources.length > 0 && (
-              <div className="border-t border-gray-100 pt-4 mb-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">TP Breakdown</h4>
-                <ul className="text-xs text-gray-600 space-y-1">
+              <div className="border-t border-neutral-100 pt-4 mb-6">
+                <h4 className="text-sm font-medium text-text-secondary mb-2">TP Breakdown</h4>
+                <ul className="text-xs text-text-secondary space-y-1">
                   {costs.tpSources.map((src, i) => (
                     <li key={i}>• {src}</li>
                   ))}
@@ -1013,7 +1013,7 @@ function TechniqueCreatorContent() {
 
 export default function TechniqueCreatorPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-neutral-50 py-8 px-4">
       <TechniqueCreatorContent />
     </div>
   );

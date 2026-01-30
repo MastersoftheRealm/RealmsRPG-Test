@@ -121,7 +121,7 @@ export function Header() {
             {/* Mobile menu button */}
             <button
               type="button"
-              className="lg:hidden p-2 text-gray-600"
+              className="lg:hidden p-2 text-text-secondary"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <span className="sr-only">Open menu</span>

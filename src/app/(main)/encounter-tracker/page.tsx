@@ -553,7 +553,7 @@ function EncounterTrackerContent() {
       <div className="max-w-7xl mx-auto flex items-center justify-center py-20">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading encounter...</p>
+          <p className="text-text-secondary">Loading encounter...</p>
         </div>
       </div>
     );
@@ -563,8 +563,8 @@ function EncounterTrackerContent() {
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Encounter Tracker</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-text-primary">Encounter Tracker</h1>
+          <p className="text-text-secondary">
             Manage combat encounters, track initiative, and monitor combatant status.
           </p>
           <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
@@ -607,7 +607,7 @@ function EncounterTrackerContent() {
               <>
                 <button
                   onClick={previousTurn}
-                  className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+                  className="px-4 py-2 rounded-lg bg-neutral-200 hover:bg-neutral-300"
                 >
                   ← Previous
                 </button>
@@ -627,7 +627,7 @@ function EncounterTrackerContent() {
             )}
             <button
               onClick={resetEncounter}
-              className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 ml-auto"
+              className="px-4 py-2 rounded-lg bg-neutral-100 text-text-secondary hover:bg-neutral-200 ml-auto"
             >
               Reset All
             </button>
@@ -641,7 +641,7 @@ function EncounterTrackerContent() {
 
           {/* Help tip when not in combat */}
           {!encounter.isActive && sortedCombatants.length > 0 && (
-            <div className="text-xs text-gray-500 flex items-center gap-4 px-2">
+            <div className="text-xs text-text-muted flex items-center gap-4 px-2">
               <span>💡 Drag the grip handle to reorder • Surprised creatures go last in round 1 • Companions always go last</span>
             </div>
           )}
@@ -649,7 +649,7 @@ function EncounterTrackerContent() {
           {/* Combatant Cards - Scrollable Container */}
           <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scroll-smooth">
             {sortedCombatants.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-md p-8 text-center text-gray-500">
+              <div className="bg-white rounded-xl shadow-md p-8 text-center text-text-muted">
                 No combatants added yet. Add some using the panel on the right.
               </div>
             ) : (
@@ -685,72 +685,72 @@ function EncounterTrackerContent() {
         {/* Add Combatant Panel */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Add Combatant</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
                 <input
                   type="text"
                   value={newCombatant.name}
                   onChange={(e) => setNewCombatant(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Creature name..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Roll</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Roll</label>
                   <input
                     type="number"
                     value={newCombatant.initiative || ''}
                     onChange={(e) => setNewCombatant(prev => ({ ...prev, initiative: parseInt(e.target.value) || 0 }))}
                     placeholder="Init"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Acuity</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Acuity</label>
                   <input
                     type="number"
                     value={newCombatant.acuity || ''}
                     onChange={(e) => setNewCombatant(prev => ({ ...prev, acuity: parseInt(e.target.value) || 0 }))}
                     placeholder="Acuity"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max HP</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Max HP</label>
                   <input
                     type="number"
                     value={newCombatant.maxHealth}
                     onChange={(e) => setNewCombatant(prev => ({ ...prev, maxHealth: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max EN</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Max EN</label>
                   <input
                     type="number"
                     value={newCombatant.maxEnergy}
                     onChange={(e) => setNewCombatant(prev => ({ ...prev, maxEnergy: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                   />
                 </div>
               </div>
 
               {/* Quantity */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Quantity</label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setNewCombatant(prev => ({ ...prev, quantity: Math.max(1, (prev.quantity || 1) - 1) }))}
-                    className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold"
+                    className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold"
                   >
                     −
                   </button>
@@ -758,11 +758,11 @@ function EncounterTrackerContent() {
                   <button
                     type="button"
                     onClick={() => setNewCombatant(prev => ({ ...prev, quantity: Math.min(26, (prev.quantity || 1) + 1) }))}
-                    className="w-8 h-8 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold"
+                    className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold"
                   >
                     +
                   </button>
-                  <span className="text-xs text-gray-500 ml-2">Creates A, B, C... suffixes</span>
+                  <span className="text-xs text-text-muted ml-2">Creates A, B, C... suffixes</span>
                 </div>
               </div>
 
@@ -807,7 +807,7 @@ function EncounterTrackerContent() {
                   onChange={(e) => setNewCombatant(prev => ({ ...prev, isSurprised: e.target.checked }))}
                   className="w-4 h-4 rounded text-amber-600"
                 />
-                <span className="text-sm text-gray-700">Surprised (goes last in round 1)</span>
+                <span className="text-sm text-text-secondary">Surprised (goes last in round 1)</span>
               </label>
               
               <button
@@ -822,7 +822,7 @@ function EncounterTrackerContent() {
 
           {/* Quick Reference */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Conditions Reference</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Conditions Reference</h3>
             <div className="flex flex-wrap gap-1">
               {CONDITION_OPTIONS.map(condition => (
                 <span 
@@ -832,14 +832,14 @@ function EncounterTrackerContent() {
                     'px-2 py-1 text-xs rounded-full cursor-help',
                     condition.leveled 
                       ? 'bg-purple-100 text-purple-700' 
-                      : 'bg-gray-100 text-gray-600'
+                      : 'bg-neutral-100 text-text-secondary'
                   )}
                 >
                   {condition.name}{condition.leveled && ' ⬇'}
                 </span>
               ))}
             </div>
-            <div className="mt-3 text-xs text-gray-500 space-y-1">
+            <div className="mt-3 text-xs text-text-muted space-y-1">
               <p><span className="inline-block w-3 h-3 rounded-full bg-purple-100 mr-1"></span>Purple = Leveled (has levels)</p>
               <p><span className="inline-block w-3 h-3 rounded-full bg-indigo-100 mr-1"></span>Indigo = Custom condition</p>
               <p className="pt-1">Click name to ↑ level, × to ↓ level (removes at 0)</p>
@@ -991,14 +991,14 @@ function CombatantCard({
           onDragEnd={onDragEnd}
           className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none"
         >
-          <div className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100">
+          <div className="text-text-muted hover:text-text-secondary p-1 rounded hover:bg-neutral-100">
             <GripVertical className="w-5 h-5" />
           </div>
           {/* Initiative Badge - Editable */}
           <div 
             className={cn(
               'w-10 h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors',
-              isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
             )}
             onClick={() => setIsEditingInitiative(true)}
             title="Click to edit initiative"
@@ -1040,7 +1040,7 @@ function CombatantCard({
               />
             ) : (
               <h3 
-                className={cn('text-base font-bold cursor-pointer hover:text-primary-600', isDead && 'line-through text-gray-500')}
+                className={cn('text-base font-bold cursor-pointer hover:text-primary-600', isDead && 'line-through text-text-muted')}
                 onClick={() => setIsEditingName(true)}
                 title="Click to edit name"
               >
@@ -1076,10 +1076,10 @@ function CombatantCard({
             
             {/* AP Tracker - Moved inline */}
             <div className="flex items-center gap-1 ml-auto">
-              <span className="text-xs text-gray-500">AP:</span>
+              <span className="text-xs text-text-muted">AP:</span>
               <button
                 onClick={() => onUpdateAP(-1)}
-                className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-xs"
+                className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold text-xs"
               >
                 −
               </button>
@@ -1088,7 +1088,7 @@ function CombatantCard({
               </span>
               <button
                 onClick={() => onUpdateAP(1)}
-                className="w-5 h-5 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center font-bold text-xs"
+                className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold text-xs"
               >
                 +
               </button>
@@ -1106,17 +1106,17 @@ function CombatantCard({
                 onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                 className={cn(
                   'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium',
-                  combatant.currentHealth <= 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-gray-300'
+                  combatant.currentHealth <= 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-neutral-300'
                 )}
               />
-              <span className="text-gray-400 text-xs">/</span>
+              <span className="text-text-muted text-xs">/</span>
               <input
                 type="number"
                 value={combatant.maxHealth}
                 onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
-                className="w-12 px-1 py-0.5 text-xs border border-gray-300 rounded text-center"
+                className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center"
               />
-              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-20">
+              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden max-w-20">
                 <div 
                   className={cn(
                     'h-full transition-all',
@@ -1135,16 +1135,16 @@ function CombatantCard({
                 type="number"
                 value={combatant.currentEnergy}
                 onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                className="w-12 px-1 py-0.5 text-xs border border-gray-300 rounded text-center font-medium"
+                className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center font-medium"
               />
-              <span className="text-gray-400 text-xs">/</span>
+              <span className="text-text-muted text-xs">/</span>
               <input
                 type="number"
                 value={combatant.maxEnergy}
                 onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
-                className="w-12 px-1 py-0.5 text-xs border border-gray-300 rounded text-center"
+                className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center"
               />
-              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-20">
+              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden max-w-20">
                 <div 
                   className="h-full bg-blue-500 transition-all"
                   style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
@@ -1200,7 +1200,7 @@ function CombatantCard({
           )}
 
           {/* Action Bar - More Compact */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-neutral-100">
             {/* HP Controls */}
             <div className="flex items-center gap-0.5 bg-red-50 rounded px-1.5 py-0.5">
               <input
@@ -1218,7 +1218,7 @@ function CombatantCard({
               >
                 Dmg
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-neutral-300">|</span>
               <input
                 type="number"
                 value={healInput}
@@ -1253,7 +1253,7 @@ function CombatantCard({
               >
                 Use
               </button>
-              <span className="text-gray-300">|</span>
+              <span className="text-neutral-300">|</span>
               <input
                 type="number"
                 value={energyRestoreInput}
@@ -1284,14 +1284,14 @@ function CombatantCard({
             <div className="ml-auto flex items-center gap-1">
               <button
                 onClick={onDuplicate}
-                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                className="px-2 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200"
                 title="Duplicate this combatant"
               >
                 📋
               </button>
               <button
                 onClick={onRemove}
-                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-red-100 hover:text-red-700"
+                className="px-2 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded hover:bg-red-100 hover:text-red-700"
                 title="Remove combatant"
               >
                 ✕
@@ -1301,12 +1301,12 @@ function CombatantCard({
 
           {/* Conditions Picker */}
           {showConditions && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="mt-3 pt-3 border-t border-neutral-100">
               <div className="flex items-center gap-2 mb-2">
                 <select
                   value={selectedCondition}
                   onChange={(e) => setSelectedCondition(e.target.value)}
-                  className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded"
+                  className="flex-1 px-3 py-1 text-sm border border-neutral-300 rounded"
                 >
                   <option value="">Select Condition...</option>
                   {CONDITION_OPTIONS.map(cond => (
@@ -1333,7 +1333,7 @@ function CombatantCard({
                   value={customCondition}
                   onChange={(e) => setCustomCondition(e.target.value)}
                   placeholder="Custom condition..."
-                  className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded"
+                  className="flex-1 px-3 py-1 text-sm border border-neutral-300 rounded"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
                   maxLength={30}
                 />
@@ -1345,7 +1345,7 @@ function CombatantCard({
                   Add Custom
                 </button>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-text-muted">
                 Left-click to increase level, right-click or × to decrease/remove. Custom conditions are leveled.
               </p>
             </div>
@@ -1358,7 +1358,7 @@ function CombatantCard({
 
 export default function EncounterTrackerPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-neutral-50 py-8 px-4">
       <EncounterTrackerContent />
     </div>
   );

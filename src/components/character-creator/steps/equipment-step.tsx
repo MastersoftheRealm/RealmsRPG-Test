@@ -304,8 +304,8 @@ export function EquipmentStep() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose Equipment</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Equipment</h1>
+          <p className="text-text-secondary">
             Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
           </p>
         </div>
@@ -320,13 +320,13 @@ export function EquipmentStep() {
 
       {/* Selected Items Summary */}
       {selectedItems.length > 0 && (
-        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-          <h3 className="font-medium text-gray-800 mb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
+        <div className="bg-neutral-50 rounded-xl p-4 mb-6">
+          <h3 className="font-medium text-text-primary mb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
           <div className="flex flex-wrap gap-2">
             {selectedItems.map(item => (
               <span
                 key={item.id}
-                className="px-3 py-1 bg-white border border-gray-200 rounded-full text-sm flex items-center gap-2"
+                className="px-3 py-1 bg-white border border-neutral-200 rounded-full text-sm flex items-center gap-2"
               >
                 {item.quantity > 1 && <span className="font-bold text-primary-600">{item.quantity}×</span>}
                 {item.name}
@@ -355,13 +355,13 @@ export function EquipmentStep() {
                 'px-4 py-2 rounded-lg font-medium capitalize transition-colors flex items-center gap-2',
                 activeTab === type
                   ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
               )}
             >
               {type}s
               <span className={cn(
                 'px-1.5 py-0.5 text-xs rounded-full',
-                activeTab === type ? 'bg-primary-500 text-white' : 'bg-gray-200 text-gray-600'
+                activeTab === type ? 'bg-primary-500 text-white' : 'bg-neutral-200 text-text-secondary'
               )}>
                 {count}
               </span>
@@ -380,17 +380,17 @@ export function EquipmentStep() {
       </div>
 
       {/* Results count */}
-      <div className="text-sm text-gray-500 mb-2">
+      <div className="text-sm text-text-muted mb-2">
         {filteredEquipment.length} {activeTab}{filteredEquipment.length !== 1 ? 's' : ''} found
       </div>
 
       {/* Equipment List - Codex-like style */}
-      <div className="border border-gray-200 rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-gray-200">
+      <div className="border border-neutral-200 rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-neutral-200">
         {filteredEquipment.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-text-muted">
             {activeTab === 'weapon' || activeTab === 'armor' ? (
               <div className="flex flex-col items-center gap-2">
-                <AlertCircle className="w-8 h-8 text-gray-400" />
+                <AlertCircle className="w-8 h-8 text-text-muted" />
                 <p>No {activeTab}s found in your library.</p>
                 <p className="text-sm">
                   Create {activeTab}s using the{' '}
@@ -414,7 +414,7 @@ export function EquipmentStep() {
             return (
               <div key={item.id} className="bg-white">
                 {/* Item Row */}
-                <div className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50">
+                <div className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-1">
                     <button
@@ -424,14 +424,14 @@ export function EquipmentStep() {
                         'w-7 h-7 rounded-full flex items-center justify-center transition-colors',
                         quantity > 0
                           ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                       )}
                     >
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className={cn(
                       'w-8 text-center font-bold',
-                      quantity > 0 ? 'text-primary-600' : 'text-gray-400'
+                      quantity > 0 ? 'text-primary-600' : 'text-text-muted'
                     )}>
                       {quantity}
                     </span>
@@ -442,7 +442,7 @@ export function EquipmentStep() {
                         'w-7 h-7 rounded-full flex items-center justify-center transition-colors',
                         canAfford
                           ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                       )}
                     >
                       <Plus className="w-4 h-4" />
@@ -455,7 +455,7 @@ export function EquipmentStep() {
                     className="flex-1 flex items-center justify-between text-left"
                   >
                     <div className="flex-1">
-                      <span className="font-medium text-gray-900">{item.name}</span>
+                      <span className="font-medium text-text-primary">{item.name}</span>
                       <div className="flex items-center gap-2 mt-1">
                         {item.damage && (
                           <span className="px-2 py-0.5 text-xs bg-red-50 text-red-700 rounded">
@@ -468,12 +468,12 @@ export function EquipmentStep() {
                           </span>
                         )}
                         {item.properties.slice(0, 2).map(prop => (
-                          <span key={prop} className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                          <span key={prop} className="px-2 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded">
                             {prop}
                           </span>
                         ))}
                         {item.properties.length > 2 && (
-                          <span className="text-xs text-gray-400">+{item.properties.length - 2}</span>
+                          <span className="text-xs text-text-muted">+{item.properties.length - 2}</span>
                         )}
                       </div>
                     </div>
@@ -486,9 +486,9 @@ export function EquipmentStep() {
                         {cost}c
                       </span>
                       {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                        <ChevronUp className="w-4 h-4 text-text-muted" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                        <ChevronDown className="w-4 h-4 text-text-muted" />
                       )}
                     </div>
                   </button>
@@ -496,14 +496,14 @@ export function EquipmentStep() {
                 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 bg-gray-50 border-t border-gray-100">
+                  <div className="px-4 pb-4 pt-2 bg-neutral-50 border-t border-neutral-100">
                     {item.description && (
-                      <p className="text-gray-700 text-sm mb-2">{item.description}</p>
+                      <p className="text-text-secondary text-sm mb-2">{item.description}</p>
                     )}
                     {item.properties.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {item.properties.map(prop => (
-                          <span key={prop} className="px-2 py-1 text-xs bg-white border border-gray-200 rounded">
+                          <span key={prop} className="px-2 py-1 text-xs bg-white border border-neutral-200 rounded">
                             {prop}
                           </span>
                         ))}

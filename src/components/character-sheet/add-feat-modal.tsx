@@ -261,28 +261,28 @@ export function AddFeatModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+          <h2 className="text-lg font-bold text-text-primary">
             Add {featType === 'archetype' ? 'Archetype' : 'Character'} Feat
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-lg hover:bg-neutral-100 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-text-muted" />
           </button>
         </div>
 
         {/* Filters */}
-        <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+        <div className="px-4 py-3 border-b border-neutral-100 space-y-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search feats..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full pl-9 pr-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
           
@@ -293,7 +293,7 @@ export function AddFeatModal({
                 'px-3 py-1 rounded-full text-sm transition-colors',
                 !selectedCategory
                   ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-neutral-100 text-text-muted hover:bg-neutral-200'
               )}
             >
               All
@@ -306,7 +306,7 @@ export function AddFeatModal({
                   'px-3 py-1 rounded-full text-sm transition-colors',
                   selectedCategory === cat
                     ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-neutral-100 text-text-muted hover:bg-neutral-200'
                 )}
               >
                 {cat}
@@ -320,25 +320,25 @@ export function AddFeatModal({
                 type="checkbox"
                 checked={showEligibleOnly}
                 onChange={(e) => setShowEligibleOnly(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
               />
-              <span className="text-gray-600">Show eligible only</span>
+              <span className="text-text-muted">Show eligible only</span>
             </label>
           {loading && (
             <div className="text-center py-8">
               <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-gray-500">Loading feats...</p>
+              <p className="text-text-muted">Loading feats...</p>
             </div>
           )}
 
           {error && (
-            <div className="text-center py-8 text-red-600">
+            <div className="text-center py-8 text-danger-600">
               <p>{error}</p>
             </div>
           )}
 
           {!loading && !error && filteredFeats.length === 0 && (
-            <p className="text-center py-8 text-gray-500 italic">
+            <p className="text-center py-8 text-text-muted italic">
               No feats available
             </p>
           )}
@@ -363,14 +363,14 @@ export function AddFeatModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
-          <span className="text-sm text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50">
+          <span className="text-sm text-text-muted">
             {selectedFeats.length} feat{selectedFeats.length !== 1 ? 's' : ''} selected
           </span>
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-200 transition-colors"
+              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-neutral-200 transition-colors"
             >
               Cancel
             </button>
@@ -381,7 +381,7 @@ export function AddFeatModal({
                 'px-4 py-2 rounded-lg font-medium transition-colors',
                 selectedFeats.length > 0
                   ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-neutral-200 text-text-muted cursor-not-allowed'
               )}
             >
               Add {selectedFeats.length > 0 ? `(${selectedFeats.length})` : ''}

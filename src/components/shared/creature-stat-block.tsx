@@ -122,10 +122,10 @@ function AbilityRow({ abilities }: { abilities: CreatureAbilities }) {
         const value = abilities[ability] ?? 0;
         return (
           <div key={ability} className="flex flex-col">
-            <span className="font-bold text-gray-500">{getAbilityAbbrev(ability)}</span>
+            <span className="font-bold text-text-muted">{getAbilityAbbrev(ability)}</span>
             <span className={cn(
               'font-medium',
-              value > 0 ? 'text-green-600' : value < 0 ? 'text-red-600' : 'text-gray-600'
+              value > 0 ? 'text-success-600' : value < 0 ? 'text-danger-600' : 'text-text-muted'
             )}>
               {formatModifier(value)}
             </span>
@@ -164,7 +164,7 @@ function TagList({ label, items, variant = 'default' }: {
   if (!items || items.length === 0) return null;
   
   const colors = {
-    default: 'bg-gray-100 text-gray-700',
+    default: 'bg-neutral-100 text-text-secondary',
     success: 'bg-green-100 text-green-700',
     danger: 'bg-red-100 text-red-700',
     warning: 'bg-yellow-100 text-yellow-700',
@@ -172,7 +172,7 @@ function TagList({ label, items, variant = 'default' }: {
   
   return (
     <div className="text-xs">
-      <span className="font-semibold text-gray-600">{label}: </span>
+      <span className="font-semibold text-text-muted">{label}: </span>
       {items.map((item, i) => (
         <span key={i}>
           <span className={cn('px-1.5 py-0.5 rounded', colors[variant])}>{item}</span>
@@ -204,12 +204,12 @@ export function CreatureStatBlock({
   
   return (
     <div className={cn(
-      'bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden',
+      'bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden',
       className
     )}>
       {/* Header - always visible */}
       <div 
-        className="bg-gradient-to-r from-gray-800 to-gray-700 px-4 py-3 cursor-pointer"
+        className="bg-gradient-to-r from-neutral-800 to-neutral-700 px-4 py-3 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center justify-between">
@@ -259,14 +259,14 @@ export function CreatureStatBlock({
         <div className="p-4 space-y-4">
           {/* Description */}
           {creature.description && (
-            <p className="text-sm text-gray-600 italic border-l-2 border-gray-300 pl-3">
+            <p className="text-sm text-text-muted italic border-l-2 border-neutral-300 pl-3">
               {creature.description}
             </p>
           )}
           
           {/* Abilities */}
           {creature.abilities && Object.keys(creature.abilities).length > 0 && (
-            <div className="border-t border-b border-gray-200 py-3">
+            <div className="border-t border-b border-neutral-200 py-3">
               <AbilityRow abilities={creature.abilities} />
             </div>
           )}
@@ -299,7 +299,7 @@ export function CreatureStatBlock({
           
           {/* Senses, Movement, Languages */}
           {(creature.senses?.length || creature.movementTypes?.length || creature.languages?.length) && (
-            <div className="space-y-1 text-xs text-gray-600">
+            <div className="space-y-1 text-xs text-text-muted">
               {creature.senses && creature.senses.length > 0 && (
                 <div><span className="font-semibold">Senses:</span> {creature.senses.join(', ')}</div>
               )}
@@ -315,8 +315,8 @@ export function CreatureStatBlock({
           {/* Skills */}
           {creature.skills && (
             <div className="text-xs">
-              <span className="font-semibold text-gray-600">Skills: </span>
-              <span className="text-gray-700">
+              <span className="font-semibold text-text-muted">Skills: </span>
+              <span className="text-text-secondary">
                 {Array.isArray(creature.skills)
                   ? creature.skills
                       .filter(s => s.value !== 0 || s.proficient)
@@ -333,11 +333,11 @@ export function CreatureStatBlock({
           
           {/* Combat - Powers, Techniques, Feats */}
           {!compact && (
-            <div className="space-y-2 pt-2 border-t border-gray-200">
+            <div className="space-y-2 pt-2 border-t border-neutral-200">
               {creature.powers && creature.powers.length > 0 && (
                 <div className="text-xs">
                   <span className="font-semibold text-purple-700">Powers: </span>
-                  <span className="text-gray-700">
+                  <span className="text-text-secondary">
                     {creature.powers.map(p => p.name).join(', ')}
                   </span>
                 </div>
@@ -345,7 +345,7 @@ export function CreatureStatBlock({
               {creature.techniques && creature.techniques.length > 0 && (
                 <div className="text-xs">
                   <span className="font-semibold text-orange-700">Techniques: </span>
-                  <span className="text-gray-700">
+                  <span className="text-text-secondary">
                     {creature.techniques.map(t => t.name).join(', ')}
                   </span>
                 </div>
@@ -353,15 +353,15 @@ export function CreatureStatBlock({
               {creature.feats && creature.feats.length > 0 && (
                 <div className="text-xs">
                   <span className="font-semibold text-blue-700">Feats: </span>
-                  <span className="text-gray-700">
+                  <span className="text-text-secondary">
                     {creature.feats.map(f => f.name).join(', ')}
                   </span>
                 </div>
               )}
               {creature.armaments && creature.armaments.length > 0 && (
                 <div className="text-xs">
-                  <span className="font-semibold text-gray-700">Equipment: </span>
-                  <span className="text-gray-600">
+                  <span className="font-semibold text-text-secondary">Equipment: </span>
+                  <span className="text-text-muted">
                     {creature.armaments.map(a => a.name).join(', ')}
                   </span>
                 </div>
@@ -371,11 +371,11 @@ export function CreatureStatBlock({
           
           {/* Actions */}
           {showActions && (onEdit || onDelete || onDuplicate) && (
-            <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
+            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-200">
               {onDuplicate && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-text-muted hover:text-text-primary hover:bg-neutral-100 rounded transition-colors"
                 >
                   <Copy className="w-4 h-4" />
                   Duplicate

@@ -15,6 +15,7 @@ import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
+import { RollButton, PointStatus } from '@/components/shared';
 import type { Abilities } from '@/types';
 
 interface Skill {
@@ -60,31 +61,7 @@ function formatBonus(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`;
 }
 
-// Roll button styled like vanilla site
-function SkillRollButton({ 
-  value, 
-  onClick, 
-  title 
-}: { 
-  value: string; 
-  onClick?: () => void; 
-  title?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      className={cn(
-        'px-3 py-1.5 min-w-[52px] text-sm font-bold text-white rounded-md',
-        'bg-gradient-to-br from-blue-500 to-blue-700',
-        'hover:from-blue-600 hover:to-blue-800 hover:scale-105',
-        'active:scale-95 transition-all duration-150 shadow-sm'
-      )}
-    >
-      {value}
-    </button>
-  );
-}
+// Note: RollButton is now imported from @/components/shared
 
 export function SkillsSection({
   skills,
@@ -177,19 +154,13 @@ export function SkillsSection({
     return abilityValue + skillValue + profBonus;
   };
   
-  // Get point tracker color classes
-  const getPointColorClasses = () => {
-    if (remaining === undefined) return 'bg-gray-100 text-gray-600 border-gray-200';
-    if (remaining > 0) return 'bg-green-100 text-green-700 border-green-200';
-    if (remaining < 0) return 'bg-red-100 text-red-700 border-red-200';
-    return 'bg-blue-100 text-blue-700 border-blue-200';
-  };
+  // Note: PointStatus component handles color states automatically
   
   return (
     <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-gray-800">Skills</h2>
+        <h2 className="text-lg font-bold text-text-primary">Skills</h2>
         <div className="flex items-center gap-2">
           {isEditMode && (
             <>
@@ -212,12 +183,11 @@ export function SkillsSection({
             </>
           )}
           {totalSkillPoints !== undefined && (
-            <span className={cn(
-              'px-3 py-1 rounded-full text-sm font-semibold border',
-              getPointColorClasses()
-            )}>
-              {remaining} / {totalSkillPoints}
-            </span>
+            <PointStatus
+              total={totalSkillPoints}
+              spent={totalSpent}
+              variant="compact"
+            />
           )}
         </div>
       </div>
@@ -226,7 +196,7 @@ export function SkillsSection({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-xs text-gray-500 uppercase tracking-wider border-b-2 border-gray-200">
+            <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-neutral-200">
               <th className="w-10 py-2 text-center">Prof</th>
               <th className="text-left py-2 pl-2">Skill</th>
               <th className="w-16 py-2 text-center">Ability</th>
@@ -245,8 +215,8 @@ export function SkillsSection({
                 <tr 
                   key={skill.id} 
                   className={cn(
-                    'border-b border-gray-100 transition-colors',
-                    isSubSkill ? 'bg-gray-50' : 'bg-white',
+                    'border-b border-neutral-100 transition-colors',
+                    isSubSkill ? 'bg-neutral-50' : 'bg-white',
                     !isEditMode && 'hover:bg-blue-50'
                   )}
                 >
@@ -271,9 +241,9 @@ export function SkillsSection({
                   {/* Skill Name */}
                   <td className={cn(
                     'py-2 pl-2 font-medium',
-                    isSubSkill ? 'text-gray-500 italic' : 'text-gray-800'
+                    isSubSkill ? 'text-text-muted italic' : 'text-text-primary'
                   )}>
-                    {isSubSkill && <span className="text-gray-400 mr-1">└</span>}
+                    {isSubSkill && <span className="text-text-muted mr-1">└</span>}
                     {skill.name}
                   </td>
                   
@@ -283,7 +253,7 @@ export function SkillsSection({
                       <select
                         value={skill.ability || 'strength'}
                         onChange={(e) => onSkillChange(skill.id, { ability: e.target.value })}
-                        className="text-xs px-1 py-0.5 rounded border border-gray-300 bg-gray-50 text-gray-600 cursor-pointer"
+                        className="text-xs px-1 py-0.5 rounded border border-neutral-300 bg-neutral-50 text-text-secondary cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {ABILITY_OPTIONS.map(opt => (
@@ -291,7 +261,7 @@ export function SkillsSection({
                         ))}
                       </select>
                     ) : (
-                      <span className="text-xs text-gray-500 font-semibold">
+                      <span className="text-xs text-text-muted font-semibold">
                         {abilityAbbr}
                       </span>
                     )}
@@ -302,14 +272,15 @@ export function SkillsSection({
                     {isEditMode ? (
                       <span className={cn(
                         'inline-block min-w-[40px] font-bold',
-                        bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-gray-600'
+                        bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-text-secondary'
                       )}>
                         {formatBonus(bonus)}
                       </span>
                     ) : (
-                      <SkillRollButton
-                        value={formatBonus(bonus)}
+                      <RollButton
+                        value={bonus}
                         onClick={() => rollContext?.rollSkill?.(skill.name, bonus)}
+                        size="sm"
                         title={`Roll ${skill.name}`}
                       />
                     )}
@@ -325,8 +296,8 @@ export function SkillsSection({
                           className={cn(
                             'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
                             skill.skill_val > 0
-                              ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                              : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                              ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
+                              : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                           )}
                         >
                           −
@@ -336,7 +307,7 @@ export function SkillsSection({
                         </span>
                         <button
                           onClick={() => onSkillChange?.(skill.id, { skill_val: skill.skill_val + 1 })}
-                          className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm font-bold text-gray-700 transition-colors"
+                          className="w-6 h-6 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center text-sm font-bold text-text-secondary transition-colors"
                         >
                           +
                         </button>
@@ -365,7 +336,7 @@ export function SkillsSection({
         </table>
         
         {orderedSkills.length === 0 && (
-          <div className="text-center py-8 text-gray-400">
+          <div className="text-center py-8 text-text-muted">
             No skills added yet.
             {isEditMode && ' Click "Add Skill" to get started.'}
           </div>

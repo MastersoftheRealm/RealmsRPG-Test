@@ -68,7 +68,7 @@ function ResourceBar({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex justify-between text-sm font-medium">
-        <span className="text-gray-700">{label}</span>
+        <span className="text-text-secondary">{label}</span>
         <span className={cn(
           'font-bold',
           isTerminal && 'text-yellow-600',
@@ -77,7 +77,7 @@ function ResourceBar({
           {current} / {max}
         </span>
       </div>
-      <div className="relative h-6 bg-gray-200 rounded-full overflow-hidden">
+      <div className="relative h-6 bg-neutral-200 rounded-full overflow-hidden">
         <div
           className={cn(
             'absolute inset-y-0 left-0 transition-all duration-300',
@@ -98,7 +98,7 @@ function ResourceBar({
         <div className="flex gap-2 mt-1 items-center justify-center">
           <button
             onClick={() => onChange(Math.max(0, current - 1))}
-            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+            className="px-2 py-1 bg-neutral-200 rounded hover:bg-neutral-300 text-sm font-bold"
             disabled={current <= 0}
           >
             −
@@ -113,7 +113,7 @@ function ResourceBar({
           />
           <button
             onClick={() => onChange(Math.min(max, current + 1))}
-            className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm font-bold"
+            className="px-2 py-1 bg-neutral-200 rounded hover:bg-neutral-300 text-sm font-bold"
             disabled={current >= max}
           >
             +
@@ -126,10 +126,10 @@ function ResourceBar({
 
 function StatBlock({ label, value, subValue }: { label: string; value: number | string; subValue?: string }) {
   return (
-    <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg min-w-[60px]">
-      <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
-      <span className="text-xl font-bold text-gray-800">{value}</span>
-      {subValue && <span className="text-xs text-gray-500">{subValue}</span>}
+    <div className="flex flex-col items-center p-2 bg-neutral-100 rounded-lg min-w-[60px]">
+      <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
+      <span className="text-xl font-bold text-text-primary">{value}</span>
+      {subValue && <span className="text-xs text-text-muted">{subValue}</span>}
     </div>
   );
 }
@@ -161,9 +161,9 @@ function EditableStatBlock({
   
   if (isEditMode && onChange && baseValue !== undefined) {
     return (
-      <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg min-w-[70px]">
-        <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
-        <span className="text-xl font-bold text-gray-800">{value}</span>
+      <div className="flex flex-col items-center p-2 bg-neutral-100 rounded-lg min-w-[70px]">
+        <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
+        <span className="text-xl font-bold text-text-primary">{value}</span>
         <div className="flex items-center gap-1 mt-1">
           <button
             onClick={() => onChange(Math.max(minBase, baseValue - 1))}
@@ -171,15 +171,15 @@ function EditableStatBlock({
             className={cn(
               'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
               baseValue > minBase
-                ? 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-neutral-300 hover:bg-neutral-400 text-text-secondary'
+                : 'bg-neutral-200 text-text-muted cursor-not-allowed'
             )}
           >
             −
           </button>
           <span className={cn(
             'text-xs min-w-[2.5rem] text-center',
-            isOverridden ? 'text-red-600 font-bold' : 'text-gray-600'
+            isOverridden ? 'text-danger-600 font-bold' : 'text-text-muted'
           )}>
             Base: {baseValue}
           </span>
@@ -189,23 +189,23 @@ function EditableStatBlock({
             className={cn(
               'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
               baseValue < maxBase
-                ? 'bg-gray-300 hover:bg-gray-400 text-gray-700'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                ? 'bg-neutral-300 hover:bg-neutral-400 text-text-secondary'
+                : 'bg-neutral-200 text-text-muted cursor-not-allowed'
             )}
           >
             +
           </button>
         </div>
-        {subValue && <span className="text-xs text-gray-500 mt-0.5">{subValue}</span>}
+        {subValue && <span className="text-xs text-text-muted mt-0.5">{subValue}</span>}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center p-2 bg-gray-100 rounded-lg min-w-[60px]">
-      <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
-      <span className="text-xl font-bold text-gray-800">{value}</span>
-      {subValue && <span className="text-xs text-gray-500">{subValue}</span>}
+    <div className="flex flex-col items-center p-2 bg-neutral-100 rounded-lg min-w-[60px]">
+      <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
+      <span className="text-xl font-bold text-text-primary">{value}</span>
+      {subValue && <span className="text-xs text-text-muted">{subValue}</span>}
     </div>
   );
 }
@@ -217,15 +217,15 @@ function DefenseBlock({ name, bonus, score, onRoll }: { name: string; bonus: num
     <div 
       onClick={onRoll}
       className={cn(
-        "flex flex-col items-center p-2 bg-white border border-gray-200 rounded-lg min-w-[70px] transition-all",
-        onRoll && "cursor-pointer hover:bg-teal-50 hover:border-teal-300 active:scale-95"
+        "flex flex-col items-center p-2 bg-white border border-neutral-200 rounded-lg min-w-[70px] transition-all",
+        onRoll && "cursor-pointer hover:bg-primary-50 hover:border-primary-300 active:scale-95"
       )}
       role={onRoll ? 'button' : undefined}
       title={onRoll ? `Click to roll ${name} save` : undefined}
     >
-      <span className="text-[10px] text-gray-500 uppercase tracking-wide">{name}</span>
-      <span className="text-lg font-bold text-gray-800">{score}</span>
-      <span className="text-xs text-gray-500">{formattedBonus}</span>
+      <span className="text-[10px] text-text-muted uppercase tracking-wide">{name}</span>
+      <span className="text-lg font-bold text-text-primary">{score}</span>
+      <span className="text-xs text-text-muted">{formattedBonus}</span>
     </div>
   );
 }
@@ -298,7 +298,7 @@ export function SheetHeader({
         <div className="flex gap-4">
           <div 
             className={cn(
-              "relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0",
+              "relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-neutral-200 flex-shrink-0",
               isEditMode && onPortraitChange && "cursor-pointer group"
             )}
             onClick={handlePortraitClick}
@@ -331,43 +331,43 @@ export function SheetHeader({
           </div>
           
           <div className="flex flex-col justify-center">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
               {character.name}
-              {genderSymbol && <span className="ml-2 text-gray-400">{genderSymbol}</span>}
+              {genderSymbol && <span className="ml-2 text-text-muted">{genderSymbol}</span>}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-text-secondary">
               Level {character.level} {character.ancestry?.name || 'Unknown Ancestry'}
             </p>
-            <p className="text-gray-500 text-sm">
+            <p className="text-text-muted text-sm">
               {character.archetype?.name || 'No Archetype'}
             </p>
             {/* Archetype Abilities Display */}
             {(character.pow_abil || character.mart_abil) && (
-              <p className="text-xs text-gray-400 flex items-center gap-1">
+              <p className="text-xs text-text-muted flex items-center gap-1">
                 {character.pow_abil && (
-                  <span className="text-purple-600">Power: {character.pow_abil}</span>
+                  <span className="text-category-power">Power: {character.pow_abil}</span>
                 )}
                 {character.pow_abil && character.mart_abil && (
-                  <span className="text-gray-300">•</span>
+                  <span className="text-neutral-300">•</span>
                 )}
                 {character.mart_abil && (
-                  <span className="text-red-600">Martial: {character.mart_abil}</span>
+                  <span className="text-category-technique">Martial: {character.mart_abil}</span>
                 )}
               </p>
             )}
             {/* XP Display with Level Up indicator */}
-            <p className="text-gray-500 text-sm flex items-center gap-1">
+            <p className="text-text-muted text-sm flex items-center gap-1">
               <span>XP: {character.experience ?? 0}</span>
               {canLevelUp && (
                 <span 
-                  className="text-green-600 animate-pulse" 
+                  className="text-success-600 animate-pulse" 
                   title="Ready to level up!"
                 >
                   ⬆
                 </span>
               )}
               {canLevelUp && (
-                <span className="text-xs text-green-600">(Level up available!)</span>
+                <span className="text-xs text-success-600">(Level up available!)</span>
               )}
             </p>
           </div>

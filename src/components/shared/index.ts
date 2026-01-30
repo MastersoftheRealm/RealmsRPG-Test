@@ -4,6 +4,22 @@
  * Reusable UI components used across multiple pages
  */
 
+// ============================================================================
+// UNIFIED INTERACTIVE COMPONENTS
+// ============================================================================
+// These components are the source of truth for their patterns across the site.
+// Use these instead of creating inline/duplicate implementations.
+
+// RollButton - Unified dice roll button (character sheet, creatures, encounters)
+export { RollButton, rollButtonVariants, type RollButtonProps } from './roll-button';
+
+// PointStatus - Unified point allocation display (creators, character sheet edit mode)
+export { PointStatus, type PointStatusProps } from './point-status';
+
+// ValueStepper - Unified +/- controls (abilities, skills, quantities)
+export { ValueStepper, type ValueStepperProps } from './value-stepper';
+
+// ============================================================================
 // Item display components
 export { ItemCard } from './item-card';
 export { ItemList } from './item-list';

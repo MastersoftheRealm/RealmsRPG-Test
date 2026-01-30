@@ -53,16 +53,16 @@ export function HealthEnergyAllocator({
   // Inline variant for character sheet edit mode
   if (variant === 'inline') {
     return (
-      <div className="p-3 bg-gradient-to-r from-red-50 to-blue-50 rounded-lg border border-gray-200">
+      <div className="p-3 bg-gradient-to-r from-red-50 to-blue-50 rounded-lg border border-neutral-200">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+          <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
             H/E Pool Allocation
           </span>
           <span className={cn(
             'text-xs font-bold px-2 py-0.5 rounded-full',
             remaining > 0 ? 'bg-green-100 text-green-700' :
             remaining < 0 ? 'bg-red-100 text-red-700' :
-            'bg-gray-100 text-gray-600'
+            'bg-neutral-100 text-text-secondary'
           )}>
             {remaining} / {poolTotal} remaining
           </span>
@@ -73,7 +73,7 @@ export function HealthEnergyAllocator({
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-red-600 font-medium">Health +</span>
-              <span className="text-xs text-gray-500">{hpBonus} pts (Max: {maxHp})</span>
+              <span className="text-xs text-text-muted">{hpBonus} pts (Max: {maxHp})</span>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -83,12 +83,12 @@ export function HealthEnergyAllocator({
                   'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
                   !disabled && hpBonus > 0
                     ? 'bg-red-100 hover:bg-red-200 text-red-600'
-                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                 )}
               >
                 −
               </button>
-              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-500 transition-all duration-200"
                   style={{ width: `${(hpBonus / poolTotal) * 100}%` }}
@@ -101,7 +101,7 @@ export function HealthEnergyAllocator({
                   'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
                   !disabled && remaining > 0
                     ? 'bg-red-100 hover:bg-red-200 text-red-600'
-                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                 )}
               >
                 +
@@ -110,13 +110,13 @@ export function HealthEnergyAllocator({
           </div>
           
           {/* Divider */}
-          <div className="w-px h-10 bg-gray-300" />
+          <div className="w-px h-10 bg-neutral-300" />
           
           {/* Energy Points */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-blue-600 font-medium">Energy +</span>
-              <span className="text-xs text-gray-500">{energyBonus} pts (Max: {maxEnergy})</span>
+              <span className="text-xs text-text-muted">{energyBonus} pts (Max: {maxEnergy})</span>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -126,12 +126,12 @@ export function HealthEnergyAllocator({
                   'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
                   !disabled && energyBonus > 0
                     ? 'bg-blue-100 hover:bg-blue-200 text-blue-600'
-                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                 )}
               >
                 −
               </button>
-              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500 transition-all duration-200"
                   style={{ width: `${(energyBonus / poolTotal) * 100}%` }}
@@ -144,7 +144,7 @@ export function HealthEnergyAllocator({
                   'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
                   !disabled && remaining > 0
                     ? 'bg-blue-100 hover:bg-blue-200 text-blue-600'
-                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                 )}
               >
                 +
@@ -153,7 +153,7 @@ export function HealthEnergyAllocator({
           </div>
         </div>
         
-        <p className="text-[10px] text-gray-400 mt-2 text-center">
+        <p className="text-[10px] text-text-muted mt-2 text-center">
           Total pool: 18 + 12 × (level - 1) = {poolTotal}
         </p>
       </div>

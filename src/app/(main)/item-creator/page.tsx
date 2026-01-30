@@ -132,18 +132,18 @@ function PropertyCard({
   const hasOption = property.op_1_desc && property.op_1_desc.trim() !== '';
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-50 px-4 py-3 flex items-center justify-between">
+      <div className="bg-neutral-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-text-muted hover:text-text-secondary"
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
-          <span className="font-medium text-gray-900">{property.name}</span>
+          <span className="font-medium text-text-primary">{property.name}</span>
           {propTP > 0 && (
             <span className="text-sm text-purple-600 font-medium">TP: {propTP}</span>
           )}
@@ -156,7 +156,7 @@ function PropertyCard({
         <button
           type="button"
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-500"
+          className="text-text-muted hover:text-red-500"
         >
           <X className="w-5 h-5" />
         </button>
@@ -167,7 +167,7 @@ function PropertyCard({
         <div className="px-4 py-4 space-y-4">
           {/* Property Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
               Property
             </label>
             <select
@@ -179,7 +179,7 @@ function PropertyCard({
                   onUpdate({ property: newProp, op_1_lvl: 0 });
                 }
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
             >
               {selectableProperties.map((p, idx) => (
                 <option key={p.id} value={idx}>
@@ -190,16 +190,16 @@ function PropertyCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600">{property.description}</p>
+          <p className="text-sm text-text-secondary">{property.description}</p>
 
           {/* Option Level */}
           {hasOption && (
-            <div className="bg-gray-50 rounded-lg p-3">
+            <div className="bg-neutral-50 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">
                   Option:{' '}
                   {property.op_1_tp && (
-                    <span className="text-gray-500">
+                    <span className="text-text-muted">
                       TP +{property.op_1_tp}/level
                     </span>
                   )}
@@ -210,7 +210,7 @@ function PropertyCard({
                   label="Level:"
                 />
               </div>
-              <p className="text-sm text-gray-600">{property.op_1_desc}</p>
+              <p className="text-sm text-text-secondary">{property.op_1_desc}</p>
             </div>
           )}
         </div>
@@ -731,9 +731,9 @@ function ItemCreatorContent() {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-neutral-200 rounded w-1/3"></div>
+          <div className="h-4 bg-neutral-200 rounded w-2/3"></div>
+          <div className="h-64 bg-neutral-200 rounded"></div>
         </div>
       </div>
     );
@@ -753,11 +753,11 @@ function ItemCreatorContent() {
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-2">
             <Sword className="w-8 h-8 text-amber-600" />
             Armament Creator
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Design custom weapons, armor, and shields by combining item properties. 
             Properties determine the item&apos;s rarity and cost.
           </p>
@@ -769,8 +769,8 @@ function ItemCreatorContent() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
               user 
-                ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                : "bg-gray-100 text-gray-400 cursor-pointer"
+                ? "bg-neutral-100 hover:bg-neutral-200 text-text-secondary"
+                : "bg-neutral-100 text-text-muted cursor-pointer"
             )}
             title={user ? "Load from library" : "Log in to load from library"}
           >
@@ -780,7 +780,7 @@ function ItemCreatorContent() {
           <button
             type="button"
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-gray-700 transition-colors"
+            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-text-secondary transition-colors"
           >
             Reset
           </button>
@@ -791,7 +791,7 @@ function ItemCreatorContent() {
             className={cn(
               'px-4 py-2 rounded-lg font-medium transition-colors',
               saving || !name.trim()
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-neutral-300 text-text-muted cursor-not-allowed'
                 : 'bg-green-600 text-white hover:bg-green-700'
             )}
           >
@@ -819,7 +819,7 @@ function ItemCreatorContent() {
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Item Name *
                 </label>
                 <input
@@ -827,12 +827,12 @@ function ItemCreatorContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter item name..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Item Type
                 </label>
                 <div className="grid grid-cols-4 gap-2">
@@ -844,7 +844,7 @@ function ItemCreatorContent() {
                         'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
                         armamentType === type.value
                           ? 'bg-amber-600 text-white'
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                          : 'bg-neutral-100 hover:bg-neutral-200 text-text-secondary'
                       )}
                     >
                       <type.icon className="w-4 h-4" />
@@ -855,7 +855,7 @@ function ItemCreatorContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
                   Description
                 </label>
                 <textarea
@@ -863,7 +863,7 @@ function ItemCreatorContent() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe your item..."
                   rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
             </div>
@@ -872,12 +872,12 @@ function ItemCreatorContent() {
           {/* Weapon Configuration - Handedness & Range */}
           {armamentType === 'Weapon' && (
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Weapon Configuration</h3>
+              <h3 className="text-lg font-bold text-text-primary mb-4">Weapon Configuration</h3>
               <div className="flex flex-wrap items-center gap-6">
                 {/* Handedness Toggle */}
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700">Handedness:</span>
-                  <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+                  <span className="text-sm font-medium text-text-secondary">Handedness:</span>
+                  <div className="flex rounded-lg border border-neutral-300 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setIsTwoHanded(false)}
@@ -885,7 +885,7 @@ function ItemCreatorContent() {
                         "px-4 py-2 text-sm font-medium transition-colors",
                         !isTwoHanded
                           ? "bg-amber-600 text-white"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          : "bg-neutral-50 text-text-secondary hover:bg-neutral-100"
                       )}
                     >
                       One-Handed
@@ -897,7 +897,7 @@ function ItemCreatorContent() {
                         "px-4 py-2 text-sm font-medium transition-colors",
                         isTwoHanded
                           ? "bg-amber-600 text-white"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                          : "bg-neutral-50 text-text-secondary hover:bg-neutral-100"
                       )}
                     >
                       Two-Handed
@@ -907,14 +907,14 @@ function ItemCreatorContent() {
 
                 {/* Range Control */}
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700">Range:</span>
+                  <span className="text-sm font-medium text-text-secondary">Range:</span>
                   <span className="font-medium text-amber-600 min-w-[80px]">{rangeDisplay}</span>
                   <div className="flex gap-1">
                     <button
                       type="button"
                       onClick={() => setRangeLevel(prev => Math.max(0, prev - 1))}
                       disabled={rangeLevel === 0}
-                      className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-neutral-300 disabled:cursor-not-allowed"
                     >
                       -
                     </button>
@@ -927,7 +927,7 @@ function ItemCreatorContent() {
                     </button>
                   </div>
                   {rangeLevel > 0 && (
-                    <span className="text-xs text-gray-500">(8 spaces per level)</span>
+                    <span className="text-xs text-text-muted">(8 spaces per level)</span>
                   )}
                 </div>
               </div>
@@ -937,7 +937,7 @@ function ItemCreatorContent() {
           {/* Weapon Damage */}
           {armamentType === 'Weapon' && (
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Base Damage</h3>
+              <h3 className="text-lg font-bold text-text-primary mb-4">Base Damage</h3>
               <div className="flex flex-wrap items-center gap-4">
                 <NumberStepper
                   value={damage.amount}
@@ -951,7 +951,7 @@ function ItemCreatorContent() {
                   <select
                     value={damage.size}
                     onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                    className="px-3 py-2 border border-gray-300 rounded-lg"
+                    className="px-3 py-2 border border-neutral-300 rounded-lg"
                   >
                     {DIE_SIZES.map((size) => (
                       <option key={size} value={size}>
@@ -963,7 +963,7 @@ function ItemCreatorContent() {
                 <select
                   value={damage.type}
                   onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
+                  className="px-3 py-2 border border-neutral-300 rounded-lg"
                 >
                   {DAMAGE_TYPES.filter((t) => t !== 'none').map((type) => (
                     <option key={type} value={type}>
@@ -978,11 +978,11 @@ function ItemCreatorContent() {
           {/* Armor Configuration */}
           {armamentType === 'Armor' && (
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Armor Configuration</h3>
+              <h3 className="text-lg font-bold text-text-primary mb-4">Armor Configuration</h3>
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Damage Reduction */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     Damage Reduction
                   </label>
                   <div className="flex items-center gap-3">
@@ -993,7 +993,7 @@ function ItemCreatorContent() {
                     >
                       −
                     </button>
-                    <span className="w-12 text-center text-2xl font-bold text-gray-900">
+                    <span className="w-12 text-center text-2xl font-bold text-text-primary">
                       {damageReduction}
                     </span>
                     <button
@@ -1004,12 +1004,12 @@ function ItemCreatorContent() {
                       +
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Reduces physical damage taken</p>
+                  <p className="text-xs text-text-muted mt-1">Reduces physical damage taken</p>
                 </div>
                 
                 {/* Agility Reduction */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     Agility Reduction
                   </label>
                   <div className="flex items-center gap-3">
@@ -1020,7 +1020,7 @@ function ItemCreatorContent() {
                     >
                       −
                     </button>
-                    <span className="w-12 text-center text-2xl font-bold text-gray-900">
+                    <span className="w-12 text-center text-2xl font-bold text-text-primary">
                       {agilityReduction}
                     </span>
                     <button
@@ -1031,12 +1031,12 @@ function ItemCreatorContent() {
                       +
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Reduces Agility for wearing this armor</p>
+                  <p className="text-xs text-text-muted mt-1">Reduces Agility for wearing this armor</p>
                 </div>
                 
                 {/* Critical Range Increase */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
                     Critical Range Increase
                   </label>
                   <div className="flex items-center gap-3">
@@ -1047,7 +1047,7 @@ function ItemCreatorContent() {
                     >
                       −
                     </button>
-                    <span className="w-12 text-center text-2xl font-bold text-gray-900">
+                    <span className="w-12 text-center text-2xl font-bold text-text-primary">
                       {criticalRangeIncrease}
                     </span>
                     <button
@@ -1058,7 +1058,7 @@ function ItemCreatorContent() {
                       +
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Increases critical hit range</p>
+                  <p className="text-xs text-text-muted mt-1">Increases critical hit range</p>
                 </div>
               </div>
             </div>
@@ -1069,7 +1069,7 @@ function ItemCreatorContent() {
             <>
               {/* Shield Damage Reduction */}
               <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Shield Block (Damage Reduction)</h3>
+                <h3 className="text-lg font-bold text-text-primary mb-4">Shield Block (Damage Reduction)</h3>
                 <div className="flex flex-wrap items-center gap-4">
                   <NumberStepper
                     value={shieldDR.amount}
@@ -1083,7 +1083,7 @@ function ItemCreatorContent() {
                     <select
                       value={shieldDR.size}
                       onChange={(e) => setShieldDR((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg"
+                      className="px-3 py-2 border border-neutral-300 rounded-lg"
                     >
                       {DIE_SIZES.map((size) => (
                         <option key={size} value={size}>
@@ -1092,11 +1092,11 @@ function ItemCreatorContent() {
                       ))}
                     </select>
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-text-secondary">
                     ({shieldDR.amount}d{shieldDR.size} damage blocked)
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Damage blocked when using Shield reaction</p>
+                <p className="text-xs text-text-muted mt-2">Damage blocked when using Shield reaction</p>
               </div>
 
               {/* Shield Damage (Optional) */}
@@ -1107,9 +1107,9 @@ function ItemCreatorContent() {
                     id="hasShieldDamage"
                     checked={hasShieldDamage}
                     onChange={(e) => setHasShieldDamage(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300"
+                    className="w-5 h-5 rounded border-neutral-300"
                   />
-                  <label htmlFor="hasShieldDamage" className="text-lg font-bold text-gray-900">
+                  <label htmlFor="hasShieldDamage" className="text-lg font-bold text-text-primary">
                     Shield Damage (Optional)
                   </label>
                 </div>
@@ -1128,7 +1128,7 @@ function ItemCreatorContent() {
                         <select
                           value={shieldDamage.size}
                           onChange={(e) => setShieldDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                          className="px-3 py-2 border border-gray-300 rounded-lg"
+                          className="px-3 py-2 border border-neutral-300 rounded-lg"
                         >
                           {DIE_SIZES.map((size) => (
                             <option key={size} value={size}>
@@ -1137,13 +1137,13 @@ function ItemCreatorContent() {
                           ))}
                         </select>
                       </div>
-                      <span className="text-sm text-gray-600">Bludgeoning</span>
+                      <span className="text-sm text-text-secondary">Bludgeoning</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">This shield can deal {shieldDamage.amount}d{shieldDamage.size} bludgeoning damage as a melee weapon attack</p>
+                    <p className="text-xs text-text-muted mt-2">This shield can deal {shieldDamage.amount}d{shieldDamage.size} bludgeoning damage as a melee weapon attack</p>
                   </>
                 )}
                 {!hasShieldDamage && (
-                  <p className="text-sm text-gray-500">Enable to allow this shield to be used as a weapon</p>
+                  <p className="text-sm text-text-muted">Enable to allow this shield to be used as a weapon</p>
                 )}
               </div>
             </>
@@ -1151,8 +1151,8 @@ function ItemCreatorContent() {
 
           {/* Ability Requirement (Optional) */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Ability Requirement</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-lg font-bold text-text-primary mb-4">Ability Requirement</h3>
+            <p className="text-sm text-text-secondary mb-4">
               Require a minimum ability score to use this {armamentType.toLowerCase()} effectively.
             </p>
             <div className="flex flex-wrap items-center gap-4">
@@ -1170,7 +1170,7 @@ function ItemCreatorContent() {
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                 >
                   <option value="">None</option>
                   {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (
@@ -1182,7 +1182,7 @@ function ItemCreatorContent() {
               </div>
               {abilityRequirement && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">Level:</span>
+                  <span className="text-sm font-medium text-text-secondary">Level:</span>
                   <NumberStepper
                     value={abilityRequirement.level}
                     onChange={(v) => setAbilityRequirement(prev => prev ? { ...prev, level: v } : null)}
@@ -1197,7 +1197,7 @@ function ItemCreatorContent() {
           {/* Item Properties */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
+              <h3 className="text-lg font-bold text-text-primary">
                 Properties ({selectedProperties.length})
               </h3>
               <button
@@ -1211,7 +1211,7 @@ function ItemCreatorContent() {
             </div>
 
             {selectedProperties.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-text-muted">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No properties added yet. Click &quot;Add Property&quot; to enhance your item.</p>
               </div>
@@ -1235,7 +1235,7 @@ function ItemCreatorContent() {
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Item Summary</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Item Summary</h3>
 
             {/* Rarity Badge */}
             <div className="text-center mb-6">
@@ -1264,21 +1264,21 @@ function ItemCreatorContent() {
             {/* Stats */}
             <div className="space-y-2 text-sm mb-6">
               <div className="flex justify-between">
-                <span className="text-gray-600">Type:</span>
+                <span className="text-text-secondary">Type:</span>
                 <span className="font-medium">{armamentType}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Item Points:</span>
+                <span className="text-text-secondary">Item Points:</span>
                 <span className="font-medium">{costs.totalIP} IP</span>
               </div>
               {armamentType === 'Weapon' && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Handedness:</span>
+                    <span className="text-text-secondary">Handedness:</span>
                     <span className="font-medium">{isTwoHanded ? 'Two-Handed' : 'One-Handed'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Range:</span>
+                    <span className="text-text-secondary">Range:</span>
                     <span className="font-medium">{rangeDisplay}</span>
                   </div>
                 </>
@@ -1286,12 +1286,12 @@ function ItemCreatorContent() {
               {armamentType === 'Armor' && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Damage Reduction:</span>
+                    <span className="text-text-secondary">Damage Reduction:</span>
                     <span className="font-medium">{damageReduction}</span>
                   </div>
                   {agilityReduction > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Agility Reduction:</span>
+                      <span className="text-text-secondary">Agility Reduction:</span>
                       <span className="font-medium text-red-600">-{agilityReduction}</span>
                     </div>
                   )}
@@ -1300,12 +1300,12 @@ function ItemCreatorContent() {
               {armamentType === 'Shield' && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Shield Block:</span>
+                    <span className="text-text-secondary">Shield Block:</span>
                     <span className="font-medium">{shieldDR.amount}d{shieldDR.size}</span>
                   </div>
                   {hasShieldDamage && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Shield Damage:</span>
+                      <span className="text-text-secondary">Shield Damage:</span>
                       <span className="font-medium">{shieldDamage.amount}d{shieldDamage.size}</span>
                     </div>
                   )}
@@ -1313,7 +1313,7 @@ function ItemCreatorContent() {
               )}
               {damageDisplay && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Damage:</span>
+                  <span className="text-text-secondary">Damage:</span>
                   <span className="font-medium">{damageDisplay}</span>
                 </div>
               )}
@@ -1321,9 +1321,9 @@ function ItemCreatorContent() {
 
             {/* Property Summary */}
             {selectedProperties.length > 0 && (
-              <div className="border-t border-gray-100 pt-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Properties</h4>
-                <ul className="text-xs text-gray-600 space-y-1">
+              <div className="border-t border-neutral-100 pt-4">
+                <h4 className="text-sm font-medium text-text-secondary mb-2">Properties</h4>
+                <ul className="text-xs text-text-secondary space-y-1">
                   {selectedProperties.map((sp, i) => (
                     <li key={i}>
                       • {sp.property.name}
@@ -1364,7 +1364,7 @@ function ItemCreatorContent() {
 
 export default function ItemCreatorPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-neutral-50 py-8 px-4">
       <ItemCreatorContent />
     </div>
   );

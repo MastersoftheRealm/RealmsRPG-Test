@@ -72,7 +72,7 @@ export function Collapsible({
   return (
     <div
       className={cn(
-        'bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden',
+        'bg-surface rounded-lg shadow-sm border border-border-light overflow-hidden',
         className
       )}
     >
@@ -84,7 +84,7 @@ export function Collapsible({
         className={cn(
           'flex items-center justify-between w-full px-4 py-3',
           'text-left font-medium transition-colors',
-          'hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
+          'hover:bg-surface-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
           disabled && 'cursor-not-allowed opacity-50',
           headerClassName
         )}
@@ -97,7 +97,7 @@ export function Collapsible({
         </div>
         <ChevronDown
           className={cn(
-            'w-5 h-5 text-gray-500 transition-transform duration-200',
+            'w-5 h-5 text-text-muted transition-transform duration-200',
             isOpen && 'rotate-180'
           )}
         />

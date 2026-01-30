@@ -267,13 +267,13 @@ const initialState: CreatureState = {
 function ChipList({ 
   items, 
   onRemove, 
-  color = 'bg-gray-100' 
+  color = 'bg-neutral-100' 
 }: { 
   items: string[]; 
   onRemove: (item: string) => void;
   color?: string;
 }) {
-  if (items.length === 0) return <p className="text-sm text-gray-400 italic">None</p>;
+  if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
   
   return (
     <div className="flex flex-wrap gap-1">
@@ -285,7 +285,7 @@ function ChipList({
           {item}
           <button 
             onClick={() => onRemove(item)} 
-            className="text-gray-500 hover:text-red-500"
+            className="text-text-muted hover:text-red-500"
           >
             ×
           </button>
@@ -298,7 +298,7 @@ function ChipList({
 function ExpandableChipList({ 
   items, 
   onRemove, 
-  color = 'bg-gray-100',
+  color = 'bg-neutral-100',
   descriptions
 }: { 
   items: string[]; 
@@ -306,7 +306,7 @@ function ExpandableChipList({
   color?: string;
   descriptions: Record<string, string>;
 }) {
-  if (items.length === 0) return <p className="text-sm text-gray-400 italic">None</p>;
+  if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
   
   return (
     <div className="flex flex-col gap-2">
@@ -362,7 +362,7 @@ function AddItemDropdown({
       <select
         value={selectedValue}
         onChange={(e) => setSelectedValue(e.target.value)}
-        className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm"
+        className="flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm"
       >
         <option value="">{placeholder}</option>
         {availableOptions.map(opt => (
@@ -394,11 +394,11 @@ function DefenseBlock({
   const totalValue = 10 + baseValue + bonusValue;
   
   return (
-    <div className="p-3 bg-gray-50 rounded-lg text-center">
-      <label className="block text-xs font-medium text-gray-500 mb-1 uppercase">
+    <div className="p-3 bg-neutral-50 rounded-lg text-center">
+      <label className="block text-xs font-medium text-text-muted mb-1 uppercase">
         {name}
       </label>
-      <div className="text-2xl font-bold text-gray-900 mb-1">{totalValue}</div>
+      <div className="text-2xl font-bold text-text-primary mb-1">{totalValue}</div>
       <div className="flex items-center justify-center gap-1">
         <button
           onClick={() => onChange(Math.max(0, bonusValue - 1))}
@@ -406,13 +406,13 @@ function DefenseBlock({
           className={cn(
             'w-6 h-6 rounded flex items-center justify-center text-sm',
             bonusValue <= 0 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+              ? 'bg-neutral-100 text-text-muted cursor-not-allowed' 
               : 'bg-red-100 text-red-700 hover:bg-red-200'
           )}
         >
           −
         </button>
-        <span className="text-xs text-gray-500 w-8">+{bonusValue}</span>
+        <span className="text-xs text-text-muted w-8">+{bonusValue}</span>
         <button
           onClick={() => onChange(bonusValue + 1)}
           className="w-6 h-6 rounded bg-green-100 text-green-700 hover:bg-green-200 flex items-center justify-center text-sm"
@@ -447,11 +447,11 @@ function LoadPowerModal({
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select a Power</h2>
-          <button onClick={onClose} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {userPowers.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No powers in your library</p>
+            <p className="text-text-muted text-center py-8">No powers in your library</p>
           ) : (
             <div className="space-y-2">
               {userPowers.map(power => {
@@ -477,10 +477,10 @@ function LoadPowerModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200"
+                    className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
                   >
                     <div className="font-medium">{power.name}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-text-muted">
                       EN: {display.energy} | {display.actionType} | {display.range}
                     </div>
                   </button>
@@ -513,11 +513,11 @@ function LoadTechniqueModal({
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select a Technique</h2>
-          <button onClick={onClose} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {userTechniques.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No techniques in your library</p>
+            <p className="text-text-muted text-center py-8">No techniques in your library</p>
           ) : (
             <div className="space-y-2">
               {userTechniques.map(tech => {
@@ -541,10 +541,10 @@ function LoadTechniqueModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200"
+                    className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
                   >
                     <div className="font-medium">{tech.name}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-text-muted">
                       EN: {display.energy} | TP: {display.tp} | {display.actionType}
                     </div>
                   </button>
@@ -593,7 +593,7 @@ function LoadFeatModal({
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select a Feat</h2>
-          <button onClick={onClose} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
         </div>
         <div className="p-4 border-b">
           <input
@@ -601,12 +601,12 @@ function LoadFeatModal({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search feats..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
           />
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {filteredFeats.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No feats found</p>
+            <p className="text-text-muted text-center py-8">No feats found</p>
           ) : (
             <div className="space-y-2">
               {filteredFeats.slice(0, 50).map(feat => (
@@ -621,14 +621,14 @@ function LoadFeatModal({
                     });
                     onClose();
                   }}
-                  className="w-full p-3 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200"
+                  className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{feat.name}</span>
                     <span className="text-sm text-amber-600 font-medium">{feat.points ?? 1} pt{(feat.points ?? 1) !== 1 ? 's' : ''}</span>
                   </div>
                   {feat.description && (
-                    <div className="text-sm text-gray-500 line-clamp-2">{feat.description}</div>
+                    <div className="text-sm text-text-muted line-clamp-2">{feat.description}</div>
                   )}
                 </button>
               ))}
@@ -664,11 +664,11 @@ function LoadArmamentModal({
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select an Armament</h2>
-          <button onClick={onClose} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {availableItems.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No items in your library</p>
+            <p className="text-text-muted text-center py-8">No items in your library</p>
           ) : (
             <div className="space-y-2">
               {availableItems.map(item => {
@@ -705,10 +705,10 @@ function LoadArmamentModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200"
+                    className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
                   >
                     <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-text-muted">
                       {item.type} | TP: {display.totalTP || 0} | {display.currencyCost || 0}c | {display.rarity || 'Common'}
                     </div>
                   </button>
@@ -740,11 +740,11 @@ function LoadCreatureModal({
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Load Creature from Library</h2>
-          <button onClick={onClose} className="text-2xl text-gray-500 hover:text-gray-700">×</button>
+          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {userCreatures.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No creatures in your library</p>
+            <p className="text-text-muted text-center py-8">No creatures in your library</p>
           ) : (
             <div className="space-y-2">
               {userCreatures.map(c => (
@@ -784,10 +784,10 @@ function LoadCreatureModal({
                     onSelect(loadedCreature);
                     onClose();
                   }}
-                  className="w-full p-3 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200"
+                  className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
                 >
                   <div className="font-medium">{c.name}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-text-muted">
                     Level {c.level} {(c as unknown as CreatureState).type || 'Creature'}
                   </div>
                 </button>
@@ -1165,8 +1165,8 @@ function CreatureCreatorContent() {
     <div className="max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Creature Creator</h1>
-          <p className="text-gray-600">Design custom creatures, monsters, and NPCs</p>
+          <h1 className="text-3xl font-bold text-text-primary">Creature Creator</h1>
+          <p className="text-text-secondary">Design custom creatures, monsters, and NPCs</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -1175,7 +1175,7 @@ function CreatureCreatorContent() {
               "px-4 py-2 rounded-lg border transition-colors",
               user 
                 ? "border-primary-600 text-primary-600 hover:bg-primary-50"
-                : "border-gray-300 text-gray-400 cursor-pointer"
+                : "border-neutral-300 text-text-muted cursor-pointer"
             )}
             title={user ? "Load from library" : "Log in to load from library"}
           >
@@ -1183,7 +1183,7 @@ function CreatureCreatorContent() {
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-100"
           >
             Reset
           </button>
@@ -1202,31 +1202,31 @@ function CreatureCreatorContent() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div>
-              <div className="text-xl font-bold text-gray-900">{creature.name || 'Unnamed Creature'}</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-xl font-bold text-text-primary">{creature.name || 'Unnamed Creature'}</div>
+              <div className="text-sm text-text-muted">
                 Level {creature.level} {creature.size.charAt(0).toUpperCase() + creature.size.slice(1)} {creature.type}
               </div>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
-              <span className="text-gray-600">HP</span>
+              <span className="text-text-secondary">HP</span>
               <span className="font-bold text-red-600">{stats.maxHealth}</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
-              <span className="text-gray-600">EN</span>
+              <span className="text-text-secondary">EN</span>
               <span className="font-bold text-blue-600">{stats.maxEnergy}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
-              <span className="text-gray-600">SPD</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-lg">
+              <span className="text-text-secondary">SPD</span>
               <span className="font-bold">{stats.speed}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
-              <span className="text-gray-600">EVA</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-lg">
+              <span className="text-text-secondary">EVA</span>
               <span className="font-bold">{stats.evasion}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-lg">
-              <span className="text-gray-600">PROF</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-lg">
+              <span className="text-text-secondary">PROF</span>
               <span className="font-bold">+{stats.proficiency}</span>
             </div>
           </div>
@@ -1252,24 +1252,24 @@ function CreatureCreatorContent() {
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Basic Information</h3>
             <div className="grid md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
                 <input
                   type="text"
                   value={creature.name}
                   onChange={(e) => updateCreature({ name: e.target.value })}
                   placeholder="Creature name..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Level</label>
                 <select
                   value={creature.level}
                   onChange={(e) => updateCreature({ level: parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                 >
                   {LEVEL_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1277,11 +1277,11 @@ function CreatureCreatorContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
                 <select
                   value={creature.type}
                   onChange={(e) => updateCreature({ type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                 >
                   {CREATURE_TYPES.map(type => (
                     <option key={type} value={type}>{type}</option>
@@ -1289,11 +1289,11 @@ function CreatureCreatorContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Size</label>
                 <select
                   value={creature.size}
                   onChange={(e) => updateCreature({ size: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                 >
                   {CREATURE_SIZES.map(size => (
                     <option key={size.value} value={size.value}>{size.label}</option>
@@ -1305,7 +1305,7 @@ function CreatureCreatorContent() {
 
           {/* Archetype Selection */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Archetype</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Archetype</h3>
             <ArchetypeSelector
               value={creature.archetypeType}
               powerProficiency={creature.powerProficiency}
@@ -1321,7 +1321,7 @@ function CreatureCreatorContent() {
 
           {/* HP/EN Allocation */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Health & Energy</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Health & Energy</h3>
             <HealthEnergyAllocator
               hpBonus={creature.hitPoints}
               energyBonus={creature.energyPoints}
@@ -1335,7 +1335,7 @@ function CreatureCreatorContent() {
 
           {/* Abilities - Using shared AbilityScoreEditor */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Ability Scores</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Ability Scores</h3>
             <AbilityScoreEditor
               abilities={creature.abilities}
               totalPoints={stats.abilityPoints}
@@ -1351,7 +1351,7 @@ function CreatureCreatorContent() {
 
           {/* Defenses */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Defenses</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Defenses</h3>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               <DefenseBlock
                 name="Might"
@@ -1394,10 +1394,10 @@ function CreatureCreatorContent() {
 
           {/* Resistances, Weaknesses, Immunities */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Damage Modifiers</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h3>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Resistances</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Resistances</label>
                 <ChipList 
                   items={creature.resistances} 
                   onRemove={(item) => removeFromArray('resistances', item)}
@@ -1411,7 +1411,7 @@ function CreatureCreatorContent() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Weaknesses</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Weaknesses</label>
                 <ChipList 
                   items={creature.weaknesses} 
                   onRemove={(item) => removeFromArray('weaknesses', item)}
@@ -1425,7 +1425,7 @@ function CreatureCreatorContent() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Immunities</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Immunities</label>
                 <ChipList 
                   items={creature.immunities} 
                   onRemove={(item) => removeFromArray('immunities', item)}
@@ -1443,10 +1443,10 @@ function CreatureCreatorContent() {
 
           {/* Senses & Movement */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Senses & Movement</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Senses & Movement</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Senses</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Senses</label>
                 <ExpandableChipList 
                   items={creature.senses} 
                   onRemove={(item) => removeFromArray('senses', item)}
@@ -1461,7 +1461,7 @@ function CreatureCreatorContent() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Movement Types</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">Movement Types</label>
                 <ExpandableChipList 
                   items={creature.movementTypes} 
                   onRemove={(item) => removeFromArray('movementTypes', item)}
@@ -1480,11 +1480,11 @@ function CreatureCreatorContent() {
 
           {/* Condition Immunities */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Condition Immunities</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Condition Immunities</h3>
             <ChipList 
               items={creature.conditionImmunities} 
               onRemove={(item) => removeFromArray('conditionImmunities', item)}
-              color="bg-gray-200 text-gray-800"
+              color="bg-neutral-200 text-text-primary"
             />
             <AddItemDropdown
               options={CONDITIONS}
@@ -1497,7 +1497,7 @@ function CreatureCreatorContent() {
           {/* Skills */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Skills</h3>
+              <h3 className="text-lg font-bold text-text-primary">Skills</h3>
               <div className="flex items-center gap-3">
                 <span className={cn(
                   'px-3 py-1 rounded-full text-sm font-medium',
@@ -1505,7 +1505,7 @@ function CreatureCreatorContent() {
                     ? 'bg-red-100 text-red-700' 
                     : stats.skillRemaining === 0
                     ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-600'
+                    : 'bg-neutral-100 text-text-secondary'
                 )}>
                   {stats.skillRemaining} remaining
                 </span>
@@ -1513,11 +1513,11 @@ function CreatureCreatorContent() {
             </div>
             
             {creature.skills.length === 0 ? (
-              <p className="text-sm text-gray-400 italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
+              <p className="text-sm text-text-muted italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
             ) : (
-              <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 mb-4">
+              <div className="border border-neutral-200 rounded-lg divide-y divide-neutral-100 mb-4">
                 {creature.skills.map(skill => (
-                  <div key={skill.name} className="flex items-center justify-between py-2.5 px-4 hover:bg-gray-50 transition-colors">
+                  <div key={skill.name} className="flex items-center justify-between py-2.5 px-4 hover:bg-neutral-50 transition-colors">
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => removeSkill(skill.name)}
@@ -1529,9 +1529,9 @@ function CreatureCreatorContent() {
                       {/* For creatures, all skills are automatically proficient */}
                       <div className="w-4 h-4 rounded-full border-2 bg-primary-600 border-primary-600" title="Proficient (all creature skills are proficient)" />
                       <div className="flex flex-col">
-                        <span className="font-medium text-gray-700">{skill.name}</span>
+                        <span className="font-medium text-text-secondary">{skill.name}</span>
                         {skillAbilityMap.get(skill.name) && (
-                          <span className="text-xs text-gray-400 capitalize">{skillAbilityMap.get(skill.name)}</span>
+                          <span className="text-xs text-text-muted capitalize">{skillAbilityMap.get(skill.name)}</span>
                         )}
                       </div>
                     </div>
@@ -1541,7 +1541,7 @@ function CreatureCreatorContent() {
                         <button
                           onClick={() => updateSkill(skill.name, { value: Math.max(0, skill.value - 1) })}
                           disabled={skill.value <= 0}
-                          className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="w-7 h-7 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           −
                         </button>
@@ -1559,7 +1559,7 @@ function CreatureCreatorContent() {
                         return (
                           <span className={cn(
                             'w-12 text-right font-bold',
-                            bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-gray-400'
+                            bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-text-muted'
                           )}>
                             {bonus >= 0 ? '+' : ''}{bonus}
                           </span>
@@ -1581,7 +1581,7 @@ function CreatureCreatorContent() {
 
           {/* Languages */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Languages</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Languages</h3>
             <ChipList 
               items={creature.languages} 
               onRemove={(item) => removeFromArray('languages', item)}
@@ -1594,7 +1594,7 @@ function CreatureCreatorContent() {
                 onChange={(e) => setNewLanguage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addLanguage()}
                 placeholder="Enter language..."
-                className="flex-1 px-3 py-1.5 border border-gray-300 rounded text-sm"
+                className="flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm"
               />
               <button
                 onClick={addLanguage}
@@ -1618,11 +1618,11 @@ function CreatureCreatorContent() {
             defaultExpanded={creature.powers.length > 0}
           >
             {creature.powers.length === 0 ? (
-              <p className="text-sm text-gray-400 italic mb-4">No powers added</p>
+              <p className="text-sm text-text-muted italic mb-4">No powers added</p>
             ) : (
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-neutral-50">
                     <tr>
                       <th className="px-3 py-2 text-left">Name</th>
                       <th className="px-3 py-2 text-left">EN</th>
@@ -1681,11 +1681,11 @@ function CreatureCreatorContent() {
             defaultExpanded={creature.techniques.length > 0}
           >
             {creature.techniques.length === 0 ? (
-              <p className="text-sm text-gray-400 italic mb-4">No techniques added</p>
+              <p className="text-sm text-text-muted italic mb-4">No techniques added</p>
             ) : (
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-neutral-50">
                     <tr>
                       <th className="px-3 py-2 text-left">Name</th>
                       <th className="px-3 py-2 text-left">EN</th>
@@ -1740,11 +1740,11 @@ function CreatureCreatorContent() {
             defaultExpanded={true}
           >
             {creature.feats.length === 0 ? (
-              <p className="text-sm text-gray-400 italic mb-4">No feats added</p>
+              <p className="text-sm text-text-muted italic mb-4">No feats added</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {creature.feats.map(feat => (
-                  <div key={feat.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div key={feat.id} className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
                     <button
                       onClick={() => setCreature(prev => ({
                         ...prev,
@@ -1760,7 +1760,7 @@ function CreatureCreatorContent() {
                         <span className="text-sm text-amber-600">{feat.points ?? 1} pt{(feat.points ?? 1) !== 1 ? 's' : ''}</span>
                       </div>
                       {feat.description && (
-                        <div className="text-sm text-gray-500 line-clamp-2">{feat.description}</div>
+                        <div className="text-sm text-text-muted line-clamp-2">{feat.description}</div>
                       )}
                     </div>
                   </div>
@@ -1787,11 +1787,11 @@ function CreatureCreatorContent() {
             defaultExpanded={creature.armaments.length > 0}
           >
             {creature.armaments.length === 0 ? (
-              <p className="text-sm text-gray-400 italic mb-4">No armaments added</p>
+              <p className="text-sm text-text-muted italic mb-4">No armaments added</p>
             ) : (
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-neutral-50">
                     <tr>
                       <th className="px-3 py-2 text-left">Name</th>
                       <th className="px-3 py-2 text-left">Type</th>
@@ -1836,13 +1836,13 @@ function CreatureCreatorContent() {
 
           {/* Description */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Description</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Description</h3>
             <textarea
               value={creature.description}
               onChange={(e) => updateCreature({ description: e.target.value })}
               placeholder="Describe this creature's appearance, behavior, and special abilities..."
               rows={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg resize-none"
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg resize-none"
             />
           </div>
         </div>
@@ -1853,8 +1853,8 @@ function CreatureCreatorContent() {
           quickStats={[
             { label: 'HP', value: stats.maxHealth, color: 'bg-red-50 text-red-600' },
             { label: 'EN', value: stats.maxEnergy, color: 'bg-blue-50 text-blue-600' },
-            { label: 'SPD', value: stats.speed, color: 'bg-gray-100' },
-            { label: 'EVA', value: stats.evasion, color: 'bg-gray-100' },
+            { label: 'SPD', value: stats.speed, color: 'bg-neutral-100' },
+            { label: 'EVA', value: stats.evasion, color: 'bg-neutral-100' },
           ]}
           items={[
             { label: 'Ability Points', remaining: stats.abilityRemaining },
@@ -1920,7 +1920,7 @@ function CreatureCreatorContent() {
 
 export default function CreatureCreatorPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-neutral-50 py-8 px-4">
       <CreatureCreatorContent />
     </div>
   );

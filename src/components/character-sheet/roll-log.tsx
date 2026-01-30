@@ -30,7 +30,7 @@ const ROLL_TYPE_COLORS: Record<RollType, string> = {
   skill: 'border-l-blue-500',
   ability: 'border-l-purple-500',
   defense: 'border-l-teal-500',
-  custom: 'border-l-gray-400',
+  custom: 'border-l-neutral-400',
 };
 
 const ROLL_TYPE_ICONS: Record<RollType, string> = {
@@ -174,9 +174,9 @@ export function RollLog({ className }: RollLogProps) {
         </div>
 
         {/* Roll History */}
-        <div className="flex-1 overflow-y-auto p-2 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-2 bg-neutral-50">
           {rolls.length === 0 ? (
-            <p className="text-center text-gray-500 italic py-10">No rolls yet. Build your dice pool below!</p>
+            <p className="text-center text-text-muted italic py-10">No rolls yet. Build your dice pool below!</p>
           ) : (
             rolls.map((roll) => (
               <RollEntryCard key={roll.id} roll={roll} />
@@ -185,7 +185,7 @@ export function RollLog({ className }: RollLogProps) {
         </div>
 
         {/* Dice Builder */}
-        <div className="p-3 bg-gradient-to-r from-primary-dark to-[#053357] border-t-2 border-gray-300">
+        <div className="p-3 bg-gradient-to-r from-primary-dark to-[#053357] border-t-2 border-neutral-300">
           {/* Roll Type & Title */}
           <div className="flex gap-2 mb-3">
             <select
@@ -267,7 +267,7 @@ export function RollLog({ className }: RollLogProps) {
             className={cn(
               'w-full py-2.5 rounded-lg font-bold text-white transition-all',
               'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
-              'disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed'
+              'disabled:from-neutral-500 disabled:to-neutral-600 disabled:cursor-not-allowed'
             )}
           >
             🎲 Roll {totalDice > 0 ? `(${totalDice} dice)` : ''}
@@ -312,7 +312,7 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
           <span className="text-sm">{ROLL_TYPE_ICONS[roll.type]}</span>
           <span className="font-semibold text-sm text-primary-dark">{roll.title}</span>
         </div>
-        <span className="text-xs text-gray-400">{formatTime(roll.timestamp)}</span>
+        <span className="text-xs text-text-muted">{formatTime(roll.timestamp)}</span>
       </div>
 
       {/* Dice Results */}
@@ -327,7 +327,7 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
                     'w-9 h-9 text-base border-2',
                     die.isMax && 'bg-green-100 border-green-500 text-green-800',
                     die.isMin && 'bg-red-100 border-red-500 text-red-800',
-                    !die.isMax && !die.isMin && 'bg-gray-100 border-gray-300 text-gray-800'
+                    !die.isMax && !die.isMin && 'bg-neutral-100 border-neutral-300 text-text-primary'
                   )
                 : cn(
                     'bg-amber-100 border border-amber-400 text-amber-800'
@@ -339,12 +339,12 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         ))}
         
         {roll.modifier !== 0 && (
-          <span className="text-gray-500 font-semibold">
+          <span className="text-text-muted font-semibold">
             {roll.modifier > 0 ? '+' : ''}{roll.modifier}
           </span>
         )}
         
-        <span className="text-gray-400">=</span>
+        <span className="text-text-muted">=</span>
         
         <span className={cn(
           'font-bold text-lg px-3 py-0.5 rounded border',
