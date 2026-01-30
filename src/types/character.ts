@@ -117,6 +117,7 @@ export interface Character {
   
   // Ancestry
   ancestry?: CharacterAncestry;
+  species?: string; // Legacy field - species name (redundant with ancestry.name)
   
   // Skills
   skills?: CharacterSkills;
