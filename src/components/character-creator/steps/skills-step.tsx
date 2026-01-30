@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 import { calculateSkillPoints } from '@/lib/game/formulas';
+import { ValueStepper } from '@/components/shared';
 
 const ABILITY_ORDER = ['Strength', 'Vitality', 'Agility', 'Acuity', 'Intelligence', 'Charisma'];
 
@@ -308,30 +309,14 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
           <span className="font-medium text-text-primary">{skill.name}</span>
         </div>
         
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onAllocate(-1)}
-            disabled={value === 0}
-            className="btn-stepper btn-stepper-danger !w-7 !h-7 text-sm"
-          >
-            −
-          </button>
-          
-          <span className={cn(
-            'w-8 text-center font-bold',
-            value > 0 ? 'text-primary-700' : 'text-text-muted'
-          )}>
-            {value}
-          </span>
-          
-          <button
-            onClick={() => onAllocate(1)}
-            disabled={!canIncrease}
-            className="btn-stepper btn-stepper-success !w-7 !h-7 text-sm"
-          >
-            +
-          </button>
-        </div>
+        <ValueStepper
+          value={value}
+          onChange={(newValue) => onAllocate(newValue - value)}
+          min={0}
+          max={canIncrease ? undefined : value}
+          size="sm"
+          enableHoldRepeat
+        />
       </div>
       
       {showDescription && skill.description && (
@@ -372,30 +357,14 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
         </div>
         
         {isUnlocked ? (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => onAllocate(-1)}
-              disabled={value === 0}
-              className="btn-stepper btn-stepper-danger !w-6 !h-6 text-xs"
-            >
-              −
-            </button>
-            
-            <span className={cn(
-              'w-6 text-center font-bold text-sm',
-              value > 0 ? 'text-primary-700' : 'text-text-muted'
-            )}>
-              {value}
-            </span>
-            
-            <button
-              onClick={() => onAllocate(1)}
-              disabled={!canIncrease}
-              className="btn-stepper btn-stepper-success !w-6 !h-6 text-xs"
-            >
-              +
-            </button>
-          </div>
+          <ValueStepper
+            value={value}
+            onChange={(newValue) => onAllocate(newValue - value)}
+            min={0}
+            max={canIncrease ? undefined : value}
+            size="xs"
+            enableHoldRepeat
+          />
         ) : (
           <span className="text-xs text-text-muted italic">
             Requires {baseSkillName}

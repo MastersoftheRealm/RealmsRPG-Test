@@ -9,6 +9,7 @@
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
+import { EditSectionToggle } from '@/components/shared';
 import type { Character, Abilities, Item } from '@/types';
 
 interface ArchetypeSectionProps {
@@ -406,8 +407,30 @@ export function ArchetypeSection({
   
   // Calculate Power Potency: 10 + pow_prof + pow_abil value
   const powAbilName = character.pow_abil?.toLowerCase() || 'charisma';
+  const martAbilName = character.mart_abil?.toLowerCase() || 'strength';
   const powAbilValue = character.abilities?.[powAbilName as keyof Abilities] ?? 0;
+  const martAbilValue = character.abilities?.[martAbilName as keyof Abilities] ?? 0;
   const powerPotency = 10 + powerProf + powAbilValue;
+  const martialPotency = 10 + martialProf + martAbilValue;
+  
+  // Build archetype title with abilities
+  const getArchetypeTitle = (): string => {
+    const parts: string[] = [];
+    if (powerProf > 0) {
+      const abilName = character.pow_abil 
+        ? character.pow_abil.charAt(0).toUpperCase() + character.pow_abil.slice(1).toLowerCase()
+        : 'Charisma';
+      parts.push(`Power - ${abilName}`);
+    }
+    if (martialProf > 0) {
+      const abilName = character.mart_abil 
+        ? character.mart_abil.charAt(0).toUpperCase() + character.mart_abil.slice(1).toLowerCase()
+        : 'Strength';
+      parts.push(`Martial - ${abilName}`);
+    }
+    if (parts.length === 0) return 'Archetype';
+    return parts.join(' / ') + ' Archetype';
+  };
   
   // Handle attack bonus roll
   const handleRollBonus = (name: string, bonus: number) => {
@@ -419,16 +442,39 @@ export function ArchetypeSection({
     rollContext?.rollDamage?.(damageStr, bonus);
   };
 
+  // Calculate edit state for pencil icon color
+  const getEditState = (): 'normal' | 'has-points' | 'over-budget' => {
+    if (remainingProfPoints > 0) return 'has-points';
+    if (remainingProfPoints < 0) return 'over-budget';
+    return 'normal';
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
+    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 relative">
+      {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
+      {isEditMode && (
+        <div className="absolute top-3 right-3">
+          <EditSectionToggle 
+            state={getEditState()}
+            title={
+              getEditState() === 'has-points' 
+                ? 'You have proficiency points to spend' 
+                : getEditState() === 'over-budget'
+                ? 'Over budget - remove proficiency points'
+                : 'Editing archetype'
+            }
+          />
+        </div>
+      )}
+      
       {/* Archetype Header */}
       <div className="mb-4">
         <h2 className="text-lg font-bold text-text-primary">
-          {character.archetype?.name || 'No Archetype'}
+          {getArchetypeTitle()}
         </h2>
-        {character.archetype?.description && (
-          <p className="text-sm text-text-muted mt-1">
-            {character.archetype.description}
+        {character.archetype?.name && (
+          <p className="text-sm text-text-muted mt-0.5">
+            {character.archetype.name}
           </p>
         )}
       </div>
@@ -524,13 +570,27 @@ export function ArchetypeSection({
         </div>
       )}
       
-      {/* Power Potency */}
-      <div className="bg-purple-50 rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
-        <span className="text-sm font-medium text-purple-700">Power Potency</span>
-        <span className="text-xl font-bold text-purple-800" title="10 + Power Prof + Power Ability">
-          {powerPotency}
-        </span>
-      </div>
+      {/* Potency displays - only show if character has corresponding proficiency */}
+      {(powerProf > 0 || martialProf > 0) && (
+        <div className="flex gap-3 mb-4">
+          {martialProf > 0 && (
+            <div className="flex-1 bg-red-50 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-red-700">Martial Potency</span>
+              <span className="text-lg font-bold text-red-800" title="10 + Martial Prof + Martial Ability">
+                {martialPotency}
+              </span>
+            </div>
+          )}
+          {powerProf > 0 && (
+            <div className="flex-1 bg-purple-50 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-purple-700">Power Potency</span>
+              <span className="text-lg font-bold text-purple-800" title="10 + Power Prof + Power Ability">
+                {powerPotency}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Attack Bonuses Table */}
       {character.abilities && (
@@ -541,20 +601,6 @@ export function ArchetypeSection({
           onRollBonus={handleRollBonus}
         />
       )}
-
-      {/* Abilities used */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {character.mart_abil && (
-          <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm">
-            Martial: {character.mart_abil}
-          </span>
-        )}
-        {character.pow_abil && (
-          <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm">
-            Power: {character.pow_abil}
-          </span>
-        )}
-      </div>
 
       {/* Weapons Section */}
       <WeaponsSection

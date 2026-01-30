@@ -4,6 +4,8 @@
  * Shared component for allocating HP and Energy points from a shared pool.
  * Used in character creator, character sheet, and creature creator.
  * 
+ * Uses the unified ValueStepper component with hold-to-repeat support.
+ * 
  * Variants:
  * - "card": Full card layout with visual pool status (default, for creators)
  * - "inline": Compact horizontal layout with progress bars (for sheet edit mode)
@@ -12,6 +14,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { ValueStepper } from '@/components/shared';
 
 export interface HealthEnergyAllocatorProps {
   /** Bonus HP points added beyond base */
@@ -32,6 +35,8 @@ export interface HealthEnergyAllocatorProps {
   variant?: 'card' | 'inline';
   /** Whether editing is disabled */
   disabled?: boolean;
+  /** Enable hold-to-repeat with exponential acceleration */
+  enableHoldRepeat?: boolean;
 }
 
 export function HealthEnergyAllocator({
@@ -44,11 +49,16 @@ export function HealthEnergyAllocator({
   onEnergyChange,
   variant = 'card',
   disabled = false,
+  enableHoldRepeat = false,
 }: HealthEnergyAllocatorProps) {
   const spent = hpBonus + energyBonus;
   const remaining = poolTotal - spent;
   const isOverspent = remaining < 0;
   const isComplete = remaining === 0;
+  
+  // Max bonus is constrained by remaining pool
+  const maxHpBonus = hpBonus + remaining;
+  const maxEnergyBonus = energyBonus + remaining;
 
   // Inline variant for character sheet edit mode
   if (variant === 'inline') {
@@ -76,36 +86,26 @@ export function HealthEnergyAllocator({
               <span className="text-xs text-text-muted">{hpBonus} pts (Max: {maxHp})</span>
             </div>
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => onHpChange(Math.max(0, hpBonus - 1))}
-                disabled={disabled || hpBonus <= 0}
-                className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                  !disabled && hpBonus > 0
-                    ? 'bg-red-100 hover:bg-red-200 text-red-600'
-                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                )}
-              >
-                −
-              </button>
-              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
+              <ValueStepper
+                value={hpBonus}
+                onChange={onHpChange}
+                min={0}
+                max={maxHpBonus}
+                size="sm"
+                variant="compact"
+                colorVariant="health"
+                enableHoldRepeat={enableHoldRepeat}
+                disabled={disabled}
+                hideValue
+                decrementTitle="Remove HP bonus"
+                incrementTitle="Add HP bonus"
+              />
+              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden mx-1">
                 <div
                   className="h-full bg-red-500 transition-all duration-200"
                   style={{ width: `${(hpBonus / poolTotal) * 100}%` }}
                 />
               </div>
-              <button
-                onClick={() => onHpChange(hpBonus + 1)}
-                disabled={disabled || remaining <= 0}
-                className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                  !disabled && remaining > 0
-                    ? 'bg-red-100 hover:bg-red-200 text-red-600'
-                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                )}
-              >
-                +
-              </button>
             </div>
           </div>
           
@@ -119,36 +119,26 @@ export function HealthEnergyAllocator({
               <span className="text-xs text-text-muted">{energyBonus} pts (Max: {maxEnergy})</span>
             </div>
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => onEnergyChange(Math.max(0, energyBonus - 1))}
-                disabled={disabled || energyBonus <= 0}
-                className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                  !disabled && energyBonus > 0
-                    ? 'bg-blue-100 hover:bg-blue-200 text-blue-600'
-                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                )}
-              >
-                −
-              </button>
-              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden">
+              <ValueStepper
+                value={energyBonus}
+                onChange={onEnergyChange}
+                min={0}
+                max={maxEnergyBonus}
+                size="sm"
+                variant="compact"
+                colorVariant="energy"
+                enableHoldRepeat={enableHoldRepeat}
+                disabled={disabled}
+                hideValue
+                decrementTitle="Remove Energy bonus"
+                incrementTitle="Add Energy bonus"
+              />
+              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden mx-1">
                 <div
                   className="h-full bg-blue-500 transition-all duration-200"
                   style={{ width: `${(energyBonus / poolTotal) * 100}%` }}
                 />
               </div>
-              <button
-                onClick={() => onEnergyChange(energyBonus + 1)}
-                disabled={disabled || remaining <= 0}
-                className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                  !disabled && remaining > 0
-                    ? 'bg-blue-100 hover:bg-blue-200 text-blue-600'
-                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                )}
-              >
-                +
-              </button>
             </div>
           </div>
         </div>
@@ -195,36 +185,23 @@ export function HealthEnergyAllocator({
             <span className="text-lg font-bold text-danger-600">{maxHp}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onHpChange(Math.max(0, hpBonus - 1))}
-              disabled={disabled || hpBonus <= 0}
-              className={cn(
-                'w-10 h-10 rounded-lg font-bold text-lg transition-colors',
-                'flex items-center justify-center',
-                disabled || hpBonus <= 0
-                  ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                  : 'bg-danger-light text-danger-600 hover:bg-danger-200'
-              )}
-            >
-              −
-            </button>
+            <ValueStepper
+              value={hpBonus}
+              onChange={onHpChange}
+              min={0}
+              max={maxHpBonus}
+              size="lg"
+              colorVariant="health"
+              enableHoldRepeat={enableHoldRepeat}
+              disabled={disabled}
+              hideValue
+              decrementTitle="Remove HP bonus"
+              incrementTitle="Add HP bonus"
+            />
             <div className="flex-1 text-center">
               <span className="text-xl font-bold text-primary">+{hpBonus}</span>
               <span className="text-xs text-tertiary ml-1">bonus</span>
             </div>
-            <button
-              onClick={() => onHpChange(hpBonus + 1)}
-              disabled={disabled || remaining <= 0}
-              className={cn(
-                'w-10 h-10 rounded-lg font-bold text-lg transition-colors',
-                'flex items-center justify-center',
-                disabled || remaining <= 0
-                  ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                  : 'bg-success-light text-success-600 hover:bg-success-200'
-              )}
-            >
-              +
-            </button>
           </div>
         </div>
 
@@ -235,36 +212,23 @@ export function HealthEnergyAllocator({
             <span className="text-lg font-bold text-info-600">{maxEnergy}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onEnergyChange(Math.max(0, energyBonus - 1))}
-              disabled={disabled || energyBonus <= 0}
-              className={cn(
-                'w-10 h-10 rounded-lg font-bold text-lg transition-colors',
-                'flex items-center justify-center',
-                disabled || energyBonus <= 0
-                  ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                  : 'bg-danger-light text-danger-600 hover:bg-danger-200'
-              )}
-            >
-              −
-            </button>
+            <ValueStepper
+              value={energyBonus}
+              onChange={onEnergyChange}
+              min={0}
+              max={maxEnergyBonus}
+              size="lg"
+              colorVariant="energy"
+              enableHoldRepeat={enableHoldRepeat}
+              disabled={disabled}
+              hideValue
+              decrementTitle="Remove Energy bonus"
+              incrementTitle="Add Energy bonus"
+            />
             <div className="flex-1 text-center">
               <span className="text-xl font-bold text-primary">+{energyBonus}</span>
               <span className="text-xs text-tertiary ml-1">bonus</span>
             </div>
-            <button
-              onClick={() => onEnergyChange(energyBonus + 1)}
-              disabled={disabled || remaining <= 0}
-              className={cn(
-                'w-10 h-10 rounded-lg font-bold text-lg transition-colors',
-                'flex items-center justify-center',
-                disabled || remaining <= 0
-                  ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                  : 'bg-success-light text-success-600 hover:bg-success-200'
-              )}
-            >
-              +
-            </button>
           </div>
         </div>
       </div>

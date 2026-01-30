@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn, formatDamageDisplay } from '@/lib/utils';
-import { LoginPromptModal, GridListRow } from '@/components/shared';
+import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
@@ -400,25 +400,18 @@ function DefenseBlock({
       </label>
       <div className="text-2xl font-bold text-text-primary mb-1">{totalValue}</div>
       <div className="flex items-center justify-center gap-1">
-        <button
+        <DecrementButton
           onClick={() => onChange(Math.max(0, bonusValue - 1))}
           disabled={bonusValue <= 0}
-          className={cn(
-            'w-6 h-6 rounded flex items-center justify-center text-sm',
-            bonusValue <= 0 
-              ? 'bg-neutral-100 text-text-muted cursor-not-allowed' 
-              : 'bg-red-100 text-red-700 hover:bg-red-200'
-          )}
-        >
-          −
-        </button>
+          size="xs"
+          enableHoldRepeat
+        />
         <span className="text-xs text-text-muted w-8">+{bonusValue}</span>
-        <button
+        <IncrementButton
           onClick={() => onChange(bonusValue + 1)}
-          className="w-6 h-6 rounded bg-green-100 text-green-700 hover:bg-green-200 flex items-center justify-center text-sm"
-        >
-          +
-        </button>
+          size="xs"
+          enableHoldRepeat
+        />
       </div>
     </div>
   );
@@ -1537,22 +1530,13 @@ function CreatureCreatorContent() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => updateSkill(skill.name, { value: Math.max(0, skill.value - 1) })}
-                          disabled={skill.value <= 0}
-                          className="w-7 h-7 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          −
-                        </button>
-                        <span className="w-8 text-center font-mono font-medium">{skill.value}</span>
-                        <button
-                          onClick={() => updateSkill(skill.name, { value: skill.value + 1 })}
-                          className="w-7 h-7 rounded bg-primary-600 text-white hover:bg-primary-700 flex items-center justify-center text-sm font-medium transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
+                      <ValueStepper
+                        value={skill.value}
+                        onChange={(newValue) => updateSkill(skill.name, { value: newValue })}
+                        min={0}
+                        size="sm"
+                        enableHoldRepeat
+                      />
                       {/* Show full bonus: ability + skill value (all creature skills are proficient) */}
                       {(() => {
                         const bonus = getSkillBonus(skill.name, skill.value, skill.proficient);

@@ -10,6 +10,7 @@
 import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, X, History, Trash2 } from 'lucide-react';
+import { ValueStepper } from '@/components/shared';
 
 interface DieRoll {
   id: string;
@@ -130,41 +131,26 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           {/* Count and Modifier */}
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setDieCount(Math.max(1, dieCount - 1))}
-                className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 font-bold"
-              >
-                −
-              </button>
-              <span className="w-8 text-center font-bold">{dieCount}</span>
-              <button
-                onClick={() => setDieCount(Math.min(10, dieCount + 1))}
-                className="w-8 h-8 rounded bg-amber-600 text-white hover:bg-amber-700 font-bold"
-              >
-                +
-              </button>
+              <ValueStepper
+                value={dieCount}
+                onChange={setDieCount}
+                min={1}
+                max={10}
+                size="sm"
+                enableHoldRepeat
+              />
               <span className="text-sm text-text-secondary">dice</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setModifier(modifier - 1)}
-                className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 font-bold"
-              >
-                −
-              </button>
-              <span className={cn(
-                'w-10 text-center font-bold',
-                modifier > 0 ? 'text-green-600' : modifier < 0 ? 'text-red-600' : 'text-text-secondary'
-              )}>
-                {formatModifier(modifier) || '±0'}
-              </span>
-              <button
-                onClick={() => setModifier(modifier + 1)}
-                className="w-8 h-8 rounded bg-amber-600 text-white hover:bg-amber-700 font-bold"
-              >
-                +
-              </button>
+              <ValueStepper
+                value={modifier}
+                onChange={setModifier}
+                size="sm"
+                formatValue={(v) => formatModifier(v) || '±0'}
+                colorValue
+                enableHoldRepeat
+              />
               <span className="text-sm text-text-secondary">mod</span>
             </div>
           </div>

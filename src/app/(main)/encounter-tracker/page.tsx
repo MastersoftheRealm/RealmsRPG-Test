@@ -11,6 +11,7 @@ import { useState, useCallback, useMemo, useEffect, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Save, GripVertical } from 'lucide-react';
 import { LoadingState } from '@/components/ui/spinner';
+import { ValueStepper } from '@/components/shared';
 
 const STORAGE_KEY = 'realms-encounter-tracker';
 
@@ -745,21 +746,14 @@ function EncounterTrackerContent() {
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Quantity</label>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setNewCombatant(prev => ({ ...prev, quantity: Math.max(1, (prev.quantity || 1) - 1) }))}
-                    className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold"
-                  >
-                    −
-                  </button>
-                  <span className="w-8 text-center font-medium">{newCombatant.quantity || 1}</span>
-                  <button
-                    type="button"
-                    onClick={() => setNewCombatant(prev => ({ ...prev, quantity: Math.min(26, (prev.quantity || 1) + 1) }))}
-                    className="w-8 h-8 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold"
-                  >
-                    +
-                  </button>
+                  <ValueStepper
+                    value={newCombatant.quantity || 1}
+                    onChange={(value) => setNewCombatant(prev => ({ ...prev, quantity: value }))}
+                    min={1}
+                    max={26}
+                    size="sm"
+                    enableHoldRepeat
+                  />
                   <span className="text-xs text-text-muted ml-2">Creates A, B, C... suffixes</span>
                 </div>
               </div>
@@ -1075,21 +1069,14 @@ function CombatantCard({
             {/* AP Tracker - Moved inline */}
             <div className="flex items-center gap-1 ml-auto">
               <span className="text-xs text-text-muted">AP:</span>
-              <button
-                onClick={() => onUpdateAP(-1)}
-                className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold text-xs"
-              >
-                −
-              </button>
-              <span className={cn('w-5 text-center text-sm font-bold', combatant.ap === 0 && 'text-red-600')}>
-                {combatant.ap}
-              </span>
-              <button
-                onClick={() => onUpdateAP(1)}
-                className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center font-bold text-xs"
-              >
-                +
-              </button>
+              <ValueStepper
+                value={combatant.ap}
+                onChange={(value) => onUpdateAP(value - combatant.ap)}
+                min={0}
+                max={10}
+                size="xs"
+                enableHoldRepeat
+              />
             </div>
           </div>
 

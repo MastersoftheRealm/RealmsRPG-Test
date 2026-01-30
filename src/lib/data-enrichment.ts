@@ -359,6 +359,27 @@ const SAVEABLE_FIELDS = [
 ] as const;
 
 /**
+ * Helper function to recursively remove undefined values from an object.
+ * Firebase doesn't accept undefined values in documents.
+ */
+function removeUndefinedValues<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeUndefinedValues(item)).filter(item => item !== undefined) as T;
+  }
+  if (typeof obj === 'object') {
+    const cleaned: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = removeUndefinedValues(value);
+      }
+    }
+    return cleaned as T;
+  }
+  return obj;
+}
+
+/**
  * Removes temporary and computed fields from character data before saving.
  * Only keeps the minimal data needed - everything else is calculated on load.
  * Mirrors the vanilla site's cleanForSave() function.
@@ -373,6 +394,34 @@ export function cleanForSave(data: Character): Partial<Character> {
     }
   }
 
+  // Clean up skills - ensure no undefined values and proper structure
+  if (Array.isArray(cleaned.skills)) {
+    cleaned.skills = cleaned.skills.map((s: unknown) => {
+      if (typeof s === 'string') return { name: s, skill_val: 0, prof: false };
+      if (s && typeof s === 'object' && 'name' in s) {
+        const skill = s as { 
+          id?: string; 
+          name: string; 
+          skill_val?: number; 
+          prof?: boolean; 
+          ability?: string;
+          baseSkill?: string | null;
+        };
+        const cleanSkill: Record<string, unknown> = {
+          name: skill.name,
+          skill_val: skill.skill_val ?? 0,
+          prof: skill.prof ?? false,
+        };
+        // Only add optional fields if they have values (not undefined/null)
+        if (skill.id) cleanSkill.id = skill.id;
+        if (skill.ability) cleanSkill.ability = skill.ability;
+        if (skill.baseSkill) cleanSkill.baseSkill = skill.baseSkill;
+        return cleanSkill;
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
   // Clean up feats - only save name, type, and currentUses
   if (Array.isArray(cleaned.feats)) {
     cleaned.feats = cleaned.feats.map((f: unknown) => {
@@ -382,6 +431,22 @@ export function cleanForSave(data: Character): Partial<Character> {
         const cleanFeat: { name: string; type?: string; currentUses?: number } = { name: feat.name };
         if (feat.type) cleanFeat.type = feat.type;
         if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
+        return cleanFeat;
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  // Clean up archetypeFeats similarly
+  if (Array.isArray(cleaned.archetypeFeats)) {
+    cleaned.archetypeFeats = (cleaned.archetypeFeats as unknown[]).map((f: unknown) => {
+      if (typeof f === 'string') return { name: f };
+      if (f && typeof f === 'object' && 'name' in f) {
+        const feat = f as { id?: string | number; name: string; currentUses?: number; maxUses?: number };
+        const cleanFeat: Record<string, unknown> = { name: feat.name };
+        if (feat.id) cleanFeat.id = feat.id;
+        if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
+        if (typeof feat.maxUses === 'number') cleanFeat.maxUses = feat.maxUses;
         return cleanFeat;
       }
       return null;
@@ -472,5 +537,6 @@ export function cleanForSave(data: Character): Partial<Character> {
     cleaned.equipment = equip;
   }
 
-  return cleaned as Partial<Character>;
+  // Final pass: remove any remaining undefined values to prevent Firebase errors
+  return removeUndefinedValues(cleaned) as Partial<Character>;
 }

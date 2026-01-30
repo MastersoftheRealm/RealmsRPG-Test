@@ -8,8 +8,9 @@
  * Supports limited uses tracking with +/- controls.
  */
 
-import { Heart, Star, Sparkles, AlertTriangle, Check, Plus, Minus } from 'lucide-react';
+import { Heart, Star, Sparkles, AlertTriangle, Check } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { DecrementButton, IncrementButton } from './value-stepper';
 
 // =============================================================================
 // Types
@@ -207,19 +208,12 @@ export function SpeciesTraitCard({
             {hasLimitedUses && (
               <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                 {onUsesChange && (
-                  <button
+                  <DecrementButton
                     onClick={() => onUsesChange(-1)}
                     disabled={usesRemaining <= 0}
-                    className={cn(
-                      'w-5 h-5 flex items-center justify-center rounded transition-colors',
-                      usesRemaining > 0
-                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                    )}
+                    size="xs"
                     title="Use trait"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
+                  />
                 )}
                 <span className={cn(
                   'text-xs font-medium min-w-[36px] text-center',
@@ -228,19 +222,12 @@ export function SpeciesTraitCard({
                   {usesRemaining}/{maxUses}
                 </span>
                 {onUsesChange && (
-                  <button
+                  <IncrementButton
                     onClick={() => onUsesChange(1)}
                     disabled={usesRemaining >= maxUses}
-                    className={cn(
-                      'w-5 h-5 flex items-center justify-center rounded transition-colors',
-                      usesRemaining < maxUses
-                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                    )}
+                    size="xs"
                     title="Restore use"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
+                  />
                 )}
               </div>
             )}

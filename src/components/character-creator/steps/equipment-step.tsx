@@ -14,9 +14,10 @@ import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
-import { SearchInput } from '@/components/shared';
+import { SearchInput, DecrementButton, IncrementButton } from '@/components/shared';
 import { Spinner } from '@/components/ui/spinner';
-import { Plus, Minus, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { TabNavigation } from '@/components/ui/tab-navigation';
+import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import type { Item } from '@/types';
 
 // Unified item type for display in equipment step
@@ -345,31 +346,17 @@ export function EquipmentStep() {
       )}
 
       {/* Type Tabs */}
-      <div className="flex gap-2 mb-4">
-        {(['weapon', 'armor', 'equipment'] as const).map(type => {
-          const count = allEquipment.filter(e => e.type === type).length;
-          return (
-            <button
-              key={type}
-              onClick={() => setActiveTab(type)}
-              className={cn(
-                'px-4 py-2 rounded-lg font-medium capitalize transition-colors flex items-center gap-2',
-                activeTab === type
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
-              )}
-            >
-              {type}s
-              <span className={cn(
-                'px-1.5 py-0.5 text-xs rounded-full',
-                activeTab === type ? 'bg-primary-500 text-white' : 'bg-neutral-200 text-text-secondary'
-              )}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <TabNavigation
+        tabs={[
+          { id: 'weapon', label: 'Weapons', count: allEquipment.filter(e => e.type === 'weapon').length },
+          { id: 'armor', label: 'Armor', count: allEquipment.filter(e => e.type === 'armor').length },
+          { id: 'equipment', label: 'Equipment', count: allEquipment.filter(e => e.type === 'equipment').length },
+        ]}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as 'weapon' | 'armor' | 'equipment')}
+        variant="pill"
+        className="mb-4"
+      />
 
       {/* Search */}
       <div className="mb-4">
@@ -418,36 +405,22 @@ export function EquipmentStep() {
                 <div className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-1">
-                    <button
+                    <DecrementButton
                       onClick={() => removeItem(item.id)}
                       disabled={quantity === 0}
-                      className={cn(
-                        'w-7 h-7 rounded-full flex items-center justify-center transition-colors',
-                        quantity > 0
-                          ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                      )}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
+                      size="sm"
+                    />
                     <span className={cn(
                       'w-8 text-center font-bold',
                       quantity > 0 ? 'text-primary-600' : 'text-text-muted'
                     )}>
                       {quantity}
                     </span>
-                    <button
+                    <IncrementButton
                       onClick={() => addItem(item)}
                       disabled={!canAfford}
-                      className={cn(
-                        'w-7 h-7 rounded-full flex items-center justify-center transition-colors',
-                        canAfford
-                          ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                      )}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                      size="sm"
+                    />
                   </div>
                   
                   {/* Item Info */}

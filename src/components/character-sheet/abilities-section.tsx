@@ -14,7 +14,7 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
-import { RollButton, PointStatus } from '@/components/shared';
+import { RollButton, PointStatus, EditSectionToggle, getEditState, DecrementButton, IncrementButton } from '@/components/shared';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 // =============================================================================
@@ -177,8 +177,29 @@ export function AbilitiesSection({
   const maxAbility = ABILITY_CONSTRAINTS.getMaxAbility(level);
   const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
   
+  // Calculate edit state for pencil icon color
+  const abilityEditState = totalAbilityPoints !== undefined 
+    ? getEditState(spentAbilityPoints ?? calculatedSpentAbilityPoints, totalAbilityPoints)
+    : 'normal';
+  
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-4">
+    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-4 relative">
+      {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
+      {isEditMode && (
+        <div className="absolute top-3 right-3">
+          <EditSectionToggle 
+            state={abilityEditState}
+            title={
+              abilityEditState === 'has-points' 
+                ? 'You have ability points to spend' 
+                : abilityEditState === 'over-budget'
+                ? 'Over budget - remove points'
+                : 'Editing abilities & defenses'
+            }
+          />
+        </div>
+      )}
+      
       {/* Header with Point Trackers */}
       {isEditMode && (
         <div className="flex flex-wrap gap-3 mb-4 p-3 bg-surface-secondary rounded-lg">
@@ -212,7 +233,7 @@ export function AbilitiesSection({
           const info = ABILITY_INFO[ability];
           const isPower = powerAbility?.toLowerCase() === ability;
           const isMartial = martialAbility?.toLowerCase() === ability;
-          const isArchetype = archetypeAbility?.toLowerCase() === ability || isPower || isMartial;
+          const isArchetype = isPower || isMartial;
           const cost = getAbilityIncreaseCost(value);
           const canIncrease = value < maxAbility;
           const canDecrease = canDecreaseAbility(abilities, ability);
@@ -222,62 +243,39 @@ export function AbilitiesSection({
               key={ability}
               className={cn(
                 'flex flex-col items-center p-3 bg-gradient-to-b from-neutral-50 to-neutral-100 rounded-xl border-2 transition-all',
-                isArchetype ? 'border-amber-400' : 'border-neutral-200',
+                isArchetype ? 'border-amber-300' : 'border-neutral-200',
                 !isEditMode && 'hover:shadow-md'
               )}
             >
-              {/* Ability badge for power/martial */}
-              {isArchetype && (
-                <span className={cn(
-                  'text-[9px] font-bold uppercase px-1.5 py-0.5 rounded mb-1',
-                  isPower && isMartial ? 'bg-amber-100 text-amber-700' :
-                  isPower ? 'bg-purple-100 text-purple-700' :
-                  isMartial ? 'bg-red-100 text-red-700' :
-                  'bg-amber-100 text-amber-700'
-                )}>
-                  {isPower && isMartial ? 'Archetype' : isPower ? 'Power' : isMartial ? 'Martial' : 'Archetype'}
-                </span>
-              )}
-              
-              {/* Ability Name */}
-              <span className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+              {/* Ability Name with small emoji indicators */}
+              <span className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2 flex items-center gap-1">
                 {info.name}
+                {isPower && <span title="Power Ability" className="text-[10px]">🔮</span>}
+                {isMartial && <span title="Martial Ability" className="text-[10px]">⚔️</span>}
               </span>
               
               {/* Ability Value / Roll Button */}
               {isEditMode ? (
                 <div className="flex items-center gap-1">
-                  <button
+                  <DecrementButton
                     onClick={() => onAbilityChange?.(ability, value - 1)}
                     disabled={!canDecrease}
-                    className={cn(
-                      'w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold transition-colors',
-                      canDecrease
-                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                    )}
-                  >
-                    −
-                  </button>
+                    size="sm"
+                    enableHoldRepeat
+                  />
                   <span className={cn(
                     'text-2xl font-bold min-w-[56px] text-center',
                     value > 0 ? 'text-success-600' : value < 0 ? 'text-danger-600' : 'text-text-secondary'
                   )}>
                     {formatBonus(value)}
                   </span>
-                  <button
+                  <IncrementButton
                     onClick={() => onAbilityChange?.(ability, value + 1)}
                     disabled={!canIncrease}
+                    size="sm"
                     title={canIncrease ? `Cost: ${cost} point${cost > 1 ? 's' : ''}` : `Max at level ${level}`}
-                    className={cn(
-                      'w-7 h-7 rounded-full flex items-center justify-center text-lg font-bold transition-colors',
-                      canIncrease
-                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                    )}
-                  >
-                    +
-                  </button>
+                    enableHoldRepeat
+                  />
                 </div>
               ) : (
                 <RollButton
@@ -330,34 +328,22 @@ export function AbilitiesSection({
                 {/* Defense Bonus Roll Button / Edit Controls */}
                 {isEditMode ? (
                   <div className="flex items-center gap-1">
-                    <button
+                    <DecrementButton
                       onClick={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
                       disabled={!canDecreaseDefense}
-                      className={cn(
-                        'w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                        canDecreaseDefense
-                          ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                      )}
-                    >
-                      −
-                    </button>
+                      size="xs"
+                      enableHoldRepeat
+                    />
                     <span className="text-sm font-bold min-w-[36px] text-center text-blue-600">
                       {formatBonus(defenseBonus)}
                     </span>
-                    <button
+                    <IncrementButton
                       onClick={() => onDefenseChange?.(defenseKey, defenseValue + 1)}
                       disabled={!canIncreaseDefense}
+                      size="xs"
                       title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max at level ${level}`}
-                      className={cn(
-                        'w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-                        canIncreaseDefense
-                          ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                          : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
-                      )}
-                    >
-                      +
-                    </button>
+                      enableHoldRepeat
+                    />
                   </div>
                 ) : (
                   <RollButton

@@ -15,7 +15,7 @@ import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
-import { RollButton, PointStatus } from '@/components/shared';
+import { RollButton, PointStatus, EditSectionToggle, getEditState } from '@/components/shared';
 import type { Abilities } from '@/types';
 
 interface Skill {
@@ -26,6 +26,8 @@ interface Skill {
   prof?: boolean;
   baseSkill?: string;
   ability?: string;
+  // Available abilities for this skill (from RTDB)
+  availableAbilities?: string[];
 }
 
 interface SkillsSectionProps {
@@ -33,6 +35,8 @@ interface SkillsSectionProps {
   abilities: Abilities;
   isEditMode?: boolean;
   totalSkillPoints?: number;
+  // Species skills are locked and can't have proficiency removed
+  speciesSkills?: string[];
   onSkillChange?: (skillId: string, updates: Partial<Skill>) => void;
   onRemoveSkill?: (skillId: string) => void;
   onAddSkill?: () => void;
@@ -68,12 +72,88 @@ export function SkillsSection({
   abilities,
   isEditMode = false,
   totalSkillPoints,
+  speciesSkills = [],
   onSkillChange,
   onRemoveSkill,
   onAddSkill,
   onAddSubSkill,
 }: SkillsSectionProps) {
   const rollContext = useRollsOptional();
+  
+  // Check if a skill is from species (locked)
+  const isSpeciesSkill = (skillName: string): boolean => {
+    return speciesSkills.includes(skillName);
+  };
+  
+  // Handle proficiency toggle with proper logic
+  const handleProfToggle = (skill: Skill) => {
+    if (!onSkillChange) return;
+    
+    const isFromSpecies = isSpeciesSkill(skill.name);
+    if (isFromSpecies) return; // Species skills can't have proficiency toggled
+    
+    if (skill.prof) {
+      // Removing proficiency: also reset skill_val to 0
+      onSkillChange(skill.id, { prof: false, skill_val: 0 });
+    } else {
+      // Adding proficiency
+      onSkillChange(skill.id, { prof: true });
+    }
+  };
+  
+  // Handle skill value increase with proper logic
+  const handleSkillIncrease = (skill: Skill) => {
+    if (!onSkillChange) return;
+    
+    const isSubSkill = Boolean(skill.baseSkill);
+    const isFromSpecies = isSpeciesSkill(skill.name);
+    
+    if (isSubSkill) {
+      // Sub-skill logic
+      const parent = skills.find(s => s.name === skill.baseSkill);
+      if (!skill.prof) {
+        // Not proficient: check base skill proficiency first
+        if (!parent?.prof) {
+          // Can't become proficient if parent isn't proficient
+          return;
+        }
+        // Make proficient and set skill_val to 1
+        onSkillChange(skill.id, { prof: true, skill_val: 1 });
+      } else {
+        // Already proficient: increase skill_val
+        onSkillChange(skill.id, { skill_val: skill.skill_val + 1 });
+      }
+    } else {
+      // Base skill logic
+      if (!skill.prof && !isFromSpecies) {
+        // Not proficient: make proficient first (don't increase value)
+        onSkillChange(skill.id, { prof: true });
+      } else {
+        // Already proficient or species skill: increase skill_val
+        onSkillChange(skill.id, { skill_val: skill.skill_val + 1 });
+      }
+    }
+  };
+  
+  // Handle skill value decrease
+  const handleSkillDecrease = (skill: Skill) => {
+    if (!onSkillChange) return;
+    
+    const isSubSkill = Boolean(skill.baseSkill);
+    
+    if (isSubSkill) {
+      if (skill.prof && skill.skill_val <= 1) {
+        // Can't go below 1 if proficient: remove proficiency
+        onSkillChange(skill.id, { prof: false, skill_val: 0 });
+      } else if (skill.skill_val > 0) {
+        onSkillChange(skill.id, { skill_val: skill.skill_val - 1 });
+      }
+    } else {
+      if (skill.skill_val > 0) {
+        onSkillChange(skill.id, { skill_val: skill.skill_val - 1 });
+      }
+    }
+  };
   
   // Separate base skills and sub-skills, then sort for display
   const { baseSkills, subSkillsByParent } = useMemo(() => {
@@ -129,35 +209,71 @@ export function SkillsSection({
   
   const remaining = totalSkillPoints !== undefined ? totalSkillPoints - totalSpent : undefined;
   
-  // Calculate bonus for a skill
+  // Calculate bonus for a skill - matches vanilla site logic
   const getSkillBonus = (skill: Skill): number => {
     const abilityKey = (skill.ability || 'strength').toLowerCase() as keyof Abilities;
     const abilityValue = abilities[abilityKey] ?? 0;
     const skillValue = skill.skill_val || 0;
     
-    // Prof bonus for base skills, or parent prof for sub-skills
-    let profBonus = 0;
+    // Helper: calculate unproficient bonus
+    // If ability is negative, double it; otherwise divide by 2 (rounded down)
+    const unprofBonus = (aVal: number): number => {
+      return aVal < 0 ? aVal * 2 : Math.floor(aVal / 2);
+    };
+    
     if (skill.baseSkill) {
-      // Sub-skill: check if parent is proficient
+      // Sub-skill logic
       const parent = skills.find(s => s.name === skill.baseSkill);
-      profBonus = parent?.prof ? 1 : 0;
+      const baseSkillVal = parent?.skill_val || 0;
+      const baseSkillProf = parent?.prof || false;
+      
+      if (!baseSkillProf) {
+        // Base skill not proficient: use unproficient calculation
+        return unprofBonus(abilityValue) + baseSkillVal;
+      } else if (skill.prof) {
+        // Both proficient: ability + skill_val + baseSkillVal
+        return abilityValue + skillValue + baseSkillVal;
+      } else {
+        // Base proficient, sub-skill not: ability + baseSkillVal
+        return abilityValue + baseSkillVal;
+      }
     } else {
-      profBonus = skill.prof ? 1 : 0;
+      // Base skill logic
+      if (skill.prof) {
+        // Proficient: ability + skill_val
+        return abilityValue + skillValue;
+      } else {
+        // Unproficient: unprofBonus(ability)
+        return unprofBonus(abilityValue);
+      }
     }
-    
-    // Unprof penalty: if ability is negative, double it; otherwise divide by 2
-    if (!skill.prof && !skill.baseSkill) {
-      const unprofPenalty = abilityValue < 0 ? abilityValue : Math.floor(abilityValue / 2);
-      return skillValue + unprofPenalty;
-    }
-    
-    return abilityValue + skillValue + profBonus;
   };
   
   // Note: PointStatus component handles color states automatically
   
+  // Calculate edit state for pencil icon color
+  const skillEditState = totalSkillPoints !== undefined 
+    ? getEditState(totalSpent, totalSkillPoints)
+    : 'normal';
+  
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
+    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 relative">
+      {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
+      {isEditMode && (
+        <div className="absolute top-3 right-3">
+          <EditSectionToggle 
+            state={skillEditState}
+            title={
+              skillEditState === 'has-points' 
+                ? 'You have skill points to spend' 
+                : skillEditState === 'over-budget'
+                ? 'Over budget - remove skill points'
+                : 'Editing skills'
+            }
+          />
+        </div>
+      )}
+      
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-text-primary">Skills</h2>
@@ -210,6 +326,14 @@ export function SkillsSection({
               const isSubSkill = Boolean(skill.baseSkill);
               const bonus = getSkillBonus(skill);
               const abilityAbbr = ABILITY_ABBR[(skill.ability || 'strength').toLowerCase()] || 'STR';
+              const isFromSpecies = isSpeciesSkill(skill.name);
+              
+              // Get available abilities for this skill (from RTDB data or fallback to all)
+              const skillAbilityOptions = skill.availableAbilities && skill.availableAbilities.length > 0
+                ? ABILITY_OPTIONS.filter(opt => 
+                    skill.availableAbilities!.some(a => a.toLowerCase() === opt.value)
+                  )
+                : ABILITY_OPTIONS;
               
               return (
                 <tr 
@@ -224,16 +348,22 @@ export function SkillsSection({
                   <td className="py-2 text-center">
                     {!isSubSkill && (
                       <button
-                        onClick={() => isEditMode && onSkillChange?.(skill.id, { prof: !skill.prof })}
-                        disabled={!isEditMode}
+                        onClick={() => isEditMode && handleProfToggle(skill)}
+                        disabled={!isEditMode || isFromSpecies}
                         className={cn(
                           'w-4 h-4 rounded-full inline-block transition-all',
                           skill.prof 
                             ? 'bg-blue-600 border-2 border-blue-600' 
                             : 'bg-orange-400 border-2 border-orange-400',
-                          isEditMode && 'cursor-pointer hover:scale-110'
+                          isEditMode && !isFromSpecies && 'cursor-pointer hover:scale-110',
+                          isFromSpecies && 'opacity-70'
                         )}
-                        title={skill.prof ? 'Proficient (click to toggle)' : 'Not proficient (click to toggle)'}
+                        title={isFromSpecies 
+                          ? 'Species skill (locked)' 
+                          : skill.prof 
+                            ? 'Proficient (click to toggle)' 
+                            : 'Not proficient (click to toggle)'
+                        }
                       />
                     )}
                   </td>
@@ -245,18 +375,21 @@ export function SkillsSection({
                   )}>
                     {isSubSkill && <span className="text-text-muted mr-1">└</span>}
                     {skill.name}
+                    {isFromSpecies && (
+                      <span className="ml-1 text-xs text-text-muted">(Species)</span>
+                    )}
                   </td>
                   
                   {/* Ability */}
                   <td className="py-2 text-center">
-                    {isEditMode && onSkillChange ? (
+                    {isEditMode && onSkillChange && skillAbilityOptions.length > 1 ? (
                       <select
-                        value={skill.ability || 'strength'}
+                        value={skill.ability || skillAbilityOptions[0]?.value || 'strength'}
                         onChange={(e) => onSkillChange(skill.id, { ability: e.target.value })}
                         className="text-xs px-1 py-0.5 rounded border border-neutral-300 bg-neutral-50 text-text-secondary cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {ABILITY_OPTIONS.map(opt => (
+                        {skillAbilityOptions.map(opt => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                       </select>
@@ -291,11 +424,11 @@ export function SkillsSection({
                     <td className="py-2 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => onSkillChange?.(skill.id, { skill_val: Math.max(0, skill.skill_val - 1) })}
-                          disabled={skill.skill_val <= 0}
+                          onClick={() => handleSkillDecrease(skill)}
+                          disabled={skill.skill_val <= 0 && !skill.prof}
                           className={cn(
                             'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                            skill.skill_val > 0
+                            (skill.skill_val > 0 || skill.prof)
                               ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
                               : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
                           )}
@@ -306,7 +439,7 @@ export function SkillsSection({
                           {skill.skill_val}
                         </span>
                         <button
-                          onClick={() => onSkillChange?.(skill.id, { skill_val: skill.skill_val + 1 })}
+                          onClick={() => handleSkillIncrease(skill)}
                           className="w-6 h-6 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center text-sm font-bold text-text-secondary transition-colors"
                         >
                           +

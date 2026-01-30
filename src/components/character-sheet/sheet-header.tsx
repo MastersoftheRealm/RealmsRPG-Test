@@ -3,6 +3,8 @@
  * ======================
  * Displays character identity, portrait, and vital stats
  * Defense blocks are clickable to roll saving throws
+ * 
+ * Uses shared ValueStepper component with hold-to-repeat for health/energy
  */
 
 'use client';
@@ -13,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { useRollsOptional } from './roll-context';
 import { HealthEnergyAllocator } from '@/components/creator';
+import { ValueStepper } from '@/components/shared';
 import type { Character } from '@/types';
 
 interface CalculatedStats {
@@ -97,13 +100,19 @@ function ResourceBar({
       </div>
       {showControls && onChange && (
         <div className="flex gap-2 mt-1 items-center justify-center">
-          <button
-            onClick={() => onChange(Math.max(0, current - 1))}
-            className="px-2 py-1 bg-neutral-200 rounded hover:bg-neutral-300 text-sm font-bold"
-            disabled={current <= 0}
-          >
-            −
-          </button>
+          <ValueStepper
+            value={current}
+            onChange={onChange}
+            min={0}
+            max={max}
+            colorVariant={color === 'red' ? 'health' : 'energy'}
+            enableHoldRepeat
+            size="sm"
+            variant="compact"
+            hideValue
+            decrementTitle={`Decrease ${label.toLowerCase()}`}
+            incrementTitle={`Increase ${label.toLowerCase()}`}
+          />
           <input
             type="number"
             value={current}
@@ -112,13 +121,6 @@ function ResourceBar({
             min={0}
             max={max}
           />
-          <button
-            onClick={() => onChange(Math.min(max, current + 1))}
-            className="px-2 py-1 bg-neutral-200 rounded hover:bg-neutral-300 text-sm font-bold"
-            disabled={current >= max}
-          >
-            +
-          </button>
         </div>
       )}
     </div>

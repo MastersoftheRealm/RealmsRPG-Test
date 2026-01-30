@@ -15,7 +15,8 @@ import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
-import { PartChipList, type PartData } from '@/components/shared/part-chip';
+import { PartChipList, type PartData, EditSectionToggle } from '@/components/shared';
+import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
 
@@ -596,19 +597,7 @@ export function LibrarySection({
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
   const rollContext = useRollsOptional();
   
-  // Calculate unarmed prowess - always present weapon option
-  const unarmedProwess = useMemo((): Item | null => {
-    if (!abilities) return null;
-    const str = abilities.strength || 0;
-    const unarmedDamage = Math.ceil(str / 2);
-    return {
-      id: '__unarmed_prowess__',
-      name: 'Unarmed Prowess',
-      description: 'Your bare fists. Damage is based on your Strength score.',
-      damage: `${unarmedDamage} Bludgeoning`,
-      equipped: true, // Always "equipped" since you always have fists
-    };
-  }, [abilities]);
+  // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
   const tabs: { id: TabType; label: string; count?: number; onAdd?: () => void }[] = [
     { id: 'powers', label: 'Powers', count: powers.length, onAdd: onAddPower },
@@ -629,27 +618,26 @@ export function LibrarySection({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6">
+    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 relative">
+      {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
+      {isEditMode && (
+        <div className="absolute top-3 right-3">
+          <EditSectionToggle 
+            state="normal"
+            title="Editing library (powers, techniques, inventory, feats)"
+          />
+        </div>
+      )}
+      
       {/* Tabs */}
-      <div className="flex flex-wrap gap-1 mb-4 border-b border-neutral-200 pb-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors',
-              activeTab === tab.id
-                ? 'bg-primary-100 text-primary-700 border-b-2 border-primary-600'
-                : 'text-text-muted hover:text-text-secondary hover:bg-neutral-100'
-            )}
-          >
-            {tab.label}
-            {tab.count !== undefined && (
-              <span className="ml-1 text-xs opacity-70">({tab.count})</span>
-            )}
-          </button>
-        ))}
-      </div>
+      <TabNavigation
+        tabs={tabs.map(t => ({ id: t.id, label: t.label, count: t.count }))}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+        variant="underline"
+        size="sm"
+        className="mb-4"
+      />
 
       {/* Armament Proficiency Display - only for weapons/armor/equipment tabs */}
       {activeTab === 'inventory' && martialProficiency !== undefined && (
@@ -838,40 +826,7 @@ export function LibrarySection({
                   </button>
                 )}
               </div>
-              {/* Unarmed Prowess - always first */}
-              {unarmedProwess && (
-                <div className="border border-dashed border-neutral-300 rounded-lg overflow-hidden bg-neutral-50/50 mb-2">
-                  <div className="flex items-center">
-                    <div className="flex-1 flex items-center justify-between px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-text-muted">👊</span>
-                        <span className="font-medium text-text-secondary">{unarmedProwess.name}</span>
-                        <span className="text-xs text-text-muted italic">Always available</span>
-                      </div>
-                      <span className="text-red-500 font-medium text-sm">{unarmedProwess.damage}</span>
-                    </div>
-                    {rollContext && (
-                      <div className="flex items-center gap-1 pr-2">
-                        <button
-                          onClick={() => rollContext.rollAttack('Unarmed', abilities?.strength || 0)}
-                          className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-                          title="Roll unarmed attack"
-                        >
-                          ⚔️ Atk
-                        </button>
-                        <button
-                          onClick={() => rollContext.rollDamage(`${unarmedProwess.damage} bludgeoning`)}
-                          className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
-                          title="Roll unarmed damage"
-                        >
-                          💥 Dmg
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              {/* Other weapons */}
+              {/* Weapons list */}
               {weapons.length > 0 ? (
                 weapons.map((item, i) => {
                   const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
@@ -889,9 +844,7 @@ export function LibrarySection({
                   );
                 })
               ) : (
-                !unarmedProwess && (
-                  <p className="text-text-muted text-sm italic text-center py-2">No weapons</p>
-                )
+                <p className="text-text-muted text-sm italic text-center py-2">No weapons (see Unarmed Prowess in Archetype section)</p>
               )}
             </div>
             

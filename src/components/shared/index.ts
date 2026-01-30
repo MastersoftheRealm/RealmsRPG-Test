@@ -17,7 +17,10 @@ export { RollButton, rollButtonVariants, type RollButtonProps } from './roll-but
 export { PointStatus, type PointStatusProps } from './point-status';
 
 // ValueStepper - Unified +/- controls (abilities, skills, quantities)
-export { ValueStepper, type ValueStepperProps } from './value-stepper';
+export { ValueStepper, DecrementButton, IncrementButton, type ValueStepperProps, type StepperButtonProps } from './value-stepper';
+
+// EditSectionToggle - Blue pencil icon for edit mode sections
+export { EditSectionToggle, getEditState, type EditState } from './edit-section-toggle';
 
 // ============================================================================
 // Item display components

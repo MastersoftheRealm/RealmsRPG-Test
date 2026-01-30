@@ -906,23 +906,13 @@ function ItemCreatorContent() {
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-text-secondary">Range:</span>
                   <span className="font-medium text-amber-600 min-w-[80px]">{rangeDisplay}</span>
-                  <div className="flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setRangeLevel(prev => Math.max(0, prev - 1))}
-                      disabled={rangeLevel === 0}
-                      className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-neutral-300 disabled:cursor-not-allowed"
-                    >
-                      -
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRangeLevel(prev => prev + 1)}
-                      className="w-8 h-8 flex items-center justify-center bg-amber-600 text-white rounded-lg hover:bg-amber-700"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <NumberStepper
+                    value={rangeLevel}
+                    onChange={setRangeLevel}
+                    min={0}
+                    max={20}
+                    size="sm"
+                  />
                   {rangeLevel > 0 && (
                     <span className="text-xs text-text-muted">(8 spaces per level)</span>
                   )}
@@ -982,25 +972,13 @@ function ItemCreatorContent() {
                   <label className="block text-sm font-medium text-text-secondary mb-2">
                     Damage Reduction
                   </label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setDamageReduction(Math.max(0, damageReduction - 1))}
-                      className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
-                    >
-                      −
-                    </button>
-                    <span className="w-12 text-center text-2xl font-bold text-text-primary">
-                      {damageReduction}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setDamageReduction(Math.min(10, damageReduction + 1))}
-                      className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <NumberStepper
+                    value={damageReduction}
+                    onChange={setDamageReduction}
+                    min={0}
+                    max={10}
+                    size="lg"
+                  />
                   <p className="text-xs text-text-muted mt-1">Reduces physical damage taken</p>
                 </div>
                 
@@ -1009,25 +987,13 @@ function ItemCreatorContent() {
                   <label className="block text-sm font-medium text-text-secondary mb-2">
                     Agility Reduction
                   </label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setAgilityReduction(Math.max(0, agilityReduction - 1))}
-                      className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
-                    >
-                      −
-                    </button>
-                    <span className="w-12 text-center text-2xl font-bold text-text-primary">
-                      {agilityReduction}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setAgilityReduction(Math.min(6, agilityReduction + 1))}
-                      className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <NumberStepper
+                    value={agilityReduction}
+                    onChange={setAgilityReduction}
+                    min={0}
+                    max={6}
+                    size="lg"
+                  />
                   <p className="text-xs text-text-muted mt-1">Reduces Agility for wearing this armor</p>
                 </div>
                 
@@ -1036,25 +1002,13 @@ function ItemCreatorContent() {
                   <label className="block text-sm font-medium text-text-secondary mb-2">
                     Critical Range Increase
                   </label>
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setCriticalRangeIncrease(Math.max(0, criticalRangeIncrease - 1))}
-                      className="w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 font-bold text-lg transition-colors"
-                    >
-                      −
-                    </button>
-                    <span className="w-12 text-center text-2xl font-bold text-text-primary">
-                      {criticalRangeIncrease}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setCriticalRangeIncrease(Math.min(6, criticalRangeIncrease + 1))}
-                      className="w-10 h-10 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 font-bold text-lg transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
+                  <NumberStepper
+                    value={criticalRangeIncrease}
+                    onChange={setCriticalRangeIncrease}
+                    min={0}
+                    max={6}
+                    size="lg"
+                  />
                   <p className="text-xs text-text-muted mt-1">Increases critical hit range</p>
                 </div>
               </div>

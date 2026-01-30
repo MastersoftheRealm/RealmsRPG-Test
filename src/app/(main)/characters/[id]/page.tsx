@@ -713,14 +713,27 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Add skills handler
   const handleAddSkills = useCallback((newSkills: { id: string; name: string; ability?: string[]; base_skill?: string | null }[]) => {
     if (!character) return;
-    const skillsToAdd = newSkills.map(s => ({
-      id: s.id,
-      name: s.name,
-      category: s.ability?.[0] || 'other',
-      skill_val: 0,
-      prof: false,
-      baseSkill: s.base_skill || undefined,
-    }));
+    const skillsToAdd = newSkills.map(s => {
+      const skill: {
+        id: string;
+        name: string;
+        category: string;
+        skill_val: number;
+        prof: boolean;
+        ability?: string;
+        baseSkill?: string;
+      } = {
+        id: s.id,
+        name: s.name,
+        category: s.ability?.[0] || 'other',
+        skill_val: 0,
+        prof: false,
+      };
+      // Only add optional fields if they have values (avoid undefined)
+      if (s.ability?.[0]) skill.ability = s.ability[0];
+      if (s.base_skill) skill.baseSkill = s.base_skill;
+      return skill;
+    });
     
     // Skills are stored as array of objects at runtime, but typed as Record
     // Cast to handle the type mismatch
@@ -1017,8 +1030,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onDefenseChange={handleDefenseChange}
               />
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-1">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] gap-4">
+              <div>
                 <SkillsSection
                   skills={skills}
                   abilities={character.abilities}
@@ -1031,7 +1044,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 />
               </div>
               
-              <div className="lg:col-span-1">
+              <div>
                 <ArchetypeSection
                   character={character}
                   isEditMode={isEditMode}
@@ -1041,7 +1054,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 />
               </div>
               
-              <div className="lg:col-span-1">
+              <div>
                 <LibrarySection
                   powers={enrichedData?.powers || character.powers || []}
                   techniques={enrichedData?.techniques || character.techniques || []}

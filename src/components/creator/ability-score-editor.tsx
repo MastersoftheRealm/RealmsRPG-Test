@@ -19,7 +19,7 @@
 
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { PointStatus } from '@/components/shared/point-status';
+import { PointStatus, DecrementButton, IncrementButton } from '@/components/shared';
 import type { AbilityName, Abilities } from '@/types';
 
 export interface AbilityScoreEditorProps {
@@ -190,18 +190,12 @@ export function AbilityScoreEditor({
 
               <div className="flex items-center justify-center gap-2">
                 {isEditMode && (
-                  <button
+                  <DecrementButton
                     onClick={() => onAbilityChange(ability, value - 1)}
                     disabled={!canDec}
-                    className={cn(
-                      'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors',
-                      canDec
-                        ? 'bg-neutral-100 hover:bg-neutral-200 text-text-secondary'
-                        : 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
-                    )}
-                  >
-                    −
-                  </button>
+                    size="md"
+                    enableHoldRepeat
+                  />
                 )}
 
                 <div className={cn(
@@ -214,19 +208,13 @@ export function AbilityScoreEditor({
                 </div>
 
                 {isEditMode && (
-                  <button
+                  <IncrementButton
                     onClick={() => onAbilityChange(ability, value + 1)}
                     disabled={!canInc}
+                    size="md"
                     title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
-                    className={cn(
-                      'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors',
-                      canInc
-                        ? 'bg-neutral-100 hover:bg-neutral-200 text-text-secondary'
-                        : 'bg-neutral-50 text-neutral-300 cursor-not-allowed'
-                    )}
-                  >
-                    +
-                  </button>
+                    enableHoldRepeat
+                  />
                 )}
               </div>
 
