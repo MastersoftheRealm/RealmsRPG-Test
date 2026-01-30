@@ -72,7 +72,7 @@ export function HealthEnergyAllocator({
             'text-xs font-bold px-2 py-0.5 rounded-full',
             remaining > 0 ? 'bg-green-100 text-green-700' :
             remaining < 0 ? 'bg-red-100 text-red-700' :
-            'bg-neutral-100 text-text-secondary'
+            'bg-surface-alt text-text-secondary'
           )}>
             {remaining} / {poolTotal} remaining
           </span>
@@ -100,7 +100,7 @@ export function HealthEnergyAllocator({
                 decrementTitle="Remove HP bonus"
                 incrementTitle="Add HP bonus"
               />
-              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden mx-1">
+              <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden mx-1">
                 <div
                   className="h-full bg-red-500 transition-all duration-200"
                   style={{ width: `${(hpBonus / poolTotal) * 100}%` }}
@@ -110,7 +110,7 @@ export function HealthEnergyAllocator({
           </div>
           
           {/* Divider */}
-          <div className="w-px h-10 bg-neutral-300" />
+          <div className="w-px h-10 bg-border-light" />
           
           {/* Energy Points */}
           <div className="flex-1">
@@ -133,7 +133,7 @@ export function HealthEnergyAllocator({
                 decrementTitle="Remove Energy bonus"
                 incrementTitle="Add Energy bonus"
               />
-              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden mx-1">
+              <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden mx-1">
                 <div
                   className="h-full bg-blue-500 transition-all duration-200"
                   style={{ width: `${(energyBonus / poolTotal) * 100}%` }}

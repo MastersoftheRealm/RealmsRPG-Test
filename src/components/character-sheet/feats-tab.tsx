@@ -127,8 +127,8 @@ function FeatCard({ feat, onUsesChange, isEditMode }: FeatCardProps) {
                 className={cn(
                   'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
                   currentUses > 0
-                    ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
+                    ? 'bg-surface hover:bg-surface-alt text-text-secondary'
+                    : 'bg-surface text-border-light cursor-not-allowed'
                 )}
                 title="Spend use"
               >
@@ -146,8 +146,8 @@ function FeatCard({ feat, onUsesChange, isEditMode }: FeatCardProps) {
                 className={cn(
                   'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
                   currentUses < maxUses
-                    ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                    : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
+                    ? 'bg-surface hover:bg-surface-alt text-text-secondary'
+                    : 'bg-surface text-border-light cursor-not-allowed'
                 )}
                 title="Recover use"
               >

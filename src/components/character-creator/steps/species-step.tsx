@@ -71,7 +71,7 @@ export function SpeciesStep() {
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-text-primary">{s.name}</h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 bg-neutral-100 text-text-secondary rounded capitalize">
+                  <span className="text-xs px-2 py-0.5 bg-surface-alt text-text-secondary rounded capitalize">
                     {getSizesDisplay(s)}
                   </span>
                   {/* NO SPEED - species don't have speed values in RTDB */}

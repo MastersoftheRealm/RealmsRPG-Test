@@ -208,6 +208,55 @@ CSS classes available:
 - `.chip-action`, `.chip-activation`, etc. - Category variants
 - `.chip-success`, `.chip-danger`, etc. - Status variants
 
+### Creator Summary Panel
+
+Unified sticky sidebar component for all creator tools (power, technique, item, creature).
+
+```tsx
+import { CreatorSummaryPanel } from '@/components/creator';
+
+<CreatorSummaryPanel
+  title="Power Summary"
+  // Cost stat boxes (Energy, TP, Currency)
+  costStats={[
+    { label: 'Energy Cost', value: 10, icon: <Zap />, color: 'energy' },
+    { label: 'Training Points', value: 3, icon: <Target />, color: 'tp' },
+  ]}
+  // Optional rarity badge
+  badge={{ label: 'Rare', className: 'bg-blue-100 text-blue-800' }}
+  // Key-value stat rows
+  statRows={[
+    { label: 'Action', value: 'Basic Action' },
+    { label: 'Range', value: '60 ft.' },
+  ]}
+  // Resource tracking items (with auto-coloring)
+  items={[
+    { label: 'Ability Points', remaining: 5 },
+    { label: 'Skill Points', remaining: -1 }, // Shows as danger
+  ]}
+  // Quick stats (HP, EN chips)
+  quickStats={[
+    { label: 'HP', value: 30, color: 'bg-red-50 text-red-600' },
+  ]}
+  // Breakdown lists
+  breakdowns={[
+    { title: 'TP Breakdown', items: ['Part A: +2', 'Part B: +1'] },
+    { title: 'Properties', items: [{ label: 'Finesse', detail: 'Lvl 2' }] },
+  ]}
+>
+  {/* Optional children (alerts, etc.) */}
+  <Alert variant="success">Saved!</Alert>
+</CreatorSummaryPanel>
+```
+
+**Cost Stat Colors:**
+| Color | Theme | Use Case |
+|-------|-------|----------|
+| `energy` | Blue | Energy costs |
+| `tp` | Purple | Training Points |
+| `health` | Red | Health/damage stats |
+| `currency` | Amber | Currency costs |
+
 ### Tab Navigation
 
 ```tsx

@@ -55,7 +55,7 @@ export function CollapsibleSection({
   if (optional && !enabled) {
     return (
       <div className={cn(
-        'rounded-xl border-2 border-dashed border-neutral-300 bg-surface-secondary p-6',
+        'rounded-xl border-2 border-dashed border-border-light bg-surface-secondary p-6',
         className
       )}>
         <div className="flex items-center justify-between">
@@ -94,7 +94,7 @@ export function CollapsibleSection({
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-primary">{title}</h3>
               {typeof itemCount === 'number' && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-neutral-100 text-secondary rounded-full">
+                <span className="px-2 py-0.5 text-xs font-medium bg-surface-alt text-secondary rounded-full">
                   {itemCount}
                 </span>
               )}

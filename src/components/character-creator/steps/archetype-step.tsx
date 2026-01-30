@@ -131,7 +131,7 @@ export function ArchetypeStep() {
                 'p-6 rounded-xl border-2 text-left transition-all',
                 selectedType === type
                   ? 'border-primary-600 bg-primary-50 shadow-lg'
-                  : 'border-border-light bg-surface hover:border-neutral-300 hover:shadow'
+                  : 'border-border-light bg-surface hover:border-border hover:shadow'
               )}
             >
               <h3 className="text-lg font-bold text-text-primary mb-2">{info.title}</h3>
@@ -166,7 +166,7 @@ export function ArchetypeStep() {
                         selectedAbility === ability
                           ? 'bg-purple-600 text-white'
                           : selectedMartialAbility === ability
-                          ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
+                          ? 'bg-surface text-text-muted cursor-not-allowed'
                           : 'bg-surface border border-border-light hover:border-purple-400'
                       )}
                     >
@@ -189,7 +189,7 @@ export function ArchetypeStep() {
                         selectedMartialAbility === ability
                           ? 'bg-red-600 text-white'
                           : selectedAbility === ability
-                          ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
+                          ? 'bg-surface text-text-muted cursor-not-allowed'
                           : 'bg-surface border border-border-light hover:border-red-400'
                       )}
                     >
@@ -211,7 +211,7 @@ export function ArchetypeStep() {
                       ? selectedType === 'power' 
                         ? 'bg-purple-600 text-white'
                         : 'bg-red-600 text-white'
-                      : 'bg-surface border border-border-light hover:border-neutral-400'
+                      : 'bg-surface border border-border-light hover:border-border'
                   )}
                 >
                   {ability.charAt(0).toUpperCase() + ability.slice(1)}

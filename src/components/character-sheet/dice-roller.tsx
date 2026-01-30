@@ -100,7 +100,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           onClick={() => setShowHistory(!showHistory)}
           className={cn(
             'p-2 rounded-lg transition-colors',
-            showHistory ? 'bg-primary-100 text-primary-700' : 'text-text-muted hover:bg-neutral-100'
+            showHistory ? 'bg-primary-100 text-primary-700' : 'text-text-muted hover:bg-surface-alt'
           )}
           title="Roll history"
         >
@@ -120,7 +120,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                   'py-2 px-1 rounded-lg text-sm font-bold transition-colors',
                   dieType === die
                     ? 'bg-primary-600 text-white'
-                    : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
+                    : 'bg-surface-alt text-text-secondary hover:bg-surface'
                 )}
               >
                 d{die}
@@ -177,7 +177,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                   <span key={i} className={cn(
                     'px-2 py-0.5 rounded',
                     r === lastRoll.dieType ? 'bg-green-200 text-green-800' :
-                    r === 1 ? 'bg-red-200 text-red-800' : 'bg-neutral-200'
+                    r === 1 ? 'bg-red-200 text-red-800' : 'bg-surface'
                   )}>
                     {r}
                   </span>

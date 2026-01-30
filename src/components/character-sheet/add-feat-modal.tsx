@@ -292,7 +292,7 @@ export function AddFeatModal({
                 'px-3 py-1 rounded-full text-sm transition-colors',
                 !selectedCategory
                   ? 'bg-primary-600 text-white'
-                  : 'bg-neutral-100 text-text-muted hover:bg-neutral-200'
+                  : 'bg-surface-alt text-text-muted hover:bg-surface'
               )}
             >
               All
@@ -305,7 +305,7 @@ export function AddFeatModal({
                   'px-3 py-1 rounded-full text-sm transition-colors',
                   selectedCategory === cat
                     ? 'bg-primary-600 text-white'
-                    : 'bg-neutral-100 text-text-muted hover:bg-neutral-200'
+                    : 'bg-surface-alt text-text-muted hover:bg-surface'
                 )}
               >
                 {cat}
@@ -365,7 +365,7 @@ export function AddFeatModal({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-neutral-200 transition-colors"
+              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-surface transition-colors"
             >
               Cancel
             </button>
@@ -376,7 +376,7 @@ export function AddFeatModal({
                 'px-4 py-2 rounded-lg font-medium transition-colors',
                 selectedFeats.length > 0
                   ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-neutral-200 text-text-muted cursor-not-allowed'
+                  : 'bg-surface text-text-muted cursor-not-allowed'
               )}
             >
               Add {selectedFeats.length > 0 ? `(${selectedFeats.length})` : ''}

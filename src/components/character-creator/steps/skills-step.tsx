@@ -189,7 +189,7 @@ export function SkillsStep() {
             <div key={ability} className="bg-surface rounded-xl shadow-md overflow-hidden">
               <button
                 onClick={() => toggleCategory(ability)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-neutral-100 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <h3 className="font-bold text-text-primary">{ability}</h3>
@@ -339,7 +339,7 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
   return (
     <div className={cn(
       'p-2 rounded-lg border transition-colors text-sm',
-      !isUnlocked && 'opacity-50 bg-neutral-100 border-border-light',
+      !isUnlocked && 'opacity-50 bg-surface border-border-light',
       isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
       isUnlocked && value === 0 && 'bg-surface-alt border-border-light'
     )}>

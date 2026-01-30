@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Character Card Component
  * =========================
  * Displays a character summary with portrait and actions
@@ -92,9 +92,9 @@ export function AddCharacterCard({ onClick }: AddCharacterCardProps) {
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-300 bg-surface-secondary hover:border-primary-400 hover:bg-primary-50 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 min-h-[280px] cursor-pointer"
+      className="group flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border-light bg-surface-secondary hover:border-primary-400 hover:bg-primary-50 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 min-h-[280px] cursor-pointer"
     >
-      <div className="w-16 h-16 rounded-full bg-neutral-200 group-hover:bg-primary-100 flex items-center justify-center transition-colors">
+      <div className="w-16 h-16 rounded-full bg-surface group-hover:bg-primary-100 flex items-center justify-center transition-colors">
         <Plus className="w-8 h-8 text-text-muted group-hover:text-primary-600" />
       </div>
       <span className="mt-4 font-semibold text-text-muted group-hover:text-primary-600">

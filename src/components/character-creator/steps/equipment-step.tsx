@@ -442,7 +442,7 @@ export function EquipmentStep() {
                           </span>
                         )}
                         {item.properties.slice(0, 2).map(prop => (
-                          <span key={prop} className="px-2 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded">
+                          <span key={prop} className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded">
                             {prop}
                           </span>
                         ))}

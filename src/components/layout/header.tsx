@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Main Navigation Header
  * =======================
  * Site-wide navigation with dropdowns
@@ -94,12 +94,12 @@ export function Header() {
                 {/* Hover bridge: invisible pseudo-element to prevent dropdown from closing */}
                 <div className="hidden group-hover:block absolute right-0 top-full pt-4 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-4">
                   <div className="w-48 bg-surface rounded-lg shadow-lg border border-border-light py-2">
-                    <Link href="/my-account" className="block px-4 py-2 text-text-secondary hover:bg-neutral-100">
+                    <Link href="/my-account" className="block px-4 py-2 text-text-secondary hover:bg-surface-alt">
                       My Account
                     </Link>
                     <button
                       onClick={() => signOut()}
-                      className="w-full text-left px-4 py-2 text-text-secondary hover:bg-neutral-100"
+                      className="w-full text-left px-4 py-2 text-text-secondary hover:bg-surface-alt"
                     >
                       Sign Out
                     </button>
@@ -181,8 +181,8 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
               key={subItem.href}
               href={subItem.href}
               className={cn(
-                'block px-5 py-3 text-primary-700 hover:bg-neutral-200 hover:text-primary-500 transition-colors',
-                pathname === subItem.href ? 'bg-neutral-100 text-primary-500' : ''
+                'block px-5 py-3 text-primary-700 hover:bg-surface hover:text-primary-500 transition-colors',
+                pathname === subItem.href ? 'bg-surface-alt text-primary-500' : ''
               )}
             >
               {subItem.label}

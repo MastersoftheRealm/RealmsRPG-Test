@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Button Component
  * ==================
  * Reusable button with variants using class-variance-authority
@@ -17,10 +17,10 @@ const buttonVariants = cva(
       variant: {
         primary: 'bg-gradient-to-b from-primary-500 to-primary-700 text-primary-foreground hover:from-primary-400 hover:to-primary-600 hover:shadow-lg focus-visible:ring-primary-accent',
         gradient: 'bg-gradient-to-r from-primary-light to-primary text-primary-foreground hover:from-primary-500 hover:to-primary-600 focus-visible:ring-primary-accent shadow-md',
-        secondary: 'bg-neutral-200 text-text-secondary border border-neutral-300 hover:bg-neutral-300 focus-visible:ring-neutral-500',
+        secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-border',
         danger: 'bg-gradient-to-b from-danger-600 to-danger-dark text-white hover:shadow-lg focus-visible:ring-danger',
         success: 'bg-gradient-to-b from-success-500 to-success-dark text-white hover:shadow-lg focus-visible:ring-success',
-        ghost: 'text-text-secondary hover:bg-neutral-100 hover:text-text-primary focus-visible:ring-neutral-500',
+        ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-border',
         link: 'text-primary-600 underline-offset-4 hover:underline focus-visible:ring-primary-accent',
         outline: 'border-2 border-primary-700 text-primary-700 bg-transparent hover:bg-primary-50 focus-visible:ring-primary-accent',
         utility: 'bg-utility-300 text-white hover:bg-utility-400 focus-visible:ring-utility-300',

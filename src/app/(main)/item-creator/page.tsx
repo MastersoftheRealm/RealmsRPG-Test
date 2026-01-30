@@ -21,6 +21,7 @@ import { LoginPromptModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
+import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
 import { db } from '@/lib/firebase/client';
 import { collection, query, where, getDocs, addDoc, setDoc, doc } from 'firebase/firestore';
@@ -181,7 +182,7 @@ function PropertyCard({
                   onUpdate({ property: newProp, op_1_lvl: 0 });
                 }
               }}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
             >
               {selectableProperties.map((p, idx) => (
                 <option key={p.id} value={idx}>
@@ -809,7 +810,7 @@ function ItemCreatorContent() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter item name..."
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
               
@@ -826,7 +827,7 @@ function ItemCreatorContent() {
                         'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
                         armamentType === type.value
                           ? 'bg-amber-600 text-white'
-                          : 'bg-neutral-100 hover:bg-neutral-200 text-text-secondary'
+                          : 'bg-surface-alt hover:bg-surface text-text-secondary'
                       )}
                     >
                       <type.icon className="w-4 h-4" />
@@ -845,7 +846,7 @@ function ItemCreatorContent() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe your item..."
                   rows={2}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 />
               </div>
             </div>
@@ -859,7 +860,7 @@ function ItemCreatorContent() {
                 {/* Handedness Toggle */}
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-text-secondary">Handedness:</span>
-                  <div className="flex rounded-lg border border-neutral-300 overflow-hidden">
+                  <div className="flex rounded-lg border border-border-light overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setIsTwoHanded(false)}
@@ -867,7 +868,7 @@ function ItemCreatorContent() {
                         "px-4 py-2 text-sm font-medium transition-colors",
                         !isTwoHanded
                           ? "bg-amber-600 text-white"
-                          : "bg-surface-alt text-text-secondary hover:bg-neutral-100"
+                          : "bg-surface-alt text-text-secondary hover:bg-surface"
                       )}
                     >
                       One-Handed
@@ -879,7 +880,7 @@ function ItemCreatorContent() {
                         "px-4 py-2 text-sm font-medium transition-colors",
                         isTwoHanded
                           ? "bg-amber-600 text-white"
-                          : "bg-surface-alt text-text-secondary hover:bg-neutral-100"
+                          : "bg-surface-alt text-text-secondary hover:bg-surface"
                       )}
                     >
                       Two-Handed
@@ -923,7 +924,7 @@ function ItemCreatorContent() {
                   <select
                     value={damage.size}
                     onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                    className="px-3 py-2 border border-neutral-300 rounded-lg"
+                    className="px-3 py-2 border border-border-light rounded-lg"
                   >
                     {DIE_SIZES.map((size) => (
                       <option key={size} value={size}>
@@ -935,7 +936,7 @@ function ItemCreatorContent() {
                 <select
                   value={damage.type}
                   onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                  className="px-3 py-2 border border-neutral-300 rounded-lg"
+                  className="px-3 py-2 border border-border-light rounded-lg"
                 >
                   {DAMAGE_TYPES.filter((t) => t !== 'none').map((type) => (
                     <option key={type} value={type}>
@@ -1019,7 +1020,7 @@ function ItemCreatorContent() {
                     <select
                       value={shieldDR.size}
                       onChange={(e) => setShieldDR((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                      className="px-3 py-2 border border-neutral-300 rounded-lg"
+                      className="px-3 py-2 border border-border-light rounded-lg"
                     >
                       {DIE_SIZES.map((size) => (
                         <option key={size} value={size}>
@@ -1061,7 +1062,7 @@ function ItemCreatorContent() {
                         <select
                           value={shieldDamage.size}
                           onChange={(e) => setShieldDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                          className="px-3 py-2 border border-neutral-300 rounded-lg"
+                          className="px-3 py-2 border border-border-light rounded-lg"
                         >
                           {DIE_SIZES.map((size) => (
                             <option key={size} value={size}>
@@ -1103,7 +1104,7 @@ function ItemCreatorContent() {
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-border-light rounded-lg"
                 >
                   <option value="">None</option>
                   {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (
@@ -1167,116 +1168,52 @@ function ItemCreatorContent() {
 
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
-          <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Item Summary</h3>
-
-            {/* Rarity Badge */}
-            <div className="text-center mb-6">
-              <span className={cn(
-                'inline-block px-4 py-1 rounded-full font-bold text-lg',
-                RARITY_COLORS[rarity] || RARITY_COLORS.Common
-              )}>
-                {rarity}
-              </span>
-            </div>
-
-            {/* Cost Display */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-amber-50 rounded-lg p-4 text-center">
-                <Coins className="w-6 h-6 mx-auto text-amber-600 mb-1" />
-                <div className="text-2xl font-bold text-amber-600">{currencyCost.toLocaleString()}</div>
-                <div className="text-xs text-amber-600">Currency Cost</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4 text-center">
-                <Target className="w-6 h-6 mx-auto text-purple-600 mb-1" />
-                <div className="text-2xl font-bold text-purple-600">{costs.totalTP}</div>
-                <div className="text-xs text-purple-600">Training Points</div>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="space-y-2 text-sm mb-6">
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Type:</span>
-                <span className="font-medium">{armamentType}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Item Points:</span>
-                <span className="font-medium">{costs.totalIP} IP</span>
-              </div>
-              {armamentType === 'Weapon' && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Handedness:</span>
-                    <span className="font-medium">{isTwoHanded ? 'Two-Handed' : 'One-Handed'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Range:</span>
-                    <span className="font-medium">{rangeDisplay}</span>
-                  </div>
-                </>
-              )}
-              {armamentType === 'Armor' && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Damage Reduction:</span>
-                    <span className="font-medium">{damageReduction}</span>
-                  </div>
-                  {agilityReduction > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Agility Reduction:</span>
-                      <span className="font-medium text-red-600">-{agilityReduction}</span>
-                    </div>
-                  )}
-                </>
-              )}
-              {armamentType === 'Shield' && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Shield Block:</span>
-                    <span className="font-medium">{shieldDR.amount}d{shieldDR.size}</span>
-                  </div>
-                  {hasShieldDamage && (
-                    <div className="flex justify-between">
-                      <span className="text-text-secondary">Shield Damage:</span>
-                      <span className="font-medium">{shieldDamage.amount}d{shieldDamage.size}</span>
-                    </div>
-                  )}
-                </>
-              )}
-              {damageDisplay && (
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Damage:</span>
-                  <span className="font-medium">{damageDisplay}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Property Summary */}
-            {selectedProperties.length > 0 && (
-              <div className="border-t border-border-subtle pt-4">
-                <h4 className="text-sm font-medium text-text-secondary mb-2">Properties</h4>
-                <ul className="text-xs text-text-secondary space-y-1">
-                  {selectedProperties.map((sp, i) => (
-                    <li key={i}>
-                      • {sp.property.name}
-                      {sp.op_1_lvl > 0 && ` (Lvl ${sp.op_1_lvl})`}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
+          <CreatorSummaryPanel
+            title="Item Summary"
+            badge={{
+              label: rarity,
+              className: RARITY_COLORS[rarity] || RARITY_COLORS.Common,
+            }}
+            costStats={[
+              { label: 'Currency Cost', value: currencyCost, icon: <Coins className="w-6 h-6" />, color: 'currency' },
+              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            ]}
+            statRows={[
+              { label: 'Type', value: armamentType },
+              { label: 'Item Points', value: `${costs.totalIP} IP` },
+              ...(armamentType === 'Weapon' ? [
+                { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
+                { label: 'Range', value: rangeDisplay },
+              ] : []),
+              ...(armamentType === 'Armor' ? [
+                { label: 'Damage Reduction', value: String(damageReduction) },
+                ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-red-600' }] : []),
+              ] : []),
+              ...(armamentType === 'Shield' ? [
+                { label: 'Shield Block', value: `${shieldDR.amount}d${shieldDR.size}` },
+                ...(hasShieldDamage ? [{ label: 'Shield Damage', value: `${shieldDamage.amount}d${shieldDamage.size}` }] : []),
+              ] : []),
+              ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
+            ]}
+            breakdowns={selectedProperties.length > 0 ? [
+              { 
+                title: 'Properties', 
+                items: selectedProperties.map(sp => ({
+                  label: sp.property.name,
+                  detail: sp.op_1_lvl > 0 ? `Lvl ${sp.op_1_lvl}` : undefined,
+                }))
+              }
+            ] : undefined}
+          >
             {/* Save Message */}
             {saveMessage && (
               <Alert 
                 variant={saveMessage.type === 'success' ? 'success' : 'danger'}
-                className="mt-4"
               >
                 {saveMessage.text}
               </Alert>
             )}
-          </div>
+          </CreatorSummaryPanel>
         </div>
       </div>
 

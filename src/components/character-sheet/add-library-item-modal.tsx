@@ -206,7 +206,7 @@ export function AddLibraryItemModal({
               )}
             </div>
           ) : (
-            <ul className="divide-y divide-neutral-100">
+            <ul className="divide-y divide-border-subtle">
               {filteredItems.map((item) => (
                 <li 
                   key={item.id}
@@ -223,7 +223,7 @@ export function AddLibraryItemModal({
                     w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
                     ${selectedIds.has(item.id) 
                       ? 'bg-primary-600 border-primary-600' 
-                      : 'border-neutral-300'
+                      : 'border-border-light'
                     }
                   `}>
                     {selectedIds.has(item.id) && (

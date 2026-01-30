@@ -211,7 +211,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
               'px-2 py-2 transition-colors border-r',
               isInnate 
                 ? 'text-purple-600 bg-purple-100 hover:bg-purple-200' 
-                : 'text-text-muted hover:bg-neutral-100'
+                : 'text-text-muted hover:bg-surface-alt'
             )}
             title={isInnate ? 'Remove from innate' : 'Set as innate'}
           >
@@ -250,7 +250,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
               'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
               canUse 
                 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                : 'bg-neutral-100 text-text-muted cursor-not-allowed'
+                : 'bg-surface text-text-muted cursor-not-allowed'
             )}
             title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
           >
@@ -337,7 +337,7 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
               'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
               canUse 
                 ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                : 'bg-neutral-100 text-text-muted cursor-not-allowed'
+                : 'bg-surface text-text-muted cursor-not-allowed'
             )}
             title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
           >
@@ -421,7 +421,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
               'px-2 py-2 transition-colors',
               item.equipped 
                 ? 'text-green-600 bg-green-100 hover:bg-green-200' 
-                : 'text-text-muted hover:bg-neutral-100'
+                : 'text-text-muted hover:bg-surface-alt'
             )}
             title={item.equipped ? 'Unequip' : 'Equip'}
           >
@@ -447,8 +447,8 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
                     className={cn(
                       'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
                       (item.quantity || 1) > 1
-                        ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                        : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
+                        ? 'bg-surface hover:bg-surface-alt text-text-secondary'
+                        : 'bg-surface text-border-light cursor-not-allowed'
                     )}
                     title="Decrease quantity"
                   >
@@ -457,7 +457,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
                   <span className="text-xs text-text-muted min-w-[1.5rem] text-center">×{item.quantity || 1}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); onQuantityChange(1); }}
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-neutral-200 hover:bg-neutral-300 text-text-secondary transition-colors"
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-surface hover:bg-surface-alt text-text-secondary transition-colors"
                     title="Increase quantity"
                   >
                     +
@@ -824,7 +824,7 @@ export function LibrarySection({
                 {isEditMode && onAddWeapon && (
                   <button
                     onClick={onAddWeapon}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-surface-alt text-text-secondary rounded hover:bg-surface transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     Add
@@ -860,7 +860,7 @@ export function LibrarySection({
                 {isEditMode && onAddArmor && (
                   <button
                     onClick={onAddArmor}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-surface-alt text-text-secondary rounded hover:bg-surface transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     Add
@@ -890,7 +890,7 @@ export function LibrarySection({
                 {isEditMode && onAddEquipment && (
                   <button
                     onClick={onAddEquipment}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-surface-alt text-text-secondary rounded hover:bg-surface transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     Add

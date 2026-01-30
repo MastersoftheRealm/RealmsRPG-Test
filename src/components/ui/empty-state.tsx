@@ -76,7 +76,7 @@ export function EmptyState({
       {icon && (
         <div
           className={cn(
-            'flex items-center justify-center rounded-full bg-neutral-100 text-text-muted mb-4',
+            'flex items-center justify-center rounded-full bg-surface-alt text-text-muted mb-4',
             sizes.iconWrapper
           )}
         >

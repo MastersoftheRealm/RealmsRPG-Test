@@ -104,7 +104,7 @@ export function ArchetypeSelector({
                 'p-4 rounded-xl border-2 text-left transition-all',
                 isSelected
                   ? 'border-primary-500 bg-primary-50 shadow-md'
-                  : 'border-border-light bg-surface hover:border-neutral-300 hover:shadow',
+                  : 'border-border-light bg-surface hover:border-border hover:shadow',
                 disabled && 'opacity-50 cursor-not-allowed'
               )}
             >
@@ -171,7 +171,7 @@ export function ArchetypeSelector({
                 key={i}
                 className={cn(
                   'w-1 h-1 rounded-full',
-                  i === sliderValue ? 'bg-primary-600' : 'bg-neutral-300'
+                  i === sliderValue ? 'bg-primary-600' : 'bg-border-light'
                 )}
               />
             ))}

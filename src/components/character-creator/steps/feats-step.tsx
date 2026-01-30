@@ -197,8 +197,8 @@ export function FeatsStep() {
               isSelected
                 ? 'bg-primary-600 border-primary-600 text-white'
                 : requirements.met && canSelect
-                  ? 'border-neutral-300 hover:border-primary-400 hover:bg-primary-50'
-                  : 'border-border-light bg-neutral-100 cursor-not-allowed'
+                  ? 'border-border-light hover:border-primary-400 hover:bg-primary-50'
+                  : 'border-border-light bg-surface-alt cursor-not-allowed'
             )}
           >
             {isSelected && '✓'}
@@ -208,7 +208,7 @@ export function FeatsStep() {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-medium text-text-primary">{feat.name}</span>
               {feat.category && (
-                <span className="px-1.5 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded">
+                <span className="px-1.5 py-0.5 text-xs bg-surface-alt text-text-secondary rounded">
                   {feat.category}
                 </span>
               )}
@@ -361,13 +361,13 @@ export function FeatsStep() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search feats..."
-          className="flex-1 min-w-[200px] px-3 py-2 border border-neutral-300 rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          className="flex-1 min-w-[200px] px-3 py-2 border border-border-light rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
         />
         
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-neutral-300 rounded-lg"
+          className="px-3 py-2 border border-border-light rounded-lg"
         >
           <option value="">All Categories</option>
           {categories.map(cat => (
@@ -382,7 +382,7 @@ export function FeatsStep() {
               'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               featTypeFilter === 'all'
                 ? 'bg-primary-600 text-white'
-                : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
+                : 'bg-surface-alt text-text-secondary hover:bg-surface'
             )}
           >
             All
@@ -393,7 +393,7 @@ export function FeatsStep() {
               'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               featTypeFilter === 'archetype'
                 ? 'bg-amber-500 text-white'
-                : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
+                : 'bg-surface-alt text-text-secondary hover:bg-surface'
             )}
           >
             Archetype
@@ -404,7 +404,7 @@ export function FeatsStep() {
               'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               featTypeFilter === 'character'
                 ? 'bg-blue-500 text-white'
-                : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
+                : 'bg-surface-alt text-text-secondary hover:bg-surface'
             )}
           >
             Character

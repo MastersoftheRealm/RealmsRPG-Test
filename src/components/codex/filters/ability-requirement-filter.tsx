@@ -63,7 +63,7 @@ export function AbilityRequirementFilter({
         <select
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
-          className="flex-1 px-3 py-2 border border-neutral-300 rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         >
           <option value="">Choose ability</option>
           {availableAbilities.map(ability => (
@@ -79,7 +79,7 @@ export function AbilityRequirementFilter({
           onKeyPress={handleKeyPress}
           placeholder="Max"
           min="0"
-          className="w-20 px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="w-20 px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
         <IconButton
           variant="primary"

@@ -23,6 +23,7 @@ import { LoginPromptModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
+import { CreatorSummaryPanel } from '@/components/creator';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
@@ -184,7 +185,7 @@ function PartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -211,7 +212,7 @@ function PartCard({
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
@@ -786,7 +787,7 @@ function TechniqueCreatorContent() {
                     const selected = allWeaponOptions.find(w => String(w.id) === selectedId);
                     if (selected) setWeapon(selected);
                   }}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg"
                 >
                   {/* Default options */}
                   <optgroup label="General">
@@ -817,7 +818,7 @@ function TechniqueCreatorContent() {
                 <select
                   value={actionType}
                   onChange={(e) => setActionType(e.target.value)}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg"
                 >
                   {ACTION_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -891,7 +892,7 @@ function TechniqueCreatorContent() {
                 <select
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                  className="px-3 py-2 border border-neutral-300 rounded-lg"
+                  className="px-3 py-2 border border-border-light rounded-lg"
                 >
                   {DIE_SIZES.map((size) => (
                     <option key={size} value={size}>
@@ -911,63 +912,30 @@ function TechniqueCreatorContent() {
 
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
-          <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Technique Summary</h3>
-
-            {/* Cost Display */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-red-50 rounded-lg p-4 text-center">
-                <Zap className="w-6 h-6 mx-auto text-red-600 mb-1" />
-                <div className="text-3xl font-bold text-red-600">{costs.totalEnergy}</div>
-                <div className="text-xs text-red-600">Energy Cost</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4 text-center">
-                <Target className="w-6 h-6 mx-auto text-purple-600 mb-1" />
-                <div className="text-3xl font-bold text-purple-600">{costs.totalTP}</div>
-                <div className="text-xs text-purple-600">Training Points</div>
-              </div>
-            </div>
-
-            {/* Derived Stats */}
-            <div className="space-y-2 text-sm mb-6">
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Action:</span>
-                <span className="font-medium">{actionTypeDisplay}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Weapon:</span>
-                <span className="font-medium">{weapon.name}</span>
-              </div>
-              {damageDisplay && (
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Damage:</span>
-                  <span className="font-medium">{damageDisplay}</span>
-                </div>
-              )}
-            </div>
-
-            {/* TP Sources */}
-            {costs.tpSources.length > 0 && (
-              <div className="border-t border-border-subtle pt-4 mb-6">
-                <h4 className="text-sm font-medium text-text-secondary mb-2">TP Breakdown</h4>
-                <ul className="text-xs text-text-secondary space-y-1">
-                  {costs.tpSources.map((src, i) => (
-                    <li key={i}>• {src}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
+          <CreatorSummaryPanel
+            title="Technique Summary"
+            costStats={[
+              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'health' },
+              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            ]}
+            statRows={[
+              { label: 'Action', value: actionTypeDisplay },
+              { label: 'Weapon', value: weapon.name },
+              ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
+            ]}
+            breakdowns={costs.tpSources.length > 0 ? [
+              { title: 'TP Breakdown', items: costs.tpSources }
+            ] : undefined}
+          >
             {/* Save Message */}
             {saveMessage && (
               <Alert 
                 variant={saveMessage.type === 'success' ? 'success' : 'danger'}
-                className="mt-4"
               >
                 {saveMessage.text}
               </Alert>
             )}
-          </div>
+          </CreatorSummaryPanel>
         </div>
       </div>
 

@@ -165,7 +165,7 @@ function TagList({ label, items, variant = 'default' }: {
   if (!items || items.length === 0) return null;
   
   const colors = {
-    default: 'bg-neutral-100 text-text-secondary',
+    default: 'bg-surface-alt text-text-secondary',
     success: 'bg-green-100 text-green-700',
     danger: 'bg-red-100 text-red-700',
     warning: 'bg-yellow-100 text-yellow-700',
@@ -260,7 +260,7 @@ export function CreatureStatBlock({
         <div className="p-4 space-y-4">
           {/* Description */}
           {creature.description && (
-            <p className="text-sm text-text-muted italic border-l-2 border-neutral-300 pl-3">
+            <p className="text-sm text-text-muted italic border-l-2 border-border-light pl-3">
               {creature.description}
             </p>
           )}

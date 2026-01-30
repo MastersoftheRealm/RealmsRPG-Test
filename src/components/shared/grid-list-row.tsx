@@ -122,7 +122,7 @@ const BADGE_COLORS = {
   purple: 'bg-purple-100 text-purple-800',
   green: 'bg-success-100 text-success-700',
   amber: 'bg-amber-100 text-amber-800',
-  gray: 'bg-neutral-100 text-neutral-700',
+  gray: 'bg-surface-alt text-text-secondary',
   red: 'bg-danger-100 text-danger-700',
 };
 
@@ -225,7 +225,7 @@ export function GridListRow({
               'w-10 flex-shrink-0 flex items-center justify-center border-r transition-colors',
               isSelected 
                 ? 'bg-primary-500 text-white' 
-                : 'bg-surface-alt text-text-muted hover:bg-neutral-100',
+                : 'bg-surface-alt text-text-muted hover:bg-surface',
               disabled && 'cursor-not-allowed'
             )}
             aria-label={isSelected ? 'Deselect' : 'Select'}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Chip Component
  * ===============
  * Small tag/badge for displaying labels
@@ -15,9 +15,9 @@ const chipVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-neutral-100 text-text-secondary border-border-light',
+        default: 'bg-surface-alt text-text-secondary border-border-light',
         primary: 'bg-primary-700 text-primary-foreground border-primary-600',
-        secondary: 'bg-neutral-200 text-text-secondary border-neutral-300',
+        secondary: 'bg-surface text-text-secondary border-border-light',
         outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
         accent: 'bg-accent-chip text-primary-700 border-accent-200',
         

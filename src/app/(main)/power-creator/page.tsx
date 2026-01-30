@@ -23,6 +23,7 @@ import { LoginPromptModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
+import { CreatorSummaryPanel } from '@/components/creator';
 import {
   calculatePowerCosts,
   computePowerActionTypeFromSelection,
@@ -232,7 +233,7 @@ function PartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -259,7 +260,7 @@ function PartCard({
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
@@ -583,7 +584,7 @@ function AdvancedMechanicsSection({
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-6 py-4 flex items-center justify-between bg-surface-alt hover:bg-neutral-100 transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between bg-surface-alt hover:bg-surface-alt transition-colors"
       >
         <div className="flex items-center gap-2">
           {expanded ? (
@@ -607,7 +608,7 @@ function AdvancedMechanicsSection({
               );
             })}
             {selectedAdvancedParts.length > 5 && (
-              <span className="px-2 py-0.5 rounded text-xs font-medium bg-neutral-200 text-text-secondary">
+              <span className="px-2 py-0.5 rounded text-xs font-medium bg-surface-alt text-text-secondary">
                 +{selectedAdvancedParts.length - 5} more
               </span>
             )}
@@ -1327,7 +1328,7 @@ function PowerCreatorContent() {
               <select
                 value={actionType}
                 onChange={(e) => setActionType(e.target.value)}
-                className="px-4 py-2 border border-neutral-300 rounded-lg"
+                className="px-4 py-2 border border-border-light rounded-lg"
               >
                 {ACTION_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -1373,7 +1374,7 @@ function PowerCreatorContent() {
               <select
                 value={area.type}
                 onChange={(e) => setArea((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
-                className="px-4 py-2 border border-neutral-300 rounded-lg"
+                className="px-4 py-2 border border-border-light rounded-lg"
               >
                 {AREA_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -1412,7 +1413,7 @@ function PowerCreatorContent() {
                   const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
                   setDuration((d) => ({ ...d, type: newType, value: newValue }));
                 }}
-                className="px-4 py-2 border border-neutral-300 rounded-lg"
+                className="px-4 py-2 border border-border-light rounded-lg"
               >
                 {DURATION_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -1424,7 +1425,7 @@ function PowerCreatorContent() {
                 <select
                   value={duration.value}
                   onChange={(e) => setDuration((d) => ({ ...d, value: parseInt(e.target.value) }))}
-                  className="px-4 py-2 border border-neutral-300 rounded-lg"
+                  className="px-4 py-2 border border-border-light rounded-lg"
                 >
                   {DURATION_VALUES[duration.type].map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -1456,7 +1457,7 @@ function PowerCreatorContent() {
                 <select
                   value={duration.sustain || 0}
                   onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
-                  className="px-2 py-1 border border-neutral-300 rounded text-sm"
+                  className="px-2 py-1 border border-border-light rounded text-sm"
                 >
                   <option value={0}>None</option>
                   <option value={1}>1 AP</option>
@@ -1530,7 +1531,7 @@ function PowerCreatorContent() {
                 <select
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                  className="px-3 py-2 border border-neutral-300 rounded-lg"
+                  className="px-3 py-2 border border-border-light rounded-lg"
                 >
                   {DIE_SIZES.map((size) => (
                     <option key={size} value={size}>
@@ -1542,7 +1543,7 @@ function PowerCreatorContent() {
               <select
                 value={damage.type}
                 onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                className="px-3 py-2 border border-neutral-300 rounded-lg"
+                className="px-3 py-2 border border-border-light rounded-lg"
               >
                 {DAMAGE_TYPES.map((type) => (
                   <option key={type} value={type}>
@@ -1561,65 +1562,31 @@ function PowerCreatorContent() {
 
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
-          <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Power Summary</h3>
-
-            {/* Cost Display */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <Zap className="w-6 h-6 mx-auto text-blue-600 mb-1" />
-                <div className="text-3xl font-bold text-blue-600">{costs.totalEnergy}</div>
-                <div className="text-xs text-blue-600">Energy Cost</div>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4 text-center">
-                <Target className="w-6 h-6 mx-auto text-purple-600 mb-1" />
-                <div className="text-3xl font-bold text-purple-600">{costs.totalTP}</div>
-                <div className="text-xs text-purple-600">Training Points</div>
-              </div>
-            </div>
-
-            {/* Derived Stats */}
-            <div className="space-y-2 text-sm mb-6">
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Action:</span>
-                <span className="font-medium">{actionTypeDisplay}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Range:</span>
-                <span className="font-medium">{rangeDisplay}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Area:</span>
-                <span className="font-medium">{areaDisplay}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Duration:</span>
-                <span className="font-medium">{durationDisplay}</span>
-              </div>
-            </div>
-
-            {/* TP Sources */}
-            {costs.tpSources.length > 0 && (
-              <div className="border-t border-border-subtle pt-4">
-                <h4 className="text-sm font-medium text-text-secondary mb-2">TP Breakdown</h4>
-                <ul className="text-xs text-text-secondary space-y-1">
-                  {costs.tpSources.map((src, i) => (
-                    <li key={i}>• {src}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
+          <CreatorSummaryPanel
+            title="Power Summary"
+            costStats={[
+              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
+              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            ]}
+            statRows={[
+              { label: 'Action', value: actionTypeDisplay },
+              { label: 'Range', value: rangeDisplay },
+              { label: 'Area', value: areaDisplay },
+              { label: 'Duration', value: durationDisplay },
+            ]}
+            breakdowns={costs.tpSources.length > 0 ? [
+              { title: 'TP Breakdown', items: costs.tpSources }
+            ] : undefined}
+          >
             {/* Save Message */}
             {saveMessage && (
               <Alert 
                 variant={saveMessage.type === 'success' ? 'success' : 'danger'}
-                className="mt-4"
               >
                 {saveMessage.text}
               </Alert>
             )}
-          </div>
+          </CreatorSummaryPanel>
         </div>
       </div>
 

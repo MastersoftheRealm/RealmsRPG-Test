@@ -268,7 +268,7 @@ function PortraitUpload() {
       
       <div className="flex items-start gap-4">
         {/* Portrait Preview */}
-        <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-neutral-100 border-2 border-dashed border-neutral-300 flex items-center justify-center">
+        <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-surface-alt border-2 border-dashed border-border-light flex items-center justify-center">
           {draft.portrait ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -308,7 +308,7 @@ function PortraitUpload() {
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
               isUploading
-                ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
+                ? 'bg-surface-alt text-text-muted cursor-not-allowed'
                 : 'border-primary-300 text-primary-600 hover:bg-primary-50'
             )}
           >
@@ -622,7 +622,7 @@ export function FinalizeStep() {
           value={draft.name || ''}
           onChange={(e) => updateDraft({ name: e.target.value })}
           placeholder="Enter your character's name"
-          className="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors"
+          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors"
         />
       </div>
       
@@ -680,7 +680,7 @@ export function FinalizeStep() {
                     'px-2 py-1 rounded text-sm font-medium',
                     value > 0 ? 'bg-green-100 text-green-700' :
                     value < 0 ? 'bg-red-100 text-red-700' :
-                    'bg-neutral-100 text-text-secondary'
+                    'bg-surface-alt text-text-secondary'
                   )}
                 >
                   {ability.charAt(0).toUpperCase()}: {value >= 0 ? `+${value}` : value}
@@ -704,7 +704,7 @@ export function FinalizeStep() {
           onChange={(e) => updateDraft({ description: e.target.value })}
           placeholder="Describe your character's appearance, personality, or background..."
           rows={4}
-          className="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
         />
       </div>
       
@@ -718,7 +718,7 @@ export function FinalizeStep() {
           onChange={(e) => updateDraft({ notes: e.target.value })}
           placeholder="Any additional notes about your character..."
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border border-neutral-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
         />
       </div>
       

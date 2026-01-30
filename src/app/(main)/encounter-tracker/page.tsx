@@ -807,7 +807,7 @@ function EncounterTrackerContent() {
                     'px-2 py-1 text-xs rounded-full cursor-help',
                     condition.leveled 
                       ? 'bg-purple-100 text-purple-700' 
-                      : 'bg-neutral-100 text-text-secondary'
+                      : 'bg-surface-alt text-text-secondary'
                   )}
                 >
                   {condition.name}{condition.leveled && ' ⬇'}
@@ -966,14 +966,14 @@ function CombatantCard({
           onDragEnd={onDragEnd}
           className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none"
         >
-          <div className="text-text-muted hover:text-text-secondary p-1 rounded hover:bg-neutral-100">
+          <div className="text-text-muted hover:text-text-secondary p-1 rounded hover:bg-surface-alt">
             <GripVertical className="w-5 h-5" />
           </div>
           {/* Initiative Badge - Editable */}
           <div 
             className={cn(
               'w-10 h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors',
-              isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
+              isCurrentTurn ? 'bg-primary-600 text-white' : 'bg-surface-alt text-text-secondary hover:bg-surface'
             )}
             onClick={() => setIsEditingInitiative(true)}
             title="Click to edit initiative"
@@ -1074,7 +1074,7 @@ function CombatantCard({
                 onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                 className={cn(
                   'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium',
-                  combatant.currentHealth <= 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-neutral-300'
+                  combatant.currentHealth <= 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-border-light'
                 )}
               />
               <span className="text-text-muted text-xs">/</span>
@@ -1082,9 +1082,9 @@ function CombatantCard({
                 type="number"
                 value={combatant.maxHealth}
                 onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
-                className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center"
+                className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
               />
-              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden max-w-20">
+              <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden max-w-20">
                 <div 
                   className={cn(
                     'h-full transition-all',
@@ -1103,16 +1103,16 @@ function CombatantCard({
                 type="number"
                 value={combatant.currentEnergy}
                 onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center font-medium"
+                className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center font-medium"
               />
               <span className="text-text-muted text-xs">/</span>
               <input
                 type="number"
                 value={combatant.maxEnergy}
                 onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
-                className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center"
+                className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
               />
-              <div className="flex-1 h-2 bg-neutral-200 rounded-full overflow-hidden max-w-20">
+              <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden max-w-20">
                 <div 
                   className="h-full bg-blue-500 transition-all"
                   style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
@@ -1186,7 +1186,7 @@ function CombatantCard({
               >
                 Dmg
               </button>
-              <span className="text-neutral-300">|</span>
+              <span className="text-border-light">|</span>
               <input
                 type="number"
                 value={healInput}
@@ -1221,7 +1221,7 @@ function CombatantCard({
               >
                 Use
               </button>
-              <span className="text-neutral-300">|</span>
+              <span className="text-border-light">|</span>
               <input
                 type="number"
                 value={energyRestoreInput}
@@ -1252,14 +1252,14 @@ function CombatantCard({
             <div className="ml-auto flex items-center gap-1">
               <button
                 onClick={onDuplicate}
-                className="px-2 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200"
+                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-surface"
                 title="Duplicate this combatant"
               >
                 📋
               </button>
               <button
                 onClick={onRemove}
-                className="px-2 py-0.5 text-xs bg-neutral-100 text-text-secondary rounded hover:bg-red-100 hover:text-red-700"
+                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-red-100 hover:text-red-700"
                 title="Remove combatant"
               >
                 ✕
@@ -1274,7 +1274,7 @@ function CombatantCard({
                 <select
                   value={selectedCondition}
                   onChange={(e) => setSelectedCondition(e.target.value)}
-                  className="flex-1 px-3 py-1 text-sm border border-neutral-300 rounded"
+                  className="flex-1 px-3 py-1 text-sm border border-border-light rounded"
                 >
                   <option value="">Select Condition...</option>
                   {CONDITION_OPTIONS.map(cond => (
@@ -1301,7 +1301,7 @@ function CombatantCard({
                   value={customCondition}
                   onChange={(e) => setCustomCondition(e.target.value)}
                   placeholder="Custom condition..."
-                  className="flex-1 px-3 py-1 text-sm border border-neutral-300 rounded"
+                  className="flex-1 px-3 py-1 text-sm border border-border-light rounded"
                   onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
                   maxLength={30}
                 />

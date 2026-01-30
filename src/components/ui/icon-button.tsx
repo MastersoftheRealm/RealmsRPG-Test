@@ -14,12 +14,12 @@ const iconButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'text-text-muted hover:text-text-primary hover:bg-neutral-100',
+        default: 'text-text-muted hover:text-text-primary hover:bg-surface-alt',
         ghost: 'text-text-muted hover:text-text-primary hover:bg-transparent',
         primary: 'text-primary-600 hover:text-primary-700 hover:bg-primary-50',
         danger: 'text-danger hover:text-danger-dark hover:bg-danger-light',
         success: 'text-success hover:text-success-dark hover:bg-success-light',
-        muted: 'text-text-muted hover:bg-neutral-100',
+        muted: 'text-text-muted hover:bg-surface-alt',
       },
       size: {
         sm: 'p-1 h-7 w-7',

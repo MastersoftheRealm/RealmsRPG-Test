@@ -10,13 +10,28 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { cn, formatDamageDisplay } from '@/lib/utils';
-import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper } from '@/components/shared';
+import { cn } from '@/lib/utils';
+import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper, ItemSelectionModal, ItemCard } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
-import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
-import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import { deriveItemDisplay } from '@/lib/calculators/item-calc';
+import {
+  transformUserPowerToDisplayItem,
+  transformUserTechniqueToDisplayItem,
+  transformCreatureFeatToDisplayItem,
+  transformUserItemToDisplayItem,
+  creaturePowerToDisplayItem,
+  creatureTechniqueToDisplayItem,
+  creatureFeatToDisplayItem,
+  creatureArmamentToDisplayItem,
+  displayItemToCreaturePower,
+  displayItemToCreatureTechnique,
+  displayItemToCreatureFeat,
+  displayItemToCreatureArmament,
+  type CreaturePower,
+  type CreatureTechnique,
+  type CreatureFeat,
+  type CreatureArmament,
+} from './transformers';
 import { 
   calculateCreatureTrainingPoints, 
   calculateCreatureCurrency,
@@ -27,8 +42,8 @@ import {
   calculateSkillPoints,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
-import { IconButton, SearchInput, Button, Input, Select, PageContainer, PageHeader } from '@/components/ui';
-import { X, Trash2 } from 'lucide-react';
+import { IconButton, Button, Input, Select, PageContainer, PageHeader, Textarea } from '@/components/ui';
+import { X, Trash2, Skull, FolderOpen } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import {
   CREATURE_TYPES,
@@ -51,11 +66,14 @@ import type { AbilityName } from '@/types';
 // =============================================================================
 
 const LEVEL_OPTIONS = [
-  { value: 0.25, label: '1/4' },
-  { value: 0.5, label: '1/2' },
-  { value: 0.75, label: '3/4' },
-  ...Array.from({ length: 30 }, (_, i) => ({ value: i + 1, label: String(i + 1) })),
+  { value: '0.25', label: '1/4' },
+  { value: '0.5', label: '1/2' },
+  { value: '0.75', label: '3/4' },
+  ...Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })),
 ];
+
+// Convert CREATURE_TYPES to Select options format
+const CREATURE_TYPE_OPTIONS = CREATURE_TYPES.map(type => ({ value: type, label: type }));
 
 // Damage types with proper capitalization for creatures (display only)
 const DAMAGE_TYPES = [
@@ -127,45 +145,8 @@ const MOVEMENT_TO_FEAT_ID: Record<string, number> = {
 };
 
 // =============================================================================
-// Types
+// Types (remaining local types - others imported from transformers)
 // =============================================================================
-
-interface CreaturePower {
-  id: string;
-  name: string;
-  energy: number;
-  action: string;
-  duration: string;
-  range: string;
-  area: string;
-  damage: string;
-}
-
-interface CreatureTechnique {
-  id: string;
-  name: string;
-  energy: number;
-  tp: number;
-  action: string;
-  weapon: string;
-  damage: string;
-}
-
-interface CreatureFeat {
-  id: string;
-  name: string;
-  description?: string;
-  points?: number;
-}
-
-interface CreatureArmament {
-  id: string;
-  name: string;
-  type: string;
-  tp: number;
-  currency: number;
-  rarity: string;
-}
 
 interface CreatureSkill {
   name: string;
@@ -269,7 +250,7 @@ const initialState: CreatureState = {
 function ChipList({ 
   items, 
   onRemove, 
-  color = 'bg-neutral-100' 
+  color = 'bg-surface-alt text-text-secondary' 
 }: { 
   items: string[]; 
   onRemove: (item: string) => void;
@@ -300,7 +281,7 @@ function ChipList({
 function ExpandableChipList({ 
   items, 
   onRemove, 
-  color = 'bg-neutral-100',
+  color = 'bg-surface-alt text-text-secondary',
   descriptions
 }: { 
   items: string[]; 
@@ -364,20 +345,20 @@ function AddItemDropdown({
       <select
         value={selectedValue}
         onChange={(e) => setSelectedValue(e.target.value)}
-        className="flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm"
+        className="flex-1 px-3 py-1.5 border border-border-light rounded text-sm bg-surface"
       >
         <option value="">{placeholder}</option>
         {availableOptions.map(opt => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
-      <button
+      <Button
+        size="sm"
         onClick={handleAdd}
         disabled={!selectedValue}
-        className="px-3 py-1.5 bg-primary-600 text-white rounded text-sm disabled:opacity-50"
       >
         Add
-      </button>
+      </Button>
     </div>
   );
 }
@@ -420,300 +401,8 @@ function DefenseBlock({
 }
 
 // =============================================================================
-// Modal Components
+// Modal Components (LoadCreatureModal - others use shared ItemSelectionModal)
 // =============================================================================
-
-function LoadPowerModal({
-  isOpen,
-  onClose,
-  onSelect,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (power: CreaturePower) => void;
-}) {
-  const { data: userPowers = [] } = useUserPowers();
-  const { data: partsDb = [] } = usePowerParts();
-  
-  if (!isOpen) return null;
-  
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-bold">Select a Power</h2>
-          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
-        </div>
-        <div className="p-4 overflow-y-auto max-h-[60vh]">
-          {userPowers.length === 0 ? (
-            <p className="text-text-muted text-center py-8">No powers in your library</p>
-          ) : (
-            <div className="space-y-2">
-              {userPowers.map(power => {
-                const display = derivePowerDisplay(
-                  { name: power.name, description: power.description, parts: power.parts || [], damage: power.damage },
-                  partsDb
-                );
-                const damageStr = formatPowerDamage(power.damage);
-                
-                return (
-                  <button
-                    key={power.docId}
-                    onClick={() => {
-                      onSelect({
-                        id: power.docId,
-                        name: power.name,
-                        energy: display.energy,
-                        action: display.actionType,
-                        duration: display.duration,
-                        range: display.range,
-                        area: display.area,
-                        damage: damageStr,
-                      });
-                      onClose();
-                    }}
-                    className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
-                  >
-                    <div className="font-medium">{power.name}</div>
-                    <div className="text-sm text-text-muted">
-                      EN: {display.energy} | {display.actionType} | {display.range}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LoadTechniqueModal({
-  isOpen,
-  onClose,
-  onSelect,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (technique: CreatureTechnique) => void;
-}) {
-  const { data: userTechniques = [] } = useUserTechniques();
-  const { data: partsDb = [] } = useTechniqueParts();
-  
-  if (!isOpen) return null;
-  
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-bold">Select a Technique</h2>
-          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
-        </div>
-        <div className="p-4 overflow-y-auto max-h-[60vh]">
-          {userTechniques.length === 0 ? (
-            <p className="text-text-muted text-center py-8">No techniques in your library</p>
-          ) : (
-            <div className="space-y-2">
-              {userTechniques.map(tech => {
-                const display = deriveTechniqueDisplay(
-                  { name: tech.name, description: tech.description, parts: tech.parts || [], damage: tech.damage?.[0], weapon: tech.weapon },
-                  partsDb
-                );
-                
-                return (
-                  <button
-                    key={tech.docId}
-                    onClick={() => {
-                      onSelect({
-                        id: tech.docId,
-                        name: tech.name,
-                        energy: display.energy,
-                        tp: display.tp,
-                        action: display.actionType,
-                        weapon: display.weaponName,
-                        damage: display.damageStr,
-                      });
-                      onClose();
-                    }}
-                    className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
-                  >
-                    <div className="font-medium">{tech.name}</div>
-                    <div className="text-sm text-text-muted">
-                      EN: {display.energy} | TP: {display.tp} | {display.actionType}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LoadFeatModal({
-  isOpen,
-  onClose,
-  onSelect,
-  selectedFeats,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (feat: CreatureFeat) => void;
-  selectedFeats: CreatureFeat[];
-}) {
-  const { data: allFeats = [] } = useCreatureFeats();
-  const [search, setSearch] = useState('');
-  
-  if (!isOpen) return null;
-  
-  const selectedIds = new Set(selectedFeats.map(f => f.id));
-  const filteredFeats = allFeats.filter(feat => {
-    // Exclude already selected feats
-    if (selectedIds.has(feat.id)) return false;
-    
-    // Exclude mechanical feats that are auto-added via basic info
-    const numId = parseInt(feat.id, 10);
-    if (!isNaN(numId) && MECHANICAL_CREATURE_FEAT_IDS.has(numId)) return false;
-    
-    // Search filter
-    return (feat.name?.toLowerCase().includes(search.toLowerCase()) ||
-            feat.description?.toLowerCase().includes(search.toLowerCase()));
-  });
-  
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-bold">Select a Feat</h2>
-          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
-        </div>
-        <div className="p-4 border-b">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search feats..."
-          />
-        </div>
-        <div className="p-4 overflow-y-auto max-h-[60vh]">
-          {filteredFeats.length === 0 ? (
-            <p className="text-text-muted text-center py-8">No feats found</p>
-          ) : (
-            <div className="space-y-2">
-              {filteredFeats.slice(0, 50).map(feat => (
-                <button
-                  key={feat.id}
-                  onClick={() => {
-                    onSelect({
-                      id: feat.id,
-                      name: feat.name,
-                      description: feat.description,
-                      points: feat.points ?? 1, // Use actual feat point cost
-                    });
-                    onClose();
-                  }}
-                  className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{feat.name}</span>
-                    <span className="text-sm text-amber-600 font-medium">{feat.points ?? 1} pt{(feat.points ?? 1) !== 1 ? 's' : ''}</span>
-                  </div>
-                  {feat.description && (
-                    <div className="text-sm text-text-muted line-clamp-2">{feat.description}</div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LoadArmamentModal({
-  isOpen,
-  onClose,
-  onSelect,
-  selectedArmaments,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (armament: CreatureArmament) => void;
-  selectedArmaments: CreatureArmament[];
-}) {
-  const { data: userItems = [] } = useUserItems();
-  const { data: propertiesDb = [] } = useItemProperties();
-  
-  if (!isOpen) return null;
-  
-  const selectedIds = new Set(selectedArmaments.map(a => a.id));
-  const availableItems = userItems.filter(item => !selectedIds.has(item.docId));
-  
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        <div className="p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-bold">Select an Armament</h2>
-          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
-        </div>
-        <div className="p-4 overflow-y-auto max-h-[60vh]">
-          {availableItems.length === 0 ? (
-            <p className="text-text-muted text-center py-8">No items in your library</p>
-          ) : (
-            <div className="space-y-2">
-              {availableItems.map(item => {
-                // Convert item to expected format for deriveItemDisplay
-                const typeMap: Record<string, 'Armor' | 'Weapon' | 'Shield' | 'Accessory'> = {
-                  weapon: 'Weapon',
-                  armor: 'Armor',
-                  equipment: 'Accessory',
-                };
-                // Convert properties (which may be objects with name property) to ItemPropertyPayload format
-                const propertyPayloads = (item.properties || []).map((prop) => ({ 
-                  name: typeof prop === 'string' ? prop : prop.name 
-                }));
-                const itemDoc = {
-                  name: item.name,
-                  description: item.description,
-                  armamentType: typeMap[item.type] || 'Weapon',
-                  properties: propertyPayloads,
-                  // damage in UserItem is a string, not used for display calculation
-                };
-                const display = deriveItemDisplay(itemDoc, propertiesDb);
-                
-                return (
-                  <button
-                    key={item.docId}
-                    onClick={() => {
-                      onSelect({
-                        id: item.docId,
-                        name: item.name,
-                        type: item.type || 'equipment',
-                        tp: display.totalTP || 0,
-                        currency: display.currencyCost || 0,
-                        rarity: display.rarity || 'Common',
-                      });
-                      onClose();
-                    }}
-                    className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
-                  >
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-text-muted">
-                      {item.type} | TP: {display.totalTP || 0} | {display.currencyCost || 0}c | {display.rarity || 'Common'}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function LoadCreatureModal({
   isOpen,
@@ -807,6 +496,15 @@ function CreatureCreatorContent() {
   const { user } = useAuthStore();
   const { data: creatureFeatsData = [] } = useCreatureFeats();
   const { data: skillsData = [] } = useRTDBSkills();
+  
+  // Data for item selection modals
+  const { data: userPowers = [] } = useUserPowers();
+  const { data: userTechniques = [] } = useUserTechniques();
+  const { data: userItems = [] } = useUserItems();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
+  
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
@@ -817,6 +515,31 @@ function CreatureCreatorContent() {
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
+  
+  // Transform user library data to DisplayItem[] for modals
+  const powerDisplayItems = useMemo(() => 
+    userPowers.map(p => transformUserPowerToDisplayItem(p, powerPartsDb)),
+    [userPowers, powerPartsDb]
+  );
+  
+  const techniqueDisplayItems = useMemo(() => 
+    userTechniques.map(t => transformUserTechniqueToDisplayItem(t, techniquePartsDb)),
+    [userTechniques, techniquePartsDb]
+  );
+  
+  const featDisplayItems = useMemo(() => {
+    const selectedIds = new Set(creature.feats.map(f => f.id));
+    return creatureFeatsData
+      .map(f => transformCreatureFeatToDisplayItem(f, selectedIds, MECHANICAL_CREATURE_FEAT_IDS))
+      .filter((f): f is NonNullable<typeof f> => f !== null);
+  }, [creatureFeatsData, creature.feats]);
+  
+  const armamentDisplayItems = useMemo(() => {
+    const selectedIds = new Set(creature.armaments.map(a => a.id));
+    return userItems
+      .filter(item => !selectedIds.has(item.docId))
+      .map(item => transformUserItemToDisplayItem(item, itemPropertiesDb));
+  }, [userItems, creature.armaments, itemPropertiesDb]);
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -1155,17 +878,19 @@ function CreatureCreatorContent() {
   };
 
   return (
-    <PageContainer size="full">
+    <PageContainer size="content">
       <PageHeader
+        icon={<Skull className="w-8 h-8 text-primary-600" />}
         title="Creature Creator"
-        description="Design custom creatures, monsters, and NPCs"
+        description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
         actions={
           <>
             <Button
-              variant="outline"
+              variant="secondary"
               onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
               title={user ? "Load from library" : "Log in to load from library"}
             >
+              <FolderOpen className="w-5 h-5" />
               Load
             </Button>
             <Button
@@ -1207,15 +932,15 @@ function CreatureCreatorContent() {
               <span className="text-text-secondary">EN</span>
               <span className="font-bold text-blue-600">{stats.maxEnergy}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-alt rounded-lg">
               <span className="text-text-secondary">SPD</span>
               <span className="font-bold">{stats.speed}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-alt rounded-lg">
               <span className="text-text-secondary">EVA</span>
               <span className="font-bold">{stats.evasion}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-alt rounded-lg">
               <span className="text-text-secondary">PROF</span>
               <span className="font-bold">+{stats.proficiency}</span>
             </div>
@@ -1254,40 +979,28 @@ function CreatureCreatorContent() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Level</label>
-                <select
-                  value={creature.level}
+                <Select
+                  label="Level"
+                  value={String(creature.level)}
                   onChange={(e) => updateCreature({ level: parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                >
-                  {LEVEL_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+                  options={LEVEL_OPTIONS}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-                <select
+                <Select
+                  label="Type"
                   value={creature.type}
                   onChange={(e) => updateCreature({ type: e.target.value })}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                >
-                  {CREATURE_TYPES.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
+                  options={CREATURE_TYPE_OPTIONS}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Size</label>
-                <select
+                <Select
+                  label="Size"
                   value={creature.size}
                   onChange={(e) => updateCreature({ size: e.target.value })}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                >
-                  {CREATURE_SIZES.map(size => (
-                    <option key={size.value} value={size.value}>{size.label}</option>
-                  ))}
-                </select>
+                  options={CREATURE_SIZES.map(s => ({ value: s.value, label: s.label }))}
+                />
               </div>
             </div>
           </div>
@@ -1473,7 +1186,7 @@ function CreatureCreatorContent() {
             <ChipList 
               items={creature.conditionImmunities} 
               onRemove={(item) => removeFromArray('conditionImmunities', item)}
-              color="bg-neutral-200 text-text-primary"
+              color="bg-surface-alt text-text-primary"
             />
             <AddItemDropdown
               options={CONDITIONS}
@@ -1494,7 +1207,7 @@ function CreatureCreatorContent() {
                     ? 'bg-red-100 text-red-700' 
                     : stats.skillRemaining === 0
                     ? 'bg-green-100 text-green-700'
-                    : 'bg-neutral-100 text-text-secondary'
+                    : 'bg-surface-alt text-text-secondary'
                 )}>
                   {stats.skillRemaining} remaining
                 </span>
@@ -1600,47 +1313,21 @@ function CreatureCreatorContent() {
             {creature.powers.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No powers added</p>
             ) : (
-              <div className="overflow-x-auto mb-4">
-                <table className="w-full text-sm">
-                  <thead className="bg-surface-alt">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Name</th>
-                      <th className="px-3 py-2 text-left">EN</th>
-                      <th className="px-3 py-2 text-left">Action</th>
-                      <th className="px-3 py-2 text-left">Duration</th>
-                      <th className="px-3 py-2 text-left">Range</th>
-                      <th className="px-3 py-2 text-left">Area</th>
-                      <th className="px-3 py-2 text-left">Damage</th>
-                      <th className="px-3 py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {creature.powers.map(power => (
-                      <tr key={power.id} className="border-t">
-                        <td className="px-3 py-2 font-medium">{power.name}</td>
-                        <td className="px-3 py-2">{power.energy}</td>
-                        <td className="px-3 py-2">{power.action}</td>
-                        <td className="px-3 py-2">{power.duration}</td>
-                        <td className="px-3 py-2">{power.range}</td>
-                        <td className="px-3 py-2">{power.area}</td>
-                        <td className="px-3 py-2">{formatDamageDisplay(power.damage)}</td>
-                        <td className="px-3 py-2">
-                          <IconButton
-                            variant="danger"
-                            size="sm"
-                            label="Remove power"
-                            onClick={() => setCreature(prev => ({
-                              ...prev,
-                              powers: prev.powers.filter(p => p.id !== power.id)
-                            }))}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </IconButton>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2 mb-4">
+                {creature.powers.map(power => (
+                  <ItemCard
+                    key={power.id}
+                    item={creaturePowerToDisplayItem(power)}
+                    mode="manage"
+                    actions={{
+                      onDelete: () => setCreature(prev => ({
+                        ...prev,
+                        powers: prev.powers.filter(p => p.id !== power.id)
+                      }))
+                    }}
+                    compact
+                  />
+                ))}
               </div>
             )}
             <Button
@@ -1664,45 +1351,21 @@ function CreatureCreatorContent() {
             {creature.techniques.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No techniques added</p>
             ) : (
-              <div className="overflow-x-auto mb-4">
-                <table className="w-full text-sm">
-                  <thead className="bg-surface-alt">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Name</th>
-                      <th className="px-3 py-2 text-left">EN</th>
-                      <th className="px-3 py-2 text-left">TP</th>
-                      <th className="px-3 py-2 text-left">Action</th>
-                      <th className="px-3 py-2 text-left">Weapon</th>
-                      <th className="px-3 py-2 text-left">Damage</th>
-                      <th className="px-3 py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {creature.techniques.map(tech => (
-                      <tr key={tech.id} className="border-t">
-                        <td className="px-3 py-2 font-medium">{tech.name}</td>
-                        <td className="px-3 py-2">{tech.energy}</td>
-                        <td className="px-3 py-2">{tech.tp}</td>
-                        <td className="px-3 py-2">{tech.action}</td>
-                        <td className="px-3 py-2">{tech.weapon}</td>
-                        <td className="px-3 py-2">{formatDamageDisplay(tech.damage)}</td>
-                        <td className="px-3 py-2">
-                          <IconButton
-                            variant="danger"
-                            size="sm"
-                            label="Remove technique"
-                            onClick={() => setCreature(prev => ({
-                              ...prev,
-                              techniques: prev.techniques.filter(t => t.id !== tech.id)
-                            }))}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </IconButton>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2 mb-4">
+                {creature.techniques.map(tech => (
+                  <ItemCard
+                    key={tech.id}
+                    item={creatureTechniqueToDisplayItem(tech)}
+                    mode="manage"
+                    actions={{
+                      onDelete: () => setCreature(prev => ({
+                        ...prev,
+                        techniques: prev.techniques.filter(t => t.id !== tech.id)
+                      }))
+                    }}
+                    compact
+                  />
+                ))}
               </div>
             )}
             <Button
@@ -1726,26 +1389,18 @@ function CreatureCreatorContent() {
             ) : (
               <div className="space-y-2 mb-4">
                 {creature.feats.map(feat => (
-                  <div key={feat.id} className="flex items-start gap-3 p-3 bg-surface-alt rounded-lg">
-                    <button
-                      onClick={() => setCreature(prev => ({
+                  <ItemCard
+                    key={feat.id}
+                    item={creatureFeatToDisplayItem(feat)}
+                    mode="manage"
+                    actions={{
+                      onDelete: () => setCreature(prev => ({
                         ...prev,
                         feats: prev.feats.filter(f => f.id !== feat.id)
-                      }))}
-                      className="text-red-500 hover:text-red-700 mt-0.5"
-                    >
-                      ×
-                    </button>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{feat.name}</span>
-                        <span className="text-sm text-amber-600">{feat.points ?? 1} pt{(feat.points ?? 1) !== 1 ? 's' : ''}</span>
-                      </div>
-                      {feat.description && (
-                        <div className="text-sm text-text-muted line-clamp-2">{feat.description}</div>
-                      )}
-                    </div>
-                  </div>
+                      }))
+                    }}
+                    compact
+                  />
                 ))}
               </div>
             )}
@@ -1770,43 +1425,21 @@ function CreatureCreatorContent() {
             {creature.armaments.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No armaments added</p>
             ) : (
-              <div className="overflow-x-auto mb-4">
-                <table className="w-full text-sm">
-                  <thead className="bg-surface-alt">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Name</th>
-                      <th className="px-3 py-2 text-left">Type</th>
-                      <th className="px-3 py-2 text-left">TP</th>
-                      <th className="px-3 py-2 text-left">Currency</th>
-                      <th className="px-3 py-2 text-left">Rarity</th>
-                      <th className="px-3 py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {creature.armaments.map(armament => (
-                      <tr key={armament.id} className="border-t">
-                        <td className="px-3 py-2 font-medium">{armament.name}</td>
-                        <td className="px-3 py-2 capitalize">{armament.type}</td>
-                        <td className="px-3 py-2">{armament.tp}</td>
-                        <td className="px-3 py-2">{armament.currency}c</td>
-                        <td className="px-3 py-2">{armament.rarity}</td>
-                        <td className="px-3 py-2">
-                          <IconButton
-                            variant="danger"
-                            size="sm"
-                            label="Remove armament"
-                            onClick={() => setCreature(prev => ({
-                              ...prev,
-                              armaments: prev.armaments.filter(a => a.id !== armament.id)
-                            }))}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </IconButton>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2 mb-4">
+                {creature.armaments.map(armament => (
+                  <ItemCard
+                    key={armament.id}
+                    item={creatureArmamentToDisplayItem(armament)}
+                    mode="manage"
+                    actions={{
+                      onDelete: () => setCreature(prev => ({
+                        ...prev,
+                        armaments: prev.armaments.filter(a => a.id !== armament.id)
+                      }))
+                    }}
+                    compact
+                  />
+                ))}
               </div>
             )}
             <Button
@@ -1819,12 +1452,11 @@ function CreatureCreatorContent() {
           {/* Description */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Description</h3>
-            <textarea
+            <Textarea
               value={creature.description}
               onChange={(e) => updateCreature({ description: e.target.value })}
               placeholder="Describe this creature's appearance, behavior, and special abilities..."
               rows={6}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg resize-none"
             />
           </div>
         </div>
@@ -1835,8 +1467,8 @@ function CreatureCreatorContent() {
           quickStats={[
             { label: 'HP', value: stats.maxHealth, color: 'bg-red-50 text-red-600' },
             { label: 'EN', value: stats.maxEnergy, color: 'bg-blue-50 text-blue-600' },
-            { label: 'SPD', value: stats.speed, color: 'bg-neutral-100' },
-            { label: 'EVA', value: stats.evasion, color: 'bg-neutral-100' },
+            { label: 'SPD', value: stats.speed, color: 'bg-surface-alt' },
+            { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt' },
           ]}
           items={[
             { label: 'Ability Points', remaining: stats.abilityRemaining },
@@ -1848,40 +1480,70 @@ function CreatureCreatorContent() {
         />
       </div>
 
-      {/* Modals */}
-      <LoadPowerModal
+      {/* Modals - using shared ItemSelectionModal */}
+      <ItemSelectionModal
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
-        onSelect={(power) => setCreature(prev => ({
-          ...prev,
-          powers: [...prev.powers, power]
-        }))}
+        onConfirm={(items) => {
+          const powers = items.map(displayItemToCreaturePower);
+          setCreature(prev => ({
+            ...prev,
+            powers: [...prev.powers, ...powers]
+          }));
+        }}
+        items={powerDisplayItems}
+        title="Select Powers"
+        description="Choose powers from your library to add to this creature"
+        maxSelections={10}
+        searchPlaceholder="Search powers..."
       />
-      <LoadTechniqueModal
+      <ItemSelectionModal
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
-        onSelect={(technique) => setCreature(prev => ({
-          ...prev,
-          techniques: [...prev.techniques, technique]
-        }))}
+        onConfirm={(items) => {
+          const techniques = items.map(displayItemToCreatureTechnique);
+          setCreature(prev => ({
+            ...prev,
+            techniques: [...prev.techniques, ...techniques]
+          }));
+        }}
+        items={techniqueDisplayItems}
+        title="Select Techniques"
+        description="Choose techniques from your library to add to this creature"
+        maxSelections={10}
+        searchPlaceholder="Search techniques..."
       />
-      <LoadFeatModal
+      <ItemSelectionModal
         isOpen={showFeatModal}
         onClose={() => setShowFeatModal(false)}
-        onSelect={(feat) => setCreature(prev => ({
-          ...prev,
-          feats: [...prev.feats, feat]
-        }))}
-        selectedFeats={creature.feats}
+        onConfirm={(items) => {
+          const feats = items.map(displayItemToCreatureFeat);
+          setCreature(prev => ({
+            ...prev,
+            feats: [...prev.feats, ...feats]
+          }));
+        }}
+        items={featDisplayItems}
+        title="Select Feats"
+        description="Choose creature feats to add"
+        maxSelections={10}
+        searchPlaceholder="Search feats..."
       />
-      <LoadArmamentModal
+      <ItemSelectionModal
         isOpen={showArmamentModal}
         onClose={() => setShowArmamentModal(false)}
-        onSelect={(armament) => setCreature(prev => ({
-          ...prev,
-          armaments: [...prev.armaments, armament]
-        }))}
-        selectedArmaments={creature.armaments}
+        onConfirm={(items) => {
+          const armaments = items.map(displayItemToCreatureArmament);
+          setCreature(prev => ({
+            ...prev,
+            armaments: [...prev.armaments, ...armaments]
+          }));
+        }}
+        items={armamentDisplayItems}
+        title="Select Armaments"
+        description="Choose items from your library to equip on this creature"
+        maxSelections={10}
+        searchPlaceholder="Search items..."
       />
       <LoadCreatureModal
         isOpen={showLoadModal}

@@ -48,7 +48,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               'flex h-10 w-full appearance-none rounded-lg border bg-surface px-4 py-2.5 pr-10 text-sm',
               'text-text-primary',
               'focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-600',
-              'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-neutral-100',
+              'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-alt',
               error
                 ? 'border-danger focus:ring-danger/20'
                 : 'border-border-light',

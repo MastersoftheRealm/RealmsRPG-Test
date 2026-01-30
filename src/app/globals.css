@@ -207,6 +207,47 @@
   --color-category-restriction-border: #ffb3b3;
 
   /* ---------------------------------------------------------------------------
+     GAME SEMANTIC COLORS
+     Semantic colors for game-specific concepts
+     --------------------------------------------------------------------------- */
+  /* Training Points (TP) - Amber */
+  --color-tp: #d97706;
+  --color-tp-light: #fef3c7;
+  --color-tp-text: #92400e;
+  --color-tp-border: #fcd34d;
+  
+  /* Energy/Power - Purple */
+  --color-power: #7c3aed;
+  --color-power-light: #ede9fe;
+  --color-power-text: #5b21b6;
+  --color-power-border: #c4b5fd;
+  
+  /* Health - Red/Rose */
+  --color-health: #dc2626;
+  --color-health-light: #fee2e2;
+  --color-health-text: #991b1b;
+  --color-health-border: #fca5a5;
+  
+  /* Energy (Resource) - Blue */
+  --color-energy: #2563eb;
+  --color-energy-light: #dbeafe;
+  --color-energy-text: #1e40af;
+  --color-energy-border: #93c5fd;
+  
+  /* Combatant Types */
+  --color-ally: #2563eb;
+  --color-ally-light: #dbeafe;
+  --color-ally-text: #1e40af;
+  
+  --color-enemy: #dc2626;
+  --color-enemy-light: #fee2e2;
+  --color-enemy-text: #991b1b;
+  
+  --color-companion: #7c3aed;
+  --color-companion-light: #ede9fe;
+  --color-companion-text: #5b21b6;
+
+  /* ---------------------------------------------------------------------------
      TYPOGRAPHY
      --------------------------------------------------------------------------- */
   --font-sans: "Nunito", system-ui, sans-serif;

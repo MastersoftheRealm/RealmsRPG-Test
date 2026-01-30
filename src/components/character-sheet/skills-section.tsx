@@ -387,7 +387,7 @@ export function SkillsSection({
                       <select
                         value={skill.ability || skillAbilityOptions[0]?.value || 'strength'}
                         onChange={(e) => onSkillChange(skill.id, { ability: e.target.value })}
-                        className="text-xs px-1 py-0.5 rounded border border-neutral-300 bg-surface-alt text-text-secondary cursor-pointer"
+                        className="text-xs px-1 py-0.5 rounded border border-border-light bg-surface-alt text-text-secondary cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {skillAbilityOptions.map(opt => (
@@ -430,8 +430,8 @@ export function SkillsSection({
                           className={cn(
                             'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
                             (skill.skill_val > 0 || skill.prof)
-                              ? 'bg-neutral-200 hover:bg-neutral-300 text-text-secondary'
-                              : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'
+                              ? 'bg-surface hover:bg-surface-alt text-text-secondary'
+                              : 'bg-surface text-border-light cursor-not-allowed'
                           )}
                         >
                           −
@@ -441,7 +441,7 @@ export function SkillsSection({
                         </span>
                         <button
                           onClick={() => handleSkillIncrease(skill)}
-                          className="w-6 h-6 rounded bg-neutral-200 hover:bg-neutral-300 flex items-center justify-center text-sm font-bold text-text-secondary transition-colors"
+                          className="w-6 h-6 rounded bg-surface hover:bg-surface-alt flex items-center justify-center text-sm font-bold text-text-secondary transition-colors"
                         >
                           +
                         </button>

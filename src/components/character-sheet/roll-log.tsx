@@ -30,7 +30,7 @@ const ROLL_TYPE_COLORS: Record<RollType, string> = {
   skill: 'border-l-blue-500',
   ability: 'border-l-purple-500',
   defense: 'border-l-teal-500',
-  custom: 'border-l-neutral-400',
+  custom: 'border-l-border',
 };
 
 const ROLL_TYPE_ICONS: Record<RollType, string> = {
@@ -185,7 +185,7 @@ export function RollLog({ className }: RollLogProps) {
         </div>
 
         {/* Dice Builder */}
-        <div className="p-3 bg-gradient-to-r from-primary-dark to-[#053357] border-t-2 border-neutral-300">
+        <div className="p-3 bg-gradient-to-r from-primary-dark to-[#053357] border-t-2 border-border-light">
           {/* Roll Type & Title */}
           <div className="flex gap-2 mb-3">
             <select
@@ -327,7 +327,7 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
                     'w-9 h-9 text-base border-2',
                     die.isMax && 'bg-green-100 border-green-500 text-green-800',
                     die.isMin && 'bg-red-100 border-red-500 text-red-800',
-                    !die.isMax && !die.isMin && 'bg-neutral-100 border-neutral-300 text-text-primary'
+                    !die.isMax && !die.isMin && 'bg-surface-alt border-border-light text-text-primary'
                   )
                 : cn(
                     'bg-amber-100 border border-amber-400 text-amber-800'

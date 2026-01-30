@@ -128,7 +128,7 @@ export function LevelUpModal({
             <button
               onClick={() => setTargetLevel(Math.max(currentLevel + 1, targetLevel - 1))}
               disabled={targetLevel <= currentLevel + 1}
-              className="w-10 h-10 rounded-full bg-neutral-100 text-text-secondary hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-surface-alt text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               -
             </button>
@@ -139,7 +139,7 @@ export function LevelUpModal({
             <button
               onClick={() => setTargetLevel(Math.min(maxLevel, targetLevel + 1))}
               disabled={targetLevel >= maxLevel}
-              className="w-10 h-10 rounded-full bg-neutral-100 text-text-secondary hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-10 h-10 rounded-full bg-surface-alt text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               +
             </button>

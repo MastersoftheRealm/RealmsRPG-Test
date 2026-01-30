@@ -164,7 +164,7 @@ export function ColumnHeaders({
   return (
     <div 
       className={cn(
-        'hidden lg:grid gap-2 px-4 py-2 bg-neutral-100 rounded-t-lg font-medium text-sm text-text-secondary',
+        'hidden lg:grid gap-2 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary',
         className
       )}
       style={{ 
@@ -232,7 +232,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {icon && (
-        <div className="w-16 h-16 mb-4 rounded-full bg-neutral-100 flex items-center justify-center text-text-muted">
+        <div className="w-16 h-16 mb-4 rounded-full bg-surface-alt flex items-center justify-center text-text-muted">
           {icon}
         </div>
       )}

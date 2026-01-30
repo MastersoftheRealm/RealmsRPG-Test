@@ -296,7 +296,7 @@ export function AncestryStep() {
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedFlaw
                 ? 'bg-purple-200 text-purple-800'
-                : 'bg-neutral-200 text-text-secondary'
+                : 'bg-surface text-text-secondary'
             )}>
               {selectedFlaw ? '1' : '0'} / 1
             </span>
@@ -448,7 +448,7 @@ function TraitSection({
         </div>
       </div>
       
-      <div className="divide-y divide-neutral-100">
+      <div className="divide-y divide-border-subtle">
         {traits.map(trait => {
           const isSelected = selectedIds.includes(trait.id);
           
@@ -468,7 +468,7 @@ function TraitSection({
                     'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
                     isSelected
                       ? `${styles.check} text-white`
-                      : 'border-neutral-300 bg-surface'
+                      : 'border-border-light bg-surface'
                   )}>
                     {isSelected && <Check className="w-3 h-3" />}
                   </div>

@@ -67,7 +67,7 @@ export function TabNavigation({
               {tab.icon}
               {tab.label}
               {typeof tab.count === 'number' && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-neutral-200 text-text-muted">
+                <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-surface-alt text-text-muted">
                   {tab.count}
                 </span>
               )}
@@ -105,7 +105,7 @@ export function TabNavigation({
                   'ml-1 px-1.5 py-0.5 text-xs rounded-full',
                   activeTab === tab.id 
                     ? 'bg-primary-200 text-primary-700'
-                    : 'bg-neutral-200 text-text-muted'
+                    : 'bg-surface-alt text-text-muted'
                 )}>
                   {tab.count}
                 </span>

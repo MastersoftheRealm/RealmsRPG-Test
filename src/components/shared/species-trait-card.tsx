@@ -161,7 +161,7 @@ export function SpeciesTraitCard({
         selected ? colors.selectedBg : colors.bg,
         selected ? colors.selectedBorder : colors.border,
         selectable && !disabled && 'cursor-pointer hover:shadow-sm',
-        selectable && !disabled && !selected && 'hover:border-neutral-400',
+        selectable && !disabled && !selected && 'hover:border-border',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}
@@ -180,7 +180,7 @@ export function SpeciesTraitCard({
               'mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
               selected 
                 ? 'bg-primary-600 border-primary-600' 
-                : 'border-neutral-300 bg-surface',
+                : 'border-border-light bg-surface',
               disabled && 'opacity-50'
             )}
           >

@@ -242,7 +242,7 @@ export function AbilitiesSection({
             <div
               key={ability}
               className={cn(
-                'flex flex-col items-center p-3 bg-gradient-to-b from-neutral-50 to-neutral-100 rounded-xl border-2 transition-all',
+                'flex flex-col items-center p-3 bg-gradient-to-b from-surface to-surface-alt rounded-xl border-2 transition-all',
                 isArchetype ? 'border-amber-300' : 'border-border-light',
                 !isEditMode && 'hover:shadow-md'
               )}

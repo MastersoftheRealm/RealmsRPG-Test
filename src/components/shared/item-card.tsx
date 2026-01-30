@@ -23,7 +23,7 @@ interface ItemCardProps {
 
 // Badge variants with design token classes
 const badgeVariants = {
-  default: 'bg-neutral-100 text-neutral-600',
+  default: 'bg-surface-alt text-text-secondary',
   primary: 'bg-primary-100 text-primary-700',
   success: 'bg-success-100 text-success-700',
   warning: 'bg-warning-100 text-warning-700',
@@ -97,7 +97,7 @@ export function ItemCard({
                 mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors
                 ${item.isSelected 
                   ? 'bg-primary-500 border-primary-500' 
-                  : 'border-neutral-400'
+                  : 'border-border'
                 }
                 ${item.isDisabled ? 'opacity-50' : ''}
               `}

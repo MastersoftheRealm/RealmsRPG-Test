@@ -38,7 +38,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             'flex min-h-[100px] w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
             'text-text-primary placeholder:text-text-muted',
             'focus:outline-none focus:ring-2 focus:ring-primary-accent/20 focus:border-primary-600',
-            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-neutral-100',
+            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-alt',
             'resize-y',
             error
               ? 'border-danger focus:ring-danger/20'

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Archetype Section
  * =================
  * Displays character archetype, proficiencies, attack bonuses, power potency, weapons, and armor
@@ -52,7 +52,7 @@ function ProficiencyMeter({
             <button
               onClick={onDecrease}
               disabled={value <= 0}
-              className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
+              className="w-5 h-5 rounded bg-surface hover:bg-surface-alt disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
               title="Decrease proficiency"
             >
               −
@@ -63,7 +63,7 @@ function ProficiencyMeter({
             <button
               onClick={onIncrease}
               disabled={value >= maxValue}
-              className="w-5 h-5 rounded bg-neutral-200 hover:bg-neutral-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
+              className="w-5 h-5 rounded bg-surface hover:bg-surface-alt disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
               title="Increase proficiency"
             >
               +
@@ -77,7 +77,7 @@ function ProficiencyMeter({
             key={i}
             className={cn(
               'h-2 flex-1 rounded-full',
-              i < value ? colorClasses[color] : 'bg-neutral-200'
+              i < value ? colorClasses[color] : 'bg-surface'
             )}
           />
         ))}
@@ -139,7 +139,7 @@ function AttackBonusesTable({
               <td className="text-center py-1">
                 <button
                   onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, bonuses[key].prof)}
-                  className="px-2 py-0.5 bg-surface border border-neutral-300 rounded hover:bg-primary-50 hover:border-primary-300 transition-colors font-mono text-sm"
+                  className="px-2 py-0.5 bg-surface border border-border-light rounded hover:bg-primary-50 hover:border-primary-300 transition-colors font-mono text-sm"
                   title={`Roll ${key} (proficient)`}
                 >
                   {formatBonus(bonuses[key].prof)}
@@ -148,7 +148,7 @@ function AttackBonusesTable({
               <td className="text-center py-1">
                 <button
                   onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, bonuses[key].unprof)}
-                  className="px-2 py-0.5 bg-neutral-100 border border-border-light rounded hover:bg-neutral-200 transition-colors font-mono text-sm text-text-muted"
+                  className="px-2 py-0.5 bg-surface-alt border border-border-light rounded hover:bg-surface transition-colors font-mono text-sm text-text-muted"
                   title={`Roll ${key} (unproficient)`}
                 >
                   {formatBonus(bonuses[key].unprof)}
@@ -269,7 +269,7 @@ function WeaponsSection({
             <td className="text-center py-1">
               <button
                 onClick={() => onRollAttack?.('Unarmed Prowess', unprofBonus)}
-                className="px-2 py-0.5 bg-neutral-200 text-text-secondary rounded hover:bg-neutral-300 transition-colors font-mono text-sm"
+                className="px-2 py-0.5 bg-surface text-text-secondary rounded hover:bg-surface-alt transition-colors font-mono text-sm"
               >
                 {formatBonus(unprofBonus)}
               </button>
@@ -277,7 +277,7 @@ function WeaponsSection({
             <td className="text-center py-1">
               <button
                 onClick={() => onRollDamage?.(`${unarmedDamage} Bludgeoning`, unprofBonus)}
-                className="px-2 py-0.5 bg-neutral-200 text-text-secondary rounded hover:bg-neutral-300 transition-colors font-mono text-sm"
+                className="px-2 py-0.5 bg-surface text-text-secondary rounded hover:bg-surface-alt transition-colors font-mono text-sm"
               >
                 {unarmedDamage} Bludg.
               </button>
@@ -554,7 +554,7 @@ export function ArchetypeSection({
                         ? 'bg-purple-100 text-purple-700'
                         : currentChoice === 'feat'
                           ? 'bg-red-100 text-red-700'
-                          : 'bg-neutral-100 text-text-muted italic'
+                          : 'bg-surface text-text-muted italic'
                     )}>
                       {currentChoice === 'innate' ? '✨ Innate' : 
                        currentChoice === 'feat' ? '🎯 Feat' : 'Not chosen'}

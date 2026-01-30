@@ -225,7 +225,7 @@ export function AddSkillModal({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-neutral-200 transition-colors"
+              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-surface transition-colors"
             >
               Cancel
             </button>
@@ -236,7 +236,7 @@ export function AddSkillModal({
                 'px-4 py-2 rounded-lg font-medium transition-colors',
                 selectedSkills.length > 0
                   ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-neutral-200 text-text-muted cursor-not-allowed'
+                  : 'bg-surface text-text-muted cursor-not-allowed'
               )}
             >
               Add {selectedSkills.length > 0 ? `(${selectedSkills.length})` : ''}

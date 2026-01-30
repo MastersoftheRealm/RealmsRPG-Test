@@ -21,7 +21,7 @@ const categoryStyles: Record<string, string> = {
   special: 'bg-category-special text-category-special-text',
   restriction: 'bg-category-restriction text-category-restriction-text',
   cost: 'bg-category-action text-category-action-text',
-  default: 'bg-neutral-100 text-text-secondary',
+  default: 'bg-surface-alt text-text-secondary',
 };
 
 export interface ExpandableChipProps {

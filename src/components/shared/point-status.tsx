@@ -101,12 +101,12 @@ export function PointStatus({
               <span className="text-xs text-text-muted block">Total</span>
               <span className="text-lg font-bold text-text-primary">{total}</span>
             </div>
-            <span className="text-2xl text-neutral-300">−</span>
+            <span className="text-2xl text-border-light">−</span>
             <div className="text-center">
               <span className="text-xs text-text-muted block">Spent</span>
               <span className="text-lg font-bold text-text-primary">{spent}</span>
             </div>
-            <span className="text-2xl text-neutral-300">=</span>
+            <span className="text-2xl text-border-light">=</span>
             <div className="text-center">
               <span className="text-xs text-text-muted block">Remaining</span>
               <span className={cn(

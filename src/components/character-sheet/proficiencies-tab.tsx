@@ -244,7 +244,7 @@ function ProficiencySection({ title, profs }: ProficiencySectionProps) {
 
   return (
     <div className="mb-4">
-      <div className="flex items-center justify-between px-3 py-2 bg-neutral-100 rounded-t-lg border border-border-light">
+      <div className="flex items-center justify-between px-3 py-2 bg-surface-alt rounded-t-lg border border-border-light">
         <span className="font-semibold text-sm text-text-secondary">{title}</span>
         <span className="text-sm text-text-muted">
           TP: <span className="font-semibold text-primary-600">{totalTP}</span>

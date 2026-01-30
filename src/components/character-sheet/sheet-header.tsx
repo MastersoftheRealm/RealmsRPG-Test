@@ -81,7 +81,7 @@ function ResourceBar({
           {current} / {max}
         </span>
       </div>
-      <div className="relative h-6 bg-neutral-200 rounded-full overflow-hidden">
+      <div className="relative h-6 bg-surface rounded-full overflow-hidden">
         <div
           className={cn(
             'absolute inset-y-0 left-0 transition-all duration-300',
@@ -129,7 +129,7 @@ function ResourceBar({
 
 function StatBlock({ label, value, subValue }: { label: string; value: number | string; subValue?: string }) {
   return (
-    <div className="flex flex-col items-center p-2 bg-neutral-100 rounded-lg min-w-[60px]">
+    <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg min-w-[60px]">
       <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
       <span className="text-xl font-bold text-text-primary">{value}</span>
       {subValue && <span className="text-xs text-text-muted">{subValue}</span>}
@@ -164,7 +164,7 @@ function EditableStatBlock({
   
   if (isEditMode && onChange && baseValue !== undefined) {
     return (
-      <div className="flex flex-col items-center p-2 bg-neutral-100 rounded-lg min-w-[70px]">
+      <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg min-w-[70px]">
         <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
         <span className="text-xl font-bold text-text-primary">{value}</span>
         <div className="flex items-center gap-1 mt-1">
@@ -174,8 +174,8 @@ function EditableStatBlock({
             className={cn(
               'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
               baseValue > minBase
-                ? 'bg-neutral-300 hover:bg-neutral-400 text-text-secondary'
-                : 'bg-neutral-200 text-text-muted cursor-not-allowed'
+                ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
+                : 'bg-surface text-text-muted cursor-not-allowed'
             )}
           >
             −
@@ -192,8 +192,8 @@ function EditableStatBlock({
             className={cn(
               'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
               baseValue < maxBase
-                ? 'bg-neutral-300 hover:bg-neutral-400 text-text-secondary'
-                : 'bg-neutral-200 text-text-muted cursor-not-allowed'
+                ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
+                : 'bg-surface text-text-muted cursor-not-allowed'
             )}
           >
             +
@@ -205,7 +205,7 @@ function EditableStatBlock({
   }
 
   return (
-    <div className="flex flex-col items-center p-2 bg-neutral-100 rounded-lg min-w-[60px]">
+    <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg min-w-[60px]">
       <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
       <span className="text-xl font-bold text-text-primary">{value}</span>
       {subValue && <span className="text-xs text-text-muted">{subValue}</span>}
@@ -301,7 +301,7 @@ export function SheetHeader({
         <div className="flex gap-4">
           <div 
             className={cn(
-              "relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-neutral-200 flex-shrink-0",
+              "relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-surface flex-shrink-0",
               isEditMode && onPortraitChange && "cursor-pointer group"
             )}
             onClick={handlePortraitClick}
@@ -351,7 +351,7 @@ export function SheetHeader({
                   <span className="text-category-power">Power: {character.pow_abil}</span>
                 )}
                 {character.pow_abil && character.mart_abil && (
-                  <span className="text-neutral-300">•</span>
+                  <span className="text-border-light">•</span>
                 )}
                 {character.mart_abil && (
                   <span className="text-category-technique">Martial: {character.mart_abil}</span>

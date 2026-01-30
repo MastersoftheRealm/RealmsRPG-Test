@@ -1,8 +1,14 @@
 /**
  * Creator Summary Panel
  * =====================
- * Sticky sidebar showing resource point summaries.
- * Used in creature creator and other creator tools.
+ * Unified sticky sidebar for all creator tools.
+ * Supports:
+ * - Cost stat boxes (Energy, TP, Currency, etc.)
+ * - Quick stats (HP, EN, SPD, etc.)
+ * - Resource items with remaining points
+ * - Stat rows (key-value pairs)
+ * - Breakdown lists (TP sources, properties, etc.)
+ * - Custom content via children
  */
 
 'use client';
@@ -21,22 +27,67 @@ export interface SummaryItem {
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
 }
 
+export interface CostStat {
+  /** Label below the value */
+  label: string;
+  /** The stat value */
+  value: string | number;
+  /** Lucide icon component */
+  icon?: ReactNode;
+  /** Color theme: energy (blue), tp (purple), health (red), currency (amber) */
+  color: 'energy' | 'tp' | 'health' | 'currency';
+}
+
+export interface StatRow {
+  /** Left-side label */
+  label: string;
+  /** Right-side value */
+  value: string | number;
+  /** Optional custom color for value (for negative values, etc.) */
+  valueColor?: string;
+}
+
+export interface BreakdownList {
+  /** Section title */
+  title: string;
+  /** List items (can be strings or objects with label and optional detail) */
+  items: Array<string | { label: string; detail?: string }>;
+}
+
 export interface CreatorSummaryPanelProps {
   /** Title of the summary panel */
   title: string;
-  /** Summary items to display */
-  items: SummaryItem[];
-  /** Optional quick stats section at top */
+  /** Large cost stat boxes at top (Energy/TP/Currency) */
+  costStats?: CostStat[];
+  /** Badge displayed prominently (for rarity, etc.) */
+  badge?: {
+    label: string;
+    className?: string;
+  };
+  /** Summary items to display (resource tracking with remaining points) */
+  items?: SummaryItem[];
+  /** Optional quick stats section (HP, EN, SPD chips) */
   quickStats?: {
     label: string;
     value: string | number;
     color?: string;
   }[];
+  /** Key-value stat rows */
+  statRows?: StatRow[];
+  /** Breakdown lists (TP sources, properties, etc.) */
+  breakdowns?: BreakdownList[];
   /** Additional content at the bottom */
   children?: ReactNode;
   /** Additional class names */
   className?: string;
 }
+
+const COST_STAT_COLORS: Record<CostStat['color'], { bg: string; text: string }> = {
+  energy: { bg: 'bg-blue-50', text: 'text-blue-600' },
+  tp: { bg: 'bg-purple-50', text: 'text-purple-600' },
+  health: { bg: 'bg-red-50', text: 'text-red-600' },
+  currency: { bg: 'bg-amber-50', text: 'text-amber-600' },
+};
 
 function getVariantClasses(variant: SummaryItem['variant'], remaining: number): string {
   // Auto-determine variant based on remaining if not specified
@@ -56,14 +107,18 @@ function getVariantClasses(variant: SummaryItem['variant'], remaining: number): 
     case 'info':
       return 'bg-info-light text-info-600';
     default:
-      return 'bg-neutral-100 text-secondary';
+      return 'bg-surface-alt text-secondary';
   }
 }
 
 export function CreatorSummaryPanel({
   title,
+  costStats,
+  badge,
   items,
   quickStats,
+  statRows,
+  breakdowns,
   children,
   className,
 }: CreatorSummaryPanelProps) {
@@ -72,9 +127,48 @@ export function CreatorSummaryPanel({
       'bg-surface rounded-xl shadow-md p-6 sticky top-24',
       className
     )}>
-      <h3 className="text-lg font-bold text-primary mb-4">{title}</h3>
+      <h3 className="text-lg font-bold text-text-primary mb-4">{title}</h3>
 
-      {/* Quick Stats (optional) */}
+      {/* Badge (Rarity, etc.) */}
+      {badge && (
+        <div className="text-center mb-6">
+          <span className={cn(
+            'inline-block px-4 py-1 rounded-full font-bold text-lg',
+            badge.className || 'bg-surface-alt text-text-secondary'
+          )}>
+            {badge.label}
+          </span>
+        </div>
+      )}
+
+      {/* Cost Stats (Energy/TP/Currency boxes) */}
+      {costStats && costStats.length > 0 && (
+        <div className={cn(
+          'grid gap-4 mb-6',
+          costStats.length === 2 ? 'grid-cols-2' : 
+          costStats.length === 3 ? 'grid-cols-3' : 
+          'grid-cols-2'
+        )}>
+          {costStats.map((stat, index) => {
+            const colors = COST_STAT_COLORS[stat.color];
+            return (
+              <div key={index} className={cn('rounded-lg p-4 text-center', colors.bg)}>
+                {stat.icon && (
+                  <div className={cn('w-6 h-6 mx-auto mb-1', colors.text)}>
+                    {stat.icon}
+                  </div>
+                )}
+                <div className={cn('text-2xl font-bold', colors.text)}>
+                  {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
+                </div>
+                <div className={cn('text-xs', colors.text)}>{stat.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Quick Stats (HP, EN, SPD chips) */}
       {quickStats && quickStats.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-border-light">
           {quickStats.map((stat, index) => (
@@ -82,38 +176,75 @@ export function CreatorSummaryPanel({
               key={index}
               className={cn(
                 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm',
-                stat.color || 'bg-neutral-100'
+                stat.color || 'bg-surface-alt'
               )}
             >
-              <span className="text-tertiary">{stat.label}</span>
+              <span className="text-text-muted">{stat.label}</span>
               <span className="font-bold">{stat.value}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Resource Items */}
-      <div className="space-y-3">
-        {items.map((item, index) => (
-          <div
-            key={index}
-            className={cn(
-              'flex justify-between items-center p-3 rounded-lg',
-              getVariantClasses(item.variant, item.remaining)
-            )}
-          >
-            <span className="text-sm font-medium text-inherit opacity-80">
-              {item.label}
-            </span>
-            <span className="font-bold">
-              {item.remaining}
-              {typeof item.total === 'number' && (
-                <span className="text-xs opacity-70 ml-1">/ {item.total}</span>
+      {/* Stat Rows (key-value pairs) */}
+      {statRows && statRows.length > 0 && (
+        <div className="space-y-2 text-sm mb-6">
+          {statRows.map((row, index) => (
+            <div key={index} className="flex justify-between">
+              <span className="text-text-secondary">{row.label}:</span>
+              <span className={cn('font-medium', row.valueColor)}>{row.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Resource Items (with remaining points) */}
+      {items && items.length > 0 && (
+        <div className="space-y-3">
+          {items.map((item, index) => (
+            <div
+              key={index}
+              className={cn(
+                'flex justify-between items-center p-3 rounded-lg',
+                getVariantClasses(item.variant, item.remaining)
               )}
-            </span>
-          </div>
-        ))}
-      </div>
+            >
+              <span className="text-sm font-medium text-inherit opacity-80">
+                {item.label}
+              </span>
+              <span className="font-bold">
+                {item.remaining}
+                {typeof item.total === 'number' && (
+                  <span className="text-xs opacity-70 ml-1">/ {item.total}</span>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Breakdown Lists (TP sources, properties, etc.) */}
+      {breakdowns && breakdowns.length > 0 && (
+        <>
+          {breakdowns.map((breakdown, index) => (
+            <div key={index} className="border-t border-border-subtle pt-4 mt-4">
+              <h4 className="text-sm font-medium text-text-secondary mb-2">{breakdown.title}</h4>
+              <ul className="text-xs text-text-secondary space-y-1">
+                {breakdown.items.map((item, i) => (
+                  <li key={i}>
+                    • {typeof item === 'string' ? item : (
+                      <>
+                        {item.label}
+                        {item.detail && <span className="text-text-muted ml-1">({item.detail})</span>}
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </>
+      )}
 
       {/* Additional Content */}
       {children && (

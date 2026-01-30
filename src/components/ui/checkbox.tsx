@@ -33,7 +33,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
               'disabled:cursor-not-allowed disabled:opacity-50',
               error
                 ? 'border-danger'
-                : 'border-neutral-300',
+                : 'border-border-light',
               className
             )}
             aria-invalid={error ? 'true' : undefined}
