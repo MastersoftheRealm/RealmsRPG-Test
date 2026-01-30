@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { usePowerParts, useUserPowers, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal } from '@/components/shared';
+import { LoadingState } from '@/components/ui/spinner';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
@@ -192,7 +193,7 @@ function PartCard({
         <button
           type="button"
           onClick={onRemove}
-          className="text-text-muted hover:text-red-500"
+          className="text-text-muted hover:text-danger-500"
         >
           <X className="w-5 h-5" />
         </button>
@@ -1233,11 +1234,7 @@ function PowerCreatorContent() {
   if (isLoading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-neutral-200 rounded w-1/3"></div>
-          <div className="h-4 bg-neutral-200 rounded w-2/3"></div>
-          <div className="h-64 bg-neutral-200 rounded"></div>
-        </div>
+        <LoadingState message="Loading power parts..." />
       </div>
     );
   }

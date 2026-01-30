@@ -21,6 +21,7 @@ import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase
 import { auth, db } from '@/lib/firebase/client';
 import { useAuthStore } from '@/stores';
 import { ProtectedRoute } from '@/components/layout';
+import { LoadingState } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { User, Mail, Lock, Trash2, AlertTriangle, Check, X, Loader2 } from 'lucide-react';
 
@@ -223,11 +224,7 @@ function AccountContent() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-neutral-200 rounded w-1/3"></div>
-          <div className="h-48 bg-neutral-200 rounded"></div>
-          <div className="h-48 bg-neutral-200 rounded"></div>
-        </div>
+        <LoadingState message="Loading account..." />
       </div>
     );
   }

@@ -19,6 +19,7 @@
 
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { PointStatus } from '@/components/shared/point-status';
 import type { AbilityName, Abilities } from '@/types';
 
 export interface AbilityScoreEditorProps {
@@ -140,34 +141,12 @@ export function AbilityScoreEditor({
     <div className="space-y-4">
       {/* Points Status - can be hidden for custom headers */}
       {!hidePointsStatus && (
-        <div className={cn(
-          'flex items-center justify-center gap-4 p-3 rounded-xl',
-          isOverspent ? 'bg-red-50 border border-red-200' :
-          isComplete ? 'bg-green-50 border border-green-200' :
-          'bg-neutral-50 border border-neutral-200'
-        )}>
-          <div className="text-center">
-            <span className="text-xs text-text-muted block">Total</span>
-            <span className="text-lg font-bold text-text-primary">{totalPoints}</span>
-          </div>
-          <span className="text-2xl text-neutral-300">−</span>
-          <div className="text-center">
-            <span className="text-xs text-text-muted block">Spent</span>
-            <span className="text-lg font-bold text-text-primary">{spentPoints}</span>
-          </div>
-          <span className="text-2xl text-neutral-300">=</span>
-          <div className="text-center">
-            <span className="text-xs text-text-muted block">Remaining</span>
-            <span className={cn(
-              'text-lg font-bold',
-              isOverspent ? 'text-red-600' :
-              isComplete ? 'text-green-600' :
-              'text-blue-600'
-            )}>
-              {remainingPoints}
-            </span>
-          </div>
-        </div>
+        <PointStatus
+          total={totalPoints}
+          spent={spentPoints}
+          variant="block"
+          showCalculation
+        />
       )}
 
       {/* Ability Grid */}

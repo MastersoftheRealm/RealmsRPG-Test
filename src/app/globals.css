@@ -243,7 +243,12 @@
   }
   
   /* Consistent heading styles */
-  h1, h2, h3, h4, h5, h6 {
+  h1, h2 {
+    @apply text-title font-semibold;
+    font-family: var(--font-display);
+  }
+  
+  h3, h4, h5, h6 {
     @apply text-title font-semibold;
   }
 }
@@ -252,6 +257,23 @@
    COMPONENT CLASSES - Unified Design System
    ============================================================================= */
 @layer components {
+  /* ---------------------------------------------------------------------------
+     TYPOGRAPHY UTILITIES
+     --------------------------------------------------------------------------- */
+  .font-display {
+    font-family: var(--font-display);
+  }
+  
+  .page-title {
+    font-family: var(--font-display);
+    @apply text-3xl font-bold text-text-primary;
+  }
+  
+  .section-title {
+    font-family: var(--font-display);
+    @apply text-xl font-semibold text-text-primary;
+  }
+
   /* ---------------------------------------------------------------------------
      LAYOUT COMPONENTS
      --------------------------------------------------------------------------- */

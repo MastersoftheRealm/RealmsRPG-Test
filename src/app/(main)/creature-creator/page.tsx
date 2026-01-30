@@ -285,7 +285,7 @@ function ChipList({
           {item}
           <button 
             onClick={() => onRemove(item)} 
-            className="text-text-muted hover:text-red-500"
+            className="text-text-muted hover:text-danger-500"
           >
             ×
           </button>
@@ -477,7 +477,7 @@ function LoadPowerModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
+                    className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
                   >
                     <div className="font-medium">{power.name}</div>
                     <div className="text-sm text-text-muted">
@@ -541,7 +541,7 @@ function LoadTechniqueModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
+                    className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
                   >
                     <div className="font-medium">{tech.name}</div>
                     <div className="text-sm text-text-muted">
@@ -621,7 +621,7 @@ function LoadFeatModal({
                     });
                     onClose();
                   }}
-                  className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
+                  className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{feat.name}</span>
@@ -705,7 +705,7 @@ function LoadArmamentModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
+                    className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
                   >
                     <div className="font-medium">{item.name}</div>
                     <div className="text-sm text-text-muted">
@@ -784,7 +784,7 @@ function LoadCreatureModal({
                     onSelect(loadedCreature);
                     onClose();
                   }}
-                  className="w-full p-3 text-left bg-neutral-50 hover:bg-blue-50 rounded-lg border border-neutral-200"
+                  className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
                 >
                   <div className="font-medium">{c.name}</div>
                   <div className="text-sm text-text-muted">
