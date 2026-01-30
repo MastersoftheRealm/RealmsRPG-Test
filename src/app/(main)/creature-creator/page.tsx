@@ -36,11 +36,13 @@ import {
 } from '@/lib/game/creator-constants';
 import {
   HealthEnergyAllocator,
+  AbilityScoreEditor,
   ArchetypeSelector,
   CollapsibleSection,
   CreatorSummaryPanel,
   type ArchetypeType,
 } from '@/components/creator';
+import type { AbilityName } from '@/types';
 
 // =============================================================================
 // Creature-specific Constants
@@ -919,7 +921,7 @@ function CreatureCreatorContent() {
     setCreature(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const updateAbility = useCallback((ability: keyof CreatureState['abilities'], value: number) => {
+  const updateAbility = useCallback((ability: AbilityName, value: number) => {
     setCreature(prev => ({
       ...prev,
       abilities: { ...prev.abilities, [ability]: value }
@@ -1331,44 +1333,20 @@ function CreatureCreatorContent() {
             />
           </div>
 
-          {/* Abilities */}
+          {/* Abilities - Using shared AbilityScoreEditor */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Ability Scores</h3>
-              <span className={cn('text-sm font-medium', stats.abilityRemaining < 0 ? 'text-red-600' : 'text-gray-500')}>
-                Remaining: {stats.abilityRemaining}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-              {(Object.keys(creature.abilities) as Array<keyof typeof creature.abilities>).map((ability) => (
-                <div key={ability} className="p-3 bg-gray-50 rounded-lg text-center">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-                    {ability}
-                  </label>
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => updateAbility(ability, Math.max(-4, creature.abilities[ability] - 1))}
-                      className="btn-stepper btn-stepper-danger"
-                    >
-                      −
-                    </button>
-                    <span className={cn(
-                      'w-10 text-center text-xl font-bold',
-                      creature.abilities[ability] > 0 ? 'text-green-600' :
-                      creature.abilities[ability] < 0 ? 'text-red-600' : 'text-gray-600'
-                    )}>
-                      {creature.abilities[ability] >= 0 ? '+' : ''}{creature.abilities[ability]}
-                    </span>
-                    <button
-                      onClick={() => updateAbility(ability, Math.min(7, creature.abilities[ability] + 1))}
-                      className="btn-stepper btn-stepper-success"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Ability Scores</h3>
+            <AbilityScoreEditor
+              abilities={creature.abilities}
+              totalPoints={stats.abilityPoints}
+              onAbilityChange={updateAbility}
+              maxAbility={7}
+              minAbility={-4}
+              maxNegativeSum={null}
+              isEditMode={true}
+              compact={true}
+              useHighAbilityCost={true}
+            />
           </div>
 
           {/* Defenses */}

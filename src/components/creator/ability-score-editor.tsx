@@ -2,7 +2,17 @@
  * Ability Score Editor
  * ====================
  * Shared component for viewing and editing ability scores.
- * Used in character creator, character sheet, and creature creator.
+ * Used in character creator, character sheet (edit mode), and creature creator.
+ * 
+ * Point Costs:
+ * - Abilities 1-3: 1 point each
+ * - Abilities 4+: 2 points each (so +4 costs 5 total, +5 costs 7, +6 costs 9, etc.)
+ * - Negative abilities give points back (1 per point)
+ * 
+ * Constraints vary by context:
+ * - Character Creator: max +3, min -2, max negative sum -3
+ * - Character Sheet: higher max based on level, no negative sum constraint
+ * - Creature Creator: max +7, min -4, no negative sum constraint
  */
 
 'use client';
@@ -18,18 +28,22 @@ export interface AbilityScoreEditorProps {
   totalPoints: number;
   /** Callback when an ability changes */
   onAbilityChange: (ability: AbilityName, value: number) => void;
-  /** Maximum value an ability can be (default: 3, scales with level) */
+  /** Maximum value an ability can be (default: 3) */
   maxAbility?: number;
   /** Minimum value an ability can be (default: -2) */
   minAbility?: number;
-  /** Maximum total negative sum allowed (default: -3) */
-  maxNegativeSum?: number;
-  /** Whether the component is in edit mode */
+  /** Maximum total negative sum allowed (default: -3, set to null to disable) */
+  maxNegativeSum?: number | null;
+  /** Whether the component is in edit mode (default: true) */
   isEditMode?: boolean;
   /** Highlighted abilities (e.g., archetype abilities) */
   highlightedAbilities?: AbilityName[];
-  /** Compact layout for smaller spaces */
+  /** Compact layout - 3 columns with short names (default: false) */
   compact?: boolean;
+  /** Hide the points status bar for custom header (default: false) */
+  hidePointsStatus?: boolean;
+  /** Whether high abilities (4+) cost 2 points each (default: true) */
+  useHighAbilityCost?: boolean;
 }
 
 const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
@@ -47,6 +61,29 @@ function formatBonus(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`;
 }
 
+/**
+ * Calculate total point cost for an ability value.
+ * 1-3 cost 1 point each, 4+ cost 2 points each.
+ * Negative values give points back (1 per point).
+ */
+function calculateAbilityCost(value: number, useHighCost: boolean): number {
+  if (value <= 0) return value; // Negative = gives points back
+  if (!useHighCost) return value; // Simple mode: 1 point per value
+  
+  // 1-3: 1 point each = 1, 2, 3
+  // 4+: 2 points each = 3 + 2*(value-3)
+  if (value <= 3) return value;
+  return 3 + 2 * (value - 3); // 4=5, 5=7, 6=9, 7=11, etc.
+}
+
+/**
+ * Calculate the cost to increase an ability by 1.
+ */
+function getIncreaseCost(currentValue: number, useHighCost: boolean): number {
+  if (!useHighCost) return 1;
+  return currentValue >= 3 ? 2 : 1;
+}
+
 export function AbilityScoreEditor({
   abilities,
   totalPoints,
@@ -57,13 +94,18 @@ export function AbilityScoreEditor({
   isEditMode = true,
   highlightedAbilities = [],
   compact = false,
+  hidePointsStatus = false,
+  useHighAbilityCost = true,
 }: AbilityScoreEditorProps) {
-  // Calculate points spent (sum of all ability values)
+  // Calculate points spent (considering high ability cost)
   const spentPoints = useMemo(() => {
-    return ABILITY_ORDER.reduce((sum, ability) => sum + (abilities[ability] || 0), 0);
-  }, [abilities]);
+    return ABILITY_ORDER.reduce((sum, ability) => {
+      const value = abilities[ability] || 0;
+      return sum + calculateAbilityCost(value, useHighAbilityCost);
+    }, 0);
+  }, [abilities, useHighAbilityCost]);
 
-  // Calculate negative sum
+  // Calculate negative sum (for constraint checking)
   const negativeSum = useMemo(() => {
     return ABILITY_ORDER.reduce((sum, ability) => {
       const val = abilities[ability] || 0;
@@ -76,83 +118,93 @@ export function AbilityScoreEditor({
   const isComplete = remainingPoints === 0;
 
   const canIncrease = (ability: AbilityName) => {
+    if (!isEditMode) return false;
     const current = abilities[ability] || 0;
-    return isEditMode && current < maxAbility && remainingPoints > 0;
+    if (current >= maxAbility) return false;
+    const cost = getIncreaseCost(current, useHighAbilityCost);
+    return remainingPoints >= cost;
   };
 
   const canDecrease = (ability: AbilityName) => {
-    const current = abilities[ability] || 0;
     if (!isEditMode) return false;
+    const current = abilities[ability] || 0;
     if (current <= minAbility) return false;
-    // Check negative sum constraint
-    if (current <= 0 && negativeSum <= maxNegativeSum) return false;
+    // Check negative sum constraint (if enabled)
+    if (maxNegativeSum !== null && current <= 0 && negativeSum <= maxNegativeSum) {
+      return false;
+    }
     return true;
   };
 
   return (
     <div className="space-y-4">
-      {/* Points Status */}
-      <div className={cn(
-        'flex items-center justify-center gap-4 p-3 rounded-xl',
-        isOverspent ? 'bg-danger-light border border-danger-300' :
-        isComplete ? 'bg-success-light border border-success-300' :
-        'bg-surface-secondary border border-neutral-200'
-      )}>
-        <div className="text-center">
-          <span className="text-xs text-tertiary block">Total</span>
-          <span className="text-lg font-bold text-primary">{totalPoints}</span>
+      {/* Points Status - can be hidden for custom headers */}
+      {!hidePointsStatus && (
+        <div className={cn(
+          'flex items-center justify-center gap-4 p-3 rounded-xl',
+          isOverspent ? 'bg-red-50 border border-red-200' :
+          isComplete ? 'bg-green-50 border border-green-200' :
+          'bg-gray-50 border border-gray-200'
+        )}>
+          <div className="text-center">
+            <span className="text-xs text-gray-500 block">Total</span>
+            <span className="text-lg font-bold text-gray-900">{totalPoints}</span>
+          </div>
+          <span className="text-2xl text-gray-300">−</span>
+          <div className="text-center">
+            <span className="text-xs text-gray-500 block">Spent</span>
+            <span className="text-lg font-bold text-gray-900">{spentPoints}</span>
+          </div>
+          <span className="text-2xl text-gray-300">=</span>
+          <div className="text-center">
+            <span className="text-xs text-gray-500 block">Remaining</span>
+            <span className={cn(
+              'text-lg font-bold',
+              isOverspent ? 'text-red-600' :
+              isComplete ? 'text-green-600' :
+              'text-blue-600'
+            )}>
+              {remainingPoints}
+            </span>
+          </div>
         </div>
-        <span className="text-2xl text-tertiary">−</span>
-        <div className="text-center">
-          <span className="text-xs text-tertiary block">Spent</span>
-          <span className="text-lg font-bold text-primary">{spentPoints}</span>
-        </div>
-        <span className="text-2xl text-tertiary">=</span>
-        <div className="text-center">
-          <span className="text-xs text-tertiary block">Remaining</span>
-          <span className={cn(
-            'text-lg font-bold',
-            isOverspent ? 'text-danger-600' :
-            isComplete ? 'text-success-600' :
-            'text-info-600'
-          )}>
-            {remainingPoints}
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Ability Grid */}
       <div className={cn(
         'grid gap-3',
-        compact ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+        compact ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
       )}>
         {ABILITY_ORDER.map((ability) => {
           const value = abilities[ability] || 0;
           const info = ABILITY_INFO[ability];
           const isHighlighted = highlightedAbilities.includes(ability);
+          const increaseCost = getIncreaseCost(value, useHighAbilityCost);
+          const canInc = canIncrease(ability);
+          const canDec = canDecrease(ability);
 
           return (
             <div
               key={ability}
               className={cn(
-                'p-3 rounded-xl border-2 bg-surface transition-all',
+                'p-3 rounded-xl border-2 bg-white transition-all',
                 isHighlighted 
-                  ? 'border-warning-400 bg-warning-light/30' 
-                  : 'border-neutral-200',
+                  ? 'border-amber-400 bg-amber-50/50' 
+                  : 'border-gray-200',
                 !isEditMode && 'opacity-75'
               )}
             >
               <div className="text-center mb-2">
-                <h4 className="font-bold text-sm text-primary">
+                <h4 className="font-bold text-sm text-gray-900 capitalize">
                   {compact ? info.shortName : info.name}
                 </h4>
                 {isHighlighted && (
-                  <span className="text-xs text-warning-600 font-medium">Archetype</span>
+                  <span className="text-xs text-amber-600 font-medium">Archetype</span>
                 )}
               </div>
 
               {!compact && (
-                <p className="text-xs text-tertiary text-center mb-2 line-clamp-1">
+                <p className="text-xs text-gray-500 text-center mb-2 line-clamp-1">
                   {info.description}
                 </p>
               )}
@@ -161,8 +213,13 @@ export function AbilityScoreEditor({
                 {isEditMode && (
                   <button
                     onClick={() => onAbilityChange(ability, value - 1)}
-                    disabled={!canDecrease(ability)}
-                    className="btn-stepper btn-stepper-danger"
+                    disabled={!canDec}
+                    className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors',
+                      canDec
+                        ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                    )}
                   >
                     −
                   </button>
@@ -170,9 +227,9 @@ export function AbilityScoreEditor({
 
                 <div className={cn(
                   'text-2xl font-bold min-w-[3rem] text-center',
-                  value > 0 ? 'text-success-600' :
-                  value < 0 ? 'text-danger-600' :
-                  'text-secondary'
+                  value > 0 ? 'text-green-600' :
+                  value < 0 ? 'text-red-600' :
+                  'text-gray-600'
                 )}>
                   {formatBonus(value)}
                 </div>
@@ -180,13 +237,26 @@ export function AbilityScoreEditor({
                 {isEditMode && (
                   <button
                     onClick={() => onAbilityChange(ability, value + 1)}
-                    disabled={!canIncrease(ability)}
-                    className="btn-stepper btn-stepper-success"
+                    disabled={!canInc}
+                    title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
+                    className={cn(
+                      'w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold transition-colors',
+                      canInc
+                        ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                    )}
                   >
                     +
                   </button>
                 )}
               </div>
+
+              {/* Show cost indicator for high values */}
+              {isEditMode && useHighAbilityCost && value >= 3 && (
+                <p className="text-[10px] text-amber-600 font-medium text-center mt-1">
+                  Next: {increaseCost + 1}pt
+                </p>
+              )}
             </div>
           );
         })}

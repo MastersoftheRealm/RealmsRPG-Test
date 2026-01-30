@@ -2,50 +2,16 @@
  * Abilities Step
  * ==============
  * Allocate ability points during character creation
+ * Uses shared AbilityScoreEditor component for consistent UI
  */
 
 'use client';
 
 import { useMemo } from 'react';
-import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
+import { AbilityScoreEditor } from '@/components/creator';
 import { calculateAbilityPoints } from '@/lib/game/formulas';
 import type { AbilityName } from '@/types';
-
-const ABILITY_INFO: Record<AbilityName, { name: string; description: string; defenseLink: string }> = {
-  strength: { 
-    name: 'Strength', 
-    description: 'Physical power, melee damage, and carrying capacity',
-    defenseLink: 'Might'
-  },
-  vitality: { 
-    name: 'Vitality', 
-    description: 'Health, endurance, and resistance to physical effects',
-    defenseLink: 'Fortitude'
-  },
-  agility: { 
-    name: 'Agility', 
-    description: 'Speed, dexterity, reflexes, and finesse attacks',
-    defenseLink: 'Reflex'
-  },
-  acuity: { 
-    name: 'Acuity', 
-    description: 'Perception, awareness, and ranged accuracy',
-    defenseLink: 'Discernment'
-  },
-  intelligence: { 
-    name: 'Intelligence', 
-    description: 'Knowledge, reasoning, and mental power',
-    defenseLink: 'Mental Fortitude'
-  },
-  charisma: { 
-    name: 'Charisma', 
-    description: 'Force of personality, leadership, and social influence',
-    defenseLink: 'Resolve'
-  },
-};
-
-const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
 
 export function AbilitiesStep() {
   const { draft, updateAbility, nextStep, prevStep } = useCharacterCreatorStore();
@@ -59,148 +25,47 @@ export function AbilitiesStep() {
     charisma: 0,
   };
   
-  // Calculate total points and spent
-  // Vanilla formula: 7 - sum of all ability values
+  // Calculate total points available (vanilla formula)
   const totalPoints = useMemo(() => calculateAbilityPoints(level), [level]);
   
-  // Simple sum of all ability values (positive adds, negative subtracts)
+  // Sum of all ability values for validation
   const spentPoints = useMemo(() => {
-    return ABILITY_ORDER.reduce((sum, ability) => {
-      return sum + (abilities[ability] || 0);
-    }, 0);
-  }, [abilities]);
-  
-  // Calculate sum of all negative ability values
-  const negativeSum = useMemo(() => {
-    return ABILITY_ORDER.reduce((sum, ability) => {
-      const val = abilities[ability] || 0;
-      return val < 0 ? sum + val : sum;
-    }, 0);
+    return Object.values(abilities).reduce((sum, val) => sum + (val || 0), 0);
   }, [abilities]);
   
   const remainingPoints = totalPoints - spentPoints;
-
-  const handleIncrease = (ability: AbilityName) => {
-    const current = abilities[ability] || 0;
-    // Max ability is 3 at creation
-    if (current >= 3) return;
-    // Check if we have points to spend
-    if (remainingPoints <= 0) return;
-    
-    updateAbility(ability, current + 1);
-  };
-
-  const handleDecrease = (ability: AbilityName) => {
-    const current = abilities[ability] || 0;
-    // Min ability is -2
-    if (current <= -2) return;
-    // Check if decreasing would exceed -3 total negative sum
-    if (negativeSum <= -3 && current <= 0) return;
-    
-    updateAbility(ability, current - 1);
-  };
-
   const canContinue = remainingPoints >= 0;
+  
+  // Determine highlighted archetype abilities
+  const highlightedAbilities = useMemo(() => {
+    const highlighted: AbilityName[] = [];
+    if (draft.pow_abil) highlighted.push(draft.pow_abil as AbilityName);
+    if (draft.mart_abil && draft.mart_abil !== draft.pow_abil) {
+      highlighted.push(draft.mart_abil as AbilityName);
+    }
+    return highlighted;
+  }, [draft.pow_abil, draft.mart_abil]);
 
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Assign Ability Scores</h1>
-      <p className="text-gray-600 mb-4">
-        Distribute your ability points. Higher scores cost more at higher values.
-        You can reduce abilities below 0 to gain extra points.
+      <p className="text-gray-600 mb-6">
+        Distribute your ability points. You can reduce abilities below 0 to gain extra points.
+        Archetype abilities are highlighted.
       </p>
       
-      {/* Points Display */}
-      <div className={cn(
-        'flex items-center justify-center gap-4 p-4 rounded-xl mb-6',
-        remainingPoints > 0 ? 'bg-green-50 border border-green-200' :
-        remainingPoints < 0 ? 'bg-red-50 border border-red-200' :
-        'bg-gray-50 border border-gray-200'
-      )}>
-        <div className="text-center">
-          <span className="text-sm text-gray-500">Total Points</span>
-          <div className="text-2xl font-bold text-gray-900">{totalPoints}</div>
-        </div>
-        <div className="text-3xl text-gray-300">−</div>
-        <div className="text-center">
-          <span className="text-sm text-gray-500">Spent</span>
-          <div className="text-2xl font-bold text-gray-900">{spentPoints}</div>
-        </div>
-        <div className="text-3xl text-gray-300">=</div>
-        <div className="text-center">
-          <span className="text-sm text-gray-500">Remaining</span>
-          <div className={cn(
-            'text-2xl font-bold',
-            remainingPoints > 0 ? 'text-green-600' :
-            remainingPoints < 0 ? 'text-red-600' :
-            'text-gray-600'
-          )}>
-            {remainingPoints}
-          </div>
-        </div>
-      </div>
-      
-      {/* Ability Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {ABILITY_ORDER.map((ability) => {
-          const value = abilities[ability] || 0;
-          const info = ABILITY_INFO[ability];
-          const isArchetypeAbility = 
-            draft.pow_abil === ability || draft.mart_abil === ability;
-          
-          return (
-            <div
-              key={ability}
-              className={cn(
-                'p-4 rounded-xl border-2 bg-white',
-                isArchetypeAbility ? 'border-amber-400' : 'border-gray-200'
-              )}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <h3 className="font-bold text-gray-900">{info.name}</h3>
-                  {isArchetypeAbility && (
-                    <span className="text-xs text-amber-600 font-medium">
-                      Archetype Ability
-                    </span>
-                  )}
-                </div>
-                <span className="text-xs text-gray-500">Defense: {info.defenseLink}</span>
-              </div>
-              
-              <p className="text-xs text-gray-500 mb-3">{info.description}</p>
-              
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => handleDecrease(ability)}
-                  disabled={value <= -2 || (negativeSum <= -3 && value <= 0)}
-                  className="btn-stepper btn-stepper-danger"
-                >
-                  −
-                </button>
-                
-                <div className="text-center">
-                  <div className={cn(
-                    'text-3xl font-bold',
-                    value > 0 ? 'text-green-600' :
-                    value < 0 ? 'text-red-600' :
-                    'text-gray-600'
-                  )}>
-                    {value >= 0 ? `+${value}` : value}
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => handleIncrease(ability)}
-                  disabled={value >= 3 || remainingPoints <= 0}
-                  className="btn-stepper btn-stepper-success"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          );
-        })}
+      {/* Shared Ability Score Editor */}
+      <div className="mb-8">
+        <AbilityScoreEditor
+          abilities={abilities}
+          totalPoints={totalPoints}
+          onAbilityChange={updateAbility}
+          maxAbility={3}
+          minAbility={-2}
+          maxNegativeSum={-3}
+          isEditMode={true}
+          highlightedAbilities={highlightedAbilities}
+        />
       </div>
       
       {/* Navigation */}
@@ -223,3 +88,4 @@ export function AbilitiesStep() {
     </div>
   );
 }
+
