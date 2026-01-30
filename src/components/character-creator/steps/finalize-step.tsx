@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
 import { LoginPromptModal } from '@/components/shared';
+import { HealthEnergyAllocator } from '@/components/creator';
 
 // Health-Energy pool for new characters (18 at level 1, +2 per level)
 const BASE_HE_POOL = 18;
@@ -122,7 +123,12 @@ function ValidationModal({
   );
 }
 
-function HealthEnergyAllocation() {
+/**
+ * Health & Energy Allocation Section
+ * Uses the shared HealthEnergyAllocator component for consistent UX
+ * across character creator, character sheet, and creature creator.
+ */
+function HealthEnergyAllocationSection() {
   const { draft, updateDraft } = useCharacterCreatorStore();
   
   // Calculate base values
@@ -139,119 +145,31 @@ function HealthEnergyAllocation() {
   const level = draft.level || 1;
   const hePool = BASE_HE_POOL + (level - 1) * 2;
   
-  // Current allocations (stored as absolute values, subtract base to get allocation)
-  const currentHealth = draft.healthPoints || baseHealth;
-  const currentEnergy = draft.energyPoints || baseEnergy;
+  // Now using bonus values (stored directly)
+  const hpBonus = draft.healthPoints || 0;
+  const enBonus = draft.energyPoints || 0;
   
-  // How many points above base have been allocated
-  const healthAllocation = currentHealth - baseHealth;
-  const energyAllocation = currentEnergy - baseEnergy;
-  const usedHEPoints = healthAllocation + energyAllocation;
-  const remainingHEPoints = hePool - usedHEPoints;
-  
-  const handleHealthChange = (delta: number) => {
-    const newHealth = currentHealth + delta;
-    if (newHealth < baseHealth) return; // Can't go below base
-    if (delta > 0 && remainingHEPoints <= 0) return; // No points left
-    
-    updateDraft({ healthPoints: newHealth });
-  };
-  
-  const handleEnergyChange = (delta: number) => {
-    const newEnergy = currentEnergy + delta;
-    if (newEnergy < baseEnergy) return; // Can't go below base
-    if (delta > 0 && remainingHEPoints <= 0) return; // No points left
-    
-    updateDraft({ energyPoints: newEnergy });
-  };
+  // Calculated max values for display
+  const maxHp = baseHealth + hpBonus;
+  const maxEnergy = baseEnergy + enBonus;
   
   return (
-    <div className="bg-gradient-to-br from-rose-50 to-violet-50 rounded-xl p-6 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-gray-900">Health & Energy</h3>
-        <span className={cn(
-          'px-3 py-1 rounded-full text-sm font-medium',
-          remainingHEPoints > 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-        )}>
-          {remainingHEPoints} points remaining
-        </span>
-      </div>
-      
-      <p className="text-sm text-gray-600 mb-4">
-        Allocate your {hePool} Health-Energy points. Base values come from your abilities.
-      </p>
-      
-      <div className="grid grid-cols-2 gap-6">
-        {/* Health */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">❤️</span>
-            <span className="font-medium text-gray-900">Health</span>
-          </div>
-          <div className="text-xs text-gray-500 mb-3">Base: {baseHealth}</div>
-          
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => handleHealthChange(-1)}
-              disabled={currentHealth <= baseHealth}
-              className="btn-stepper btn-stepper-danger !w-8 !h-8"
-            >
-              −
-            </button>
-            <span className="text-2xl font-bold text-rose-600 w-12 text-center">
-              {currentHealth}
-            </span>
-            <button
-              onClick={() => handleHealthChange(1)}
-              disabled={remainingHEPoints <= 0}
-              className="btn-stepper btn-stepper-success !w-8 !h-8"
-            >
-              +
-            </button>
-          </div>
-          
-          {healthAllocation > 0 && (
-            <div className="text-xs text-center text-gray-500 mt-2">
-              +{healthAllocation} allocated
-            </div>
-          )}
-        </div>
-        
-        {/* Energy */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">⚡</span>
-            <span className="font-medium text-gray-900">Energy</span>
-          </div>
-          <div className="text-xs text-gray-500 mb-3">Base: {baseEnergy}</div>
-          
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => handleEnergyChange(-1)}
-              disabled={currentEnergy <= baseEnergy}
-              className="btn-stepper btn-stepper-danger !w-8 !h-8"
-            >
-              −
-            </button>
-            <span className="text-2xl font-bold text-violet-600 w-12 text-center">
-              {currentEnergy}
-            </span>
-            <button
-              onClick={() => handleEnergyChange(1)}
-              disabled={remainingHEPoints <= 0}
-              className="btn-stepper btn-stepper-success !w-8 !h-8"
-            >
-              +
-            </button>
-          </div>
-          
-          {energyAllocation > 0 && (
-            <div className="text-xs text-center text-gray-500 mt-2">
-              +{energyAllocation} allocated
-            </div>
-          )}
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-bold text-gray-900">Health & Energy Allocation</h3>
+        <div className="text-xs text-gray-500">
+          Base HP: {baseHealth} | Base EN: {baseEnergy}
         </div>
       </div>
+      <HealthEnergyAllocator
+        hpBonus={hpBonus}
+        energyBonus={enBonus}
+        poolTotal={hePool}
+        maxHp={maxHp}
+        maxEnergy={maxEnergy}
+        onHpChange={(val) => updateDraft({ healthPoints: val })}
+        onEnergyChange={(val) => updateDraft({ energyPoints: val })}
+      />
     </div>
   );
 }
@@ -512,19 +430,12 @@ export function FinalizeStep() {
     }
     
     // 6. Health/Energy points - base HE pool is 18 at level 1 (+2 per level)
-    const abilities = draft.abilities || {};
-    const archetype = { 
-      type: draft.archetype?.type, 
-      pow_abil: draft.pow_abil, 
-      mart_abil: draft.mart_abil 
-    };
-    const baseHealth = getBaseHealth(archetype, abilities);
-    const baseEnergy = getBaseEnergy(archetype, abilities);
     const hePool = BASE_HE_POOL + (level - 1) * 2;
     
-    const healthAllocation = (draft.healthPoints || 0) - baseHealth;
-    const energyAllocation = (draft.energyPoints || 0) - baseEnergy;
-    const usedHEPoints = Math.max(0, healthAllocation) + Math.max(0, energyAllocation);
+    // Now using bonus values directly (not absolute)
+    const healthAllocation = draft.healthPoints || 0;
+    const energyAllocation = draft.energyPoints || 0;
+    const usedHEPoints = healthAllocation + energyAllocation;
     const remainingHEPoints = hePool - usedHEPoints;
     
     if (remainingHEPoints > 0) {
@@ -786,7 +697,7 @@ export function FinalizeStep() {
       </div>
       
       {/* Health & Energy Allocation */}
-      <HealthEnergyAllocation />
+      <HealthEnergyAllocationSection />
       
       {/* Description (Optional) */}
       <div className="mb-6">

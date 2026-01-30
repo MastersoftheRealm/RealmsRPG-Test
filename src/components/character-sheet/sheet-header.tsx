@@ -11,6 +11,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
+import { HealthEnergyAllocator } from '@/components/creator';
 import type { Character } from '@/types';
 
 interface CalculatedStats {
