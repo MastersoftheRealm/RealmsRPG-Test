@@ -56,8 +56,16 @@ interface RollLogProps {
 }
 
 export function RollLog({ className }: RollLogProps) {
-  const { rolls, addRoll, clearHistory } = useRolls();
+  const { rolls, addRoll, clearHistory, subscribeToRolls } = useRolls();
   const [isOpen, setIsOpen] = React.useState(false);
+  
+  // Subscribe to roll events to auto-open the log
+  React.useEffect(() => {
+    const unsubscribe = subscribeToRolls(() => {
+      setIsOpen(true);
+    });
+    return unsubscribe;
+  }, [subscribeToRolls]);
   
   // Dice pool state (local to the manual dice builder)
   const [dicePool, setDicePool] = React.useState<Record<DieType, number>>({

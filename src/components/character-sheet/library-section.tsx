@@ -15,7 +15,7 @@ import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
-import { PartChipList, type PartData, EditSectionToggle } from '@/components/shared';
+import { PartChipList, type PartData, EditSectionToggle, RollButton } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
@@ -488,22 +488,23 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
         {type === 'weapon' && !isEditMode && (
           <div className="flex items-center gap-1 pr-2">
             {onRollAttack && (
-              <button
+              <RollButton
+                value={0}
+                displayValue="⚔️ Atk"
                 onClick={onRollAttack}
-                className="px-2 py-1 text-xs font-medium bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                size="sm"
                 title="Roll attack"
-              >
-                ⚔️ Atk
-              </button>
+              />
             )}
             {onRollDamage && item.damage && (
-              <button
+              <RollButton
+                value={0}
+                displayValue="💥 Dmg"
+                variant="danger"
                 onClick={onRollDamage}
-                className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors"
+                size="sm"
                 title="Roll damage"
-              >
-                💥 Dmg
-              </button>
+              />
             )}
           </div>
         )}

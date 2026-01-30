@@ -267,6 +267,7 @@ export function FeatsTab({
                   trait={enriched}
                   category={trait.category}
                   compact
+                  neutralStyle
                   currentUses={traitUses[trait.name] ?? enriched.maxUses}
                   onUsesChange={enriched.maxUses > 0 && onTraitUsesChange 
                     ? (delta) => onTraitUsesChange(trait.name, delta) 
@@ -284,6 +285,7 @@ export function FeatsTab({
                   trait={{ ...trait, ...enriched }}
                   category="species"
                   compact
+                  neutralStyle
                   currentUses={traitUses[trait.name] ?? enriched.maxUses}
                   onUsesChange={enriched.maxUses > 0 && onTraitUsesChange 
                     ? (delta) => onTraitUsesChange(trait.name, delta) 

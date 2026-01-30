@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
 import { RollButton, PointStatus, EditSectionToggle, getEditState, DecrementButton, IncrementButton } from '@/components/shared';
@@ -137,6 +137,13 @@ export function AbilitiesSection({
 }: AbilitiesSectionProps) {
   const rollContext = useRollsOptional();
   
+  // Local state for whether this section is actively being edited
+  // Only relevant when isEditMode is true - clicking pencil toggles this
+  const [isSectionEditing, setIsSectionEditing] = useState(false);
+  
+  // Derived state: is the section actually editable right now?
+  const showEditControls = isEditMode && isSectionEditing;
+  
   // Calculate ability points spent
   const calculatedSpentAbilityPoints = useMemo(() => {
     let spent = 0;
@@ -189,19 +196,23 @@ export function AbilitiesSection({
         <div className="absolute top-3 right-3">
           <EditSectionToggle 
             state={abilityEditState}
+            isActive={isSectionEditing}
+            onClick={() => setIsSectionEditing(prev => !prev)}
             title={
-              abilityEditState === 'has-points' 
-                ? 'You have ability points to spend' 
-                : abilityEditState === 'over-budget'
-                ? 'Over budget - remove points'
-                : 'Editing abilities & defenses'
+              isSectionEditing
+                ? 'Click to close editing'
+                : abilityEditState === 'has-points' 
+                  ? 'Click to edit - you have ability points to spend' 
+                  : abilityEditState === 'over-budget'
+                    ? 'Click to edit - over budget, remove points'
+                    : 'Click to edit abilities & defenses'
             }
           />
         </div>
       )}
       
       {/* Header with Point Trackers */}
-      {isEditMode && (
+      {showEditControls && (
         <div className="flex flex-wrap gap-3 mb-4 p-3 bg-surface-secondary rounded-lg">
           {totalAbilityPoints !== undefined && (
             <PointStatus
@@ -244,7 +255,7 @@ export function AbilitiesSection({
               className={cn(
                 'flex flex-col items-center p-3 bg-gradient-to-b from-surface to-surface-alt rounded-xl border-2 transition-all',
                 isArchetype ? 'border-amber-300' : 'border-border-light',
-                !isEditMode && 'hover:shadow-md'
+                !showEditControls && 'hover:shadow-md'
               )}
             >
               {/* Ability Name with small emoji indicators */}
@@ -255,7 +266,7 @@ export function AbilitiesSection({
               </span>
               
               {/* Ability Value / Roll Button */}
-              {isEditMode ? (
+              {showEditControls ? (
                 <div className="flex items-center gap-1">
                   <DecrementButton
                     onClick={() => onAbilityChange?.(ability, value - 1)}
@@ -287,7 +298,7 @@ export function AbilitiesSection({
               )}
               
               {/* Cost indicator in edit mode */}
-              {isEditMode && value >= 3 && (
+              {showEditControls && value >= 3 && (
                 <span className="text-[10px] text-amber-600 font-medium mt-1">
                   Next: {cost + (value >= 3 ? 1 : 0)}pt
                 </span>
@@ -326,7 +337,7 @@ export function AbilitiesSection({
                 </span>
                 
                 {/* Defense Bonus Roll Button / Edit Controls */}
-                {isEditMode ? (
+                {showEditControls ? (
                   <div className="flex items-center gap-1">
                     <DecrementButton
                       onClick={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
@@ -356,7 +367,7 @@ export function AbilitiesSection({
                 )}
                 
                 {/* Defense skill allocation indicator */}
-                {isEditMode && defenseValue > 0 && (
+                {showEditControls && defenseValue > 0 && (
                   <span className="text-[9px] text-blue-600 font-medium mt-0.5">
                     +{defenseValue} ({defenseValue * 2}sp)
                   </span>

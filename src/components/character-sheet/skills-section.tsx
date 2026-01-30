@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
@@ -80,6 +80,12 @@ export function SkillsSection({
   onAddSubSkill,
 }: SkillsSectionProps) {
   const rollContext = useRollsOptional();
+  
+  // Local state for whether this section is actively being edited
+  const [isSectionEditing, setIsSectionEditing] = useState(false);
+  
+  // Derived state: is the section actually editable right now?
+  const showEditControls = isEditMode && isSectionEditing;
   
   // Check if a skill is from species (locked)
   const isSpeciesSkill = (skillName: string): boolean => {
@@ -264,12 +270,16 @@ export function SkillsSection({
         <div className="absolute top-3 right-3">
           <EditSectionToggle 
             state={skillEditState}
+            isActive={isSectionEditing}
+            onClick={() => setIsSectionEditing(prev => !prev)}
             title={
-              skillEditState === 'has-points' 
-                ? 'You have skill points to spend' 
-                : skillEditState === 'over-budget'
-                ? 'Over budget - remove skill points'
-                : 'Editing skills'
+              isSectionEditing
+                ? 'Click to close editing'
+                : skillEditState === 'has-points' 
+                  ? 'Click to edit - you have skill points to spend' 
+                  : skillEditState === 'over-budget'
+                    ? 'Click to edit - over budget, remove skill points'
+                    : 'Click to edit skills'
             }
           />
         </div>
@@ -279,7 +289,7 @@ export function SkillsSection({
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-text-primary">Skills</h2>
         <div className="flex items-center gap-2">
-          {isEditMode && (
+          {showEditControls && (
             <>
               <Button
                 variant="success"
@@ -318,8 +328,8 @@ export function SkillsSection({
               <th className="text-left py-2 pl-2">Skill</th>
               <th className="w-16 py-2 text-center">Ability</th>
               <th className="w-20 py-2 text-center">Bonus</th>
-              {isEditMode && <th className="w-24 py-2 text-center">Value</th>}
-              {isEditMode && <th className="w-8 py-2"></th>}
+              {showEditControls && <th className="w-24 py-2 text-center">Value</th>}
+              {showEditControls && <th className="w-8 py-2"></th>}
             </tr>
           </thead>
           <tbody>
@@ -342,21 +352,21 @@ export function SkillsSection({
                   className={cn(
                     'border-b border-border-subtle transition-colors',
                     isSubSkill ? 'bg-surface-alt' : 'bg-surface',
-                    !isEditMode && 'hover:bg-blue-50'
+                    !showEditControls && 'hover:bg-blue-50'
                   )}
                 >
                   {/* Proficiency Dot */}
                   <td className="py-2 text-center">
                     {!isSubSkill && (
                       <button
-                        onClick={() => isEditMode && handleProfToggle(skill)}
-                        disabled={!isEditMode || isFromSpecies}
+                        onClick={() => showEditControls && handleProfToggle(skill)}
+                        disabled={!showEditControls || isFromSpecies}
                         className={cn(
                           'w-4 h-4 rounded-full inline-block transition-all',
                           skill.prof 
                             ? 'bg-blue-600 border-2 border-blue-600' 
                             : 'bg-orange-400 border-2 border-orange-400',
-                          isEditMode && !isFromSpecies && 'cursor-pointer hover:scale-110',
+                          showEditControls && !isFromSpecies && 'cursor-pointer hover:scale-110',
                           isFromSpecies && 'opacity-70'
                         )}
                         title={isFromSpecies 
@@ -383,7 +393,7 @@ export function SkillsSection({
                   
                   {/* Ability */}
                   <td className="py-2 text-center">
-                    {isEditMode && onSkillChange && skillAbilityOptions.length > 1 ? (
+                    {showEditControls && onSkillChange && skillAbilityOptions.length > 1 ? (
                       <select
                         value={skill.ability || skillAbilityOptions[0]?.value || 'strength'}
                         onChange={(e) => onSkillChange(skill.id, { ability: e.target.value })}
@@ -403,7 +413,7 @@ export function SkillsSection({
                   
                   {/* Bonus Roll Button */}
                   <td className="py-2 text-center">
-                    {isEditMode ? (
+                    {showEditControls ? (
                       <span className={cn(
                         'inline-block min-w-[40px] font-bold',
                         bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-text-secondary'
@@ -421,7 +431,7 @@ export function SkillsSection({
                   </td>
                   
                   {/* Skill Value +/- (edit mode) */}
-                  {isEditMode && (
+                  {showEditControls && (
                     <td className="py-2 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
@@ -450,7 +460,7 @@ export function SkillsSection({
                   )}
                   
                   {/* Remove button (edit mode) */}
-                  {isEditMode && (
+                  {showEditControls && (
                     <td className="py-2 text-center">
                       {onRemoveSkill && (
                         <IconButton
@@ -473,7 +483,7 @@ export function SkillsSection({
         {orderedSkills.length === 0 && (
           <div className="text-center py-8 text-text-muted">
             No skills added yet.
-            {isEditMode && ' Click "Add Skill" to get started.'}
+            {showEditControls && ' Click "Add Skill" to get started.'}
           </div>
         )}
       </div>

@@ -47,6 +47,8 @@ export interface SpeciesTraitCardProps {
   currentUses?: number;
   /** Callback to change uses (+1 or -1) */
   onUsesChange?: (delta: number) => void;
+  /** Use neutral styling with text subtype (for character sheet display) */
+  neutralStyle?: boolean;
 }
 
 // =============================================================================
@@ -115,6 +117,16 @@ const CATEGORY_CONFIG: Record<TraitCategory, {
   },
 };
 
+// Neutral styling for character sheet display
+const NEUTRAL_COLORS = {
+  bg: 'bg-surface-alt',
+  border: 'border-border-light',
+  text: 'text-text-primary',
+  iconColor: 'text-text-muted',
+  selectedBg: 'bg-primary-50',
+  selectedBorder: 'border-primary-400',
+};
+
 // =============================================================================
 // Main Component
 // =============================================================================
@@ -130,10 +142,12 @@ export function SpeciesTraitCard({
   className,
   currentUses,
   onUsesChange,
+  neutralStyle = false,
 }: SpeciesTraitCardProps) {
   const config = CATEGORY_CONFIG[category];
   const Icon = config.icon;
-  const { colors } = config;
+  // Use neutral colors if neutralStyle is true, otherwise use category colors
+  const colors = neutralStyle ? NEUTRAL_COLORS : config.colors;
   
   // Uses tracking
   const maxUses = trait.maxUses ?? 0;
@@ -196,13 +210,21 @@ export function SpeciesTraitCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <h4 className={cn(
-              'font-medium',
-              compact ? 'text-sm' : '',
-              colors.text
-            )}>
-              {trait.name}
-            </h4>
+            <div className="flex items-center gap-2">
+              <h4 className={cn(
+                'font-medium',
+                compact ? 'text-sm' : '',
+                colors.text
+              )}>
+                {trait.name}
+              </h4>
+              {/* Subtext label for trait type when using neutral style */}
+              {neutralStyle && (
+                <span className="text-xs text-text-muted italic">
+                  {config.label}
+                </span>
+              )}
+            </div>
             
             {/* Uses tracking controls */}
             {hasLimitedUses && (

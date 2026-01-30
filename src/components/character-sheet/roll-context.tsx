@@ -47,6 +47,9 @@ interface RollContextValue {
   // History management
   clearHistory: () => void;
   addRoll: (roll: RollEntry) => void;
+  
+  // Subscription for roll log auto-open
+  subscribeToRolls: (callback: (roll: RollEntry) => void) => () => void;
 }
 
 const RollContext = createContext<RollContextValue | null>(null);
@@ -81,13 +84,26 @@ export function RollProvider({
   maxHistory?: number;
 }) {
   const [rolls, setRolls] = useState<RollEntry[]>([]);
+  
+  // Subscribers to be notified when a new roll is added
+  const subscribersRef = React.useRef<Set<(roll: RollEntry) => void>>(new Set());
 
   const addRoll = useCallback((roll: RollEntry) => {
     setRolls(prev => [roll, ...prev].slice(0, maxHistory));
+    // Notify all subscribers
+    subscribersRef.current.forEach(callback => callback(roll));
   }, [maxHistory]);
 
   const clearHistory = useCallback(() => {
     setRolls([]);
+  }, []);
+  
+  // Subscribe to roll events (for auto-opening roll log)
+  const subscribeToRolls = useCallback((callback: (roll: RollEntry) => void) => {
+    subscribersRef.current.add(callback);
+    return () => {
+      subscribersRef.current.delete(callback);
+    };
   }, []);
 
   // Internal helper for d20 rolls (abilities, defenses, skills, attacks)
@@ -241,6 +257,7 @@ export function RollProvider({
     rollCustom,
     clearHistory,
     addRoll,
+    subscribeToRolls,
   };
 
   return (

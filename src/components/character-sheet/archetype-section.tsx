@@ -6,10 +6,11 @@
 
 'use client';
 
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
-import { EditSectionToggle } from '@/components/shared';
+import { EditSectionToggle, RollButton } from '@/components/shared';
 import type { Character, Abilities, Item } from '@/types';
 
 interface ArchetypeSectionProps {
@@ -98,11 +99,9 @@ function AttackBonusesTable({
   powerProf: number;
   onRollBonus?: (name: string, bonus: number) => void;
 }) {
-  const formatBonus = (val: number) => val >= 0 ? `+${val}` : `${val}`;
-  
   // Calculate bonuses for each ability
-  // Prof = ability + martial_prof, Unprof = ability only (or ability/2 rounded up for negative)
-  const bonuses = {
+  // Prof = ability + martial_prof, Unprof = ability only
+  const martialBonuses = {
     strength: {
       prof: (abilities.strength ?? 0) + martialProf,
       unprof: abilities.strength ?? 0,
@@ -115,11 +114,17 @@ function AttackBonusesTable({
       prof: (abilities.acuity ?? 0) + martialProf,
       unprof: abilities.acuity ?? 0,
     },
-    power: {
-      prof: (abilities[('charisma')] ?? 0) + powerProf, // Using default power ability
-      unprof: abilities[('charisma')] ?? 0,
-    },
   };
+  
+  const powerBonus = {
+    prof: (abilities[('charisma')] ?? 0) + powerProf,
+    unprof: abilities[('charisma')] ?? 0,
+  };
+
+  // Don't render table if no proficiencies at all
+  if (martialProf === 0 && powerProf === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
@@ -133,29 +138,52 @@ function AttackBonusesTable({
           </tr>
         </thead>
         <tbody>
-          {(['strength', 'agility', 'acuity', 'power'] as const).map((key) => (
+          {/* Martial rows - only show if martial proficiency > 0 */}
+          {martialProf > 0 && (['strength', 'agility', 'acuity'] as const).map((key) => (
             <tr key={key}>
-              <td className="py-1 font-medium text-text-secondary capitalize">{key}</td>
+              <td className="py-1 font-medium text-text-secondary capitalize">⚔️ {key}</td>
               <td className="text-center py-1">
-                <button
-                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, bonuses[key].prof)}
-                  className="px-2 py-0.5 bg-surface border border-border-light rounded hover:bg-primary-50 hover:border-primary-300 transition-colors font-mono text-sm"
+                <RollButton
+                  value={martialBonuses[key].prof}
+                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, martialBonuses[key].prof)}
+                  size="sm"
                   title={`Roll ${key} (proficient)`}
-                >
-                  {formatBonus(bonuses[key].prof)}
-                </button>
+                />
               </td>
               <td className="text-center py-1">
-                <button
-                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, bonuses[key].unprof)}
-                  className="px-2 py-0.5 bg-surface-alt border border-border-light rounded hover:bg-surface transition-colors font-mono text-sm text-text-muted"
+                <RollButton
+                  value={martialBonuses[key].unprof}
+                  variant="unproficient"
+                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, martialBonuses[key].unprof)}
+                  size="sm"
                   title={`Roll ${key} (unproficient)`}
-                >
-                  {formatBonus(bonuses[key].unprof)}
-                </button>
+                />
               </td>
             </tr>
           ))}
+          {/* Power row - only show if power proficiency > 0 */}
+          {powerProf > 0 && (
+            <tr>
+              <td className="py-1 font-medium text-text-secondary capitalize">✨ Power</td>
+              <td className="text-center py-1">
+                <RollButton
+                  value={powerBonus.prof}
+                  onClick={() => onRollBonus?.('Power (Prof.)', powerBonus.prof)}
+                  size="sm"
+                  title="Roll power (proficient)"
+                />
+              </td>
+              <td className="text-center py-1">
+                <RollButton
+                  value={powerBonus.unprof}
+                  variant="unproficient"
+                  onClick={() => onRollBonus?.('Power (Unprof.)', powerBonus.unprof)}
+                  size="sm"
+                  title="Roll power (unproficient)"
+                />
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
@@ -174,7 +202,6 @@ function WeaponsSection({
   onRollAttack?: (name: string, bonus: number) => void;
   onRollDamage?: (damageStr: string, bonus: number) => void;
 }) {
-  const formatBonus = (val: number) => val >= 0 ? `+${val}` : `${val}`;
   const abilities = character.abilities || {};
   
   // Get equipped weapons from character equipment
@@ -242,20 +269,22 @@ function WeaponsSection({
                   )}
                 </td>
                 <td className="text-center py-1">
-                  <button
+                  <RollButton
+                    value={attackBonus}
                     onClick={() => onRollAttack?.(weapon.name || 'Attack', attackBonus)}
-                    className="px-2 py-0.5 bg-gradient-to-b from-blue-500 to-blue-600 text-white rounded hover:from-blue-600 hover:to-blue-700 transition-colors font-mono text-sm shadow-sm"
-                  >
-                    {formatBonus(attackBonus)}
-                  </button>
+                    size="sm"
+                    title={`Roll attack with ${weapon.name}`}
+                  />
                 </td>
                 <td className="text-center py-1">
-                  <button
+                  <RollButton
+                    value={0}
+                    displayValue={damageStr}
+                    variant="danger"
                     onClick={() => onRollDamage?.(damageStr, attackBonus)}
-                    className="px-2 py-0.5 bg-gradient-to-b from-red-500 to-red-600 text-white rounded hover:from-red-600 hover:to-red-700 transition-colors font-mono text-sm shadow-sm"
-                  >
-                    {damageStr}
-                  </button>
+                    size="sm"
+                    title={`Roll ${damageStr} damage`}
+                  />
                 </td>
                 <td className="text-center py-1 text-text-muted">
                   {weapon.range || 'Melee'}
@@ -267,20 +296,23 @@ function WeaponsSection({
           <tr className="border-t border-border-light">
             <td className="py-1 font-medium text-text-muted italic">Unarmed Prowess</td>
             <td className="text-center py-1">
-              <button
+              <RollButton
+                value={unprofBonus}
+                variant="unproficient"
                 onClick={() => onRollAttack?.('Unarmed Prowess', unprofBonus)}
-                className="px-2 py-0.5 bg-surface text-text-secondary rounded hover:bg-surface-alt transition-colors font-mono text-sm"
-              >
-                {formatBonus(unprofBonus)}
-              </button>
+                size="sm"
+                title="Roll unarmed attack"
+              />
             </td>
             <td className="text-center py-1">
-              <button
+              <RollButton
+                value={0}
+                displayValue={`${unarmedDamage} Bludg.`}
+                variant="unproficient"
                 onClick={() => onRollDamage?.(`${unarmedDamage} Bludgeoning`, unprofBonus)}
-                className="px-2 py-0.5 bg-surface text-text-secondary rounded hover:bg-surface-alt transition-colors font-mono text-sm"
-              >
-                {unarmedDamage} Bludg.
-              </button>
+                size="sm"
+                title="Roll unarmed damage"
+              />
             </td>
             <td className="text-center py-1 text-text-muted">Melee</td>
           </tr>
@@ -387,6 +419,12 @@ export function ArchetypeSection({
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
   const rollContext = useRollsOptional();
   
+  // Local state for whether this section is actively being edited
+  const [isSectionEditing, setIsSectionEditing] = useState(false);
+  
+  // Derived state: is the section actually editable right now?
+  const showEditControls = isEditMode && isSectionEditing;
+  
   // Calculate proficiency points
   const level = character.level || 1;
   const totalProfPoints = calculateProficiency(level);
@@ -456,12 +494,16 @@ export function ArchetypeSection({
         <div className="absolute top-3 right-3">
           <EditSectionToggle 
             state={getEditState()}
+            isActive={isSectionEditing}
+            onClick={() => setIsSectionEditing(prev => !prev)}
             title={
-              getEditState() === 'has-points' 
-                ? 'You have proficiency points to spend' 
-                : getEditState() === 'over-budget'
-                ? 'Over budget - remove proficiency points'
-                : 'Editing archetype'
+              isSectionEditing
+                ? 'Click to close editing'
+                : getEditState() === 'has-points' 
+                  ? 'Click to edit - you have proficiency points to spend' 
+                  : getEditState() === 'over-budget'
+                    ? 'Click to edit - over budget, remove proficiency points'
+                    : 'Click to edit archetype'
             }
           />
         </div>
@@ -485,7 +527,7 @@ export function ArchetypeSection({
           label="Martial" 
           value={martialProf}
           color="red"
-          isEditMode={isEditMode}
+          isEditMode={showEditControls}
           onIncrease={() => onMartialProfChange?.(martialProf + 1)}
           onDecrease={() => onMartialProfChange?.(martialProf - 1)}
         />
@@ -493,14 +535,14 @@ export function ArchetypeSection({
           label="Power" 
           value={powerProf}
           color="purple"
-          isEditMode={isEditMode}
+          isEditMode={showEditControls}
           onIncrease={() => onPowerProfChange?.(powerProf + 1)}
           onDecrease={() => onPowerProfChange?.(powerProf - 1)}
         />
       </div>
       
       {/* Proficiency Points Display - three-state coloring */}
-      {isEditMode && (
+      {showEditControls && (
         <div className="mb-4 flex justify-center">
           <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getProfPointsColorClass())}>
             {remainingProfPoints} / {totalProfPoints} prof. points
@@ -520,7 +562,7 @@ export function ArchetypeSection({
               return (
                 <div key={milestoneLevel} className="flex items-center gap-1">
                   <span className="text-xs text-text-muted min-w-[32px]">Lv.{milestoneLevel}:</span>
-                  {isEditMode && onMilestoneChoiceChange ? (
+                  {showEditControls && onMilestoneChoiceChange ? (
                     <div className="flex gap-1">
                       <button
                         onClick={() => onMilestoneChoiceChange(milestoneLevel, 'innate')}
