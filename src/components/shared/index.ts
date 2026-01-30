@@ -43,6 +43,10 @@ export type { ColumnValue, ChipData, GridListRowProps } from './grid-list-row';
 export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';
 export type { PartData } from './part-chip';
 
+// CollapsibleListItem - Simple collapsible item for traits, feats, etc.
+export { CollapsibleListItem } from './collapsible-list-item';
+export type { CollapsibleListItemProps } from './collapsible-list-item';
+
 // List components (shared between Codex and Library)
 export {
   SearchInput,

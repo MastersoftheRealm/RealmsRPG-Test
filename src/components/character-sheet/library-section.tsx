@@ -141,9 +141,18 @@ interface LibrarySectionProps {
   // Feats tab props
   ancestry?: {
     selectedTraits?: string[];
-    selectedFlaw?: string;
-    selectedCharacteristic?: string;
+    selectedFlaw?: string | null;
+    selectedCharacteristic?: string | null;
   };
+  // Vanilla site trait fields (stored at top level)
+  vanillaTraits?: {
+    ancestryTraits?: string[];
+    flawTrait?: string | null;
+    characteristicTrait?: string | null;
+    speciesTraits?: string[];
+  };
+  // Species traits from RTDB species data (automatically granted based on species)
+  speciesTraitsFromRTDB?: string[];
   traitsDb?: Array<{
     id: string;
     name: string;
@@ -589,6 +598,8 @@ export function LibrarySection({
   techniquePartsDb = [],
   // Feats props
   ancestry,
+  vanillaTraits,
+  speciesTraitsFromRTDB = [],
   traitsDb = [],
   traitUses = {},
   archetypeFeats = [],
@@ -919,6 +930,8 @@ export function LibrarySection({
         {activeTab === 'feats' && (
           <FeatsTab
             ancestry={ancestry}
+            vanillaTraits={vanillaTraits}
+            speciesTraitsFromRTDB={speciesTraitsFromRTDB}
             traitsDb={traitsDb}
             traitUses={traitUses}
             archetypeFeats={archetypeFeats}

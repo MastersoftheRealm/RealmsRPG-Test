@@ -172,9 +172,14 @@ export interface Character {
   updatedAt?: Date | string;
   lastPlayedAt?: Date | string;
   
-  // Legacy fields for compatibility
+  // Legacy fields for compatibility (vanilla site format)
   allTraits?: unknown[];
   _displayFeats?: unknown[];
+  // Vanilla site stores traits at top level instead of inside ancestry object
+  ancestryTraits?: string[];
+  flawTrait?: string | null;
+  characteristicTrait?: string | null;
+  speciesTraits?: string[];
 }
 
 /** Character summary for list views */

@@ -2,14 +2,15 @@
  * Add Library Item Modal
  * =======================
  * Modal for adding powers, techniques, or items from the user's library
- * to their character sheet.
+ * to their character sheet. Uses GridListRow for consistent styling.
  */
 
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Check, Loader2 } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Modal, SearchInput, Button } from '@/components/ui';
+import { GridListRow } from '@/components/shared';
 import { formatDamageDisplay } from '@/lib/utils';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
@@ -206,40 +207,21 @@ export function AddLibraryItemModal({
               )}
             </div>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <div className="space-y-2 p-2">
               {filteredItems.map((item) => (
-                <li 
+                <GridListRow
                   key={item.id}
-                  onClick={() => toggleSelection(item.id)}
-                  className={`
-                    flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors
-                    ${selectedIds.has(item.id) 
-                      ? 'bg-primary-50 border-l-4 border-primary-500' 
-                      : 'hover:bg-surface-alt border-l-4 border-transparent'
-                    }
-                  `}
-                >
-                  <div className={`
-                    w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
-                    ${selectedIds.has(item.id) 
-                      ? 'bg-primary-600 border-primary-600' 
-                      : 'border-border-light'
-                    }
-                  `}>
-                    {selectedIds.has(item.id) && (
-                      <Check className="w-3 h-3 text-white" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-text-primary truncate">{item.name}</p>
-                    {item.description && (
-                      <p className="text-sm text-text-muted truncate">{item.description}</p>
-                    )}
-                  </div>
-                  {renderItemMeta(item, itemType)}
-                </li>
+                  id={item.id}
+                  name={item.name}
+                  description={item.description || 'No description available.'}
+                  columns={getItemColumns(item, itemType)}
+                  selectable
+                  isSelected={selectedIds.has(item.id)}
+                  onSelect={() => toggleSelection(item.id)}
+                  compact
+                />
               ))}
-            </ul>
+            </div>
           )}
         </div>
         
@@ -269,27 +251,33 @@ export function AddLibraryItemModal({
   );
 }
 
-// Helper to render item-specific metadata
-function renderItemMeta(item: UserPower | UserTechnique | UserItem, itemType: ItemType) {
+// Helper to get item-specific columns for GridListRow
+function getItemColumns(item: UserPower | UserTechnique | UserItem, itemType: ItemType) {
   if (itemType === 'power') {
-    return null; // Could add cost display
+    const power = item as UserPower;
+    return [
+      { key: 'Level', value: power.parts?.length || '-' },
+    ];
   }
   if (itemType === 'technique') {
-    return null; // Could add energy display
+    const technique = item as UserTechnique;
+    return [
+      { key: 'Parts', value: technique.parts?.length || '-' },
+    ];
   }
   if (itemType === 'weapon') {
     const weapon = item as UserItem;
-    return weapon.damage ? (
-      <span className="text-sm text-red-600 font-medium">{formatDamageDisplay(weapon.damage)}</span>
-    ) : null;
+    return weapon.damage ? [
+      { key: 'Damage', value: formatDamageDisplay(weapon.damage), highlight: true },
+    ] : [];
   }
   if (itemType === 'armor') {
     const armor = item as UserItem;
-    return armor.armorValue ? (
-      <span className="text-sm text-blue-600 font-medium">+{armor.armorValue} AR</span>
-    ) : null;
+    return armor.armorValue ? [
+      { key: 'Armor', value: `+${armor.armorValue}`, highlight: true },
+    ] : [];
   }
-  return null;
+  return [];
 }
 
 export default AddLibraryItemModal;

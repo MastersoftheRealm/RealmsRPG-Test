@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
-import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts } from '@/hooks';
+import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useSpecies } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
@@ -143,11 +143,31 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   
+  // Fetch all species data to look up species traits
+  const { data: allSpecies = [] } = useSpecies();
+  
   // Enrich character data with full library objects
   const enrichedData = useMemo(() => {
     if (!character) return null;
     return enrichCharacterData(character, userPowers, userTechniques, userItems);
   }, [character, userPowers, userTechniques, userItems]);
+  
+  // Look up character's species and its species_traits (automatically granted to all characters of that species)
+  const characterSpeciesTraits = useMemo(() => {
+    if (!character || !allSpecies.length) return [];
+    
+    // Find species by ID first, then by name
+    const speciesId = character.ancestry?.id;
+    const speciesName = character.ancestry?.name || character.species;
+    
+    let species = allSpecies.find(s => s.id === speciesId);
+    if (!species && speciesName) {
+      species = allSpecies.find(s => s.name.toLowerCase() === speciesName?.toLowerCase());
+    }
+    
+    // Return the species_traits array (IDs/names of traits automatically granted)
+    return species?.species_traits || [];
+  }, [character, allSpecies]);
   
   // Load character data
   useEffect(() => {
@@ -1107,6 +1127,15 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   // Feats tab props
                   // Cast ancestry to any to accommodate nullable fields from RTDB (selectedFlaw may be null)
                   ancestry={character.ancestry as any}
+                  // Vanilla site trait fields (stored at top level)
+                  vanillaTraits={{
+                    ancestryTraits: character.ancestryTraits,
+                    flawTrait: character.flawTrait,
+                    characteristicTrait: character.characteristicTrait,
+                    speciesTraits: character.speciesTraits,
+                  }}
+                  // Species traits from RTDB (automatically granted to all characters of this species)
+                  speciesTraitsFromRTDB={characterSpeciesTraits}
                   archetypeFeats={character.archetypeFeats}
                   characterFeats={character.feats}
                   onFeatUsesChange={handleFeatUsesChange}

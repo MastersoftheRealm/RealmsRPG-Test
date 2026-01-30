@@ -2,16 +2,15 @@
  * Feats Tab Component
  * ====================
  * Combined view of traits and feats for the library section
- * Mirrors vanilla feats.js organization with collapsible sections
+ * Uses CollapsibleListItem for consistent library-style display
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, Plus, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
+import { Plus } from 'lucide-react';
 import { Button, Collapsible } from '@/components/ui';
-import { SpeciesTraitCard } from '@/components/shared/species-trait-card';
+import { CollapsibleListItem } from '@/components/shared';
 
 // =============================================================================
 // Types
@@ -45,13 +44,25 @@ interface FeatData {
 
 interface CharacterAncestry {
   selectedTraits?: string[];
-  selectedFlaw?: string;
-  selectedCharacteristic?: string;
+  selectedFlaw?: string | null;
+  selectedCharacteristic?: string | null;
+}
+
+/** Legacy vanilla site trait fields (stored at top level) */
+interface VanillaTraitFields {
+  ancestryTraits?: string[];
+  flawTrait?: string | null;
+  characteristicTrait?: string | null;
+  speciesTraits?: string[];
 }
 
 interface FeatsTabProps {
-  // Traits from ancestry
+  // Traits from ancestry (new format)
   ancestry?: CharacterAncestry;
+  // Legacy vanilla trait fields (stored at top level on character)
+  vanillaTraits?: VanillaTraitFields;
+  // Species traits from RTDB (automatically granted based on character's species)
+  speciesTraitsFromRTDB?: string[];
   // Character's traits (legacy format)
   traits?: TraitData[];
   // RTDB traits for enrichment (max uses, descriptions)
@@ -72,116 +83,13 @@ interface FeatsTabProps {
 }
 
 // =============================================================================
-// Feat Card Component
-// =============================================================================
-
-interface FeatCardProps {
-  feat: FeatData;
-  onUsesChange?: (delta: number) => void;
-  isEditMode?: boolean;
-}
-
-function FeatCard({ feat, onUsesChange, isEditMode }: FeatCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  const currentUses = feat.currentUses ?? feat.maxUses ?? 0;
-  const maxUses = feat.maxUses ?? 0;
-  const hasLimitedUses = maxUses > 0;
-
-  const handleUsesChange = (e: React.MouseEvent, delta: number) => {
-    e.stopPropagation();
-    onUsesChange?.(delta);
-  };
-
-  return (
-    <div className="border border-border-light rounded-lg overflow-hidden transition-colors bg-surface">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-surface-alt text-left"
-      >
-        <div className="flex items-center gap-2">
-          {expanded ? (
-            <ChevronUp className="w-4 h-4 text-text-muted" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-text-muted" />
-          )}
-          <span className="font-medium text-text-primary">{feat.name}</span>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Type as plain text subtext instead of colored badge */}
-          {feat.type && (
-            <span className="text-xs text-text-muted italic capitalize">
-              {feat.type}
-            </span>
-          )}
-
-          {/* Uses tracking */}
-          {hasLimitedUses && (
-            <div 
-              className="flex items-center gap-1"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={(e) => handleUsesChange(e, -1)}
-                disabled={currentUses <= 0}
-                className={cn(
-                  'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                  currentUses > 0
-                    ? 'bg-surface hover:bg-surface-alt text-text-secondary'
-                    : 'bg-surface text-border-light cursor-not-allowed'
-                )}
-                title="Spend use"
-              >
-                <Minus className="w-3 h-3" />
-              </button>
-              <span className={cn(
-                'min-w-[2rem] text-center text-sm font-medium',
-                currentUses === 0 ? 'text-red-600' : 'text-text-secondary'
-              )}>
-                {currentUses}/{maxUses}
-              </span>
-              <button
-                onClick={(e) => handleUsesChange(e, 1)}
-                disabled={currentUses >= maxUses}
-                className={cn(
-                  'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                  currentUses < maxUses
-                    ? 'bg-surface hover:bg-surface-alt text-text-secondary'
-                    : 'bg-surface text-border-light cursor-not-allowed'
-                )}
-                title="Recover use"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
-          )}
-        </div>
-      </button>
-
-      {expanded && (
-        <div className="px-3 py-2 bg-surface-alt border-t border-border-light">
-          <p className="text-sm text-text-secondary mb-2">
-            {feat.description || 'No description available.'}
-          </p>
-          
-          {/* Recovery period display */}
-          {hasLimitedUses && (
-            <div className="text-xs text-text-muted">
-              <span className="font-medium">Recovery:</span> {feat.recovery || 'Full Recovery'}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// =============================================================================
 // Main Component
 // =============================================================================
 
 export function FeatsTab({
   ancestry,
+  vanillaTraits,
+  speciesTraitsFromRTDB = [],
   traits = [],
   traitsDb = [],
   traitUses = {},
@@ -213,11 +121,33 @@ export function FeatsTab({
     };
   };
   
-  // Collect all traits from ancestry
-  const ancestryTraits = useMemo(() => {
-    const result: { name: string; category: 'ancestry' | 'flaw' | 'characteristic' }[] = [];
+  // Category label formatting
+  const getCategoryLabel = (category: string) => {
+    if (category === 'species') return ''; // No label for species traits
+    return category.charAt(0).toUpperCase() + category.slice(1);
+  };
+  
+  // Collect all traits:
+  // 1. Species traits from RTDB are ALWAYS included (automatic based on species)
+  // 2. Selected traits (ancestry, flaw, characteristic) come from ancestry object OR vanilla format
+  const allTraitsWithCategories = useMemo(() => {
+    const result: { name: string; category: 'ancestry' | 'flaw' | 'characteristic' | 'species' }[] = [];
     
-    if (ancestry?.selectedTraits) {
+    // 1. Species traits are always included (automatic, not selectable)
+    // First try RTDB species traits (preferred source)
+    if (speciesTraitsFromRTDB?.length) {
+      speciesTraitsFromRTDB.forEach(name => {
+        result.push({ name, category: 'species' });
+      });
+    } else if (vanillaTraits?.speciesTraits?.length) {
+      // Fallback to vanilla format if RTDB not available
+      vanillaTraits.speciesTraits.forEach(name => {
+        result.push({ name, category: 'species' });
+      });
+    }
+    
+    // 2. Selected traits from new format (ancestry object)
+    if (ancestry?.selectedTraits?.length) {
       ancestry.selectedTraits.forEach(name => {
         result.push({ name, category: 'ancestry' });
       });
@@ -231,17 +161,42 @@ export function FeatsTab({
       result.push({ name: ancestry.selectedCharacteristic, category: 'characteristic' });
     }
     
+    // 3. If no new format selected traits, try vanilla format (only for selected traits, not species)
+    const hasNewFormatSelectedTraits = 
+      (ancestry?.selectedTraits?.length ?? 0) > 0 ||
+      ancestry?.selectedFlaw ||
+      ancestry?.selectedCharacteristic;
+    
+    if (!hasNewFormatSelectedTraits && vanillaTraits) {
+      // Add flaw first (like vanilla)
+      if (vanillaTraits.flawTrait) {
+        result.push({ name: vanillaTraits.flawTrait, category: 'flaw' });
+      }
+      
+      // Add characteristic
+      if (vanillaTraits.characteristicTrait) {
+        result.push({ name: vanillaTraits.characteristicTrait, category: 'characteristic' });
+      }
+      
+      // Add ancestry traits
+      if (vanillaTraits.ancestryTraits?.length) {
+        vanillaTraits.ancestryTraits.forEach(name => {
+          result.push({ name, category: 'ancestry' });
+        });
+      }
+    }
+    
     return result;
-  }, [ancestry]);
+  }, [ancestry, vanillaTraits, speciesTraitsFromRTDB]);
 
   // Check if we have any traits
-  const hasTraits = ancestryTraits.length > 0 || traits.length > 0;
+  const hasTraits = allTraitsWithCategories.length > 0 || traits.length > 0;
   const hasArchetypeFeats = archetypeFeats.length > 0;
   const hasCharacterFeats = characterFeats.length > 0;
   const hasStateFeats = stateFeats.length > 0;
 
   // Total counts
-  const totalTraits = ancestryTraits.length + traits.length;
+  const totalTraits = allTraitsWithCategories.length + traits.length;
   const totalArchetypeFeats = archetypeFeats.length;
   const totalCharacterFeats = characterFeats.length;
   const totalStateFeats = stateFeats.length;
@@ -258,20 +213,22 @@ export function FeatsTab({
           className="mb-3"
         >
           <div className="space-y-2">
-            {/* Ancestry traits from character creator - enriched with RTDB data */}
-            {ancestryTraits.map((trait, index) => {
+            {/* All traits (species + selected) - enriched with RTDB data */}
+            {allTraitsWithCategories.map((trait, index) => {
               const enriched = enrichTrait(trait.name);
               return (
-                <SpeciesTraitCard
+                <CollapsibleListItem
                   key={`${trait.category}-${index}`}
-                  trait={enriched}
-                  category={trait.category}
-                  compact
-                  neutralStyle
+                  name={enriched.name}
+                  description={enriched.description}
+                  subtext={getCategoryLabel(trait.category)}
+                  maxUses={enriched.maxUses}
                   currentUses={traitUses[trait.name] ?? enriched.maxUses}
                   onUsesChange={enriched.maxUses > 0 && onTraitUsesChange 
                     ? (delta) => onTraitUsesChange(trait.name, delta) 
                     : undefined}
+                  recoveryPeriod={enriched.recoveryPeriod}
+                  compact
                 />
               );
             })}
@@ -280,16 +237,17 @@ export function FeatsTab({
             {traits.map((trait, index) => {
               const enriched = enrichTrait(trait.name);
               return (
-                <SpeciesTraitCard
+                <CollapsibleListItem
                   key={`trait-${index}`}
-                  trait={{ ...trait, ...enriched }}
-                  category="species"
-                  compact
-                  neutralStyle
+                  name={enriched.name}
+                  description={enriched.description || trait.description}
+                  maxUses={enriched.maxUses || trait.maxUses}
                   currentUses={traitUses[trait.name] ?? enriched.maxUses}
                   onUsesChange={enriched.maxUses > 0 && onTraitUsesChange 
                     ? (delta) => onTraitUsesChange(trait.name, delta) 
                     : undefined}
+                  recoveryPeriod={enriched.recoveryPeriod || trait.recoveryPeriod}
+                  compact
                 />
               );
             })}
@@ -318,14 +276,17 @@ export function FeatsTab({
         {hasArchetypeFeats ? (
           <div className="space-y-2">
             {archetypeFeats.map((feat, index) => (
-              <FeatCard
+              <CollapsibleListItem
                 key={feat.id || index}
-                feat={{ ...feat, type: 'archetype' }}
+                name={feat.name}
+                description={feat.description}
+                maxUses={feat.maxUses}
+                currentUses={feat.currentUses}
                 onUsesChange={onFeatUsesChange 
                   ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
-                  : undefined
-                }
-                isEditMode={isEditMode}
+                  : undefined}
+                recoveryPeriod={feat.recovery}
+                compact
               />
             ))}
           </div>
@@ -357,14 +318,17 @@ export function FeatsTab({
         {hasCharacterFeats ? (
           <div className="space-y-2">
             {characterFeats.map((feat, index) => (
-              <FeatCard
+              <CollapsibleListItem
                 key={feat.id || index}
-                feat={{ ...feat, type: 'character' }}
+                name={feat.name}
+                description={feat.description}
+                maxUses={feat.maxUses}
+                currentUses={feat.currentUses}
                 onUsesChange={onFeatUsesChange 
                   ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
-                  : undefined
-                }
-                isEditMode={isEditMode}
+                  : undefined}
+                recoveryPeriod={feat.recovery}
+                compact
               />
             ))}
           </div>
@@ -386,14 +350,18 @@ export function FeatsTab({
         >
           <div className="space-y-2">
             {stateFeats.map((feat, index) => (
-              <FeatCard
+              <CollapsibleListItem
                 key={feat.id || index}
-                feat={{ ...feat, type: 'state' }}
+                name={feat.name}
+                description={feat.description}
+                subtext="State"
+                maxUses={feat.maxUses}
+                currentUses={feat.currentUses}
                 onUsesChange={onFeatUsesChange 
                   ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
-                  : undefined
-                }
-                isEditMode={isEditMode}
+                  : undefined}
+                recoveryPeriod={feat.recovery}
+                compact
               />
             ))}
           </div>
