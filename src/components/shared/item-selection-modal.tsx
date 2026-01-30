@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, Check } from 'lucide-react';
 import { ItemList } from './item-list';
+import { IconButton, Button } from '@/components/ui';
 import type { DisplayItem, FilterOption, SortOption } from '@/types/items';
 
 interface ItemSelectionModalProps {
@@ -144,12 +145,13 @@ export function ItemSelectionModal({
               <p className="text-sm text-text-muted mt-1">{description}</p>
             )}
           </div>
-          <button
+          <IconButton
+            label="Close modal"
+            variant="ghost"
             onClick={onClose}
-            className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors"
           >
             <X className="w-5 h-5" />
-          </button>
+          </IconButton>
         </div>
         
         {/* Content */}
@@ -183,20 +185,17 @@ export function ItemSelectionModal({
           
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-border text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors"
-            >
+            <Button variant="ghost" onClick={onClose}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleConfirm}
               disabled={selectedCount === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="w-4 h-4" />
               Confirm Selection
-            </button>
+            </Button>
           </div>
         </div>
       </div>

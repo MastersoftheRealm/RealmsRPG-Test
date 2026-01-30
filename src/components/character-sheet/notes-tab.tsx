@@ -93,7 +93,7 @@ export function NotesTab({
         <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
           Physical Attributes & Movement
         </h3>
-        <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+        <div className="bg-surface-alt border border-border-light rounded-lg p-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {/* Weight */}
             <div className="flex flex-col gap-1">
@@ -194,7 +194,7 @@ export function NotesTab({
           onChange={(e) => onAppearanceChange?.(e.target.value)}
           readOnly={!isEditMode}
           placeholder="Describe your character's appearance..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-neutral-50"
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-surface-alt"
           disabled={!isEditMode}
         />
       </div>
@@ -209,7 +209,7 @@ export function NotesTab({
           onChange={(e) => onArchetypeDescChange?.(e.target.value)}
           readOnly={!isEditMode}
           placeholder="Describe your character's archetype background..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-neutral-50"
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-surface-alt"
           disabled={!isEditMode}
         />
       </div>
@@ -224,7 +224,7 @@ export function NotesTab({
           onChange={(e) => onNotesChange?.(e.target.value)}
           readOnly={!isEditMode}
           placeholder="Additional notes, backstory, goals..."
-          className="w-full min-h-[120px] px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-neutral-50"
+          className="w-full min-h-[120px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-surface-alt"
           disabled={!isEditMode}
         />
       </div>

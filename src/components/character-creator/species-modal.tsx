@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Modal } from '@/components/ui';
+import { Modal, Chip, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import type { Species, Trait } from '@/hooks';
 
@@ -85,7 +85,7 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
               'p-3 rounded-lg border',
               isFlaw 
                 ? 'bg-purple-50 border-purple-200' 
-                : 'bg-neutral-50 border-neutral-200',
+                : 'bg-surface-alt border-border-light',
               selectable && 'cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors',
               !trait.found && 'opacity-60'
             )}
@@ -147,7 +147,7 @@ export function SpeciesModal({
         </div>
 
         {/* Stats Grid - NO SPEED (species don't have speed in RTDB) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-neutral-50 rounded-xl mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-surface-alt rounded-xl mb-6">
           <div className="text-center">
             <span className="block text-xs text-text-muted uppercase tracking-wide">Size</span>
             <span className="font-bold text-text-primary capitalize">{sizesDisplay}</span>
@@ -178,12 +178,9 @@ export function SpeciesModal({
             </h4>
             <div className="flex flex-wrap gap-2">
               {Object.entries(species.ability_bonuses).map(([ability, bonus]) => (
-                <span
-                  key={ability}
-                  className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium"
-                >
+                <Chip key={ability} variant="success">
                   {ability.substring(0, 3).toUpperCase()} +{bonus}
-                </span>
+                </Chip>
               ))}
             </div>
           </div>
@@ -199,12 +196,9 @@ export function SpeciesModal({
               </h4>
               <div className="flex flex-wrap gap-2">
                 {species.skills.map(skill => (
-                  <span 
-                    key={skill}
-                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
-                  >
+                  <Chip key={skill} variant="info">
                     {skill}
-                  </span>
+                  </Chip>
                 ))}
               </div>
             </div>
@@ -218,12 +212,9 @@ export function SpeciesModal({
               </h4>
               <div className="flex flex-wrap gap-2">
                 {species.languages.map(lang => (
-                  <span 
-                    key={lang}
-                    className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium"
-                  >
+                  <Chip key={lang} variant="primary">
                     {lang}
-                  </span>
+                  </Chip>
                 ))}
               </div>
             </div>
@@ -254,19 +245,20 @@ export function SpeciesModal({
         )}
 
         {/* Action Buttons */}
-        <div className="flex gap-4 mt-8 pt-4 border-t border-neutral-200">
-          <button 
+        <div className="flex gap-4 mt-8 pt-4 border-t border-border-light">
+          <Button 
             onClick={onSelect} 
-            className="btn-continue flex-1"
+            className="flex-1"
           >
             Pick Me!
-          </button>
-          <button 
+          </Button>
+          <Button 
+            variant="secondary"
             onClick={onClose} 
-            className="btn-back flex-1"
+            className="flex-1"
           >
             Nah...
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { RollButton, PointStatus, EditSectionToggle, getEditState } from '@/components/shared';
+import { Button, IconButton } from '@/components/ui';
 import type { Abilities } from '@/types';
 
 interface Skill {
@@ -257,7 +258,7 @@ export function SkillsSection({
     : 'normal';
   
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 relative">
+    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 relative">
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -280,22 +281,22 @@ export function SkillsSection({
         <div className="flex items-center gap-2">
           {isEditMode && (
             <>
-              <button
+              <Button
+                variant="success"
+                size="sm"
                 onClick={onAddSkill}
-                className="flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-sm font-medium transition-colors"
-                title="Add Skill"
               >
                 <Plus size={14} />
                 Skill
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
                 onClick={onAddSubSkill}
-                className="flex items-center gap-1 px-2 py-1 rounded-md bg-teal-100 hover:bg-teal-200 text-teal-700 text-sm font-medium transition-colors"
-                title="Add Sub-Skill"
+                className="bg-teal-100 hover:bg-teal-200 text-teal-700"
               >
                 <Plus size={14} />
                 Sub-Skill
-              </button>
+              </Button>
             </>
           )}
           {totalSkillPoints !== undefined && (
@@ -312,7 +313,7 @@ export function SkillsSection({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-neutral-200">
+            <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
               <th className="w-10 py-2 text-center">Prof</th>
               <th className="text-left py-2 pl-2">Skill</th>
               <th className="w-16 py-2 text-center">Ability</th>
@@ -339,8 +340,8 @@ export function SkillsSection({
                 <tr 
                   key={skill.id} 
                   className={cn(
-                    'border-b border-neutral-100 transition-colors',
-                    isSubSkill ? 'bg-neutral-50' : 'bg-white',
+                    'border-b border-border-subtle transition-colors',
+                    isSubSkill ? 'bg-surface-alt' : 'bg-surface',
                     !isEditMode && 'hover:bg-blue-50'
                   )}
                 >
@@ -386,7 +387,7 @@ export function SkillsSection({
                       <select
                         value={skill.ability || skillAbilityOptions[0]?.value || 'strength'}
                         onChange={(e) => onSkillChange(skill.id, { ability: e.target.value })}
-                        className="text-xs px-1 py-0.5 rounded border border-neutral-300 bg-neutral-50 text-text-secondary cursor-pointer"
+                        className="text-xs px-1 py-0.5 rounded border border-neutral-300 bg-surface-alt text-text-secondary cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {skillAbilityOptions.map(opt => (
@@ -452,13 +453,14 @@ export function SkillsSection({
                   {isEditMode && (
                     <td className="py-2 text-center">
                       {onRemoveSkill && (
-                        <button
+                        <IconButton
+                          variant="danger"
+                          size="sm"
                           onClick={() => onRemoveSkill(skill.id)}
-                          className="p-1 rounded hover:bg-red-100 text-red-500 transition-colors"
-                          title="Remove skill"
+                          label="Remove skill"
                         >
                           <X className="w-4 h-4" />
-                        </button>
+                        </IconButton>
                       )}
                     </td>
                   )}

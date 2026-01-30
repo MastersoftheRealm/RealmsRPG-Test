@@ -63,7 +63,7 @@ export function HealthEnergyAllocator({
   // Inline variant for character sheet edit mode
   if (variant === 'inline') {
     return (
-      <div className="p-3 bg-gradient-to-r from-red-50 to-blue-50 rounded-lg border border-neutral-200">
+      <div className="p-3 bg-gradient-to-r from-red-50 to-blue-50 rounded-lg border border-border-light">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
             H/E Pool Allocation
@@ -156,14 +156,14 @@ export function HealthEnergyAllocator({
       'rounded-xl border',
       isOverspent ? 'border-danger-300 bg-danger-light' : 
       isComplete ? 'border-success-300 bg-success-light' : 
-      'border-neutral-200 bg-surface-secondary'
+      'border-border-light bg-surface-secondary'
     )}>
       {/* Pool Status */}
       <div className={cn(
         'flex items-center justify-between px-4 py-2 border-b',
         isOverspent ? 'border-danger-300' : 
         isComplete ? 'border-success-300' : 
-        'border-neutral-200'
+        'border-border-light'
       )}>
         <span className="text-sm font-medium text-secondary">HP/EN Pool</span>
         <span className={cn(

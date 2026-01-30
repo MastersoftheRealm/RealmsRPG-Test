@@ -10,6 +10,7 @@
 import { useState, ReactNode } from 'react';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui';
 
 interface FilterSectionProps {
   children: ReactNode;
@@ -26,9 +27,11 @@ export function FilterSection({
 
   return (
     <div className={cn('mb-6', className)}>
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary mb-4 transition-colors"
+        className="mb-4"
       >
         <Filter className="w-4 h-4" />
         {isExpanded ? (
@@ -42,10 +45,10 @@ export function FilterSection({
             <ChevronDown className="w-4 h-4" />
           </>
         )}
-      </button>
+      </Button>
 
       {isExpanded && (
-        <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+        <div className="p-4 bg-surface-alt rounded-lg border border-border-light">
           {children}
         </div>
       )}

@@ -51,7 +51,7 @@ const categoryStyles: Record<string, string> = {
   restriction: 'bg-category-restriction-bg text-category-restriction-text border-category-restriction-border',
   cost: 'bg-category-action-bg text-category-action-text border-category-action-border',
   proficiency: 'bg-amber-50 text-amber-800 border-amber-200',
-  property: 'bg-neutral-50 text-neutral-700 border-neutral-200',
+  property: 'bg-surface-alt text-text-secondary border-border-light',
   default: 'bg-primary-50 text-primary-700 border-primary-200',
 };
 

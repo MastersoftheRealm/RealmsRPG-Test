@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
+import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
 import { 
   GridListRow,
   CreatureStatBlock, 
@@ -55,7 +56,6 @@ import {
   useItemProperties,
 } from '@/hooks';
 import type { DisplayItem } from '@/types';
-import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
 
 type TabId = 'powers' | 'techniques' | 'items' | 'creatures';
 
@@ -305,13 +305,12 @@ function PowersTab({ onDelete }: TabProps) {
         title="No powers yet"
         message="Create your first power to see it here in your library."
         action={
-          <Link
-            href="/power-creator"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create Power
-          </Link>
+          <Button asChild>
+            <Link href="/power-creator">
+              <Plus className="w-4 h-4" />
+              Create Power
+            </Link>
+          </Button>
         }
       />
     );
@@ -491,13 +490,12 @@ function TechniquesTab({ onDelete }: TabProps) {
         title="No techniques yet"
         message="Create your first technique to see it here in your library."
         action={
-          <Link
-            href="/technique-creator"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create Technique
-          </Link>
+          <Button asChild>
+            <Link href="/technique-creator">
+              <Plus className="w-4 h-4" />
+              Create Technique
+            </Link>
+          </Button>
         }
       />
     );
@@ -728,13 +726,12 @@ function ItemsTab({ onDelete }: TabProps) {
         title="No armaments yet"
         message="Create your first weapon, armor, or equipment to see it here."
         action={
-          <Link
-            href="/item-creator"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create Armament
-          </Link>
+          <Button asChild>
+            <Link href="/item-creator">
+              <Plus className="w-4 h-4" />
+              Create Armament
+            </Link>
+          </Button>
         }
       />
     );
@@ -855,13 +852,12 @@ function CreaturesTab({ onDelete }: TabProps) {
         title="No creatures yet"
         message="Create your first creature to see it here in your library."
         action={
-          <Link
-            href="/creature-creator"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create Creature
-          </Link>
+          <Button asChild>
+            <Link href="/creature-creator">
+              <Plus className="w-4 h-4" />
+              Create Creature
+            </Link>
+          </Button>
         }
       />
     );

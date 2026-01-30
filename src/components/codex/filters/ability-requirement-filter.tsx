@@ -8,7 +8,8 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { Chip, IconButton } from '@/components/ui';
 
 export interface AbilityRequirement {
   ability: string;
@@ -62,7 +63,7 @@ export function AbilityRequirementFilter({
         <select
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
-          className="flex-1 px-3 py-2 border border-neutral-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 px-3 py-2 border border-neutral-300 rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         >
           <option value="">Choose ability</option>
           {availableAbilities.map(ability => (
@@ -80,32 +81,26 @@ export function AbilityRequirementFilter({
           min="0"
           className="w-20 px-3 py-2 border border-neutral-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
-        <button
-          type="button"
+        <IconButton
+          variant="primary"
+          label="Add requirement"
           onClick={handleAdd}
           disabled={!selectedAbility || !maxValue}
-          className="px-3 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <Plus className="w-4 h-4" />
-        </button>
+        </IconButton>
       </div>
       {requirements.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {requirements.map(req => (
-            <span
+            <Chip
               key={req.ability}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-sm"
+              variant="warning"
+              size="sm"
+              onRemove={() => onRemove(req.ability)}
             >
               {req.ability} ≤ {req.maxValue}
-              <button
-                type="button"
-                onClick={() => onRemove(req.ability)}
-                className="hover:bg-amber-200 rounded-full p-0.5 transition-colors"
-                aria-label={`Remove ${req.ability} requirement`}
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
+            </Chip>
           ))}
         </div>
       )}

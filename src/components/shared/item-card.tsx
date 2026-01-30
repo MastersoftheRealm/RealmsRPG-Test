@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Check, Edit, Trash2, Copy, Eye, AlertCircle } from 'lucide-react';
+import { IconButton } from '@/components/ui';
 import type { DisplayItem, ListMode, ItemActions } from '@/types/items';
 
 interface ItemCardProps {
@@ -141,58 +142,64 @@ export function ItemCard({
           {isManageable && (
             <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
               {actions?.onView && (
-                <button
+                <IconButton
+                  variant="ghost"
+                  size="sm"
                   onClick={() => actions.onView?.(item)}
-                  className="p-1.5 rounded hover:bg-surface-alt transition-colors"
-                  title="View"
+                  label="View"
                 >
-                  <Eye className="w-4 h-4 text-text-muted" />
-                </button>
+                  <Eye className="w-4 h-4" />
+                </IconButton>
               )}
               {actions?.onEdit && (
-                <button
+                <IconButton
+                  variant="ghost"
+                  size="sm"
                   onClick={() => actions.onEdit?.(item)}
-                  className="p-1.5 rounded hover:bg-surface-alt transition-colors"
-                  title="Edit"
+                  label="Edit"
                 >
-                  <Edit className="w-4 h-4 text-text-muted" />
-                </button>
+                  <Edit className="w-4 h-4" />
+                </IconButton>
               )}
               {actions?.onDuplicate && (
-                <button
+                <IconButton
+                  variant="ghost"
+                  size="sm"
                   onClick={() => actions.onDuplicate?.(item)}
-                  className="p-1.5 rounded hover:bg-surface-alt transition-colors"
-                  title="Duplicate"
+                  label="Duplicate"
                 >
-                  <Copy className="w-4 h-4 text-text-muted" />
-                </button>
+                  <Copy className="w-4 h-4" />
+                </IconButton>
               )}
               {actions?.onDelete && (
-                <button
+                <IconButton
+                  variant="danger"
+                  size="sm"
                   onClick={() => actions.onDelete?.(item)}
-                  className="p-1.5 rounded hover:bg-danger-50 transition-colors"
-                  title="Delete"
+                  label="Delete"
                 >
-                  <Trash2 className="w-4 h-4 text-danger-600" />
-                </button>
+                  <Trash2 className="w-4 h-4" />
+                </IconButton>
               )}
             </div>
           )}
           
           {/* Expand/collapse indicator */}
           {hasDetails && !isManageable && (
-            <button 
-              className="p-1 rounded hover:bg-surface-alt transition-colors"
+            <IconButton
+              variant="ghost"
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsExpanded(!isExpanded);
               }}
+              label={isExpanded ? 'Collapse' : 'Expand'}
             >
               {isExpanded 
-                ? <ChevronUp className="w-4 h-4 text-text-muted" /> 
-                : <ChevronDown className="w-4 h-4 text-text-muted" />
+                ? <ChevronUp className="w-4 h-4" /> 
+                : <ChevronDown className="w-4 h-4" />
               }
-            </button>
+            </IconButton>
           )}
         </div>
       </div>

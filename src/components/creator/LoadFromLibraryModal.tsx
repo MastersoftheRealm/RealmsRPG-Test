@@ -8,8 +8,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { X, Search, FileText, Zap, Sword, Shield, Loader2 } from 'lucide-react';
+import { X, FileText, Zap, Sword, Shield, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SearchInput, IconButton, Alert } from '@/components/ui';
 
 export type LibraryItemType = 'power' | 'technique' | 'item' | 'creature';
 
@@ -98,33 +99,30 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col overflow-hidden">
+      <div className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={config.color}>{config.icon}</span>
             <h2 className="text-xl font-bold text-text-primary">{displayTitle}</h2>
           </div>
-          <button
+          <IconButton
+            label="Close modal"
+            variant="ghost"
             onClick={onClose}
-            className="p-2 text-text-muted hover:text-text-primary hover:bg-neutral-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
-          </button>
+          </IconButton>
         </div>
 
         {/* Search */}
         <div className="px-6 py-3 border-b border-border-light">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={`Search ${itemType}s...`}
-              className="w-full pl-10 pr-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder={`Search ${itemType}s...`}
+            size="sm"
+          />
         </div>
 
         {/* Content */}
@@ -134,9 +132,9 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
               <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-600">Error loading library: {error.message}</p>
-            </div>
+            <Alert variant="danger" className="mx-4">
+              Error loading library: {error.message}
+            </Alert>
           ) : filteredItems.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-text-muted">

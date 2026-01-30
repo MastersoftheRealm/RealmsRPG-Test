@@ -18,7 +18,7 @@ import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, Fo
 import { cn } from '@/lib/utils';
 import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
 import { LoginPromptModal } from '@/components/shared';
-import { LoadingState } from '@/components/ui/spinner';
+import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import { useAuthStore } from '@/stores';
@@ -133,9 +133,9 @@ function PropertyCard({
   const hasOption = property.op_1_desc && property.op_1_desc.trim() !== '';
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden">
+    <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-neutral-50 px-4 py-3 flex items-center justify-between">
+      <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -154,13 +154,14 @@ function PropertyCard({
             </span>
           )}
         </div>
-        <button
-          type="button"
+        <IconButton
           onClick={onRemove}
-          className="text-text-muted hover:text-danger-500"
+          label="Remove property"
+          variant="danger"
+          size="sm"
         >
           <X className="w-5 h-5" />
-        </button>
+        </IconButton>
       </div>
 
       {/* Expanded Content */}
@@ -195,7 +196,7 @@ function PropertyCard({
 
           {/* Option Level */}
           {hasOption && (
-            <div className="bg-neutral-50 rounded-lg p-3">
+            <div className="bg-surface-alt rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">
                   Option:{' '}
@@ -730,24 +731,24 @@ function ItemCreatorContent() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto">
+      <PageContainer size="content">
         <LoadingState message="Loading item properties..." />
-      </div>
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <p className="text-red-700">Failed to load item properties: {error.message}</p>
-        </div>
-      </div>
+      <PageContainer size="content">
+        <Alert variant="danger">
+          Failed to load item properties: {error.message}
+        </Alert>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <PageContainer size="content">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-2">
@@ -760,40 +761,28 @@ function ItemCreatorContent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
-              user 
-                ? "bg-neutral-100 hover:bg-neutral-200 text-text-secondary"
-                : "bg-neutral-100 text-text-muted cursor-pointer"
-            )}
             title={user ? "Load from library" : "Log in to load from library"}
           >
             <FolderOpen className="w-5 h-5" />
             Load
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="secondary"
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-text-secondary transition-colors"
           >
             Reset
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="success"
             onClick={handleSave}
             disabled={saving || !name.trim()}
-            className={cn(
-              'px-4 py-2 rounded-lg font-medium transition-colors',
-              saving || !name.trim()
-                ? 'bg-neutral-300 text-text-muted cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-700'
-            )}
+            isLoading={saving}
           >
             {saving ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -813,7 +802,7 @@ function ItemCreatorContent() {
         {/* Main Editor */}
         <div className="lg:col-span-2 space-y-6">
           {/* Name & Type */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -868,7 +857,7 @@ function ItemCreatorContent() {
 
           {/* Weapon Configuration - Handedness & Range */}
           {armamentType === 'Weapon' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-surface rounded-xl shadow-md p-6">
               <h3 className="text-lg font-bold text-text-primary mb-4">Weapon Configuration</h3>
               <div className="flex flex-wrap items-center gap-6">
                 {/* Handedness Toggle */}
@@ -882,7 +871,7 @@ function ItemCreatorContent() {
                         "px-4 py-2 text-sm font-medium transition-colors",
                         !isTwoHanded
                           ? "bg-amber-600 text-white"
-                          : "bg-neutral-50 text-text-secondary hover:bg-neutral-100"
+                          : "bg-surface-alt text-text-secondary hover:bg-neutral-100"
                       )}
                     >
                       One-Handed
@@ -894,7 +883,7 @@ function ItemCreatorContent() {
                         "px-4 py-2 text-sm font-medium transition-colors",
                         isTwoHanded
                           ? "bg-amber-600 text-white"
-                          : "bg-neutral-50 text-text-secondary hover:bg-neutral-100"
+                          : "bg-surface-alt text-text-secondary hover:bg-neutral-100"
                       )}
                     >
                       Two-Handed
@@ -923,7 +912,7 @@ function ItemCreatorContent() {
 
           {/* Weapon Damage */}
           {armamentType === 'Weapon' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-surface rounded-xl shadow-md p-6">
               <h3 className="text-lg font-bold text-text-primary mb-4">Base Damage</h3>
               <div className="flex flex-wrap items-center gap-4">
                 <NumberStepper
@@ -964,7 +953,7 @@ function ItemCreatorContent() {
 
           {/* Armor Configuration */}
           {armamentType === 'Armor' && (
-            <div className="bg-white rounded-xl shadow-md p-6">
+            <div className="bg-surface rounded-xl shadow-md p-6">
               <h3 className="text-lg font-bold text-text-primary mb-4">Armor Configuration</h3>
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Damage Reduction */}
@@ -1019,7 +1008,7 @@ function ItemCreatorContent() {
           {armamentType === 'Shield' && (
             <>
               {/* Shield Damage Reduction */}
-              <div className="bg-white rounded-xl shadow-md p-6">
+              <div className="bg-surface rounded-xl shadow-md p-6">
                 <h3 className="text-lg font-bold text-text-primary mb-4">Shield Block (Damage Reduction)</h3>
                 <div className="flex flex-wrap items-center gap-4">
                   <NumberStepper
@@ -1051,18 +1040,15 @@ function ItemCreatorContent() {
               </div>
 
               {/* Shield Damage (Optional) */}
-              <div className="bg-white rounded-xl shadow-md p-6">
+              <div className="bg-surface rounded-xl shadow-md p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="hasShieldDamage"
                     checked={hasShieldDamage}
                     onChange={(e) => setHasShieldDamage(e.target.checked)}
-                    className="w-5 h-5 rounded border-neutral-300"
+                    label="Shield Damage (Optional)"
+                    className="text-lg font-bold"
                   />
-                  <label htmlFor="hasShieldDamage" className="text-lg font-bold text-text-primary">
-                    Shield Damage (Optional)
-                  </label>
                 </div>
                 {hasShieldDamage && (
                   <>
@@ -1101,7 +1087,7 @@ function ItemCreatorContent() {
           )}
 
           {/* Ability Requirement (Optional) */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Ability Requirement</h3>
             <p className="text-sm text-text-secondary mb-4">
               Require a minimum ability score to use this {armamentType.toLowerCase()} effectively.
@@ -1146,7 +1132,7 @@ function ItemCreatorContent() {
           </div>
 
           {/* Item Properties */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-text-primary">
                 Properties ({selectedProperties.length})
@@ -1185,7 +1171,7 @@ function ItemCreatorContent() {
 
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+          <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
             <h3 className="text-lg font-bold text-text-primary mb-4">Item Summary</h3>
 
             {/* Rarity Badge */}
@@ -1272,7 +1258,7 @@ function ItemCreatorContent() {
 
             {/* Property Summary */}
             {selectedProperties.length > 0 && (
-              <div className="border-t border-neutral-100 pt-4">
+              <div className="border-t border-border-subtle pt-4">
                 <h4 className="text-sm font-medium text-text-secondary mb-2">Properties</h4>
                 <ul className="text-xs text-text-secondary space-y-1">
                   {selectedProperties.map((sp, i) => (
@@ -1287,16 +1273,12 @@ function ItemCreatorContent() {
 
             {/* Save Message */}
             {saveMessage && (
-              <div
-                className={cn(
-                  'mt-4 p-3 rounded-lg text-sm',
-                  saveMessage.type === 'success'
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-red-50 text-red-700'
-                )}
+              <Alert 
+                variant={saveMessage.type === 'success' ? 'success' : 'danger'}
+                className="mt-4"
               >
                 {saveMessage.text}
-              </div>
+              </Alert>
             )}
           </div>
         </div>
@@ -1309,13 +1291,13 @@ function ItemCreatorContent() {
         returnPath="/item-creator"
         contentType="armament"
       />
-    </div>
+    </PageContainer>
   );
 }
 
 export default function ItemCreatorPage() {
   return (
-    <div className="min-h-screen bg-neutral-50 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <ItemCreatorContent />
     </div>
   );

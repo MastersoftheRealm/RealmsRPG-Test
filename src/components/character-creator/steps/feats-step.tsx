@@ -14,7 +14,7 @@
 
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner, Button } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBFeats, type RTDBFeat } from '@/hooks';
 import { getArchetypeFeatLimit } from '@/lib/game/formulas';
@@ -183,8 +183,8 @@ export function FeatsStep() {
       <div
         key={feat.id}
         className={cn(
-          'bg-white rounded-lg border overflow-hidden transition-all',
-          isSelected ? 'border-primary-400 bg-primary-50' : 'border-neutral-200',
+          'bg-surface rounded-lg border overflow-hidden transition-all',
+          isSelected ? 'border-primary-400 bg-primary-50' : 'border-border-light',
           !requirements.met && 'opacity-60'
         )}
       >
@@ -198,7 +198,7 @@ export function FeatsStep() {
                 ? 'bg-primary-600 border-primary-600 text-white'
                 : requirements.met && canSelect
                   ? 'border-neutral-300 hover:border-primary-400 hover:bg-primary-50'
-                  : 'border-neutral-200 bg-neutral-100 cursor-not-allowed'
+                  : 'border-border-light bg-neutral-100 cursor-not-allowed'
             )}
           >
             {isSelected && '✓'}
@@ -229,7 +229,7 @@ export function FeatsStep() {
         </div>
         
         {isExpanded && (
-          <div className="px-3 pb-3 pt-2 border-t border-neutral-100">
+          <div className="px-3 pb-3 pt-2 border-t border-border-subtle">
             <p className="text-sm text-text-secondary">{feat.description}</p>
             
             {feat.tags.length > 0 && (
@@ -355,7 +355,7 @@ export function FeatsStep() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center border border-neutral-200">
+      <div className="bg-surface rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center border border-border-light">
         <input
           type="text"
           value={searchTerm}
@@ -458,18 +458,17 @@ export function FeatsStep() {
       </div>
       
       <div className="flex justify-between">
-        <button
+        <Button
+          variant="secondary"
           onClick={prevStep}
-          className="btn-back"
         >
           ← Back
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={nextStep}
-          className="btn-continue"
         >
           Continue →
-        </button>
+        </Button>
       </div>
     </div>
   );

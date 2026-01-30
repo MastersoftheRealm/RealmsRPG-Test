@@ -220,7 +220,7 @@ function DefenseBlock({ name, bonus, score, onRoll }: { name: string; bonus: num
     <div 
       onClick={onRoll}
       className={cn(
-        "flex flex-col items-center p-2 bg-white border border-neutral-200 rounded-lg min-w-[70px] transition-all",
+        "flex flex-col items-center p-2 bg-surface border border-border-light rounded-lg min-w-[70px] transition-all",
         onRoll && "cursor-pointer hover:bg-primary-50 hover:border-primary-300 active:scale-95"
       )}
       role={onRoll ? 'button' : undefined}
@@ -295,7 +295,7 @@ export function SheetHeader({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-4">
+    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Portrait and Identity */}
         <div className="flex gap-4">

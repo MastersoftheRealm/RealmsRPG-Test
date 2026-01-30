@@ -1,80 +1,335 @@
 # RealmsRPG Component & Style Unification Plan
 
-> **Last Updated:** Phase 5 Complete  
+> **Last Updated:** January 30, 2025 - Phase 10E Complete  
 > **Goal:** Unify components, styles, and logic across the entire site while preserving vanilla site functionality
-> **Status:** ✅ All 5 phases complete - unification successful
+> **Status:** ✅ Phase 10E Complete - Static Pages Fully Unified
+
+---
+
+## 🔴 CRITICAL: Unused Shared Components (Deep Audit Finding)
+
+These components exist but were **underutilized**:
+
+| Component | File | Status |
+|-----------|------|--------|
+| **Input** | `ui/input.tsx` | ✅ Used in my-account, codex, power/technique/creature creators |
+| **Card** | `ui/card.tsx` | ✅ Card layouts now use `bg-surface` token |
+| **Chip** | `ui/chip.tsx` | ✅ Now used in 8+ files (filters, species-modal, ancestry-step, etc.) |
+| **SearchInput** | `ui/search-input.tsx` | ✅ Now used in 7 modals |
+| **IconButton** | `ui/icon-button.tsx` | ✅ Used in 15+ components (modals, cards, tables) |
+| **Checkbox** | `ui/checkbox.tsx` | ✅ Used in 5+ components (filters, creator pages) |
+| **Select** | `ui/select.tsx` | 🔄 Available - inline selects remain |
+| **Textarea** | `ui/textarea.tsx` | ✅ Used in power-creator, technique-creator |
+| **Button** | `ui/button.tsx` | ✅ Used in 25+ components (modals, pages, creators) |
+| **ExpandableChip** | `ui/expandable-chip.tsx` | 🔄 Available for future use |
+| **CreaturePowerCard** | `shared/creature-power-card.tsx` | 🔄 Available for future use |
 
 ---
 
 ## Progress Summary
 
-### ✅ Completed
-- [x] Created unified `RollButton` component (`shared/roll-button.tsx`)
-- [x] Created unified `PointStatus` component (`shared/point-status.tsx`)
-- [x] Created unified `ValueStepper` component (`shared/value-stepper.tsx`)
+### ✅ Phases 1-5 Complete (Previous Work)
+- [x] Created unified `RollButton`, `PointStatus`, `ValueStepper` components
 - [x] Consolidated SearchInput to single source (`ui/search-input.tsx`)
 - [x] Updated LoadingSpinner to use `ui/spinner.tsx`
-- [x] Updated `abilities-section.tsx` to use shared components
-- [x] Updated `skills-section.tsx` to use shared components
-- [x] Updated `NumberStepper` to wrap shared `ValueStepper`
-- [x] Fixed color tokens in `LoadFromLibraryModal.tsx`
-- [x] Fixed color tokens in `list-components.tsx`
-- [x] Fixed color tokens in `collapsible.tsx`
-- [x] Fixed color tokens in `expandable-chip.tsx`
-- [x] Fixed color tokens in `sheet-header.tsx` (20+ replacements)
-- [x] Fixed color tokens in `archetype-section.tsx` (25+ replacements)
-- [x] Fixed color tokens in `add-skill-modal.tsx`
-- [x] Fixed color tokens in `library-section.tsx` (50+ replacements)
+- [x] Updated character sheet components to use shared components
 - [x] **Phase 4 Color Migration Complete** - All non-auth components migrated
 - [x] **Phase 5: Dead Code Removal** - Deleted unused `alert-enhanced.tsx` and `tabs.tsx`
-- [x] **Phase 5: Syntax Fix** - Fixed extra `}` in `list-components.tsx`
-- [x] **Phase 5: Spinner Unification** - Replaced 12 inline spinners across 11 files with `<Spinner />` component
-- [x] **Phase 5: Creator Loading States** - Replaced skeleton loaders with `<LoadingState />` in 3 creators
-- [x] **Phase 5: PointStatus in ability-score-editor** - Replaced inline point display with `<PointStatus />`
-- [x] **Phase 5: Color Token Cleanup** - Replaced 9 non-semantic hardcoded colors in creators
-- [x] **Phase 5: Typography System** - Added `font-display` utility and `.page-title`/`.section-title` classes
+- [x] **Phase 5: Spinner Unification** - Replaced 12 inline spinners with `<Spinner />`
+- [x] **Phase 5: Typography System** - Added `font-display` utility classes
 
-### ✅ Phase 4 Color Migration - Migrated Files
-**App Pages:**
-- [x] `characters/[id]/page.tsx` - 10 gray-* replaced
-- [x] `characters/new/page.tsx` - 4 gray-* replaced
-- [x] `power-creator/page.tsx`
-- [x] `creature-creator/page.tsx`
-- [x] `encounter-tracker/page.tsx`
-- [x] `technique-creator/page.tsx`
-- [x] `resources/page.tsx`
-- [x] `rules/page.tsx`
-- [x] `item-creator/page.tsx`
-- [x] `privacy/page.tsx`
-- [x] `library/page.tsx`
-- [x] `(main)/layout.tsx`
+### ✅ Phase 6: Adopt Unused Components (COMPLETE)
+- [x] **Chip Component Adoption** - Replaced inline chips in:
+  - `codex/filters/tag-filter.tsx` - Uses `<Chip variant="success" onRemove={...}>`
+  - `codex/filters/ability-requirement-filter.tsx` - Uses `<Chip variant="warning" onRemove={...}>`
+  - `character-creator/species-modal.tsx` - Ability bonuses, skills, languages
+  - `character-creator/steps/ancestry-step.tsx` - Species skills, languages
+  - `character-creator/steps/archetype-step.tsx` - Power/Martial ability display
+  - `character-creator/steps/species-step.tsx` - Ability bonuses
+  - `character-sheet/proficiencies-tab.tsx` - Proficiency chips
+- [x] **SearchInput Component Adoption** - Replaced inline search inputs in:
+  - `character-sheet/add-feat-modal.tsx`
+  - `character-sheet/add-skill-modal.tsx`
+  - `character-sheet/add-sub-skill-modal.tsx`
+  - `character-sheet/add-library-item-modal.tsx`
+  - `creator/LoadFromLibraryModal.tsx`
+- [x] **Checkbox Component Adoption** - Replaced in:
+  - `codex/filters/checkbox-filter.tsx` - Uses shared Checkbox
+  - `character-sheet/add-feat-modal.tsx` - "Show eligible only" toggle
+- [x] **bg-white → bg-surface Migration** - 73 instances converted across 25+ files
+- [x] **Dead Code Removal**:
+  - Removed `console.log` from `firebase/client.ts`
+  - Removed `console.log` from `forgot-username/page.tsx`
+  - Deleted unused `firebase/admin.ts`
+  - Removed unused `Check` import from `ui/checkbox.tsx`
 
-**Character-Creator Steps:**
-- [x] `abilities-step.tsx`
-- [x] `archetype-step.tsx`
-- [x] `ancestry-step.tsx`
-- [x] `equipment-step.tsx`
-- [x] `feats-step.tsx`
-- [x] `finalize-step.tsx`
+### ✅ Phase 7: Create Missing Shared Components (COMPLETE)
+- [x] **IconButton** (`ui/icon-button.tsx`) - Created with CVA variants (default, ghost, primary, danger, success, muted) and sizes (sm, md, lg)
+- [x] **Select** (`ui/select.tsx`) - Created with label, error, helperText, options support
+- [x] **Checkbox** (`ui/checkbox.tsx`) - Created with label, description, error support
+- [x] **Textarea** (`ui/textarea.tsx`) - Created with label, error, helperText support
+- [x] **IconButton Adoption** - Used in 4 modal close buttons:
+  - `character-sheet/add-feat-modal.tsx`
+  - `character-sheet/add-skill-modal.tsx`
+  - `character-sheet/add-sub-skill-modal.tsx`
+  - `creator/LoadFromLibraryModal.tsx`
 
-**Character-Sheet Components:**
-- [x] `level-up-modal.tsx`
-- [x] `feats-tab.tsx`
-- [x] `dice-roller.tsx`
-- [x] `add-sub-skill-modal.tsx`
-- [x] `roll-log.tsx` (except dropdown `<option>` elements - browser-styled)
-- [x] `proficiencies-tab.tsx`
-- [x] `notes-tab.tsx`
-- [x] `skills-section.tsx`
+### ✅ Phase 8: Unify Remaining Patterns (COMPLETE)
+
+**Button Component - All Navigation Buttons Migrated:**
+- [x] All `.btn-back`/`.btn-continue` CSS classes eliminated (0 remaining)
+- [x] **Dead CSS removed:** `.btn-back` and `.btn-continue` classes removed from `globals.css`
+- [x] Character creator steps: species, powers, skills, feats, archetype, ancestry, abilities, equipment, finalize
+- [x] Species modal: Pick Me/Nah buttons
+- [x] All creators: Load/Reset/Save buttons
+- [x] All modals: Cancel/Confirm buttons
+- [x] Library/Codex: Empty state CTAs
+- [x] Character sheet: Level Up/Recover/Edit header buttons
+
+**IconButton Adoption** - 20+ components:
+- [x] `character-sheet/add-feat-modal.tsx` - Close button
+- [x] `character-sheet/add-skill-modal.tsx` - Close button
+- [x] `character-sheet/add-sub-skill-modal.tsx` - Close button
+- [x] `character-sheet/add-library-item-modal.tsx` - Close button
+- [x] `creator/LoadFromLibraryModal.tsx` - Close button
+- [x] `shared/item-selection-modal.tsx` - Close button
+- [x] `character/character-card.tsx` - Delete button
+- [x] `power-creator/page.tsx` - 3 remove part buttons
+- [x] `technique-creator/page.tsx` - 3 remove part buttons
+- [x] `item-creator/page.tsx` - 2 remove property buttons
+- [x] `creature-creator/page.tsx` - 5 modal close + 3 table remove buttons
+- [x] `ability-requirement-filter.tsx` - Add button (primary variant)
+
+**Button Component Adoption** - 10+ components:
+- [x] `shared/item-selection-modal.tsx` - Cancel/Confirm buttons
+- [x] `creator/collapsible-section.tsx` - Enable section button
+- [x] `library/page.tsx` - 4 empty state CTA buttons
+- [x] `my-account/page.tsx` - 5 buttons (Update Email/Password, Delete, etc.)
+- [x] `encounter-tracker/page.tsx` - 7 combat control buttons
+- [x] `creature-creator/page.tsx` - 4 Add buttons
+- [x] `level-up-modal.tsx` - Cancel/Level Up buttons
+- [x] `add-library-item-modal.tsx` - Cancel/Add buttons
+- [x] `forgot-username/page.tsx` - Submit button
+- [x] `forgot-password/page.tsx` - "try again" link button
+- [x] `finalize-step.tsx` - Modal buttons + main save/back buttons
+- [x] `creature-stat-block.tsx` - Edit/Duplicate/Delete action buttons
+- [x] `grid-list-row.tsx` - Edit/Duplicate/Delete action buttons
+- [x] Creator page headers - All 4 creators (power/technique/item/creature) now use Button for Load/Reset/Save
+- [x] `powers-step.tsx` - Add Powers/Add Techniques buttons + remove buttons
+- [x] `collapsible-section.tsx` - Remove button
+- [x] `species-step.tsx` - View Details link button
+- [x] `skills-section.tsx` - Add Skill/Add Sub-Skill buttons + remove skill button
+
+**IconButton Component Adoption** - 25+ components:
+- [x] All modal close buttons (6 modals)
+- [x] Creator table remove buttons (power/technique/item/creature)
+- [x] `item-card.tsx` - View/Edit/Duplicate/Delete + expand/collapse buttons
+- [x] `powers-step.tsx` - Remove power/technique buttons
+- [x] `skills-section.tsx` - Remove skill button
+
+**Checkbox Component Adoption** - 5+ components:
+- [x] `codex/filters/checkbox-filter.tsx`
+- [x] `character-sheet/add-feat-modal.tsx`
+- [x] `power-creator/page.tsx` - 8 checkboxes
+- [x] `technique-creator/page.tsx` - 1 checkbox
+- [x] `item-creator/page.tsx` - 1 checkbox
+- [x] `encounter-tracker/page.tsx` - 1 checkbox
+
+**SearchInput Adoption** - 8 modals (complete):
+- [x] 7 original modal adoptions
+- [x] `creature-creator/page.tsx` - LoadFeatModal search
+
+- [x] `modal.tsx` - Close button
+- [x] `alert.tsx` - Dismiss button  
+- [x] `toast.tsx` - Dismiss button
+- [x] `library-section.tsx` - 3 remove buttons (power, technique, item)
+- [x] `item-list.tsx` - Clear search, filter toggle, layout buttons
+
+**Input/Textarea Component Adoption:**
+- [x] `my-account/page.tsx` - 7 form inputs → Input component
+- [x] `codex/page.tsx` - Max level filter → Input component
+- [x] `power-creator/page.tsx` - Name input + description textarea
+- [x] `technique-creator/page.tsx` - Name input + description textarea
+- [x] `creature-creator/page.tsx` - Name input + language input
+- [x] `encounter-tracker/page.tsx` - Add Combatant form (5 inputs) → Input component
+
+**bg-white → bg-surface Migration (Phase 9):**
+- [x] `codex/filters/tag-filter.tsx` - select bg-white → bg-surface
+- [x] `codex/filters/chip-select.tsx` - select bg-white → bg-surface
+- [x] `codex/filters/select-filter.tsx` - select bg-white → bg-surface
+- [x] `codex/filters/ability-requirement-filter.tsx` - select bg-white → bg-surface
+- [x] `creator/ability-score-editor.tsx` - card bg-white → bg-surface
+- [x] `character-sheet/skills-section.tsx` - table row bg-white → bg-surface
+- [x] `character-sheet/sheet-header.tsx` - DefenseBlock bg-white → bg-surface
+- [x] `character-sheet/library-section.tsx` - 3 card types bg-white → bg-surface
+- [x] `character-sheet/feats-tab.tsx` - CollapsibleSection + FeatCard bg-white → bg-surface
+- [x] `character-sheet/archetype-section.tsx` - roll button bg-white → bg-surface
+- [x] `character-creator/steps/archetype-step.tsx` - 4 button types bg-white → bg-surface
+- [x] `character-creator/steps/ancestry-step.tsx` - checkbox bg-white → bg-surface
+- [x] `character-creator/steps/equipment-step.tsx` - 3 elements bg-white → bg-surface
+- [x] `character-creator/creator-tab-bar.tsx` - tab button bg-white → bg-surface
+- [x] `characters/[id]/page.tsx` - sticky action bar bg-white → bg-surface
+
+**Intentionally Preserved bg-white (26 instances):**
+- `bg-white/XX` opacity patterns (overlays on dark backgrounds in spinner, roll-log, creature-stat-block, power-creator)
+- Roll log dice buttons (dark theme contrast)
+- Creature stat block pills (on gradient backgrounds)
+- Power creator cost displays (inside colored containers)
+- Feats-step selected tags (contrast styling)
+- Auth social buttons (gray theme)
+- Encounter-tracker stat inputs (specialized compact fields with colored borders)
+- CSS slider thumbs in globals.css
+
+**Remaining Work (Phase 10+):**
+- [ ] ~14 inline inputs in encounter-tracker (specialized stat table fields - intentionally compact)
+- [ ] ~10 inline inputs in character-sheet components (specialized currency/weight fields)
+- [ ] ~40 inline selects in creator pages (consider Select component or keep inline)
+
+### ✅ Phase 9: Design Token Migration (COMPLETE)
+- [x] Replace `bg-white rounded-*` → `bg-surface rounded-*` (73+ instances)
+- [x] Replace remaining `neutral-*` → semantic tokens (COMPLETE - see Phase 10A below)
+- [ ] Add missing tokens (TP, rarity, combatant types)
+
+### ✅ Phase 10A: Semantic Token Migration (COMPLETE)
+**Page Backgrounds:**
+- [x] `(main)/layout.tsx` - bg-neutral-50 → bg-background
+- [x] `not-found.tsx` - bg-neutral-50 → bg-background
+- [x] `my-account/page.tsx` - bg-neutral-50 → bg-background
+- [x] All creator pages - bg-neutral-50 → bg-background
+- [x] `characters/[id]/page.tsx` - bg-neutral-50 → bg-background
+- [x] `characters/new/page.tsx` - bg-neutral-50 → bg-background
+
+**Nested Section Backgrounds:**
+- [x] Creator card headers/options → bg-surface-alt
+- [x] Modal footers → bg-surface-alt
+- [x] Character-sheet section backgrounds → bg-surface-alt
+- [x] Character-creator step summaries → bg-surface-alt
+
+**Border Tokens:**
+- [x] All `border-neutral-200` → `border-border-light` (75+ instances)
+- [x] Container borders, card borders, dividers
+- [x] Modal headers/footers, table headers, section dividers
+
+**Hover States:**
+- [x] All `hover:bg-neutral-50` → `hover:bg-surface-alt`
+- [x] Collapsible headers, list items, buttons
+
+**Components Updated:**
+- [x] `spinner.tsx` - muted variant border
+- [x] `chip.tsx` - default variant + outline hover
+- [x] `part-chip.tsx` - property variant
+- [x] `collapsible-section.tsx` - header hover
+- [x] `health-energy-allocator.tsx` - container borders
+- [x] All character-sheet components (12 files)
+- [x] All character-creator steps (7 files)
+- [x] All creator pages (4 files)
+- [x] `creature-creator/page.tsx` - 20+ instances
+
+**Alert Component Adoption:**
+- [x] `finalize-step.tsx` - Error message → Alert variant="danger"
+- [x] `my-account/page.tsx` - Email/Password messages → Alert variant="success/danger"
+- [x] `technique-creator/page.tsx` - Save message + loading error → Alert
+- [x] `power-creator/page.tsx` - Save message + loading error → Alert
+- [x] `item-creator/page.tsx` - Save message + loading error → Alert
+- [x] `login/page.tsx` - Error message → Alert variant="danger"
+- [x] `register/page.tsx` - Error message → Alert variant="danger"
+- [x] `forgot-password/page.tsx` - Error message → Alert variant="danger"
+- [x] `forgot-username/page.tsx` - Error message → Alert variant="danger"
+- [x] `species-step.tsx` - Missing data warning → Alert variant="warning"
+- [x] `skills-step.tsx` - Missing data warning → Alert variant="warning"
+- [x] `ancestry-step.tsx` - No species selected warning → Alert variant="warning"
+- [x] `LoadFromLibraryModal.tsx` - Library error → Alert variant="danger"
+- [x] `add-sub-skill-modal.tsx` - Load error → Alert variant="danger"
+- [x] `add-skill-modal.tsx` - Load error → Alert variant="danger"
+- [x] `add-feat-modal.tsx` - Load error → Alert variant="danger"
+
+### 📋 Phase 10: Final Cleanup
+- [x] Remove console.logs (2 instances removed)
+- [x] Delete unused files (`firebase/admin.ts` deleted)
+- [x] Clean up unused imports in my-account/page.tsx
+- [ ] Clean up unused hook exports (kept for API completeness)
+
+### ✅ Phase 10B: Collapsible Component Unification (COMPLETE)
+
+**Shared Collapsible Component Enhancements:**
+- [x] Enhanced `ui/collapsible.tsx` with `count` prop for item count display
+- [x] Enhanced `ui/collapsible.tsx` with `action` prop for header action buttons
+
+**feats-tab.tsx Migration:**
+- [x] Removed local `CollapsibleSection` component (50 lines)
+- [x] Migrated to shared `Collapsible` from `@/components/ui`
+- [x] Preserved custom header gradients via `headerClassName`
+- [x] Preserved action buttons (Add Feat) via `action` prop
+
+**Other Collapsible Patterns (Intentionally Preserved):**
+- `library-section.tsx` - Specialized expandable cards with innate toggle, use buttons, energy costs
+- `creature-stat-block.tsx` - Specialized stat block expansion with action buttons
+- Power/Technique/Item cards - Custom expand/collapse with specialized content
+
+### ✅ Phase 10C: PageContainer Adoption (COMPLETE)
+
+**PageContainer Size Enhancements:**
+- [x] Added `xs` size (max-w-2xl) for narrow form pages
+- [x] Added `prose` size (max-w-4xl) for content-heavy pages
+- [x] Added `content` size (max-w-6xl) for medium content pages
+
+**Static Pages Migrated:**
+- [x] `privacy/page.tsx` - Now uses `<PageContainer size="prose">`
+- [x] `terms/page.tsx` - Now uses `<PageContainer size="prose">`
+- [x] `resources/page.tsx` - Now uses `<PageContainer size="prose">`
+- [x] `rules/page.tsx` - Now uses `<PageContainer size="content">`
+- [x] `my-account/page.tsx` - Now uses `<PageContainer size="xs">`
+
+**PageContainer Size Reference:**
+- `xs` = max-w-2xl (my-account, login forms)
+- `sm` = max-w-3xl
+- `prose` = max-w-4xl (privacy, terms, resources)
+- `md` = max-w-5xl
+- `content` = max-w-6xl (rules)
+- `lg` = max-w-7xl (default)
+- `xl` = max-w-[1440px] (library, codex)
+- `full` = max-w-none
+
+### ✅ Phase 10D: Border Token Completion (COMPLETE)
+
+**Design Token Addition:**
+- [x] Added `--color-border-subtle` token (neutral-100) to globals.css
+
+**Border Migration (15 instances):**
+- [x] `creator/collapsible-section.tsx` - border-neutral-100 → border-border-subtle
+- [x] `character-sheet/skills-section.tsx` - Table row borders
+- [x] `character-sheet/archetype-section.tsx` - Weapon/armor table borders
+- [x] `character-sheet/add-sub-skill-modal.tsx` - Header divider
+- [x] `character-sheet/add-skill-modal.tsx` - Header divider
+- [x] `character-sheet/add-feat-modal.tsx` - Header divider
+- [x] `technique-creator/page.tsx` - Section divider
+- [x] `item-creator/page.tsx` - Section divider
+- [x] `power-creator/page.tsx` - Section divider
+- [x] `encounter-tracker/page.tsx` - 2 dividers
+- [x] `character-creator/steps/feats-step.tsx` - Section divider
+- [x] `my-account/page.tsx` - 2 profile info dividers
+
+**Border Token System (Complete):**
+- `border-border` = #707070 (neutral-600) - Default borders
+- `border-border-light` = #dad9d9 (neutral-200) - Card/container borders
+- `border-border-subtle` = #f6f6f6 (neutral-100) - Very light internal dividers
+
+### ✅ Phase 10E: PageHeader Adoption (COMPLETE)
+
+**Static Pages Migrated:**
+- [x] `privacy/page.tsx` - Now uses `<PageHeader title="Privacy Policy" />`
+- [x] `terms/page.tsx` - Now uses `<PageHeader title="Terms of Service" />`
+- [x] `resources/page.tsx` - Uses PageHeader with title + description
+- [x] `rules/page.tsx` - Uses PageHeader with title + description
+
+**Result:** All static content pages now use consistent PageHeader + PageContainer pattern
 
 ### ⚠️ Intentionally Preserved
-- Auth components (`login/`, `register/`, `forgot-password/`, `forgot-username/`, `layout.tsx`) - Use dark theme gray-* styling
-- Dropdown `<option>` elements in `roll-log.tsx` - Browser/OS styled
+- Auth components (`login/`, `register/`, `forgot-password/`, `forgot-username/`) - Use dark theme gray-* styling
+- Dropdown `<option>` elements - Browser/OS styled
 - Semantic colors: Health=red, Energy=blue, Resistances=green (per design philosophy)
-
-### 📋 TODO
-- [ ] Create unified DataTable/List component
-- [ ] Consider unifying creator summary panels (extend `CreatorSummaryPanel`)
+- `bg-white/XX` opacity patterns - Used for overlays on dark backgrounds
+- Specialized stepper/toggle buttons - Roll log dice buttons, level selectors, proficiency dots (context-specific UI)
 
 ---
 

@@ -27,7 +27,7 @@ import {
   GridListRow,
   type ChipData,
 } from '@/components/shared';
-import { PageContainer, PageHeader, TabNavigation, Spinner } from '@/components/ui';
+import { PageContainer, PageHeader, TabNavigation, Spinner, Input } from '@/components/ui';
 import { 
   useRTDBFeats, 
   useRTDBSkills, 
@@ -254,7 +254,7 @@ function FeatsTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">
               Max Required Level
             </label>
-            <input
+            <Input
               type="number"
               min={0}
               value={filters.maxLevel ?? ''}
@@ -263,7 +263,6 @@ function FeatsTab() {
                 maxLevel: e.target.value ? parseInt(e.target.value) : null 
               }))}
               placeholder="No limit"
-              className="w-full px-3 py-2 border border-border rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
             <p className="text-xs text-text-muted mt-1">Hide feats requiring higher levels</p>
           </div>

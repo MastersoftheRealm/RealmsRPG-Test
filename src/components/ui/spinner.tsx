@@ -27,7 +27,7 @@ const sizeClasses = {
 const variantClasses = {
   primary: 'border-primary-200 border-t-primary-600',
   white: 'border-white/30 border-t-white',
-  muted: 'border-neutral-200 border-t-neutral-500',
+  muted: 'border-border-light border-t-neutral-500',
 };
 
 export function Spinner({

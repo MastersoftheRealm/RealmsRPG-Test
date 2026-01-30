@@ -92,7 +92,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
   const lastRoll = rollHistory[0];
 
   return (
-    <div className={cn('bg-white rounded-xl shadow-md p-4', className)}>
+    <div className={cn('bg-surface rounded-xl shadow-md p-4', className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-text-primary">🎲 Dice Roller</h3>
@@ -165,7 +165,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
 
           {/* Last Roll Result */}
           {lastRoll && (
-            <div className="mt-4 p-4 bg-neutral-50 rounded-xl text-center">
+            <div className="mt-4 p-4 bg-surface-alt rounded-xl text-center">
               <div className="text-sm text-text-secondary mb-1">
                 {lastRoll.count}d{lastRoll.dieType}{formatModifier(lastRoll.modifier)}
               </div>
@@ -213,7 +213,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           ) : (
             <div className="max-h-[300px] overflow-y-auto space-y-2">
               {rollHistory.map((roll) => (
-                <div key={roll.id} className="flex items-center justify-between p-2 bg-neutral-50 rounded-lg">
+                <div key={roll.id} className="flex items-center justify-between p-2 bg-surface-alt rounded-lg">
                   <div>
                     <span className="font-medium text-text-primary">
                       {roll.count}d{roll.dieType}{formatModifier(roll.modifier)}

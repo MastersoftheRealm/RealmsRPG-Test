@@ -27,6 +27,8 @@ import {
   calculateSkillPoints,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
+import { IconButton, SearchInput, Button, Input, Select, PageContainer } from '@/components/ui';
+import { X, Trash2 } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import {
   CREATURE_TYPES,
@@ -394,7 +396,7 @@ function DefenseBlock({
   const totalValue = 10 + baseValue + bonusValue;
   
   return (
-    <div className="p-3 bg-neutral-50 rounded-lg text-center">
+    <div className="p-3 bg-surface-alt rounded-lg text-center">
       <label className="block text-xs font-medium text-text-muted mb-1 uppercase">
         {name}
       </label>
@@ -437,10 +439,10 @@ function LoadPowerModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select a Power</h2>
-          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
+          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {userPowers.length === 0 ? (
@@ -470,7 +472,7 @@ function LoadPowerModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
+                    className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
                   >
                     <div className="font-medium">{power.name}</div>
                     <div className="text-sm text-text-muted">
@@ -503,10 +505,10 @@ function LoadTechniqueModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select a Technique</h2>
-          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
+          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {userTechniques.length === 0 ? (
@@ -534,7 +536,7 @@ function LoadTechniqueModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
+                    className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
                   >
                     <div className="font-medium">{tech.name}</div>
                     <div className="text-sm text-text-muted">
@@ -583,18 +585,16 @@ function LoadFeatModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select a Feat</h2>
-          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
+          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
         </div>
         <div className="p-4 border-b">
-          <input
-            type="text"
+          <SearchInput
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={setSearch}
             placeholder="Search feats..."
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
           />
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
@@ -614,7 +614,7 @@ function LoadFeatModal({
                     });
                     onClose();
                   }}
-                  className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
+                  className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{feat.name}</span>
@@ -654,10 +654,10 @@ function LoadArmamentModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Select an Armament</h2>
-          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
+          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {availableItems.length === 0 ? (
@@ -698,7 +698,7 @@ function LoadArmamentModal({
                       });
                       onClose();
                     }}
-                    className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
+                    className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
                   >
                     <div className="font-medium">{item.name}</div>
                     <div className="text-sm text-text-muted">
@@ -730,10 +730,10 @@ function LoadCreatureModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-surface rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">Load Creature from Library</h2>
-          <button onClick={onClose} className="text-2xl text-text-muted hover:text-text-secondary">×</button>
+          <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
         </div>
         <div className="p-4 overflow-y-auto max-h-[60vh]">
           {userCreatures.length === 0 ? (
@@ -777,7 +777,7 @@ function LoadCreatureModal({
                     onSelect(loadedCreature);
                     onClose();
                   }}
-                  className="w-full p-3 text-left bg-neutral-50 hover:bg-primary-50 rounded-lg border border-neutral-200"
+                  className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
                 >
                   <div className="font-medium">{c.name}</div>
                   <div className="text-sm text-text-muted">
@@ -1155,43 +1155,39 @@ function CreatureCreatorContent() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <PageContainer size="full">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Creature Creator</h1>
           <p className="text-text-secondary">Design custom creatures, monsters, and NPCs</p>
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-            className={cn(
-              "px-4 py-2 rounded-lg border transition-colors",
-              user 
-                ? "border-primary-600 text-primary-600 hover:bg-primary-50"
-                : "border-neutral-300 text-text-muted cursor-pointer"
-            )}
             title={user ? "Load from library" : "Log in to load from library"}
           >
             Load
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="secondary"
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-100"
           >
             Reset
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="success"
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            isLoading={saving}
           >
             {saving ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Creature Summary Card (Top) */}
-      <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+      <div className="bg-surface rounded-xl shadow-md p-4 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div>
@@ -1244,17 +1240,16 @@ function CreatureCreatorContent() {
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Basic Information</h3>
             <div className="grid md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
-                <input
+                <Input
                   type="text"
                   value={creature.name}
                   onChange={(e) => updateCreature({ name: e.target.value })}
                   placeholder="Creature name..."
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
                 />
               </div>
               <div>
@@ -1297,7 +1292,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Archetype Selection */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Archetype</h3>
             <ArchetypeSelector
               value={creature.archetypeType}
@@ -1313,7 +1308,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* HP/EN Allocation */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Health & Energy</h3>
             <HealthEnergyAllocator
               hpBonus={creature.hitPoints}
@@ -1327,7 +1322,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Abilities - Using shared AbilityScoreEditor */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Ability Scores</h3>
             <AbilityScoreEditor
               abilities={creature.abilities}
@@ -1343,7 +1338,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Defenses */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Defenses</h3>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               <DefenseBlock
@@ -1386,7 +1381,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Resistances, Weaknesses, Immunities */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h3>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
@@ -1435,7 +1430,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Senses & Movement */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Senses & Movement</h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -1472,7 +1467,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Condition Immunities */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Condition Immunities</h3>
             <ChipList 
               items={creature.conditionImmunities} 
@@ -1488,7 +1483,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Skills */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-text-primary">Skills</h3>
               <div className="flex items-center gap-3">
@@ -1508,9 +1503,9 @@ function CreatureCreatorContent() {
             {creature.skills.length === 0 ? (
               <p className="text-sm text-text-muted italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
             ) : (
-              <div className="border border-neutral-200 rounded-lg divide-y divide-neutral-100 mb-4">
+              <div className="border border-border-light rounded-lg divide-y divide-border-light mb-4">
                 {creature.skills.map(skill => (
-                  <div key={skill.name} className="flex items-center justify-between py-2.5 px-4 hover:bg-neutral-50 transition-colors">
+                  <div key={skill.name} className="flex items-center justify-between py-2.5 px-4 hover:bg-surface-alt transition-colors">
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => removeSkill(skill.name)}
@@ -1564,7 +1559,7 @@ function CreatureCreatorContent() {
           </div>
 
           {/* Languages */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Languages</h3>
             <ChipList 
               items={creature.languages} 
@@ -1572,21 +1567,21 @@ function CreatureCreatorContent() {
               color="bg-teal-100 text-teal-800"
             />
             <div className="flex gap-2 mt-2">
-              <input
+              <Input
                 type="text"
                 value={newLanguage}
                 onChange={(e) => setNewLanguage(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addLanguage()}
                 placeholder="Enter language..."
-                className="flex-1 px-3 py-1.5 border border-neutral-300 rounded text-sm"
+                className="flex-1"
               />
-              <button
+              <Button
                 onClick={addLanguage}
                 disabled={!newLanguage.trim()}
-                className="px-3 py-1.5 bg-primary-600 text-white rounded text-sm disabled:opacity-50"
+                size="sm"
               >
                 Add
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -1606,7 +1601,7 @@ function CreatureCreatorContent() {
             ) : (
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-neutral-50">
+                  <thead className="bg-surface-alt">
                     <tr>
                       <th className="px-3 py-2 text-left">Name</th>
                       <th className="px-3 py-2 text-left">EN</th>
@@ -1629,15 +1624,17 @@ function CreatureCreatorContent() {
                         <td className="px-3 py-2">{power.area}</td>
                         <td className="px-3 py-2">{formatDamageDisplay(power.damage)}</td>
                         <td className="px-3 py-2">
-                          <button
+                          <IconButton
+                            variant="danger"
+                            size="sm"
+                            label="Remove power"
                             onClick={() => setCreature(prev => ({
                               ...prev,
                               powers: prev.powers.filter(p => p.id !== power.id)
                             }))}
-                            className="text-red-500 hover:text-red-700"
                           >
-                            ×
-                          </button>
+                            <Trash2 className="w-4 h-4" />
+                          </IconButton>
                         </td>
                       </tr>
                     ))}
@@ -1645,12 +1642,11 @@ function CreatureCreatorContent() {
                 </table>
               </div>
             )}
-            <button
+            <Button
               onClick={() => setShowPowerModal(true)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Add Power
-            </button>
+            </Button>
           </CollapsibleSection>
 
           {/* Techniques - Optional */}
@@ -1669,7 +1665,7 @@ function CreatureCreatorContent() {
             ) : (
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-neutral-50">
+                  <thead className="bg-surface-alt">
                     <tr>
                       <th className="px-3 py-2 text-left">Name</th>
                       <th className="px-3 py-2 text-left">EN</th>
@@ -1690,15 +1686,17 @@ function CreatureCreatorContent() {
                         <td className="px-3 py-2">{tech.weapon}</td>
                         <td className="px-3 py-2">{formatDamageDisplay(tech.damage)}</td>
                         <td className="px-3 py-2">
-                          <button
+                          <IconButton
+                            variant="danger"
+                            size="sm"
+                            label="Remove technique"
                             onClick={() => setCreature(prev => ({
                               ...prev,
                               techniques: prev.techniques.filter(t => t.id !== tech.id)
                             }))}
-                            className="text-red-500 hover:text-red-700"
                           >
-                            ×
-                          </button>
+                            <Trash2 className="w-4 h-4" />
+                          </IconButton>
                         </td>
                       </tr>
                     ))}
@@ -1706,12 +1704,11 @@ function CreatureCreatorContent() {
                 </table>
               </div>
             )}
-            <button
+            <Button
               onClick={() => setShowTechniqueModal(true)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Add Technique
-            </button>
+            </Button>
           </CollapsibleSection>
 
           {/* Feats - Always visible, collapsible */}
@@ -1728,7 +1725,7 @@ function CreatureCreatorContent() {
             ) : (
               <div className="space-y-2 mb-4">
                 {creature.feats.map(feat => (
-                  <div key={feat.id} className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg">
+                  <div key={feat.id} className="flex items-start gap-3 p-3 bg-surface-alt rounded-lg">
                     <button
                       onClick={() => setCreature(prev => ({
                         ...prev,
@@ -1751,12 +1748,11 @@ function CreatureCreatorContent() {
                 ))}
               </div>
             )}
-            <button
+            <Button
               onClick={() => setShowFeatModal(true)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Add Feat
-            </button>
+            </Button>
           </CollapsibleSection>
 
           {/* Armaments - Optional */}
@@ -1775,7 +1771,7 @@ function CreatureCreatorContent() {
             ) : (
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm">
-                  <thead className="bg-neutral-50">
+                  <thead className="bg-surface-alt">
                     <tr>
                       <th className="px-3 py-2 text-left">Name</th>
                       <th className="px-3 py-2 text-left">Type</th>
@@ -1794,15 +1790,17 @@ function CreatureCreatorContent() {
                         <td className="px-3 py-2">{armament.currency}c</td>
                         <td className="px-3 py-2">{armament.rarity}</td>
                         <td className="px-3 py-2">
-                          <button
+                          <IconButton
+                            variant="danger"
+                            size="sm"
+                            label="Remove armament"
                             onClick={() => setCreature(prev => ({
                               ...prev,
                               armaments: prev.armaments.filter(a => a.id !== armament.id)
                             }))}
-                            className="text-red-500 hover:text-red-700"
                           >
-                            ×
-                          </button>
+                            <Trash2 className="w-4 h-4" />
+                          </IconButton>
                         </td>
                       </tr>
                     ))}
@@ -1810,16 +1808,15 @@ function CreatureCreatorContent() {
                 </table>
               </div>
             )}
-            <button
+            <Button
               onClick={() => setShowArmamentModal(true)}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Add Armament
-            </button>
+            </Button>
           </CollapsibleSection>
 
           {/* Description */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Description</h3>
             <textarea
               value={creature.description}
@@ -1898,13 +1895,13 @@ function CreatureCreatorContent() {
         returnPath="/creature-creator"
         contentType="creature"
       />
-    </div>
+    </PageContainer>
   );
 }
 
 export default function CreatureCreatorPage() {
   return (
-    <div className="min-h-screen bg-neutral-50 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <CreatureCreatorContent />
     </div>
   );

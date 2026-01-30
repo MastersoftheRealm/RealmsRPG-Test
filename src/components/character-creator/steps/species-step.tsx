@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Chip, Button, Alert } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
@@ -86,52 +87,48 @@ export function SpeciesStep() {
               {s.ability_bonuses && Object.keys(s.ability_bonuses).length > 0 && (
                 <div className="flex gap-1 mt-2">
                   {Object.entries(s.ability_bonuses).map(([ability, bonus]) => (
-                    <span
-                      key={ability}
-                      className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded"
-                    >
+                    <Chip key={ability} variant="success" size="sm">
                       {ability.substring(0, 3).toUpperCase()} +{bonus}
-                    </span>
+                    </Chip>
                   ))}
                 </div>
               )}
               
-              <button 
-                className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
+              <Button 
+                variant="link"
+                size="sm"
+                className="mt-3"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleCardClick(s);
                 }}
               >
                 View Details →
-              </button>
+              </Button>
             </div>
           );
         })}
       </div>
       
       {(!species || species.length === 0) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
-          <p className="text-amber-700 text-center">
-            No species data available. Please check Firebase connection.
-          </p>
-        </div>
+        <Alert variant="warning" className="mb-8">
+          No species data available. Please check Firebase connection.
+        </Alert>
       )}
       
       <div className="flex justify-between">
-        <button
+        <Button
+          variant="secondary"
           onClick={prevStep}
-          className="btn-back"
         >
           ← Back
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={nextStep}
           disabled={!draft.ancestry?.id}
-          className="btn-continue"
         >
           Continue →
-        </button>
+        </Button>
       </div>
 
       {/* Species Details Modal */}

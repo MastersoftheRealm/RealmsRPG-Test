@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Edit, Trash2, Copy, Heart, Zap, Shield, Swords } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { Button } from '@/components/ui';
 
 // =============================================================================
 // Types
@@ -204,7 +205,7 @@ export function CreatureStatBlock({
   
   return (
     <div className={cn(
-      'bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden',
+      'bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden',
       className
     )}>
       {/* Header - always visible */}
@@ -266,7 +267,7 @@ export function CreatureStatBlock({
           
           {/* Abilities */}
           {creature.abilities && Object.keys(creature.abilities).length > 0 && (
-            <div className="border-t border-b border-neutral-200 py-3">
+            <div className="border-t border-b border-border-light py-3">
               <AbilityRow abilities={creature.abilities} />
             </div>
           )}
@@ -333,7 +334,7 @@ export function CreatureStatBlock({
           
           {/* Combat - Powers, Techniques, Feats */}
           {!compact && (
-            <div className="space-y-2 pt-2 border-t border-neutral-200">
+            <div className="space-y-2 pt-2 border-t border-border-light">
               {creature.powers && creature.powers.length > 0 && (
                 <div className="text-xs">
                   <span className="font-semibold text-purple-700">Powers: </span>
@@ -371,33 +372,38 @@ export function CreatureStatBlock({
           
           {/* Actions */}
           {showActions && (onEdit || onDelete || onDuplicate) && (
-            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-200">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border-light">
               {onDuplicate && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-text-muted hover:text-text-primary hover:bg-neutral-100 rounded transition-colors"
                 >
                   <Copy className="w-4 h-4" />
                   Duplicate
-                </button>
+                </Button>
               )}
               {onEdit && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded transition-colors"
+                  className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
                 >
                   <Edit className="w-4 h-4" />
                   Edit
-                </button>
+                </Button>
               )}
               {onDelete && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <Trash2 className="w-4 h-4" />
                   Delete
-                </button>
+                </Button>
               )}
             </div>
           )}

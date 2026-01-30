@@ -157,7 +157,7 @@ export function RollLog({ className }: RollLogProps) {
       <div
         className={cn(
           'absolute bottom-[70px] right-0 w-[360px] max-w-[calc(100vw-40px)]',
-          'bg-white rounded-xl shadow-2xl overflow-hidden',
+          'bg-surface rounded-xl shadow-2xl overflow-hidden',
           'flex flex-col transition-all duration-300',
           isOpen ? 'h-[70vh] max-h-[600px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
         )}
@@ -174,7 +174,7 @@ export function RollLog({ className }: RollLogProps) {
         </div>
 
         {/* Roll History */}
-        <div className="flex-1 overflow-y-auto p-2 bg-neutral-50">
+        <div className="flex-1 overflow-y-auto p-2 bg-surface-alt">
           {rolls.length === 0 ? (
             <p className="text-center text-text-muted italic py-10">No rolls yet. Build your dice pool below!</p>
           ) : (
@@ -300,7 +300,7 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
   return (
     <div
       className={cn(
-        'bg-white rounded-lg mb-2 p-3 shadow-sm border-l-4 animate-slide-in-right',
+        'bg-surface rounded-lg mb-2 p-3 shadow-sm border-l-4 animate-slide-in-right',
         ROLL_TYPE_COLORS[roll.type],
         roll.isCrit && 'ring-2 ring-green-400',
         roll.isCritFail && 'ring-2 ring-red-400'

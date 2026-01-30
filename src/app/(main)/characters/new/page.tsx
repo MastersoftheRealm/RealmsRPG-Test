@@ -51,7 +51,7 @@ export default function CharacterCreatorPage() {
   const StepComponent = STEP_COMPONENTS[currentStep];
   
   return (
-    <div className="min-h-screen bg-neutral-50 py-6">
+    <div className="min-h-screen bg-background py-6">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-text-primary">Create New Character</h1>
@@ -62,7 +62,7 @@ export default function CharacterCreatorPage() {
         
         <CreatorTabBar />
         
-        <div className="bg-white rounded-xl shadow-md p-6 md:p-8">
+        <div className="bg-surface rounded-xl shadow-md p-6 md:p-8">
           <StepComponent />
         </div>
       </div>

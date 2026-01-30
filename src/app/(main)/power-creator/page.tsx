@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { usePowerParts, useUserPowers, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal } from '@/components/shared';
-import { LoadingState } from '@/components/ui/spinner';
+import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
 import {
@@ -174,9 +174,9 @@ function PartCard({
     (part.op_3_tp || 0) * selectedPart.op_3_lvl;
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden">
+    <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-neutral-50 px-4 py-3 flex items-center justify-between">
+      <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -190,13 +190,14 @@ function PartCard({
             EN: {partEnergy.toFixed(1)} | TP: {Math.floor(partTP)}
           </span>
         </div>
-        <button
-          type="button"
+        <IconButton
           onClick={onRemove}
-          className="text-text-muted hover:text-danger-500"
+          label="Remove part"
+          variant="danger"
+          size="sm"
         >
           <X className="w-5 h-5" />
-        </button>
+        </IconButton>
       </div>
 
       {/* Expanded Content */}
@@ -284,9 +285,9 @@ function PartCard({
 
           {/* Options */}
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
-            <div className="space-y-3 pt-2 border-t border-neutral-100">
+            <div className="space-y-3 pt-2 border-t border-border-light">
               {hasOption(1) && (
-                <div className="bg-neutral-50 rounded-lg p-3">
+                <div className="bg-surface-alt rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 1:{' '}
@@ -308,7 +309,7 @@ function PartCard({
               )}
 
               {hasOption(2) && (
-                <div className="bg-neutral-50 rounded-lg p-3">
+                <div className="bg-surface-alt rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 2:{' '}
@@ -330,7 +331,7 @@ function PartCard({
               )}
 
               {hasOption(3) && (
-                <div className="bg-neutral-50 rounded-lg p-3">
+                <div className="bg-surface-alt rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">
                       Option 3:{' '}
@@ -354,15 +355,11 @@ function PartCard({
           )}
 
           {/* Apply Duration Checkbox */}
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={selectedPart.applyDuration}
-              onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
-              className="rounded border-neutral-300"
-            />
-            <span className="text-sm text-text-secondary">Apply to Duration</span>
-          </label>
+          <Checkbox
+            checked={selectedPart.applyDuration}
+            onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
+            label="Apply to Duration"
+          />
         </div>
       )}
     </div>
@@ -544,15 +541,11 @@ function AddedAdvancedChip({
             </div>
           )}
           
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={advPart.applyDuration}
-              onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
-              className="rounded border-neutral-300"
-            />
-            <span className="text-sm text-text-secondary">Apply Duration</span>
-          </label>
+          <Checkbox
+            checked={advPart.applyDuration}
+            onChange={(e) => onUpdate({ applyDuration: e.target.checked })}
+            label="Apply Duration"
+          />
         </div>
       )}
     </div>
@@ -585,12 +578,12 @@ function AdvancedMechanicsSection({
   );
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+    <div className="bg-surface rounded-xl shadow-md overflow-hidden">
       {/* Toggle Header */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-6 py-4 flex items-center justify-between bg-neutral-50 hover:bg-neutral-100 transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between bg-surface-alt hover:bg-neutral-100 transition-colors"
       >
         <div className="flex items-center gap-2">
           {expanded ? (
@@ -1233,24 +1226,24 @@ function PowerCreatorContent() {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto">
+      <PageContainer size="content">
         <LoadingState message="Loading power parts..." />
-      </div>
+      </PageContainer>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <p className="text-red-700">Failed to load power parts: {error.message}</p>
-        </div>
-      </div>
+      <PageContainer size="content">
+        <Alert variant="danger">
+          Failed to load power parts: {error.message}
+        </Alert>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <PageContainer size="content">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center gap-2">
@@ -1263,40 +1256,28 @@ function PowerCreatorContent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
-              user 
-                ? "bg-neutral-100 hover:bg-neutral-200 text-text-secondary"
-                : "bg-neutral-100 text-text-muted cursor-pointer"
-            )}
             title={user ? "Load from library" : "Log in to load from library"}
           >
             <FolderOpen className="w-5 h-5" />
             Load
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="secondary"
             onClick={handleReset}
-            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-text-secondary transition-colors"
           >
             Reset
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="success"
             onClick={handleSave}
             disabled={saving || !name.trim()}
-            className={cn(
-              'px-4 py-2 rounded-lg font-medium transition-colors',
-              saving || !name.trim()
-                ? 'bg-neutral-300 text-text-muted cursor-not-allowed'
-                : 'bg-green-600 text-white hover:bg-green-700'
-            )}
+            isLoading={saving}
           >
             {saving ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -1316,37 +1297,35 @@ function PowerCreatorContent() {
         {/* Main Editor */}
         <div className="lg:col-span-2 space-y-6">
           {/* Name & Description */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
                   Power Name *
                 </label>
-                <input
+                <Input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter power name..."
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
                   Description
                 </label>
-                <textarea
+                <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe what your power does..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
               </div>
             </div>
           </div>
 
           {/* Action Type */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Action Type</h3>
             <div className="flex flex-wrap gap-4">
               <select
@@ -1360,20 +1339,16 @@ function PowerCreatorContent() {
                   </option>
                 ))}
               </select>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
+              <Checkbox
                   checked={isReaction}
                   onChange={(e) => setIsReaction(e.target.checked)}
-                  className="rounded border-neutral-300"
+                  label="Reaction"
                 />
-                <span className="text-sm">Reaction</span>
-              </label>
             </div>
           </div>
 
           {/* Range */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Range</h3>
             <div className="flex flex-wrap items-center gap-4">
               <NumberStepper
@@ -1386,20 +1361,17 @@ function PowerCreatorContent() {
               <span className="text-sm text-text-secondary">
                 {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
               </span>
-              <label className="flex items-center gap-2 ml-4">
-                <input
-                  type="checkbox"
-                  checked={range.applyDuration || false}
-                  onChange={(e) => setRange((r) => ({ ...r, applyDuration: e.target.checked }))}
-                  className="rounded border-neutral-300"
-                />
-                <span className="text-sm">Apply Duration</span>
-              </label>
+              <Checkbox
+                checked={range.applyDuration || false}
+                onChange={(e) => setRange((r) => ({ ...r, applyDuration: e.target.checked }))}
+                label="Apply Duration"
+                className="ml-4"
+              />
             </div>
           </div>
 
           {/* Area of Effect */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Area of Effect</h3>
             <div className="flex flex-wrap items-center gap-4">
               <select
@@ -1422,22 +1394,18 @@ function PowerCreatorContent() {
                     min={1}
                     max={10}
                   />
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
+                  <Checkbox
                       checked={area.applyDuration || false}
                       onChange={(e) => setArea((a) => ({ ...a, applyDuration: e.target.checked }))}
-                      className="rounded border-neutral-300"
+                      label="Apply Duration"
                     />
-                    <span className="text-sm">Apply Duration</span>
-                  </label>
                 </>
               )}
             </div>
           </div>
 
           {/* Duration */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Duration</h3>
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
@@ -1471,34 +1439,22 @@ function PowerCreatorContent() {
               )}
             </div>
             {/* Duration Modifiers */}
-            <div className="flex flex-wrap gap-4 pt-3 border-t border-neutral-200">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={duration.focus || false}
-                  onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
-                  className="rounded border-neutral-300"
-                />
-                <span className="text-sm">Focus</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={duration.noHarm || false}
-                  onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
-                  className="rounded border-neutral-300"
-                />
-                <span className="text-sm">No Harm or Adaptation Parts</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={duration.endsOnActivation || false}
-                  onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
-                  className="rounded border-neutral-300"
-                />
-                <span className="text-sm">Ends on Activation</span>
-              </label>
+            <div className="flex flex-wrap gap-4 pt-3 border-t border-border-light">
+              <Checkbox
+                checked={duration.focus || false}
+                onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
+                label="Focus"
+              />
+              <Checkbox
+                checked={duration.noHarm || false}
+                onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
+                label="No Harm or Adaptation Parts"
+              />
+              <Checkbox
+                checked={duration.endsOnActivation || false}
+                onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
+                label="Ends on Activation"
+              />
               <div className="flex items-center gap-2">
                 <span className="text-sm">Sustain:</span>
                 <select
@@ -1517,7 +1473,7 @@ function PowerCreatorContent() {
           </div>
 
           {/* Power Parts */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-text-primary">
                 Power Parts ({selectedParts.length})
@@ -1563,7 +1519,7 @@ function PowerCreatorContent() {
           />
 
           {/* Damage (Optional) */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Damage (Optional)</h3>
             <div className="flex flex-wrap items-center gap-4">
               <NumberStepper
@@ -1609,7 +1565,7 @@ function PowerCreatorContent() {
 
         {/* Sidebar - Cost Summary */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+          <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
             <h3 className="text-lg font-bold text-text-primary mb-4">Power Summary</h3>
 
             {/* Cost Display */}
@@ -1648,7 +1604,7 @@ function PowerCreatorContent() {
 
             {/* TP Sources */}
             {costs.tpSources.length > 0 && (
-              <div className="border-t border-neutral-100 pt-4">
+              <div className="border-t border-border-subtle pt-4">
                 <h4 className="text-sm font-medium text-text-secondary mb-2">TP Breakdown</h4>
                 <ul className="text-xs text-text-secondary space-y-1">
                   {costs.tpSources.map((src, i) => (
@@ -1660,16 +1616,12 @@ function PowerCreatorContent() {
 
             {/* Save Message */}
             {saveMessage && (
-              <div
-                className={cn(
-                  'mt-4 p-3 rounded-lg text-sm',
-                  saveMessage.type === 'success'
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-red-50 text-red-700'
-                )}
+              <Alert 
+                variant={saveMessage.type === 'success' ? 'success' : 'danger'}
+                className="mt-4"
               >
                 {saveMessage.text}
-              </div>
+              </Alert>
             )}
           </div>
         </div>
@@ -1682,13 +1634,13 @@ function PowerCreatorContent() {
         returnPath="/power-creator"
         contentType="power"
       />
-    </div>
+    </PageContainer>
   );
 }
 
 export default function PowerCreatorPage() {
   return (
-    <div className="min-h-screen bg-neutral-50 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <PowerCreatorContent />
     </div>
   );

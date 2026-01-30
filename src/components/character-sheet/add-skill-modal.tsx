@@ -11,8 +11,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { X, Search } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { X } from 'lucide-react';
+import { Spinner, SearchInput, IconButton, Alert } from '@/components/ui';
 import { GridListRow } from '@/components/shared';
 
 interface Skill {
@@ -158,30 +158,28 @@ export function AddSkillModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
           <h2 className="text-lg font-bold text-text-primary">Add Skill</h2>
-          <button
+          <IconButton
+            label="Close modal"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-neutral-100 transition-colors"
           >
-            <X className="w-5 h-5 text-text-muted" />
-          </button>
+            <X className="w-5 h-5" />
+          </IconButton>
         </div>
 
         {/* Search */}
-        <div className="px-4 py-3 border-b border-neutral-100">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search skills..."
-              className="w-full pl-9 pr-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
+        <div className="px-4 py-3 border-b border-border-subtle">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search skills..."
+            size="sm"
+          />
         </div>
 
         {/* Content */}
@@ -194,9 +192,9 @@ export function AddSkillModal({
           )}
 
           {error && (
-            <div className="text-center py-8 text-danger-600">
-              <p>{error}</p>
-            </div>
+            <Alert variant="danger" className="mx-4">
+              {error}
+            </Alert>
           )}
 
           {!loading && !error && filteredSkills.length === 0 && (
@@ -220,7 +218,7 @@ export function AddSkillModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border-light bg-surface-alt">
           <span className="text-sm text-text-muted">
             {selectedSkills.length} skill{selectedSkills.length !== 1 ? 's' : ''} selected
           </span>

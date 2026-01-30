@@ -7,6 +7,8 @@
 
 'use client';
 
+import { Checkbox } from '@/components/ui';
+
 interface CheckboxOption {
   id: string;
   label: string;
@@ -33,18 +35,12 @@ export function CheckboxFilter({
       </label>
       <div className="flex flex-wrap gap-4">
         {options.map(option => (
-          <label
+          <Checkbox
             key={option.id}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              checked={option.checked}
-              onChange={(e) => onChange(option.id, e.target.checked)}
-              className="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-            />
-            <span className="text-sm text-text-secondary">{option.label}</span>
-          </label>
+            label={option.label}
+            checked={option.checked}
+            onChange={(e) => onChange(option.id, e.target.checked)}
+          />
         ))}
       </div>
     </div>

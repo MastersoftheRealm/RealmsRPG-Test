@@ -16,6 +16,7 @@ import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
 import { PartChipList, type PartData, EditSectionToggle } from '@/components/shared';
+import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
@@ -199,7 +200,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
   return (
     <div className={cn(
       'border rounded-lg overflow-hidden',
-      isInnate ? 'border-purple-300 bg-purple-50' : 'border-neutral-200 bg-white'
+      isInnate ? 'border-purple-300 bg-purple-50' : 'border-border-light bg-surface'
     )}>
       <div className="flex items-center">
         {/* Innate toggle checkbox in edit mode */}
@@ -219,7 +220,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
         )}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-neutral-50 text-left"
+          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-surface-alt text-left"
         >
           <div className="flex items-center gap-2">
             {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
@@ -258,18 +259,19 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
         )}
         
         {isEditMode && onRemove && (
-          <button
+          <IconButton
+            variant="danger"
+            size="sm"
             onClick={onRemove}
-            className="p-2 text-red-500 hover:bg-red-50 transition-colors"
-            title="Remove power"
+            label="Remove power"
           >
             <X className="w-4 h-4" />
-          </button>
+          </IconButton>
         )}
       </div>
 
       {expanded && hasExpandableContent && (
-        <div className="px-3 py-2 bg-neutral-50 border-t border-neutral-100 space-y-3">
+        <div className="px-3 py-2 bg-surface-alt border-t border-border-light space-y-3">
           {power.description && (
             <p className="text-sm text-text-secondary">{power.description}</p>
           )}
@@ -305,11 +307,11 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
   const hasExpandableContent = technique.description || partChips.length > 0 || technique.weaponName || technique.actionType;
 
   return (
-    <div className="border border-neutral-200 rounded-lg overflow-hidden bg-white">
+    <div className="border border-border-light rounded-lg overflow-hidden bg-surface">
       <div className="flex items-center">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-neutral-50 text-left"
+          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-surface-alt text-left"
         >
           <div className="flex items-center gap-2">
             {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
@@ -344,18 +346,19 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
         )}
         
         {isEditMode && onRemove && (
-          <button
+          <IconButton
+            variant="danger"
+            size="sm"
             onClick={onRemove}
-            className="p-2 text-red-500 hover:bg-red-50 transition-colors"
-            title="Remove technique"
+            label="Remove technique"
           >
             <X className="w-4 h-4" />
-          </button>
+          </IconButton>
         )}
       </div>
 
       {expanded && hasExpandableContent && (
-        <div className="px-3 py-2 bg-neutral-50 border-t border-neutral-100 space-y-3">
+        <div className="px-3 py-2 bg-surface-alt border-t border-border-light space-y-3">
           {/* Action Type and Weapon info */}
           {(technique.actionType || technique.weaponName) && (
             <div className="flex flex-wrap gap-2 text-xs">
@@ -408,7 +411,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
   return (
     <div className={cn(
       'border rounded-lg overflow-hidden',
-      item.equipped ? 'border-green-300 bg-green-50' : 'border-neutral-200 bg-white'
+      item.equipped ? 'border-green-300 bg-green-50' : 'border-border-light bg-surface'
     )}>
       <div className="flex items-center">
         {isEditMode && onToggleEquip && (type === 'weapon' || type === 'armor') && (
@@ -427,7 +430,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
         )}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-neutral-50 text-left"
+          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-surface-alt text-left"
         >
           <div className="flex items-center gap-2">
             {!isEditMode && item.equipped && (
@@ -506,18 +509,19 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
         )}
         
         {isEditMode && onRemove && (
-          <button
+          <IconButton
+            variant="danger"
+            size="sm"
             onClick={onRemove}
-            className="p-2 text-red-500 hover:bg-red-50 transition-colors"
-            title="Remove item"
+            label="Remove item"
           >
             <X className="w-4 h-4" />
-          </button>
+          </IconButton>
         )}
       </div>
 
       {expanded && hasExpandableContent && (
-        <div className="px-3 py-2 bg-neutral-50 border-t border-neutral-100 space-y-3">
+        <div className="px-3 py-2 bg-surface-alt border-t border-border-light space-y-3">
           {item.description && (
             <p className="text-sm text-text-secondary">{item.description}</p>
           )}
@@ -618,7 +622,7 @@ export function LibrarySection({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 relative">
+    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 relative">
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -680,14 +684,15 @@ export function LibrarySection({
           </div>
           
           {isEditMode && activeTabData?.onAdd && (
-            <button
+            <Button
+              variant="success"
+              size="sm"
               onClick={activeTabData.onAdd}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />
-            Add
-          </button>
-        )}
+              Add
+            </Button>
+          )}
         </div>
       )}
 

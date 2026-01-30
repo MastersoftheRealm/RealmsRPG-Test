@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { ArrowUp, Star, Heart, Zap, Shield, Sword, Plus, Check } from 'lucide-react';
-import { Modal } from '@/components/ui';
+import { Modal, Button } from '@/components/ui';
 import {
   calculateAbilityPoints,
   calculateSkillPoints,
@@ -194,19 +194,20 @@ export function LevelUpModal({
         
         {/* Confirm Button */}
         <div className="flex gap-3">
-          <button
+          <Button
+            variant="secondary"
+            className="flex-1"
             onClick={onClose}
-            className="flex-1 px-4 py-3 rounded-lg border border-neutral-300 text-text-secondary hover:bg-neutral-50 transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            className="flex-1"
             onClick={handleConfirm}
-            className="flex-1 px-4 py-3 rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 font-medium"
           >
             <ArrowUp className="w-5 h-5" />
             Level Up to {targetLevel}!
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>
@@ -222,7 +223,7 @@ interface GainCardProps {
 
 function GainCard({ icon, label, value, description }: GainCardProps) {
   return (
-    <div className="bg-neutral-50 rounded-lg p-3 border border-neutral-100">
+    <div className="bg-surface-alt rounded-lg p-3 border border-border-light">
       <div className="flex items-center gap-2 mb-1">
         {icon}
         <span className="text-sm font-medium text-text-secondary">{label}</span>

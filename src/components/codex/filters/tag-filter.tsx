@@ -7,7 +7,7 @@
 
 'use client';
 
-import { X } from 'lucide-react';
+import { Chip } from '@/components/ui';
 
 interface TagFilterProps {
   label?: string;
@@ -50,7 +50,7 @@ export function TagFilter({
       <div className="flex gap-2 items-center">
         <select
           onChange={handleChange}
-          className="flex-1 px-3 py-2 border border-neutral-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 px-3 py-2 border border-neutral-300 rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           defaultValue=""
         >
           <option value="">{placeholder}</option>
@@ -86,20 +86,14 @@ export function TagFilter({
       {selectedTags.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedTags.map(tag => (
-            <span
+            <Chip
               key={tag}
-              className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+              variant="success"
+              size="sm"
+              onRemove={() => onRemove(tag)}
             >
               {tag}
-              <button
-                type="button"
-                onClick={() => onRemove(tag)}
-                className="hover:bg-green-200 rounded-full p-0.5 transition-colors"
-                aria-label={`Remove ${tag}`}
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
+            </Chip>
           ))}
         </div>
       )}

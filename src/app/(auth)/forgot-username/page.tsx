@@ -11,8 +11,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { cn } from '@/lib/utils';
-import { Mail, ArrowLeft, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Button, Alert } from '@/components/ui';
+import { Mail, ArrowLeft, Check, Loader2 } from 'lucide-react';
 
 export default function ForgotUsernamePage() {
   const [email, setEmail] = useState('');
@@ -40,7 +40,6 @@ export default function ForgotUsernamePage() {
         // const userDoc = snapshot.docs[0];
         // const username = userDoc.data().username;
         // await sendUsernameRecoveryEmail(email, username);
-        console.log('User found, would send recovery email');
       }
 
       // Always show success for security (don't reveal if email exists)
@@ -65,7 +64,7 @@ export default function ForgotUsernamePage() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-surface rounded-xl shadow-lg p-8">
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Input */}
@@ -92,31 +91,20 @@ export default function ForgotUsernamePage() {
 
               {/* Error Message */}
               {error && (
-                <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <Alert variant="danger">
                   {error}
-                </div>
+                </Alert>
               )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 type="submit"
                 disabled={loading || !email}
-                className={cn(
-                  'w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2',
-                  'bg-primary-600 text-white hover:bg-primary-700',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
+                isLoading={loading}
+                className="w-full"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  'Send Username'
-                )}
-              </button>
+                {loading ? 'Sending...' : 'Send Username'}
+              </Button>
             </form>
           ) : (
             /* Success State */

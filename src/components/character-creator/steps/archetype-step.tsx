@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Chip, Button } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import type { ArchetypeCategory, AbilityName } from '@/types';
 
@@ -74,14 +75,14 @@ export function ArchetypeStep() {
           
           <div className="flex flex-wrap gap-2">
             {draft.pow_abil && (
-              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full">
+              <Chip variant="power">
                 Power Ability: {draft.pow_abil.charAt(0).toUpperCase() + draft.pow_abil.slice(1)}
-              </span>
+              </Chip>
             )}
             {draft.mart_abil && (
-              <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full">
+              <Chip variant="technique">
                 Martial Ability: {draft.mart_abil.charAt(0).toUpperCase() + draft.mart_abil.slice(1)}
-              </span>
+              </Chip>
             )}
           </div>
         </div>
@@ -130,7 +131,7 @@ export function ArchetypeStep() {
                 'p-6 rounded-xl border-2 text-left transition-all',
                 selectedType === type
                   ? 'border-primary-600 bg-primary-50 shadow-lg'
-                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow'
+                  : 'border-border-light bg-surface hover:border-neutral-300 hover:shadow'
               )}
             >
               <h3 className="text-lg font-bold text-text-primary mb-2">{info.title}</h3>
@@ -142,7 +143,7 @@ export function ArchetypeStep() {
       
       {/* Ability Selection */}
       {selectedType && (
-        <div className="bg-neutral-50 rounded-xl p-6 mb-6">
+        <div className="bg-surface-alt rounded-xl p-6 mb-6">
           <h3 className="font-bold text-text-primary mb-4">
             {selectedType === 'powered-martial' 
               ? 'Choose Your Power and Martial Abilities'
@@ -166,7 +167,7 @@ export function ArchetypeStep() {
                           ? 'bg-purple-600 text-white'
                           : selectedMartialAbility === ability
                           ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
-                          : 'bg-white border border-neutral-200 hover:border-purple-400'
+                          : 'bg-surface border border-border-light hover:border-purple-400'
                       )}
                     >
                       {ability.charAt(0).toUpperCase() + ability.slice(1)}
@@ -189,7 +190,7 @@ export function ArchetypeStep() {
                           ? 'bg-red-600 text-white'
                           : selectedAbility === ability
                           ? 'bg-neutral-100 text-text-muted cursor-not-allowed'
-                          : 'bg-white border border-neutral-200 hover:border-red-400'
+                          : 'bg-surface border border-border-light hover:border-red-400'
                       )}
                     >
                       {ability.charAt(0).toUpperCase() + ability.slice(1)}
@@ -210,7 +211,7 @@ export function ArchetypeStep() {
                       ? selectedType === 'power' 
                         ? 'bg-purple-600 text-white'
                         : 'bg-red-600 text-white'
-                      : 'bg-white border border-neutral-200 hover:border-neutral-400'
+                      : 'bg-surface border border-border-light hover:border-neutral-400'
                   )}
                 >
                   {ability.charAt(0).toUpperCase() + ability.slice(1)}
@@ -222,13 +223,13 @@ export function ArchetypeStep() {
       )}
       
       {/* Confirm Button */}
-      <button
+      <Button
         onClick={handleConfirm}
         disabled={!canConfirm}
-        className="btn-continue w-full"
+        className="w-full"
       >
         Confirm Archetype
-      </button>
+      </Button>
     </div>
   );
 }

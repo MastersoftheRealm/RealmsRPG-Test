@@ -122,7 +122,7 @@ function AttackBonusesTable({
   };
 
   return (
-    <div className="bg-neutral-50 rounded-lg p-3 mb-4">
+    <div className="bg-surface-alt rounded-lg p-3 mb-4">
       <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Attack Bonuses</h4>
       <table className="w-full text-sm">
         <thead>
@@ -139,7 +139,7 @@ function AttackBonusesTable({
               <td className="text-center py-1">
                 <button
                   onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, bonuses[key].prof)}
-                  className="px-2 py-0.5 bg-white border border-neutral-300 rounded hover:bg-primary-50 hover:border-primary-300 transition-colors font-mono text-sm"
+                  className="px-2 py-0.5 bg-surface border border-neutral-300 rounded hover:bg-primary-50 hover:border-primary-300 transition-colors font-mono text-sm"
                   title={`Roll ${key} (proficient)`}
                 >
                   {formatBonus(bonuses[key].prof)}
@@ -148,7 +148,7 @@ function AttackBonusesTable({
               <td className="text-center py-1">
                 <button
                   onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, bonuses[key].unprof)}
-                  className="px-2 py-0.5 bg-neutral-100 border border-neutral-200 rounded hover:bg-neutral-200 transition-colors font-mono text-sm text-text-muted"
+                  className="px-2 py-0.5 bg-neutral-100 border border-border-light rounded hover:bg-neutral-200 transition-colors font-mono text-sm text-text-muted"
                   title={`Roll ${key} (unproficient)`}
                 >
                   {formatBonus(bonuses[key].unprof)}
@@ -192,7 +192,7 @@ function WeaponsSection({
   const unarmedDamage = Math.max(1, Math.ceil(str / 2));
 
   return (
-    <div className="bg-neutral-50 rounded-lg p-3 mb-4">
+    <div className="bg-surface-alt rounded-lg p-3 mb-4">
       <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Weapons</h4>
       <table className="w-full text-sm">
         <thead>
@@ -232,7 +232,7 @@ function WeaponsSection({
             const displayProps = props.filter(p => p && !excludedProps.includes(p));
             
             return (
-              <tr key={weapon.id || idx} className="border-b border-neutral-100 last:border-0">
+              <tr key={weapon.id || idx} className="border-b border-border-subtle last:border-0">
                 <td className="py-1 font-medium text-text-secondary">
                   {weapon.name}
                   {displayProps.length > 0 && (
@@ -264,7 +264,7 @@ function WeaponsSection({
             );
           })}
           {/* Unarmed Prowess - always shown */}
-          <tr className="border-t border-neutral-200">
+          <tr className="border-t border-border-light">
             <td className="py-1 font-medium text-text-muted italic">Unarmed Prowess</td>
             <td className="text-center py-1">
               <button
@@ -306,7 +306,7 @@ function ArmorSection({
   const equippedArmor = armorArray.filter((a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true);
 
   return (
-    <div className="bg-neutral-50 rounded-lg p-3 mb-4">
+    <div className="bg-surface-alt rounded-lg p-3 mb-4">
       <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Armor</h4>
       <table className="w-full text-sm">
         <thead>
@@ -350,7 +350,7 @@ function ArmorSection({
               const displayProps = propNames.filter(n => n && !excludedProps.includes(n));
               
               return (
-                <tr key={armorItem.id || idx} className="border-b border-neutral-100 last:border-0">
+                <tr key={armorItem.id || idx} className="border-b border-border-subtle last:border-0">
                   <td className="py-1 font-medium text-text-secondary">
                     {armorItem.name}
                     {displayProps.length > 0 && (
@@ -450,7 +450,7 @@ export function ArchetypeSection({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 relative">
+    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 relative">
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">

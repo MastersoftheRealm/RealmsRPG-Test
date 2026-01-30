@@ -15,7 +15,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation';
 import { AuthCard, FormInput } from '@/components/auth';
-import { Button } from '@/components/ui';
+import { Button, Alert } from '@/components/ui';
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -60,13 +60,13 @@ export default function ForgotPasswordPage() {
           </p>
           <p className="text-sm text-gray-400">
             Did not receive the email? Check your spam folder or{' '}
-            <button
+            <Button
+              variant="link"
               type="button"
               onClick={() => setIsSuccess(false)}
-              className="text-primary-400 hover:text-primary-300 transition-colors"
             >
               try again
-            </button>
+            </Button>
           </p>
           <Link 
             href="/login"
@@ -85,9 +85,9 @@ export default function ForgotPasswordPage() {
       subtitle="Enter your email to receive reset instructions"
     >
       {error ? (
-        <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+        <Alert variant="danger" className="mb-6">
           {error}
-        </div>
+        </Alert>
       ) : null}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

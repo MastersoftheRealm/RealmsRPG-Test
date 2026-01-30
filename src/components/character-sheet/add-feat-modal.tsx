@@ -11,8 +11,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { X, Search } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { X } from 'lucide-react';
+import { Spinner, SearchInput, Checkbox, IconButton, Alert } from '@/components/ui';
 import { GridListRow } from '@/components/shared';
 import type { Character } from '@/types';
 
@@ -260,32 +260,30 @@ export function AddFeatModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
           <h2 className="text-lg font-bold text-text-primary">
             Add {featType === 'archetype' ? 'Archetype' : 'Character'} Feat
           </h2>
-          <button
+          <IconButton
+            label="Close modal"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-neutral-100 transition-colors"
           >
-            <X className="w-5 h-5 text-text-muted" />
-          </button>
+            <X className="w-5 h-5" />
+          </IconButton>
         </div>
 
         {/* Filters */}
-        <div className="px-4 py-3 border-b border-neutral-100 space-y-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search feats..."
-              className="w-full pl-9 pr-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
+        <div className="px-4 py-3 border-b border-border-subtle space-y-2">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search feats..."
+            size="sm"
+          />
           
           <div className="flex gap-2 flex-wrap">
             <button
@@ -316,15 +314,11 @@ export function AddFeatModal({
           </div>
             
             {/* Show Eligible Only toggle */}
-            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={showEligibleOnly}
-                onChange={(e) => setShowEligibleOnly(e.target.checked)}
-                className="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-              />
-              <span className="text-text-muted">Show eligible only</span>
-            </label>
+            <Checkbox
+              label="Show eligible only"
+              checked={showEligibleOnly}
+              onChange={(e) => setShowEligibleOnly(e.target.checked)}
+            />
           {loading && (
             <div className="text-center py-8">
               <Spinner size="md" className="mx-auto mb-2" />
@@ -333,9 +327,9 @@ export function AddFeatModal({
           )}
 
           {error && (
-            <div className="text-center py-8 text-danger-600">
-              <p>{error}</p>
-            </div>
+            <Alert variant="danger" className="mx-4">
+              {error}
+            </Alert>
           )}
 
           {!loading && !error && filteredFeats.length === 0 && (
@@ -364,7 +358,7 @@ export function AddFeatModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-border-light bg-surface-alt">
           <span className="text-sm text-text-muted">
             {selectedFeats.length} feat{selectedFeats.length !== 1 ? 's' : ''} selected
           </span>

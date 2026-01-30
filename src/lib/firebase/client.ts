@@ -72,8 +72,6 @@ async function initializeFirebaseClient() {
     // The /__/firebase/init.json might return a different authDomain that doesn't work
     config.authDomain = 'realmsrpg-test.firebaseapp.com';
     
-    console.log('Firebase config:', JSON.stringify(config, null, 2));
-    
     app = initializeApp(config);
   }
   

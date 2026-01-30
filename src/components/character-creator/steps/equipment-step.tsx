@@ -15,7 +15,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
 import { SearchInput, DecrementButton, IncrementButton } from '@/components/shared';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner, Button } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import type { Item } from '@/types';
@@ -297,7 +297,7 @@ export function EquipmentStep() {
     return (
       <div className="max-w-5xl mx-auto text-center py-12">
         <p className="text-red-600 mb-4">Failed to load equipment data.</p>
-        <button onClick={prevStep} className="btn-back">← Back</button>
+        <Button variant="secondary" onClick={prevStep}>← Back</Button>
       </div>
     );
   }
@@ -322,13 +322,13 @@ export function EquipmentStep() {
 
       {/* Selected Items Summary */}
       {selectedItems.length > 0 && (
-        <div className="bg-neutral-50 rounded-xl p-4 mb-6">
+        <div className="bg-surface-alt rounded-xl p-4 mb-6">
           <h3 className="font-medium text-text-primary mb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
           <div className="flex flex-wrap gap-2">
             {selectedItems.map(item => (
               <span
                 key={item.id}
-                className="px-3 py-1 bg-white border border-neutral-200 rounded-full text-sm flex items-center gap-2"
+                className="px-3 py-1 bg-surface border border-border-light rounded-full text-sm flex items-center gap-2"
               >
                 {item.quantity > 1 && <span className="font-bold text-primary-600">{item.quantity}×</span>}
                 {item.name}
@@ -373,7 +373,7 @@ export function EquipmentStep() {
       </div>
 
       {/* Equipment List - Codex-like style */}
-      <div className="border border-neutral-200 rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-neutral-200">
+      <div className="border border-border-light rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-border-light">
         {filteredEquipment.length === 0 ? (
           <div className="text-center py-8 text-text-muted">
             {activeTab === 'weapon' || activeTab === 'armor' ? (
@@ -400,9 +400,9 @@ export function EquipmentStep() {
             const isExpanded = expandedItem === item.id;
             
             return (
-              <div key={item.id} className="bg-white">
+              <div key={item.id} className="bg-surface">
                 {/* Item Row */}
-                <div className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
+                <div className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt">
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-1">
                     <DecrementButton
@@ -470,14 +470,14 @@ export function EquipmentStep() {
                 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 bg-neutral-50 border-t border-neutral-100">
+                  <div className="px-4 pb-4 pt-2 bg-surface-alt border-t border-border-light">
                     {item.description && (
                       <p className="text-text-secondary text-sm mb-2">{item.description}</p>
                     )}
                     {item.properties.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {item.properties.map(prop => (
-                          <span key={prop} className="px-2 py-1 text-xs bg-white border border-neutral-200 rounded">
+                          <span key={prop} className="px-2 py-1 text-xs bg-surface border border-border-light rounded">
                             {prop}
                           </span>
                         ))}
@@ -492,18 +492,17 @@ export function EquipmentStep() {
       </div>
       
       <div className="flex justify-between">
-        <button
+        <Button
+          variant="secondary"
           onClick={prevStep}
-          className="btn-back"
         >
           ← Back
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleContinue}
-          className="btn-continue"
         >
           Continue →
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -90,6 +90,7 @@
   --color-title: #5a5645;
   --color-border: #707070;
   --color-border-light: #dad9d9;
+  --color-border-subtle: #f6f6f6; /* Very light dividers for internal separations */
   --color-divider: #707070;
 
   /* ---------------------------------------------------------------------------
@@ -626,26 +627,6 @@
     @apply bg-success-light text-success-700 border-success-200
            hover:bg-success-200 hover:border-success-300 active:bg-success-300
            disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200;
-  }
-
-  /* Large prominent continue/action buttons */
-  .btn-continue {
-    @apply bg-gradient-to-b from-primary-600 to-primary-700 text-primary-foreground 
-           font-bold px-8 py-3 rounded-xl
-           shadow-md border border-primary-800
-           hover:from-primary-500 hover:to-primary-600 hover:shadow-lg
-           active:from-primary-700 active:to-primary-800
-           disabled:from-neutral-300 disabled:to-neutral-400 disabled:text-neutral-500 
-           disabled:border-neutral-400 disabled:shadow-none disabled:cursor-not-allowed
-           transition-all duration-150;
-  }
-
-  /* Secondary back/cancel buttons */
-  .btn-back {
-    @apply px-6 py-3 rounded-xl font-medium 
-           text-text-secondary bg-neutral-100 border-2 border-neutral-200
-           hover:bg-neutral-200 hover:text-text-primary hover:border-neutral-300
-           transition-colors duration-150;
   }
 
   /* Interactive card hover effects */

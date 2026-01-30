@@ -21,6 +21,7 @@
 import { useState, ReactNode } from 'react';
 import { ChevronDown, Edit, Trash2, Copy, Zap, Check, Plus, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui';
 
 // =============================================================================
 // Types
@@ -474,31 +475,34 @@ export function GridListRow({
               {showActions && (
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
                   {onEdit && (
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-secondary bg-surface border border-border hover:bg-surface-alt transition-colors"
                     >
                       <Edit className="w-4 h-4" />
                       Edit
-                    </button>
+                    </Button>
                   )}
                   {onDuplicate && (
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-secondary bg-surface border border-border hover:bg-surface-alt transition-colors"
                     >
                       <Copy className="w-4 h-4" />
                       Duplicate
-                    </button>
+                    </Button>
                   )}
                   {onDelete && (
-                    <button
+                    <Button
+                      variant="danger"
+                      size="sm"
                       onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-danger-600 bg-surface border border-danger-200 hover:bg-danger-50 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                       Delete
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}

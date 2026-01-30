@@ -183,7 +183,7 @@ export function AbilitiesSection({
     : 'normal';
   
   return (
-    <div className="bg-white rounded-xl shadow-md p-4 md:p-6 mb-4 relative">
+    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4 relative">
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -243,7 +243,7 @@ export function AbilitiesSection({
               key={ability}
               className={cn(
                 'flex flex-col items-center p-3 bg-gradient-to-b from-neutral-50 to-neutral-100 rounded-xl border-2 transition-all',
-                isArchetype ? 'border-amber-300' : 'border-neutral-200',
+                isArchetype ? 'border-amber-300' : 'border-border-light',
                 !isEditMode && 'hover:shadow-md'
               )}
             >
@@ -298,7 +298,7 @@ export function AbilitiesSection({
       </div>
       
       {/* Defenses Row - Separate from abilities */}
-      <div className="border-t-2 border-neutral-200 pt-4">
+      <div className="border-t-2 border-border-light pt-4">
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 md:gap-4">
           {ABILITY_ORDER.map((ability) => {
             const info = ABILITY_INFO[ability];
@@ -313,7 +313,7 @@ export function AbilitiesSection({
             return (
               <div
                 key={defenseKey}
-                className="flex flex-col items-center p-3 bg-neutral-50 rounded-lg"
+                className="flex flex-col items-center p-3 bg-surface-alt rounded-lg"
               >
                 {/* Defense Name */}
                 <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">

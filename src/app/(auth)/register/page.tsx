@@ -17,7 +17,7 @@ import { doc, setDoc, Firestore } from 'firebase/firestore';
 import { waitForFirebase, auth as firebaseAuth, db as firebaseDb } from '@/lib/firebase/client';
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
-import { Button } from '@/components/ui';
+import { Button, Alert } from '@/components/ui';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -138,9 +138,9 @@ export default function RegisterPage() {
       subtitle="Join the adventure"
     >
       {error ? (
-        <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+        <Alert variant="danger" className="mb-6">
           {error}
-        </div>
+        </Alert>
       ) : null}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

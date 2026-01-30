@@ -15,10 +15,10 @@ const chipVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-neutral-100 text-text-secondary border-neutral-200',
+        default: 'bg-neutral-100 text-text-secondary border-border-light',
         primary: 'bg-primary-700 text-primary-foreground border-primary-600',
         secondary: 'bg-neutral-200 text-text-secondary border-neutral-300',
-        outline: 'border-border-light bg-transparent text-text-secondary hover:bg-neutral-50',
+        outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
         accent: 'bg-accent-chip text-primary-700 border-accent-200',
         
         // Category-based colors using design system tokens

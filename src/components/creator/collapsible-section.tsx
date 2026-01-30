@@ -9,6 +9,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui';
 
 export interface CollapsibleSectionProps {
   /** Section title */
@@ -65,12 +66,13 @@ export function CollapsibleSection({
               {subtitle && <p className="text-sm text-tertiary">{subtitle}</p>}
             </div>
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => onEnabledChange?.(true)}
-            className="px-4 py-2 rounded-lg border border-primary-500 text-primary-600 hover:bg-primary-50 font-medium text-sm transition-colors"
           >
             + Enable {title}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -84,7 +86,7 @@ export function CollapsibleSection({
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-neutral-50 transition-colors"
+        className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors"
       >
         <div className="flex items-center gap-3">
           {icon && <span className="text-xl">{icon}</span>}
@@ -113,15 +115,17 @@ export function CollapsibleSection({
         
         <div className="flex items-center gap-2">
           {optional && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onEnabledChange?.(false);
               }}
-              className="px-2 py-1 text-xs text-danger-600 hover:bg-danger-light rounded transition-colors"
+              className="text-danger-600 hover:bg-danger-light"
             >
               Remove
-            </button>
+            </Button>
           )}
           <span className={cn(
             'text-xl text-tertiary transition-transform',
@@ -134,7 +138,7 @@ export function CollapsibleSection({
 
       {/* Content */}
       {isExpanded && (
-        <div className="p-4 pt-0 border-t border-neutral-100">
+        <div className="p-4 pt-0 border-t border-border-subtle">
           {children}
         </div>
       )}

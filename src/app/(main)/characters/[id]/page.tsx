@@ -14,7 +14,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
 import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts } from '@/hooks';
 import { cn } from '@/lib/utils';
-import { LoadingState } from '@/components/ui/spinner';
+import { LoadingState, Button } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPoints } from '@/lib/game/formulas';
 import {
@@ -934,9 +934,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   return (
     <RollProvider>
-      <div className="min-h-screen bg-neutral-50 pb-8">
+      <div className="min-h-screen bg-background pb-8">
         {/* Action Bar */}
-        <div className="sticky top-20 z-40 bg-white border-b border-neutral-200 shadow-sm">
+        <div className="sticky top-20 z-40 bg-surface border-b border-border-light shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
             <Link
               href="/characters"
@@ -956,27 +956,29 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 <span className="text-sm text-green-600">Saved</span>
               )}
               
-              <button
+              <Button
+                size="sm"
                 onClick={() => setShowLevelUpModal(true)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+                className="bg-purple-100 text-purple-700 hover:bg-purple-200"
               >
                 ⬆️ Level Up
-              </button>
+              </Button>
               
-              <button
+              <Button
+                size="sm"
                 onClick={handleLongRest}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                className="bg-blue-100 text-blue-700 hover:bg-blue-200"
               >
                 😴 Recover
-              </button>
+              </Button>
               
-              <button
+              <Button
+                size="sm"
                 onClick={handleToggleEditMode}
+                variant={isEditMode ? 'success' : 'secondary'}
                 className={cn(
-                  'relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                  isEditMode
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-neutral-100 text-text-secondary hover:bg-neutral-200'
+                  'relative',
+                  isEditMode && 'bg-green-600 hover:bg-green-700'
                 )}
               >
                 {isEditMode ? '✓ Done' : '🖉 Edit'}
@@ -987,7 +989,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                     title="You have unspent points!"
                   />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

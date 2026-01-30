@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Resources Page
  * ===============
  * Additional game resources including downloadable PDFs
@@ -6,20 +6,19 @@
 
 import { Download, FileText, BookOpen, Users } from 'lucide-react';
 import Link from 'next/link';
+import { PageContainer, PageHeader } from '@/components/ui';
 
 export default function ResourcesPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-text-primary mb-4 text-center">Resources</h1>
-      
-      <p className="text-center text-text-secondary mb-10">
-        Welcome to the Resources page. Here you can find various tools, downloads, and references 
-        to enhance your Realms RPG experience. More resources will be added over time!
-      </p>
+    <PageContainer size="prose">
+      <PageHeader 
+        title="Resources"
+        description="Welcome to the Resources page. Here you can find various tools, downloads, and references to enhance your Realms RPG experience. More resources will be added over time!"
+      />
 
       <div className="space-y-8">
         {/* Character Sheet PDF - Primary Resource */}
-        <section className="bg-white rounded-xl shadow-md p-6">
+        <section className="bg-surface rounded-xl shadow-md p-6">
           <div className="flex items-start gap-4">
             <div className="p-3 bg-amber-100 rounded-lg">
               <FileText className="w-8 h-8 text-amber-600" />
@@ -43,7 +42,7 @@ export default function ResourcesPage() {
         </section>
 
         {/* Coming Soon Section */}
-        <section className="bg-neutral-50 rounded-xl p-6 border border-neutral-200">
+        <section className="bg-surface-alt rounded-xl p-6 border border-border-light">
           <h2 className="text-xl font-bold text-text-primary mb-4">Coming Soon</h2>
           <ul className="space-y-3">
             <li className="flex items-center gap-3 text-text-secondary">
@@ -61,6 +60,6 @@ export default function ResourcesPage() {
           </ul>
         </section>
       </div>
-    </div>
+    </PageContainer>
   );
 }

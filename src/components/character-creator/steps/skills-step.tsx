@@ -13,6 +13,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 import { calculateSkillPoints } from '@/lib/game/formulas';
 import { ValueStepper } from '@/components/shared';
+import { Button, Alert } from '@/components/ui';
 
 const ABILITY_ORDER = ['Strength', 'Vitality', 'Agility', 'Acuity', 'Intelligence', 'Charisma'];
 
@@ -185,10 +186,10 @@ export function SkillsStep() {
           const isExpanded = expandedCategories.has(ability);
           
           return (
-            <div key={ability} className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div key={ability} className="bg-surface rounded-xl shadow-md overflow-hidden">
               <button
                 onClick={() => toggleCategory(ability)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-neutral-50 hover:bg-neutral-100 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-neutral-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <h3 className="font-bold text-text-primary">{ability}</h3>
@@ -230,7 +231,7 @@ export function SkillsStep() {
                         
                         {/* Sub-Skills (nested under base skill) */}
                         {hasSubSkills && (
-                          <div className="ml-6 mt-2 pl-3 border-l-2 border-neutral-200 space-y-2">
+                          <div className="ml-6 mt-2 pl-3 border-l-2 border-border-light space-y-2">
                             {skillSubSkills.map(subSkill => {
                               const isUnlocked = baseSkillValue > 0;
                               return (
@@ -258,26 +259,23 @@ export function SkillsStep() {
       </div>
       
       {(!skills || skills.length === 0) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
-          <p className="text-amber-700 text-center">
-            No skill data available. Please check Firebase connection.
-          </p>
-        </div>
+        <Alert variant="warning" className="mb-8">
+          No skill data available. Please check Firebase connection.
+        </Alert>
       )}
       
       <div className="flex justify-between">
-        <button
+        <Button
+          variant="secondary"
           onClick={prevStep}
-          className="btn-back"
         >
           ← Back
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleContinue}
-          className="btn-continue"
         >
           Continue →
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -296,7 +294,7 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
   return (
     <div className={cn(
       'p-3 rounded-lg border transition-colors',
-      value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-neutral-50 border-neutral-200'
+      value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-surface-alt border-border-light'
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -320,7 +318,7 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
       </div>
       
       {showDescription && skill.description && (
-        <p className="text-xs text-text-secondary mt-2 border-t border-neutral-200 pt-2">
+        <p className="text-xs text-text-secondary mt-2 border-t border-border-light pt-2">
           {skill.description}
         </p>
       )}
@@ -341,9 +339,9 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
   return (
     <div className={cn(
       'p-2 rounded-lg border transition-colors text-sm',
-      !isUnlocked && 'opacity-50 bg-neutral-100 border-neutral-200',
+      !isUnlocked && 'opacity-50 bg-neutral-100 border-border-light',
       isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
-      isUnlocked && value === 0 && 'bg-neutral-50 border-neutral-200'
+      isUnlocked && value === 0 && 'bg-surface-alt border-border-light'
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

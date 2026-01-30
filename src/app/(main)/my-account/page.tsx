@@ -21,9 +21,8 @@ import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase
 import { auth, db } from '@/lib/firebase/client';
 import { useAuthStore } from '@/stores';
 import { ProtectedRoute } from '@/components/layout';
-import { LoadingState } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
-import { User, Mail, Lock, Trash2, AlertTriangle, Check, X, Loader2 } from 'lucide-react';
+import { LoadingState, Button, Input, Alert, PageContainer } from '@/components/ui';
+import { User, Mail, Lock, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface UserProfile {
   username?: string;
@@ -223,14 +222,14 @@ function AccountContent() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <PageContainer size="xs" padded={false}>
         <LoadingState message="Loading account..." />
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <PageContainer size="xs" padded={false} className="space-y-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
@@ -241,15 +240,15 @@ function AccountContent() {
       </div>
 
       {/* Profile Info */}
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
         
         <div className="space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
             <span className="text-text-secondary">Username</span>
             <span className="font-medium text-text-primary">{profile?.username || 'Not set'}</span>
           </div>
-          <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
             <span className="text-text-secondary">Email</span>
             <span className="font-medium text-text-primary">{profile?.email}</span>
           </div>
@@ -263,7 +262,7 @@ function AccountContent() {
       </div>
 
       {/* Change Email */}
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
           <Mail className="w-5 h-5 text-text-secondary" />
           Change Email
@@ -274,12 +273,11 @@ function AccountContent() {
             <label className="block text-sm font-medium text-text-secondary mb-1">
               New Email Address
             </label>
-            <input
+            <Input
               type="email"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter new email"
             />
           </div>
@@ -287,39 +285,33 @@ function AccountContent() {
             <label className="block text-sm font-medium text-text-secondary mb-1">
               Current Password
             </label>
-            <input
+            <Input
               type="password"
               value={emailPassword}
               onChange={(e) => setEmailPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter current password"
             />
           </div>
           
           {emailMessage && (
-            <div className={cn(
-              'p-3 rounded-lg text-sm flex items-center gap-2',
-              emailMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-            )}>
-              {emailMessage.type === 'success' ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+            <Alert variant={emailMessage.type === 'success' ? 'success' : 'danger'}>
               {emailMessage.text}
-            </div>
+            </Alert>
           )}
           
-          <button
+          <Button
             type="submit"
             disabled={emailChanging || !newEmail || !emailPassword}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            isLoading={emailChanging}
           >
-            {emailChanging && <Loader2 className="w-4 h-4 animate-spin" />}
             Update Email
-          </button>
+          </Button>
         </form>
       </div>
 
       {/* Change Password */}
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
           <Lock className="w-5 h-5 text-text-secondary" />
           Change Password
@@ -330,12 +322,11 @@ function AccountContent() {
             <label className="block text-sm font-medium text-text-secondary mb-1">
               Current Password
             </label>
-            <input
+            <Input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter current password"
             />
           </div>
@@ -343,13 +334,12 @@ function AccountContent() {
             <label className="block text-sm font-medium text-text-secondary mb-1">
               New Password
             </label>
-            <input
+            <Input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Enter new password"
             />
           </div>
@@ -357,49 +347,43 @@ function AccountContent() {
             <label className="block text-sm font-medium text-text-secondary mb-1">
               Confirm New Password
             </label>
-            <input
+            <Input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               placeholder="Confirm new password"
             />
           </div>
           
           {passwordMessage && (
-            <div className={cn(
-              'p-3 rounded-lg text-sm flex items-center gap-2',
-              passwordMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-            )}>
-              {passwordMessage.type === 'success' ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+            <Alert variant={passwordMessage.type === 'success' ? 'success' : 'danger'}>
               {passwordMessage.text}
-            </div>
+            </Alert>
           )}
           
           <div className="flex items-center gap-4">
-            <button
+            <Button
               type="submit"
               disabled={passwordChanging || !currentPassword || !newPassword || !confirmPassword}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              isLoading={passwordChanging}
             >
-              {passwordChanging && <Loader2 className="w-4 h-4 animate-spin" />}
               Update Password
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="link"
               onClick={handleSendResetEmail}
-              className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
             >
               Send password reset email instead
-            </button>
+            </Button>
           </div>
         </form>
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-xl shadow-md p-6 border-2 border-red-200">
+      <div className="bg-surface rounded-xl shadow-md p-6 border-2 border-red-200">
         <h2 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Danger Zone
@@ -411,13 +395,13 @@ function AccountContent() {
         </p>
         
         {!showDeleteConfirm ? (
-          <button
+          <Button
+            variant="danger"
             onClick={() => setShowDeleteConfirm(true)}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
             Delete My Account
-          </button>
+          </Button>
         ) : (
           <div className="bg-red-50 rounded-lg p-4 space-y-4">
             <p className="text-sm text-red-700 font-medium">
@@ -427,11 +411,11 @@ function AccountContent() {
               <label className="block text-sm font-medium text-red-700 mb-1">
                 Password
               </label>
-              <input
+              <Input
                 type="password"
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
-                className="w-full px-4 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                className="border-red-300 focus:ring-red-500"
                 placeholder="Enter your password"
               />
             </div>
@@ -439,11 +423,11 @@ function AccountContent() {
               <label className="block text-sm font-medium text-red-700 mb-1">
                 Type DELETE to confirm
               </label>
-              <input
+              <Input
                 type="text"
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
-                className="w-full px-4 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                className="border-red-300 focus:ring-red-500"
                 placeholder="DELETE"
               />
             </div>
@@ -455,37 +439,37 @@ function AccountContent() {
             )}
             
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="danger"
                 onClick={handleDeleteAccount}
                 disabled={deleting || deleteConfirmText !== 'DELETE' || !deletePassword}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                isLoading={deleting}
               >
-                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
                 Permanently Delete Account
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowDeleteConfirm(false);
                   setDeletePassword('');
                   setDeleteConfirmText('');
                   setDeleteError(null);
                 }}
-                className="px-4 py-2 text-text-secondary hover:text-text-primary"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
 export default function MyAccountPage() {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-neutral-50 py-8 px-4">
+      <div className="min-h-screen bg-background py-8 px-4">
         <AccountContent />
       </div>
     </ProtectedRoute>

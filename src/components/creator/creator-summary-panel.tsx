@@ -76,7 +76,7 @@ export function CreatorSummaryPanel({
 
       {/* Quick Stats (optional) */}
       {quickStats && quickStats.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-neutral-200">
+        <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-border-light">
           {quickStats.map((stat, index) => (
             <div
               key={index}
@@ -117,7 +117,7 @@ export function CreatorSummaryPanel({
 
       {/* Additional Content */}
       {children && (
-        <div className="mt-4 pt-4 border-t border-neutral-200">
+        <div className="mt-4 pt-4 border-t border-border-light">
           {children}
         </div>
       )}

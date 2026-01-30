@@ -3,10 +3,12 @@
  * =====================
  */
 
+import { PageContainer, PageHeader } from '@/components/ui';
+
 export default function PrivacyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-3xl font-bold text-text-primary mb-8">Privacy Policy</h1>
+    <PageContainer size="prose">
+      <PageHeader title="Privacy Policy" />
       
       <div className="prose prose-gray max-w-none space-y-8">
         <p className="text-text-secondary">
@@ -95,6 +97,6 @@ export default function PrivacyPage() {
           </p>
         </section>
       </div>
-    </div>
+    </PageContainer>
   );
 }

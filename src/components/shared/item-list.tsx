@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { Search, SortAsc, SortDesc, Filter, Grid, List, X } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner, Button, IconButton } from '@/components/ui';
 import { ItemCard } from './item-card';
 import type { DisplayItem, ListMode, ItemActions, FilterOption, SortOption, FilterState, SortState } from '@/types/items';
 
@@ -240,32 +240,32 @@ export function ItemList({
                   className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 {filterState.search && (
-                  <button
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setFilterState(prev => ({ ...prev, search: '' }))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    label="Clear search"
+                    className="absolute right-2 top-1/2 -translate-y-1/2"
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </IconButton>
                 )}
               </div>
             )}
             
             {/* Filter toggle */}
             {filterOptions.length > 0 && (
-              <button
+              <Button
+                variant={showFilters || hasActiveFilters ? 'primary' : 'secondary'}
+                size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                  showFilters || hasActiveFilters
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/50'
-                }`}
               >
                 <Filter className="w-4 h-4" />
-                <span className="text-sm">Filters</span>
+                <span>Filters</span>
                 {hasActiveFilters && (
-                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="w-2 h-2 rounded-full bg-white" />
                 )}
-              </button>
+              </Button>
             )}
             
             {/* Sort dropdown */}
@@ -290,12 +290,13 @@ export function ItemList({
                   const descLabel = isString ? 'Z→A' : '9→0';
                   
                   return (
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setSortState(prev => ({ 
                         ...prev, 
                         direction: prev.direction === 'asc' ? 'desc' : 'asc' 
                       }))}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
                       title={`Click to sort ${isAsc ? descLabel : ascLabel}`}
                     >
                       {isAsc 
@@ -303,7 +304,7 @@ export function ItemList({
                         : <SortDesc className="w-4 h-4" />
                       }
                       <span className="font-medium">{isAsc ? ascLabel : descLabel}</span>
-                    </button>
+                    </Button>
                   );
                 })()}
               </div>
@@ -311,28 +312,24 @@ export function ItemList({
             
             {/* Layout toggle */}
             <div className="flex items-center border border-border rounded-lg overflow-hidden">
-              <button
+              <IconButton
+                variant={currentLayout === 'list' ? 'primary' : 'ghost'}
+                size="sm"
                 onClick={() => setCurrentLayout('list')}
-                className={`p-2 transition-colors ${
-                  currentLayout === 'list' 
-                    ? 'bg-primary-400 text-white' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-                }`}
-                title="List view"
+                label="List view"
+                className="rounded-none"
               >
                 <List className="w-4 h-4" />
-              </button>
-              <button
+              </IconButton>
+              <IconButton
+                variant={currentLayout === 'grid' ? 'primary' : 'ghost'}
+                size="sm"
                 onClick={() => setCurrentLayout('grid')}
-                className={`p-2 transition-colors ${
-                  currentLayout === 'grid' 
-                    ? 'bg-primary-400 text-white' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-neutral-100'
-                }`}
-                title="Grid view"
+                label="Grid view"
+                className="rounded-none"
               >
                 <Grid className="w-4 h-4" />
-              </button>
+              </IconButton>
             </div>
             
             {/* Count */}
@@ -388,13 +385,15 @@ export function ItemList({
               
               {/* Clear filters */}
               {hasActiveFilters && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={clearFilters}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-destructive hover:text-destructive/80 transition-colors"
+                  className="text-destructive hover:text-destructive/80"
                 >
                   <X className="w-3 h-3" />
                   Clear
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -413,12 +412,14 @@ export function ItemList({
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground">{emptyMessage}</p>
           {hasActiveFilters && (
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={clearFilters}
-              className="mt-2 text-sm text-primary hover:underline"
+              className="mt-2"
             >
               Clear filters
-            </button>
+            </Button>
           )}
         </div>
       )}

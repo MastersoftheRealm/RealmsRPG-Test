@@ -8,11 +8,14 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
-type ContainerSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+type ContainerSize = 'xs' | 'sm' | 'prose' | 'md' | 'content' | 'lg' | 'xl' | 'full';
 
 const sizeClasses: Record<ContainerSize, string> = {
+  xs: 'max-w-2xl', // For narrow forms like my-account, login
   sm: 'max-w-3xl',
+  prose: 'max-w-4xl', // For content-heavy pages like privacy, terms, resources
   md: 'max-w-5xl', 
+  content: 'max-w-6xl', // For medium content pages like rules, creators
   lg: 'max-w-7xl',
   xl: 'max-w-[1440px] lg:px-24',
   full: 'max-w-none',

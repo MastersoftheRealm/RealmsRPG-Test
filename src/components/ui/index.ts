@@ -6,7 +6,11 @@
 
 // Core input components
 export { Button, buttonVariants, type ButtonProps } from './button';
+export { IconButton, iconButtonVariants, type IconButtonProps } from './icon-button';
 export { Input, type InputProps } from './input';
+export { Select, type SelectProps, type SelectOption } from './select';
+export { Checkbox, type CheckboxProps } from './checkbox';
+export { Textarea, type TextareaProps } from './textarea';
 export { SearchInput } from './search-input';
 
 // Layout components

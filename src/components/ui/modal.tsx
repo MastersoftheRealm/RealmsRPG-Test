@@ -9,7 +9,9 @@
 
 import * as React from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { IconButton } from './icon-button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -117,15 +119,14 @@ export function Modal({
         
         {/* Close button */}
         {showCloseButton && (
-          <button
+          <IconButton
+            variant="ghost"
             onClick={onClose}
-            className="absolute right-4 top-4 rounded-full p-2 text-text-muted hover:bg-neutral-100 hover:text-text-primary transition-colors"
-            aria-label="Close modal"
+            label="Close modal"
+            className="absolute right-4 top-4"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <X className="h-5 w-5" />
+          </IconButton>
         )}
         
         {/* Content */}

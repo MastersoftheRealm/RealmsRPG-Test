@@ -12,7 +12,7 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAuth, useRTDBSkills } from '@/hooks';
 import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/ui/spinner';
+import { Spinner, Button, Alert } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
 import { LoginPromptModal } from '@/components/shared';
@@ -49,7 +49,7 @@ function ValidationModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-lg w-full max-h-[80vh] overflow-hidden">
+      <div className="bg-surface rounded-xl max-w-lg w-full max-h-[80vh] overflow-hidden">
         <div className={cn(
           'p-4 border-b flex items-center gap-3',
           isValid ? 'bg-green-50' : hasErrors ? 'bg-red-50' : 'bg-amber-50'
@@ -84,39 +84,33 @@ function ValidationModal({
         </div>
         
         <div className="p-4 border-t flex justify-end gap-3">
-          <button
+          <Button
+            variant="secondary"
             onClick={onClose}
             disabled={isSaving}
-            className="px-4 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-50 disabled:opacity-50"
           >
             {isValid ? 'Cancel' : 'Go Back & Fix'}
-          </button>
+          </Button>
           {/* Show Save button when valid */}
           {isValid && onSave && (
-            <button
+            <Button
+              variant="success"
               onClick={onSave}
               disabled={isSaving}
-              className="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+              isLoading={isSaving}
             >
-              {isSaving ? (
-                <>
-                  <Spinner size="sm" variant="white" />
-                  Saving...
-                </>
-              ) : (
-                <>✓ Create Character</>
-              )}
-            </button>
+              ✓ Create Character
+            </Button>
           )}
           {/* Show Continue Anyway when there are warnings but no errors */}
           {!hasErrors && !isValid && onContinueAnyway && (
-            <button
+            <Button
               onClick={onContinueAnyway}
               disabled={isSaving}
-              className="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50"
+              className="bg-amber-500 text-white hover:bg-amber-600"
             >
               Save Anyway
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -636,7 +630,7 @@ export function FinalizeStep() {
       <PortraitUpload />
       
       {/* Character Summary */}
-      <div className="bg-neutral-50 rounded-xl p-6 mb-6">
+      <div className="bg-surface-alt rounded-xl p-6 mb-6">
         <h3 className="font-bold text-text-primary mb-4">Character Summary</h3>
         
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -676,7 +670,7 @@ export function FinalizeStep() {
         
         {/* Abilities Summary */}
         {draft.abilities && (
-          <div className="mt-4 pt-4 border-t border-neutral-200">
+          <div className="mt-4 pt-4 border-t border-border-light">
             <span className="text-text-muted text-sm">Abilities:</span>
             <div className="flex flex-wrap gap-2 mt-2">
               {Object.entries(draft.abilities).map(([ability, value]) => (
@@ -730,9 +724,9 @@ export function FinalizeStep() {
       
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+        <Alert variant="danger" className="mb-6">
           {error}
-        </div>
+        </Alert>
       )}
       
       {/* Validation Summary */}
@@ -760,41 +754,26 @@ export function FinalizeStep() {
       
       {/* Navigation */}
       <div className="flex justify-between">
-        <button
+        <Button
+          variant="secondary"
           onClick={prevStep}
           disabled={saving}
-          className="btn-back disabled:opacity-50"
         >
           ← Back
-        </button>
+        </Button>
         
-        <button
+        <Button
           onClick={handleValidateAndSave}
           disabled={saving}
+          isLoading={saving}
+          variant={validationIssues.some(i => i.severity === 'error') ? 'secondary' : 'success'}
           className={cn(
-            'px-8 py-3 rounded-xl font-bold transition-colors flex items-center gap-2',
-            saving
-              ? 'bg-neutral-200 text-text-muted cursor-not-allowed'
-              : validationIssues.some(i => i.severity === 'error')
-                ? 'bg-amber-500 text-white hover:bg-amber-600'
-                : 'bg-green-600 text-white hover:bg-green-700'
+            'px-8 py-3',
+            !saving && validationIssues.some(i => i.severity === 'error') && 'bg-amber-500 hover:bg-amber-600 text-white'
           )}
         >
-          {saving ? (
-            <>
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Saving...
-            </>
-          ) : validationIssues.length > 0 ? (
-            <>
-              📋 Review & Create
-            </>
-          ) : (
-            <>
-              ✓ Create Character
-            </>
-          )}
-        </button>
+          {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}
+        </Button>
       </div>
       
       {/* Validation Modal */}

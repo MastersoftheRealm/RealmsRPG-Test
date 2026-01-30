@@ -104,7 +104,7 @@ export function ArchetypeSelector({
                 'p-4 rounded-xl border-2 text-left transition-all',
                 isSelected
                   ? 'border-primary-500 bg-primary-50 shadow-md'
-                  : 'border-neutral-200 bg-surface hover:border-neutral-300 hover:shadow',
+                  : 'border-border-light bg-surface hover:border-neutral-300 hover:shadow',
                 disabled && 'opacity-50 cursor-not-allowed'
               )}
             >
@@ -122,7 +122,7 @@ export function ArchetypeSelector({
 
       {/* Powered-Martial Slider */}
       {value === 'powered-martial' && (
-        <div className="p-4 rounded-xl bg-surface-secondary border border-neutral-200">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-border-light">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-medium text-secondary">Proficiency Allocation</span>
             <span className="text-sm text-tertiary">
@@ -181,7 +181,7 @@ export function ArchetypeSelector({
 
       {/* Non-slider display for Martial/Power */}
       {value !== 'powered-martial' && (
-        <div className="p-4 rounded-xl bg-surface-secondary border border-neutral-200">
+        <div className="p-4 rounded-xl bg-surface-secondary border border-border-light">
           <div className="flex items-center justify-between">
             <span className="text-sm text-secondary">
               {value === 'martial' ? 'Martial Proficiency' : 'Power Proficiency'}

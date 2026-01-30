@@ -22,6 +22,10 @@ export interface CollapsibleProps {
   contentClassName?: string;
   icon?: React.ReactNode;
   badge?: React.ReactNode;
+  /** Item count displayed as a badge after the title */
+  count?: number;
+  /** Action element displayed on the right side of the header (e.g., add button) */
+  action?: React.ReactNode;
   disabled?: boolean;
 }
 
@@ -36,6 +40,8 @@ export function Collapsible({
   contentClassName,
   icon,
   badge,
+  count,
+  action,
   disabled = false,
 }: CollapsibleProps) {
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
@@ -93,14 +99,24 @@ export function Collapsible({
         <div className="flex items-center gap-2">
           {icon}
           <span>{title}</span>
+          {typeof count === 'number' && (
+            <span className="text-xs text-text-muted">({count})</span>
+          )}
           {badge}
         </div>
-        <ChevronDown
-          className={cn(
-            'w-5 h-5 text-text-muted transition-transform duration-200',
-            isOpen && 'rotate-180'
+        <div className="flex items-center gap-2">
+          {action && (
+            <div onClick={(e) => e.stopPropagation()}>
+              {action}
+            </div>
           )}
-        />
+          <ChevronDown
+            className={cn(
+              'w-5 h-5 text-text-muted transition-transform duration-200',
+              isOpen && 'rotate-180'
+            )}
+          />
+        </div>
       </button>
 
       {/* Content */}

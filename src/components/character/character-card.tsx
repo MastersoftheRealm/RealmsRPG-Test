@@ -10,6 +10,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { X, Plus } from 'lucide-react';
+import { IconButton } from '@/components/ui';
 import type { CharacterSummary } from '@/types';
 
 const FALLBACK_AVATAR = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><rect width="100%" height="100%" fill="%23053357"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" font-size="44" fill="white" font-family="Arial">?</text></svg>';
@@ -48,13 +49,14 @@ export function CharacterCard({ character, onDelete, isDeleting }: CharacterCard
         
         {/* Delete button */}
         {onDelete ? (
-          <button
+          <IconButton
             onClick={handleDelete}
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-danger/80 hover:bg-danger text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            title="Delete character"
+            className="absolute top-2 right-2 bg-danger/80 hover:bg-danger text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            label="Delete character"
+            variant="danger"
           >
             <X className="w-5 h-5" />
-          </button>
+          </IconButton>
         ) : null}
       </div>
 

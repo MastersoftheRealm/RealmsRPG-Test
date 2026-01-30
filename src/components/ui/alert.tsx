@@ -8,6 +8,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 import { AlertTriangle, CheckCircle, Info, XCircle, X } from 'lucide-react';
+import { IconButton } from './icon-button';
 
 const alertVariants = cva(
   'relative flex items-start gap-3 rounded-lg border p-4',
@@ -62,14 +63,14 @@ export function Alert({
         <div className="text-sm">{children}</div>
       </div>
       {onDismiss && (
-        <button
-          type="button"
+        <IconButton
+          variant="ghost"
+          size="sm"
           onClick={onDismiss}
-          className="p-1 rounded hover:bg-black/10 transition-colors"
-          aria-label="Dismiss alert"
+          label="Dismiss alert"
         >
           <X className="h-4 w-4" />
-        </button>
+        </IconButton>
       )}
     </div>
   );

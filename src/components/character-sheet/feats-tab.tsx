@@ -10,6 +10,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button, Collapsible } from '@/components/ui';
 import { SpeciesTraitCard } from '@/components/shared/species-trait-card';
 
 // =============================================================================
@@ -71,65 +72,6 @@ interface FeatsTabProps {
 }
 
 // =============================================================================
-// Collapsible Section Component
-// =============================================================================
-
-interface CollapsibleSectionProps {
-  title: string;
-  count?: number;
-  defaultOpen?: boolean;
-  headerColor?: string;
-  children: React.ReactNode;
-  action?: React.ReactNode;
-}
-
-function CollapsibleSection({ 
-  title, 
-  count, 
-  defaultOpen = true, 
-  headerColor = 'bg-neutral-100',
-  children,
-  action,
-}: CollapsibleSectionProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className="border border-neutral-200 rounded-lg overflow-hidden mb-3">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          'w-full flex items-center justify-between px-3 py-2 text-left transition-colors',
-          headerColor
-        )}
-      >
-        <div className="flex items-center gap-2">
-          {isOpen ? (
-            <ChevronUp className="w-4 h-4 text-text-muted" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-text-muted" />
-          )}
-          <span className="font-semibold text-sm text-text-secondary">{title}</span>
-          {count !== undefined && (
-            <span className="text-xs text-text-muted">({count})</span>
-          )}
-        </div>
-        {action && (
-          <div onClick={(e) => e.stopPropagation()}>
-            {action}
-          </div>
-        )}
-      </button>
-      
-      {isOpen && (
-        <div className="p-3 bg-white">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// =============================================================================
 // Feat Card Component
 // =============================================================================
 
@@ -151,10 +93,10 @@ function FeatCard({ feat, onUsesChange, isEditMode }: FeatCardProps) {
   };
 
   return (
-    <div className="border border-neutral-200 rounded-lg overflow-hidden transition-colors bg-white">
+    <div className="border border-border-light rounded-lg overflow-hidden transition-colors bg-surface">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-3 py-2 hover:bg-neutral-50 text-left"
+        className="w-full flex items-center justify-between px-3 py-2 hover:bg-surface-alt text-left"
       >
         <div className="flex items-center gap-2">
           {expanded ? (
@@ -217,7 +159,7 @@ function FeatCard({ feat, onUsesChange, isEditMode }: FeatCardProps) {
       </button>
 
       {expanded && (
-        <div className="px-3 py-2 bg-neutral-50 border-t border-neutral-100">
+        <div className="px-3 py-2 bg-surface-alt border-t border-border-light">
           <p className="text-sm text-text-secondary mb-2">
             {feat.description || 'No description available.'}
           </p>
@@ -308,10 +250,12 @@ export function FeatsTab({
     <div className="space-y-2">
       {/* Traits Section */}
       {hasTraits && (
-        <CollapsibleSection 
+        <Collapsible 
           title="Traits" 
           count={totalTraits}
-          headerColor="bg-gradient-to-r from-green-50 to-blue-50"
+          defaultOpen
+          headerClassName="bg-gradient-to-r from-green-50 to-blue-50"
+          className="mb-3"
         >
           <div className="space-y-2">
             {/* Ancestry traits from character creator - enriched with RTDB data */}
@@ -348,22 +292,25 @@ export function FeatsTab({
               );
             })}
           </div>
-        </CollapsibleSection>
+        </Collapsible>
       )}
 
       {/* Archetype Feats Section */}
-      <CollapsibleSection 
+      <Collapsible 
         title="Archetype Feats" 
         count={totalArchetypeFeats}
-        headerColor="bg-amber-50"
+        defaultOpen
+        headerClassName="bg-amber-50"
+        className="mb-3"
         action={isEditMode && onAddArchetypeFeat && (
-          <button
+          <Button
+            size="sm"
             onClick={onAddArchetypeFeat}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors"
+            className="bg-amber-100 text-amber-700 hover:bg-amber-200"
           >
             <Plus className="w-3 h-3" />
             Add
-          </button>
+          </Button>
         )}
       >
         {hasArchetypeFeats ? (
@@ -385,21 +332,24 @@ export function FeatsTab({
             No archetype feats selected
           </p>
         )}
-      </CollapsibleSection>
+      </Collapsible>
 
       {/* Character Feats Section */}
-      <CollapsibleSection 
+      <Collapsible 
         title="Character Feats" 
         count={totalCharacterFeats}
-        headerColor="bg-neutral-50"
+        defaultOpen
+        headerClassName="bg-surface-alt"
+        className="mb-3"
         action={isEditMode && onAddCharacterFeat && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onAddCharacterFeat}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-neutral-100 text-text-secondary rounded hover:bg-neutral-200 transition-colors"
           >
             <Plus className="w-3 h-3" />
             Add
-          </button>
+          </Button>
         )}
       >
         {hasCharacterFeats ? (
@@ -421,14 +371,16 @@ export function FeatsTab({
             No character feats selected
           </p>
         )}
-      </CollapsibleSection>
+      </Collapsible>
 
       {/* State Feats Section (only show if any exist) */}
       {hasStateFeats && (
-        <CollapsibleSection 
+        <Collapsible 
           title="State Feats" 
           count={totalStateFeats}
-          headerColor="bg-blue-50"
+          defaultOpen
+          headerClassName="bg-blue-50"
+          className="mb-3"
         >
           <div className="space-y-2">
             {stateFeats.map((feat, index) => (
@@ -443,7 +395,7 @@ export function FeatsTab({
               />
             ))}
           </div>
-        </CollapsibleSection>
+        </Collapsible>
       )}
 
       {/* Empty state */}
@@ -455,22 +407,22 @@ export function FeatsTab({
           {isEditMode && (onAddArchetypeFeat || onAddCharacterFeat) && (
             <div className="flex justify-center gap-2 mt-4">
               {onAddArchetypeFeat && (
-                <button
+                <Button
                   onClick={onAddArchetypeFeat}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors"
+                  className="bg-amber-100 text-amber-700 hover:bg-amber-200"
                 >
                   <Plus className="w-4 h-4" />
                   Add Archetype Feat
-                </button>
+                </Button>
               )}
               {onAddCharacterFeat && (
-                <button
+                <Button
+                  variant="secondary"
                   onClick={onAddCharacterFeat}
-                  className="flex items-center gap-1 px-3 py-2 text-sm font-medium bg-neutral-100 text-text-secondary rounded-lg hover:bg-neutral-200 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Add Character Feat
-                </button>
+                </Button>
               )}
             </div>
           )}

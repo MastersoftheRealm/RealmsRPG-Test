@@ -8,8 +8,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { X, Search, Plus, Check, Loader2 } from 'lucide-react';
-import { Modal } from '@/components/ui';
+import { X, Plus, Check, Loader2 } from 'lucide-react';
+import { Modal, SearchInput, Button } from '@/components/ui';
 import { formatDamageDisplay } from '@/lib/utils';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
@@ -176,19 +176,17 @@ export function AddLibraryItemModal({
     <Modal isOpen={isOpen} onClose={onClose} title={getTitle()}>
       <div className="flex flex-col h-[60vh]">
         {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-          <input
-            type="text"
+        <div className="mb-4">
+          <SearchInput
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={setSearchQuery}
             placeholder={`Search your ${itemType}s...`}
-            className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            size="sm"
           />
         </div>
         
         {/* Items List */}
-        <div className="flex-1 overflow-y-auto border border-neutral-200 rounded-lg">
+        <div className="flex-1 overflow-y-auto border border-border-light rounded-lg">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
@@ -217,7 +215,7 @@ export function AddLibraryItemModal({
                     flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors
                     ${selectedIds.has(item.id) 
                       ? 'bg-primary-50 border-l-4 border-primary-500' 
-                      : 'hover:bg-neutral-50 border-l-4 border-transparent'
+                      : 'hover:bg-surface-alt border-l-4 border-transparent'
                     }
                   `}
                 >
@@ -246,25 +244,24 @@ export function AddLibraryItemModal({
         </div>
         
         {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-neutral-200 mt-4">
+        <div className="flex items-center justify-between pt-4 border-t border-border-light mt-4">
           <span className="text-sm text-text-muted">
             {selectedIds.size} selected
           </span>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="secondary"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-text-secondary bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleConfirm}
               disabled={selectedIds.size === 0}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
               Add Selected
-            </button>
+            </Button>
           </div>
         </div>
       </div>

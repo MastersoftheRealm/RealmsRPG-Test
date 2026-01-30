@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { ItemList, ItemSelectionModal } from '@/components/shared';
+import { Button, IconButton } from '@/components/ui';
 import { transformPower, transformTechnique } from '@/lib/item-transformers';
 import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts } from '@/hooks';
 import type { DisplayItem, SortOption } from '@/types';
@@ -181,14 +182,13 @@ export function PowersStep() {
                 </p>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => setShowPowerModal(true)}
               disabled={userPowers.length === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-400 text-white hover:bg-primary-500 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
               Add Powers
-            </button>
+            </Button>
           </div>
           
           {selectedPowerItems.length > 0 ? (
@@ -207,13 +207,14 @@ export function PowersStep() {
                       </span>
                     )}
                   </div>
-                  <button
+                  <IconButton
+                    variant="danger"
+                    size="sm"
                     onClick={() => removePower(power.id)}
-                    className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
-                    title="Remove power"
+                    label="Remove power"
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </IconButton>
                 </div>
               ))}
             </div>
@@ -247,14 +248,14 @@ export function PowersStep() {
                 </p>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => setShowTechniqueModal(true)}
               disabled={userTechniques.length === 0}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-orange-500 hover:bg-orange-600"
             >
               <Plus className="w-4 h-4" />
               Add Techniques
-            </button>
+            </Button>
           </div>
           
           {selectedTechniqueItems.length > 0 ? (
@@ -273,13 +274,14 @@ export function PowersStep() {
                       </span>
                     )}
                   </div>
-                  <button
+                  <IconButton
+                    variant="danger"
+                    size="sm"
                     onClick={() => removeTechnique(tech.id)}
-                    className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
-                    title="Remove technique"
+                    label="Remove technique"
                   >
                     <X className="w-4 h-4" />
-                  </button>
+                  </IconButton>
                 </div>
               ))}
             </div>
@@ -300,18 +302,17 @@ export function PowersStep() {
       
       {/* Navigation */}
       <div className="flex justify-between pt-6 border-t border-border">
-        <button
+        <Button
+          variant="secondary"
           onClick={prevStep}
-          className="btn-back"
         >
           ← Back
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={nextStep}
-          className="btn-continue"
         >
           Continue →
-        </button>
+        </Button>
       </div>
       
       {/* Power Selection Modal */}

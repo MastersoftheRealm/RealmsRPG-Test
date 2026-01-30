@@ -8,6 +8,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Chip } from '@/components/ui';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 /** RTDB part data for enrichment */
@@ -243,14 +244,14 @@ function ProficiencySection({ title, profs }: ProficiencySectionProps) {
 
   return (
     <div className="mb-4">
-      <div className="flex items-center justify-between px-3 py-2 bg-neutral-100 rounded-t-lg border border-neutral-200">
+      <div className="flex items-center justify-between px-3 py-2 bg-neutral-100 rounded-t-lg border border-border-light">
         <span className="font-semibold text-sm text-text-secondary">{title}</span>
         <span className="text-sm text-text-muted">
           TP: <span className="font-semibold text-primary-600">{totalTP}</span>
         </span>
       </div>
       
-      <div className="border border-t-0 border-neutral-200 rounded-b-lg p-3">
+      <div className="border border-t-0 border-border-light rounded-b-lg p-3">
         {profs.size === 0 ? (
           <p className="text-sm text-text-muted italic text-center py-2">No proficiencies</p>
         ) : (
@@ -262,13 +263,14 @@ function ProficiencySection({ title, profs }: ProficiencySectionProps) {
               if (prof.op1Lvl > 0) label += ` Lvl ${prof.op1Lvl}`;
               
               return (
-                <div
+                <Chip
                   key={index}
-                  className="px-2 py-1 text-xs bg-primary-50 text-primary-700 border border-primary-200 rounded-full"
+                  variant="proficiency"
+                  size="sm"
                   title={prof.description || `${label} - TP: ${tp}`}
                 >
                   {label} | {tp} TP
-                </div>
+                </Chip>
               );
             })}
           </div>
@@ -314,7 +316,7 @@ export function ProficienciesTab({
     <div>
       {/* Training Points Box */}
       <div className="flex justify-center mb-6">
-        <div className="px-8 py-4 bg-neutral-50 border border-neutral-200 rounded-xl shadow-sm">
+        <div className="px-8 py-4 bg-surface-alt border border-border-light rounded-xl shadow-sm">
           <div className="text-center">
             <span className="text-lg font-semibold text-text-secondary">Training Points: </span>
             <span className={`text-2xl font-bold ${trainingPoints >= 0 ? 'text-primary-600' : 'text-red-600'}`}>

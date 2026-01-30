@@ -11,6 +11,7 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils/cn';
 import { Check, X, AlertTriangle, Info, XCircle } from 'lucide-react';
+import { IconButton } from './icon-button';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -92,16 +93,17 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         {toastIcons[toast.type]}
       </span>
       <p className="flex-1 text-sm font-medium">{toast.message}</p>
-      <button
+      <IconButton
+        variant="ghost"
+        size="sm"
         onClick={() => {
           setIsLeaving(true);
           setTimeout(onDismiss, 300);
         }}
-        className="flex-shrink-0 p-1 rounded hover:bg-black/10 transition-colors"
-        aria-label="Dismiss"
+        label="Dismiss"
       >
         <X className="w-4 h-4" />
-      </button>
+      </IconButton>
     </div>
   );
 }

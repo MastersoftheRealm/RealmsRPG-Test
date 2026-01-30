@@ -1,19 +1,20 @@
-﻿/**
+/**
  * Rules Page
  * ===========
  * Core rulebook embedded from Google Docs
  */
 
+import { PageContainer, PageHeader } from '@/components/ui';
+
 export default function RulesPage() {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-text-primary mb-4 text-center">Core Rulebook Alpha</h1>
-      
-      <p className="text-center text-text-secondary mb-6">
-        Scroll through or use Ctrl+F to find the desired rule or reference you&apos;re looking for! Enjoy playing!
-      </p>
+    <PageContainer size="content">
+      <PageHeader 
+        title="Core Rulebook Alpha"
+        description="Scroll through or use Ctrl+F to find the desired rule or reference you're looking for! Enjoy playing!"
+      />
 
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-lg overflow-hidden">
         <iframe 
           src="https://docs.google.com/document/d/e/2PACX-1vR2In0Fvu9axM9bb85Ne2rSp5SEfBd3kA34a3IHtcR5fIJ4spxCVgWezaNtejtyaGGmLtG-WTTKbgbE/pub?embedded=true" 
           className="w-full border-0"
@@ -22,6 +23,6 @@ export default function RulesPage() {
           title="Realms RPG Core Rulebook"
         />
       </div>
-    </div>
+    </PageContainer>
   );
 }

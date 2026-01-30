@@ -166,10 +166,10 @@ export function AbilityScoreEditor({
             <div
               key={ability}
               className={cn(
-                'p-3 rounded-xl border-2 bg-white transition-all',
+                'p-3 rounded-xl border-2 bg-surface transition-all',
                 isHighlighted 
                   ? 'border-amber-400 bg-amber-50/50' 
-                  : 'border-neutral-200',
+                  : 'border-border-light',
                 !isEditMode && 'opacity-75'
               )}
             >

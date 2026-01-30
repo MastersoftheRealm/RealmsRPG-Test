@@ -14,6 +14,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { Chip, Button, Alert } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useSpecies, useTraits, resolveTraitIds, type Trait } from '@/hooks';
 import { Heart, AlertTriangle, Sparkles, Star, Check } from 'lucide-react';
@@ -134,21 +135,23 @@ export function AncestryStep() {
           Customize your character with ancestry traits and an optional flaw.
         </p>
         
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
-          <p className="text-amber-700 mb-4">
-            <strong>No species selected!</strong> Please choose a species first.
-          </p>
-          <button
-            onClick={() => setStep('species')}
-            className="px-6 py-2 rounded-lg bg-amber-600 text-white font-medium hover:bg-amber-700"
-          >
-            Go to Species Selection
-          </button>
-        </div>
+        <Alert variant="warning" className="mb-8">
+          <div className="text-center">
+            <p className="mb-4">
+              <strong>No species selected!</strong> Please choose a species first.
+            </p>
+            <Button
+              onClick={() => setStep('species')}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              Go to Species Selection
+            </Button>
+          </div>
+        </Alert>
         
         <div className="flex justify-between">
-          <button onClick={prevStep} className="btn-back">← Back</button>
-          <button disabled className="btn-continue">Continue →</button>
+          <Button variant="secondary" onClick={prevStep}>← Back</Button>
+          <Button disabled>Continue →</Button>
         </div>
       </div>
     );
@@ -177,7 +180,7 @@ export function AncestryStep() {
       </div>
 
       {/* Species Info Summary */}
-      <div className="bg-neutral-50 rounded-xl p-4 mb-6 border border-neutral-200">
+      <div className="bg-surface-alt rounded-xl p-4 mb-6 border border-border-light">
         {/* Species Description */}
         {selectedSpecies.description && (
           <p className="text-text-secondary text-sm mb-4 leading-relaxed">
@@ -209,15 +212,15 @@ export function AncestryStep() {
         </div>
         
         {/* Skills and Languages */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-neutral-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-light">
           {selectedSpecies.skills && selectedSpecies.skills.length > 0 && (
             <div>
               <span className="text-xs text-text-muted uppercase">Species Skills:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {selectedSpecies.skills.map(skill => (
-                  <span key={skill} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+                  <Chip key={skill} variant="info" size="sm">
                     {skill}
-                  </span>
+                  </Chip>
                 ))}
               </div>
             </div>
@@ -227,9 +230,9 @@ export function AncestryStep() {
               <span className="text-xs text-text-muted uppercase">Languages:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {selectedSpecies.languages.map(lang => (
-                  <span key={lang} className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs">
+                  <Chip key={lang} variant="primary" size="sm">
                     {lang}
-                  </span>
+                  </Chip>
                 ))}
               </div>
             </div>
@@ -285,7 +288,7 @@ export function AncestryStep() {
           'p-4 rounded-xl border-2',
           selectedFlaw
             ? 'bg-purple-50 border-purple-300'
-            : 'bg-neutral-50 border-neutral-200'
+            : 'bg-surface-alt border-border-light'
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Flaw</span>
@@ -359,7 +362,7 @@ export function AncestryStep() {
 
       {/* No traits message */}
       {ancestryTraits.length === 0 && speciesTraits.length === 0 && (
-        <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-6 mb-6 text-center">
+        <div className="bg-surface-alt border border-border-light rounded-xl p-6 mb-6 text-center">
           <p className="text-text-secondary">
             No specific ancestry traits defined for {selectedSpecies.name}.
             You may continue without selecting traits.
@@ -369,14 +372,13 @@ export function AncestryStep() {
 
       {/* Navigation */}
       <div className="flex justify-between mt-8">
-        <button onClick={prevStep} className="btn-back">← Back</button>
-        <button
+        <Button variant="secondary" onClick={prevStep}>← Back</Button>
+        <Button
           onClick={nextStep}
           disabled={!canContinue}
-          className="btn-continue"
         >
           Continue →
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -409,8 +411,8 @@ function TraitSection({
 }: TraitSectionProps) {
   const variantStyles = {
     default: {
-      border: 'border-neutral-200',
-      header: 'bg-neutral-50',
+      border: 'border-border-light',
+      header: 'bg-surface-alt',
       selected: 'border-primary-400 bg-primary-50',
       check: 'bg-primary-600 border-primary-600',
     },
@@ -456,7 +458,7 @@ function TraitSection({
               onClick={() => selectable && onToggle(trait.id)}
               className={cn(
                 'px-4 py-3 transition-colors',
-                selectable && 'cursor-pointer hover:bg-neutral-50',
+                selectable && 'cursor-pointer hover:bg-surface-alt',
                 isSelected && styles.selected
               )}
             >
@@ -466,7 +468,7 @@ function TraitSection({
                     'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
                     isSelected
                       ? `${styles.check} text-white`
-                      : 'border-neutral-300 bg-white'
+                      : 'border-neutral-300 bg-surface'
                   )}>
                     {isSelected && <Check className="w-3 h-3" />}
                   </div>

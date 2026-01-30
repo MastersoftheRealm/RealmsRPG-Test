@@ -10,7 +10,7 @@
 import { useState, useCallback, useMemo, useEffect, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Save, GripVertical } from 'lucide-react';
-import { LoadingState } from '@/components/ui/spinner';
+import { LoadingState, Button, Checkbox, Input, PageContainer } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 
 const STORAGE_KEY = 'realms-encounter-tracker';
@@ -552,14 +552,16 @@ function EncounterTrackerContent() {
   // Show loading state until localStorage is checked
   if (!isLoaded) {
     return (
-      <div className="max-w-7xl mx-auto flex items-center justify-center py-20">
-        <LoadingState message="Loading encounter..." size="lg" />
-      </div>
+      <PageContainer size="full">
+        <div className="flex items-center justify-center py-20">
+          <LoadingState message="Loading encounter..." size="lg" />
+        </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <PageContainer size="full">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-text-primary">Encounter Tracker</h1>
@@ -584,58 +586,57 @@ function EncounterTrackerContent() {
         {/* Combatant List */}
         <div className="lg:col-span-3 space-y-4">
           {/* Combat Controls - Sticky */}
-          <div className="bg-white rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4 sticky top-4 z-10">
+          <div className="bg-surface rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4 sticky top-4 z-10">
             {!encounter.isActive ? (
               <>
-                <button
+                <Button
+                  variant="success"
                   onClick={startCombat}
                   disabled={encounter.combatants.length === 0}
-                  className="px-6 py-2 rounded-lg font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Start Encounter
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={sortInitiative}
-                  className="px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700"
                   title="Sort by alternative initiative (alternating allies/enemies, companions last)"
                 >
                   Sort Initiative ⇆
-                </button>
+                </Button>
               </>
             ) : (
               <>
-                <button
+                <Button
+                  variant="secondary"
                   onClick={previousTurn}
-                  className="px-4 py-2 rounded-lg bg-neutral-200 hover:bg-neutral-300"
                 >
                   ← Previous
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={nextTurn}
-                  className="px-6 py-2 rounded-lg font-bold bg-primary-600 text-white hover:bg-primary-700"
                 >
                   Next Turn →
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger"
                   onClick={endCombat}
-                  className="px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
                 >
                   End Combat
-                </button>
+                </Button>
               </>
             )}
-            <button
+            <Button
+              variant="ghost"
               onClick={resetEncounter}
-              className="px-4 py-2 rounded-lg bg-neutral-100 text-text-secondary hover:bg-neutral-200 ml-auto"
+              className="ml-auto"
             >
               Reset All
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="danger"
               onClick={() => setEncounter(prev => ({ ...prev, combatants: [] }))}
-              className="px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200"
             >
               Clear All
-            </button>
+            </Button>
           </div>
 
           {/* Help tip when not in combat */}
@@ -648,7 +649,7 @@ function EncounterTrackerContent() {
           {/* Combatant Cards - Scrollable Container */}
           <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scroll-smooth">
             {sortedCombatants.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-md p-8 text-center text-text-muted">
+              <div className="bg-surface rounded-xl shadow-md p-8 text-center text-text-muted">
                 No combatants added yet. Add some using the panel on the right.
               </div>
             ) : (
@@ -683,63 +684,48 @@ function EncounterTrackerContent() {
 
         {/* Add Combatant Panel */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+          <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
             <h3 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h3>
             
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
-                <input
-                  type="text"
-                  value={newCombatant.name}
-                  onChange={(e) => setNewCombatant(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Creature name..."
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                />
-              </div>
+              <Input
+                label="Name"
+                type="text"
+                value={newCombatant.name}
+                onChange={(e) => setNewCombatant(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Creature name..."
+              />
               
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Roll</label>
-                  <input
-                    type="number"
-                    value={newCombatant.initiative || ''}
-                    onChange={(e) => setNewCombatant(prev => ({ ...prev, initiative: parseInt(e.target.value) || 0 }))}
-                    placeholder="Init"
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Acuity</label>
-                  <input
-                    type="number"
-                    value={newCombatant.acuity || ''}
-                    onChange={(e) => setNewCombatant(prev => ({ ...prev, acuity: parseInt(e.target.value) || 0 }))}
-                    placeholder="Acuity"
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                  />
-                </div>
+                <Input
+                  label="Roll"
+                  type="number"
+                  value={newCombatant.initiative || ''}
+                  onChange={(e) => setNewCombatant(prev => ({ ...prev, initiative: parseInt(e.target.value) || 0 }))}
+                  placeholder="Init"
+                />
+                <Input
+                  label="Acuity"
+                  type="number"
+                  value={newCombatant.acuity || ''}
+                  onChange={(e) => setNewCombatant(prev => ({ ...prev, acuity: parseInt(e.target.value) || 0 }))}
+                  placeholder="Acuity"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Max HP</label>
-                  <input
-                    type="number"
-                    value={newCombatant.maxHealth}
-                    onChange={(e) => setNewCombatant(prev => ({ ...prev, maxHealth: parseInt(e.target.value) || 1 }))}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Max EN</label>
-                  <input
-                    type="number"
-                    value={newCombatant.maxEnergy}
-                    onChange={(e) => setNewCombatant(prev => ({ ...prev, maxEnergy: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg"
-                  />
-                </div>
+                <Input
+                  label="Max HP"
+                  type="number"
+                  value={newCombatant.maxHealth}
+                  onChange={(e) => setNewCombatant(prev => ({ ...prev, maxHealth: parseInt(e.target.value) || 1 }))}
+                />
+                <Input
+                  label="Max EN"
+                  type="number"
+                  value={newCombatant.maxEnergy}
+                  onChange={(e) => setNewCombatant(prev => ({ ...prev, maxEnergy: parseInt(e.target.value) || 0 }))}
+                />
               </div>
 
               {/* Quantity */}
@@ -792,28 +778,25 @@ function EncounterTrackerContent() {
                 </label>
               </div>
               
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={newCombatant.isSurprised}
-                  onChange={(e) => setNewCombatant(prev => ({ ...prev, isSurprised: e.target.checked }))}
-                  className="w-4 h-4 rounded text-amber-600"
-                />
-                <span className="text-sm text-text-secondary">Surprised (goes last in round 1)</span>
-              </label>
+              <Checkbox
+                checked={newCombatant.isSurprised}
+                onChange={(e) => setNewCombatant(prev => ({ ...prev, isSurprised: e.target.checked }))}
+                label="Surprised (goes last in round 1)"
+              />
               
-              <button
+              <Button
+                variant="success"
                 onClick={addCombatant}
                 disabled={!newCombatant.name.trim()}
-                className="w-full py-2 rounded-lg font-bold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full font-bold"
               >
                 Add Creature
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Quick Reference */}
-          <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Conditions Reference</h3>
             <div className="flex flex-wrap gap-1">
               {CONDITION_OPTIONS.map(condition => (
@@ -839,7 +822,7 @@ function EncounterTrackerContent() {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -966,7 +949,7 @@ function CombatantCard({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       className={cn(
-        'bg-white rounded-xl shadow-md p-3 transition-all',
+        'bg-surface rounded-xl shadow-md p-3 transition-all',
         isCurrentTurn && 'ring-2 ring-primary-500 shadow-lg',
         isDead && 'bg-red-50 opacity-75',
         isDragOver && 'ring-2 ring-amber-400 bg-amber-50',
@@ -1185,7 +1168,7 @@ function CombatantCard({
           )}
 
           {/* Action Bar - More Compact */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-neutral-100">
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border-subtle">
             {/* HP Controls */}
             <div className="flex items-center gap-0.5 bg-red-50 rounded px-1.5 py-0.5">
               <input
@@ -1286,7 +1269,7 @@ function CombatantCard({
 
           {/* Conditions Picker */}
           {showConditions && (
-            <div className="mt-3 pt-3 border-t border-neutral-100">
+            <div className="mt-3 pt-3 border-t border-border-subtle">
               <div className="flex items-center gap-2 mb-2">
                 <select
                   value={selectedCondition}
@@ -1343,7 +1326,7 @@ function CombatantCard({
 
 export default function EncounterTrackerPage() {
   return (
-    <div className="min-h-screen bg-neutral-50 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <EncounterTrackerContent />
     </div>
   );

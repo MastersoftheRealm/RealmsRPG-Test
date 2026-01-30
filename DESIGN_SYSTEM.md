@@ -129,9 +129,9 @@ import { Button } from '@/components/ui';
 CSS classes available:
 - `.btn-primary`, `.btn-secondary`, `.btn-danger`, `.btn-success`
 - `.btn-outline`, `.btn-ghost`, `.btn-utility`, `.btn-icon`
-- `.btn-continue` - Large action button
-- `.btn-back` - Secondary back button
 - `.btn-stepper` - +/- stepper buttons
+
+> **Note:** Navigation buttons (back/continue) now use the `<Button>` component with `variant="secondary"` for back and default for continue.
 
 ### Cards
 
