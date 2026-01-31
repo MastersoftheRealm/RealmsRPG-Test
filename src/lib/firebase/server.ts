@@ -21,11 +21,11 @@ let adminRtdb: Database | null = null;
 
 /**
  * Get the Firebase Admin service account credentials.
- * In production, these come from environment variables set by Firebase Hosting.
+ * In production, these come from Google Cloud Secret Manager (accessed via environment variables).
  * For local development, use GOOGLE_APPLICATION_CREDENTIALS or explicit config.
  */
 function getServiceAccount() {
-  // Check for explicit service account JSON
+  // Check for explicit service account JSON (local dev)
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
       return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
@@ -34,10 +34,11 @@ function getServiceAccount() {
     }
   }
   
-  // Use individual environment variables (Firebase Hosting pattern)
+  // Use individual environment variables from Secret Manager
+  // Note: Can't use FIREBASE_ prefix in Secret Manager, so we use SERVICE_ACCOUNT_*
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || 'realmsrpg-test';
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const clientEmail = process.env.SERVICE_ACCOUNT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = (process.env.SERVICE_ACCOUNT_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY)?.replace(/\\n/g, '\n');
   
   if (clientEmail && privateKey) {
     console.log('Using explicit service account credentials for project:', projectId);
@@ -46,10 +47,10 @@ function getServiceAccount() {
   
   // Log which env vars are missing for debugging
   if (!clientEmail) {
-    console.warn('FIREBASE_CLIENT_EMAIL not set - session cookies may not work');
+    console.warn('SERVICE_ACCOUNT_EMAIL not set - session cookies may not work');
   }
   if (!privateKey) {
-    console.warn('FIREBASE_PRIVATE_KEY not set - session cookies may not work');
+    console.warn('SERVICE_ACCOUNT_PRIVATE_KEY not set - session cookies may not work');
   }
   
   // Return null to use Application Default Credentials (ADC)

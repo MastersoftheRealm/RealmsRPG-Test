@@ -938,42 +938,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
     }
   }, [addModalType, handleAddPowers, handleAddTechniques, handleAddWeapons, handleAddArmor, handleAddEquipment]);
   
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [authLoading, user, router]);
-  
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingState message="Loading character..." size="lg" />
-      </div>
-    );
-  }
-  
-  if (error || !character) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-text-primary mb-2">
-            {error || 'Character not found'}
-          </h1>
-          <Link
-            href="/characters"
-            className="text-primary-600 hover:text-primary-700"
-          >
-            ← Back to Characters
-          </Link>
-        </div>
-      </div>
-    );
-  }
-  
   // Enrich skills with availableAbilities from RTDB
   // This ensures existing skills that lack availableAbilities get them from the database
+  // NOTE: This useMemo must be before any early returns to follow React's Rules of Hooks
   const skills = useMemo(() => {
+    if (!character) return [];
+    
     const rawSkills = (character.skills || []) as Array<{
       id: string;
       name: string;
@@ -1017,7 +987,40 @@ export default function CharacterSheetPage({ params }: PageParams) {
       
       return skill;
     });
-  }, [character.skills, rtdbSkills]);
+  }, [character, rtdbSkills]);
+  
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [authLoading, user, router]);
+  
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingState message="Loading character..." size="lg" />
+      </div>
+    );
+  }
+  
+  if (error || !character) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">
+            {error || 'Character not found'}
+          </h1>
+          <Link
+            href="/characters"
+            className="text-primary-600 hover:text-primary-700"
+          >
+            ← Back to Characters
+          </Link>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <RollProvider>
