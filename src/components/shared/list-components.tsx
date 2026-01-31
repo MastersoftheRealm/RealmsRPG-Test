@@ -164,7 +164,7 @@ export function ColumnHeaders({
   return (
     <div 
       className={cn(
-        'hidden lg:grid gap-2 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary',
+        'hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-medium text-sm text-text-secondary',
         className
       )}
       style={{ 
@@ -202,8 +202,8 @@ export function ListContainer({
   return (
     <div 
       className={cn(
-        'divide-y divide-border-light border border-border-light',
-        hasHeader ? 'rounded-b-lg lg:rounded-t-none rounded-lg' : 'rounded-lg',
+        'flex flex-col gap-2',
+        hasHeader ? 'rounded-b-lg' : 'rounded-lg',
         className
       )}
     >

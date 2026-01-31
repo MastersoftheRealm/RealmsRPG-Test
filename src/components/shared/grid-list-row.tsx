@@ -199,7 +199,7 @@ export function GridListRow({
 
   // Determine row styling based on state
   const rowStyles = cn(
-    'bg-surface transition-all',
+    'bg-surface transition-all rounded-lg border border-border-light overflow-hidden',
     isSelected && 'bg-primary-50 border-l-4 border-l-primary-500',
     disabled && 'opacity-50',
     className
@@ -339,7 +339,7 @@ export function GridListRow({
       {/* Expanded Content */}
       {isExpanded && hasDetails && (
         <div className={cn(
-          'border-t border-border bg-surface-alt',
+          'border-t border-border-light bg-surface-alt',
           compact ? 'px-3 pb-3 pt-2' : 'px-4 pb-4 pt-2',
           selectable && 'ml-10' // Indent when selection button present
         )}>
@@ -479,7 +479,7 @@ export function GridListRow({
 
               {/* Action Buttons */}
               {showActions && (
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-light">
                   {onEdit && (
                     <Button
                       variant="secondary"

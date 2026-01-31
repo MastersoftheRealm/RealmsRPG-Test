@@ -195,15 +195,27 @@ function AttackBonusesTable({
   );
 }
 
+// Unarmed Prowess damage table based on character level
+const UNARMED_PROWESS_DAMAGE = [
+  { level: 0, damage: 'Ability' }, // Unproficient - half ability
+  { level: 1, damage: '1d2' },     // Prowess I (base)
+  { level: 2, damage: '1d4' },     // Prowess II (Lv 4)
+  { level: 3, damage: '1d6' },     // Prowess III (Lv 8)
+  { level: 4, damage: '1d8' },     // Prowess IV (Lv 12)
+  { level: 5, damage: '1d10' },    // Prowess V (Lv 16+)
+];
+
 // Weapons Section - displays equipped weapons with attack/damage rolls
 function WeaponsSection({
   character,
   martialProf,
+  unarmedProwess = 0,
   onRollAttack,
   onRollDamage,
 }: {
   character: Character;
   martialProf: number;
+  unarmedProwess?: number;
   onRollAttack?: (name: string, bonus: number) => void;
   onRollDamage?: (damageStr: string, bonus: number) => void;
 }) {
@@ -218,10 +230,22 @@ function WeaponsSection({
   const agiBonus = (abilities.agility ?? 0) + martialProf;
   const acuBonus = (abilities.acuity ?? 0) + martialProf;
   
-  // Unproficient unarmed: strength only (or double negative)
+  // Unarmed prowess uses STR or AGI (whichever is higher)
   const str = abilities.strength ?? 0;
-  const unprofBonus = str < 0 ? str * 2 : Math.ceil(str / 2);
-  const unarmedDamage = Math.max(1, Math.ceil(str / 2));
+  const agi = abilities.agility ?? 0;
+  const unarmedAbility = Math.max(str, agi);
+  
+  // Calculate unarmed attack bonus based on proficiency
+  const hasProwess = unarmedProwess > 0;
+  const unarmedAttackBonus = hasProwess 
+    ? unarmedAbility + martialProf  // Proficient: full ability + martial prof
+    : (unarmedAbility < 0 ? unarmedAbility * 2 : Math.floor(unarmedAbility / 2)); // Unproficient: half ability (double if negative)
+  
+  // Calculate unarmed damage based on prowess level
+  const prowessData = UNARMED_PROWESS_DAMAGE[unarmedProwess] || UNARMED_PROWESS_DAMAGE[0];
+  const unarmedDamageDisplay = hasProwess 
+    ? `${prowessData.damage} + ${unarmedAbility}` 
+    : String(Math.max(1, Math.floor(unarmedAbility / 2)));
 
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
@@ -319,25 +343,30 @@ function WeaponsSection({
               </tr>
             );
           })}
-          {/* Unarmed Prowess - always shown */}
+          {/* Unarmed Prowess - always shown, styled based on proficiency */}
           <tr className="border-t border-border-light align-top">
-            <td className="py-2 font-medium text-text-muted italic">Unarmed Prowess</td>
+            <td className="py-2 font-medium text-text-secondary">
+              Unarmed Prowess
+              {hasProwess && (
+                <span className="text-xs text-primary-600 ml-1">(Proficient)</span>
+              )}
+            </td>
             <td className="text-center py-2">
               <RollButton
-                value={unprofBonus}
-                variant="unproficient"
-                onClick={() => onRollAttack?.('Unarmed Prowess', unprofBonus)}
+                value={unarmedAttackBonus}
+                variant={hasProwess ? 'primary' : 'unproficient'}
+                onClick={() => onRollAttack?.('Unarmed Prowess', unarmedAttackBonus)}
                 size="sm"
-                title="Roll unarmed attack"
+                title={`Roll unarmed attack (${hasProwess ? 'proficient' : 'unproficient'})`}
               />
             </td>
             <td className="text-center py-2">
               <div className="flex flex-col items-center gap-0.5">
                 <RollButton
                   value={0}
-                  displayValue={String(unarmedDamage)}
-                  variant="unproficient"
-                  onClick={() => onRollDamage?.(`${unarmedDamage} Bludgeoning`, unprofBonus)}
+                  displayValue={unarmedDamageDisplay}
+                  variant={hasProwess ? 'danger' : 'unproficient'}
+                  onClick={() => onRollDamage?.(`${unarmedDamageDisplay} Bludgeoning`, unarmedAttackBonus)}
                   size="sm"
                   title="Roll unarmed damage"
                 />
@@ -724,6 +753,7 @@ export function ArchetypeSection({
       <WeaponsSection
         character={character}
         martialProf={martialProf}
+        unarmedProwess={unarmedProwess}
         onRollAttack={handleRollBonus}
         onRollDamage={handleRollDamage}
       />

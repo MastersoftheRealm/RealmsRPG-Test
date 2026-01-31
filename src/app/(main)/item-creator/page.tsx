@@ -57,6 +57,7 @@ interface DamageConfig {
 
 import {
   ALL_DAMAGE_TYPES as DAMAGE_TYPES,
+  WEAPON_DAMAGE_TYPES,
   DIE_SIZES,
   RARITY_COLORS,
   CREATOR_CACHE_KEYS,
@@ -1107,7 +1108,7 @@ function ItemCreatorContent() {
                   onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
                   className="px-3 py-2 border border-border-light rounded-lg"
                 >
-                  {DAMAGE_TYPES.filter((t) => t !== 'none').map((type) => (
+                  {WEAPON_DAMAGE_TYPES.map((type) => (
                     <option key={type} value={type}>
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </option>

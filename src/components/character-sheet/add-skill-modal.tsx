@@ -50,16 +50,17 @@ function ExpandableSkillRow({
   
   return (
     <div className={cn(
-      'border rounded-lg transition-colors',
-      isSelected ? 'border-primary-400 bg-primary-50' : 'border-border-light hover:border-border-medium'
+      'border rounded-lg transition-colors hover:border-primary-200',
+      isSelected ? 'border-primary-400 bg-primary-50' : 'border-border-light'
     )}>
-      {/* Header Row */}
-      <div className="flex items-center gap-3 p-3">
+      {/* Header Row - Entire row is clickable to expand */}
+      <div 
+        className="flex items-center gap-3 p-3 cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         {/* Expand Button */}
-        <button
-          type="button"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-text-muted hover:text-text-primary transition-colors"
+        <span
+          className="text-text-muted transition-transform"
           aria-label={isExpanded ? 'Collapse' : 'Expand'}
         >
           {isExpanded ? (
@@ -67,7 +68,7 @@ function ExpandableSkillRow({
           ) : (
             <ChevronRight className="w-4 h-4" />
           )}
-        </button>
+        </span>
         
         {/* Skill Name */}
         <span className="font-medium text-text-primary flex-1">{skill.name}</span>
@@ -87,7 +88,7 @@ function ExpandableSkillRow({
         {/* Selection Toggle */}
         <button
           type="button"
-          onClick={onToggle}
+          onClick={(e) => { e.stopPropagation(); onToggle(); }}
           className={cn(
             'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
             isSelected 
@@ -192,7 +193,7 @@ export function AddSkillModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border-light rounded-t-xl bg-surface-alt">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-light rounded-t-xl bg-gradient-to-r from-primary-50 to-surface">
           <div>
             <h2 className="text-xl font-bold text-text-primary">Add Skills</h2>
             <p className="text-sm text-text-muted mt-0.5">
@@ -210,7 +211,7 @@ export function AddSkillModal({
         </div>
 
         {/* Search & Filters */}
-        <div className="px-5 py-4 border-b border-border-subtle space-y-3">
+        <div className="px-5 py-4 border-b border-border-light bg-surface-alt space-y-3">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
@@ -238,7 +239,7 @@ export function AddSkillModal({
         </div>
 
         {/* Column Headers */}
-        <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-2 bg-surface-alt border-b border-border-light text-xs font-semibold text-text-muted uppercase tracking-wider">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wider">
           <span className="pl-7">Skill Name</span>
           <span>Abilities</span>
           <span className="w-6"></span>

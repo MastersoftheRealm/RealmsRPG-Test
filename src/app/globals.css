@@ -862,4 +862,57 @@
   .divider-vertical {
     @apply border-l border-divider h-full;
   }
+
+  /* ---------------------------------------------------------------------------
+     UNIFIED LIST COMPONENTS
+     Consistent styling for all list-based displays (Library, Codex, Modals)
+     --------------------------------------------------------------------------- */
+  
+  /* List headers - darker background for visibility */
+  .list-header {
+    @apply hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light 
+           rounded-t-lg font-semibold text-sm text-primary-700 uppercase tracking-wide;
+  }
+  
+  /* List container - gap-based instead of dividers for softer look */
+  .list-container {
+    @apply flex flex-col gap-2;
+  }
+  
+  /* List container with dividers (for compact internal lists) */
+  .list-container-compact {
+    @apply border border-border-light rounded-lg divide-y divide-border-light;
+  }
+  
+  /* Individual list item - rounded with soft border */
+  .list-item {
+    @apply bg-surface rounded-lg border border-border-light overflow-hidden 
+           transition-all hover:border-primary-200;
+  }
+  
+  /* Selectable list item */
+  .list-item-selectable {
+    @apply cursor-pointer hover:bg-surface-alt;
+  }
+  
+  /* Selected list item */
+  .list-item-selected {
+    @apply bg-primary-50 border-l-4 border-l-primary-500;
+  }
+  
+  /* Expanded content area */
+  .list-item-expanded {
+    @apply border-t border-border-light bg-surface-alt px-4 py-3;
+  }
+  
+  /* Modal header with gradient */
+  .modal-header-gradient {
+    @apply px-5 py-4 border-b border-border-light rounded-t-xl 
+           bg-gradient-to-r from-primary-50 to-surface;
+  }
+  
+  /* Modal filters section */
+  .modal-filters {
+    @apply px-5 py-4 border-b border-border-light bg-surface-alt;
+  }
 }

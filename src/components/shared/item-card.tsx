@@ -70,7 +70,7 @@ export function ItemCard({
         rounded-lg border transition-all duration-200
         ${item.isSelected 
           ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' 
-          : 'border-border bg-surface hover:border-primary-300'
+          : 'border-border-light bg-surface hover:border-primary-300'
         }
         ${item.isDisabled 
           ? 'opacity-50 cursor-not-allowed' 
@@ -242,7 +242,7 @@ export function ItemCard({
       
       {/* Expanded details */}
       {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-border space-y-2">
+        <div className="mt-3 pt-3 border-t border-border-light space-y-2">
           {/* Description */}
           {item.description && (
             <p className="text-sm text-text-secondary">{item.description}</p>

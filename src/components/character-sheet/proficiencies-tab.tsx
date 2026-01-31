@@ -390,10 +390,10 @@ export function ProficienciesTab({
           <div className="border border-t-0 border-border-light rounded-b-lg p-3">
             {isEditMode ? (
               <div className="space-y-2">
-                {UNARMED_PROWESS_LEVELS.map((prowessLevel) => {
-                  const isAvailable = prowessLevel.charLevel <= level;
+                {/* Only show levels that are available at the character's level */}
+                {availableUnarmedLevels.map((prowessLevel) => {
                   const isSelected = unarmedProwess >= prowessLevel.level;
-                  const canToggle = isAvailable && onUnarmedProwessChange;
+                  const canToggle = onUnarmedProwessChange;
                   const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
                   
                   return (
@@ -402,7 +402,6 @@ export function ProficienciesTab({
                       className={cn(
                         'flex items-center gap-3 p-2 rounded-lg border transition-all',
                         isSelected ? 'bg-primary-50 border-primary-300' : 'bg-surface border-border-light',
-                        !isAvailable && 'opacity-50',
                         canToggle && 'cursor-pointer hover:border-primary-300'
                       )}
                       onClick={() => {
@@ -425,9 +424,6 @@ export function ProficienciesTab({
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-medium text-text-primary">{prowessLevel.name}</span>
                         <span className="text-xs text-text-muted ml-2">({prowessLevel.damage})</span>
-                        {!isAvailable && (
-                          <span className="text-xs ml-2 text-gray-500">Req. Lv {prowessLevel.charLevel}</span>
-                        )}
                       </div>
                       <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
                         {tpCost} TP

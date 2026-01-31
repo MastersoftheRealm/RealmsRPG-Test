@@ -338,7 +338,7 @@ function PowersTab({ onDelete }: TabProps) {
       
       {/* Column Headers - Grid aligned */}
       <div 
-        className="hidden lg:grid gap-2 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary"
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
         style={{ gridTemplateColumns: POWER_GRID_COLUMNS }}
       >
         {POWER_COLUMNS.map(col => (
@@ -354,7 +354,7 @@ function PowersTab({ onDelete }: TabProps) {
       </div>
       
       {/* Power List */}
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
@@ -522,7 +522,7 @@ function TechniquesTab({ onDelete }: TabProps) {
       
       {/* Column Headers - Grid aligned */}
       <div 
-        className="hidden lg:grid gap-2 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary"
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
         style={{ gridTemplateColumns: TECHNIQUE_GRID_COLUMNS }}
       >
         {TECHNIQUE_COLUMNS.map(col => (
@@ -538,7 +538,7 @@ function TechniquesTab({ onDelete }: TabProps) {
       </div>
       
       {/* Technique List */}
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
@@ -758,7 +758,7 @@ function ItemsTab({ onDelete }: TabProps) {
       
       {/* Column Headers - Grid aligned */}
       <div 
-        className="hidden lg:grid gap-2 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary"
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
         style={{ gridTemplateColumns: ARMAMENT_GRID_COLUMNS }}
       >
         {ARMAMENT_COLUMNS.map(col => (
@@ -774,7 +774,7 @@ function ItemsTab({ onDelete }: TabProps) {
       </div>
       
       {/* Armament List */}
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (

@@ -81,6 +81,7 @@ function ResourceInput({
   onChange,
   colorVariant = 'default',
   subLabel,
+  showBar = false,
 }: {
   label: string;
   current: number;
@@ -88,6 +89,7 @@ function ResourceInput({
   onChange?: (value: number) => void;
   colorVariant?: 'health' | 'energy' | 'default';
   subLabel?: string;
+  showBar?: boolean;
 }) {
   const [inputValue, setInputValue] = useState(String(current));
   const [isEditing, setIsEditing] = useState(false);
@@ -196,12 +198,23 @@ function ResourceInput({
       ? 'text-blue-700'
       : 'text-text-secondary';
   
+  // Calculate bar percentage
+  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+  const barColorClass = colorVariant === 'health' 
+    ? (percentage > 50 ? 'bg-green-500' : percentage > 25 ? 'bg-orange-500' : 'bg-red-500')
+    : colorVariant === 'energy' ? 'bg-blue-500' : 'bg-primary-500';
+  
   return (
     <div className={cn('flex flex-col p-3 rounded-lg border', bgColor)}>
-      <span className={cn('text-xs font-semibold uppercase tracking-wide', labelColor)}>
-        {label}
-      </span>
-      <div className="flex items-center gap-2 mt-1">
+      <div className="flex items-center justify-between mb-1">
+        <span className={cn('text-xs font-semibold uppercase tracking-wide', labelColor)}>
+          {label}
+        </span>
+        {subLabel && (
+          <span className="text-xs text-text-muted">{subLabel}</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
         <input
           ref={inputRef}
           type="text"
@@ -212,20 +225,15 @@ function ResourceInput({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-14 text-center text-xl font-bold rounded border px-1 py-0.5',
+            'w-12 text-center text-lg font-bold rounded border px-1 py-0.5',
             'focus:outline-none focus:ring-2 focus:ring-primary-500',
             colorVariant === 'health' && 'border-red-300 text-red-800',
             colorVariant === 'energy' && 'border-blue-300 text-blue-800',
             colorVariant === 'default' && 'border-border-light text-text-primary'
           )}
         />
-        <span className={cn('text-lg font-medium', labelColor)}>/ {max}</span>
-      </div>
-      {subLabel && (
-        <span className="text-xs text-text-muted mt-1">{subLabel}</span>
-      )}
-      {onChange && (
-        <div className="mt-2">
+        <span className={cn('text-base font-medium', labelColor)}>/ {max}</span>
+        {onChange && (
           <ValueStepper
             value={current}
             onChange={handleStepperChange}
@@ -238,6 +246,15 @@ function ResourceInput({
             hideValue
             decrementTitle={`Decrease ${label.toLowerCase()}`}
             incrementTitle={`Increase ${label.toLowerCase()}`}
+          />
+        )}
+      </div>
+      {/* Inline bar */}
+      {showBar && (
+        <div className="relative h-2 mt-2 bg-surface rounded-full overflow-hidden">
+          <div
+            className={cn('absolute inset-y-0 left-0 transition-all duration-300 rounded-full', barColorClass)}
+            style={{ width: `${percentage}%` }}
           />
         </div>
       )}
@@ -347,22 +364,10 @@ function HealthBar({
     'bg-red-500';
   
   return (
-    <div className="relative h-4 bg-surface rounded-full overflow-hidden border border-border-light">
+    <div className="relative h-3 bg-surface rounded-full overflow-hidden">
       <div
-        className={cn('absolute inset-y-0 left-0 transition-all duration-300', barColorClass)}
+        className={cn('absolute inset-y-0 left-0 transition-all duration-300 rounded-full', barColorClass)}
         style={{ width: `${percentage}%` }}
-      />
-      {/* Terminal threshold marker */}
-      <div
-        className="absolute inset-y-0 w-0.5 bg-red-600 opacity-60"
-        style={{ left: `${(terminal / max) * 100}%` }}
-        title={`Terminal: ${terminal}`}
-      />
-      {/* Half health marker */}
-      <div
-        className="absolute inset-y-0 w-0.5 bg-orange-500 opacity-40"
-        style={{ left: '50%' }}
-        title={`Half: ${Math.ceil(max / 2)}`}
       />
     </div>
   );
@@ -498,8 +503,8 @@ export function SheetHeader({
           </div>
         </div>
 
-        {/* Center: Speed and Evasion - Prominent display */}
-        <div className="flex gap-3 items-start">
+        {/* Center section with Speed/Evasion - grows to fill available space */}
+        <div className="flex-1 flex items-center justify-center gap-4">
           <LargeStatBlock 
             label="Speed" 
             value={calculatedStats.speed}
@@ -522,59 +527,33 @@ export function SheetHeader({
           />
         </div>
 
-        {/* Right: Resources in 2x2 grid (four corners layout) */}
-        <div className="flex-1 min-w-[280px]">
-          {/* Health bar spanning full width */}
-          <div className="mb-3">
-            <HealthBar 
-              current={currentHealth} 
-              max={calculatedStats.maxHealth} 
-              terminal={calculatedStats.terminal}
-            />
-          </div>
+        {/* Right: Resources - takes about 1/3 of the row */}
+        <div className="lg:w-1/3 min-w-[260px] flex flex-col gap-2">
+          {/* Health with integrated bar */}
+          <ResourceInput
+            label="Health"
+            current={currentHealth}
+            max={calculatedStats.maxHealth}
+            onChange={onHealthChange}
+            colorVariant="health"
+            subLabel={`Terminal: ${calculatedStats.terminal}`}
+            showBar
+          />
           
-          {/* 2x2 Grid: Health/Energy top, Terminal/Innate bottom */}
-          <div className="grid grid-cols-2 gap-2">
-            {/* Health */}
-            <ResourceInput
-              label="Health"
-              current={currentHealth}
-              max={calculatedStats.maxHealth}
-              onChange={onHealthChange}
-              colorVariant="health"
-            />
-            
-            {/* Energy */}
-            <ResourceInput
-              label="Energy"
-              current={currentEnergy}
-              max={calculatedStats.maxEnergy}
-              onChange={onEnergyChange}
-              colorVariant="energy"
-            />
-            
-            {/* Terminal */}
-            <SmallStatBlock 
-              label="Terminal" 
-              value={calculatedStats.terminal} 
-              subValue="HP ÷ 4"
-            />
-            
-            {/* Innate Threshold */}
-            {innateThreshold > 0 ? (
-              <SmallStatBlock 
-                label="Innate" 
-                value={innateThreshold} 
-                subValue={innatePools > 0 ? `${innatePools} pools` : undefined} 
-              />
-            ) : (
-              <div /> /* Empty cell to maintain grid */
-            )}
-          </div>
+          {/* Energy with integrated bar */}
+          <ResourceInput
+            label="Energy"
+            current={currentEnergy}
+            max={calculatedStats.maxEnergy}
+            onChange={onEnergyChange}
+            colorVariant="energy"
+            subLabel={innateThreshold > 0 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}` : undefined}
+            showBar
+          />
           
           {/* Health-Energy Pool Allocation (edit mode only) */}
           {isEditMode && onHealthPointsChange && onEnergyPointsChange && (
-            <div className="mt-4">
+            <div className="mt-2">
               <HealthEnergyAllocator
                 hpBonus={healthPoints}
                 energyBonus={energyPoints}

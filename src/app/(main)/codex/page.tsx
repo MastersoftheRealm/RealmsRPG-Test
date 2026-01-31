@@ -347,7 +347,7 @@ function FeatsTab() {
       </div>
 
       {/* Column Headers */}
-      <div className="hidden lg:grid grid-cols-6 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
+      <div className="hidden lg:grid grid-cols-6 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="REQ. LEVEL" col="lvl_req" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
@@ -357,7 +357,7 @@ function FeatsTab() {
       </div>
 
       {/* Feat List */}
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingState />
         ) : filteredFeats.length === 0 ? (
@@ -615,14 +615,14 @@ function SkillsTab() {
       </div>
 
       {/* Column Headers */}
-      <div className="hidden lg:grid grid-cols-3 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
+      <div className="hidden lg:grid grid-cols-3 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
         <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
       </div>
 
       {/* Skill List */}
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingState />
         ) : filteredSkills.length === 0 ? (
@@ -813,14 +813,14 @@ function SpeciesTab() {
         {isLoading ? 'Loading...' : `${filteredSpecies.length} species found`}
       </div>
 
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
+      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
         <SortHeader label="SIZES" col="sizes" sortState={sortState} onSort={handleSort} />
         <div>DESCRIPTION</div>
       </div>
 
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingState />
         ) : filteredSpecies.length === 0 ? (
@@ -1076,14 +1076,14 @@ function EquipmentTab() {
       </div>
 
       {/* Header Row - Matching style of other tabs */}
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
+      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <SortHeader label="COST" col="cost" sortState={sortState} onSort={handleSort} />
         <SortHeader label="RARITY" col="rarity" sortState={sortState} onSort={handleSort} />
       </div>
         
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingState />
         ) : filteredEquipment.length === 0 ? (
@@ -1223,7 +1223,7 @@ function PropertiesTab() {
       </div>
 
       {/* Header Row - Matching style of other tabs */}
-      <div className="hidden lg:grid grid-cols-5 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
+      <div className="hidden lg:grid grid-cols-5 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ITEM POINTS" col="ip" sortState={sortState} onSort={handleSort} />
@@ -1231,7 +1231,7 @@ function PropertiesTab() {
         <SortHeader label="CURRENCY MULTIPLIER" col="cost" sortState={sortState} onSort={handleSort} />
       </div>
         
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingState />
         ) : filteredProperties.length === 0 ? (
@@ -1397,14 +1397,14 @@ function PartsTab() {
         {isLoading ? 'Loading...' : `${filteredParts.length} parts found`}
       </div>
 
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-2 bg-surface-alt rounded-t-lg font-medium text-sm text-text-secondary">
+      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <div>ENERGY</div>
         <div>TRAINING POINTS</div>
       </div>
 
-      <div className="divide-y divide-border border border-border rounded-b-lg lg:rounded-t-none rounded-lg">
+      <div className="flex flex-col gap-2 lg:mt-0">
         {isLoading ? (
           <LoadingState />
         ) : filteredParts.length === 0 ? (

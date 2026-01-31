@@ -36,6 +36,13 @@ export const PHYSICAL_DAMAGE_TYPES = [
   'bludgeoning',
 ] as const;
 
+/** Weapon-only damage types (slashing, piercing, bludgeoning - no 'physical' or 'none') */
+export const WEAPON_DAMAGE_TYPES = [
+  'slashing',
+  'piercing',
+  'bludgeoning',
+] as const;
+
 /** Magic damage types (used by powers) */
 export const MAGIC_DAMAGE_TYPES = [
   'none',

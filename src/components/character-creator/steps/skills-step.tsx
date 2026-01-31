@@ -51,12 +51,13 @@ export function SkillsStep() {
     return draft.skills || {};
   });
 
-  // Calculate used points (excluding species skills - they don't cost points)
+  // Calculate used points (for species skills, only count points above 1 - first point is free)
   const usedPoints = useMemo(() => {
     return Object.entries(allocations).reduce((sum, [skillId, val]) => {
-      // Check if this skill ID is a species skill (free)
+      // Check if this skill ID is a species skill (first point is free)
       if (speciesSkillIds.has(skillId)) {
-        return sum; // Species skills don't cost points
+        // Only count points above 1 (the free proficient point)
+        return sum + Math.max(0, val - 1);
       }
       return sum + val;
     }, 0);
@@ -333,6 +334,10 @@ interface SkillAllocatorProps {
 function SkillAllocator({ skill, value, onAllocate, canIncrease, isSpeciesSkill }: SkillAllocatorProps) {
   const [showDescription, setShowDescription] = useState(false);
   
+  // Species skills have a minimum of 1 (proficient)
+  const effectiveMin = isSpeciesSkill ? 1 : 0;
+  const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
+  
   return (
     <div className={cn(
       'p-3 rounded-lg border transition-colors',
@@ -349,24 +354,24 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease, isSpeciesSkill 
           </button>
           <span className="font-medium text-text-primary">{skill.name}</span>
           {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(Species)</span>
+            <span className="text-xs text-blue-600 font-medium">(Species +1 Free)</span>
           )}
         </div>
         
-        {isSpeciesSkill ? (
-          <span className="text-xs text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded">
-            ✓ Proficient
-          </span>
-        ) : (
+        <div className="flex items-center gap-2">
+          {isSpeciesSkill && (
+            <span className="text-xs text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded">
+              ✓ Proficient
+            </span>
+          )}
           <ValueStepper
-            value={value}
-            onChange={(newValue) => onAllocate(newValue - value)}
-            min={0}
-            max={canIncrease ? undefined : value}
+            value={effectiveValue}
+            onChange={(newValue) => onAllocate(newValue - effectiveValue)}
+            min={effectiveMin}
+            max={canIncrease ? undefined : effectiveValue}
             size="sm"
-            // No enableHoldRepeat - skill points should be allocated individually
           />
-        )}
+        </div>
       </div>
       
       {showDescription && skill.description && (
@@ -389,6 +394,10 @@ interface SubSkillAllocatorProps {
 }
 
 function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, baseSkillName, isSpeciesSkill }: SubSkillAllocatorProps) {
+  // Species skills have a minimum of 1 (proficient)
+  const effectiveMin = isSpeciesSkill ? 1 : 0;
+  const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
+  
   return (
     <div className={cn(
       'p-2 rounded-lg border transition-colors text-sm',
@@ -408,23 +417,25 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
             {skill.name}
           </span>
           {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(Species)</span>
+            <span className="text-xs text-blue-600 font-medium">(Species +1 Free)</span>
           )}
         </div>
         
-        {isSpeciesSkill ? (
-          <span className="text-xs text-blue-600 font-medium px-2 py-0.5 bg-blue-100 rounded">
-            ✓ Proficient
-          </span>
-        ) : isUnlocked ? (
-          <ValueStepper
-            value={value}
-            onChange={(newValue) => onAllocate(newValue - value)}
-            min={0}
-            max={canIncrease ? undefined : value}
-            size="xs"
-            // No enableHoldRepeat - skill points should be allocated individually
-          />
+        {isSpeciesSkill || isUnlocked ? (
+          <div className="flex items-center gap-2">
+            {isSpeciesSkill && (
+              <span className="text-xs text-blue-600 font-medium px-2 py-0.5 bg-blue-100 rounded">
+                ✓ Proficient
+              </span>
+            )}
+            <ValueStepper
+              value={effectiveValue}
+              onChange={(newValue) => onAllocate(newValue - effectiveValue)}
+              min={effectiveMin}
+              max={canIncrease ? undefined : effectiveValue}
+              size="xs"
+            />
+          </div>
         ) : (
           <span className="text-xs text-text-muted italic">
             Requires {baseSkillName}

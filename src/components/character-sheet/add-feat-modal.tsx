@@ -353,7 +353,7 @@ export function AddFeatModal({
 
         {/* Column Headers */}
         <div 
-          className="hidden md:grid gap-2 px-4 py-2 bg-surface-alt border-b border-border-subtle text-xs font-medium text-text-muted uppercase tracking-wide"
+          className="hidden md:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wide"
           style={{ gridTemplateColumns: MODAL_FEAT_GRID_COLUMNS }}
         >
           <SortHeader label="Name" col="name" sortState={sortState} onSort={handleSort} />
@@ -376,7 +376,7 @@ export function AddFeatModal({
               No feats match your filters.
             </div>
           ) : (
-            <div className="divide-y divide-border-subtle">
+            <div className="flex flex-col gap-2 p-2">
               {filteredFeats.map(feat => {
                 const { meets, warning } = checkRequirements(feat);
                 const isSelected = selectedFeats.some(f => f.id === feat.id);

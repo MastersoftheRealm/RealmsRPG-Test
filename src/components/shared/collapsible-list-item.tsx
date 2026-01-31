@@ -78,7 +78,7 @@ export function CollapsibleListItem({
 
   return (
     <div className={cn(
-      'border border-border-light rounded-lg overflow-hidden bg-surface transition-colors',
+      'border border-border-light rounded-lg overflow-hidden bg-surface transition-colors hover:border-primary-200',
       className
     )}>
       {/* Collapsed Header Row */}
