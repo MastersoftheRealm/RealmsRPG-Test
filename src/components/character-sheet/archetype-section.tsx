@@ -22,6 +22,7 @@ interface ArchetypeSectionProps {
   // Unarmed Prowess props
   unarmedProwess?: number; // 0 = not selected, 1-5 = prowess level
   onUnarmedProwessChange?: (level: number) => void;
+  className?: string;
 }
 
 function ProficiencyMeter({ 
@@ -43,7 +44,7 @@ function ProficiencyMeter({
 }) {
   const colorClasses = {
     blue: 'bg-blue-500',
-    purple: 'bg-purple-500',
+    purple: 'bg-violet-500',
     red: 'bg-red-500',
   };
 
@@ -134,11 +135,6 @@ function AttackBonusesTable({
     unprof: powAbilValue,
   };
 
-  // Don't render table if no proficiencies at all
-  if (martialProf === 0 && powerProf === 0) {
-    return null;
-  }
-
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
       <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Attack Bonuses</h4>
@@ -151,8 +147,8 @@ function AttackBonusesTable({
           </tr>
         </thead>
         <tbody>
-          {/* Martial rows - only show if martial proficiency > 0 */}
-          {martialProf > 0 && (['strength', 'agility', 'acuity'] as const).map((key) => (
+          {/* Martial rows - always show for unproficient attacks */}
+          {(['strength', 'agility', 'acuity'] as const).map((key) => (
             <tr key={key}>
               <td className="py-1 font-medium text-text-secondary capitalize">⚔️ {key}</td>
               <td className="text-center py-1">
@@ -413,22 +409,27 @@ function ArmorSection({
             equippedArmor.map((armorItem, idx) => {
               // Extract properties
               const properties = armorItem.properties || [];
-              let damageReduction = 0;
+              let damageReduction = armorItem.armor ?? 0; // Check direct armor value first
               let critRangeBonus = 0;
               const abilityReqs: string[] = [];
               
               properties.forEach(prop => {
                 if (!prop) return;
                 const propName = typeof prop === 'string' ? prop : prop.name || '';
-                const op1Lvl = Number((typeof prop === 'object' && 'op_1_lvl' in prop ? (prop as any).op_1_lvl : 0) || 0);
+                const propValue = typeof prop === 'object' && 'value' in prop ? Number(prop.value) : 0;
+                const op1Lvl = Number((typeof prop === 'object' && 'op_1_lvl' in prop ? (prop as any).op_1_lvl : propValue) || 0);
 
-                if (propName === 'Damage Reduction') damageReduction = 1 + op1Lvl;
+                // Only override damageReduction from property if no direct armor value
+                if (propName === 'Damage Reduction' && damageReduction === 0) {
+                  damageReduction = 1 + op1Lvl;
+                }
                 if (propName === 'Critical Range +1') critRangeBonus = 1 + op1Lvl;
-                if (propName === 'Armor Strength Requirement') abilityReqs.push(`STR ${1 + op1Lvl}`);
-                if (propName === 'Armor Agility Requirement') abilityReqs.push(`AGI ${1 + op1Lvl}`);
-                if (propName === 'Armor Vitality Requirement') abilityReqs.push(`VIT ${1 + op1Lvl}`);
+                if (propName.includes('Strength Requirement')) abilityReqs.push(`STR ${1 + op1Lvl}`);
+                if (propName.includes('Agility Requirement')) abilityReqs.push(`AGI ${1 + op1Lvl}`);
+                if (propName.includes('Vitality Requirement')) abilityReqs.push(`VIT ${1 + op1Lvl}`);
               });
               
+              // Critical Range is just baseEvasion + critRangeBonus (display the actual crit threshold)
               const critRange = baseEvasion + 10 + critRangeBonus;
               
               // Properties to exclude from display
@@ -475,6 +476,7 @@ export function ArchetypeSection({
   onMilestoneChoiceChange,
   unarmedProwess,
   onUnarmedProwessChange,
+  className,
 }: ArchetypeSectionProps) {
   const martialProf = character.mart_prof ?? character.martialProficiency ?? 0;
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
@@ -549,7 +551,7 @@ export function ArchetypeSection({
   };
 
   return (
-    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 relative">
+    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6 relative", className)}>
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -573,7 +575,7 @@ export function ArchetypeSection({
       {/* Archetype Header */}
       <div className="mb-4">
         <h2 className="text-lg font-bold text-text-primary">
-          Archetype Proficiency
+          Archetype & Attacks
         </h2>
         {character.archetype?.name && (
           <p className="text-sm text-text-muted mt-0.5">
@@ -639,8 +641,8 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'innate'
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                            ? 'bg-violet-500 text-white'
+                            : 'bg-violet-100 text-violet-600 hover:bg-violet-200'
                         )}
                         title="Gain +1 Innate Threshold & +1 Innate Pools"
                       >
@@ -663,7 +665,7 @@ export function ArchetypeSection({
                     <span className={cn(
                       'px-2 py-0.5 text-xs rounded',
                       currentChoice === 'innate'
-                        ? 'bg-purple-100 text-purple-700'
+                        ? 'bg-violet-100 text-violet-700'
                         : currentChoice === 'feat'
                           ? 'bg-red-100 text-red-700'
                           : 'bg-surface text-text-muted italic'
@@ -694,9 +696,9 @@ export function ArchetypeSection({
             </div>
           )}
           {powerProf > 0 && (
-            <div className="flex-1 bg-purple-50 rounded-lg px-3 py-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-purple-700">Power Potency</span>
-              <span className="text-lg font-bold text-purple-800" title="10 + Power Prof + Power Ability">
+            <div className="flex-1 bg-violet-50 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-violet-600">Power Potency</span>
+              <span className="text-lg font-bold text-violet-700" title="10 + Power Prof + Power Ability">
                 {powerPotency}
               </span>
             </div>

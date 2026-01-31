@@ -51,17 +51,13 @@ export function SkillsStep() {
     return draft.skills || {};
   });
 
-  // Calculate used points (for species skills, only count points above 1 - first point is free)
+  // Calculate used points - species skills count against skill points like any other skill
   const usedPoints = useMemo(() => {
     return Object.entries(allocations).reduce((sum, [skillId, val]) => {
-      // Check if this skill ID is a species skill (first point is free)
-      if (speciesSkillIds.has(skillId)) {
-        // Only count points above 1 (the free proficient point)
-        return sum + Math.max(0, val - 1);
-      }
+      // All skills count against skill points, including species skills
       return sum + val;
     }, 0);
-  }, [allocations, speciesSkillIds]);
+  }, [allocations]);
 
   const remainingPoints = totalSkillPoints - usedPoints;
 
@@ -140,13 +136,20 @@ export function SkillsStep() {
       // Can't exceed remaining points when adding
       if (delta > 0 && remainingPoints <= 0) return prev;
       
+      let newAllocations: Record<string, number>;
       if (newValue === 0) {
         const { [skillId]: _, ...rest } = prev;
-        return rest;
+        newAllocations = rest;
+      } else {
+        newAllocations = { ...prev, [skillId]: newValue };
       }
-      return { ...prev, [skillId]: newValue };
+      
+      // Auto-save to draft immediately
+      updateDraft({ skills: newAllocations });
+      
+      return newAllocations;
     });
-  }, [remainingPoints]);
+  }, [remainingPoints, updateDraft]);
 
   const handleContinue = () => {
     // Save allocations to draft - CharacterSkills is just Record<string, number>
@@ -354,16 +357,11 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease, isSpeciesSkill 
           </button>
           <span className="font-medium text-text-primary">{skill.name}</span>
           {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(Species +1 Free)</span>
+            <span className="text-xs text-blue-600 font-medium">(Species Skill)</span>
           )}
         </div>
         
         <div className="flex items-center gap-2">
-          {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded">
-              ✓ Proficient
-            </span>
-          )}
           <ValueStepper
             value={effectiveValue}
             onChange={(newValue) => onAllocate(newValue - effectiveValue)}
@@ -417,7 +415,7 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
             {skill.name}
           </span>
           {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(Species +1 Free)</span>
+            <span className="text-xs text-blue-600 font-medium">(Species Skill)</span>
           )}
         </div>
         

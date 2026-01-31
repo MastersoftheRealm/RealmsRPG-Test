@@ -42,6 +42,7 @@ interface SkillsSectionProps {
   onRemoveSkill?: (skillId: string) => void;
   onAddSkill?: () => void;
   onAddSubSkill?: () => void;
+  className?: string;
 }
 
 const ABILITY_ABBR: Record<string, string> = {
@@ -78,6 +79,7 @@ export function SkillsSection({
   onRemoveSkill,
   onAddSkill,
   onAddSubSkill,
+  className,
 }: SkillsSectionProps) {
   const rollContext = useRollsOptional();
   
@@ -264,7 +266,7 @@ export function SkillsSection({
     : 'normal';
   
   return (
-    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6">
+    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6", className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-text-primary">Skills</h2>

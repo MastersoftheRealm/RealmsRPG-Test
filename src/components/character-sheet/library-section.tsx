@@ -192,6 +192,7 @@ interface LibrarySectionProps {
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
+  className?: string;
 }
 
 type TabType = 'powers' | 'techniques' | 'inventory' | 'feats' | 'proficiencies' | 'notes';
@@ -220,7 +221,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
   return (
     <div className={cn(
       'border rounded-lg overflow-hidden',
-      isInnate ? 'border-purple-300 bg-purple-50' : 'border-border-light bg-surface'
+      isInnate ? 'border-violet-300 bg-violet-50' : 'border-border-light bg-surface'
     )}>
       <div className="flex items-center">
         {/* Innate toggle checkbox in edit mode */}
@@ -230,7 +231,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
             className={cn(
               'px-2 py-2 transition-colors border-r',
               isInnate 
-                ? 'text-purple-600 bg-purple-100 hover:bg-purple-200' 
+                ? 'text-violet-600 bg-violet-100 hover:bg-violet-200' 
                 : 'text-text-muted hover:bg-surface-alt'
             )}
             title={isInnate ? 'Remove from innate' : 'Set as innate'}
@@ -246,7 +247,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
             {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
             <span className="font-medium text-text-primary">{power.name}</span>
             {isInnate && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-purple-200 text-purple-700">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-violet-200 text-violet-600">
                 Innate
               </span>
             )}
@@ -434,7 +435,7 @@ function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttac
       item.equipped ? 'border-green-300 bg-green-50' : 'border-border-light bg-surface'
     )}>
       <div className="flex items-center">
-        {isEditMode && onToggleEquip && (type === 'weapon' || type === 'armor') && (
+        {onToggleEquip && (type === 'weapon' || type === 'armor') && (
           <button
             onClick={onToggleEquip}
             className={cn(
@@ -622,18 +623,19 @@ export function LibrarySection({
   onTraitUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
+  className,
 }: LibrarySectionProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('powers');
+  const [activeTab, setActiveTab] = useState<TabType>('feats');
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
   const rollContext = useRollsOptional();
   
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
   const tabs: { id: TabType; label: string; count?: number; onAdd?: () => void }[] = [
+    { id: 'feats', label: 'Feats', count: archetypeFeats.length + characterFeats.length },
     { id: 'powers', label: 'Powers', count: powers.length, onAdd: onAddPower },
     { id: 'techniques', label: 'Techniques', count: techniques.length, onAdd: onAddTechnique },
     { id: 'inventory', label: 'Inventory', count: weapons.length + armor.length + equipment.length },
-    { id: 'feats', label: 'Feats', count: archetypeFeats.length + characterFeats.length },
     { id: 'proficiencies', label: 'Proficiencies' },
     { id: 'notes', label: 'Notes' },
   ];
@@ -648,7 +650,7 @@ export function LibrarySection({
   };
 
   return (
-    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 relative">
+    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6 relative", className)}>
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -680,8 +682,8 @@ export function LibrarySection({
         </div>
       )}
 
-      {/* Currency + Add Button Row - only show for inventory-related tabs */}
-      {['powers', 'techniques', 'inventory'].includes(activeTab) && (
+      {/* Currency + Add Button Row - only show for inventory tab */}
+      {activeTab === 'inventory' && (
         <div className="flex justify-between items-center mb-3">
           <div className="flex items-center gap-2">
             <span className="text-sm text-text-muted">💰</span>
@@ -728,12 +730,12 @@ export function LibrarySection({
           <>
             {/* Innate Energy Tracking Box - shows when character has innate energy */}
             {innateEnergy > 0 && (
-              <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg mb-3">
+              <div className="p-3 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-lg mb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-purple-700">✨ Innate Energy</span>
+                    <span className="text-sm font-semibold text-violet-600">✨ Innate Energy</span>
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded">
+                      <span className="px-2 py-0.5 bg-violet-100 text-violet-600 rounded">
                         Threshold: {innateThreshold}
                       </span>
                       <span className="text-text-muted">×</span>
@@ -743,7 +745,7 @@ export function LibrarySection({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-purple-600">
+                    <span className="text-lg font-bold text-violet-600">
                       {currentInnateEnergy !== undefined ? currentInnateEnergy : innateEnergy}
                     </span>
                     <span className="text-sm text-text-muted">/ {innateEnergy}</span>
@@ -758,11 +760,11 @@ export function LibrarySection({
             {/* Innate Powers Section */}
             {powers.filter(p => p.innate === true).length > 0 && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 px-2 py-1 bg-purple-50 border border-purple-200 rounded">
-                  <span className="text-xs font-semibold text-purple-700 uppercase tracking-wide">
+                <div className="flex items-center gap-2 px-2 py-1 bg-violet-50 border border-violet-200 rounded">
+                  <span className="text-xs font-semibold text-violet-600 uppercase tracking-wide">
                     ★ Innate Powers
                   </span>
-                  <span className="text-xs text-purple-600">
+                  <span className="text-xs text-violet-500">
                     ({powers.filter(p => p.innate === true).length} power{powers.filter(p => p.innate === true).length !== 1 ? 's' : ''})
                   </span>
                 </div>

@@ -216,11 +216,12 @@
   --color-tp-text: #92400e;
   --color-tp-border: #fcd34d;
   
-  /* Energy/Power - Purple */
-  --color-power: #7c3aed;
-  --color-power-light: #ede9fe;
-  --color-power-text: #5b21b6;
-  --color-power-border: #c4b5fd;
+  /* Energy/Power - Violet (lighter than purple for less striking appearance) */
+  --color-power: #8b5cf6;
+  --color-power-light: #f5f3ff;
+  --color-power-text: #7c3aed;
+  --color-power-border: #ddd6fe;
+  --color-power-dark: #6d28d9;
   
   /* Health - Red/Rose */
   --color-health: #dc2626;

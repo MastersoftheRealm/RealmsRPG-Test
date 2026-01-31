@@ -1024,7 +1024,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
         </div>
         
         {/* Character Sheet Content */}
-        <div className="max-w-7xl mx-auto px-4 pt-4">
+        <div className="max-w-[1600px] mx-auto px-4 pt-4">
           {calculatedStats && (
             <>
               <SheetHeader
@@ -1061,8 +1061,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onDefenseChange={handleDefenseChange}
               />
             
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] gap-4">
-              <div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] gap-4 items-stretch">
+              <div className="flex flex-col">
                 <SkillsSection
                   skills={skills}
                   abilities={character.abilities}
@@ -1072,10 +1072,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onRemoveSkill={handleRemoveSkill}
                   onAddSkill={() => setSkillModalType('skill')}
                   onAddSubSkill={() => setSkillModalType('subskill')}
+                  className="flex-1"
                 />
               </div>
               
-              <div>
+              <div className="flex flex-col">
                 <ArchetypeSection
                   character={character}
                   isEditMode={isEditMode}
@@ -1084,10 +1085,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onMilestoneChoiceChange={handleMilestoneChoiceChange}
                   unarmedProwess={character.unarmedProwess}
                   onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
+                  className="flex-1"
                 />
               </div>
               
-              <div>
+              <div className="flex flex-col">
                 <LibrarySection
                   powers={enrichedData?.powers || character.powers || []}
                   techniques={enrichedData?.techniques || character.techniques || []}
@@ -1159,6 +1161,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   featsDb={featsDb}
                   traitUses={character.traitUses}
                   onTraitUsesChange={handleTraitUsesChange}
+                  className="flex-1"
                 />
               </div>
             </div>

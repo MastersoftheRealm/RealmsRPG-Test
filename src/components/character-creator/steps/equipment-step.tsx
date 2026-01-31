@@ -112,12 +112,18 @@ export function EquipmentStep() {
     // Add weapons and armor from user's item library
     if (userItems && itemProperties) {
       for (const userItem of userItems) {
-        // Get the raw armamentType from Firestore data
+        // Get the raw data to access armamentType or type field
         const rawData = userItem as unknown as Record<string, unknown>;
-        const armamentType = rawData.armamentType as string;
+        // Check both armamentType (old format) and type (new format from item creator)
+        const armamentType = rawData.armamentType as string || '';
+        const itemType = rawData.type as string || '';
+        
+        // Normalize to title case for comparison
+        const normalizedType = armamentType || 
+          (itemType.charAt(0).toUpperCase() + itemType.slice(1).toLowerCase());
         
         // Skip items that aren't weapons, shields, or armor
-        if (!armamentType || !['Weapon', 'Shield', 'Armor'].includes(armamentType)) {
+        if (!normalizedType || !['Weapon', 'Shield', 'Armor'].includes(normalizedType)) {
           continue;
         }
         
@@ -126,7 +132,7 @@ export function EquipmentStep() {
           {
             name: userItem.name,
             description: userItem.description,
-            armamentType: armamentType as 'Weapon' | 'Armor' | 'Shield',
+            armamentType: normalizedType as 'Weapon' | 'Armor' | 'Shield',
             properties: userItem.properties?.map(p => ({
               id: p.id,
               name: p.name,
@@ -139,9 +145,9 @@ export function EquipmentStep() {
         
         // Map armamentType to our tab types
         let type: 'weapon' | 'armor' | 'equipment';
-        if (armamentType === 'Weapon' || armamentType === 'Shield') {
+        if (normalizedType === 'Weapon' || normalizedType === 'Shield') {
           type = 'weapon';
-        } else if (armamentType === 'Armor') {
+        } else if (normalizedType === 'Armor') {
           type = 'armor';
         } else {
           type = 'equipment';
@@ -414,9 +420,9 @@ export function EquipmentStep() {
             </div>
           </div>
 
-          {/* Prowess Levels */}
+          {/* Prowess Levels - only show level 1 for character creation */}
           <div className="space-y-3">
-            {UNARMED_PROWESS_LEVELS.map((prowessLevel, idx) => {
+            {availableUnarmedLevels.map((prowessLevel, idx) => {
               const isAvailable = prowessLevel.charLevel <= (draft.level || 1);
               const isSelected = currentUnarmedProwess >= prowessLevel.level;
               const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
