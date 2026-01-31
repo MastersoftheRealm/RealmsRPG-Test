@@ -146,14 +146,14 @@ export const RARITY_COLORS: Record<string, string> = {
 // Category Colors (for Power Parts)
 // =============================================================================
 
-export const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; hoverBg: string }> = {
-  'Action': { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', hoverBg: 'hover:bg-blue-200' },
-  'Activation': { bg: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', hoverBg: 'hover:bg-teal-200' },
-  'Area of Effect': { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', hoverBg: 'hover:bg-green-200' },
-  'Duration': { bg: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-800', hoverBg: 'hover:bg-purple-200' },
-  'Target': { bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-800', hoverBg: 'hover:bg-orange-200' },
-  'Special': { bg: 'bg-amber-100', border: 'border-amber-300', text: 'text-amber-800', hoverBg: 'hover:bg-amber-200' },
-  'Restriction': { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', hoverBg: 'hover:bg-red-200' },
+export const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; hoverBg: string; buttonBg: string; buttonHover: string }> = {
+  'Action': { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-800', hoverBg: 'hover:bg-blue-200', buttonBg: 'bg-blue-600', buttonHover: 'hover:bg-blue-700' },
+  'Activation': { bg: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-800', hoverBg: 'hover:bg-teal-200', buttonBg: 'bg-teal-600', buttonHover: 'hover:bg-teal-700' },
+  'Area of Effect': { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-800', hoverBg: 'hover:bg-green-200', buttonBg: 'bg-green-600', buttonHover: 'hover:bg-green-700' },
+  'Duration': { bg: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-800', hoverBg: 'hover:bg-purple-200', buttonBg: 'bg-purple-600', buttonHover: 'hover:bg-purple-700' },
+  'Target': { bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-800', hoverBg: 'hover:bg-orange-200', buttonBg: 'bg-orange-600', buttonHover: 'hover:bg-orange-700' },
+  'Special': { bg: 'bg-amber-100', border: 'border-amber-300', text: 'text-amber-800', hoverBg: 'hover:bg-amber-200', buttonBg: 'bg-amber-600', buttonHover: 'hover:bg-amber-700' },
+  'Restriction': { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-800', hoverBg: 'hover:bg-red-200', buttonBg: 'bg-red-600', buttonHover: 'hover:bg-red-700' },
 };
 
 // =============================================================================
@@ -217,6 +217,36 @@ export const CREATOR_CACHE_KEYS = {
 
 /** Cache expiry time in milliseconds (30 days) */
 export const CACHE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000;
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+/**
+ * Format a cost value to its minimum necessary decimal places.
+ * Examples: 5.0 → "5", 1.30 → "1.3", 1.25 → "1.25", 0.125 → "0.125"
+ * For percentages, shows as-is. For regular costs, strips trailing zeros.
+ */
+export function formatCost(value: number, isPercentage = false): string {
+  if (isPercentage) {
+    return value.toString();
+  }
+  // Check if it's an integer
+  if (Number.isInteger(value)) {
+    return Math.floor(value).toString();
+  }
+  // Round to 3 decimal places to avoid floating point issues
+  const rounded = Math.round(value * 1000) / 1000;
+  // Convert to string and remove trailing zeros after decimal
+  return rounded.toString();
+}
+
+/**
+ * Format a cost with a label (e.g., "EN: 5" or "TP: 10")
+ */
+export function formatCostWithLabel(label: string, value: number, isPercentage = false): string {
+  return `${label}: ${formatCost(value, isPercentage)}`;
+}
 
 // =============================================================================
 // Default Damage Configurations

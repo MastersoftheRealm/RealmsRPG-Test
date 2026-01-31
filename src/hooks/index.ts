@@ -82,6 +82,9 @@ export {
 // Auto-save
 export { useAutoSave } from './use-auto-save';
 
+// Session Sync (syncs Firebase Auth with server-side session cookies)
+export { useSessionSync } from './use-session-sync';
+
 // Creator Cache (localStorage persistence for guest users)
 export { 
   useCreatorCache, 

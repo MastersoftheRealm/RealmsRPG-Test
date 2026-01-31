@@ -135,6 +135,8 @@ interface LibrarySectionProps {
   level?: number;
   archetypeAbility?: number;
   martialProficiency?: number; // For armament proficiency display
+  unarmedProwess?: number; // 0 means not selected, 1-5 = prowess level
+  onUnarmedProwessChange?: (level: number) => void;
   // Parts RTDB data for enrichment (descriptions, TP costs)
   powerPartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
   techniquePartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
@@ -594,6 +596,8 @@ export function LibrarySection({
   level = 1,
   archetypeAbility = 0,
   martialProficiency,
+  unarmedProwess,
+  onUnarmedProwessChange,
   powerPartsDb = [],
   techniquePartsDb = [],
   // Feats props
@@ -954,6 +958,9 @@ export function LibrarySection({
             archetypeAbility={archetypeAbility}
             powerPartsDb={powerPartsDb}
             techniquePartsDb={techniquePartsDb}
+            unarmedProwess={unarmedProwess}
+            isEditMode={isEditMode}
+            onUnarmedProwessChange={onUnarmedProwessChange}
           />
         )}
 

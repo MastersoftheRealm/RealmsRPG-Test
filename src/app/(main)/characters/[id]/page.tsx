@@ -730,8 +730,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setFeatModalType(null);
   }, [character]);
   
-  // Add skills handler
-  const handleAddSkills = useCallback((newSkills: { id: string; name: string; ability?: string[]; base_skill?: string | null }[]) => {
+  // Add skills handler - accepts skills from add-skill or add-sub-skill modals
+  const handleAddSkills = useCallback((newSkills: Array<{ 
+    id: string; 
+    name: string; 
+    ability?: string; 
+    base_skill_id?: number;
+    selectedBaseSkillId?: string;
+  }>) => {
     if (!character) return;
     const skillsToAdd = newSkills.map(s => {
       const skill: {
@@ -741,17 +747,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
         skill_val: number;
         prof: boolean;
         ability?: string;
-        baseSkill?: string;
+        baseSkillId?: number;
+        selectedBaseSkillId?: string;
       } = {
         id: s.id,
         name: s.name,
-        category: s.ability?.[0] || 'other',
+        category: typeof s.ability === 'string' ? s.ability.split(',')[0]?.trim() : 'other',
         skill_val: 0,
         prof: false,
       };
       // Only add optional fields if they have values (avoid undefined)
-      if (s.ability?.[0]) skill.ability = s.ability[0];
-      if (s.base_skill) skill.baseSkill = s.base_skill;
+      if (s.ability) skill.ability = typeof s.ability === 'string' ? s.ability.split(',')[0]?.trim() : s.ability;
+      if (s.base_skill_id !== undefined) skill.baseSkillId = s.base_skill_id;
+      if (s.selectedBaseSkillId) skill.selectedBaseSkillId = s.selectedBaseSkillId;
       return skill;
     });
     
@@ -1073,6 +1081,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onMartialProfChange={handleMartialProfChange}
                   onPowerProfChange={handlePowerProfChange}
                   onMilestoneChoiceChange={handleMilestoneChoiceChange}
+                  unarmedProwess={character.unarmedProwess}
+                  onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
                 />
               </div>
               
@@ -1122,6 +1132,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   // Proficiencies tab props
                   level={character.level}
                   archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
+                  unarmedProwess={character.unarmedProwess}
+                  onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
                   powerPartsDb={powerPartsDb}
                   techniquePartsDb={techniquePartsDb}
                   // Feats tab props

@@ -455,6 +455,12 @@ function SkillsTab() {
   const { data: skills, isLoading, error } = useRTDBSkills();
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
+  // Create a lookup map from skill ID to skill name for display
+  const skillIdToName = useMemo(() => {
+    if (!skills) return new Map<string, string>();
+    return new Map(skills.map(s => [s.id, s.name]));
+  }, [skills]);
+  
   const [filters, setFilters] = useState<SkillFilters>({
     search: '',
     abilities: [],
@@ -477,14 +483,18 @@ function SkillsTab() {
         });
       }
       if (s.category && typeof s.category === 'string') baseSkills.add(s.category);
-      if (s.base_skill && typeof s.base_skill === 'string') baseSkills.add(s.base_skill);
+      // Use base_skill_id to look up the base skill name
+      if (s.base_skill_id !== undefined) {
+        const baseSkillName = skillIdToName.get(String(s.base_skill_id));
+        if (baseSkillName) baseSkills.add(baseSkillName);
+      }
     });
 
     return {
       abilities: Array.from(abilities).sort(),
       baseSkills: Array.from(baseSkills).sort(),
     };
-  }, [skills]);
+  }, [skills, skillIdToName]);
 
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
@@ -510,12 +520,14 @@ function SkillsTab() {
       // Filter by base skill - shows skills that ARE this base skill or have it as their parent
       if (filters.baseSkill) {
         const isThisBaseSkill = s.name === filters.baseSkill;
-        const hasThisBaseSkill = s.base_skill === filters.baseSkill;
+        // Look up base skill name by ID
+        const baseSkillName = s.base_skill_id !== undefined ? skillIdToName.get(String(s.base_skill_id)) : undefined;
+        const hasThisBaseSkill = baseSkillName === filters.baseSkill;
         if (!isThisBaseSkill && !hasThisBaseSkill) return false;
       }
 
       // Sub-skill filtering logic
-      const isSubSkill = Boolean(s.base_skill);
+      const isSubSkill = s.base_skill_id !== undefined;
       
       if (filters.subSkillMode === 'only' && !isSubSkill) return false;
       if (filters.subSkillMode === 'hide' && isSubSkill) return false;
@@ -617,7 +629,7 @@ function SkillsTab() {
           <div className="p-8 text-center text-text-muted">No skills match your filters.</div>
         ) : (
           filteredSkills.map(skill => (
-            <SkillCard key={skill.id} skill={skill} />
+            <SkillCard key={skill.id} skill={skill} skillIdToName={skillIdToName} />
           ))
         )}
       </div>
@@ -628,16 +640,17 @@ function SkillsTab() {
 // Grid columns for skills list
 const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
 
-function SkillCard({ skill }: { skill: Skill }) {
-  const isSubSkill = Boolean(skill.base_skill);
+function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<string, string> }) {
+  const isSubSkill = skill.base_skill_id !== undefined;
+  const baseSkillName = isSubSkill ? (skillIdToName.get(String(skill.base_skill_id)) || '-') : '-';
   
   // Build custom expanded content for sub-skill info
   const expandedContent = skill.description ? (
     <div>
       <p className="text-text-secondary text-sm mb-2 p-3 bg-surface-alt rounded-lg">{skill.description}</p>
-      {skill.base_skill && (
+      {isSubSkill && (
         <p className="text-sm text-primary-600">
-          Sub-skill of: <strong>{skill.base_skill}</strong>
+          Sub-skill of: <strong>{baseSkillName}</strong>
         </p>
       )}
     </div>
@@ -654,7 +667,7 @@ function SkillCard({ skill }: { skill: Skill }) {
       gridColumns={SKILL_GRID_COLUMNS}
       columns={[
         { key: 'Ability', value: skill.ability || '-', highlight: false },
-        { key: 'Base Skill', value: skill.base_skill || '-', highlight: isSubSkill },
+        { key: 'Base Skill', value: baseSkillName, highlight: isSubSkill },
       ]}
       expandedContent={expandedContent}
     />

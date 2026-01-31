@@ -220,6 +220,20 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           ...(draft.archetype.mart_abil && { mart_abil: draft.archetype.mart_abil }),
         } : undefined;
         
+        // Transform equipment from inventory format to weapons/armor/items format
+        // for compatibility with character sheet
+        const inventory = draft.equipment?.inventory || [];
+        const weapons = inventory.filter(item => item.type === 'weapon');
+        const armor = inventory.filter(item => item.type === 'armor');
+        const items = inventory.filter(item => item.type === 'equipment' || (!item.type));
+        const equipment = {
+          weapons,
+          armor,
+          items,
+          // Also keep original inventory for reference
+          inventory,
+        };
+        
         return {
           name: draft.name || 'Unnamed Character',
           level: draft.level || 1,
@@ -247,10 +261,17 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           skills: draft.skills || {},
           defenseSkills: draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
           defenseVals: draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
-          feats: draft.feats || [],
+          // Separate feats by type - archetype feats vs character feats
+          // The feats step stores them with type: 'archetype' | 'character'
+          archetypeFeats: (draft.feats || [])
+            .filter((f: { type?: string }) => f.type !== 'character')
+            .map(({ type, ...rest }) => rest), // Remove the type field
+          feats: (draft.feats || [])
+            .filter((f: { type?: string }) => f.type === 'character')
+            .map(({ type, ...rest }) => rest), // Remove the type field
           powers: draft.powers || [],
           techniques: draft.techniques || [],
-          equipment: draft.equipment || {},
+          equipment: equipment,
           // Health/Energy tracking
           health_energy_points: {
             health: allocatedHealth,

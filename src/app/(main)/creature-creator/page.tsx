@@ -596,6 +596,11 @@ function CreatureCreatorContent() {
     return map;
   }, [skillsData]);
   
+  // Create lookup map for skill ID to name (for base_skill_id lookups)
+  const skillIdToName = useMemo(() => {
+    return new Map(skillsData.map(s => [s.id, s.name]));
+  }, [skillsData]);
+  
   // Create description maps for senses and movements
   const senseDescriptions = useMemo(() => {
     const map: Record<string, string> = {};
@@ -624,14 +629,15 @@ function CreatureCreatorContent() {
     const addedSkillNames = creature.skills.map(s => s.name);
     
     return skillsData.filter(skill => {
-      // If this skill has a base_skill, only show it if the base skill is already added
-      if (skill.base_skill) {
-        return addedSkillNames.includes(skill.base_skill);
+      // If this skill has a base_skill_id, only show it if the base skill is already added
+      if (skill.base_skill_id !== undefined) {
+        const baseSkillName = skillIdToName.get(String(skill.base_skill_id));
+        return baseSkillName ? addedSkillNames.includes(baseSkillName) : false;
       }
       // Otherwise, show all base skills
       return true;
     }).map(skill => skill.name);
-  }, [skillsData, creature.skills]);
+  }, [skillsData, creature.skills, skillIdToName]);
 
   const updateCreature = useCallback((updates: Partial<CreatureState>) => {
     setCreature(prev => ({ ...prev, ...updates }));

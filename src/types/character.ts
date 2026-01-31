@@ -159,6 +159,10 @@ export interface Character {
   mart_prof?: number;
   pow_prof?: number;
   
+  // Unarmed Prowess - fighting style for unarmed combat
+  // Level 0 = not selected, 1 = base (10 TP), 2-5 = upgrades at levels 4,8,12,16,20 (6 TP each)
+  unarmedProwess?: number;
+  
   // Mixed archetype milestone choices (level -> 'innate' | 'feat')
   archetypeChoices?: Record<number, 'innate' | 'feat'>;
   

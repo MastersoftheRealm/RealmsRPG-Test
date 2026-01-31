@@ -228,6 +228,12 @@ function PowersTab({ onDelete }: TabProps) {
           description: power.description,
           parts: power.parts || [],
           damage: power.damage,
+          // Pass directly saved fields for range, area, duration, actionType
+          actionType: power.actionType,
+          isReaction: power.isReaction,
+          range: power.range,
+          area: power.area,
+          duration: power.duration,
         },
         partsDb
       );

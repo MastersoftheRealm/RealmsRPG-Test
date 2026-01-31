@@ -74,6 +74,7 @@ import {
   DURATION_VALUES,
   CATEGORY_COLORS,
   CREATOR_CACHE_KEYS,
+  formatCost,
 } from '@/lib/game/creator-constants';
 
 // LocalStorage key for caching power creator state
@@ -176,21 +177,22 @@ function PartCard({
 
   return (
     <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
-      {/* Header */}
+      {/* Header - entire header clickable except X button */}
       <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-            className="text-text-muted hover:text-text-secondary"
-          >
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
+        >
+          <span className="text-text-muted">
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-          <span className="font-medium text-text-primary">{part.name}</span>
-          <span className="text-sm text-text-muted">
-            EN: {partEnergy.toFixed(1)} | TP: {Math.floor(partTP)}
           </span>
-        </div>
+          <span className="font-medium text-text-primary truncate">{part.name}</span>
+          <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
+            <span className="text-blue-600">EN: {formatCost(partEnergy)}</span>
+            <span className="text-purple-600">TP: {formatCost(partTP)}</span>
+          </span>
+        </button>
         <IconButton
           onClick={onRemove}
           label="Remove part"
@@ -272,15 +274,15 @@ function PartCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-text-secondary">{part.description}</p>
+          <p className="text-base text-text-primary leading-relaxed">{part.description}</p>
 
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
-              Base Energy: <strong>{part.base_en}</strong>
+              Base Energy: <strong className="text-blue-600">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
-              Base TP: <strong>{part.base_tp}</strong>
+              Base TP: <strong className="text-purple-600">{formatCost(part.base_tp || 0)}</strong>
             </span>
           </div>
 
@@ -288,15 +290,17 @@ function PartCard({
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
             <div className="space-y-3 pt-2 border-t border-border-light">
               {hasOption(1) && (
-                <div className="bg-surface-alt rounded-lg p-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      Option 1:{' '}
-                      <span className="text-text-muted">
-                        EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP{' '}
-                        {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-blue-800">Option 1</span>
+                      <span className="text-sm font-medium text-blue-600">
+                        EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                       </span>
-                    </span>
+                      <span className="text-sm font-medium text-purple-600">
+                        TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
+                      </span>
+                    </div>
                     <NumberStepper
                       value={selectedPart.op_1_lvl}
                       onChange={(v) => onUpdate({ op_1_lvl: v })}
@@ -304,21 +308,23 @@ function PartCard({
                     />
                   </div>
                   {part.op_1_desc && (
-                    <p className="text-sm text-text-secondary">{part.op_1_desc}</p>
+                    <p className="text-sm text-text-primary">{part.op_1_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(2) && (
-                <div className="bg-surface-alt rounded-lg p-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      Option 2:{' '}
-                      <span className="text-text-muted">
-                        EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP{' '}
-                        {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-blue-800">Option 2</span>
+                      <span className="text-sm font-medium text-blue-600">
+                        EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                       </span>
-                    </span>
+                      <span className="text-sm font-medium text-purple-600">
+                        TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
+                      </span>
+                    </div>
                     <NumberStepper
                       value={selectedPart.op_2_lvl}
                       onChange={(v) => onUpdate({ op_2_lvl: v })}
@@ -326,21 +332,23 @@ function PartCard({
                     />
                   </div>
                   {part.op_2_desc && (
-                    <p className="text-sm text-text-secondary">{part.op_2_desc}</p>
+                    <p className="text-sm text-text-primary">{part.op_2_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(3) && (
-                <div className="bg-surface-alt rounded-lg p-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      Option 3:{' '}
-                      <span className="text-text-muted">
-                        EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP{' '}
-                        {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-blue-800">Option 3</span>
+                      <span className="text-sm font-medium text-blue-600">
+                        EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                       </span>
-                    </span>
+                      <span className="text-sm font-medium text-purple-600">
+                        TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
+                      </span>
+                    </div>
                     <NumberStepper
                       value={selectedPart.op_3_lvl}
                       onChange={(v) => onUpdate({ op_3_lvl: v })}
@@ -348,7 +356,7 @@ function PartCard({
                     />
                   </div>
                   {part.op_3_desc && (
-                    <p className="text-sm text-text-secondary">{part.op_3_desc}</p>
+                    <p className="text-sm text-text-primary">{part.op_3_desc}</p>
                   )}
                 </div>
               )}
@@ -392,7 +400,7 @@ function AdvancedChip({
   return (
     <div
       className={cn(
-        'rounded-lg border px-3 py-2 cursor-pointer transition-all',
+        'rounded-lg border px-3 py-2 cursor-pointer transition-all min-w-0',
         colors.bg,
         colors.border,
         colors.hoverBg
@@ -400,7 +408,7 @@ function AdvancedChip({
       onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className={cn('text-sm font-medium', colors.text)}>
+        <span className={cn('text-sm font-medium truncate', colors.text)}>
           {part.name}
         </span>
         <button
@@ -410,8 +418,9 @@ function AdvancedChip({
             onAdd();
           }}
           className={cn(
-            'w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm',
-            'bg-primary-600 hover:bg-primary-700'
+            'w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center text-white font-bold text-sm',
+            colors.buttonBg,
+            colors.buttonHover
           )}
         >
           +
@@ -492,53 +501,71 @@ function AddedAdvancedChip({
       </div>
       {expanded && (
         <div className="mt-2 pt-2 border-t border-current/20 text-sm space-y-2" onClick={(e) => e.stopPropagation()}>
-          <p className={colors.text}>{part.description}</p>
+          <p className={cn(colors.text, 'text-base leading-relaxed')}>{part.description}</p>
           
           {hasOption(1) && (
-            <div className="bg-white/50 rounded p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-text-muted">
-                  Option 1: EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
-                </span>
+            <div className="bg-white/70 border border-current/20 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-text-primary">Option 1</span>
+                  <span className="text-sm font-medium text-blue-600">
+                    EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
+                  </span>
+                  <span className="text-sm font-medium text-purple-600">
+                    TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
+                  </span>
+                </div>
                 <NumberStepper
                   value={advPart.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label=""
                 />
               </div>
-              <p className="text-text-secondary mt-1">{part.op_1_desc}</p>
+              <p className="text-sm text-text-primary">{part.op_1_desc}</p>
             </div>
           )}
           
           {hasOption(2) && (
-            <div className="bg-white/50 rounded p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-text-muted">
-                  Option 2: EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
-                </span>
+            <div className="bg-white/70 border border-current/20 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-text-primary">Option 2</span>
+                  <span className="text-sm font-medium text-blue-600">
+                    EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
+                  </span>
+                  <span className="text-sm font-medium text-purple-600">
+                    TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
+                  </span>
+                </div>
                 <NumberStepper
                   value={advPart.op_2_lvl}
                   onChange={(v) => onUpdate({ op_2_lvl: v })}
                   label=""
                 />
               </div>
-              <p className="text-text-secondary mt-1">{part.op_2_desc}</p>
+              <p className="text-sm text-text-primary">{part.op_2_desc}</p>
             </div>
           )}
           
           {hasOption(3) && (
-            <div className="bg-white/50 rounded p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-text-muted">
-                  Option 3: EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
-                </span>
+            <div className="bg-white/70 border border-current/20 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-text-primary">Option 3</span>
+                  <span className="text-sm font-medium text-blue-600">
+                    EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
+                  </span>
+                  <span className="text-sm font-medium text-purple-600">
+                    TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
+                  </span>
+                </div>
                 <NumberStepper
                   value={advPart.op_3_lvl}
                   onChange={(v) => onUpdate({ op_3_lvl: v })}
                   label=""
                 />
               </div>
-              <p className="text-text-secondary mt-1">{part.op_3_desc}</p>
+              <p className="text-sm text-text-primary">{part.op_3_desc}</p>
             </div>
           )}
           
@@ -1411,7 +1438,20 @@ function PowerCreatorContent() {
                   const newType = e.target.value as DurationConfig['type'];
                   // Reset value to first option when changing type
                   const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
-                  setDuration((d) => ({ ...d, type: newType, value: newValue }));
+                  // Clear duration modifiers if duration is less than 2 rounds
+                  const isShortDuration = newType === 'instant' || (newType === 'rounds' && newValue === 1);
+                  if (isShortDuration) {
+                    setDuration({
+                      type: newType,
+                      value: newValue,
+                      focus: false,
+                      noHarm: false,
+                      endsOnActivation: false,
+                      sustain: 0,
+                    });
+                  } else {
+                    setDuration((d) => ({ ...d, type: newType, value: newValue }));
+                  }
                 }}
                 className="px-4 py-2 border border-border-light rounded-lg"
               >
@@ -1424,7 +1464,22 @@ function PowerCreatorContent() {
               {duration.type !== 'instant' && duration.type !== 'permanent' && DURATION_VALUES[duration.type] && (
                 <select
                   value={duration.value}
-                  onChange={(e) => setDuration((d) => ({ ...d, value: parseInt(e.target.value) }))}
+                  onChange={(e) => {
+                    const newValue = parseInt(e.target.value);
+                    // Clear duration modifiers if duration becomes 1 round
+                    if (duration.type === 'rounds' && newValue === 1) {
+                      setDuration({
+                        type: duration.type,
+                        value: newValue,
+                        focus: false,
+                        noHarm: false,
+                        endsOnActivation: false,
+                        sustain: 0,
+                      });
+                    } else {
+                      setDuration((d) => ({ ...d, value: newValue }));
+                    }
+                  }}
                   className="px-4 py-2 border border-border-light rounded-lg"
                 >
                   {DURATION_VALUES[duration.type].map((opt) => (
@@ -1435,38 +1490,55 @@ function PowerCreatorContent() {
                 </select>
               )}
             </div>
-            {/* Duration Modifiers */}
-            <div className="flex flex-wrap gap-4 pt-3 border-t border-border-light">
-              <Checkbox
-                checked={duration.focus || false}
-                onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
-                label="Focus"
-              />
-              <Checkbox
-                checked={duration.noHarm || false}
-                onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
-                label="No Harm or Adaptation Parts"
-              />
-              <Checkbox
-                checked={duration.endsOnActivation || false}
-                onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
-                label="Ends on Activation"
-              />
-              <div className="flex items-center gap-2">
-                <span className="text-sm">Sustain:</span>
-                <select
-                  value={duration.sustain || 0}
-                  onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
-                  className="px-2 py-1 border border-border-light rounded text-sm"
-                >
-                  <option value={0}>None</option>
-                  <option value={1}>1 AP</option>
-                  <option value={2}>2 AP</option>
-                  <option value={3}>3 AP</option>
-                  <option value={4}>4 AP</option>
-                </select>
-              </div>
-            </div>
+            {/* Duration Modifiers - only enabled for durations of 2+ rounds */}
+            {(() => {
+              const isShortDuration = duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
+              return (
+                <div className={cn(
+                  'flex flex-wrap items-center gap-4 pt-3 border-t border-border-light',
+                  isShortDuration && 'opacity-50'
+                )}>
+                  <Checkbox
+                    checked={duration.focus || false}
+                    onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
+                    label="Focus"
+                    disabled={isShortDuration}
+                  />
+                  <Checkbox
+                    checked={duration.noHarm || false}
+                    onChange={(e) => setDuration((d) => ({ ...d, noHarm: e.target.checked }))}
+                    label="No Harm or Adaptation Parts"
+                    disabled={isShortDuration}
+                  />
+                  <Checkbox
+                    checked={duration.endsOnActivation || false}
+                    onChange={(e) => setDuration((d) => ({ ...d, endsOnActivation: e.target.checked }))}
+                    label="Ends on Activation"
+                    disabled={isShortDuration}
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">Sustain:</span>
+                    <select
+                      value={duration.sustain || 0}
+                      onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
+                      className="px-2 py-1 border border-border-light rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={isShortDuration}
+                    >
+                      <option value={0}>None</option>
+                      <option value={1}>1 AP</option>
+                      <option value={2}>2 AP</option>
+                      <option value={3}>3 AP</option>
+                      <option value={4}>4 AP</option>
+                    </select>
+                  </div>
+                  {isShortDuration && (
+                    <span className="text-xs text-text-muted italic">
+                      (Requires 2+ rounds)
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Power Parts */}

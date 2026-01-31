@@ -405,7 +405,8 @@ export function cleanForSave(data: Character): Partial<Character> {
           skill_val?: number; 
           prof?: boolean; 
           ability?: string;
-          baseSkill?: string | null;
+          baseSkillId?: number | null; // ID of base skill (0 = any, undefined = not a sub-skill)
+          selectedBaseSkillId?: string; // User-selected base skill for "any" sub-skills
         };
         const cleanSkill: Record<string, unknown> = {
           name: skill.name,
@@ -415,7 +416,8 @@ export function cleanForSave(data: Character): Partial<Character> {
         // Only add optional fields if they have values (not undefined/null)
         if (skill.id) cleanSkill.id = skill.id;
         if (skill.ability) cleanSkill.ability = skill.ability;
-        if (skill.baseSkill) cleanSkill.baseSkill = skill.baseSkill;
+        if (skill.baseSkillId !== undefined) cleanSkill.baseSkillId = skill.baseSkillId;
+        if (skill.selectedBaseSkillId) cleanSkill.selectedBaseSkillId = skill.selectedBaseSkillId;
         return cleanSkill;
       }
       return null;

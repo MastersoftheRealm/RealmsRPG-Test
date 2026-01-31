@@ -9,6 +9,8 @@
 
 import { useMemo } from 'react';
 import { Chip } from '@/components/ui';
+import { Check, Swords, ChevronUp, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 /** RTDB part data for enrichment */
@@ -42,9 +44,31 @@ interface ProficienciesTabProps {
   armor: Item[];
   level: number;
   archetypeAbility: number; // The archetype's key ability score value
+  // Unarmed prowess level (0 = none, 1-5 = prowess levels)
+  unarmedProwess?: number;
+  // Edit mode for selecting/upgrading unarmed prowess
+  isEditMode?: boolean;
+  onUnarmedProwessChange?: (level: number) => void;
   // RTDB parts data for enrichment
   powerPartsDb?: RTDBPart[];
   techniquePartsDb?: RTDBPart[];
+}
+
+// Unarmed Prowess constants (matching equipment-step.tsx)
+const UNARMED_PROWESS_BASE_TP = 10;
+const UNARMED_PROWESS_UPGRADE_TP = 6;
+const UNARMED_PROWESS_LEVELS = [
+  { level: 1, charLevel: 1, name: 'Unarmed Prowess', damage: '1d4' },
+  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', damage: '1d6' },
+  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', damage: '1d8' },
+  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', damage: '1d10' },
+  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', damage: '1d12' },
+];
+
+// Calculate TP cost for unarmed prowess
+function calculateUnarmedProwessTP(level: number): number {
+  if (level <= 0) return 0;
+  return UNARMED_PROWESS_BASE_TP + (level - 1) * UNARMED_PROWESS_UPGRADE_TP;
 }
 
 // Calculate TP for a proficiency
@@ -87,13 +111,20 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
 
       const partName = partData.name;
 
+      // Look up RTDB data for TP values if not present on the part
+      const rtdbPart = rtdbParts.find(p => 
+        p.id === partData.id || 
+        p.name?.toLowerCase() === partName.toLowerCase()
+      );
+
       const lvl1 = partData.op_1_lvl || 0;
       const lvl2 = partData.op_2_lvl || 0;
       const lvl3 = partData.op_3_lvl || 0;
-      const baseTP = partData.base_tp || 0;
-      const op1TP = partData.op_1_tp || 0;
-      const op2TP = partData.op_2_tp || 0;
-      const op3TP = partData.op_3_tp || 0;
+      // Use part data if available, fall back to RTDB
+      const baseTP = partData.base_tp ?? rtdbPart?.base_tp ?? 0;
+      const op1TP = partData.op_1_tp ?? rtdbPart?.op_1_tp ?? 0;
+      const op2TP = partData.op_2_tp ?? rtdbPart?.op_2_tp ?? 0;
+      const op3TP = partData.op_3_tp ?? rtdbPart?.op_3_tp ?? 0;
       
       const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
       if (Math.floor(rawTP) <= 0) return;
@@ -105,8 +136,6 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
         ex.op2Lvl = Math.max(ex.op2Lvl || 0, lvl2);
         ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
       } else {
-        // Try to get description from RTDB
-        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
         profs.set(key, {
           name: partName,
           description: rtdbPart?.description,
@@ -156,13 +185,20 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
 
       const partName = partData.name;
 
+      // Look up RTDB data for TP values if not present on the part
+      const rtdbPart = rtdbParts.find(p => 
+        p.id === partData.id || 
+        p.name?.toLowerCase() === partName.toLowerCase()
+      );
+
       const lvl1 = partData.op_1_lvl || 0;
       const lvl2 = partData.op_2_lvl || 0;
       const lvl3 = partData.op_3_lvl || 0;
-      const baseTP = partData.base_tp || 0;
-      const op1TP = partData.op_1_tp || 0;
-      const op2TP = partData.op_2_tp || 0;
-      const op3TP = partData.op_3_tp || 0;
+      // Use part data if available, fall back to RTDB
+      const baseTP = partData.base_tp ?? rtdbPart?.base_tp ?? 0;
+      const op1TP = partData.op_1_tp ?? rtdbPart?.op_1_tp ?? 0;
+      const op2TP = partData.op_2_tp ?? rtdbPart?.op_2_tp ?? 0;
+      const op3TP = partData.op_3_tp ?? rtdbPart?.op_3_tp ?? 0;
       
       const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
       if (Math.floor(rawTP) <= 0) return;
@@ -174,8 +210,6 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
         ex.op2Lvl = Math.max(ex.op2Lvl || 0, lvl2);
         ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
       } else {
-        // Try to get description from RTDB
-        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
         profs.set(key, {
           name: partName,
           description: rtdbPart?.description,
@@ -287,6 +321,9 @@ export function ProficienciesTab({
   armor,
   level,
   archetypeAbility,
+  unarmedProwess = 0,
+  isEditMode = false,
+  onUnarmedProwessChange,
   powerPartsDb = [],
   techniquePartsDb = [],
 }: ProficienciesTabProps) {
@@ -296,16 +333,24 @@ export function ProficienciesTab({
   const weaponProfs = useMemo(() => extractEquipmentProficiencies(weapons, []), [weapons]);
   const armorProfs = useMemo(() => extractEquipmentProficiencies([], armor), [armor]);
 
+  // Calculate unarmed prowess TP
+  const unarmedProwessTP = calculateUnarmedProwessTP(unarmedProwess);
+
+  // Get available unarmed prowess levels based on character level
+  const availableUnarmedLevels = useMemo(() => {
+    return UNARMED_PROWESS_LEVELS.filter(up => up.charLevel <= level);
+  }, [level]);
+
   // Calculate total TP spent
   const totalSpent = useMemo(() => {
-    let sum = 0;
+    let sum = unarmedProwessTP;
     [powerProfs, techniqueProfs, weaponProfs, armorProfs].forEach(profs => {
       profs.forEach(prof => {
         sum += calculateProfTP(prof);
       });
     });
     return sum;
-  }, [powerProfs, techniqueProfs, weaponProfs, armorProfs]);
+  }, [powerProfs, techniqueProfs, weaponProfs, armorProfs, unarmedProwessTP]);
 
   // Calculate available training points
   // Formula: 22 + (archetype_ability * level) + (2 * (level - 1)) - total_spent
@@ -328,6 +373,83 @@ export function ProficienciesTab({
           </div>
         </div>
       </div>
+
+      {/* Unarmed Prowess Section - shown in edit mode or if character has it */}
+      {(isEditMode || unarmedProwess > 0) && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between px-3 py-2 bg-surface-alt rounded-t-lg border border-border-light">
+            <div className="flex items-center gap-2">
+              <Swords className="w-4 h-4 text-amber-600" />
+              <span className="font-semibold text-sm text-text-secondary">Unarmed Prowess</span>
+            </div>
+            <span className="text-sm text-text-muted">
+              TP: <span className="font-semibold text-primary-600">{unarmedProwessTP}</span>
+            </span>
+          </div>
+          
+          <div className="border border-t-0 border-border-light rounded-b-lg p-3">
+            {isEditMode ? (
+              <div className="space-y-2">
+                {UNARMED_PROWESS_LEVELS.map((prowessLevel) => {
+                  const isAvailable = prowessLevel.charLevel <= level;
+                  const isSelected = unarmedProwess >= prowessLevel.level;
+                  const canToggle = isAvailable && onUnarmedProwessChange;
+                  const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
+                  
+                  return (
+                    <div
+                      key={prowessLevel.level}
+                      className={cn(
+                        'flex items-center gap-3 p-2 rounded-lg border transition-all',
+                        isSelected ? 'bg-primary-50 border-primary-300' : 'bg-surface border-border-light',
+                        !isAvailable && 'opacity-50',
+                        canToggle && 'cursor-pointer hover:border-primary-300'
+                      )}
+                      onClick={() => {
+                        if (!canToggle) return;
+                        if (isSelected && unarmedProwess === prowessLevel.level) {
+                          // Deselect this level (set to previous)
+                          onUnarmedProwessChange(prowessLevel.level - 1);
+                        } else if (!isSelected && unarmedProwess === prowessLevel.level - 1) {
+                          // Select this level
+                          onUnarmedProwessChange(prowessLevel.level);
+                        }
+                      }}
+                    >
+                      <div className={cn(
+                        'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
+                        isSelected ? 'bg-primary-600 text-white' : 'bg-surface-alt border border-border-light'
+                      )}>
+                        {isSelected && <Check className="w-3 h-3" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-text-primary">{prowessLevel.name}</span>
+                        <span className="text-xs text-text-muted ml-2">({prowessLevel.damage})</span>
+                        {!isAvailable && (
+                          <span className="text-xs ml-2 text-gray-500">Req. Lv {prowessLevel.charLevel}</span>
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                        {tpCost} TP
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {unarmedProwess > 0 ? (
+                  <Chip variant="proficiency" size="sm">
+                    {UNARMED_PROWESS_LEVELS[unarmedProwess - 1]?.name || 'Unarmed Prowess'} | {unarmedProwessTP} TP
+                  </Chip>
+                ) : (
+                  <p className="text-sm text-text-muted italic text-center py-2 w-full">No unarmed prowess</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Proficiency Sections */}
       <ProficiencySection title="Power Proficiencies" profs={powerProfs} />

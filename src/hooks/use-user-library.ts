@@ -41,6 +41,26 @@ export interface UserPower {
   description?: string;
   parts: SavedPart[];
   damage?: SavedDamage[];
+  // Directly saved fields from power creator
+  actionType?: string;
+  isReaction?: boolean;
+  range?: {
+    steps?: number;
+    applyDuration?: boolean;
+  };
+  area?: {
+    type?: string;
+    level?: number;
+    applyDuration?: boolean;
+  };
+  duration?: {
+    type?: string;
+    value?: number;
+    focus?: boolean;
+    noHarm?: boolean;
+    endsOnActivation?: boolean;
+    sustain?: number;
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }

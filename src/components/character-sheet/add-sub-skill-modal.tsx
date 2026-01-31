@@ -4,27 +4,20 @@
  * Modal for adding sub-skills from RTDB
  * Only shows sub-skills where the character has proficiency in the base skill
  * Uses unified GridListRow component for consistent styling.
+ * Now uses ID-based base_skill lookups (base_skill_id = 0 means "any base skill")
  */
 
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ref, get } from 'firebase/database';
-import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
-import { Spinner, SearchInput, IconButton, Alert } from '@/components/ui';
+import { Spinner, SearchInput, IconButton, Alert, Select } from '@/components/ui';
 import { GridListRow } from '@/components/shared';
-
-interface SubSkill {
-  id: string;
-  name: string;
-  ability?: string[];
-  description?: string;
-  base_skill: string;
-}
+import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 
 interface CharacterSkill {
+  id?: string;
   name: string;
   prof?: boolean;
 }
@@ -34,37 +27,65 @@ interface AddSubSkillModalProps {
   onClose: () => void;
   characterSkills: CharacterSkill[];
   existingSkillNames: string[];
-  onAdd: (skills: SubSkill[]) => void;
+  onAdd: (skills: Array<RTDBSkill & { selectedBaseSkillId?: string }>) => void;
 }
 
 function SubSkillRow({
   skill,
   isSelected,
   onToggle,
+  baseSkillName,
+  isAnyBaseSkill,
+  selectedBaseSkillId,
+  onBaseSkillSelect,
+  proficientSkills,
 }: {
-  skill: SubSkill;
+  skill: RTDBSkill;
   isSelected: boolean;
   onToggle: () => void;
+  baseSkillName: string;
+  isAnyBaseSkill: boolean;
+  selectedBaseSkillId?: string;
+  onBaseSkillSelect?: (skillId: string) => void;
+  proficientSkills: Array<{ id: string; name: string }>;
 }) {
-  const abilityStr = Array.isArray(skill.ability) ? skill.ability.join(', ') : '';
+  const abilityStr = skill.ability || '';
 
   // Build columns for base skill and ability info
   const columns = [
-    { key: 'Base', value: skill.base_skill },
+    { key: 'Base', value: isAnyBaseSkill ? 'Any' : baseSkillName },
     ...(abilityStr ? [{ key: 'Ability', value: abilityStr }] : []),
   ];
 
   return (
-    <GridListRow
-      id={skill.id}
-      name={skill.name}
-      description={skill.description}
-      columns={columns}
-      selectable
-      isSelected={isSelected}
-      onSelect={onToggle}
-      compact
-    />
+    <div className="space-y-2">
+      <GridListRow
+        id={skill.id}
+        name={skill.name}
+        description={skill.description}
+        columns={columns}
+        selectable
+        isSelected={isSelected}
+        onSelect={onToggle}
+        compact
+      />
+      {/* If "any base skill" and selected, show dropdown to pick which base skill */}
+      {isAnyBaseSkill && isSelected && onBaseSkillSelect && (
+        <div className="ml-6 p-2 bg-surface-alt rounded border border-border-light">
+          <label className="block text-sm font-medium text-text-secondary mb-1">
+            Choose base skill for {skill.name}:
+          </label>
+          <Select
+            value={selectedBaseSkillId || ''}
+            onChange={(e) => onBaseSkillSelect(e.target.value)}
+            options={[
+              { value: '', label: 'Select a base skill...' },
+              ...proficientSkills.map(s => ({ value: s.id, label: s.name }))
+            ]}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -75,56 +96,66 @@ export function AddSubSkillModal({
   existingSkillNames,
   onAdd,
 }: AddSubSkillModalProps) {
-  const [subSkills, setSubSkills] = useState<SubSkill[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: allSkills, isLoading: loading, error: fetchError } = useRTDBSkills();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<SubSkill[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
+  // Track which base skill is selected for "any base skill" sub-skills
+  const [anyBaseSkillSelections, setAnyBaseSkillSelections] = useState<Record<string, string>>({});
 
-  // Get proficient base skill names
+  // Build a map of skill ID to skill for lookups
+  const skillById = useMemo(() => {
+    if (!allSkills) return {};
+    return allSkills.reduce((acc, skill) => {
+      acc[skill.id] = skill;
+      return acc;
+    }, {} as Record<string, RTDBSkill>);
+  }, [allSkills]);
+
+  // Get proficient base skills (with IDs)
   const proficientBaseSkills = useMemo(() => {
+    if (!allSkills) return [];
+    
     return characterSkills
       .filter(s => s.prof)
-      .map(s => s.name);
-  }, [characterSkills]);
+      .map(charSkill => {
+        // Find the RTDB skill by name or ID
+        const rtdbSkill = allSkills.find(
+          s => s.name.toLowerCase() === charSkill.name.toLowerCase() || s.id === charSkill.id
+        );
+        return rtdbSkill ? { id: rtdbSkill.id, name: rtdbSkill.name } : null;
+      })
+      .filter((s): s is { id: string; name: string } => s !== null);
+  }, [characterSkills, allSkills]);
 
-  // Load sub-skills from RTDB
-  useEffect(() => {
-    if (!isOpen) return;
+  const proficientSkillIds = useMemo(() => 
+    new Set(proficientBaseSkills.map(s => s.id)), 
+    [proficientBaseSkills]
+  );
+
+  // Get sub-skills that the user can add
+  const availableSubSkills = useMemo(() => {
+    if (!allSkills) return [];
     
-    const loadSubSkills = async () => {
-      setLoading(true);
-      setError(null);
+    return allSkills.filter(skill => {
+      // Must be a sub-skill (has base_skill_id)
+      if (skill.base_skill_id === undefined) return false;
       
-      try {
-        const snapshot = await get(ref(rtdb, 'skills'));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          // Only get sub-skills (have base_skill property) where base is proficient
-          const skillList = Object.entries(data)
-            .map(([id, skill]) => ({
-              id,
-              ...(skill as Omit<SubSkill, 'id'>),
-            }))
-            .filter(s => s.base_skill && proficientBaseSkills.includes(s.base_skill));
-          
-          setSubSkills(skillList);
-        }
-      } catch (e) {
-        setError(`Failed to load sub-skills: ${e instanceof Error ? e.message : 'Unknown error'}`);
-      } finally {
-        setLoading(false);
+      // base_skill_id = 0 means any base skill - just need at least one proficient skill
+      if (skill.base_skill_id === 0) {
+        return proficientBaseSkills.length > 0;
       }
-    };
-
-    loadSubSkills();
-  }, [isOpen, proficientBaseSkills]);
+      
+      // Otherwise, check if the specific base skill is proficient
+      return proficientSkillIds.has(String(skill.base_skill_id));
+    });
+  }, [allSkills, proficientBaseSkills, proficientSkillIds]);
 
   // Reset selection when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedSkills([]);
       setSearchQuery('');
+      setAnyBaseSkillSelections({});
     }
   }, [isOpen]);
 
@@ -132,24 +163,26 @@ export function AddSubSkillModal({
   const filteredSkills = useMemo(() => {
     const existingLower = existingSkillNames.map(n => n.toLowerCase());
     
-    return subSkills.filter(skill => {
+    return availableSubSkills.filter(skill => {
       // Exclude already owned skills
       if (existingLower.includes(skill.name.toLowerCase())) return false;
       
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
+        const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
+        const baseSkillName = baseSkill?.name || '';
         if (!skill.name.toLowerCase().includes(query) && 
-            !skill.base_skill.toLowerCase().includes(query)) {
+            !baseSkillName.toLowerCase().includes(query)) {
           return false;
         }
       }
       
       return true;
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [subSkills, existingSkillNames, searchQuery]);
+  }, [availableSubSkills, existingSkillNames, searchQuery, skillById]);
 
-  const toggleSkill = (skill: SubSkill) => {
+  const toggleSkill = (skill: RTDBSkill) => {
     setSelectedSkills(prev => {
       const exists = prev.some(s => s.id === skill.id);
       if (exists) {
@@ -160,12 +193,28 @@ export function AddSubSkillModal({
     });
   };
 
+  const handleBaseSkillSelect = (subSkillId: string, baseSkillId: string) => {
+    setAnyBaseSkillSelections(prev => ({
+      ...prev,
+      [subSkillId]: baseSkillId,
+    }));
+  };
+
   const handleConfirm = () => {
     if (selectedSkills.length > 0) {
-      onAdd(selectedSkills);
+      // Attach selected base skill ID for "any base skill" sub-skills
+      const skillsWithBase = selectedSkills.map(skill => ({
+        ...skill,
+        selectedBaseSkillId: skill.base_skill_id === 0 
+          ? anyBaseSkillSelections[skill.id] 
+          : undefined,
+      }));
+      onAdd(skillsWithBase);
       onClose();
     }
   };
+
+  const error = fetchError?.message || null;
 
   if (!isOpen) return null;
 
@@ -231,14 +280,25 @@ export function AddSubSkillModal({
 
           {!loading && !error && filteredSkills.length > 0 && (
             <div className="space-y-2">
-              {filteredSkills.map(skill => (
-                <SubSkillRow
-                  key={skill.id}
-                  skill={skill}
-                  isSelected={selectedSkills.some(s => s.id === skill.id)}
-                  onToggle={() => toggleSkill(skill)}
-                />
-              ))}
+              {filteredSkills.map(skill => {
+                const isAnyBaseSkill = skill.base_skill_id === 0;
+                const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
+                const baseSkillName = isAnyBaseSkill ? 'Any' : (baseSkill?.name || 'Unknown');
+                
+                return (
+                  <SubSkillRow
+                    key={skill.id}
+                    skill={skill}
+                    isSelected={selectedSkills.some(s => s.id === skill.id)}
+                    onToggle={() => toggleSkill(skill)}
+                    baseSkillName={baseSkillName}
+                    isAnyBaseSkill={isAnyBaseSkill}
+                    selectedBaseSkillId={anyBaseSkillSelections[skill.id]}
+                    onBaseSkillSelect={isAnyBaseSkill ? (id) => handleBaseSkillSelect(skill.id, id) : undefined}
+                    proficientSkills={proficientBaseSkills}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

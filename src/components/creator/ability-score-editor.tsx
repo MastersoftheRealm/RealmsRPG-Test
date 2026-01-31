@@ -194,7 +194,7 @@ export function AbilityScoreEditor({
                     onClick={() => onAbilityChange(ability, value - 1)}
                     disabled={!canDec}
                     size="md"
-                    enableHoldRepeat
+                    // No enableHoldRepeat - abilities should be clicked individually
                   />
                 )}
 
@@ -213,7 +213,7 @@ export function AbilityScoreEditor({
                     disabled={!canInc}
                     size="md"
                     title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
-                    enableHoldRepeat
+                    // No enableHoldRepeat - abilities should be clicked individually
                   />
                 )}
               </div>

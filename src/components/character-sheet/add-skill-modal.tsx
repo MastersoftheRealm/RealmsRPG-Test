@@ -8,27 +8,17 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ref, get } from 'firebase/database';
-import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert } from '@/components/ui';
 import { GridListRow } from '@/components/shared';
-
-interface Skill {
-  id: string;
-  name: string;
-  ability?: string[];
-  description?: string;
-  category?: string;
-  base_skill?: string | null;
-}
+import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 
 interface AddSkillModalProps {
   isOpen: boolean;
   onClose: () => void;
   existingSkillNames: string[];
-  onAdd: (skills: Skill[]) => void;
+  onAdd: (skills: RTDBSkill[]) => void;
 }
 
 function SkillRow({
@@ -36,11 +26,11 @@ function SkillRow({
   isSelected,
   onToggle,
 }: {
-  skill: Skill;
+  skill: RTDBSkill;
   isSelected: boolean;
   onToggle: () => void;
 }) {
-  const abilityStr = Array.isArray(skill.ability) ? skill.ability.join(', ') : '';
+  const abilityStr = skill.ability || '';
 
   // Build badges from category
   const badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' }> = [];
@@ -72,43 +62,16 @@ export function AddSkillModal({
   existingSkillNames,
   onAdd,
 }: AddSkillModalProps) {
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: allSkills = [], isLoading: loading, error: queryError } = useRTDBSkills();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
 
-  // Load skills from RTDB
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    const loadSkills = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const snapshot = await get(ref(rtdb, 'skills'));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          // Only get base skills (no base_skill property)
-          const skillList = Object.entries(data)
-            .map(([id, skill]) => ({
-              id,
-              ...(skill as Omit<Skill, 'id'>),
-            }))
-            .filter(s => !s.base_skill); // Filter to base skills only
-          
-          setSkills(skillList);
-        }
-      } catch (e) {
-        setError(`Failed to load skills: ${e instanceof Error ? e.message : 'Unknown error'}`);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Filter to base skills only (no base_skill_id = not a sub-skill)
+  const skills = useMemo(() => {
+    return allSkills.filter(s => s.base_skill_id === undefined);
+  }, [allSkills]);
 
-    loadSkills();
-  }, [isOpen]);
+  const error = queryError ? `Failed to load skills: ${queryError.message}` : null;
 
   // Reset selection when modal opens
   useEffect(() => {
@@ -136,7 +99,7 @@ export function AddSkillModal({
     }).sort((a, b) => a.name.localeCompare(b.name));
   }, [skills, existingSkillNames, searchQuery]);
 
-  const toggleSkill = (skill: Skill) => {
+  const toggleSkill = (skill: RTDBSkill) => {
     setSelectedSkills(prev => {
       const exists = prev.some(s => s.id === skill.id);
       if (exists) {

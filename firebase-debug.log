@@ -1,0 +1,268 @@
+[debug] [2026-01-31T13:25:12.422Z] ----------------------------------------------------------------------
+[debug] [2026-01-31T13:25:12.424Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Kadin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-01-31T13:25:12.424Z] CLI Version:   15.2.1
+[debug] [2026-01-31T13:25:12.424Z] Platform:      win32
+[debug] [2026-01-31T13:25:12.424Z] Node Version:  v22.12.0
+[debug] [2026-01-31T13:25:12.425Z] Time:          Sat Jan 31 2026 08:25:12 GMT-0500 (Eastern Standard Time)
+[debug] [2026-01-31T13:25:12.425Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-31T13:25:28.873Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-31T13:25:28.873Z] > authorizing via signed-in user (realmsroleplaygame@gmail.com)
+[debug] [2026-01-31T13:25:28.873Z] [iam] checking project realmsrpg-test for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-01-31T13:25:28.874Z] Checked if tokens are valid: false, expires at: 1769817288985
+[debug] [2026-01-31T13:25:28.874Z] Checked if tokens are valid: false, expires at: 1769817288985
+[debug] [2026-01-31T13:25:28.874Z] > refreshing access token with scopes: []
+[debug] [2026-01-31T13:25:28.875Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-31T13:25:28.875Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-31T13:25:29.169Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-31T13:25:29.169Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-31T13:25:29.200Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions [none]
+[debug] [2026-01-31T13:25:29.200Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions x-goog-quota-user=projects/realmsrpg-test
+[debug] [2026-01-31T13:25:29.200Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-01-31T13:25:29.497Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions 200
+[debug] [2026-01-31T13:25:29.497Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-01-31T13:25:29.497Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:29.497Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:29.497Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test [none]
+[debug] [2026-01-31T13:25:29.996Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test 200
+[debug] [2026-01-31T13:25:29.996Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test {"projectId":"realmsrpg-test","projectNumber":"829555734488","displayName":"RealmsRPG-Test","name":"projects/realmsrpg-test","resources":{"hostingSite":"realmsrpg-test","realtimeDatabaseInstance":"realmsrpg-test-default-rtdb"},"state":"ACTIVE","etag":"1_77b5be64-a29f-4747-b8ce-fc37b084dce0"}
+[debug] [2026-01-31T13:25:29.996Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:29.996Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:29.996Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test [none]
+[debug] [2026-01-31T13:25:30.310Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test 200
+[debug] [2026-01-31T13:25:30.310Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test {"projectId":"realmsrpg-test","projectNumber":"829555734488","displayName":"RealmsRPG-Test","name":"projects/realmsrpg-test","resources":{"hostingSite":"realmsrpg-test","realtimeDatabaseInstance":"realmsrpg-test-default-rtdb"},"state":"ACTIVE","etag":"1_77b5be64-a29f-4747-b8ce-fc37b084dce0"}
+[debug] [2026-01-31T13:25:31.864Z] defaultcredentials: writing to file C:\Users\Kadin\AppData\Roaming\firebase\realmsroleplaygame_gmail_com_application_default_credentials.json
+[debug] [2026-01-31T13:25:31.865Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:31.865Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:31.865Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites pageToken=&pageSize=10
+[debug] [2026-01-31T13:25:32.462Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites 200
+[debug] [2026-01-31T13:25:32.462Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites {"sites":[{"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}]}
+[debug] [2026-01-31T13:25:32.462Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:32.462Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:32.462Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config [none]
+[debug] [2026-01-31T13:25:32.877Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config 200
+[debug] [2026-01-31T13:25:32.877Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config {"projectId":"realmsrpg-test","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","databaseURL":"https://realmsrpg-test-default-rtdb.firebaseio.com","storageBucket":"realmsrpg-test.firebasestorage.app","apiKey":"AIzaSyDNcNXHuO8dfcg15ZOkoa4dY3wZ2kYSWtQ","authDomain":"realmsrpg-test.firebaseapp.com","messagingSenderId":"829555734488","measurementId":"G-V3154LLM4E","projectNumber":"829555734488","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-01-31T13:25:36.308Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:36.309Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:36.309Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test [none]
+[debug] [2026-01-31T13:25:36.491Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test 200
+[debug] [2026-01-31T13:25:36.491Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test {"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}
+[info] ▲ Next.js 16.1.1 (Turbopack)
+
+[info] 
+
+[info]   Creating an optimized production build ...
+
+[info] ✓ Compiled successfully in 3.1s
+
+[info]   Running TypeScript ...
+
+[info]   Collecting page data using 15 workers ...
+
+[info] (node:26600) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[info]   Generating static pages using 15 workers (0/23) ...
+
+[info]   Generating static pages using 15 workers (5/23) 
+
+[info]   Generating static pages using 15 workers (11/23) 
+
+[info]   Generating static pages using 15 workers (17/23) 
+
+[info] (node:22848) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[info] ✓ Generating static pages using 15 workers (23/23) in 964.2ms
+
+[info]   Finalizing page optimization ...
+
+[info] 
+
+[info] Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/session
+├ ○ /characters
+├ ƒ /characters/[id]
+├ ○ /characters/new
+├ ○ /codex
+├ ○ /creature-creator
+├ ○ /encounter-tracker
+├ ○ /forgot-password
+├ ○ /forgot-username
+├ ○ /item-creator
+├ ○ /library
+├ ○ /login
+├ ○ /my-account
+├ ○ /power-creator
+├ ○ /privacy
+├ ○ /register
+├ ○ /resources
+├ ○ /rules
+├ ○ /technique-creator
+└ ○ /terms
+
+
+[info] 
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • non-static component /(main)/characters/[id]/page
+[info]  • non-static component /api/session/route
+[info] 
+[debug] [2026-01-31T13:25:48.524Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:48.524Z] Checked if tokens are valid: true, expires at: 1769869528169
+[debug] [2026-01-31T13:25:48.524Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test [none]
+[debug] [2026-01-31T13:25:48.986Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test 200
+[debug] [2026-01-31T13:25:48.987Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test {"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}
+[debug] [2026-01-31T13:25:49.328Z] Error: EPERM: operation not permitted, symlink 'C:\Users\Kadin\Desktop\Code\RealmsRPG-Test\node_modules\firebase-admin' -> 'C:\Users\Kadin\Desktop\Code\RealmsRPG-Test\.firebase\realmsrpg-test\functions\.next\node_modules\firebase-admin-a14c8a5423a75469'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2026-01-31T14:13:57.831Z] ----------------------------------------------------------------------
+[debug] [2026-01-31T14:13:57.832Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Kadin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-01-31T14:13:57.833Z] CLI Version:   15.2.1
+[debug] [2026-01-31T14:13:57.833Z] Platform:      win32
+[debug] [2026-01-31T14:13:57.833Z] Node Version:  v22.12.0
+[debug] [2026-01-31T14:13:57.833Z] Time:          Sat Jan 31 2026 09:13:57 GMT-0500 (Eastern Standard Time)
+[debug] [2026-01-31T14:13:57.833Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-01-31T14:13:58.890Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-31T14:13:58.890Z] > authorizing via signed-in user (realmsroleplaygame@gmail.com)
+[debug] [2026-01-31T14:13:58.890Z] [iam] checking project realmsrpg-test for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-01-31T14:13:58.891Z] Checked if tokens are valid: false, expires at: 1769869528169
+[debug] [2026-01-31T14:13:58.891Z] Checked if tokens are valid: false, expires at: 1769869528169
+[debug] [2026-01-31T14:13:58.891Z] > refreshing access token with scopes: []
+[debug] [2026-01-31T14:13:58.892Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-31T14:13:58.892Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-31T14:13:59.185Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-31T14:13:59.185Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-31T14:13:59.208Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions [none]
+[debug] [2026-01-31T14:13:59.208Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions x-goog-quota-user=projects/realmsrpg-test
+[debug] [2026-01-31T14:13:59.208Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-01-31T14:13:59.587Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions 200
+[debug] [2026-01-31T14:13:59.588Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-01-31T14:13:59.588Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:13:59.588Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:13:59.588Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test [none]
+[debug] [2026-01-31T14:14:00.008Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test 200
+[debug] [2026-01-31T14:14:00.008Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test {"projectId":"realmsrpg-test","projectNumber":"829555734488","displayName":"RealmsRPG-Test","name":"projects/realmsrpg-test","resources":{"hostingSite":"realmsrpg-test","realtimeDatabaseInstance":"realmsrpg-test-default-rtdb"},"state":"ACTIVE","etag":"1_77b5be64-a29f-4747-b8ce-fc37b084dce0"}
+[debug] [2026-01-31T14:14:00.009Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:00.009Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:00.009Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test [none]
+[debug] [2026-01-31T14:14:00.237Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test 200
+[debug] [2026-01-31T14:14:00.237Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test {"projectId":"realmsrpg-test","projectNumber":"829555734488","displayName":"RealmsRPG-Test","name":"projects/realmsrpg-test","resources":{"hostingSite":"realmsrpg-test","realtimeDatabaseInstance":"realmsrpg-test-default-rtdb"},"state":"ACTIVE","etag":"1_77b5be64-a29f-4747-b8ce-fc37b084dce0"}
+[debug] [2026-01-31T14:14:01.704Z] defaultcredentials: writing to file C:\Users\Kadin\AppData\Roaming\firebase\realmsroleplaygame_gmail_com_application_default_credentials.json
+[debug] [2026-01-31T14:14:01.707Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:01.707Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:01.707Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites pageToken=&pageSize=10
+[debug] [2026-01-31T14:14:02.342Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites 200
+[debug] [2026-01-31T14:14:02.342Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites {"sites":[{"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}]}
+[debug] [2026-01-31T14:14:02.343Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:02.343Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:02.343Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config [none]
+[debug] [2026-01-31T14:14:02.768Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config 200
+[debug] [2026-01-31T14:14:02.768Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config {"projectId":"realmsrpg-test","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","databaseURL":"https://realmsrpg-test-default-rtdb.firebaseio.com","storageBucket":"realmsrpg-test.firebasestorage.app","apiKey":"AIzaSyDNcNXHuO8dfcg15ZOkoa4dY3wZ2kYSWtQ","authDomain":"realmsrpg-test.firebaseapp.com","messagingSenderId":"829555734488","measurementId":"G-V3154LLM4E","projectNumber":"829555734488","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-01-31T14:14:06.175Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:06.175Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:06.175Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test [none]
+[debug] [2026-01-31T14:14:06.377Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test 200
+[debug] [2026-01-31T14:14:06.378Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test {"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}
+[info] ▲ Next.js 16.1.1 (Turbopack)
+
+[info] 
+
+[info]   Creating an optimized production build ...
+
+[info] ✓ Compiled successfully in 3.2s
+
+[info]   Running TypeScript ...
+
+[info]   Collecting page data using 15 workers ...
+
+[info] (node:26288) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[info]   Generating static pages using 15 workers (0/23) ...
+
+[info]   Generating static pages using 15 workers (5/23) 
+
+[info]   Generating static pages using 15 workers (11/23) 
+
+[info]   Generating static pages using 15 workers (17/23) 
+
+[info] (node:28104) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[info] ✓ Generating static pages using 15 workers (23/23) in 948.9ms
+
+[info]   Finalizing page optimization ...
+
+[info] 
+
+[info] Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/session
+├ ○ /characters
+├ ƒ /characters/[id]
+├ ○ /characters/new
+├ ○ /codex
+├ ○ /creature-creator
+├ ○ /encounter-tracker
+├ ○ /forgot-password
+├ ○ /forgot-username
+├ ○ /item-creator
+├ ○ /library
+├ ○ /login
+├ ○ /my-account
+├ ○ /power-creator
+├ ○ /privacy
+├ ○ /register
+├ ○ /resources
+├ ○ /rules
+├ ○ /technique-creator
+└ ○ /terms
+
+
+[info] 
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • non-static component /(main)/characters/[id]/page
+[info]  • non-static component /api/session/route
+[info] 
+[debug] [2026-01-31T14:14:19.293Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:19.294Z] Checked if tokens are valid: true, expires at: 1769872438185
+[debug] [2026-01-31T14:14:19.294Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test [none]
+[debug] [2026-01-31T14:14:19.746Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test 200
+[debug] [2026-01-31T14:14:19.747Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test {"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}
+[debug] [2026-01-31T14:14:20.087Z] Error: EPERM: operation not permitted, symlink 'C:\Users\Kadin\Desktop\Code\RealmsRPG-Test\node_modules\firebase-admin' -> 'C:\Users\Kadin\Desktop\Code\RealmsRPG-Test\.firebase\realmsrpg-test\functions\.next\node_modules\firebase-admin-a14c8a5423a75469'
+[error] 
+[error] Error: An unexpected error has occurred.

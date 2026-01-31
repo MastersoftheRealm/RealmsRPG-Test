@@ -19,6 +19,9 @@ interface ArchetypeSectionProps {
   onMartialProfChange?: (value: number) => void;
   onPowerProfChange?: (value: number) => void;
   onMilestoneChoiceChange?: (level: number, choice: 'innate' | 'feat') => void;
+  // Unarmed Prowess props
+  unarmedProwess?: number; // 0 = not selected, 1-5 = prowess level
+  onUnarmedProwessChange?: (level: number) => void;
 }
 
 function ProficiencyMeter({ 
@@ -92,11 +95,13 @@ function AttackBonusesTable({
   abilities,
   martialProf,
   powerProf,
+  powerAbility,
   onRollBonus,
 }: {
   abilities: Abilities;
   martialProf: number;
   powerProf: number;
+  powerAbility?: string; // The archetype's power ability (pow_abil)
   onRollBonus?: (name: string, bonus: number) => void;
 }) {
   // Calculate bonuses for each ability
@@ -116,9 +121,17 @@ function AttackBonusesTable({
     },
   };
   
+  // Use the archetype's power ability for power bonus calculation
+  // Default to charisma if not specified
+  const powAbilKey = (powerAbility?.toLowerCase() || 'charisma') as keyof Abilities;
+  const powAbilValue = abilities[powAbilKey] ?? 0;
+  const powAbilDisplayName = powerAbility 
+    ? powerAbility.charAt(0).toUpperCase() + powerAbility.slice(1).toLowerCase()
+    : 'Charisma';
+  
   const powerBonus = {
-    prof: (abilities[('charisma')] ?? 0) + powerProf,
-    unprof: abilities[('charisma')] ?? 0,
+    prof: powAbilValue + powerProf,
+    unprof: powAbilValue,
   };
 
   // Don't render table if no proficiencies at all
@@ -164,22 +177,22 @@ function AttackBonusesTable({
           {/* Power row - only show if power proficiency > 0 */}
           {powerProf > 0 && (
             <tr>
-              <td className="py-1 font-medium text-text-secondary capitalize">✨ Power</td>
+              <td className="py-1 font-medium text-text-secondary capitalize">✨ {powAbilDisplayName}</td>
               <td className="text-center py-1">
                 <RollButton
                   value={powerBonus.prof}
-                  onClick={() => onRollBonus?.('Power (Prof.)', powerBonus.prof)}
+                  onClick={() => onRollBonus?.(`Power (Prof.) [${powAbilDisplayName}]`, powerBonus.prof)}
                   size="sm"
-                  title="Roll power (proficient)"
+                  title={`Roll power (proficient) - ${powAbilDisplayName}`}
                 />
               </td>
               <td className="text-center py-1">
                 <RollButton
                   value={powerBonus.unprof}
                   variant="unproficient"
-                  onClick={() => onRollBonus?.('Power (Unprof.)', powerBonus.unprof)}
+                  onClick={() => onRollBonus?.(`Power (Unprof.) [${powAbilDisplayName}]`, powerBonus.unprof)}
                   size="sm"
-                  title="Roll power (unproficient)"
+                  title={`Roll power (unproficient) - ${powAbilDisplayName}`}
                 />
               </td>
             </tr>
@@ -414,6 +427,8 @@ export function ArchetypeSection({
   onMartialProfChange,
   onPowerProfChange,
   onMilestoneChoiceChange,
+  unarmedProwess,
+  onUnarmedProwessChange,
 }: ArchetypeSectionProps) {
   const martialProf = character.mart_prof ?? character.martialProficiency ?? 0;
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
@@ -634,12 +649,47 @@ export function ArchetypeSection({
         </div>
       )}
       
+      {/* Unarmed Prowess Display - show if character has unarmed prowess */}
+      {(unarmedProwess !== undefined && unarmedProwess > 0) && (
+        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-amber-700">Unarmed Prowess</span>
+              <span className="text-lg font-bold text-amber-800">Level {unarmedProwess}</span>
+            </div>
+            {showEditControls && onUnarmedProwessChange && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => onUnarmedProwessChange(Math.max(0, (unarmedProwess || 1) - 1))}
+                  className="w-6 h-6 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold flex items-center justify-center"
+                  title="Decrease prowess level"
+                >
+                  −
+                </button>
+                <button
+                  onClick={() => onUnarmedProwessChange(Math.min(5, (unarmedProwess || 0) + 1))}
+                  disabled={(unarmedProwess || 0) >= 5}
+                  className="w-6 h-6 rounded bg-amber-100 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed text-amber-700 font-bold flex items-center justify-center"
+                  title="Increase prowess level"
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
+          <p className="text-xs text-amber-600 mt-1">
+            Unarmed attacks deal 1d4+STR bludgeoning • {unarmedProwess >= 2 ? 'Counts as weapon' : ''} {unarmedProwess >= 3 ? '• Choose damage type' : ''}
+          </p>
+        </div>
+      )}
+      
       {/* Attack Bonuses Table */}
       {character.abilities && (
         <AttackBonusesTable
           abilities={character.abilities}
           martialProf={martialProf}
           powerProf={powerProf}
+          powerAbility={character.pow_abil}
           onRollBonus={handleRollBonus}
         />
       )}

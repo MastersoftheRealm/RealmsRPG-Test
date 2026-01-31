@@ -134,7 +134,8 @@ export interface Skill {
   description: string;
   ability: string;
   category: string;
-  base_skill?: string;
+  /** Base skill ID for sub-skills. 0 = any base skill, undefined = not a sub-skill */
+  base_skill_id?: number;
   trained_only?: boolean;
 }
 
@@ -292,8 +293,15 @@ async function fetchSkills(): Promise<Skill[]> {
         ability = skill.ability;
       }
       
-      // Handle base_skill field (some records use base_skill instead of category)
-      const category = (skill.category as string) || (skill.base_skill as string) || '';
+      // Handle base_skill field - now stored as ID (number), 0 means "any base skill"
+      const baseSkillRaw = skill.base_skill;
+      const baseSkillId = typeof baseSkillRaw === 'number' 
+        ? baseSkillRaw 
+        : (typeof baseSkillRaw === 'string' && baseSkillRaw !== '' 
+            ? parseInt(baseSkillRaw, 10) 
+            : undefined);
+      
+      const category = (skill.category as string) || '';
       
       return {
         id,
@@ -301,7 +309,8 @@ async function fetchSkills(): Promise<Skill[]> {
         description: (skill.description as string) || '',
         ability,
         category,
-        base_skill: (skill.base_skill as string) || '',
+        base_skill_id: !isNaN(baseSkillId as number) ? baseSkillId : undefined,
+        trained_only: skill.trained_only === true || skill.trained_only === 'true',
       };
     })
   );

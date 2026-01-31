@@ -426,48 +426,54 @@ export function GridListRow({
                       const category = chip.category || (hasCost ? 'cost' : 'default');
                       
                       return (
-                        <button
+                        <div 
                           key={index}
-                          onClick={(e) => handleChipClick(index, e)}
                           className={cn(
-                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all',
-                            'border cursor-pointer',
-                            CHIP_STYLES[category],
-                            isChipExpanded && 'ring-2 ring-offset-1 ring-current'
+                            'flex flex-col',
+                            isChipExpanded && 'w-full'
                           )}
                         >
-                          <span>{chip.name}</span>
-                          {chip.level && chip.level > 1 && (
-                            <span className="text-xs opacity-75">(Lv.{chip.level})</span>
+                          <button
+                            onClick={(e) => handleChipClick(index, e)}
+                            className={cn(
+                              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all',
+                              'border cursor-pointer',
+                              CHIP_STYLES[category],
+                              isChipExpanded && 'ring-2 ring-offset-1 ring-current'
+                            )}
+                          >
+                            <span>{chip.name}</span>
+                            {chip.level && chip.level > 1 && (
+                              <span className="text-xs opacity-75">(Lv.{chip.level})</span>
+                            )}
+                            {hasCost && (
+                              <>
+                                <span className="opacity-40">|</span>
+                                <span className="text-xs font-semibold">{chip.costLabel || costLabel}: {chip.cost}</span>
+                              </>
+                            )}
+                          </button>
+                          {/* Inline expanded details - shows below the chip when expanded */}
+                          {isChipExpanded && (
+                            <div className="mt-2 p-3 rounded-lg bg-surface border border-border shadow-sm w-full">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <h5 className="font-semibold text-text-primary">{chip.name}</h5>
+                                {hasCost && (
+                                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                    <Zap className="w-3 h-3" />
+                                    {chip.cost} {chip.costLabel || costLabel}
+                                  </span>
+                                )}
+                              </div>
+                              {chip.description && (
+                                <p className="text-sm text-text-secondary">{chip.description}</p>
+                              )}
+                            </div>
                           )}
-                          {hasCost && (
-                            <>
-                              <span className="opacity-40">|</span>
-                              <span className="text-xs font-semibold">{chip.costLabel || costLabel}: {chip.cost}</span>
-                            </>
-                          )}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
-
-                  {/* Expanded Chip Details */}
-                  {expandedChipIndex !== null && chips[expandedChipIndex] && (
-                    <div className="mt-2 p-3 rounded-lg bg-surface border border-border shadow-sm">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h5 className="font-semibold text-text-primary">{chips[expandedChipIndex].name}</h5>
-                        {(chips[expandedChipIndex].cost ?? 0) > 0 && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                            <Zap className="w-3 h-3" />
-                            {chips[expandedChipIndex].cost} {chips[expandedChipIndex].costLabel || costLabel}
-                          </span>
-                        )}
-                      </div>
-                      {chips[expandedChipIndex].description && (
-                        <p className="text-sm text-text-secondary">{chips[expandedChipIndex].description}</p>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 

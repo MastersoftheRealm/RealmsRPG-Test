@@ -3,6 +3,7 @@
  * ============
  * Allocate skill points with real data from Firebase RTDB
  * Skills are grouped by the 6 abilities, with sub-skills nested under their base skills
+ * Species skills are automatically granted as proficiencies without costing skill points
  */
 
 'use client';
@@ -10,7 +11,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useRTDBSkills, type RTDBSkill } from '@/hooks';
+import { useRTDBSkills, useSpecies, type RTDBSkill } from '@/hooks';
 import { calculateSkillPoints } from '@/lib/game/formulas';
 import { ValueStepper } from '@/components/shared';
 import { Button, Alert } from '@/components/ui';
@@ -20,11 +21,23 @@ const ABILITY_ORDER = ['Strength', 'Vitality', 'Agility', 'Acuity', 'Intelligenc
 export function SkillsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: skills, isLoading } = useRTDBSkills();
+  const { data: allSpecies = [] } = useSpecies();
+  
   // Track expanded state for each category independently
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Strength']));
 
   // Get skill points based on level (default level 1)
   const totalSkillPoints = calculateSkillPoints(draft.level || 1);
+  
+  // Get species skills (granted free proficiencies)
+  const speciesSkillNames = useMemo(() => {
+    // Find the species from draft.ancestry?.name or draft.species
+    const speciesName = draft.ancestry?.name || draft.species;
+    if (!speciesName) return new Set<string>();
+    
+    const species = allSpecies.find(s => s.name.toLowerCase() === speciesName.toLowerCase());
+    return new Set((species?.skills || []).map(s => s.toLowerCase()));
+  }, [draft.ancestry?.name, draft.species, allSpecies]);
   
   // Initialize skill allocations from draft or create empty
   // CharacterSkills is Record<string, number>
@@ -32,10 +45,17 @@ export function SkillsStep() {
     return draft.skills || {};
   });
 
-
+  // Calculate used points (excluding species skills - they don't cost points)
   const usedPoints = useMemo(() => {
-    return Object.values(allocations).reduce((sum, val) => sum + val, 0);
-  }, [allocations]);
+    return Object.entries(allocations).reduce((sum, [skillId, val]) => {
+      // Find the skill by ID to check if it's a species skill
+      const skill = skills?.find(s => s.id === skillId);
+      if (skill && speciesSkillNames.has(skill.name.toLowerCase())) {
+        return sum; // Species skills don't cost points
+      }
+      return sum + val;
+    }, 0);
+  }, [allocations, skills, speciesSkillNames]);
 
   const remainingPoints = totalSkillPoints - usedPoints;
 
@@ -52,20 +72,29 @@ export function SkillsStep() {
       groups[ability] = [];
     });
     
-    // First pass: identify all sub-skills and group by base skill
+    // Create a mapping from skill ID to skill for base_skill_id lookups
+    const skillById: Record<string, RTDBSkill> = {};
     skills.forEach(skill => {
-      if (skill.base_skill) {
-        if (!subsByBase[skill.base_skill]) {
-          subsByBase[skill.base_skill] = [];
+      skillById[skill.id] = skill;
+    });
+    
+    // First pass: identify all sub-skills and group by base skill ID
+    // base_skill_id = 0 means "any base skill", undefined means not a sub-skill
+    skills.forEach(skill => {
+      if (skill.base_skill_id !== undefined) {
+        // Key by the base skill ID (or "0" for any base skill)
+        const baseKey = String(skill.base_skill_id);
+        if (!subsByBase[baseKey]) {
+          subsByBase[baseKey] = [];
         }
-        subsByBase[skill.base_skill].push(skill);
+        subsByBase[baseKey].push(skill);
       }
     });
     
     // Second pass: group main skills by ability
     skills.forEach(skill => {
       // Skip sub-skills - they'll be nested under their base skill
-      if (skill.base_skill) {
+      if (skill.base_skill_id !== undefined) {
         return;
       }
       
@@ -171,8 +200,8 @@ export function SkillsStep() {
           let categoryPoints = 0;
           categorySkills.forEach(skill => {
             categoryPoints += allocations[skill.id] || 0;
-            // Add sub-skill points
-            const subs = subSkillsByBase[skill.id] || [];
+            // Add sub-skill points (look up by skill name)
+            const subs = subSkillsByBase[skill.name.toLowerCase()] || [];
             subs.forEach(sub => {
               categoryPoints += allocations[sub.id] || 0;
             });
@@ -180,7 +209,7 @@ export function SkillsStep() {
           
           // Count sub-skills in this category
           const subSkillCount = categorySkills.reduce((count, skill) => {
-            return count + (subSkillsByBase[skill.id]?.length || 0);
+            return count + (subSkillsByBase[skill.name.toLowerCase()]?.length || 0);
           }, 0);
           
           const isExpanded = expandedCategories.has(ability);
@@ -215,7 +244,12 @@ export function SkillsStep() {
               {isExpanded && (
                 <div className="p-4 space-y-3">
                   {categorySkills.map(skill => {
-                    const skillSubSkills = subSkillsByBase[skill.id] || [];
+                    // Look up sub-skills by skill ID - subSkillsByBase is keyed by base_skill_id
+                    // Also include "any base skill" sub-skills (base_skill_id = 0)
+                    const skillSubSkills = [
+                      ...(subSkillsByBase[skill.id] || []),
+                      ...(subSkillsByBase['0'] || []), // Skills that can use any base skill
+                    ];
                     const hasSubSkills = skillSubSkills.length > 0;
                     const baseSkillValue = allocations[skill.id] || 0;
                     
@@ -227,6 +261,7 @@ export function SkillsStep() {
                           value={baseSkillValue}
                           onAllocate={(delta) => handleAllocate(skill.id, delta)}
                           canIncrease={remainingPoints > 0}
+                          isSpeciesSkill={speciesSkillNames.has(skill.name.toLowerCase())}
                         />
                         
                         {/* Sub-Skills (nested under base skill) */}
@@ -243,6 +278,7 @@ export function SkillsStep() {
                                   canIncrease={remainingPoints > 0}
                                   isUnlocked={isUnlocked}
                                   baseSkillName={skill.name}
+                                  isSpeciesSkill={speciesSkillNames.has(subSkill.name.toLowerCase())}
                                 />
                               );
                             })}
@@ -286,15 +322,17 @@ interface SkillAllocatorProps {
   value: number;
   onAllocate: (delta: number) => void;
   canIncrease: boolean;
+  isSpeciesSkill?: boolean;
 }
 
-function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocatorProps) {
+function SkillAllocator({ skill, value, onAllocate, canIncrease, isSpeciesSkill }: SkillAllocatorProps) {
   const [showDescription, setShowDescription] = useState(false);
   
   return (
     <div className={cn(
       'p-3 rounded-lg border transition-colors',
-      value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-surface-alt border-border-light'
+      isSpeciesSkill ? 'bg-blue-50 border-blue-200' : 
+        value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-surface-alt border-border-light'
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -305,16 +343,25 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease }: SkillAllocato
             ℹ️
           </button>
           <span className="font-medium text-text-primary">{skill.name}</span>
+          {isSpeciesSkill && (
+            <span className="text-xs text-blue-600 font-medium">(Species)</span>
+          )}
         </div>
         
-        <ValueStepper
-          value={value}
-          onChange={(newValue) => onAllocate(newValue - value)}
-          min={0}
-          max={canIncrease ? undefined : value}
-          size="sm"
-          enableHoldRepeat
-        />
+        {isSpeciesSkill ? (
+          <span className="text-xs text-blue-600 font-medium px-2 py-1 bg-blue-100 rounded">
+            ✓ Proficient
+          </span>
+        ) : (
+          <ValueStepper
+            value={value}
+            onChange={(newValue) => onAllocate(newValue - value)}
+            min={0}
+            max={canIncrease ? undefined : value}
+            size="sm"
+            // No enableHoldRepeat - skill points should be allocated individually
+          />
+        )}
       </div>
       
       {showDescription && skill.description && (
@@ -333,35 +380,45 @@ interface SubSkillAllocatorProps {
   canIncrease: boolean;
   isUnlocked: boolean;
   baseSkillName: string;
+  isSpeciesSkill?: boolean;
 }
 
-function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, baseSkillName }: SubSkillAllocatorProps) {
+function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, baseSkillName, isSpeciesSkill }: SubSkillAllocatorProps) {
   return (
     <div className={cn(
       'p-2 rounded-lg border transition-colors text-sm',
-      !isUnlocked && 'opacity-50 bg-surface border-border-light',
-      isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
-      isUnlocked && value === 0 && 'bg-surface-alt border-border-light'
+      isSpeciesSkill ? 'bg-blue-50 border-blue-200' :
+        !isUnlocked && 'opacity-50 bg-surface border-border-light',
+      !isSpeciesSkill && isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
+      !isSpeciesSkill && isUnlocked && value === 0 && 'bg-surface-alt border-border-light'
     )}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xs text-text-muted">↳</span>
           <span className={cn(
             'font-medium',
-            isUnlocked ? 'text-text-primary' : 'text-text-muted'
+            isSpeciesSkill ? 'text-blue-700' :
+              isUnlocked ? 'text-text-primary' : 'text-text-muted'
           )}>
             {skill.name}
           </span>
+          {isSpeciesSkill && (
+            <span className="text-xs text-blue-600 font-medium">(Species)</span>
+          )}
         </div>
         
-        {isUnlocked ? (
+        {isSpeciesSkill ? (
+          <span className="text-xs text-blue-600 font-medium px-2 py-0.5 bg-blue-100 rounded">
+            ✓ Proficient
+          </span>
+        ) : isUnlocked ? (
           <ValueStepper
             value={value}
             onChange={(newValue) => onAllocate(newValue - value)}
             min={0}
             max={canIncrease ? undefined : value}
             size="xs"
-            enableHoldRepeat
+            // No enableHoldRepeat - skill points should be allocated individually
           />
         ) : (
           <span className="text-xs text-text-muted italic">

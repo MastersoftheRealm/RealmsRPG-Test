@@ -515,6 +515,26 @@ export interface PowerDocument {
     type?: string;
     applyDuration?: boolean;
   }>;
+  // Directly saved fields from power creator
+  actionType?: string;
+  isReaction?: boolean;
+  range?: {
+    steps?: number;
+    applyDuration?: boolean;
+  };
+  area?: {
+    type?: string;
+    level?: number;
+    applyDuration?: boolean;
+  };
+  duration?: {
+    type?: string;
+    value?: number;
+    focus?: boolean;
+    noHarm?: boolean;
+    endsOnActivation?: boolean;
+    sustain?: number;
+  };
 }
 
 /**
@@ -536,10 +556,71 @@ export function derivePowerDisplay(
     : [];
 
   const calc = calculatePowerCosts(partsPayload, partsDb);
-  const actionType = computeActionType(partsPayload, partsDb);
-  const rangeStr = deriveRange(partsPayload, partsDb);
-  const areaStr = deriveArea(partsPayload, partsDb);
-  const durationStr = deriveDuration(partsPayload, partsDb);
+  
+  // Use directly saved actionType if available, otherwise derive from parts
+  let actionType: string;
+  if (powerDoc.actionType) {
+    actionType = powerDoc.isReaction ? 'Reaction' : 
+      powerDoc.actionType.charAt(0).toUpperCase() + powerDoc.actionType.slice(1).toLowerCase();
+  } else {
+    actionType = computeActionType(partsPayload, partsDb);
+  }
+  
+  // Use directly saved range if available, otherwise derive from parts
+  let rangeStr: string;
+  if (powerDoc.range && powerDoc.range.steps !== undefined && powerDoc.range.steps > 0) {
+    const spaces = 3 + 3 * powerDoc.range.steps;
+    rangeStr = `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
+  } else {
+    rangeStr = deriveRange(partsPayload, partsDb);
+  }
+  
+  // Use directly saved area if available, otherwise derive from parts
+  let areaStr: string;
+  if (powerDoc.area && powerDoc.area.type && powerDoc.area.type !== 'none') {
+    const areaNames: Record<string, string> = {
+      sphere: 'Sphere',
+      cylinder: 'Cylinder',
+      cone: 'Cone',
+      line: 'Line',
+      trail: 'Trail',
+    };
+    areaStr = areaNames[powerDoc.area.type] || powerDoc.area.type;
+    if (powerDoc.area.level && powerDoc.area.level > 1) {
+      areaStr += ` ${powerDoc.area.level}`;
+    }
+  } else {
+    areaStr = deriveArea(partsPayload, partsDb);
+  }
+  
+  // Use directly saved duration if available, otherwise derive from parts
+  let durationStr: string;
+  if (powerDoc.duration && powerDoc.duration.type && powerDoc.duration.type !== 'instant') {
+    const durType = powerDoc.duration.type;
+    const durValue = powerDoc.duration.value || 1;
+    if (durType === 'permanent') {
+      durationStr = 'Permanent';
+    } else if (durType === 'round') {
+      durationStr = durValue > 1 ? `${durValue} Rounds` : '1 Round';
+    } else if (durType === 'minute') {
+      durationStr = durValue > 1 ? `${durValue} Minutes` : '1 Minute';
+    } else if (durType === 'hour') {
+      durationStr = durValue > 1 ? `${durValue} Hours` : '1 Hour';
+    } else if (durType === 'day') {
+      durationStr = durValue > 1 ? `${durValue} Days` : '1 Day';
+    } else {
+      durationStr = durType;
+    }
+    // Add focus/sustain modifiers
+    if (powerDoc.duration.focus) {
+      durationStr += ' (Focus)';
+    }
+    if (powerDoc.duration.sustain && powerDoc.duration.sustain > 0) {
+      durationStr += ` (Sustain ${powerDoc.duration.sustain})`;
+    }
+  } else {
+    durationStr = deriveDuration(partsPayload, partsDb);
+  }
 
   // Build part chips
   const partChips: PartChipData[] = partsPayload

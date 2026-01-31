@@ -60,6 +60,7 @@ import {
   DIE_SIZES,
   RARITY_COLORS,
   CREATOR_CACHE_KEYS,
+  formatCost,
 } from '@/lib/game/creator-constants';
 
 // LocalStorage key for caching item creator state
@@ -135,26 +136,28 @@ function PropertyCard({
 
   return (
     <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
-      {/* Header */}
+      {/* Header - entire header clickable except X button */}
       <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-            className="text-text-muted hover:text-text-secondary"
-          >
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
+        >
+          <span className="text-text-muted">
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-          <span className="font-medium text-text-primary">{property.name}</span>
-          {propTP > 0 && (
-            <span className="text-sm text-purple-600 font-medium">TP: {propTP}</span>
-          )}
-          {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
-            <span className="text-sm text-amber-600 font-medium">
-              C: {((property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl).toFixed(2)}
-            </span>
-          )}
-        </div>
+          </span>
+          <span className="font-medium text-text-primary truncate">{property.name}</span>
+          <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
+            {propTP > 0 && (
+              <span className="text-purple-600">TP: {formatCost(propTP)}</span>
+            )}
+            {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
+              <span className="text-amber-600">
+                C: {formatCost((property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl)}
+              </span>
+            )}
+          </span>
+        </button>
         <IconButton
           onClick={onRemove}
           label="Remove property"
@@ -193,29 +196,119 @@ function PropertyCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-text-secondary">{property.description}</p>
+          <p className="text-base text-text-primary leading-relaxed">{property.description}</p>
 
           {/* Option Level */}
           {hasOption && (
-            <div className="bg-surface-alt rounded-lg p-3">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">
-                  Option:{' '}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-amber-800">Option</span>
                   {property.op_1_tp && (
-                    <span className="text-text-muted">
-                      TP +{property.op_1_tp}/level
+                    <span className="text-sm font-medium text-purple-600">
+                      TP +{formatCost(property.op_1_tp)}/level
                     </span>
                   )}
-                </span>
+                  {property.op_1_c && (
+                    <span className="text-sm font-medium text-amber-600">
+                      C +{formatCost(property.op_1_c)}/level
+                    </span>
+                  )}
+                </div>
                 <NumberStepper
                   value={selectedProperty.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label="Level:"
                 />
               </div>
-              <p className="text-sm text-text-secondary">{property.op_1_desc}</p>
+              <p className="text-sm text-text-primary">{property.op_1_desc}</p>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// Rarity Reference Table Component
+// =============================================================================
+
+const RARITY_REFERENCE = [
+  { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-secondary bg-neutral-100' },
+  { name: 'Uncommon', ipRange: '4.01 – 6', baseCost: 100, color: 'text-green-700 bg-green-100' },
+  { name: 'Rare', ipRange: '6.01 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100' },
+  { name: 'Epic', ipRange: '8.01 – 11', baseCost: 2500, color: 'text-purple-700 bg-purple-100' },
+  { name: 'Legendary', ipRange: '11.01 – 14', baseCost: 10000, color: 'text-amber-700 bg-amber-100' },
+  { name: 'Mythic', ipRange: '14.01 – 16', baseCost: 50000, color: 'text-red-700 bg-red-100' },
+  { name: 'Ascended', ipRange: '16.01+', baseCost: 100000, color: 'text-pink-700 bg-pink-100' },
+];
+
+function RarityReferenceTable({ currentIP }: { currentIP: number }) {
+  const [expanded, setExpanded] = useState(false);
+  
+  // Find current rarity based on IP
+  const getCurrentRarity = () => {
+    if (currentIP <= 4) return 'Common';
+    if (currentIP <= 6) return 'Uncommon';
+    if (currentIP <= 8) return 'Rare';
+    if (currentIP <= 11) return 'Epic';
+    if (currentIP <= 14) return 'Legendary';
+    if (currentIP <= 16) return 'Mythic';
+    return 'Ascended';
+  };
+  const currentRarity = getCurrentRarity();
+
+  return (
+    <div className="bg-surface rounded-xl shadow-md overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface-alt/80 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-amber-600" />
+          <span className="font-medium text-text-primary">Rarity Reference</span>
+        </div>
+        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+      
+      {expanded && (
+        <div className="p-4">
+          <p className="text-xs text-text-muted mb-3">
+            IP (Item Power) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C multiplier)
+          </p>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-light">
+                <th className="text-left py-1 font-medium text-text-secondary">Rarity</th>
+                <th className="text-right py-1 font-medium text-text-secondary">IP Range</th>
+                <th className="text-right py-1 font-medium text-text-secondary">Base Gold</th>
+              </tr>
+            </thead>
+            <tbody>
+              {RARITY_REFERENCE.map((r) => (
+                <tr 
+                  key={r.name} 
+                  className={cn(
+                    'border-b border-border-light last:border-0',
+                    currentRarity === r.name && 'font-semibold'
+                  )}
+                >
+                  <td className="py-1.5">
+                    <span className={cn('px-2 py-0.5 rounded text-xs font-medium', r.color)}>
+                      {r.name}
+                    </span>
+                    {currentRarity === r.name && (
+                      <span className="ml-1 text-xs text-amber-600">← Current</span>
+                    )}
+                  </td>
+                  <td className="text-right py-1.5 text-text-secondary">{r.ipRange}</td>
+                  <td className="text-right py-1.5 text-amber-600">{r.baseCost.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -605,7 +698,7 @@ function ItemCreatorContent() {
           ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
           : [];
 
-      // Prepare item data
+      // Prepare item data - include ALL configuration fields
       const itemData = {
         name: name.trim(),
         description: description.trim(),
@@ -615,6 +708,33 @@ function ItemCreatorContent() {
         costs: costs,
         rarity: rarity,
         updatedAt: new Date(),
+        // Weapon-specific fields
+        ...(armamentType === 'Weapon' && {
+          isTwoHanded,
+          rangeLevel,
+          abilityRequirement: abilityRequirement ? {
+            id: abilityRequirement.id,
+            name: abilityRequirement.name,
+            level: abilityRequirement.level,
+          } : null,
+        }),
+        // Armor-specific fields
+        ...(armamentType === 'Armor' && {
+          damageReduction,
+          agilityReduction,
+          criticalRangeIncrease,
+          abilityRequirement: abilityRequirement ? {
+            id: abilityRequirement.id,
+            name: abilityRequirement.name,
+            level: abilityRequirement.level,
+          } : null,
+        }),
+        // Shield-specific fields
+        ...(armamentType === 'Shield' && {
+          shieldDR: { amount: shieldDR.amount, size: shieldDR.size },
+          hasShieldDamage,
+          shieldDamage: hasShieldDamage ? { amount: shieldDamage.amount, size: shieldDamage.size } : null,
+        }),
       };
 
       // Save directly to Firestore - check for existing item with same name
@@ -689,7 +809,8 @@ function ItemCreatorContent() {
       'armor': 'Armor',
       'shield': 'Shield',
     };
-    setArmamentType(typeMap[item.type?.toLowerCase()] || 'Weapon');
+    const loadedType = typeMap[item.type?.toLowerCase()] || 'Weapon';
+    setArmamentType(loadedType);
     
     // Load properties - match by id or name
     if (item.properties && Array.isArray(item.properties) && itemProperties.length > 0) {
@@ -724,6 +845,54 @@ function ItemCreatorContent() {
       });
     } else {
       setDamage({ amount: 1, size: 6, type: 'slashing' });
+    }
+    
+    // Load weapon-specific fields
+    if (loadedType === 'Weapon') {
+      setIsTwoHanded(item.isTwoHanded || false);
+      setRangeLevel(item.rangeLevel || 0);
+      if (item.abilityRequirement) {
+        setAbilityRequirement({
+          id: item.abilityRequirement.id,
+          name: item.abilityRequirement.name,
+          level: item.abilityRequirement.level || 0,
+        });
+      } else {
+        setAbilityRequirement(null);
+      }
+    }
+    
+    // Load armor-specific fields
+    if (loadedType === 'Armor') {
+      setDamageReduction(item.damageReduction || 0);
+      setAgilityReduction(item.agilityReduction || 0);
+      setCriticalRangeIncrease(item.criticalRangeIncrease || 0);
+      if (item.abilityRequirement) {
+        setAbilityRequirement({
+          id: item.abilityRequirement.id,
+          name: item.abilityRequirement.name,
+          level: item.abilityRequirement.level || 0,
+        });
+      } else {
+        setAbilityRequirement(null);
+      }
+    }
+    
+    // Load shield-specific fields
+    if (loadedType === 'Shield') {
+      if (item.shieldDR) {
+        setShieldDR({
+          amount: item.shieldDR.amount || 1,
+          size: item.shieldDR.size || 4,
+        });
+      }
+      setHasShieldDamage(item.hasShieldDamage || false);
+      if (item.shieldDamage) {
+        setShieldDamage({
+          amount: item.shieldDamage.amount || 1,
+          size: item.shieldDamage.size || 4,
+        });
+      }
     }
     
     // Close modal
@@ -1180,7 +1349,7 @@ function ItemCreatorContent() {
             ]}
             statRows={[
               { label: 'Type', value: armamentType },
-              { label: 'Item Points', value: `${costs.totalIP} IP` },
+              { label: 'Item Points', value: `${formatCost(costs.totalIP)} IP` },
               ...(armamentType === 'Weapon' ? [
                 { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
                 { label: 'Range', value: rangeDisplay },
@@ -1214,6 +1383,9 @@ function ItemCreatorContent() {
               </Alert>
             )}
           </CreatorSummaryPanel>
+          
+          {/* Rarity Reference Table */}
+          <RarityReferenceTable currentIP={costs.totalIP} />
         </div>
       </div>
 

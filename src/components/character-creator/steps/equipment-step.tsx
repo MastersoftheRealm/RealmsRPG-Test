@@ -17,8 +17,21 @@ import { deriveItemDisplay } from '@/lib/calculators/item-calc';
 import { SearchInput, DecrementButton, IncrementButton } from '@/components/shared';
 import { Spinner, Button } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
-import { ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, AlertCircle, Swords, Check } from 'lucide-react';
 import type { Item } from '@/types';
+
+// Unarmed Prowess constants
+const UNARMED_PROWESS_BASE_TP = 10;
+const UNARMED_PROWESS_UPGRADE_TP = 6;
+const UNARMED_PROWESS_LEVELS = [
+  { level: 1, charLevel: 1, name: 'Unarmed Prowess', description: 'Your unarmed strikes deal 1d4 damage and can use Strength or Agility for attack and damage rolls.' },
+  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', description: 'Your unarmed damage increases to 1d6.' },
+  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', description: 'Your unarmed damage increases to 1d8.' },
+  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', description: 'Your unarmed damage increases to 1d10.' },
+  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', description: 'Your unarmed damage increases to 1d12.' },
+];
+
+type EquipmentTabId = 'weapon' | 'armor' | 'equipment' | 'unarmed';
 
 // Unified item type for display in equipment step
 interface UnifiedEquipmentItem {
@@ -59,12 +72,38 @@ export function EquipmentStep() {
   // Fetch item properties for deriving display data from user items
   const { data: itemProperties } = useItemProperties();
   
-  const [activeTab, setActiveTab] = useState<'weapon' | 'armor' | 'equipment'>('weapon');
+  const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   const isLoading = userItemsLoading || rtdbLoading;
   const error = rtdbError;
+
+  // Current unarmed prowess level from draft (0 = not selected)
+  const currentUnarmedProwess = draft.unarmedProwess || 0;
+  
+  // Calculate TP cost for unarmed prowess
+  const unarmedProwessTPCost = useMemo(() => {
+    if (currentUnarmedProwess === 0) return 0;
+    return UNARMED_PROWESS_BASE_TP + (currentUnarmedProwess - 1) * UNARMED_PROWESS_UPGRADE_TP;
+  }, [currentUnarmedProwess]);
+
+  // Get available unarmed prowess levels based on character level
+  const availableUnarmedLevels = useMemo(() => {
+    const charLevel = draft.level || 1;
+    return UNARMED_PROWESS_LEVELS.filter(up => up.charLevel <= charLevel);
+  }, [draft.level]);
+  
+  // Toggle unarmed prowess selection
+  const toggleUnarmedProwess = useCallback(() => {
+    const newLevel = currentUnarmedProwess === 0 ? 1 : 0;
+    updateDraft({ unarmedProwess: newLevel });
+  }, [currentUnarmedProwess, updateDraft]);
+
+  // Upgrade unarmed prowess to a specific level
+  const setUnarmedProwessLevel = useCallback((level: number) => {
+    updateDraft({ unarmedProwess: level });
+  }, [updateDraft]);
 
   // Combine user library items (weapons/armor) with RTDB general equipment
   const allEquipment = useMemo((): UnifiedEquipmentItem[] => {
@@ -124,14 +163,14 @@ export function EquipmentStep() {
       }
     }
     
-    // Add general equipment from RTDB
+    // Add all equipment from RTDB (weapons, armor, and general equipment)
     if (rtdbEquipment) {
       for (const item of rtdbEquipment) {
-        // RTDB items are general equipment only (no weapons/armor)
+        // Use the actual type from RTDB (weapon, armor, or equipment)
         items.push({
           id: item.id,
           name: item.name,
-          type: 'equipment', // RTDB items are always general equipment
+          type: item.type, // Preserve the actual type from RTDB
           description: item.description || '',
           damage: item.damage,
           armor_value: item.armor_value,
@@ -351,33 +390,121 @@ export function EquipmentStep() {
           { id: 'weapon', label: 'Weapons', count: allEquipment.filter(e => e.type === 'weapon').length },
           { id: 'armor', label: 'Armor', count: allEquipment.filter(e => e.type === 'armor').length },
           { id: 'equipment', label: 'Equipment', count: allEquipment.filter(e => e.type === 'equipment').length },
+          { id: 'unarmed', label: currentUnarmedProwess > 0 ? `Unarmed Prowess (Lv ${currentUnarmedProwess})` : 'Unarmed Prowess' },
         ]}
         activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as 'weapon' | 'armor' | 'equipment')}
+        onTabChange={(tabId) => setActiveTab(tabId as EquipmentTabId)}
         variant="pill"
         className="mb-4"
       />
 
-      {/* Search */}
-      <div className="mb-4">
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder={`Search ${activeTab}s...`}
-        />
-      </div>
+      {/* Unarmed Prowess Tab Content */}
+      {activeTab === 'unarmed' ? (
+        <div className="border border-border-light rounded-lg mb-8 p-6 bg-surface">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="p-3 rounded-full bg-amber-100">
+              <Swords className="w-8 h-8 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-text-primary mb-1">Unarmed Prowess</h3>
+              <p className="text-text-secondary text-sm">
+                Master the art of unarmed combat. Your fists become deadly weapons, 
+                dealing increasing damage as you train. Upgrades become available at higher character levels.
+              </p>
+            </div>
+          </div>
 
-      {/* Results count */}
-      <div className="text-sm text-text-muted mb-2">
-        {filteredEquipment.length} {activeTab}{filteredEquipment.length !== 1 ? 's' : ''} found
-      </div>
+          {/* Prowess Levels */}
+          <div className="space-y-3">
+            {UNARMED_PROWESS_LEVELS.map((prowessLevel, idx) => {
+              const isAvailable = prowessLevel.charLevel <= (draft.level || 1);
+              const isSelected = currentUnarmedProwess >= prowessLevel.level;
+              const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
+              const canSelect = isAvailable && (currentUnarmedProwess === prowessLevel.level - 1 || isSelected);
+              
+              return (
+                <div
+                  key={prowessLevel.level}
+                  className={cn(
+                    'flex items-center gap-4 p-4 rounded-lg border transition-all',
+                    isSelected ? 'bg-primary-50 border-primary-300' : 'bg-surface border-border-light',
+                    !isAvailable && 'opacity-50',
+                    canSelect && !isSelected && 'hover:border-primary-300 cursor-pointer'
+                  )}
+                  onClick={() => {
+                    if (!isAvailable) return;
+                    if (isSelected) {
+                      // Deselect - set to previous level
+                      setUnarmedProwessLevel(prowessLevel.level - 1);
+                    } else if (currentUnarmedProwess === prowessLevel.level - 1) {
+                      // Select this level
+                      setUnarmedProwessLevel(prowessLevel.level);
+                    }
+                  }}
+                >
+                  {/* Selection indicator */}
+                  <div className={cn(
+                    'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
+                    isSelected ? 'bg-primary-600 text-white' : 'bg-surface-alt border border-border-light'
+                  )}>
+                    {isSelected && <Check className="w-4 h-4" />}
+                  </div>
 
-      {/* Equipment List - Codex-like style */}
-      <div className="border border-border-light rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-border-light">
-        {filteredEquipment.length === 0 ? (
-          <div className="text-center py-8 text-text-muted">
-            {activeTab === 'weapon' || activeTab === 'armor' ? (
-              <div className="flex flex-col items-center gap-2">
+                  {/* Level info */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-text-primary">{prowessLevel.name}</span>
+                      {!isAvailable && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                          Requires Level {prowessLevel.charLevel}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-text-secondary mt-1">{prowessLevel.description}</p>
+                  </div>
+
+                  {/* TP Cost */}
+                  <div className={cn(
+                    'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
+                    isSelected ? 'bg-primary-100 text-primary-700' : 'bg-amber-50 text-amber-700'
+                  )}>
+                    {tpCost} TP
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Total TP Cost */}
+          {currentUnarmedProwess > 0 && (
+            <div className="mt-6 pt-4 border-t border-border-light flex items-center justify-between">
+              <span className="text-text-secondary">Total Unarmed Prowess Cost:</span>
+              <span className="text-lg font-bold text-primary-600">{unarmedProwessTPCost} TP</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Search */}
+          <div className="mb-4">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={`Search ${activeTab}s...`}
+            />
+          </div>
+
+          {/* Results count */}
+          <div className="text-sm text-text-muted mb-2">
+            {filteredEquipment.length} {activeTab}{filteredEquipment.length !== 1 ? 's' : ''} found
+          </div>
+
+          {/* Equipment List - Codex-like style */}
+          <div className="border border-border-light rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-border-light">
+            {filteredEquipment.length === 0 ? (
+              <div className="text-center py-8 text-text-muted">
+                {activeTab === 'weapon' || activeTab === 'armor' ? (
+                  <div className="flex flex-col items-center gap-2">
                 <AlertCircle className="w-8 h-8 text-text-muted" />
                 <p>No {activeTab}s found in your library.</p>
                 <p className="text-sm">
@@ -489,7 +616,9 @@ export function EquipmentStep() {
             );
           })
         )}
-      </div>
+          </div>
+        </>
+      )}
       
       <div className="flex justify-between">
         <Button

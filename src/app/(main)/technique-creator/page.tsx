@@ -65,6 +65,7 @@ import {
   ACTION_OPTIONS,
   DIE_SIZES,
   CREATOR_CACHE_KEYS,
+  formatCost,
 } from '@/lib/game/creator-constants';
 
 // LocalStorage key for caching technique creator state
@@ -131,21 +132,22 @@ function PartCard({
 
   return (
     <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
-      {/* Header */}
+      {/* Header - entire header clickable except X button */}
       <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setExpanded(!expanded)}
-            className="text-text-muted hover:text-text-secondary"
-          >
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
+        >
+          <span className="text-text-muted">
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-          <span className="font-medium text-text-primary">{part.name}</span>
-          <span className="text-sm text-text-muted">
-            En: {partEnergy.toFixed(1)} | TP: {Math.floor(partTP)}
           </span>
-        </div>
+          <span className="font-medium text-text-primary truncate">{part.name}</span>
+          <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
+            <span className="text-red-600">EN: {formatCost(partEnergy)}</span>
+            <span className="text-purple-600">TP: {formatCost(partTP)}</span>
+          </span>
+        </button>
         <IconButton
           onClick={onRemove}
           label="Remove part"
@@ -224,15 +226,15 @@ function PartCard({
           </div>
 
           {/* Description */}
-          <p className="text-sm text-text-secondary">{part.description}</p>
+          <p className="text-base text-text-primary leading-relaxed">{part.description}</p>
 
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
-              Base Energy: <strong>{part.base_en || 0}</strong>
+              Base Energy: <strong className="text-red-600">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
-              Base TP: <strong>{part.base_tp}</strong>
+              Base TP: <strong className="text-purple-600">{formatCost(part.base_tp || 0)}</strong>
             </span>
           </div>
 
@@ -240,15 +242,17 @@ function PartCard({
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
             <div className="space-y-3 pt-2 border-t border-border-light">
               {hasOption(1) && (
-                <div className="bg-surface-alt rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      Option 1:{' '}
-                      <span className="text-text-muted">
-                        En {(part.op_1_en || 0) >= 0 ? '+' : ''}{part.op_1_en || 0}, TP{' '}
-                        {(part.op_1_tp || 0) >= 0 ? '+' : ''}{part.op_1_tp || 0}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-red-800">Option 1</span>
+                      <span className="text-sm font-medium text-red-600">
+                        EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                       </span>
-                    </span>
+                      <span className="text-sm font-medium text-purple-600">
+                        TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
+                      </span>
+                    </div>
                     <NumberStepper
                       value={selectedPart.op_1_lvl}
                       onChange={(v) => onUpdate({ op_1_lvl: v })}
@@ -256,21 +260,23 @@ function PartCard({
                     />
                   </div>
                   {part.op_1_desc && (
-                    <p className="text-sm text-text-secondary">{part.op_1_desc}</p>
+                    <p className="text-sm text-text-primary">{part.op_1_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(2) && (
-                <div className="bg-surface-alt rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      Option 2:{' '}
-                      <span className="text-text-muted">
-                        En {(part.op_2_en || 0) >= 0 ? '+' : ''}{part.op_2_en || 0}, TP{' '}
-                        {(part.op_2_tp || 0) >= 0 ? '+' : ''}{part.op_2_tp || 0}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-red-800">Option 2</span>
+                      <span className="text-sm font-medium text-red-600">
+                        EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                       </span>
-                    </span>
+                      <span className="text-sm font-medium text-purple-600">
+                        TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
+                      </span>
+                    </div>
                     <NumberStepper
                       value={selectedPart.op_2_lvl}
                       onChange={(v) => onUpdate({ op_2_lvl: v })}
@@ -278,21 +284,23 @@ function PartCard({
                     />
                   </div>
                   {part.op_2_desc && (
-                    <p className="text-sm text-text-secondary">{part.op_2_desc}</p>
+                    <p className="text-sm text-text-primary">{part.op_2_desc}</p>
                   )}
                 </div>
               )}
 
               {hasOption(3) && (
-                <div className="bg-surface-alt rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      Option 3:{' '}
-                      <span className="text-text-muted">
-                        En {(part.op_3_en || 0) >= 0 ? '+' : ''}{part.op_3_en || 0}, TP{' '}
-                        {(part.op_3_tp || 0) >= 0 ? '+' : ''}{part.op_3_tp || 0}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-red-800">Option 3</span>
+                      <span className="text-sm font-medium text-red-600">
+                        EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                       </span>
-                    </span>
+                      <span className="text-sm font-medium text-purple-600">
+                        TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
+                      </span>
+                    </div>
                     <NumberStepper
                       value={selectedPart.op_3_lvl}
                       onChange={(v) => onUpdate({ op_3_lvl: v })}
@@ -300,7 +308,7 @@ function PartCard({
                     />
                   </div>
                   {part.op_3_desc && (
-                    <p className="text-sm text-text-secondary">{part.op_3_desc}</p>
+                    <p className="text-sm text-text-primary">{part.op_3_desc}</p>
                   )}
                 </div>
               )}

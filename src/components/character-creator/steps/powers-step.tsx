@@ -88,25 +88,73 @@ export function PowersStep() {
     return availableTechniques.filter(t => selectedTechniqueIds.has(t.id));
   }, [availableTechniques, selectedTechniqueIds]);
   
-  // Handle power selection
+  // Handle power selection - include full parts data for TP calculation
   const handlePowerSelect = useCallback((items: DisplayItem[]) => {
-    const powers = items.map(item => ({
-      id: item.id,
-      name: item.name,
-    }));
+    const powers = items.map(item => {
+      // Find the full user power to get parts data
+      const userPower = userPowers.find(p => p.docId === item.id);
+      // Merge RTDB TP data with saved option levels
+      const partsWithTP = (userPower?.parts || []).map(savedPart => {
+        const rtdbPart = powerParts?.find(rp => 
+          String(rp.id) === String(savedPart.id) || 
+          rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
+        );
+        return {
+          id: savedPart.id !== undefined ? String(savedPart.id) : undefined,
+          name: savedPart.name || rtdbPart?.name,
+          base_tp: rtdbPart?.base_tp || 0,
+          op_1_lvl: savedPart.op_1_lvl || 0,
+          op_1_tp: rtdbPart?.op_1_tp || 0,
+          op_2_lvl: savedPart.op_2_lvl || 0,
+          op_2_tp: rtdbPart?.op_2_tp || 0,
+          op_3_lvl: savedPart.op_3_lvl || 0,
+          op_3_tp: rtdbPart?.op_3_tp || 0,
+        };
+      });
+      return {
+        id: item.id,
+        name: item.name,
+        description: userPower?.description,
+        parts: partsWithTP,
+      };
+    });
     updateDraft({ powers });
     setShowPowerModal(false);
-  }, [updateDraft]);
+  }, [updateDraft, userPowers, powerParts]);
   
-  // Handle technique selection
+  // Handle technique selection - include full parts data for TP calculation
   const handleTechniqueSelect = useCallback((items: DisplayItem[]) => {
-    const techniques = items.map(item => ({
-      id: item.id,
-      name: item.name,
-    }));
+    const techniques = items.map(item => {
+      // Find the full user technique to get parts data
+      const userTech = userTechniques.find(t => t.docId === item.id);
+      // Merge RTDB TP data with saved option levels
+      const partsWithTP = (userTech?.parts || []).map(savedPart => {
+        const rtdbPart = techniqueParts?.find(rp => 
+          String(rp.id) === String(savedPart.id) || 
+          rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
+        );
+        return {
+          id: savedPart.id !== undefined ? String(savedPart.id) : undefined,
+          name: savedPart.name || rtdbPart?.name,
+          base_tp: rtdbPart?.base_tp || 0,
+          op_1_lvl: savedPart.op_1_lvl || 0,
+          op_1_tp: rtdbPart?.op_1_tp || 0,
+          op_2_lvl: savedPart.op_2_lvl || 0,
+          op_2_tp: rtdbPart?.op_2_tp || 0,
+          op_3_lvl: savedPart.op_3_lvl || 0,
+          op_3_tp: rtdbPart?.op_3_tp || 0,
+        };
+      });
+      return {
+        id: item.id,
+        name: item.name,
+        description: userTech?.description,
+        parts: partsWithTP,
+      };
+    });
     updateDraft({ techniques });
     setShowTechniqueModal(false);
-  }, [updateDraft]);
+  }, [updateDraft, userTechniques, techniqueParts]);
   
   // Remove a power
   const removePower = useCallback((powerId: string) => {
