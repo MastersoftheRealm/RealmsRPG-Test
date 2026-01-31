@@ -29,8 +29,8 @@ function getServiceAccount() {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     try {
       return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    } catch {
-      console.warn('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY');
+    } catch (e) {
+      console.warn('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', e);
     }
   }
   
@@ -40,11 +40,22 @@ function getServiceAccount() {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
   
   if (clientEmail && privateKey) {
+    console.log('Using explicit service account credentials for project:', projectId);
     return { projectId, clientEmail, privateKey };
+  }
+  
+  // Log which env vars are missing for debugging
+  if (!clientEmail) {
+    console.warn('FIREBASE_CLIENT_EMAIL not set - session cookies may not work');
+  }
+  if (!privateKey) {
+    console.warn('FIREBASE_PRIVATE_KEY not set - session cookies may not work');
   }
   
   // Return null to use Application Default Credentials (ADC)
   // This works automatically in Google Cloud environments (Cloud Functions, Cloud Run, etc.)
+  // Note: ADC may not support all Admin SDK features like createSessionCookie
+  console.log('Using Application Default Credentials (ADC)');
   return null;
 }
 

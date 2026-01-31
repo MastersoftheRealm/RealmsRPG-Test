@@ -218,18 +218,26 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
   const partChips = useMemo(() => partsToPartData(power.parts, partsDb), [power.parts, partsDb]);
   const hasExpandableContent = power.description || partChips.length > 0;
 
+  // Display values for vanilla-style columns
+  const actionType = power.actionType || '-';
+  const damage = power.damage || '-';
+  const energy = energyCost > 0 ? `${energyCost}` : '-';
+  const area = power.area || '-';
+  const duration = power.duration || '-';
+
   return (
     <div className={cn(
       'border rounded-lg overflow-hidden',
       isInnate ? 'border-violet-300 bg-violet-50' : 'border-border-light bg-surface'
     )}>
-      <div className="flex items-center">
+      {/* Header row with vanilla-style grid layout */}
+      <div className="flex items-stretch">
         {/* Innate toggle checkbox in edit mode */}
         {isEditMode && onToggleInnate && (
           <button
             onClick={() => onToggleInnate(!isInnate)}
             className={cn(
-              'px-2 py-2 transition-colors border-r',
+              'px-2 py-2 transition-colors border-r flex-shrink-0',
               isInnate 
                 ? 'text-violet-600 bg-violet-100 hover:bg-violet-200' 
                 : 'text-text-muted hover:bg-surface-alt'
@@ -239,27 +247,35 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
             {isInnate ? '★' : '☆'}
           </button>
         )}
+        
+        {/* Main clickable area with grid columns */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-surface-alt text-left"
+          className="flex-1 grid grid-cols-[1.4fr_1fr_1fr_0.8fr_0.7fr_0.7fr] gap-1 items-center px-2 py-2 hover:bg-surface-alt text-left min-w-0"
         >
-          <div className="flex items-center gap-2">
-            {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-            <span className="font-medium text-text-primary">{power.name}</span>
+          {/* NAME column */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {expanded ? <ChevronUp className="w-3.5 h-3.5 text-text-muted flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />}
+            <span className="font-medium text-text-primary text-sm truncate">{power.name}</span>
             {isInnate && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-violet-200 text-violet-600">
-                Innate
+              <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 text-violet-600 flex-shrink-0">
+                ★
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-text-muted">
-            {energyCost > 0 && (
-              <span className="text-blue-600 font-medium">{energyCost} EP</span>
-            )}
-            {power.level && (
-              <span>Lvl {power.level}</span>
-            )}
-          </div>
+          {/* ACTION column */}
+          <span className="text-xs text-text-secondary truncate">{actionType}</span>
+          {/* DAMAGE column */}
+          <span className="text-xs text-text-secondary truncate">{damage}</span>
+          {/* ENERGY column */}
+          <span className={cn(
+            'text-xs truncate',
+            energyCost > 0 ? 'text-blue-600 font-medium' : 'text-text-muted'
+          )}>{energy}</span>
+          {/* AREA column */}
+          <span className="text-xs text-text-secondary truncate">{area}</span>
+          {/* DURATION column */}
+          <span className="text-xs text-text-secondary truncate">{duration}</span>
         </button>
         
         {/* Use button - only show when not in edit mode and has energy cost */}
@@ -268,7 +284,7 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
             onClick={onUse}
             disabled={!canUse}
             className={cn(
-              'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
+              'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors flex-shrink-0 self-center',
               canUse 
                 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
                 : 'bg-surface text-text-muted cursor-not-allowed'
@@ -280,14 +296,16 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
         )}
         
         {isEditMode && onRemove && (
-          <IconButton
-            variant="danger"
-            size="sm"
-            onClick={onRemove}
-            label="Remove power"
-          >
-            <X className="w-4 h-4" />
-          </IconButton>
+          <div className="flex-shrink-0 self-center">
+            <IconButton
+              variant="danger"
+              size="sm"
+              onClick={onRemove}
+              label="Remove power"
+            >
+              <X className="w-4 h-4" />
+            </IconButton>
+          </div>
         )}
       </div>
 
@@ -295,6 +313,12 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
         <div className="px-3 py-2 bg-surface-alt border-t border-border-light space-y-3">
           {power.description && (
             <p className="text-sm text-text-secondary">{power.description}</p>
+          )}
+          {/* Range info if available */}
+          {power.range && (
+            <div className="text-xs text-text-muted">
+              <span className="font-medium">Range:</span> {power.range}
+            </div>
           )}
           {partChips.length > 0 && (
             <PartChipList 
@@ -325,28 +349,39 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
   
   // Convert parts to PartData format for chips, enriched with RTDB descriptions
   const partChips = useMemo(() => partsToPartData(technique.parts, partsDb), [technique.parts, partsDb]);
-  const hasExpandableContent = technique.description || partChips.length > 0 || technique.weaponName || technique.actionType;
+  const hasExpandableContent = technique.description || partChips.length > 0;
+
+  // Display values for vanilla-style columns
+  const actionType = technique.actionType || '-';
+  const weapon = technique.weaponName || '-';
+  const energy = energyCost > 0 ? `${energyCost}` : '-';
 
   return (
     <div className="border border-border-light rounded-lg overflow-hidden bg-surface">
-      <div className="flex items-center">
+      {/* Header row with vanilla-style grid layout */}
+      <div className="flex items-stretch">
+        {/* Main clickable area with grid columns */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex-1 flex items-center justify-between px-3 py-2 hover:bg-surface-alt text-left"
+          className="flex-1 grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-1 items-center px-2 py-2 hover:bg-surface-alt text-left min-w-0"
         >
-          <div className="flex items-center gap-2">
-            {expanded ? <ChevronUp className="w-4 h-4 text-text-muted" /> : <ChevronDown className="w-4 h-4 text-text-muted" />}
-            <span className="font-medium text-text-primary">{technique.name}</span>
-            {/* Weapon requirement badge */}
-            {technique.weaponName && technique.weaponName !== 'Unarmed' && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">
-                ⚔️ {technique.weaponName}
-              </span>
-            )}
+          {/* NAME column */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            {expanded ? <ChevronUp className="w-3.5 h-3.5 text-text-muted flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-text-muted flex-shrink-0" />}
+            <span className="font-medium text-text-primary text-sm truncate">{technique.name}</span>
           </div>
-          {energyCost > 0 && (
-            <span className="text-sm text-blue-600 font-medium">{energyCost} EP</span>
-          )}
+          {/* ACTION column */}
+          <span className="text-xs text-text-secondary truncate">{actionType}</span>
+          {/* WEAPON column */}
+          <span className={cn(
+            'text-xs truncate',
+            weapon !== '-' ? 'text-orange-600' : 'text-text-muted'
+          )}>{weapon}</span>
+          {/* ENERGY column */}
+          <span className={cn(
+            'text-xs truncate',
+            energyCost > 0 ? 'text-blue-600 font-medium' : 'text-text-muted'
+          )}>{energy}</span>
         </button>
         
         {/* Use button - only show when not in edit mode and has energy cost */}
@@ -355,7 +390,7 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
             onClick={onUse}
             disabled={!canUse}
             className={cn(
-              'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors',
+              'px-2 py-1 mx-1 text-xs font-medium rounded transition-colors flex-shrink-0 self-center',
               canUse 
                 ? 'bg-green-100 text-green-700 hover:bg-green-200' 
                 : 'bg-surface text-text-muted cursor-not-allowed'
@@ -367,36 +402,34 @@ function TechniqueCard({ technique, currentEnergy, isEditMode, partsDb = [], onR
         )}
         
         {isEditMode && onRemove && (
-          <IconButton
-            variant="danger"
-            size="sm"
-            onClick={onRemove}
-            label="Remove technique"
-          >
-            <X className="w-4 h-4" />
-          </IconButton>
+          <div className="flex-shrink-0 self-center">
+            <IconButton
+              variant="danger"
+              size="sm"
+              onClick={onRemove}
+              label="Remove technique"
+            >
+              <X className="w-4 h-4" />
+            </IconButton>
+          </div>
         )}
       </div>
 
       {expanded && hasExpandableContent && (
         <div className="px-3 py-2 bg-surface-alt border-t border-border-light space-y-3">
-          {/* Action Type and Weapon info */}
-          {(technique.actionType || technique.weaponName) && (
-            <div className="flex flex-wrap gap-2 text-xs">
-              {technique.actionType && (
-                <span className="px-2 py-1 rounded bg-blue-100 text-blue-700">
-                  ⚡ {technique.actionType}
-                </span>
-              )}
-              {technique.weaponName && (
-                <span className="px-2 py-1 rounded bg-orange-100 text-orange-700">
-                  ⚔️ {technique.weaponName}
-                </span>
-              )}
-            </div>
-          )}
           {technique.description && (
             <p className="text-sm text-text-secondary">{technique.description}</p>
+          )}
+          {/* Range/Damage info if available */}
+          {(technique.range || technique.damage) && (
+            <div className="flex flex-wrap gap-3 text-xs text-text-muted">
+              {technique.range && (
+                <span><span className="font-medium">Range:</span> {technique.range}</span>
+              )}
+              {technique.damage && (
+                <span><span className="font-medium">Damage:</span> {technique.damage}</span>
+              )}
+            </div>
           )}
           {partChips.length > 0 && (
             <PartChipList 
@@ -631,11 +664,11 @@ export function LibrarySection({
   
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
-  const tabs: { id: TabType; label: string; count?: number; onAdd?: () => void }[] = [
-    { id: 'feats', label: 'Feats', count: archetypeFeats.length + characterFeats.length },
-    { id: 'powers', label: 'Powers', count: powers.length, onAdd: onAddPower },
-    { id: 'techniques', label: 'Techniques', count: techniques.length, onAdd: onAddTechnique },
-    { id: 'inventory', label: 'Inventory', count: weapons.length + armor.length + equipment.length },
+  const tabs: { id: TabType; label: string; onAdd?: () => void }[] = [
+    { id: 'feats', label: 'Feats' },
+    { id: 'powers', label: 'Powers', onAdd: onAddPower },
+    { id: 'techniques', label: 'Techniques', onAdd: onAddTechnique },
+    { id: 'inventory', label: 'Inventory' },
     { id: 'proficiencies', label: 'Proficiencies' },
     { id: 'notes', label: 'Notes' },
   ];
@@ -663,7 +696,7 @@ export function LibrarySection({
       
       {/* Tabs */}
       <TabNavigation
-        tabs={tabs.map(t => ({ id: t.id, label: t.label, count: t.count }))}
+        tabs={tabs.map(t => ({ id: t.id, label: t.label }))}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
         variant="underline"
@@ -711,7 +744,7 @@ export function LibrarySection({
             <span className="text-sm text-text-muted">currency</span>
           </div>
           
-          {isEditMode && activeTabData?.onAdd && (
+          {activeTabData?.onAdd && (
             <Button
               variant="success"
               size="sm"
@@ -725,9 +758,35 @@ export function LibrarySection({
       )}
 
       {/* Content */}
-      <div className="space-y-2 max-h-[400px] overflow-y-auto">
+      <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
         {activeTab === 'powers' && (
           <>
+            {/* Add Power button - always visible at top of tab */}
+            {activeTabData?.onAdd && (
+              <div className="flex justify-end mb-3">
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={activeTabData.onAdd}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Power
+                </Button>
+              </div>
+            )}
+
+            {/* Powers Column Headers - like vanilla site */}
+            {powers.length > 0 && (
+              <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr_0.7fr_0.7fr] gap-1 px-2 py-1.5 bg-surface-alt border-b border-border-light text-xs font-semibold text-text-muted uppercase tracking-wide">
+                <span className="pl-5">Name</span>
+                <span>Action</span>
+                <span>Damage</span>
+                <span>Energy</span>
+                <span>Area</span>
+                <span>Duration</span>
+              </div>
+            )}
+
             {/* Innate Energy Tracking Box - shows when character has innate energy */}
             {innateEnergy > 0 && (
               <div className="p-3 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-lg mb-3">
@@ -824,23 +883,48 @@ export function LibrarySection({
         )}
 
         {activeTab === 'techniques' && (
-          techniques.length > 0 ? (
-            techniques.map((tech, i) => (
-              <TechniqueCard 
-                key={tech.id || i} 
-                technique={tech}
-                currentEnergy={currentEnergy}
-                isEditMode={isEditMode}
-                partsDb={techniquePartsDb}
-                onRemove={onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
-                onUse={onUseTechnique && tech.cost ? () => onUseTechnique(tech.id || String(i), tech.cost!) : undefined}
-              />
-            ))
-          ) : (
-            <p className="text-text-muted text-sm italic text-center py-4">
-              No techniques learned
-            </p>
-          )
+          <>
+            {/* Add Technique button - always visible at top of tab */}
+            {activeTabData?.onAdd && (
+              <div className="flex justify-end mb-3">
+                <Button
+                  variant="success"
+                  size="sm"
+                  onClick={activeTabData.onAdd}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Technique
+                </Button>
+              </div>
+            )}
+
+            {/* Techniques Column Headers - like vanilla site */}
+            {techniques.length > 0 && (
+              <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-1 px-2 py-1.5 bg-surface-alt border-b border-border-light text-xs font-semibold text-text-muted uppercase tracking-wide">
+                <span className="pl-5">Name</span>
+                <span>Action</span>
+                <span>Weapon</span>
+                <span>Energy</span>
+              </div>
+            )}
+            {techniques.length > 0 ? (
+              techniques.map((tech, i) => (
+                <TechniqueCard 
+                  key={tech.id || i} 
+                  technique={tech}
+                  currentEnergy={currentEnergy}
+                  isEditMode={isEditMode}
+                  partsDb={techniquePartsDb}
+                  onRemove={onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
+                  onUse={onUseTechnique && tech.cost ? () => onUseTechnique(tech.id || String(i), tech.cost!) : undefined}
+                />
+              ))
+            ) : (
+              <p className="text-text-muted text-sm italic text-center py-4">
+                No techniques learned
+              </p>
+            )}
+          </>
         )}
 
         {activeTab === 'inventory' && (

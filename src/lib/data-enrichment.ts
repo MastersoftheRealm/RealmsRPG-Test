@@ -7,6 +7,8 @@
 
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
+import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
+import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage } from '@/lib/calculators';
 
 // =============================================================================
 // Types for Enriched Data
@@ -130,10 +132,12 @@ function getReferenceName(ref: string | { name?: string; id?: string | number })
 
 /**
  * Enrich character powers with full data from user's power library
+ * Uses derivePowerDisplay to calculate energy cost, action type, etc.
  */
 export function enrichPowers(
   characterPowers: CharacterPower[] | undefined,
-  userPowerLibrary: UserPower[]
+  userPowerLibrary: UserPower[],
+  powerPartsDb: PowerPart[] = []
 ): EnrichedPower[] {
   if (!characterPowers || characterPowers.length === 0) return [];
   
@@ -144,6 +148,22 @@ export function enrichPowers(
     const libraryItem = findInLibrary(userPowerLibrary, charPower);
     
     if (libraryItem) {
+      // Use derivePowerDisplay to calculate all display values including cost
+      const displayData = derivePowerDisplay(
+        {
+          name: libraryItem.name,
+          description: libraryItem.description,
+          parts: libraryItem.parts || [],
+          actionType: libraryItem.actionType,
+          isReaction: libraryItem.isReaction,
+          range: libraryItem.range,
+          area: libraryItem.area,
+          duration: libraryItem.duration,
+          damage: libraryItem.damage,
+        },
+        powerPartsDb
+      );
+      
       return {
         id: libraryItem.id,
         name: libraryItem.name,
@@ -157,7 +177,13 @@ export function enrichPowers(
         })),
         innate,
         libraryItem,
-        // Additional display fields can be calculated/derived here
+        // Calculated display fields from derivePowerDisplay
+        cost: displayData.energy,
+        actionType: displayData.actionType,
+        area: displayData.area,
+        duration: displayData.duration,
+        range: displayData.range,
+        damage: formatPowerDamage(libraryItem.damage),
       };
     }
     
@@ -174,10 +200,12 @@ export function enrichPowers(
 
 /**
  * Enrich character techniques with full data from user's technique library
+ * Uses deriveTechniqueDisplay to calculate stamina cost, action type, etc.
  */
 export function enrichTechniques(
   characterTechniques: CharacterTechnique[] | undefined,
-  userTechniqueLibrary: UserTechnique[]
+  userTechniqueLibrary: UserTechnique[],
+  techniquePartsDb: TechniquePart[] = []
 ): EnrichedTechnique[] {
   if (!characterTechniques || characterTechniques.length === 0) return [];
   
@@ -187,6 +215,23 @@ export function enrichTechniques(
     const libraryItem = findInLibrary(userTechniqueLibrary, charTech);
     
     if (libraryItem) {
+      // Extract first damage object if damage is an array
+      const damageObj = Array.isArray(libraryItem.damage) && libraryItem.damage.length > 0
+        ? libraryItem.damage[0]
+        : undefined;
+      
+      // Use deriveTechniqueDisplay to calculate all display values including cost
+      const displayData = deriveTechniqueDisplay(
+        {
+          name: libraryItem.name,
+          description: libraryItem.description,
+          parts: libraryItem.parts || [],
+          weapon: libraryItem.weapon,
+          damage: damageObj,
+        },
+        techniquePartsDb
+      );
+      
       return {
         id: libraryItem.id,
         name: libraryItem.name,
@@ -199,7 +244,11 @@ export function enrichTechniques(
           op_3_lvl: part.op_3_lvl,
         })),
         libraryItem,
-        // Additional display fields can be calculated/derived here
+        // Calculated display fields from deriveTechniqueDisplay
+        energyCost: displayData.energy,
+        actionType: displayData.actionType,
+        weaponName: displayData.weaponName,
+        damageStr: displayData.damageStr,
       };
     }
     
@@ -214,12 +263,33 @@ export function enrichTechniques(
 }
 
 /**
+ * RTDB Equipment Item interface (for codex equipment lookup)
+ */
+export interface RTDBEquipmentItem {
+  id: string;
+  name: string;
+  type: 'weapon' | 'armor' | 'equipment';
+  subtype?: string;
+  category?: string;
+  description: string;
+  damage?: string;
+  armor_value?: number;
+  gold_cost?: number;
+  currency?: number;
+  properties?: string[];
+  rarity?: string;
+  weight?: number;
+}
+
+/**
  * Enrich character equipment with full data from user's item library
+ * Falls back to RTDB equipment data for general items if not found in user library
  */
 export function enrichItems(
   characterItems: Array<{ name: string; equipped?: boolean; type?: string }> | undefined,
   userItemLibrary: UserItem[],
-  itemType: 'weapon' | 'armor' | 'equipment'
+  itemType: 'weapon' | 'armor' | 'equipment',
+  rtdbEquipment?: RTDBEquipmentItem[]
 ): EnrichedItem[] {
   if (!characterItems || characterItems.length === 0) return [];
   
@@ -227,6 +297,7 @@ export function enrichItems(
     const name = typeof charItem === 'string' ? charItem : charItem.name;
     const equipped = typeof charItem === 'object' ? !!charItem.equipped : false;
     
+    // First try user's library
     const libraryItem = findInLibrary(userItemLibrary, charItem);
     
     if (libraryItem) {
@@ -248,7 +319,29 @@ export function enrichItems(
       };
     }
     
-    // Not found in library - return placeholder
+    // For equipment, also check RTDB codex as fallback
+    if (rtdbEquipment && rtdbEquipment.length > 0) {
+      const searchName = name.toLowerCase();
+      const rtdbItem = rtdbEquipment.find(item => 
+        item.name.toLowerCase() === searchName ||
+        item.id === name
+      );
+      
+      if (rtdbItem) {
+        return {
+          id: rtdbItem.id,
+          name: rtdbItem.name,
+          description: rtdbItem.description || '',
+          type: rtdbItem.type || itemType,
+          equipped,
+          damage: rtdbItem.damage,
+          armorValue: rtdbItem.armor_value,
+          properties: rtdbItem.properties || [],
+        };
+      }
+    }
+    
+    // Not found in library or RTDB - return placeholder
     return {
       id: name,
       name,
@@ -293,30 +386,41 @@ export function enrichCharacterData(
   character: Character,
   userPowers: UserPower[],
   userTechniques: UserTechnique[],
-  userItems: UserItem[]
+  userItems: UserItem[],
+  rtdbEquipment?: RTDBEquipmentItem[],
+  powerPartsDb?: PowerPart[],
+  techniquePartsDb?: TechniquePart[]
 ): EnrichedCharacterData {
   // Split items by type
   const weaponItems = userItems.filter(i => i.type === 'weapon');
   const armorItems = userItems.filter(i => i.type === 'armor');
   const equipmentItems = userItems.filter(i => i.type === 'equipment');
   
+  // Split RTDB equipment by type for fallback lookups
+  const rtdbWeapons = rtdbEquipment?.filter(i => i.type === 'weapon');
+  const rtdbArmor = rtdbEquipment?.filter(i => i.type === 'armor');
+  const rtdbItems = rtdbEquipment?.filter(i => i.type === 'equipment');
+  
   return {
-    powers: enrichPowers(character.powers, userPowers),
-    techniques: enrichTechniques(character.techniques, userTechniques),
+    powers: enrichPowers(character.powers, userPowers, powerPartsDb || []),
+    techniques: enrichTechniques(character.techniques, userTechniques, techniquePartsDb || []),
     weapons: enrichItems(
       toEquipmentArray(character.equipment?.weapons),
       weaponItems,
-      'weapon'
+      'weapon',
+      rtdbWeapons
     ),
     armor: enrichItems(
       toEquipmentArray(character.equipment?.armor),
       armorItems,
-      'armor'
+      'armor',
+      rtdbArmor
     ),
     equipment: enrichItems(
       toEquipmentArray(character.equipment?.items),
       equipmentItems,
-      'equipment'
+      'equipment',
+      rtdbItems
     ),
   };
 }

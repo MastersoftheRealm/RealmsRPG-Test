@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
-import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useSpecies, useRTDBFeats } from '@/hooks';
+import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
@@ -144,14 +144,20 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   
+  // RTDB equipment for enrichment fallback (codex items)
+  const { data: rtdbEquipment = [] } = useEquipment();
+  
   // Fetch all species data to look up species traits
   const { data: allSpecies = [] } = useSpecies();
+  
+  // Fetch all RTDB skills to get ability options for each skill
+  const { data: rtdbSkills = [] } = useRTDBSkills();
   
   // Enrich character data with full library objects
   const enrichedData = useMemo(() => {
     if (!character) return null;
-    return enrichCharacterData(character, userPowers, userTechniques, userItems);
-  }, [character, userPowers, userTechniques, userItems]);
+    return enrichCharacterData(character, userPowers, userTechniques, userItems, rtdbEquipment, powerPartsDb, techniquePartsDb);
+  }, [character, userPowers, userTechniques, userItems, rtdbEquipment, powerPartsDb, techniquePartsDb]);
   
   // Look up character's species and its species_traits (automatically granted to all characters of that species)
   const characterSpeciesTraits = useMemo(() => {
@@ -741,6 +747,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }>) => {
     if (!character) return;
     const skillsToAdd = newSkills.map(s => {
+      // Parse available abilities from comma-separated string
+      const availableAbilities = typeof s.ability === 'string' 
+        ? s.ability.split(',').map(a => a.trim().toLowerCase()).filter(Boolean)
+        : [];
+      
+      // Default to the first available ability, not just 'strength'
+      const defaultAbility = availableAbilities[0] || 'strength';
+      
       const skill: {
         id: string;
         name: string;
@@ -748,17 +762,22 @@ export default function CharacterSheetPage({ params }: PageParams) {
         skill_val: number;
         prof: boolean;
         ability?: string;
+        availableAbilities?: string[];
         baseSkillId?: number;
         selectedBaseSkillId?: string;
       } = {
         id: s.id,
         name: s.name,
-        category: typeof s.ability === 'string' ? s.ability.split(',')[0]?.trim() : 'other',
+        category: defaultAbility,
         skill_val: 0,
         prof: false,
       };
-      // Only add optional fields if they have values (avoid undefined)
-      if (s.ability) skill.ability = typeof s.ability === 'string' ? s.ability.split(',')[0]?.trim() : s.ability;
+      // Store the selected ability (defaults to first available)
+      skill.ability = defaultAbility;
+      // Store all available abilities for the dropdown
+      if (availableAbilities.length > 0) {
+        skill.availableAbilities = availableAbilities;
+      }
       if (s.base_skill_id !== undefined) skill.baseSkillId = s.base_skill_id;
       if (s.selectedBaseSkillId) skill.selectedBaseSkillId = s.selectedBaseSkillId;
       return skill;
@@ -952,14 +971,53 @@ export default function CharacterSheetPage({ params }: PageParams) {
     );
   }
   
-  const skills = (character.skills || []) as Array<{
-    id: string;
-    name: string;
-    category?: string;
-    skill_val: number;
-    prof?: boolean;
-    baseSkill?: string;
-  }>;
+  // Enrich skills with availableAbilities from RTDB
+  // This ensures existing skills that lack availableAbilities get them from the database
+  const skills = useMemo(() => {
+    const rawSkills = (character.skills || []) as Array<{
+      id: string;
+      name: string;
+      category?: string;
+      skill_val: number;
+      prof?: boolean;
+      baseSkill?: string;
+      ability?: string;
+      availableAbilities?: string[];
+    }>;
+    
+    // If no RTDB skills loaded yet, return raw skills
+    if (rtdbSkills.length === 0) return rawSkills;
+    
+    return rawSkills.map(skill => {
+      // If skill already has availableAbilities, use those
+      if (skill.availableAbilities && skill.availableAbilities.length > 0) {
+        return skill;
+      }
+      
+      // Find matching skill in RTDB by name or id
+      const rtdbSkill = rtdbSkills.find(
+        rs => rs.id === skill.id || rs.name.toLowerCase() === skill.name.toLowerCase()
+      );
+      
+      if (rtdbSkill && rtdbSkill.ability) {
+        const availableAbilities = rtdbSkill.ability.split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
+        
+        // If the skill's current ability is not in the available list, default to first available
+        let ability = skill.ability;
+        if (!ability || !availableAbilities.includes(ability.toLowerCase())) {
+          ability = availableAbilities[0] || 'strength';
+        }
+        
+        return {
+          ...skill,
+          ability,
+          availableAbilities,
+        };
+      }
+      
+      return skill;
+    });
+  }, [character.skills, rtdbSkills]);
   
   return (
     <RollProvider>
@@ -1039,8 +1097,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 isUploadingPortrait={uploadingPortrait}
                 speedBase={character.speedBase ?? 6}
                 evasionBase={character.evasionBase ?? 10}
-                onSpeedBaseChange={(v) => setCharacter(prev => prev ? { ...prev, speedBase: v } : null)}
-                onEvasionBaseChange={(v) => setCharacter(prev => prev ? { ...prev, evasionBase: v } : null)}
+                onSpeedBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, speedBase: v } : null)}
+                onEvasionBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, evasionBase: v } : null)}
                 innateThreshold={archetypeProgression?.innateThreshold || 0}
                 innatePools={archetypeProgression?.innatePools || 0}
               />

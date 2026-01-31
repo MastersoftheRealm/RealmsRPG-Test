@@ -25,6 +25,12 @@ export interface CharacterPower {
   cost?: number;
   description?: string;
   innate?: boolean; // Whether this power is marked as innate
+  // Display fields for character sheet (like vanilla site)
+  actionType?: string; // e.g., "Basic Action", "Free Action", "Quick Action"
+  damage?: string; // e.g., "2d6 fire"
+  area?: string; // e.g., "Sphere 3", "Cone 5"
+  duration?: string; // e.g., "Instant", "1 Minute", "Concentration"
+  range?: string | number; // e.g., "30 spaces", "Melee", or numeric (spaces)
   // Parts can be either just names (string[]) or full part data with TP info
   parts?: Array<string | {
     id?: string;
@@ -47,6 +53,9 @@ export interface CharacterTechnique {
   description?: string;
   weaponName?: string; // Required weapon type (e.g., "Sword", "Unarmed")
   actionType?: string; // e.g., "Basic Action", "Free Action"
+  // Display fields for character sheet (like vanilla site)
+  damage?: string; // e.g., "Weapon + 1d6"
+  range?: string; // e.g., "Melee", "10 spaces"
   // Parts can be either just names (string[]) or full part data with TP info
   parts?: Array<string | {
     id?: string;

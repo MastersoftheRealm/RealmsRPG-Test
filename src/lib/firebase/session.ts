@@ -36,22 +36,35 @@ export async function createSession(idToken: string): Promise<{ success: boolean
     // Verify the ID token first
     const { user, error } = await verifyIdToken(idToken);
     if (error || !user) {
+      console.error('Token verification failed:', error);
       return { success: false, error: error || 'Invalid token' };
     }
     
     // Create a session cookie using Firebase Admin
     const auth = getAdminAuth();
     const expiresIn = SESSION_COOKIE_OPTIONS.maxAge * 1000; // Convert to milliseconds
-    const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
     
-    // Set the cookie
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, sessionCookie, SESSION_COOKIE_OPTIONS);
-    
-    return { success: true };
+    try {
+      const sessionCookie = await auth.createSessionCookie(idToken, { expiresIn });
+      
+      // Set the cookie
+      const cookieStore = await cookies();
+      cookieStore.set(SESSION_COOKIE_NAME, sessionCookie, SESSION_COOKIE_OPTIONS);
+      
+      return { success: true };
+    } catch (cookieError) {
+      // createSessionCookie can fail if:
+      // 1. Service account credentials are not properly configured
+      // 2. The token is expired or invalid
+      // 3. IAM permissions are not set correctly
+      console.error('Failed to create session cookie:', cookieError);
+      const errorMessage = cookieError instanceof Error ? cookieError.message : 'Failed to create session cookie';
+      return { success: false, error: errorMessage };
+    }
   } catch (error) {
     console.error('Error creating session:', error);
-    return { success: false, error: 'Failed to create session' };
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create session';
+    return { success: false, error: errorMessage };
   }
 }
 

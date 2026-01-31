@@ -37,6 +37,8 @@ export interface HealthEnergyAllocatorProps {
   disabled?: boolean;
   /** Enable hold-to-repeat with exponential acceleration */
   enableHoldRepeat?: boolean;
+  /** Allow allocating more points than the pool provides (for manual overrides) */
+  allowOverallocation?: boolean;
 }
 
 export function HealthEnergyAllocator({
@@ -50,15 +52,16 @@ export function HealthEnergyAllocator({
   variant = 'card',
   disabled = false,
   enableHoldRepeat = false,
+  allowOverallocation = false,
 }: HealthEnergyAllocatorProps) {
   const spent = hpBonus + energyBonus;
   const remaining = poolTotal - spent;
   const isOverspent = remaining < 0;
   const isComplete = remaining === 0;
   
-  // Max bonus is constrained by remaining pool
-  const maxHpBonus = hpBonus + remaining;
-  const maxEnergyBonus = energyBonus + remaining;
+  // Max bonus is constrained by remaining pool, unless overallocation is allowed
+  const maxHpBonus = allowOverallocation ? Infinity : hpBonus + remaining;
+  const maxEnergyBonus = allowOverallocation ? Infinity : energyBonus + remaining;
 
   // Inline variant for character sheet edit mode
   if (variant === 'inline') {

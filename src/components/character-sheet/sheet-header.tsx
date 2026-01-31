@@ -123,22 +123,23 @@ function ResourceInput({
     if (trimmed.startsWith('+')) {
       const delta = parseInt(trimmed.slice(1), 10);
       if (!isNaN(delta)) {
-        const newValue = Math.max(0, Math.min(max, current + delta));
+        // Allow values above max (no upper clamp)
+        const newValue = Math.max(0, current + delta);
         onChange(newValue);
         setInputValue(String(newValue));
       }
     } else if (trimmed.startsWith('-')) {
       const delta = parseInt(trimmed.slice(1), 10);
       if (!isNaN(delta)) {
-        const newValue = Math.max(0, Math.min(max, current - delta));
+        const newValue = Math.max(0, current - delta);
         onChange(newValue);
         setInputValue(String(newValue));
       }
     } else {
-      // Direct value
+      // Direct value - allow any non-negative value (no upper clamp)
       const newValue = parseInt(trimmed, 10);
       if (!isNaN(newValue)) {
-        const clamped = Math.max(0, Math.min(max, newValue));
+        const clamped = Math.max(0, newValue);
         onChange(clamped);
         setInputValue(String(clamped));
       }
@@ -172,8 +173,8 @@ function ResourceInput({
       if (!isNaN(typedNum)) {
         // Calculate the delta from current to newValue (stepper clicked)
         const stepperDelta = newValue - current;
-        // Apply that delta to the typed number
-        const result = Math.max(0, Math.min(max, current + (stepperDelta * typedNum)));
+        // Apply that delta to the typed number - allow above max
+        const result = Math.max(0, current + (stepperDelta * typedNum));
         onChange(result);
         setInputValue(String(result));
         setIsEditing(false);
@@ -198,11 +199,16 @@ function ResourceInput({
       ? 'text-blue-700'
       : 'text-text-secondary';
   
-  // Calculate bar percentage
-  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
-  const barColorClass = colorVariant === 'health' 
-    ? (percentage > 50 ? 'bg-green-500' : percentage > 25 ? 'bg-orange-500' : 'bg-red-500')
-    : colorVariant === 'energy' ? 'bg-blue-500' : 'bg-primary-500';
+  // Calculate bar percentage - cap at 100% for display but allow tracking above max
+  const isAboveMax = current > max;
+  const percentage = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
+  
+  // Bar color: gold when above max, otherwise normal colors
+  const barColorClass = isAboveMax 
+    ? 'bg-amber-400' // Gold when above max
+    : colorVariant === 'health' 
+      ? (percentage > 50 ? 'bg-green-500' : percentage > 25 ? 'bg-orange-500' : 'bg-red-500')
+      : colorVariant === 'energy' ? 'bg-blue-500' : 'bg-primary-500';
   
   return (
     <div className={cn('flex flex-col p-3 rounded-lg border', bgColor)}>
@@ -238,7 +244,7 @@ function ResourceInput({
             value={current}
             onChange={handleStepperChange}
             min={0}
-            max={max}
+            // No max - allow incrementing above max (gold bar shows when above)
             colorVariant={colorVariant === 'health' ? 'health' : colorVariant === 'energy' ? 'energy' : 'default'}
             enableHoldRepeat
             size="sm"
@@ -563,6 +569,7 @@ export function SheetHeader({
                 onHpChange={onHealthPointsChange}
                 onEnergyChange={onEnergyPointsChange}
                 variant="inline"
+                allowOverallocation
               />
             </div>
           )}

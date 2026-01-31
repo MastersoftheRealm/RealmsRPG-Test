@@ -16,20 +16,21 @@ import { createSession, clearSession } from '@/lib/firebase/session';
  */
 export async function POST(request: NextRequest) {
   try {
-    const { idToken } = await request.json();
+    const body = await request.json().catch(() => null);
     
-    if (!idToken || typeof idToken !== 'string') {
+    if (!body || !body.idToken || typeof body.idToken !== 'string') {
       return NextResponse.json(
         { error: 'ID token is required' },
         { status: 400 }
       );
     }
     
-    const result = await createSession(idToken);
+    const result = await createSession(body.idToken);
     
     if (!result.success) {
+      console.error('Session creation failed:', result.error);
       return NextResponse.json(
-        { error: result.error },
+        { error: result.error || 'Failed to create session' },
         { status: 401 }
       );
     }
@@ -37,8 +38,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Session creation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create session';
     return NextResponse.json(
-      { error: 'Failed to create session' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

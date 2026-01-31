@@ -58,7 +58,6 @@ interface DamageConfig {
 
 interface RangeConfig {
   steps: number; // 0 = melee (1 space), 1+ = ranged
-  applyDuration?: boolean;
 }
 
 // =============================================================================
@@ -737,7 +736,7 @@ function PowerCreatorContent() {
   const [isReaction, setIsReaction] = useState(false);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
   // Range state (0 = melee/1 space, 1+ = ranged increments)
-  const [range, setRange] = useState<RangeConfig>({ steps: 0, applyDuration: false });
+  const [range, setRange] = useState<RangeConfig>({ steps: 0 });
   // Area of effect state
   const [area, setArea] = useState<AreaConfig>({ type: 'none', level: 1, applyDuration: false });
   // Duration state
@@ -776,7 +775,7 @@ function PowerCreatorContent() {
           setActionType(parsed.actionType || 'basic');
           setIsReaction(parsed.isReaction || false);
           setDamage(parsed.damage || { amount: 0, size: 6, type: 'none' });
-          setRange(parsed.range || { steps: 0, applyDuration: false });
+          setRange(parsed.range || { steps: 0 });
           setArea(parsed.area || { type: 'none', level: 1, applyDuration: false });
           setDuration(parsed.duration || {
             type: 'instant',
@@ -887,7 +886,6 @@ function PowerCreatorContent() {
       diceAmt: damage.amount,
       dieSize: damage.size,
       range: range.steps,
-      rangeApplyDuration: range.applyDuration,
       areaType: area.type,
       areaLevel: area.level,
       areaApplyDuration: area.applyDuration,
@@ -1071,7 +1069,7 @@ function PowerCreatorContent() {
         setActionType('basic');
         setIsReaction(false);
         setDamage({ amount: 0, size: 6, type: 'none' });
-        setRange({ steps: 0, applyDuration: false });
+        setRange({ steps: 0 });
         setArea({ type: 'none', level: 1, applyDuration: false });
         setDuration({
           type: 'instant',
@@ -1102,7 +1100,7 @@ function PowerCreatorContent() {
     setActionType('basic');
     setIsReaction(false);
     setDamage({ amount: 0, size: 6, type: 'none' });
-    setRange({ steps: 0, applyDuration: false });
+    setRange({ steps: 0 });
     setArea({ type: 'none', level: 1, applyDuration: false });
     setDuration({
       type: 'instant',
@@ -1210,10 +1208,9 @@ function PowerCreatorContent() {
     if (power.range) {
       setRange({
         steps: power.range.steps || 0,
-        applyDuration: power.range.applyDuration || false,
       });
     } else {
-      setRange({ steps: 0, applyDuration: false });
+      setRange({ steps: 0 });
     }
     
     // Load area of effect
@@ -1385,12 +1382,6 @@ function PowerCreatorContent() {
               <span className="text-sm text-text-secondary">
                 {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
               </span>
-              <Checkbox
-                checked={range.applyDuration || false}
-                onChange={(e) => setRange((r) => ({ ...r, applyDuration: e.target.checked }))}
-                label="Apply Duration"
-                className="ml-4"
-              />
             </div>
           </div>
 

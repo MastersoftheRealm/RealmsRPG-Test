@@ -28,9 +28,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // This hook syncs Firebase auth state with server-side session cookies
   // When user signs in: creates a session cookie for SSR
   // When user signs out: clears the session cookie
+  // Note: Session sync is optional - the app works without it (just no SSR auth)
   useSessionSync({
     onError: (error) => {
       // Log session sync errors but don't block the UI
+      // Session sync failures are non-critical - client-side auth still works
       console.warn('Session sync error:', error.message);
     },
   });

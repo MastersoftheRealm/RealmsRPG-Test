@@ -61,8 +61,17 @@ export function useSessionSync(options: UseSessionSyncOptions = {}) {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to create session');
+        // Try to parse as JSON, fallback to text for non-JSON error responses
+        let errorMessage = 'Failed to create session';
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('application/json')) {
+          const data = await response.json();
+          errorMessage = data.error || errorMessage;
+        } else {
+          const text = await response.text();
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       lastUidRef.current = user.uid;
