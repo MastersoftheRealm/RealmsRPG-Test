@@ -32,6 +32,17 @@ interface RTDBTrait {
   rec_period?: string;
 }
 
+/** RTDB feat data for enrichment */
+interface RTDBFeat {
+  id: string;
+  name: string;
+  description?: string;
+  effect?: string;
+  max_uses?: number;
+  rec_period?: string;
+  category?: string;
+}
+
 interface FeatData {
   id?: string | number;
   name: string;
@@ -67,6 +78,8 @@ interface FeatsTabProps {
   traits?: TraitData[];
   // RTDB traits for enrichment (max uses, descriptions)
   traitsDb?: RTDBTrait[];
+  // RTDB feats for enrichment (descriptions, uses)
+  featsDb?: RTDBFeat[];
   // Current trait uses (trait name -> uses remaining)
   traitUses?: Record<string, number>;
   // Feats by category
@@ -80,6 +93,7 @@ interface FeatsTabProps {
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
+  onRemoveFeat?: (featId: string) => void;
 }
 
 // =============================================================================
@@ -92,6 +106,7 @@ export function FeatsTab({
   speciesTraitsFromRTDB = [],
   traits = [],
   traitsDb = [],
+  featsDb = [],
   traitUses = {},
   archetypeFeats = [],
   characterFeats = [],
@@ -101,6 +116,7 @@ export function FeatsTab({
   onTraitUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
+  onRemoveFeat,
 }: FeatsTabProps) {
   // Helper to find trait in RTDB and enrich with uses data
   // Supports lookup by name OR by ID (in case traits are stored as IDs)
@@ -118,6 +134,22 @@ export function FeatsTab({
       description: dbTrait?.description,
       maxUses: dbTrait?.uses_per_rec ?? 0,
       recoveryPeriod: dbTrait?.rec_period,
+    };
+  };
+  
+  // Helper to enrich feat with RTDB data
+  const enrichFeat = (feat: FeatData) => {
+    // Try to find by ID first, then by name
+    let dbFeat = featsDb.find(f => f.id === String(feat.id));
+    if (!dbFeat) {
+      dbFeat = featsDb.find(f => f.name.toLowerCase() === feat.name.toLowerCase());
+    }
+    
+    return {
+      ...feat,
+      description: feat.description || dbFeat?.description || dbFeat?.effect,
+      maxUses: feat.maxUses ?? dbFeat?.max_uses ?? 0,
+      recovery: feat.recovery || dbFeat?.rec_period,
     };
   };
   
@@ -275,20 +307,23 @@ export function FeatsTab({
       >
         {hasArchetypeFeats ? (
           <div className="space-y-2">
-            {archetypeFeats.map((feat, index) => (
-              <CollapsibleListItem
-                key={feat.id || index}
-                name={feat.name}
-                description={feat.description}
-                maxUses={feat.maxUses}
-                currentUses={feat.currentUses}
-                onUsesChange={onFeatUsesChange 
-                  ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
-                  : undefined}
-                recoveryPeriod={feat.recovery}
-                compact
-              />
-            ))}
+            {archetypeFeats.map((feat, index) => {
+              const enriched = enrichFeat(feat);
+              return (
+                <CollapsibleListItem
+                  key={feat.id || index}
+                  name={enriched.name}
+                  description={enriched.description}
+                  maxUses={enriched.maxUses}
+                  currentUses={enriched.currentUses}
+                  onUsesChange={onFeatUsesChange 
+                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
+                    : undefined}
+                  recoveryPeriod={enriched.recovery}
+                  compact
+                />
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-text-muted italic text-center py-2">
@@ -317,20 +352,23 @@ export function FeatsTab({
       >
         {hasCharacterFeats ? (
           <div className="space-y-2">
-            {characterFeats.map((feat, index) => (
-              <CollapsibleListItem
-                key={feat.id || index}
-                name={feat.name}
-                description={feat.description}
-                maxUses={feat.maxUses}
-                currentUses={feat.currentUses}
-                onUsesChange={onFeatUsesChange 
-                  ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
-                  : undefined}
-                recoveryPeriod={feat.recovery}
-                compact
-              />
-            ))}
+            {characterFeats.map((feat, index) => {
+              const enriched = enrichFeat(feat);
+              return (
+                <CollapsibleListItem
+                  key={feat.id || index}
+                  name={enriched.name}
+                  description={enriched.description}
+                  maxUses={enriched.maxUses}
+                  currentUses={enriched.currentUses}
+                  onUsesChange={onFeatUsesChange 
+                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
+                    : undefined}
+                  recoveryPeriod={enriched.recovery}
+                  compact
+                />
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-text-muted italic text-center py-2">
@@ -349,21 +387,24 @@ export function FeatsTab({
           className="mb-3"
         >
           <div className="space-y-2">
-            {stateFeats.map((feat, index) => (
-              <CollapsibleListItem
-                key={feat.id || index}
-                name={feat.name}
-                description={feat.description}
-                subtext="State"
-                maxUses={feat.maxUses}
-                currentUses={feat.currentUses}
-                onUsesChange={onFeatUsesChange 
-                  ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
-                  : undefined}
-                recoveryPeriod={feat.recovery}
-                compact
-              />
-            ))}
+            {stateFeats.map((feat, index) => {
+              const enriched = enrichFeat(feat);
+              return (
+                <CollapsibleListItem
+                  key={feat.id || index}
+                  name={enriched.name}
+                  description={enriched.description}
+                  subtext="State"
+                  maxUses={enriched.maxUses}
+                  currentUses={enriched.currentUses}
+                  onUsesChange={onFeatUsesChange 
+                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
+                    : undefined}
+                  recoveryPeriod={enriched.recovery}
+                  compact
+                />
+              );
+            })}
           </div>
         </Collapsible>
       )}

@@ -168,6 +168,12 @@ export function RollProvider({
 
   // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")
   const rollDamage = useCallback((damageStr: string, bonus: number = 0) => {
+    // Validate input is a string
+    if (typeof damageStr !== 'string') {
+      console.warn('rollDamage called with non-string:', damageStr);
+      return;
+    }
+    
     const match = damageStr.match(/(\d+)d(\d+)([+-]\d+)?(?:\s+([a-zA-Z]+))?/);
     if (!match) return;
 

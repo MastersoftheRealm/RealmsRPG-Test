@@ -179,6 +179,15 @@ interface LibrarySectionProps {
     currentUses?: number;
     recovery?: string;
   }>;
+  featsDb?: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    effect?: string;
+    max_uses?: number;
+    rec_period?: string;
+    category?: string;
+  }>;
   onFeatUsesChange?: (featId: string, delta: number) => void;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
@@ -605,6 +614,7 @@ export function LibrarySection({
   vanillaTraits,
   speciesTraitsFromRTDB = [],
   traitsDb = [],
+  featsDb = [],
   traitUses = {},
   archetypeFeats = [],
   characterFeats = [],
@@ -860,7 +870,7 @@ export function LibrarySection({
                       onRemove={onRemoveWeapon ? () => onRemoveWeapon(item.id || String(i)) : undefined}
                       onToggleEquip={onToggleEquipWeapon ? () => onToggleEquipWeapon(item.id || String(i)) : undefined}
                       onRollAttack={rollContext ? () => rollContext.rollAttack(item.name, attackBonus) : undefined}
-                      onRollDamage={rollContext && item.damage ? () => rollContext.rollDamage(item.damage as string) : undefined}
+                      onRollDamage={rollContext && item.damage && typeof item.damage === 'string' ? () => rollContext.rollDamage(item.damage as string) : undefined}
                     />
                   );
                 })
@@ -937,6 +947,7 @@ export function LibrarySection({
             vanillaTraits={vanillaTraits}
             speciesTraitsFromRTDB={speciesTraitsFromRTDB}
             traitsDb={traitsDb}
+            featsDb={featsDb}
             traitUses={traitUses}
             archetypeFeats={archetypeFeats}
             characterFeats={characterFeats}

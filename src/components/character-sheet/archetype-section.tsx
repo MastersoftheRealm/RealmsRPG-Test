@@ -174,31 +174,23 @@ function AttackBonusesTable({
               </td>
             </tr>
           ))}
-          {/* Power row - only show if power proficiency > 0 */}
-          {powerProf > 0 && (
-            <tr>
-              <td className="py-1 font-medium text-text-secondary capitalize">✨ {powAbilDisplayName}</td>
-              <td className="text-center py-1">
-                <RollButton
-                  value={powerBonus.prof}
-                  onClick={() => onRollBonus?.(`Power (Prof.) [${powAbilDisplayName}]`, powerBonus.prof)}
-                  size="sm"
-                  title={`Roll power (proficient) - ${powAbilDisplayName}`}
-                />
-              </td>
-              <td className="text-center py-1">
-                <RollButton
-                  value={powerBonus.unprof}
-                  variant="unproficient"
-                  onClick={() => onRollBonus?.(`Power (Unprof.) [${powAbilDisplayName}]`, powerBonus.unprof)}
-                  size="sm"
-                  title={`Roll power (unproficient) - ${powAbilDisplayName}`}
-                />
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
+      
+      {/* Power Attack Bonus - separate section, full width, no unprof */}
+      {powerProf > 0 && (
+        <div className="mt-3 pt-3 border-t border-border-light">
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-text-secondary">✨ Power Attack ({powAbilDisplayName})</span>
+            <RollButton
+              value={powerBonus.prof}
+              onClick={() => onRollBonus?.(`Power Attack [${powAbilDisplayName}]`, powerBonus.prof)}
+              size="sm"
+              title={`Roll power attack - ${powAbilDisplayName}`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -254,16 +246,33 @@ function WeaponsSection({
               attackBonus = acuBonus;
             }
             
-            // Build damage string
+            // Parse damage - separate dice from type for display
+            let damageDice = '-';
+            let damageType = '';
             let damageStr = '-';
+            
             if (weapon.damage) {
               if (Array.isArray(weapon.damage)) {
-                damageStr = weapon.damage
+                const parts = weapon.damage
                   .filter((d: { amount?: number; size?: number; type?: string }) => d && d.amount && d.size)
-                  .map((d: { amount?: number; size?: number; type?: string }) => `${d.amount}d${d.size}${d.type && d.type !== 'none' ? ` ${d.type}` : ''}`)
-                  .join(', ') || '-';
+                  .map((d: { amount?: number; size?: number; type?: string }) => ({
+                    dice: `${d.amount}d${d.size}`,
+                    type: d.type && d.type !== 'none' ? d.type : ''
+                  }));
+                if (parts.length > 0) {
+                  damageDice = parts.map(p => p.dice).join(' + ');
+                  damageType = parts.map(p => p.type).filter(Boolean).join(', ');
+                  damageStr = parts.map(p => p.type ? `${p.dice} ${p.type}` : p.dice).join(', ');
+                }
               } else {
-                damageStr = String(weapon.damage);
+                // Parse string like "1d8 Slashing"
+                const strDamage = String(weapon.damage);
+                const match = strDamage.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+                if (match) {
+                  damageDice = match[1].trim();
+                  damageType = match[2]?.trim() || '';
+                  damageStr = strDamage;
+                }
               }
             }
             
@@ -272,8 +281,8 @@ function WeaponsSection({
             const displayProps = props.filter(p => p && !excludedProps.includes(p));
             
             return (
-              <tr key={weapon.id || idx} className="border-b border-border-subtle last:border-0">
-                <td className="py-1 font-medium text-text-secondary">
+              <tr key={weapon.id || idx} className="border-b border-border-subtle last:border-0 align-top">
+                <td className="py-2 font-medium text-text-secondary">
                   {weapon.name}
                   {displayProps.length > 0 && (
                     <div className="text-xs text-text-muted font-normal">
@@ -281,7 +290,7 @@ function WeaponsSection({
                     </div>
                   )}
                 </td>
-                <td className="text-center py-1">
+                <td className="text-center py-2">
                   <RollButton
                     value={attackBonus}
                     onClick={() => onRollAttack?.(weapon.name || 'Attack', attackBonus)}
@@ -289,26 +298,31 @@ function WeaponsSection({
                     title={`Roll attack with ${weapon.name}`}
                   />
                 </td>
-                <td className="text-center py-1">
-                  <RollButton
-                    value={0}
-                    displayValue={damageStr}
-                    variant="danger"
-                    onClick={() => onRollDamage?.(damageStr, attackBonus)}
-                    size="sm"
-                    title={`Roll ${damageStr} damage`}
-                  />
+                <td className="text-center py-2">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <RollButton
+                      value={0}
+                      displayValue={damageDice}
+                      variant="danger"
+                      onClick={() => onRollDamage?.(damageStr, attackBonus)}
+                      size="sm"
+                      title={`Roll ${damageStr} damage`}
+                    />
+                    {damageType && (
+                      <span className="text-[10px] text-text-muted">{damageType}</span>
+                    )}
+                  </div>
                 </td>
-                <td className="text-center py-1 text-text-muted">
+                <td className="text-center py-2 text-text-muted">
                   {weapon.range || 'Melee'}
                 </td>
               </tr>
             );
           })}
           {/* Unarmed Prowess - always shown */}
-          <tr className="border-t border-border-light">
-            <td className="py-1 font-medium text-text-muted italic">Unarmed Prowess</td>
-            <td className="text-center py-1">
+          <tr className="border-t border-border-light align-top">
+            <td className="py-2 font-medium text-text-muted italic">Unarmed Prowess</td>
+            <td className="text-center py-2">
               <RollButton
                 value={unprofBonus}
                 variant="unproficient"
@@ -317,17 +331,20 @@ function WeaponsSection({
                 title="Roll unarmed attack"
               />
             </td>
-            <td className="text-center py-1">
-              <RollButton
-                value={0}
-                displayValue={`${unarmedDamage} Bludg.`}
-                variant="unproficient"
-                onClick={() => onRollDamage?.(`${unarmedDamage} Bludgeoning`, unprofBonus)}
-                size="sm"
-                title="Roll unarmed damage"
-              />
+            <td className="text-center py-2">
+              <div className="flex flex-col items-center gap-0.5">
+                <RollButton
+                  value={0}
+                  displayValue={String(unarmedDamage)}
+                  variant="unproficient"
+                  onClick={() => onRollDamage?.(`${unarmedDamage} Bludgeoning`, unprofBonus)}
+                  size="sm"
+                  title="Roll unarmed damage"
+                />
+                <span className="text-[10px] text-text-muted">Bludgeoning</span>
+              </div>
             </td>
-            <td className="text-center py-1 text-text-muted">Melee</td>
+            <td className="text-center py-2 text-text-muted">Melee</td>
           </tr>
         </tbody>
       </table>
@@ -527,7 +544,7 @@ export function ArchetypeSection({
       {/* Archetype Header */}
       <div className="mb-4">
         <h2 className="text-lg font-bold text-text-primary">
-          {getArchetypeTitle()}
+          Archetype Proficiency
         </h2>
         {character.archetype?.name && (
           <p className="text-sm text-text-muted mt-0.5">
@@ -536,25 +553,34 @@ export function ArchetypeSection({
         )}
       </div>
 
-      {/* Proficiencies */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <ProficiencyMeter 
-          label="Martial" 
-          value={martialProf}
-          color="red"
-          isEditMode={showEditControls}
-          onIncrease={() => onMartialProfChange?.(martialProf + 1)}
-          onDecrease={() => onMartialProfChange?.(martialProf - 1)}
-        />
-        <ProficiencyMeter 
-          label="Power" 
-          value={powerProf}
-          color="purple"
-          isEditMode={showEditControls}
-          onIncrease={() => onPowerProfChange?.(powerProf + 1)}
-          onDecrease={() => onPowerProfChange?.(powerProf - 1)}
-        />
-      </div>
+      {/* Proficiencies - only show non-zero values (unless editing) */}
+      {(martialProf > 0 || powerProf > 0 || showEditControls) && (
+        <div className={cn(
+          'grid gap-4 mb-4',
+          (martialProf > 0 || showEditControls) && (powerProf > 0 || showEditControls) ? 'grid-cols-2' : 'grid-cols-1'
+        )}>
+          {(martialProf > 0 || showEditControls) && (
+            <ProficiencyMeter 
+              label="Martial" 
+              value={martialProf}
+              color="red"
+              isEditMode={showEditControls}
+              onIncrease={() => onMartialProfChange?.(martialProf + 1)}
+              onDecrease={() => onMartialProfChange?.(martialProf - 1)}
+            />
+          )}
+          {(powerProf > 0 || showEditControls) && (
+            <ProficiencyMeter 
+              label="Power" 
+              value={powerProf}
+              color="purple"
+              isEditMode={showEditControls}
+              onIncrease={() => onPowerProfChange?.(powerProf + 1)}
+              onDecrease={() => onPowerProfChange?.(powerProf - 1)}
+            />
+          )}
+        </div>
+      )}
       
       {/* Proficiency Points Display - three-state coloring */}
       {showEditControls && (

@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
-import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useSpecies } from '@/hooks';
+import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useSpecies, useRTDBFeats } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
@@ -138,6 +138,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { data: userTechniques = [] } = useUserTechniques();
   const { data: userItems = [] } = useUserItems();
   const { data: traitsDb = [] } = useTraits();
+  const { data: featsDb = [] } = useRTDBFeats();
   
   // RTDB parts data for enrichment (descriptions, TP costs)
   const { data: powerPartsDb = [] } = usePowerParts();
@@ -1155,6 +1156,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onAddCharacterFeat={() => setFeatModalType('character')}
                   // Traits enrichment props
                   traitsDb={traitsDb}
+                  featsDb={featsDb}
                   traitUses={character.traitUses}
                   onTraitUsesChange={handleTraitUsesChange}
                 />
