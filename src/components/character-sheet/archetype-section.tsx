@@ -191,14 +191,15 @@ function AttackBonusesTable({
   );
 }
 
-// Unarmed Prowess damage table based on character level
-const UNARMED_PROWESS_DAMAGE = [
-  { level: 0, damage: 'Ability' }, // Unproficient - half ability
-  { level: 1, damage: '1d2' },     // Prowess I (base)
-  { level: 2, damage: '1d4' },     // Prowess II (Lv 4)
-  { level: 3, damage: '1d6' },     // Prowess III (Lv 8)
-  { level: 4, damage: '1d8' },     // Prowess IV (Lv 12)
-  { level: 5, damage: '1d10' },    // Prowess V (Lv 16+)
+// Unarmed Prowess damage table based on prowess level
+// Level 1: ability only (no dice), Level 4/prowess 2: 1d2, Level 8/prowess 3: 1d4, etc.
+const UNARMED_PROWESS_DAMAGE: { level: number; damage: string | null }[] = [
+  { level: 0, damage: null },     // Unproficient - half ability, no bonus
+  { level: 1, damage: null },     // Prowess I (Lv 1) - ability only, no dice
+  { level: 2, damage: '1d2' },    // Prowess II (Lv 4)
+  { level: 3, damage: '1d4' },    // Prowess III (Lv 8)
+  { level: 4, damage: '1d6' },    // Prowess IV (Lv 12)
+  { level: 5, damage: '1d8' },    // Prowess V (Lv 16+)
 ];
 
 // Weapons Section - displays equipped weapons with attack/damage rolls
@@ -240,7 +241,9 @@ function WeaponsSection({
   // Calculate unarmed damage based on prowess level
   const prowessData = UNARMED_PROWESS_DAMAGE[unarmedProwess] || UNARMED_PROWESS_DAMAGE[0];
   const unarmedDamageDisplay = hasProwess 
-    ? `${prowessData.damage} + ${unarmedAbility}` 
+    ? (prowessData.damage 
+        ? `${prowessData.damage} + ${unarmedAbility}` 
+        : String(unarmedAbility)) // Prowess I: ability only
     : String(Math.max(1, Math.floor(unarmedAbility / 2)));
 
   return (
@@ -707,39 +710,6 @@ export function ArchetypeSection({
       )}
       
       {/* Unarmed Prowess Display - show if character has unarmed prowess */}
-      {(unarmedProwess !== undefined && unarmedProwess > 0) && (
-        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-amber-700">Unarmed Prowess</span>
-              <span className="text-lg font-bold text-amber-800">Level {unarmedProwess}</span>
-            </div>
-            {showEditControls && onUnarmedProwessChange && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => onUnarmedProwessChange(Math.max(0, (unarmedProwess || 1) - 1))}
-                  className="w-6 h-6 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold flex items-center justify-center"
-                  title="Decrease prowess level"
-                >
-                  −
-                </button>
-                <button
-                  onClick={() => onUnarmedProwessChange(Math.min(5, (unarmedProwess || 0) + 1))}
-                  disabled={(unarmedProwess || 0) >= 5}
-                  className="w-6 h-6 rounded bg-amber-100 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed text-amber-700 font-bold flex items-center justify-center"
-                  title="Increase prowess level"
-                >
-                  +
-                </button>
-              </div>
-            )}
-          </div>
-          <p className="text-xs text-amber-600 mt-1">
-            Unarmed attacks deal 1d4+STR bludgeoning • {unarmedProwess >= 2 ? 'Counts as weapon' : ''} {unarmedProwess >= 3 ? '• Choose damage type' : ''}
-          </p>
-        </div>
-      )}
-      
       {/* Attack Bonuses Table */}
       {character.abilities && (
         <AttackBonusesTable

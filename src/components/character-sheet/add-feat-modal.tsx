@@ -376,7 +376,7 @@ export function AddFeatModal({
               No feats match your filters.
             </div>
           ) : (
-            <div className="flex flex-col gap-2 p-2">
+            <div className="flex flex-col gap-2 px-2 pt-2 pb-2">
               {filteredFeats.map(feat => {
                 const { meets, warning } = checkRequirements(feat);
                 const isSelected = selectedFeats.some(f => f.id === feat.id);

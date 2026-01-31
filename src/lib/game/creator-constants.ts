@@ -53,6 +53,7 @@ export const MAGIC_DAMAGE_TYPES = [
   'necrotic',
   'radiant',
   'psychic',
+  'spiritual',
   'poison',
   'sonic',
 ] as const;
@@ -68,6 +69,7 @@ export const ALL_DAMAGE_TYPES = [
   'fire',
   'cold',
   'lightning',
+  'spiritual',
   'acid',
   'poison',
   'necrotic',

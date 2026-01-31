@@ -157,11 +157,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const characterSpeciesTraits = useMemo(() => {
     if (!character || !allSpecies.length) return [];
     
-    // Find species by ID first, then by name
+    // Find species by ID first (handle type coercion), then by name
     const speciesId = character.ancestry?.id;
     const speciesName = character.ancestry?.name || character.species;
     
-    let species = allSpecies.find(s => s.id === speciesId);
+    let species = allSpecies.find(s => String(s.id) === String(speciesId));
     if (!species && speciesName) {
       species = allSpecies.find(s => s.name.toLowerCase() === speciesName?.toLowerCase());
     }
@@ -988,7 +988,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
               <Button
                 size="sm"
                 onClick={() => setShowLevelUpModal(true)}
-                className="bg-purple-100 text-purple-700 hover:bg-purple-200"
+                className="bg-violet-100 text-violet-600 hover:bg-violet-200"
               >
                 ⬆️ Level Up
               </Button>

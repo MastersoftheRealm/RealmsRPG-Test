@@ -267,7 +267,7 @@ export function AddSkillModal({
           )}
 
           {!loading && !error && filteredSkills.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-2 mt-2">
               {filteredSkills.map(skill => (
                 <ExpandableSkillRow
                   key={skill.id}

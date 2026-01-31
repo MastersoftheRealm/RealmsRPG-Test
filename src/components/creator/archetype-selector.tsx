@@ -134,7 +134,7 @@ export function ArchetypeSelector({
           <div className="flex justify-between mb-2">
             <div className="text-center">
               <span className="text-xs text-tertiary block">Power</span>
-              <span className="text-lg font-bold text-purple-600">{sliderValue}</span>
+              <span className="text-lg font-bold text-violet-500">{sliderValue}</span>
             </div>
             <div className="text-center">
               <span className="text-xs text-tertiary block">Martial</span>
@@ -144,7 +144,7 @@ export function ArchetypeSelector({
 
           {/* Custom Slider */}
           <div className="relative py-2">
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-red-500" />
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-violet-500 to-red-500" />
             <input
               type="range"
               min={0}
@@ -188,7 +188,7 @@ export function ArchetypeSelector({
             </span>
             <span className={cn(
               'text-xl font-bold',
-              value === 'martial' ? 'text-red-600' : 'text-purple-600'
+              value === 'martial' ? 'text-red-600' : 'text-violet-500'
             )}>
               +{maxProficiency}
             </span>

@@ -24,11 +24,11 @@ import type { Item } from '@/types';
 const UNARMED_PROWESS_BASE_TP = 10;
 const UNARMED_PROWESS_UPGRADE_TP = 6;
 const UNARMED_PROWESS_LEVELS = [
-  { level: 1, charLevel: 1, name: 'Unarmed Prowess', description: 'Your unarmed strikes deal 1d4 damage and can use Strength or Agility for attack and damage rolls.' },
-  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', description: 'Your unarmed damage increases to 1d6.' },
-  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', description: 'Your unarmed damage increases to 1d8.' },
-  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', description: 'Your unarmed damage increases to 1d10.' },
-  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', description: 'Your unarmed damage increases to 1d12.' },
+  { level: 1, charLevel: 1, name: 'Unarmed Prowess', description: 'Your unarmed strikes deal damage equal to your Ability (STR or AGI, whichever is higher) and can use Strength or Agility for attack rolls.' },
+  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', description: 'Your unarmed damage increases to 1d2 + Ability.' },
+  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', description: 'Your unarmed damage increases to 1d4 + Ability.' },
+  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', description: 'Your unarmed damage increases to 1d6 + Ability.' },
+  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', description: 'Your unarmed damage increases to 1d8 + Ability.' },
 ];
 
 type EquipmentTabId = 'weapon' | 'armor' | 'equipment' | 'unarmed';

@@ -84,7 +84,7 @@ export interface CreatorSummaryPanelProps {
 
 const COST_STAT_COLORS: Record<CostStat['color'], { bg: string; text: string }> = {
   energy: { bg: 'bg-blue-50', text: 'text-blue-600' },
-  tp: { bg: 'bg-purple-50', text: 'text-purple-600' },
+  tp: { bg: 'bg-violet-50', text: 'text-violet-500' },
   health: { bg: 'bg-red-50', text: 'text-red-600' },
   currency: { bg: 'bg-amber-50', text: 'text-amber-600' },
 };
