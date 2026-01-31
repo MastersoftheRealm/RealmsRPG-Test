@@ -687,7 +687,14 @@ interface SpeciesFilters {
 function SpeciesTab() {
   const { data: species, isLoading, error } = useSpecies();
   const { data: allTraits } = useTraits();
+  const { data: allSkills } = useRTDBSkills();
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
+  
+  // Build skill ID to name map for resolving species skills
+  const skillIdToName = useMemo(() => {
+    if (!allSkills) return new Map<string, string>();
+    return new Map(allSkills.map(s => [s.id, s.name]));
+  }, [allSkills]);
   
   const [filters, setFilters] = useState<SpeciesFilters>({
     search: '',
@@ -820,7 +827,7 @@ function SpeciesTab() {
           <div className="p-8 text-center text-text-muted">No species match your filters.</div>
         ) : (
           filteredSpecies.map(s => (
-            <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} />
+            <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} skillIdToName={skillIdToName} />
           ))
         )}
       </div>
@@ -828,7 +835,7 @@ function SpeciesTab() {
   );
 }
 
-function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trait[] }) {
+function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; allTraits: Trait[]; skillIdToName: Map<string, string> }) {
   const [expanded, setExpanded] = useState(false);
   
   // Resolve trait IDs to full trait objects
@@ -848,6 +855,12 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
     resolveTraitIds(species.characteristics || [], allTraits),
     [species.characteristics, allTraits]
   );
+  
+  // Resolve skill IDs to names
+  const speciesSkillNames = useMemo(() => {
+    if (!species.skills?.length) return [];
+    return species.skills.map(skillId => skillIdToName.get(String(skillId)) || String(skillId));
+  }, [species.skills, skillIdToName]);
 
   return (
     <div className="bg-surface">
@@ -881,8 +894,8 @@ function SpeciesCard({ species, allTraits }: { species: Species; allTraits: Trai
             {species.languages?.length > 0 && (
               <div><span className="font-medium">Languages:</span> {species.languages.join(', ')}</div>
             )}
-            {species.skills?.length > 0 && (
-              <div><span className="font-medium">Skills:</span> {species.skills.join(', ')}</div>
+            {speciesSkillNames.length > 0 && (
+              <div><span className="font-medium">Skills:</span> {speciesSkillNames.join(', ')}</div>
             )}
           </div>
 

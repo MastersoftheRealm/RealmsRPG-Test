@@ -48,6 +48,11 @@ export {
   useResolvedTraits,
   findTraitByIdOrName,
   resolveTraitIds,
+  // Skill ID resolution utilities
+  useSkillIdToNameMap,
+  useResolvedSkillNames,
+  buildSkillIdToNameMap,
+  resolveSkillIdsToNames,
   prefetchFunctions,
   type Feat as RTDBFeat,
   type Skill as RTDBSkill,

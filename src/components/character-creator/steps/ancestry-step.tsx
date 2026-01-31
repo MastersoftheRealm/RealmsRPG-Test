@@ -16,7 +16,7 @@ import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useSpecies, useTraits, resolveTraitIds, type Trait } from '@/hooks';
+import { useSpecies, useTraits, useRTDBSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait } from '@/hooks';
 import { Heart, AlertTriangle, Sparkles, Star, Check } from 'lucide-react';
 
 interface ResolvedTrait extends Trait {
@@ -27,12 +27,19 @@ export function AncestryStep() {
   const { draft, nextStep, prevStep, setStep, updateDraft } = useCharacterCreatorStore();
   const { data: allSpecies } = useSpecies();
   const { data: allTraits } = useTraits();
+  const { data: allSkills } = useRTDBSkills();
 
   // Find selected species
   const selectedSpecies = useMemo(() => {
     if (!allSpecies || !draft.ancestry?.id) return null;
     return allSpecies.find(s => s.id === draft.ancestry?.id);
   }, [allSpecies, draft.ancestry?.id]);
+
+  // Resolve species skill IDs to names
+  const speciesSkillNames = useMemo(() => {
+    if (!selectedSpecies?.skills || !allSkills) return [];
+    return resolveSkillIdsToNames(selectedSpecies.skills, allSkills);
+  }, [selectedSpecies?.skills, allSkills]);
 
   // Current selections from draft
   const selectedTraitIds = draft.ancestry?.selectedTraits || [];
@@ -213,13 +220,13 @@ export function AncestryStep() {
         
         {/* Skills and Languages */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-light">
-          {selectedSpecies.skills && selectedSpecies.skills.length > 0 && (
+          {speciesSkillNames.length > 0 && (
             <div>
               <span className="text-xs text-text-muted uppercase">Species Skills:</span>
               <div className="flex flex-wrap gap-1 mt-1">
-                {selectedSpecies.skills.map(skill => (
-                  <Chip key={skill} variant="info" size="sm">
-                    {skill}
+                {speciesSkillNames.map(skillName => (
+                  <Chip key={skillName} variant="info" size="sm">
+                    {skillName}
                   </Chip>
                 ))}
               </div>

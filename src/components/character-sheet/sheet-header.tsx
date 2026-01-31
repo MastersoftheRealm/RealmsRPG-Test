@@ -2,18 +2,20 @@
  * Character Sheet Header
  * ======================
  * Displays character identity, portrait, and vital stats
- * Defense blocks are clickable to roll saving throws
  * 
- * Uses shared ValueStepper component with hold-to-repeat for health/energy
+ * Features:
+ * - Health colors: green (normal), orange (half health), red (terminal)
+ * - Smart value editing: type a value to set, prefix with +/- to modify
+ * - Four-corner resource layout matching vanilla site
+ * - Prominent speed/evasion display
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
-import { useRollsOptional } from './roll-context';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { ValueStepper } from '@/components/shared';
 import type { Character } from '@/types';
@@ -49,63 +51,187 @@ interface SheetHeaderProps {
   innatePools?: number;
 }
 
-function ResourceBar({
+/**
+ * Get health color based on current health percentage
+ * - Green: > 50% health
+ * - Orange: <= 50% but > 25% (half health, rounded up)
+ * - Red: <= 25% (terminal range, rounded up)
+ */
+function getHealthColor(current: number, max: number): 'green' | 'orange' | 'red' {
+  if (max <= 0) return 'red';
+  const halfThreshold = Math.ceil(max / 2);
+  const terminalThreshold = Math.ceil(max / 4);
+  
+  if (current <= terminalThreshold) return 'red';
+  if (current <= halfThreshold) return 'orange';
+  return 'green';
+}
+
+/**
+ * Smart Resource Input
+ * - Click value to select all for easy editing
+ * - Type a number and press Enter to set that value
+ * - Type +N or -N and press Enter to modify by that amount
+ * - Use stepper buttons with typed value (if not pressed Enter yet)
+ */
+function ResourceInput({
   label,
   current,
   max,
-  color,
-  terminalThreshold,
-  showControls,
   onChange,
+  colorVariant = 'default',
+  subLabel,
 }: {
   label: string;
   current: number;
   max: number;
-  color: 'red' | 'blue';
-  terminalThreshold?: number;
-  showControls?: boolean;
   onChange?: (value: number) => void;
+  colorVariant?: 'health' | 'energy' | 'default';
+  subLabel?: string;
 }) {
-  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
-  const isTerminal = terminalThreshold && current <= terminalThreshold && current > 0;
-
+  const [inputValue, setInputValue] = useState(String(current));
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Sync input value when current changes externally
+  useEffect(() => {
+    if (!isEditing) {
+      setInputValue(String(current));
+    }
+  }, [current, isEditing]);
+  
+  const handleFocus = () => {
+    setIsEditing(true);
+    // Select all text when focused
+    setTimeout(() => inputRef.current?.select(), 0);
+  };
+  
+  const handleBlur = () => {
+    setIsEditing(false);
+    // Reset to current value if not committed
+    setInputValue(String(current));
+  };
+  
+  const applyValue = () => {
+    if (!onChange) return;
+    
+    const trimmed = inputValue.trim();
+    
+    // Check for +/- modifiers
+    if (trimmed.startsWith('+')) {
+      const delta = parseInt(trimmed.slice(1), 10);
+      if (!isNaN(delta)) {
+        const newValue = Math.max(0, Math.min(max, current + delta));
+        onChange(newValue);
+        setInputValue(String(newValue));
+      }
+    } else if (trimmed.startsWith('-')) {
+      const delta = parseInt(trimmed.slice(1), 10);
+      if (!isNaN(delta)) {
+        const newValue = Math.max(0, Math.min(max, current - delta));
+        onChange(newValue);
+        setInputValue(String(newValue));
+      }
+    } else {
+      // Direct value
+      const newValue = parseInt(trimmed, 10);
+      if (!isNaN(newValue)) {
+        const clamped = Math.max(0, Math.min(max, newValue));
+        onChange(clamped);
+        setInputValue(String(clamped));
+      }
+    }
+    
+    setIsEditing(false);
+    inputRef.current?.blur();
+  };
+  
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      applyValue();
+    } else if (e.key === 'Escape') {
+      setInputValue(String(current));
+      setIsEditing(false);
+      inputRef.current?.blur();
+    }
+  };
+  
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+  
+  // Stepper uses the pending value if editing, otherwise modifies current
+  const handleStepperChange = (newValue: number) => {
+    if (!onChange) return;
+    
+    if (isEditing && inputValue.trim() !== String(current)) {
+      // User typed a number but didn't press Enter - use that as the delta base
+      const typedNum = parseInt(inputValue.trim(), 10);
+      if (!isNaN(typedNum)) {
+        // Calculate the delta from current to newValue (stepper clicked)
+        const stepperDelta = newValue - current;
+        // Apply that delta to the typed number
+        const result = Math.max(0, Math.min(max, current + (stepperDelta * typedNum)));
+        onChange(result);
+        setInputValue(String(result));
+        setIsEditing(false);
+        return;
+      }
+    }
+    
+    onChange(newValue);
+    setInputValue(String(newValue));
+  };
+  
+  // Color classes based on variant
+  const bgColor = colorVariant === 'health' 
+    ? 'bg-red-50 border-red-200' 
+    : colorVariant === 'energy'
+      ? 'bg-blue-50 border-blue-200'
+      : 'bg-surface-alt border-border-light';
+  
+  const labelColor = colorVariant === 'health'
+    ? 'text-red-700'
+    : colorVariant === 'energy'
+      ? 'text-blue-700'
+      : 'text-text-secondary';
+  
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex justify-between text-sm font-medium">
-        <span className="text-text-secondary">{label}</span>
-        <span className={cn(
-          'font-bold',
-          isTerminal && 'text-yellow-600',
-          current <= 0 && 'text-red-600'
-        )}>
-          {current} / {max}
-        </span>
-      </div>
-      <div className="relative h-6 bg-surface rounded-full overflow-hidden">
-        <div
+    <div className={cn('flex flex-col p-3 rounded-lg border', bgColor)}>
+      <span className={cn('text-xs font-semibold uppercase tracking-wide', labelColor)}>
+        {label}
+      </span>
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          ref={inputRef}
+          type="text"
+          inputMode="numeric"
+          value={inputValue}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           className={cn(
-            'absolute inset-y-0 left-0 transition-all duration-300',
-            color === 'red' ? 'bg-red-500' : 'bg-blue-500',
-            isTerminal && 'bg-yellow-500 animate-pulse'
+            'w-14 text-center text-xl font-bold rounded border px-1 py-0.5',
+            'focus:outline-none focus:ring-2 focus:ring-primary-500',
+            colorVariant === 'health' && 'border-red-300 text-red-800',
+            colorVariant === 'energy' && 'border-blue-300 text-blue-800',
+            colorVariant === 'default' && 'border-border-light text-text-primary'
           )}
-          style={{ width: `${percentage}%` }}
         />
-        {terminalThreshold && (
-          <div
-            className="absolute inset-y-0 w-0.5 bg-yellow-600 opacity-50"
-            style={{ left: `${(terminalThreshold / max) * 100}%` }}
-            title={`Terminal: ${terminalThreshold}`}
-          />
-        )}
+        <span className={cn('text-lg font-medium', labelColor)}>/ {max}</span>
       </div>
-      {showControls && onChange && (
-        <div className="flex gap-2 mt-1 items-center justify-center">
+      {subLabel && (
+        <span className="text-xs text-text-muted mt-1">{subLabel}</span>
+      )}
+      {onChange && (
+        <div className="mt-2">
           <ValueStepper
             value={current}
-            onChange={onChange}
+            onChange={handleStepperChange}
             min={0}
             max={max}
-            colorVariant={color === 'red' ? 'health' : 'energy'}
+            colorVariant={colorVariant === 'health' ? 'health' : colorVariant === 'energy' ? 'energy' : 'default'}
             enableHoldRepeat
             size="sm"
             variant="compact"
@@ -113,37 +239,20 @@ function ResourceBar({
             decrementTitle={`Decrease ${label.toLowerCase()}`}
             incrementTitle={`Increase ${label.toLowerCase()}`}
           />
-          <input
-            type="number"
-            value={current}
-            onChange={(e) => onChange(Math.max(0, Math.min(max, parseInt(e.target.value) || 0)))}
-            className="w-16 text-center border rounded px-2 py-1 text-sm"
-            min={0}
-            max={max}
-          />
         </div>
       )}
     </div>
   );
 }
 
-function StatBlock({ label, value, subValue }: { label: string; value: number | string; subValue?: string }) {
-  return (
-    <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg min-w-[60px]">
-      <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
-      <span className="text-xl font-bold text-text-primary">{value}</span>
-      {subValue && <span className="text-xs text-text-muted">{subValue}</span>}
-    </div>
-  );
-}
-
-// Editable stat block for speed/evasion base values
-function EditableStatBlock({ 
+/**
+ * Large stat block for Speed and Evasion
+ */
+function LargeStatBlock({ 
   label, 
   value, 
   baseValue,
   defaultBase,
-  subValue, 
   isEditMode,
   onChange,
   minBase = 0,
@@ -153,7 +262,6 @@ function EditableStatBlock({
   value: number | string; 
   baseValue?: number;
   defaultBase?: number;
-  subValue?: string;
   isEditMode?: boolean;
   onChange?: (newBase: number) => void;
   minBase?: number;
@@ -162,26 +270,27 @@ function EditableStatBlock({
   // Check if base is overridden from default
   const isOverridden = defaultBase !== undefined && baseValue !== undefined && baseValue !== defaultBase;
   
-  if (isEditMode && onChange && baseValue !== undefined) {
-    return (
-      <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg min-w-[70px]">
-        <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
-        <span className="text-xl font-bold text-text-primary">{value}</span>
-        <div className="flex items-center gap-1 mt-1">
+  return (
+    <div className="flex flex-col items-center p-4 bg-surface-alt rounded-xl border border-border-light min-w-[100px]">
+      <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide">{label}</span>
+      <span className="text-4xl font-bold text-text-primary mt-1">{value}</span>
+      
+      {isEditMode && onChange && baseValue !== undefined && (
+        <div className="flex items-center gap-1 mt-2">
           <button
             onClick={() => onChange(Math.max(minBase, baseValue - 1))}
             disabled={baseValue <= minBase}
             className={cn(
-              'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
+              'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
               baseValue > minBase
-                ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
+                ? 'bg-surface hover:bg-border-light text-text-secondary'
                 : 'bg-surface text-text-muted cursor-not-allowed'
             )}
           >
             −
           </button>
           <span className={cn(
-            'text-xs min-w-[2.5rem] text-center',
+            'text-xs min-w-[3rem] text-center',
             isOverridden ? 'text-danger-600 font-bold' : 'text-text-muted'
           )}>
             Base: {baseValue}
@@ -190,45 +299,71 @@ function EditableStatBlock({
             onClick={() => onChange(Math.min(maxBase, baseValue + 1))}
             disabled={baseValue >= maxBase}
             className={cn(
-              'w-5 h-5 rounded flex items-center justify-center text-xs font-bold transition-colors',
+              'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
               baseValue < maxBase
-                ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
+                ? 'bg-surface hover:bg-border-light text-text-secondary'
                 : 'bg-surface text-text-muted cursor-not-allowed'
             )}
           >
             +
           </button>
         </div>
-        {subValue && <span className="text-xs text-text-muted mt-0.5">{subValue}</span>}
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
+}
 
+/**
+ * Small stat block for Terminal and Innate
+ */
+function SmallStatBlock({ label, value, subValue }: { label: string; value: number | string; subValue?: string }) {
   return (
-    <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg min-w-[60px]">
+    <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg border border-border-light">
       <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
-      <span className="text-xl font-bold text-text-primary">{value}</span>
+      <span className="text-lg font-bold text-text-primary">{value}</span>
       {subValue && <span className="text-xs text-text-muted">{subValue}</span>}
     </div>
   );
 }
 
-function DefenseBlock({ name, bonus, score, onRoll }: { name: string; bonus: number; score: number; onRoll?: () => void }) {
-  const formattedBonus = bonus >= 0 ? `+${bonus}` : `${bonus}`;
+/**
+ * Health bar with color states
+ */
+function HealthBar({
+  current,
+  max,
+  terminal,
+}: {
+  current: number;
+  max: number;
+  terminal: number;
+}) {
+  const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+  const healthColor = getHealthColor(current, max);
+  
+  const barColorClass = 
+    healthColor === 'green' ? 'bg-green-500' :
+    healthColor === 'orange' ? 'bg-orange-500' :
+    'bg-red-500';
   
   return (
-    <div 
-      onClick={onRoll}
-      className={cn(
-        "flex flex-col items-center p-2 bg-surface border border-border-light rounded-lg min-w-[70px] transition-all",
-        onRoll && "cursor-pointer hover:bg-primary-50 hover:border-primary-300 active:scale-95"
-      )}
-      role={onRoll ? 'button' : undefined}
-      title={onRoll ? `Click to roll ${name} save` : undefined}
-    >
-      <span className="text-[10px] text-text-muted uppercase tracking-wide">{name}</span>
-      <span className="text-lg font-bold text-text-primary">{score}</span>
-      <span className="text-xs text-text-muted">{formattedBonus}</span>
+    <div className="relative h-4 bg-surface rounded-full overflow-hidden border border-border-light">
+      <div
+        className={cn('absolute inset-y-0 left-0 transition-all duration-300', barColorClass)}
+        style={{ width: `${percentage}%` }}
+      />
+      {/* Terminal threshold marker */}
+      <div
+        className="absolute inset-y-0 w-0.5 bg-red-600 opacity-60"
+        style={{ left: `${(terminal / max) * 100}%` }}
+        title={`Terminal: ${terminal}`}
+      />
+      {/* Half health marker */}
+      <div
+        className="absolute inset-y-0 w-0.5 bg-orange-500 opacity-40"
+        style={{ left: '50%' }}
+        title={`Half: ${Math.ceil(max / 2)}`}
+      />
     </div>
   );
 }
@@ -252,11 +387,7 @@ export function SheetHeader({
 }: SheetHeaderProps) {
   const currentHealth = character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
-  const rollContext = useRollsOptional();
   
-  const genderSymbol = character.description?.includes('female') ? '♀' : 
-                       character.description?.includes('male') ? '♂' : '';
-
   // Check if character can level up (XP >= level * 4)
   const xp = character.experience ?? 0;
   const level = character.level || 1;
@@ -266,8 +397,6 @@ export function SheetHeader({
   const totalHEPool = 18 + 12 * (level - 1);
   const healthPoints = character.healthPoints ?? 0;
   const energyPoints = character.energyPoints ?? 0;
-  const spentHEPoints = healthPoints + energyPoints;
-  const remainingHEPoints = totalHEPool - spentHEPoints;
 
   // Handle portrait file selection
   const handlePortraitClick = () => {
@@ -284,24 +413,21 @@ export function SheetHeader({
     input.click();
   };
 
-  // Defense names mapping
-  const defenseLabels: Record<string, string> = {
-    might: 'Might',
-    fortitude: 'Fortitude',
-    reflex: 'Reflex',
-    discernment: 'Discernment',
-    mentalFortitude: 'Mental Fort',
-    resolve: 'Resolve',
-  };
+  // Get health color for styling
+  const healthColor = getHealthColor(currentHealth, calculatedStats.maxHealth);
 
   return (
     <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4">
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Portrait and Identity */}
-        <div className="flex gap-4">
+        {/* Left: Portrait and Identity */}
+        <div className="flex gap-4 flex-shrink-0">
+          {/* Portrait */}
           <div 
             className={cn(
-              "relative w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-surface flex-shrink-0",
+              "relative w-24 h-24 md:w-28 md:h-28 rounded-lg overflow-hidden bg-surface flex-shrink-0 border-2",
+              healthColor === 'green' && 'border-green-400',
+              healthColor === 'orange' && 'border-orange-400',
+              healthColor === 'red' && 'border-red-400',
               isEditMode && onPortraitChange && "cursor-pointer group"
             )}
             onClick={handlePortraitClick}
@@ -315,7 +441,7 @@ export function SheetHeader({
                 "object-cover transition-opacity",
                 isUploadingPortrait && "opacity-50"
               )}
-              sizes="(max-width: 768px) 96px, 128px"
+              sizes="(max-width: 768px) 96px, 112px"
             />
             {/* Upload overlay in edit mode */}
             {isEditMode && onPortraitChange && (
@@ -333,52 +459,48 @@ export function SheetHeader({
             )}
           </div>
           
-          <div className="flex flex-col justify-center">
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary">
+          {/* Character Identity - Clean unified format */}
+          <div className="flex flex-col justify-center min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate">
               {character.name}
-              {genderSymbol && <span className="ml-2 text-text-muted">{genderSymbol}</span>}
             </h1>
-            <p className="text-text-secondary">
-              Level {character.level} {character.ancestry?.name || 'Unknown Ancestry'}
+            
+            {/* Level X Species */}
+            <p className="text-base text-text-primary">
+              Level {character.level} {character.ancestry?.name || character.species || 'Unknown'}
             </p>
-            <p className="text-text-muted text-sm">
+            
+            {/* Archetype: Abilities */}
+            <p className="text-base text-text-primary">
               {character.archetype?.name || 'No Archetype'}
+              {(character.pow_abil || character.mart_abil) && ': '}
+              {character.pow_abil && (
+                <span className="text-category-power">{character.pow_abil}</span>
+              )}
+              {character.pow_abil && character.mart_abil && ' / '}
+              {character.mart_abil && (
+                <span className="text-category-technique">{character.mart_abil}</span>
+              )}
             </p>
-            {/* Archetype Abilities Display */}
-            {(character.pow_abil || character.mart_abil) && (
-              <p className="text-xs text-text-muted flex items-center gap-1">
-                {character.pow_abil && (
-                  <span className="text-category-power">Power: {character.pow_abil}</span>
-                )}
-                {character.pow_abil && character.mart_abil && (
-                  <span className="text-border-light">•</span>
-                )}
-                {character.mart_abil && (
-                  <span className="text-category-technique">Martial: {character.mart_abil}</span>
-                )}
-              </p>
-            )}
-            {/* XP Display with Level Up indicator */}
-            <p className="text-text-muted text-sm flex items-center gap-1">
+            
+            {/* XP Display */}
+            <p className="text-base text-text-primary flex items-center gap-2">
               <span>XP: {character.experience ?? 0}</span>
               {canLevelUp && (
                 <span 
-                  className="text-success-600 animate-pulse" 
+                  className="text-success-600 animate-pulse text-sm font-medium" 
                   title="Ready to level up!"
                 >
-                  ⬆
+                  ⬆ Level up!
                 </span>
-              )}
-              {canLevelUp && (
-                <span className="text-xs text-success-600">(Level up available!)</span>
               )}
             </p>
           </div>
         </div>
 
-        {/* Core Stats */}
-        <div className="flex flex-wrap gap-2 items-start">
-          <EditableStatBlock 
+        {/* Center: Speed and Evasion - Prominent display */}
+        <div className="flex gap-3 items-start">
+          <LargeStatBlock 
             label="Speed" 
             value={calculatedStats.speed}
             baseValue={speedBase}
@@ -388,7 +510,7 @@ export function SheetHeader({
             minBase={1}
             maxBase={20}
           />
-          <EditableStatBlock 
+          <LargeStatBlock 
             label="Evasion" 
             value={calculatedStats.evasion}
             baseValue={evasionBase}
@@ -398,36 +520,57 @@ export function SheetHeader({
             minBase={0}
             maxBase={20}
           />
-          <StatBlock label="Armor" value={calculatedStats.armor} />
-          <StatBlock label="Terminal" value={calculatedStats.terminal} subValue="HP ÷ 4" />
-          {innateThreshold > 0 && (
-            <StatBlock 
-              label="Innate" 
-              value={innateThreshold} 
-              subValue={innatePools > 0 ? `${innatePools} pools` : undefined} 
-            />
-          )}
         </div>
 
-        {/* Resources - always show +/- controls */}
-        <div className="flex-1 space-y-3 min-w-[200px]">
-          <ResourceBar
-            label="Health"
-            current={currentHealth}
-            max={calculatedStats.maxHealth}
-            color="red"
-            terminalThreshold={calculatedStats.terminal}
-            showControls={true}
-            onChange={onHealthChange}
-          />
-          <ResourceBar
-            label="Energy"
-            current={currentEnergy}
-            max={calculatedStats.maxEnergy}
-            color="blue"
-            showControls={true}
-            onChange={onEnergyChange}
-          />
+        {/* Right: Resources in 2x2 grid (four corners layout) */}
+        <div className="flex-1 min-w-[280px]">
+          {/* Health bar spanning full width */}
+          <div className="mb-3">
+            <HealthBar 
+              current={currentHealth} 
+              max={calculatedStats.maxHealth} 
+              terminal={calculatedStats.terminal}
+            />
+          </div>
+          
+          {/* 2x2 Grid: Health/Energy top, Terminal/Innate bottom */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Health */}
+            <ResourceInput
+              label="Health"
+              current={currentHealth}
+              max={calculatedStats.maxHealth}
+              onChange={onHealthChange}
+              colorVariant="health"
+            />
+            
+            {/* Energy */}
+            <ResourceInput
+              label="Energy"
+              current={currentEnergy}
+              max={calculatedStats.maxEnergy}
+              onChange={onEnergyChange}
+              colorVariant="energy"
+            />
+            
+            {/* Terminal */}
+            <SmallStatBlock 
+              label="Terminal" 
+              value={calculatedStats.terminal} 
+              subValue="HP ÷ 4"
+            />
+            
+            {/* Innate Threshold */}
+            {innateThreshold > 0 ? (
+              <SmallStatBlock 
+                label="Innate" 
+                value={innateThreshold} 
+                subValue={innatePools > 0 ? `${innatePools} pools` : undefined} 
+              />
+            ) : (
+              <div /> /* Empty cell to maintain grid */
+            )}
+          </div>
           
           {/* Health-Energy Pool Allocation (edit mode only) */}
           {isEditMode && onHealthPointsChange && onEnergyPointsChange && (

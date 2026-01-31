@@ -732,6 +732,77 @@ export function useResolvedTraits(traitIds: (string | number)[]): {
 }
 
 // =============================================================================
+// Skill ID Resolution Utilities
+// =============================================================================
+
+/**
+ * Build a map from skill ID to skill name for quick lookups
+ */
+export function buildSkillIdToNameMap(skills: Skill[]): Map<string, string> {
+  return new Map(skills.map(s => [s.id, s.name]));
+}
+
+/**
+ * Resolve skill IDs to skill names
+ * @param skillIds Array of skill IDs (strings or numbers)
+ * @param allSkills Full list of skills to search
+ * @returns Array of skill names (preserving order)
+ */
+export function resolveSkillIdsToNames(
+  skillIds: (string | number)[],
+  allSkills: Skill[]
+): string[] {
+  const skillMap = buildSkillIdToNameMap(allSkills);
+  return skillIds.map(id => skillMap.get(String(id)) || String(id));
+}
+
+/**
+ * Hook to get a skill ID to name lookup map
+ * Useful for components that need to display skill names from IDs
+ */
+export function useSkillIdToNameMap(): {
+  skillIdToName: Map<string, string>;
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data: skills, isLoading, error } = useSkills();
+  
+  const skillIdToName = useMemo(() => {
+    if (!skills) return new Map<string, string>();
+    return buildSkillIdToNameMap(skills);
+  }, [skills]);
+  
+  return {
+    skillIdToName,
+    isLoading,
+    error: error || null,
+  };
+}
+
+/**
+ * Hook to resolve an array of skill IDs to names
+ * Automatically fetches skills and resolves the given IDs
+ */
+export function useResolvedSkillNames(skillIds: (string | number)[]): {
+  skillNames: string[];
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const { data: skills, isLoading, error } = useSkills();
+  
+  const skillNames = useMemo(() => {
+    if (!skills || !skillIds?.length) return [];
+    return resolveSkillIdsToNames(skillIds, skills);
+  }, [skills, skillIds]);
+  
+  return {
+    skillNames,
+    isLoading,
+    error: error || null,
+  };
+}
+
+// =============================================================================
 // Prefetch Functions (for SSR or preloading)
 // =============================================================================
 

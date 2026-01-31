@@ -2,18 +2,21 @@
  * Add Sub-Skill Modal
  * ===================
  * Modal for adding sub-skills from RTDB
- * Only shows sub-skills where the character has proficiency in the base skill
- * Uses unified GridListRow component for consistent styling.
- * Now uses ID-based base_skill lookups (base_skill_id = 0 means "any base skill")
+ * Features:
+ * - Shows ALL sub-skills (not just for proficient base skills)
+ * - If base skill is not in character's list, auto-adds it unproficiently
+ * - Matches Codex skills page design
+ * - Expandable skill rows with descriptions
+ * - Fully rounded edges
+ * - Uses ID-based base_skill lookups (base_skill_id = 0 means "any base skill")
  */
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
-import { Spinner, SearchInput, IconButton, Alert, Select } from '@/components/ui';
-import { GridListRow } from '@/components/shared';
+import { X, ChevronDown, ChevronRight, Check, AlertCircle } from 'lucide-react';
+import { Spinner, SearchInput, IconButton, Alert, Button, Select } from '@/components/ui';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 
 interface CharacterSkill {
@@ -27,60 +30,132 @@ interface AddSubSkillModalProps {
   onClose: () => void;
   characterSkills: CharacterSkill[];
   existingSkillNames: string[];
-  onAdd: (skills: Array<RTDBSkill & { selectedBaseSkillId?: string }>) => void;
+  onAdd: (skills: Array<RTDBSkill & { selectedBaseSkillId?: string; autoAddBaseSkill?: RTDBSkill }>) => void;
 }
 
-function SubSkillRow({
+const ABILITY_OPTIONS = [
+  { value: 'strength', label: 'Strength' },
+  { value: 'vitality', label: 'Vitality' },
+  { value: 'agility', label: 'Agility' },
+  { value: 'acuity', label: 'Acuity' },
+  { value: 'intelligence', label: 'Intelligence' },
+  { value: 'charisma', label: 'Charisma' },
+];
+
+function ExpandableSubSkillRow({
   skill,
   isSelected,
   onToggle,
   baseSkillName,
   isAnyBaseSkill,
+  hasBaseSkill,
   selectedBaseSkillId,
   onBaseSkillSelect,
-  proficientSkills,
+  allBaseSkills,
 }: {
   skill: RTDBSkill;
   isSelected: boolean;
   onToggle: () => void;
   baseSkillName: string;
   isAnyBaseSkill: boolean;
+  hasBaseSkill: boolean;
   selectedBaseSkillId?: string;
   onBaseSkillSelect?: (skillId: string) => void;
-  proficientSkills: Array<{ id: string; name: string }>;
+  allBaseSkills: Array<{ id: string; name: string }>;
 }) {
-  const abilityStr = skill.ability || '';
-
-  // Build columns for base skill and ability info
-  const columns = [
-    { key: 'Base', value: isAnyBaseSkill ? 'Any' : baseSkillName },
-    ...(abilityStr ? [{ key: 'Ability', value: abilityStr }] : []),
-  ];
-
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Format abilities for display
+  const abilities = skill.ability?.split(',').map(a => a.trim()).filter(Boolean) || [];
+  
   return (
-    <div className="space-y-2">
-      <GridListRow
-        id={skill.id}
-        name={skill.name}
-        description={skill.description}
-        columns={columns}
-        selectable
-        isSelected={isSelected}
-        onSelect={onToggle}
-        compact
-      />
-      {/* If "any base skill" and selected, show dropdown to pick which base skill */}
+    <div className={cn(
+      'border rounded-lg transition-colors',
+      isSelected ? 'border-primary-400 bg-primary-50' : 'border-border-light hover:border-border-medium'
+    )}>
+      {/* Header Row */}
+      <div className="flex items-center gap-3 p-3">
+        {/* Expand Button */}
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-text-muted hover:text-text-primary transition-colors"
+          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+        >
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </button>
+        
+        {/* Skill Name */}
+        <div className="flex-1">
+          <span className="font-medium text-text-primary">{skill.name}</span>
+          {/* Show base skill info */}
+          <span className="ml-2 text-sm text-text-muted">
+            ({isAnyBaseSkill ? 'Any Base' : `Base: ${baseSkillName}`})
+          </span>
+          {/* Warning if base skill will be auto-added */}
+          {!hasBaseSkill && !isAnyBaseSkill && (
+            <span className="ml-2 text-xs text-amber-600 flex items-center gap-1 inline-flex">
+              <AlertCircle className="w-3 h-3" />
+              Will add {baseSkillName}
+            </span>
+          )}
+        </div>
+        
+        {/* Abilities */}
+        <div className="flex gap-1">
+          {abilities.map(ability => (
+            <span 
+              key={ability}
+              className="px-2 py-0.5 text-xs font-medium rounded bg-surface-alt text-text-secondary capitalize"
+            >
+              {ability.slice(0, 3).toUpperCase()}
+            </span>
+          ))}
+        </div>
+        
+        {/* Selection Toggle */}
+        <button
+          type="button"
+          onClick={onToggle}
+          className={cn(
+            'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
+            isSelected 
+              ? 'bg-primary-600 border-primary-600 text-white' 
+              : 'border-border-medium hover:border-primary-400'
+          )}
+          aria-label={isSelected ? 'Deselect skill' : 'Select skill'}
+        >
+          {isSelected && <Check className="w-4 h-4" />}
+        </button>
+      </div>
+      
+      {/* Expanded Content */}
+      {isExpanded && (
+        <div className="px-3 pb-3 pt-0 space-y-2">
+          {skill.description && (
+            <div className="pl-7 text-sm text-text-secondary bg-surface-alt rounded-lg p-3">
+              {skill.description}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Base skill selector for "any base skill" sub-skills */}
       {isAnyBaseSkill && isSelected && onBaseSkillSelect && (
-        <div className="ml-6 p-2 bg-surface-alt rounded border border-border-light">
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Choose base skill for {skill.name}:
+        <div className="mx-3 mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <label className="block text-sm font-medium text-blue-800 mb-2">
+            Choose which base skill to associate with {skill.name}:
           </label>
           <Select
             value={selectedBaseSkillId || ''}
             onChange={(e) => onBaseSkillSelect(e.target.value)}
             options={[
               { value: '', label: 'Select a base skill...' },
-              ...proficientSkills.map(s => ({ value: s.id, label: s.name }))
+              ...allBaseSkills.map(s => ({ value: s.id, label: s.name }))
             ]}
           />
         </div>
@@ -96,76 +171,81 @@ export function AddSubSkillModal({
   existingSkillNames,
   onAdd,
 }: AddSubSkillModalProps) {
-  const { data: allSkills, isLoading: loading, error: fetchError } = useRTDBSkills();
+  const { data: allSkills = [], isLoading: loading, error: fetchError } = useRTDBSkills();
   const [searchQuery, setSearchQuery] = useState('');
+  const [abilityFilter, setAbilityFilter] = useState('');
+  const [baseSkillFilter, setBaseSkillFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
   // Track which base skill is selected for "any base skill" sub-skills
   const [anyBaseSkillSelections, setAnyBaseSkillSelections] = useState<Record<string, string>>({});
 
   // Build a map of skill ID to skill for lookups
   const skillById = useMemo(() => {
-    if (!allSkills) return {};
     return allSkills.reduce((acc, skill) => {
       acc[skill.id] = skill;
       return acc;
     }, {} as Record<string, RTDBSkill>);
   }, [allSkills]);
 
-  // Get proficient base skills (with IDs)
-  const proficientBaseSkills = useMemo(() => {
-    if (!allSkills) return [];
-    
-    return characterSkills
-      .filter(s => s.prof)
-      .map(charSkill => {
-        // Find the RTDB skill by name or ID
-        const rtdbSkill = allSkills.find(
-          s => s.name.toLowerCase() === charSkill.name.toLowerCase() || s.id === charSkill.id
-        );
-        return rtdbSkill ? { id: rtdbSkill.id, name: rtdbSkill.name } : null;
-      })
-      .filter((s): s is { id: string; name: string } => s !== null);
-  }, [characterSkills, allSkills]);
+  // Get all base skills (no base_skill_id)
+  const allBaseSkills = useMemo(() => {
+    return allSkills
+      .filter(s => s.base_skill_id === undefined)
+      .map(s => ({ id: s.id, name: s.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allSkills]);
 
-  const proficientSkillIds = useMemo(() => 
-    new Set(proficientBaseSkills.map(s => s.id)), 
-    [proficientBaseSkills]
+  // Get character's existing skill names (lowercase for comparison)
+  const existingSkillNamesLower = useMemo(() => 
+    new Set(existingSkillNames.map(n => n.toLowerCase())),
+    [existingSkillNames]
   );
 
-  // Get sub-skills that the user can add
-  const availableSubSkills = useMemo(() => {
-    if (!allSkills) return [];
-    
-    return allSkills.filter(skill => {
-      // Must be a sub-skill (has base_skill_id)
-      if (skill.base_skill_id === undefined) return false;
-      
-      // base_skill_id = 0 means any base skill - just need at least one proficient skill
-      if (skill.base_skill_id === 0) {
-        return proficientBaseSkills.length > 0;
+  // Check if character has a base skill (by name or ID)
+  const hasBaseSkill = useCallback((baseSkillId: string | number) => {
+    const baseSkill = skillById[String(baseSkillId)];
+    if (!baseSkill) return false;
+    return characterSkills.some(
+      cs => cs.name.toLowerCase() === baseSkill.name.toLowerCase() || cs.id === baseSkill.id
+    );
+  }, [characterSkills, skillById]);
+
+  // Get ALL sub-skills (not just for proficient base skills)
+  const allSubSkills = useMemo(() => {
+    return allSkills.filter(skill => skill.base_skill_id !== undefined);
+  }, [allSkills]);
+
+  // Get unique base skill options for filter
+  const baseSkillOptions = useMemo(() => {
+    const baseSkillIds = new Set<string>();
+    allSubSkills.forEach(skill => {
+      if (skill.base_skill_id !== undefined && skill.base_skill_id !== 0) {
+        baseSkillIds.add(String(skill.base_skill_id));
       }
-      
-      // Otherwise, check if the specific base skill is proficient
-      return proficientSkillIds.has(String(skill.base_skill_id));
     });
-  }, [allSkills, proficientBaseSkills, proficientSkillIds]);
+    return Array.from(baseSkillIds)
+      .map(id => skillById[id])
+      .filter(Boolean)
+      .map(s => ({ id: s.id, name: s.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allSubSkills, skillById]);
 
   // Reset selection when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedSkills([]);
       setSearchQuery('');
+      setAbilityFilter('');
+      setBaseSkillFilter('');
       setAnyBaseSkillSelections({});
     }
   }, [isOpen]);
 
   // Filter sub-skills
   const filteredSkills = useMemo(() => {
-    const existingLower = existingSkillNames.map(n => n.toLowerCase());
-    
-    return availableSubSkills.filter(skill => {
+    return allSubSkills.filter(skill => {
       // Exclude already owned skills
-      if (existingLower.includes(skill.name.toLowerCase())) return false;
+      if (existingSkillNamesLower.has(skill.name.toLowerCase())) return false;
       
       // Search filter
       if (searchQuery) {
@@ -173,16 +253,31 @@ export function AddSubSkillModal({
         const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
         const baseSkillName = baseSkill?.name || '';
         if (!skill.name.toLowerCase().includes(query) && 
+            !skill.description?.toLowerCase().includes(query) &&
             !baseSkillName.toLowerCase().includes(query)) {
           return false;
         }
       }
       
+      // Ability filter
+      if (abilityFilter) {
+        const skillAbilities = skill.ability?.split(',').map(a => a.trim().toLowerCase()) || [];
+        if (!skillAbilities.includes(abilityFilter.toLowerCase())) {
+          return false;
+        }
+      }
+      
+      // Base skill filter
+      if (baseSkillFilter) {
+        if (skill.base_skill_id === 0) return false; // "Any base" doesn't match specific filter
+        if (String(skill.base_skill_id) !== baseSkillFilter) return false;
+      }
+      
       return true;
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [availableSubSkills, existingSkillNames, searchQuery, skillById]);
+  }, [allSubSkills, existingSkillNamesLower, searchQuery, abilityFilter, baseSkillFilter, skillById]);
 
-  const toggleSkill = (skill: RTDBSkill) => {
+  const toggleSkill = useCallback((skill: RTDBSkill) => {
     setSelectedSkills(prev => {
       const exists = prev.some(s => s.id === skill.id);
       if (exists) {
@@ -191,27 +286,39 @@ export function AddSubSkillModal({
         return [...prev, skill];
       }
     });
-  };
+  }, []);
 
-  const handleBaseSkillSelect = (subSkillId: string, baseSkillId: string) => {
+  const handleBaseSkillSelect = useCallback((subSkillId: string, baseSkillId: string) => {
     setAnyBaseSkillSelections(prev => ({
       ...prev,
       [subSkillId]: baseSkillId,
     }));
-  };
+  }, []);
 
   const handleConfirm = () => {
-    if (selectedSkills.length > 0) {
-      // Attach selected base skill ID for "any base skill" sub-skills
-      const skillsWithBase = selectedSkills.map(skill => ({
+    if (selectedSkills.length === 0) return;
+    
+    // Attach selected base skill ID for "any base skill" sub-skills
+    // And include any base skills that need to be auto-added
+    const skillsWithBase = selectedSkills.map(skill => {
+      const isAnyBase = skill.base_skill_id === 0;
+      const baseSkillId = isAnyBase 
+        ? anyBaseSkillSelections[skill.id] 
+        : String(skill.base_skill_id);
+      
+      // Check if we need to auto-add the base skill
+      const needsBaseSkill = baseSkillId && !hasBaseSkill(baseSkillId);
+      const autoAddBaseSkill = needsBaseSkill ? skillById[baseSkillId] : undefined;
+      
+      return {
         ...skill,
-        selectedBaseSkillId: skill.base_skill_id === 0 
-          ? anyBaseSkillSelections[skill.id] 
-          : undefined,
-      }));
-      onAdd(skillsWithBase);
-      onClose();
-    }
+        selectedBaseSkillId: isAnyBase ? anyBaseSkillSelections[skill.id] : undefined,
+        autoAddBaseSkill,
+      };
+    });
+    
+    onAdd(skillsWithBase);
+    onClose();
   };
 
   const error = fetchError?.message || null;
@@ -220,10 +327,15 @@ export function AddSubSkillModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
-          <h2 className="text-lg font-bold text-text-primary">Add Sub-Skill</h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-light rounded-t-xl bg-surface-alt">
+          <div>
+            <h2 className="text-xl font-bold text-text-primary">Add Sub-Skills</h2>
+            <p className="text-sm text-text-muted mt-0.5">
+              Add specialized skills. Base skill will be added automatically if needed.
+            </p>
+          </div>
           <IconButton
             label="Close modal"
             variant="ghost"
@@ -234,21 +346,55 @@ export function AddSubSkillModal({
           </IconButton>
         </div>
 
-        {/* Info */}
-        <div className="px-4 py-2 bg-blue-50 border-b border-blue-100">
-          <p className="text-sm text-blue-700">
-            Sub-skills are available for skills you are proficient in.
-          </p>
-        </div>
-
-        {/* Search */}
-        <div className="px-4 py-3 border-b border-border-subtle">
+        {/* Search & Filters */}
+        <div className="px-5 py-4 border-b border-border-subtle space-y-3">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
-            placeholder="Search sub-skills..."
-            size="sm"
+            placeholder="Search sub-skills by name, description, or base skill..."
           />
+          
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-text-secondary">Ability:</label>
+              <select
+                value={abilityFilter}
+                onChange={(e) => setAbilityFilter(e.target.value)}
+                className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="">All</option>
+                {ABILITY_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-text-secondary">Base Skill:</label>
+              <select
+                value={baseSkillFilter}
+                onChange={(e) => setBaseSkillFilter(e.target.value)}
+                className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="">All</option>
+                {baseSkillOptions.map(opt => (
+                  <option key={opt.id} value={opt.id}>{opt.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Results count */}
+            <span className="text-sm text-text-muted ml-auto">
+              {filteredSkills.length} sub-skill{filteredSkills.length !== 1 ? 's' : ''} available
+            </span>
+          </div>
+        </div>
+
+        {/* Column Headers */}
+        <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-2 bg-surface-alt border-b border-border-light text-xs font-semibold text-text-muted uppercase tracking-wider">
+          <span className="pl-7">Sub-Skill Name</span>
+          <span>Abilities</span>
+          <span className="w-6"></span>
         </div>
 
         {/* Content */}
@@ -266,13 +412,7 @@ export function AddSubSkillModal({
             </Alert>
           )}
 
-          {!loading && !error && proficientBaseSkills.length === 0 && (
-            <p className="text-center py-8 text-text-muted italic">
-              You need at least one proficient skill to add sub-skills.
-            </p>
-          )}
-
-          {!loading && !error && proficientBaseSkills.length > 0 && filteredSkills.length === 0 && (
+          {!loading && !error && filteredSkills.length === 0 && (
             <p className="text-center py-8 text-text-muted italic">
               No sub-skills available to add
             </p>
@@ -284,18 +424,22 @@ export function AddSubSkillModal({
                 const isAnyBaseSkill = skill.base_skill_id === 0;
                 const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
                 const baseSkillName = isAnyBaseSkill ? 'Any' : (baseSkill?.name || 'Unknown');
+                const characterHasBase = !isAnyBaseSkill && skill.base_skill_id 
+                  ? hasBaseSkill(skill.base_skill_id) 
+                  : true;
                 
                 return (
-                  <SubSkillRow
+                  <ExpandableSubSkillRow
                     key={skill.id}
                     skill={skill}
                     isSelected={selectedSkills.some(s => s.id === skill.id)}
                     onToggle={() => toggleSkill(skill)}
                     baseSkillName={baseSkillName}
                     isAnyBaseSkill={isAnyBaseSkill}
+                    hasBaseSkill={characterHasBase}
                     selectedBaseSkillId={anyBaseSkillSelections[skill.id]}
                     onBaseSkillSelect={isAnyBaseSkill ? (id) => handleBaseSkillSelect(skill.id, id) : undefined}
-                    proficientSkills={proficientBaseSkills}
+                    allBaseSkills={allBaseSkills}
                   />
                 );
               })}
@@ -304,29 +448,21 @@ export function AddSubSkillModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border-light bg-surface-alt">
-          <span className="text-sm text-text-muted">
+        <div className="flex items-center justify-between px-5 py-4 border-t border-border-light bg-surface-alt rounded-b-xl">
+          <span className="text-sm text-text-secondary font-medium">
             {selectedSkills.length} sub-skill{selectedSkills.length !== 1 ? 's' : ''} selected
           </span>
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-surface transition-colors"
-            >
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={onClose}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={handleConfirm}
               disabled={selectedSkills.length === 0}
-              className={cn(
-                'px-4 py-2 rounded-lg font-medium transition-colors',
-                selectedSkills.length > 0
-                  ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-surface text-text-muted cursor-not-allowed'
-              )}
             >
-              Add {selectedSkills.length > 0 ? `(${selectedSkills.length})` : ''}
-            </button>
+              Add Selected {selectedSkills.length > 0 ? `(${selectedSkills.length})` : ''}
+            </Button>
           </div>
         </div>
       </div>

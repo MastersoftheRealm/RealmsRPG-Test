@@ -264,27 +264,7 @@ export function SkillsSection({
     : 'normal';
   
   return (
-    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 relative">
-      {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
-      {isEditMode && (
-        <div className="absolute top-3 right-3">
-          <EditSectionToggle 
-            state={skillEditState}
-            isActive={isSectionEditing}
-            onClick={() => setIsSectionEditing(prev => !prev)}
-            title={
-              isSectionEditing
-                ? 'Click to close editing'
-                : skillEditState === 'has-points' 
-                  ? 'Click to edit - you have skill points to spend' 
-                  : skillEditState === 'over-budget'
-                    ? 'Click to edit - over budget, remove skill points'
-                    : 'Click to edit skills'
-            }
-          />
-        </div>
-      )}
-      
+    <div className="bg-surface rounded-xl shadow-md p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-text-primary">Skills</h2>
@@ -314,6 +294,23 @@ export function SkillsSection({
               total={totalSkillPoints}
               spent={totalSpent}
               variant="compact"
+            />
+          )}
+          {/* Edit Mode Indicator - Pencil Icon after skill points */}
+          {isEditMode && (
+            <EditSectionToggle 
+              state={skillEditState}
+              isActive={isSectionEditing}
+              onClick={() => setIsSectionEditing(prev => !prev)}
+              title={
+                isSectionEditing
+                  ? 'Click to close editing'
+                  : skillEditState === 'has-points' 
+                    ? 'Click to edit - you have skill points to spend' 
+                    : skillEditState === 'over-budget'
+                      ? 'Click to edit - over budget, remove skill points'
+                      : 'Click to edit skills'
+              }
             />
           )}
         </div>

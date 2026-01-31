@@ -4,6 +4,7 @@
 import { useMemo } from 'react';
 import { Modal, Chip, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { useRTDBSkills, resolveSkillIdsToNames } from '@/hooks';
 import type { Species, Trait } from '@/hooks';
 
 interface SpeciesModalProps {
@@ -118,6 +119,9 @@ export function SpeciesModal({
   onSelect, 
   onClose 
 }: SpeciesModalProps) {
+  // Fetch skills for ID → name resolution
+  const { data: allSkills } = useRTDBSkills();
+
   // Resolve all trait categories
   const resolvedTraits = useMemo(() => {
     if (!species || !traits) return null;
@@ -129,6 +133,12 @@ export function SpeciesModal({
       characteristics: resolveTraits(species.characteristics || [], traits),
     };
   }, [species, traits]);
+
+  // Resolve species skill IDs to names
+  const speciesSkillNames = useMemo(() => {
+    if (!species?.skills || !allSkills) return [];
+    return resolveSkillIdsToNames(species.skills, allSkills);
+  }, [species?.skills, allSkills]);
 
   if (!species || !isOpen) return null;
 
@@ -189,15 +199,15 @@ export function SpeciesModal({
         {/* Skills and Languages - Main Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Species Skills */}
-          {species.skills && species.skills.length > 0 && (
+          {speciesSkillNames.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
                 Species Skills
               </h4>
               <div className="flex flex-wrap gap-2">
-                {species.skills.map(skill => (
-                  <Chip key={skill} variant="info">
-                    {skill}
+                {speciesSkillNames.map(skillName => (
+                  <Chip key={skillName} variant="info">
+                    {skillName}
                   </Chip>
                 ))}
               </div>

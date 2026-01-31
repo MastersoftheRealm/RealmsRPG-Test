@@ -29,15 +29,21 @@ export function SkillsStep() {
   // Get skill points based on level (default level 1)
   const totalSkillPoints = calculateSkillPoints(draft.level || 1);
   
-  // Get species skills (granted free proficiencies)
-  const speciesSkillNames = useMemo(() => {
-    // Find the species from draft.ancestry?.name or draft.species
+  // Get species skill IDs (granted free proficiencies)
+  // Species skills are now stored as IDs, not names
+  const speciesSkillIds = useMemo(() => {
+    // Find the species from draft.ancestry?.id or draft.species name
+    const speciesId = draft.ancestry?.id;
     const speciesName = draft.ancestry?.name || draft.species;
-    if (!speciesName) return new Set<string>();
+    if (!speciesId && !speciesName) return new Set<string>();
     
-    const species = allSpecies.find(s => s.name.toLowerCase() === speciesName.toLowerCase());
-    return new Set((species?.skills || []).map(s => s.toLowerCase()));
-  }, [draft.ancestry?.name, draft.species, allSpecies]);
+    const species = speciesId 
+      ? allSpecies.find(s => s.id === speciesId)
+      : allSpecies.find(s => s.name.toLowerCase() === speciesName?.toLowerCase());
+    
+    // Species.skills is now an array of skill IDs (strings)
+    return new Set((species?.skills || []).map(id => String(id)));
+  }, [draft.ancestry?.id, draft.ancestry?.name, draft.species, allSpecies]);
   
   // Initialize skill allocations from draft or create empty
   // CharacterSkills is Record<string, number>
@@ -48,14 +54,13 @@ export function SkillsStep() {
   // Calculate used points (excluding species skills - they don't cost points)
   const usedPoints = useMemo(() => {
     return Object.entries(allocations).reduce((sum, [skillId, val]) => {
-      // Find the skill by ID to check if it's a species skill
-      const skill = skills?.find(s => s.id === skillId);
-      if (skill && speciesSkillNames.has(skill.name.toLowerCase())) {
+      // Check if this skill ID is a species skill (free)
+      if (speciesSkillIds.has(skillId)) {
         return sum; // Species skills don't cost points
       }
       return sum + val;
     }, 0);
-  }, [allocations, skills, speciesSkillNames]);
+  }, [allocations, speciesSkillIds]);
 
   const remainingPoints = totalSkillPoints - usedPoints;
 
@@ -261,7 +266,7 @@ export function SkillsStep() {
                           value={baseSkillValue}
                           onAllocate={(delta) => handleAllocate(skill.id, delta)}
                           canIncrease={remainingPoints > 0}
-                          isSpeciesSkill={speciesSkillNames.has(skill.name.toLowerCase())}
+                          isSpeciesSkill={speciesSkillIds.has(skill.id)}
                         />
                         
                         {/* Sub-Skills (nested under base skill) */}
@@ -278,7 +283,7 @@ export function SkillsStep() {
                                   canIncrease={remainingPoints > 0}
                                   isUnlocked={isUnlocked}
                                   baseSkillName={skill.name}
-                                  isSpeciesSkill={speciesSkillNames.has(subSkill.name.toLowerCase())}
+                                  isSpeciesSkill={speciesSkillIds.has(subSkill.id)}
                                 />
                               );
                             })}
