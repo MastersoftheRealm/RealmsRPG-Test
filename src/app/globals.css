@@ -216,18 +216,25 @@
   --color-tp-text: #92400e;
   --color-tp-border: #fcd34d;
   
-  /* Energy/Power - Violet (lighter than purple for less striking appearance) */
-  --color-power: #8b5cf6;
-  --color-power-light: #f5f3ff;
-  --color-power-text: #7c3aed;
-  --color-power-border: #ddd6fe;
-  --color-power-dark: #6d28d9;
+  /* Power Archetype - Soft Purple (reduced saturation for less striking appearance) */
+  --color-power: #9d8abf;
+  --color-power-light: #f8f6fc;
+  --color-power-text: #6b5b8a;
+  --color-power-border: #d4cce6;
+  --color-power-dark: #5c4a7a;
   
-  /* Health - Red/Rose */
-  --color-health: #dc2626;
-  --color-health-light: #fee2e2;
-  --color-health-text: #991b1b;
-  --color-health-border: #fca5a5;
+  /* Martial Archetype - Soft Rose/Coral (similar saturation to power) */
+  --color-martial: #c48b8b;
+  --color-martial-light: #fcf6f6;
+  --color-martial-text: #8a5b5b;
+  --color-martial-border: #e6cccc;
+  --color-martial-dark: #7a4a4a;
+  
+  /* Health - Green (intuitive for HP) */
+  --color-health: #22c55e;
+  --color-health-light: #dcfce7;
+  --color-health-text: #166534;
+  --color-health-border: #86efac;
   
   /* Energy (Resource) - Blue */
   --color-energy: #2563eb;

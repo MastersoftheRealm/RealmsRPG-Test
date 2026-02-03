@@ -294,7 +294,7 @@ export function AncestryStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedFlaw
-            ? 'bg-purple-50 border-purple-300'
+            ? 'bg-red-50 border-red-300'
             : 'bg-surface-alt border-border-light'
         )}>
           <div className="flex items-center justify-between mb-1">
@@ -302,7 +302,7 @@ export function AncestryStep() {
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedFlaw
-                ? 'bg-purple-200 text-purple-800'
+                ? 'bg-red-200 text-red-800'
                 : 'bg-surface text-text-secondary'
             )}>
               {selectedFlaw ? '1' : '0'} / 1
@@ -436,10 +436,10 @@ function TraitSection({
       check: 'bg-blue-600 border-blue-600',
     },
     flaw: {
-      border: 'border-purple-200',
-      header: 'bg-purple-50',
-      selected: 'border-purple-400 bg-purple-50',
-      check: 'bg-purple-600 border-purple-600',
+      border: 'border-red-200',
+      header: 'bg-red-50',
+      selected: 'border-red-400 bg-red-50',
+      check: 'bg-red-600 border-red-600',
     },
   };
 

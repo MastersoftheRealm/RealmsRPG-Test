@@ -84,6 +84,26 @@ export type { CreatureData, CreatureStatBlockProps } from './creature-stat-block
 export { SpeciesTraitCard, TraitGroup } from './species-trait-card';
 export type { TraitData, TraitCategory, SpeciesTraitCardProps, TraitGroupProps } from './species-trait-card';
 
+// ============================================================================
+// UNIFIED SELECTION COMPONENTS
+// ============================================================================
+
+// SelectionToggle - The unified + → ✓ selection button
+// Use for ALL selection actions: add feats, select traits, pick equipment, etc.
+export { SelectionToggle } from './selection-toggle';
+export type { SelectionToggleProps } from './selection-toggle';
+
+// UnifiedSelectionModal - One modal pattern for all selection scenarios
+// Use for: adding skills, feats, powers, techniques, equipment, etc.
+// Works in: character sheet, character creator, creature creator
+export { UnifiedSelectionModal } from './unified-selection-modal';
+export type { 
+  UnifiedSelectionModalProps, 
+  SelectableItem, 
+  ColumnHeader as SelectionColumnHeader,
+  FilterOption as SelectionFilterOption,
+} from './unified-selection-modal';
+
 // Modals
 export { LoginPromptModal } from './login-prompt-modal';
 export { DeleteConfirmModal } from './delete-confirm-modal';

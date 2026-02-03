@@ -37,7 +37,11 @@ export interface AbilityScoreEditorProps {
   maxNegativeSum?: number | null;
   /** Whether the component is in edit mode (default: true) */
   isEditMode?: boolean;
-  /** Highlighted abilities (e.g., archetype abilities) */
+  /** Power archetype ability name (for purple highlight) */
+  powerAbility?: AbilityName;
+  /** Martial archetype ability name (for red highlight) */
+  martialAbility?: AbilityName;
+  /** DEPRECATED: Use powerAbility/martialAbility instead */
   highlightedAbilities?: AbilityName[];
   /** Compact layout - 3 columns with short names (default: false) */
   compact?: boolean;
@@ -93,6 +97,8 @@ export function AbilityScoreEditor({
   minAbility = -2,
   maxNegativeSum = -3,
   isEditMode = true,
+  powerAbility,
+  martialAbility,
   highlightedAbilities = [],
   compact = false,
   hidePointsStatus = false,
@@ -157,71 +163,90 @@ export function AbilityScoreEditor({
         {ABILITY_ORDER.map((ability) => {
           const value = abilities[ability] || 0;
           const info = ABILITY_INFO[ability];
-          const isHighlighted = highlightedAbilities.includes(ability);
+          const isPowerAbility = powerAbility === ability;
+          const isMartialAbility = martialAbility === ability;
+          // Fallback for deprecated highlightedAbilities prop
+          const isLegacyHighlight = !powerAbility && !martialAbility && highlightedAbilities.includes(ability);
           const increaseCost = getIncreaseCost(value, useHighAbilityCost);
           const canInc = canIncrease(ability);
           const canDec = canDecrease(ability);
 
+          // Determine border/highlight color
+          let borderClass = 'border-border-light';
+          let bgClass = 'bg-surface';
+          if (isPowerAbility) {
+            borderClass = 'border-power';
+            bgClass = 'bg-power-light/50';
+          } else if (isMartialAbility) {
+            borderClass = 'border-martial';
+            bgClass = 'bg-martial-light/50';
+          } else if (isLegacyHighlight) {
+            borderClass = 'border-amber-400';
+            bgClass = 'bg-amber-50/50';
+          }
+
           return (
             <div
               key={ability}
-              className={cn(
-                'p-3 rounded-xl border-2 bg-surface transition-all',
-                isHighlighted 
-                  ? 'border-amber-400 bg-amber-50/50' 
-                  : 'border-border-light',
-                !isEditMode && 'opacity-75'
-              )}
+              className="flex flex-col"
             >
-              <div className="text-center mb-2">
-                <h4 className="font-bold text-sm text-text-primary capitalize">
-                  {compact ? info.shortName : info.name}
-                </h4>
-                {isHighlighted && (
-                  <span className="text-xs text-amber-600 font-medium">Archetype</span>
+              {/* Ability Card */}
+              <div
+                className={cn(
+                  'p-3 rounded-xl border-2 transition-all flex-1',
+                  borderClass,
+                  bgClass,
+                  !isEditMode && 'opacity-75'
                 )}
-              </div>
-
-              {!compact && (
-                <p className="text-xs text-text-muted text-center mb-2 line-clamp-1">
-                  {info.description}
-                </p>
-              )}
-
-              <div className="flex items-center justify-center gap-2">
-                {isEditMode && (
-                  <DecrementButton
-                    onClick={() => onAbilityChange(ability, value - 1)}
-                    disabled={!canDec}
-                    size="md"
-                    // No enableHoldRepeat - abilities should be clicked individually
-                  />
-                )}
-
-                <div className={cn(
-                  'text-2xl font-bold min-w-[3rem] text-center',
-                  value > 0 ? 'text-success-600' :
-                  value < 0 ? 'text-danger-600' :
-                  'text-text-secondary'
-                )}>
-                  {formatBonus(value)}
+              >
+                <div className="text-center mb-2">
+                  <h4 className="font-bold text-sm text-text-primary capitalize">
+                    {compact ? info.shortName : info.name}
+                  </h4>
                 </div>
 
-                {isEditMode && (
-                  <IncrementButton
-                    onClick={() => onAbilityChange(ability, value + 1)}
-                    disabled={!canInc}
-                    size="md"
-                    title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
-                    // No enableHoldRepeat - abilities should be clicked individually
-                  />
+                <div className="flex items-center justify-center gap-2">
+                  {isEditMode && (
+                    <DecrementButton
+                      onClick={() => onAbilityChange(ability, value - 1)}
+                      disabled={!canDec}
+                      size="md"
+                      // No enableHoldRepeat - abilities should be clicked individually
+                    />
+                  )}
+
+                  <div className={cn(
+                    'text-2xl font-bold min-w-[3rem] text-center',
+                    value > 0 ? 'text-success-600' :
+                    value < 0 ? 'text-danger-600' :
+                    'text-text-secondary'
+                  )}>
+                    {formatBonus(value)}
+                  </div>
+
+                  {isEditMode && (
+                    <IncrementButton
+                      onClick={() => onAbilityChange(ability, value + 1)}
+                      disabled={!canInc}
+                      size="md"
+                      title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
+                      // No enableHoldRepeat - abilities should be clicked individually
+                    />
+                  )}
+                </div>
+
+                {/* Show cost indicator for high values */}
+                {isEditMode && useHighAbilityCost && value >= 3 && (
+                  <p className="text-[10px] text-amber-600 font-medium text-center mt-1">
+                    Next: {increaseCost + 1}pt
+                  </p>
                 )}
               </div>
-
-              {/* Show cost indicator for high values */}
-              {isEditMode && useHighAbilityCost && value >= 3 && (
-                <p className="text-[10px] text-amber-600 font-medium text-center mt-1">
-                  Next: {increaseCost + 1}pt
+              
+              {/* Description below card (not in compact mode) */}
+              {!compact && (
+                <p className="text-xs text-text-muted text-center mt-1.5 px-1 line-clamp-2">
+                  {info.description}
                 </p>
               )}
             </div>

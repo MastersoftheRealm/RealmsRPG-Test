@@ -13,7 +13,7 @@
  * - Consistent visual patterns across the entire site
  * - Grid-aligned columns match headers
  * - Flexible expanded content via render prop or default slots
- * - Selection mode for modals
+ * - Selection mode for modals (using SelectionToggle for + → ✓ UX)
  * - Action buttons for editable content
  * - Accessible and responsive
  */
@@ -22,6 +22,7 @@ import { useState, ReactNode } from 'react';
 import { ChevronDown, Edit, Trash2, Copy, Zap, Check, Plus, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
+import { SelectionToggle } from './selection-toggle';
 
 // =============================================================================
 // Types
@@ -243,29 +244,20 @@ export function GridListRow({
     <div className={rowStyles}>
       {/* Main Row */}
       <div className="flex">
-        {/* Selection Button (for modals) */}
+        {/* Selection Button (for modals) - uses unified SelectionToggle */}
         {selectable && (
-          <button
-            onClick={(e) => { e.stopPropagation(); if (!disabled) onSelect?.(); }}
-            disabled={disabled}
-            className={cn(
-              'w-10 flex-shrink-0 flex items-center justify-center transition-colors',
-              isSelected 
-                ? 'bg-primary-600 text-white' 
-                : 'bg-surface text-text-muted hover:bg-primary-50 hover:text-primary-600',
-              disabled && 'cursor-not-allowed opacity-50'
-            )}
-            aria-label={isSelected ? 'Remove from selection' : 'Add to selection'}
-          >
-            <div className={cn(
-              'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
-              isSelected 
-                ? 'bg-primary-600 border-primary-600 text-white' 
-                : 'border-border-medium hover:border-primary-400'
-            )}>
-              {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            </div>
-          </button>
+          <div className={cn(
+            'w-10 flex-shrink-0 flex items-center justify-center',
+            disabled && 'cursor-not-allowed opacity-50'
+          )}>
+            <SelectionToggle
+              isSelected={!!isSelected}
+              onToggle={() => !disabled && onSelect?.()}
+              disabled={disabled}
+              size="md"
+              label={isSelected ? 'Remove from selection' : 'Add to selection'}
+            />
+          </div>
         )}
         
         {/* Left Slot - renders before clickable content (e.g., equip toggle, innate toggle) */}

@@ -1,7 +1,8 @@
 /**
- * Equipment Step
- * ===============
- * Select starting equipment with real data from Firebase
+ * Equipment Step - Codex-Style
+ * =============================
+ * Select starting equipment with real data from Firebase.
+ * Uses Codex-style filtering and list presentation.
  * - Weapons and Armor come from user's Firestore item library
  * - General equipment comes from RTDB items
  * Supports quantity selection for equipment items
@@ -14,7 +15,8 @@ import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
-import { SearchInput, DecrementButton, IncrementButton } from '@/components/shared';
+import { SearchInput, DecrementButton, IncrementButton, GridListRow, type ChipData } from '@/components/shared';
+import { FilterSection, SelectFilter } from '@/components/codex';
 import { Spinner, Button } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { ChevronDown, ChevronUp, AlertCircle, Swords, Check } from 'lucide-react';
@@ -496,9 +498,40 @@ export function EquipmentStep() {
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
-              placeholder={`Search ${activeTab}s...`}
+              placeholder={`Search ${activeTab}s by name or description...`}
             />
           </div>
+
+          {/* Filters */}
+          <FilterSection>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <SelectFilter
+                label="Source"
+                value=""
+                options={[
+                  { value: '', label: 'All Sources' },
+                  { value: 'library', label: 'My Library' },
+                  { value: 'rtdb', label: 'Standard Equipment' },
+                ]}
+                onChange={() => {}}
+                placeholder="All Sources"
+              />
+              
+              <div className="filter-group">
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Budget Filter
+                </label>
+                <div className={cn(
+                  'px-3 py-2 rounded-lg border text-sm',
+                  remainingCurrency >= 0 
+                    ? 'bg-green-50 border-green-200 text-green-700'
+                    : 'bg-red-50 border-red-200 text-red-700'
+                )}>
+                  {remainingCurrency}c remaining of {startingCurrency}c
+                </div>
+              </div>
+            </div>
+          </FilterSection>
 
           {/* Results count */}
           <div className="text-sm text-text-muted mb-2">

@@ -6,6 +6,11 @@
  * 
  * Uses the unified ValueStepper component with hold-to-repeat support.
  * 
+ * Design Updates:
+ * - Health uses GREEN colors (intuitive for HP)
+ * - Shows TOTAL value prominently, "points" allocated shown secondary
+ * - Renamed "bonus" to "points" for clarity
+ * 
  * Variants:
  * - "card": Full card layout with visual pool status (default, for creators)
  * - "inline": Compact horizontal layout with progress bars (for sheet edit mode)
@@ -17,9 +22,9 @@ import { cn } from '@/lib/utils';
 import { ValueStepper } from '@/components/shared';
 
 export interface HealthEnergyAllocatorProps {
-  /** Bonus HP points added beyond base */
+  /** Additional HP points allocated beyond base */
   hpBonus: number;
-  /** Bonus Energy points added beyond base */
+  /** Additional Energy points allocated beyond base */
   energyBonus: number;
   /** Total pool of points available */
   poolTotal: number;
@@ -27,9 +32,9 @@ export interface HealthEnergyAllocatorProps {
   maxHp: number;
   /** Calculated max Energy after bonuses */
   maxEnergy: number;
-  /** Callback when HP bonus changes */
+  /** Callback when HP allocation changes */
   onHpChange: (value: number) => void;
-  /** Callback when Energy bonus changes */
+  /** Callback when Energy allocation changes */
   onEnergyChange: (value: number) => void;
   /** Layout variant: 'card' for creators, 'inline' for sheet */
   variant?: 'card' | 'inline';
@@ -66,7 +71,7 @@ export function HealthEnergyAllocator({
   // Inline variant for character sheet edit mode
   if (variant === 'inline') {
     return (
-      <div className="p-3 bg-gradient-to-r from-red-50 to-blue-50 rounded-lg border border-border-light">
+      <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-border-light">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
             H/E Pool Allocation
@@ -82,11 +87,11 @@ export function HealthEnergyAllocator({
         </div>
         
         <div className="flex items-center gap-4">
-          {/* Health Points */}
+          {/* Health Points - Green colors, show total prominently */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-red-600 font-medium">Health +</span>
-              <span className="text-xs text-text-muted">{hpBonus} pts (Max: {maxHp})</span>
+              <span className="text-sm font-bold text-green-600">{maxHp} HP</span>
+              <span className="text-xs text-text-muted">+{hpBonus} pts</span>
             </div>
             <div className="flex items-center gap-1">
               <ValueStepper
@@ -100,12 +105,12 @@ export function HealthEnergyAllocator({
                 enableHoldRepeat={enableHoldRepeat}
                 disabled={disabled}
                 hideValue
-                decrementTitle="Remove HP bonus"
-                incrementTitle="Add HP bonus"
+                decrementTitle="Remove HP points"
+                incrementTitle="Add HP points"
               />
               <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden mx-1">
                 <div
-                  className="h-full bg-red-500 transition-all duration-200"
+                  className="h-full bg-green-500 transition-all duration-200"
                   style={{ width: `${(hpBonus / poolTotal) * 100}%` }}
                 />
               </div>
@@ -115,11 +120,11 @@ export function HealthEnergyAllocator({
           {/* Divider */}
           <div className="w-px h-10 bg-border-light" />
           
-          {/* Energy Points */}
+          {/* Energy Points - Blue colors, show total prominently */}
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-blue-600 font-medium">Energy +</span>
-              <span className="text-xs text-text-muted">{energyBonus} pts (Max: {maxEnergy})</span>
+              <span className="text-sm font-bold text-blue-600">{maxEnergy} EN</span>
+              <span className="text-xs text-text-muted">+{energyBonus} pts</span>
             </div>
             <div className="flex items-center gap-1">
               <ValueStepper
@@ -133,8 +138,8 @@ export function HealthEnergyAllocator({
                 enableHoldRepeat={enableHoldRepeat}
                 disabled={disabled}
                 hideValue
-                decrementTitle="Remove Energy bonus"
-                incrementTitle="Add Energy bonus"
+                decrementTitle="Remove Energy points"
+                incrementTitle="Add Energy points"
               />
               <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden mx-1">
                 <div
@@ -181,11 +186,11 @@ export function HealthEnergyAllocator({
       </div>
 
       <div className="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2">
-        {/* HP Allocator */}
+        {/* HP Allocator - Show total prominently, points secondary */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-secondary">Hit Points</span>
-            <span className="text-lg font-bold text-danger-600">{maxHp}</span>
+            <span className="text-lg font-bold text-green-600">{maxHp} HP</span>
+            <span className="text-sm text-text-muted">+{hpBonus} pts</span>
           </div>
           <div className="flex items-center gap-2">
             <ValueStepper
@@ -198,21 +203,23 @@ export function HealthEnergyAllocator({
               enableHoldRepeat={enableHoldRepeat}
               disabled={disabled}
               hideValue
-              decrementTitle="Remove HP bonus"
-              incrementTitle="Add HP bonus"
+              decrementTitle="Remove HP points"
+              incrementTitle="Add HP points"
             />
-            <div className="flex-1 text-center">
-              <span className="text-xl font-bold text-primary">+{hpBonus}</span>
-              <span className="text-xs text-tertiary ml-1">bonus</span>
+            <div className="flex-1 h-3 bg-surface rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-500 transition-all duration-200"
+                style={{ width: `${poolTotal > 0 ? (hpBonus / poolTotal) * 100 : 0}%` }}
+              />
             </div>
           </div>
         </div>
 
-        {/* Energy Allocator */}
+        {/* Energy Allocator - Show total prominently, points secondary */}
         <div className="flex flex-col">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-secondary">Energy</span>
-            <span className="text-lg font-bold text-info-600">{maxEnergy}</span>
+            <span className="text-lg font-bold text-blue-600">{maxEnergy} EN</span>
+            <span className="text-sm text-text-muted">+{energyBonus} pts</span>
           </div>
           <div className="flex items-center gap-2">
             <ValueStepper
@@ -225,12 +232,14 @@ export function HealthEnergyAllocator({
               enableHoldRepeat={enableHoldRepeat}
               disabled={disabled}
               hideValue
-              decrementTitle="Remove Energy bonus"
-              incrementTitle="Add Energy bonus"
+              decrementTitle="Remove Energy points"
+              incrementTitle="Add Energy points"
             />
-            <div className="flex-1 text-center">
-              <span className="text-xl font-bold text-primary">+{energyBonus}</span>
-              <span className="text-xs text-tertiary ml-1">bonus</span>
+            <div className="flex-1 h-3 bg-surface rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 transition-all duration-200"
+                style={{ width: `${poolTotal > 0 ? (energyBonus / poolTotal) * 100 : 0}%` }}
+              />
             </div>
           </div>
         </div>

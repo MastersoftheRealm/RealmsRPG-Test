@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Modal, Chip, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useRTDBSkills, resolveSkillIdsToNames } from '@/hooks';
-import type { Species, Trait } from '@/hooks';
+import type { Species, Trait, RTDBSkill } from '@/hooks';
 
 interface SpeciesModalProps {
   species: Species | null;
@@ -72,10 +72,7 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
   
   return (
     <div className="mb-4">
-      <h4 className={cn(
-        'font-semibold text-sm uppercase tracking-wide mb-2',
-        isFlaw ? 'text-purple-700' : 'text-text-secondary'
-      )}>
+      <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-text-secondary">
         {title}
       </h4>
       <div className="space-y-2">
@@ -83,26 +80,17 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
           <div 
             key={`${trait.id}-${index}`}
             className={cn(
-              'p-3 rounded-lg border',
-              isFlaw 
-                ? 'bg-purple-50 border-purple-200' 
-                : 'bg-surface-alt border-border-light',
+              'p-3 rounded-lg border bg-surface-alt border-border-light',
               selectable && 'cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors',
               !trait.found && 'opacity-60'
             )}
           >
             <div className="flex items-start gap-2">
-              <span className={cn(
-                'font-medium text-sm',
-                isFlaw ? 'text-purple-800' : 'text-text-primary'
-              )}>
+              <span className="font-medium text-sm text-text-primary">
                 {trait.name}
               </span>
             </div>
-            <p className={cn(
-              'text-xs mt-1',
-              isFlaw ? 'text-purple-600' : 'text-text-secondary'
-            )}>
+            <p className="text-xs mt-1 text-text-secondary">
               {trait.description}
             </p>
           </div>
@@ -121,6 +109,8 @@ export function SpeciesModal({
 }: SpeciesModalProps) {
   // Fetch skills for ID → name resolution
   const { data: allSkills } = useRTDBSkills();
+  // State for showing skill description
+  const [selectedSkill, setSelectedSkill] = useState<RTDBSkill | null>(null);
 
   // Resolve all trait categories
   const resolvedTraits = useMemo(() => {
@@ -134,10 +124,15 @@ export function SpeciesModal({
     };
   }, [species, traits]);
 
-  // Resolve species skill IDs to names
-  const speciesSkillNames = useMemo(() => {
+  // Resolve species skill IDs to full skill objects (not just names)
+  const speciesSkills = useMemo(() => {
     if (!species?.skills || !allSkills) return [];
-    return resolveSkillIdsToNames(species.skills, allSkills);
+    return species.skills
+      .map(skillId => {
+        const idStr = String(skillId);
+        return allSkills.find(s => s.id === idStr || s.name.toLowerCase() === idStr.toLowerCase());
+      })
+      .filter((s): s is RTDBSkill => s !== undefined);
   }, [species?.skills, allSkills]);
 
   if (!species || !isOpen) return null;
@@ -198,19 +193,46 @@ export function SpeciesModal({
 
         {/* Skills and Languages - Main Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Species Skills */}
-          {speciesSkillNames.length > 0 && (
+          {/* Species Skills - Clickable to show description */}
+          {speciesSkills.length > 0 && (
             <div>
               <h4 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
                 Species Skills
               </h4>
               <div className="flex flex-wrap gap-2">
-                {speciesSkillNames.map(skillName => (
-                  <Chip key={skillName} variant="info">
-                    {skillName}
+                {speciesSkills.map(skill => (
+                  <Chip 
+                    key={skill.id} 
+                    variant="info"
+                    className="cursor-pointer hover:ring-2 hover:ring-info-300 transition-all"
+                    onClick={() => setSelectedSkill(selectedSkill?.id === skill.id ? null : skill)}
+                  >
+                    {skill.name}
                   </Chip>
                 ))}
               </div>
+              {/* Show selected skill description */}
+              {selectedSkill && (
+                <div className="mt-2 p-3 bg-info-50 border border-info-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-info-800">{selectedSkill.name}</span>
+                    <button 
+                      onClick={() => setSelectedSkill(null)}
+                      className="text-info-600 hover:text-info-800 text-sm"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-sm text-info-700">
+                    {selectedSkill.description || 'No description available.'}
+                  </p>
+                  {selectedSkill.ability && (
+                    <p className="text-xs text-info-600 mt-1">
+                      Ability: {selectedSkill.ability}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

@@ -1,8 +1,8 @@
 /**
- * Feats Step
- * ===========
- * Select character feats with real data from Firebase RTDB
- * Phase 1 fix: Separate archetype feats vs character feats with proper limits
+ * Feats Step - Codex-Style
+ * =========================
+ * Select character feats with Codex-style filtering and GridListRow cards.
+ * Features auto-filters based on character stats to hide unqualified feats.
  * 
  * Feat Limits by Archetype:
  * - Power: 1 archetype feat + 1 character feat
@@ -12,9 +12,20 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Spinner, Button } from '@/components/ui';
+import { 
+  GridListRow, 
+  SearchInput, 
+  SortHeader, 
+  type ChipData 
+} from '@/components/shared';
+import { 
+  FilterSection, 
+  ChipSelect, 
+  SelectFilter 
+} from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBFeats, type RTDBFeat } from '@/hooks';
 import { getArchetypeFeatLimit } from '@/lib/game/formulas';
@@ -23,6 +34,9 @@ import type { ArchetypeCategory } from '@/types';
 // Character feats are always 1 at level 1
 const CHARACTER_FEAT_LIMIT = 1;
 
+// Grid columns for feat display
+const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 40px';
+
 interface SelectedFeat {
   id: string;
   name: string;
@@ -30,13 +44,27 @@ interface SelectedFeat {
   type: 'archetype' | 'character';
 }
 
+interface FeatFilters {
+  search: string;
+  categories: string[];
+  featType: 'all' | 'archetype' | 'character';
+  hideUnqualified: boolean;
+  sortCol: string;
+  sortDir: 1 | -1;
+}
+
 export function FeatsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: feats, isLoading } = useRTDBFeats();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [featTypeFilter, setFeatTypeFilter] = useState<'all' | 'archetype' | 'character'>('all');
-  const [expandedFeat, setExpandedFeat] = useState<string | null>(null);
+  
+  const [filters, setFilters] = useState<FeatFilters>({
+    search: '',
+    categories: [],
+    featType: 'all',
+    hideUnqualified: true, // Auto-hide unqualified by default
+    sortCol: 'name',
+    sortDir: 1,
+  });
 
   // Get archetype feat limit based on archetype type
   const archetypeType = (draft.archetype?.type || 'power') as ArchetypeCategory;
@@ -62,7 +90,7 @@ export function FeatsStep() {
     };
   }, [draft.feats]);
 
-  // Get unique categories
+  // Get unique categories for filter dropdown
   const categories = useMemo(() => {
     if (!feats) return [];
     const cats = new Set<string>();
@@ -70,13 +98,54 @@ export function FeatsStep() {
     return Array.from(cats).sort();
   }, [feats]);
 
-  // Filter feats
+  // Check if character meets feat requirements
+  const checkRequirements = useCallback((feat: RTDBFeat): { met: boolean; reason?: string } => {
+    const abilities = draft.abilities || {};
+    const skills = draft.skills || {};
+    
+    // Check level requirement
+    if (feat.lvl_req > (draft.level || 1)) {
+      return { met: false, reason: `Requires level ${feat.lvl_req}` };
+    }
+    
+    // Check ability requirements
+    for (let i = 0; i < feat.ability_req.length; i++) {
+      const reqAbility = feat.ability_req[i].toLowerCase() as keyof typeof abilities;
+      const reqValue = feat.abil_req_val[i] || 0;
+      const charValue = abilities[reqAbility] || 0;
+      
+      if (charValue < reqValue) {
+        return { met: false, reason: `Requires ${feat.ability_req[i]} ${reqValue}+` };
+      }
+    }
+    
+    // Check skill requirements
+    for (let i = 0; i < feat.skill_req.length; i++) {
+      const reqSkill = feat.skill_req[i];
+      const reqValue = feat.skill_req_val[i] || 1;
+      const charValue = skills[reqSkill] || 0;
+      
+      if (charValue < reqValue) {
+        return { met: false, reason: `Requires ${reqSkill} ${reqValue}+` };
+      }
+    }
+    
+    // Check martial ability requirement
+    if (feat.mart_abil_req && draft.archetype?.mart_abil !== feat.mart_abil_req) {
+      return { met: false, reason: `Requires ${feat.mart_abil_req} martial ability` };
+    }
+    
+    return { met: true };
+  }, [draft.abilities, draft.skills, draft.level, draft.archetype?.mart_abil]);
+
+  // Filter and sort feats
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
+    
     return feats.filter(feat => {
       // Search filter
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
+      if (filters.search) {
+        const term = filters.search.toLowerCase();
         const matches = 
           feat.name.toLowerCase().includes(term) ||
           feat.description?.toLowerCase().includes(term) ||
@@ -85,18 +154,35 @@ export function FeatsStep() {
       }
       
       // Feat type filter
-      if (featTypeFilter === 'archetype' && feat.char_feat) return false;
-      if (featTypeFilter === 'character' && !feat.char_feat) return false;
+      if (filters.featType === 'archetype' && feat.char_feat) return false;
+      if (filters.featType === 'character' && !feat.char_feat) return false;
       
-      // Category filter
-      if (categoryFilter && feat.category !== categoryFilter) return false;
+      // Category filter (multi-select)
+      if (filters.categories.length > 0 && !filters.categories.includes(feat.category)) {
+        return false;
+      }
       
-      // Level requirement
-      if (feat.lvl_req > (draft.level || 1)) return false;
+      // Hide unqualified filter (auto-filter based on character stats)
+      if (filters.hideUnqualified) {
+        const reqs = checkRequirements(feat);
+        if (!reqs.met) return false;
+      }
       
       return true;
+    }).sort((a, b) => {
+      const col = filters.sortCol as keyof RTDBFeat;
+      const aVal = a[col];
+      const bVal = b[col];
+      
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return filters.sortDir * aVal.localeCompare(bVal);
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return filters.sortDir * (aVal - bVal);
+      }
+      return 0;
     });
-  }, [feats, searchTerm, featTypeFilter, categoryFilter, draft.level]);
+  }, [feats, filters, checkRequirements]);
 
   // Separate filtered feats into archetype and character
   const { archetypeFeats, characterFeats } = useMemo(() => {
@@ -105,7 +191,7 @@ export function FeatsStep() {
     return { archetypeFeats: arch, characterFeats: char };
   }, [filteredFeats]);
 
-  const toggleFeat = (feat: RTDBFeat, isCharacterFeat: boolean) => {
+  const toggleFeat = useCallback((feat: RTDBFeat, isCharacterFeat: boolean) => {
     const featType = isCharacterFeat ? 'character' : 'archetype';
     const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
     const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
@@ -134,121 +220,90 @@ export function FeatsStep() {
         ]
       });
     }
-  };
+  }, [selectedArchetypeFeats, selectedCharacterFeats, maxArchetypeFeats, maxCharacterFeats, draft.feats, updateDraft]);
 
-  const checkRequirements = (feat: RTDBFeat): { met: boolean; reason?: string } => {
-    const abilities = draft.abilities || {};
-    const skills = draft.skills || {};
-    
-    // Check ability requirements
-    for (let i = 0; i < feat.ability_req.length; i++) {
-      const reqAbility = feat.ability_req[i].toLowerCase() as keyof typeof abilities;
-      const reqValue = feat.abil_req_val[i] || 0;
-      const charValue = abilities[reqAbility] || 0;
-      
-      if (charValue < reqValue) {
-        return { met: false, reason: `Requires ${feat.ability_req[i]} ${reqValue}+` };
-      }
-    }
-    
-    // Check skill requirements
-    for (let i = 0; i < feat.skill_req.length; i++) {
-      const reqSkill = feat.skill_req[i];
-      const reqValue = feat.skill_req_val[i] || 1;
-      const charValue = skills[reqSkill] || 0;
-      
-      if (charValue < reqValue) {
-        return { met: false, reason: `Requires ${reqSkill} ${reqValue}+` };
-      }
-    }
-    
-    // Check martial ability requirement (for martial archetype feats)
-    if (feat.mart_abil_req && draft.archetype?.mart_abil !== feat.mart_abil_req) {
-      return { met: false, reason: `Requires ${feat.mart_abil_req} martial ability` };
-    }
-    
-    return { met: true };
-  };
+  const handleSort = useCallback((col: string) => {
+    setFilters(prev => ({
+      ...prev,
+      sortCol: col,
+      sortDir: prev.sortCol === col ? (prev.sortDir === 1 ? -1 : 1) : 1,
+    }));
+  }, []);
 
-  const renderFeatCard = (feat: RTDBFeat, isCharacterFeat: boolean) => {
+  // Build GridListRow for a feat
+  const renderFeatRow = useCallback((feat: RTDBFeat, isCharacterFeat: boolean) => {
     const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
     const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
     
     const isSelected = selectedList.some(f => f.id === feat.id);
-    const isExpanded = expandedFeat === feat.id;
     const requirements = checkRequirements(feat);
-    const canSelect = selectedList.length < maxForType || isSelected;
+    const canSelect = (selectedList.length < maxForType || isSelected) && requirements.met;
     
-    return (
-      <div
-        key={feat.id}
-        className={cn(
-          'bg-surface rounded-lg border overflow-hidden transition-all',
-          isSelected ? 'border-primary-400 bg-primary-50' : 'border-border-light',
-          !requirements.met && 'opacity-60'
-        )}
-      >
-        <div className="p-3 flex items-center gap-3">
-          <button
-            onClick={() => requirements.met && canSelect && toggleFeat(feat, isCharacterFeat)}
-            disabled={!requirements.met || !canSelect}
-            className={cn(
-              'w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
-              isSelected
-                ? 'bg-primary-600 border-primary-600 text-white'
-                : requirements.met && canSelect
-                  ? 'border-border-light hover:border-primary-400 hover:bg-primary-50'
-                  : 'border-border-light bg-surface-alt cursor-not-allowed'
-            )}
-          >
-            {isSelected && '✓'}
-          </button>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-text-primary">{feat.name}</span>
-              {feat.category && (
-                <span className="px-1.5 py-0.5 text-xs bg-surface-alt text-text-secondary rounded">
-                  {feat.category}
-                </span>
-              )}
-              {!requirements.met && (
-                <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded">
-                  {requirements.reason}
-                </span>
-              )}
-            </div>
+    // Build badges
+    const badges: Array<{ label: string; color: 'blue' | 'purple' | 'amber' | 'gray' }> = [];
+    if (isCharacterFeat) badges.push({ label: 'Character', color: 'blue' });
+    else badges.push({ label: 'Archetype', color: 'amber' });
+    if (feat.state_feat) badges.push({ label: 'State', color: 'purple' });
+    if (feat.category) badges.push({ label: feat.category, color: 'gray' });
+    
+    // Build tag chips
+    const tagChips: ChipData[] = feat.tags?.map(tag => ({
+      name: tag,
+      category: 'tag' as const,
+    })) || [];
+    
+    // Requirements content
+    const requirementsContent = (feat.ability_req?.length > 0 || feat.skill_req?.length > 0) ? (
+      <div className="space-y-1 text-sm">
+        {feat.ability_req?.length > 0 && (
+          <div>
+            <span className="font-medium text-text-secondary">Ability Requirements:</span>{' '}
+            <span className="text-text-muted">
+              {feat.ability_req.map((a, i) => {
+                const val = feat.abil_req_val?.[i];
+                return `${a}${typeof val === 'number' ? ` ${val}+` : ''}`;
+              }).join(', ')}
+            </span>
           </div>
-          
-          <button
-            onClick={() => setExpandedFeat(isExpanded ? null : feat.id)}
-            className="text-text-muted hover:text-text-secondary p-1"
-          >
-            {isExpanded ? '▲' : '▼'}
-          </button>
-        </div>
-        
-        {isExpanded && (
-          <div className="px-3 pb-3 pt-2 border-t border-border-subtle">
-            <p className="text-sm text-text-secondary">{feat.description}</p>
-            
-            {feat.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {feat.tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="px-1.5 py-0.5 text-xs bg-primary-50 text-primary-700 rounded"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
+        )}
+        {feat.skill_req?.length > 0 && (
+          <div>
+            <span className="font-medium text-text-secondary">Skill Requirements:</span>{' '}
+            <span className="text-text-muted">
+              {feat.skill_req.map((s, i) => {
+                const val = feat.skill_req_val?.[i];
+                return `${s}${typeof val === 'number' ? ` ${val}+` : ''}`;
+              }).join(', ')}
+            </span>
           </div>
         )}
       </div>
+    ) : undefined;
+
+    return (
+      <GridListRow
+        key={feat.id}
+        id={feat.id}
+        name={feat.name}
+        description={feat.description}
+        gridColumns={FEAT_GRID_COLUMNS}
+        columns={[
+          { key: 'Level', value: feat.lvl_req || '-' },
+          { key: 'Category', value: feat.category || '-' },
+          { key: 'Uses', value: feat.uses_per_rec ? `${feat.uses_per_rec}/${feat.rec_period || 'rest'}` : '-' },
+        ]}
+        badges={badges}
+        chips={tagChips}
+        chipsLabel="Tags"
+        requirements={requirementsContent}
+        selectable
+        isSelected={isSelected}
+        onSelect={() => canSelect && toggleFeat(feat, isCharacterFeat)}
+        disabled={!canSelect}
+        warningMessage={!requirements.met ? requirements.reason : undefined}
+      />
     );
-  };
+  }, [selectedArchetypeFeats, selectedCharacterFeats, maxArchetypeFeats, maxCharacterFeats, checkRequirements, toggleFeat]);
 
   if (isLoading) {
     return (
@@ -298,7 +353,7 @@ export function FeatsStep() {
               selectedArchetypeFeats.map(feat => (
                 <span
                   key={feat.id}
-                  className="px-3 py-1 bg-white text-primary-700 rounded-full text-sm flex items-center gap-2 border border-primary-200"
+                  className="px-3 py-1 bg-white text-amber-700 rounded-full text-sm flex items-center gap-2 border border-amber-200"
                 >
                   {feat.name}
                   <button
@@ -354,68 +409,84 @@ export function FeatsStep() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-surface rounded-xl p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center border border-border-light">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search feats..."
-          className="flex-1 min-w-[200px] px-3 py-2 border border-border-light rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+      {/* Search Bar */}
+      <div className="mb-4">
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
+          placeholder="Search feats by name, description, or tags..."
         />
-        
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-border-light rounded-lg"
-        >
-          <option value="">All Categories</option>
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
-        
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFeatTypeFilter('all')}
-            className={cn(
-              'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-              featTypeFilter === 'all'
-                ? 'bg-primary-600 text-white'
-                : 'bg-surface-alt text-text-secondary hover:bg-surface'
-            )}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFeatTypeFilter('archetype')}
-            className={cn(
-              'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-              featTypeFilter === 'archetype'
-                ? 'bg-amber-500 text-white'
-                : 'bg-surface-alt text-text-secondary hover:bg-surface'
-            )}
-          >
-            Archetype
-          </button>
-          <button
-            onClick={() => setFeatTypeFilter('character')}
-            className={cn(
-              'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-              featTypeFilter === 'character'
-                ? 'bg-blue-500 text-white'
-                : 'bg-surface-alt text-text-secondary hover:bg-surface'
-            )}
-          >
-            Character
-          </button>
+      </div>
+
+      {/* Filters Panel - Codex Style */}
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Category Filter */}
+          <ChipSelect
+            label="Category"
+            placeholder="All categories"
+            options={categories.map(c => ({ value: c, label: c }))}
+            selectedValues={filters.categories}
+            onSelect={(v) => setFilters(f => ({ ...f, categories: [...f.categories, v] }))}
+            onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
+          />
+
+          {/* Feat Type Filter */}
+          <SelectFilter
+            label="Feat Type"
+            value={filters.featType}
+            options={[
+              { value: 'all', label: 'All Feats' },
+              { value: 'archetype', label: 'Archetype Only' },
+              { value: 'character', label: 'Character Only' },
+            ]}
+            onChange={(v) => setFilters(f => ({ ...f, featType: v as 'all' | 'archetype' | 'character' }))}
+            placeholder="All Feats"
+          />
+
+          {/* Hide Unqualified Toggle */}
+          <div className="filter-group">
+            <label className="block text-sm font-medium text-text-secondary mb-1">
+              Qualification Filter
+            </label>
+            <button
+              onClick={() => setFilters(f => ({ ...f, hideUnqualified: !f.hideUnqualified }))}
+              className={cn(
+                'w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left',
+                filters.hideUnqualified
+                  ? 'bg-green-50 border-green-300 text-green-700'
+                  : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
+              )}
+            >
+              {filters.hideUnqualified ? '✓ Hiding unqualified' : 'Show all feats'}
+            </button>
+            <p className="text-xs text-text-muted mt-1">
+              {filters.hideUnqualified ? 'Only showing feats you qualify for' : 'Showing all feats including unqualified'}
+            </p>
+          </div>
         </div>
+      </FilterSection>
+
+      {/* Results Count */}
+      <div className="text-sm text-text-muted mb-4">
+        {filteredFeats.length} feats found
+        {filters.hideUnqualified && ' (qualified only)'}
+      </div>
+
+      {/* Column Headers */}
+      <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+           style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}>
+        <SortHeader label="NAME" col="name" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
+        <SortHeader label="LEVEL" col="lvl_req" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
+        <SortHeader label="CATEGORY" col="category" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
+        <span>USES</span>
+        <span></span>
       </div>
 
       {/* Feats Lists - Two Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 mt-4">
         {/* Archetype Feats Column */}
-        {(featTypeFilter === 'all' || featTypeFilter === 'archetype') && (
+        {(filters.featType === 'all' || filters.featType === 'archetype') && (
           <div>
             <h3 className="font-bold text-lg text-text-primary mb-3 flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-amber-500"></span>
@@ -424,11 +495,19 @@ export function FeatsStep() {
                 ({selectedArchetypeFeats.length}/{maxArchetypeFeats})
               </span>
             </h3>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-              {archetypeFeats.map(feat => renderFeatCard(feat, false))}
+            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+              {archetypeFeats.map(feat => renderFeatRow(feat, false))}
               {archetypeFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted">
+                <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
                   No archetype feats match your filters.
+                  {filters.hideUnqualified && (
+                    <button 
+                      onClick={() => setFilters(f => ({ ...f, hideUnqualified: false }))}
+                      className="block mx-auto mt-2 text-primary-600 hover:underline"
+                    >
+                      Show unqualified feats
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -436,7 +515,7 @@ export function FeatsStep() {
         )}
 
         {/* Character Feats Column */}
-        {(featTypeFilter === 'all' || featTypeFilter === 'character') && (
+        {(filters.featType === 'all' || filters.featType === 'character') && (
           <div>
             <h3 className="font-bold text-lg text-text-primary mb-3 flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-blue-500"></span>
@@ -445,11 +524,19 @@ export function FeatsStep() {
                 ({selectedCharacterFeats.length}/{maxCharacterFeats})
               </span>
             </h3>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-              {characterFeats.map(feat => renderFeatCard(feat, true))}
+            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+              {characterFeats.map(feat => renderFeatRow(feat, true))}
               {characterFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted">
+                <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
                   No character feats match your filters.
+                  {filters.hideUnqualified && (
+                    <button 
+                      onClick={() => setFilters(f => ({ ...f, hideUnqualified: false }))}
+                      className="block mx-auto mt-2 text-primary-600 hover:underline"
+                    >
+                      Show unqualified feats
+                    </button>
+                  )}
                 </div>
               )}
             </div>

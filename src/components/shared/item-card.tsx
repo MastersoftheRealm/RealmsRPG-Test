@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Check, Edit, Trash2, Copy, Eye, AlertCircle } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import { SelectionToggle } from './selection-toggle';
 import type { DisplayItem, ListMode, ItemActions } from '@/types/items';
 
 interface ItemCardProps {
@@ -90,20 +91,21 @@ export function ItemCard({
       <div className="flex items-start justify-between gap-2">
         {/* Left: Selection indicator + Name */}
         <div className="flex items-start gap-2 flex-1 min-w-0">
-          {/* Selection checkbox (select mode) */}
+          {/* Selection toggle (select mode) - uses unified SelectionToggle */}
           {isSelectable && (
-            <div 
-              className={`
-                mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors
-                ${item.isSelected 
-                  ? 'bg-primary-500 border-primary-500' 
-                  : 'border-border'
+            <SelectionToggle
+              isSelected={!!item.isSelected}
+              onToggle={() => {
+                if (item.isSelected) {
+                  actions?.onDeselect?.(item);
+                } else {
+                  actions?.onSelect?.(item);
                 }
-                ${item.isDisabled ? 'opacity-50' : ''}
-              `}
-            >
-              {item.isSelected && <Check className="w-3 h-3 text-white" />}
-            </div>
+              }}
+              disabled={item.isDisabled}
+              size="sm"
+              label={item.isSelected ? `Remove ${item.name}` : `Add ${item.name}`}
+            />
           )}
           
           {/* Name and subtitle */}

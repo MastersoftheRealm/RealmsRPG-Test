@@ -146,7 +146,7 @@ const valueDisplayVariants = cva(
         positive: 'text-success-700',
         negative: 'text-danger-700',
         neutral: 'text-text-primary',
-        health: 'text-red-600',
+        health: 'text-green-600',
         energy: 'text-blue-600',
       },
     },
@@ -245,13 +245,13 @@ export function ValueStepper({
 
   // Button color classes based on colorVariant
   const getDecrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-red-200 hover:bg-red-300 text-red-700';
+    if (colorVariant === 'health') return 'bg-green-200 hover:bg-green-300 text-green-700';
     if (colorVariant === 'energy') return 'bg-blue-200 hover:bg-blue-300 text-blue-700';
     return 'btn-stepper btn-stepper-danger';
   };
 
   const getIncrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-red-200 hover:bg-red-300 text-red-700';
+    if (colorVariant === 'health') return 'bg-green-200 hover:bg-green-300 text-green-700';
     if (colorVariant === 'energy') return 'bg-blue-200 hover:bg-blue-300 text-blue-700';
     return 'btn-stepper btn-stepper-success';
   };

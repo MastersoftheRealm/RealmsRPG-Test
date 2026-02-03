@@ -656,14 +656,14 @@ export function FinalizeStep() {
           {draft.pow_abil && (
             <div>
               <span className="text-text-muted">Power Ability:</span>
-              <span className="ml-2 font-medium capitalize">{draft.pow_abil}</span>
+              <span className="ml-2 font-medium capitalize text-power">{draft.pow_abil}</span>
             </div>
           )}
           
           {draft.mart_abil && (
             <div>
               <span className="text-text-muted">Martial Ability:</span>
-              <span className="ml-2 font-medium capitalize">{draft.mart_abil}</span>
+              <span className="ml-2 font-medium capitalize text-martial">{draft.mart_abil}</span>
             </div>
           )}
         </div>
@@ -673,20 +673,80 @@ export function FinalizeStep() {
           <div className="mt-4 pt-4 border-t border-border-light">
             <span className="text-text-muted text-sm">Abilities:</span>
             <div className="flex flex-wrap gap-2 mt-2">
-              {Object.entries(draft.abilities).map(([ability, value]) => (
+              {Object.entries(draft.abilities).map(([ability, value]) => {
+                const isPowerAbil = draft.pow_abil === ability;
+                const isMartAbil = draft.mart_abil === ability;
+                return (
+                  <span
+                    key={ability}
+                    className={cn(
+                      'px-2 py-1 rounded text-sm font-medium',
+                      isPowerAbil ? 'bg-power-light text-power-dark' :
+                      isMartAbil ? 'bg-martial-light text-martial-dark' :
+                      value > 0 ? 'bg-green-100 text-green-700' :
+                      value < 0 ? 'bg-red-100 text-red-700' :
+                      'bg-surface-alt text-text-secondary'
+                    )}
+                  >
+                    {ability.charAt(0).toUpperCase()}: {value >= 0 ? `+${value}` : value}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        {/* Feats Summary */}
+        {draft.feats && draft.feats.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border-light">
+            <span className="text-text-muted text-sm">Feats:</span>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {draft.feats.map((feat) => (
                 <span
-                  key={ability}
+                  key={feat.id}
                   className={cn(
                     'px-2 py-1 rounded text-sm font-medium',
-                    value > 0 ? 'bg-green-100 text-green-700' :
-                    value < 0 ? 'bg-red-100 text-red-700' :
-                    'bg-surface-alt text-text-secondary'
+                    feat.type === 'archetype' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                   )}
                 >
-                  {ability.charAt(0).toUpperCase()}: {value >= 0 ? `+${value}` : value}
+                  {feat.name}
                 </span>
               ))}
             </div>
+          </div>
+        )}
+        
+        {/* Powers & Techniques Summary */}
+        {((draft.powers && draft.powers.length > 0) || (draft.techniques && draft.techniques.length > 0)) && (
+          <div className="mt-4 pt-4 border-t border-border-light">
+            {draft.powers && draft.powers.length > 0 && (
+              <div className="mb-2">
+                <span className="text-text-muted text-sm">Powers: </span>
+                <span className="text-sm text-power">
+                  {draft.powers.map(p => p.name).join(', ')}
+                </span>
+              </div>
+            )}
+            {draft.techniques && draft.techniques.length > 0 && (
+              <div>
+                <span className="text-text-muted text-sm">Techniques: </span>
+                <span className="text-sm text-martial">
+                  {draft.techniques.map(t => t.name).join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Equipment Summary */}
+        {draft.equipment?.inventory && draft.equipment.inventory.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-border-light">
+            <span className="text-text-muted text-sm">Equipment: </span>
+            <span className="text-sm text-text-secondary">
+              {draft.equipment.inventory.map(i => 
+                i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name
+              ).join(', ')}
+            </span>
           </div>
         )}
       </div>

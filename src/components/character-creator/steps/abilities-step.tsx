@@ -37,22 +37,17 @@ export function AbilitiesStep() {
   const remainingPoints = totalPoints - spentPoints;
   const canContinue = remainingPoints >= 0;
   
-  // Determine highlighted archetype abilities
-  const highlightedAbilities = useMemo(() => {
-    const highlighted: AbilityName[] = [];
-    if (draft.pow_abil) highlighted.push(draft.pow_abil as AbilityName);
-    if (draft.mart_abil && draft.mart_abil !== draft.pow_abil) {
-      highlighted.push(draft.mart_abil as AbilityName);
-    }
-    return highlighted;
-  }, [draft.pow_abil, draft.mart_abil]);
+  // Get archetype abilities
+  const powerAbility = draft.pow_abil as AbilityName | undefined;
+  const martialAbility = draft.mart_abil as AbilityName | undefined;
 
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-text-primary mb-2">Assign Ability Scores</h1>
       <p className="text-text-secondary mb-6">
         Distribute your ability points. You can reduce abilities below 0 to gain extra points.
-        Archetype abilities are highlighted.
+        {powerAbility && <span className="text-power"> Power archetype ability highlighted.</span>}
+        {martialAbility && <span className="text-martial"> Martial archetype ability highlighted.</span>}
       </p>
       
       {/* Shared Ability Score Editor */}
@@ -65,7 +60,8 @@ export function AbilitiesStep() {
           minAbility={-2}
           maxNegativeSum={-3}
           isEditMode={true}
-          highlightedAbilities={highlightedAbilities}
+          powerAbility={powerAbility}
+          martialAbility={martialAbility}
         />
       </div>
       
