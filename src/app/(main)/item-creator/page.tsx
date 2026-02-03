@@ -150,7 +150,7 @@ function PropertyCard({
           <span className="font-medium text-text-primary truncate">{property.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
             {propTP > 0 && (
-              <span className="text-purple-600">TP: {formatCost(propTP)}</span>
+              <span className="text-tp">TP: {formatCost(propTP)}</span>
             )}
             {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
               <span className="text-amber-600">
@@ -206,7 +206,7 @@ function PropertyCard({
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-amber-800">Option</span>
                   {property.op_1_tp && (
-                    <span className="text-sm font-medium text-purple-600">
+                    <span className="text-sm font-medium text-tp">
                       TP +{formatCost(property.op_1_tp)}/level
                     </span>
                   )}
@@ -239,7 +239,7 @@ const RARITY_REFERENCE = [
   { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-secondary bg-neutral-100' },
   { name: 'Uncommon', ipRange: '4.01 – 6', baseCost: 100, color: 'text-green-700 bg-green-100' },
   { name: 'Rare', ipRange: '6.01 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100' },
-  { name: 'Epic', ipRange: '8.01 – 11', baseCost: 2500, color: 'text-purple-700 bg-purple-100' },
+  { name: 'Epic', ipRange: '8.01 – 11', baseCost: 2500, color: 'text-power-text bg-power-light' },
   { name: 'Legendary', ipRange: '11.01 – 14', baseCost: 10000, color: 'text-amber-700 bg-amber-100' },
   { name: 'Mythic', ipRange: '14.01 – 16', baseCost: 50000, color: 'text-red-700 bg-red-100' },
   { name: 'Ascended', ipRange: '16.01+', baseCost: 100000, color: 'text-pink-700 bg-pink-100' },

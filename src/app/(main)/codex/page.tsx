@@ -952,10 +952,10 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <h4 className="font-medium text-text-primary mb-2">Characteristics</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {characteristics.map(trait => (
-                  <div key={trait.id} className="p-2 bg-purple-50 border border-purple-200 rounded">
-                    <span className="font-medium text-purple-800">{trait.name}</span>
+                  <div key={trait.id} className="p-2 bg-power-light border border-power-border rounded">
+                    <span className="font-medium text-power-text">{trait.name}</span>
                     {trait.description && (
-                      <p className="text-sm text-purple-700 mt-1">{trait.description}</p>
+                      <p className="text-sm text-power-text/80 mt-1">{trait.description}</p>
                     )}
                   </div>
                 ))}
@@ -1277,7 +1277,7 @@ function PropertyCard({ property }: { property: ItemProperty }) {
       columns={[
         { key: 'Type', value: property.type || 'General' },
         { key: 'IP', value: ip > 0 ? ip : '-', className: 'text-blue-600' },
-        { key: 'TP', value: tp > 0 ? tp : '-', className: 'text-purple-600' },
+        { key: 'TP', value: tp > 0 ? tp : '-', className: 'text-tp' },
         { key: 'Cost', value: cost > 0 ? `×${cost}` : '-', highlight: true },
       ]}
       expandedContent={optionContent}
@@ -1487,7 +1487,7 @@ function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends 
       columns={[
         { key: 'Category', value: part.category || '-' },
         { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-blue-600' },
-        { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-purple-600' },
+        { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-tp' },
       ]}
       badges={badges}
       chips={typeChips}

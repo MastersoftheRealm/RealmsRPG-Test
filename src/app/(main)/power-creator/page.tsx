@@ -189,7 +189,7 @@ function PartCard({
           <span className="font-medium text-text-primary truncate">{part.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
             <span className="text-blue-600">EN: {formatCost(partEnergy)}</span>
-            <span className="text-purple-600">TP: {formatCost(partTP)}</span>
+            <span className="text-tp">TP: {formatCost(partTP)}</span>
           </span>
         </button>
         <IconButton
@@ -281,7 +281,7 @@ function PartCard({
               Base Energy: <strong className="text-blue-600">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
-              Base TP: <strong className="text-purple-600">{formatCost(part.base_tp || 0)}</strong>
+              Base TP: <strong className="text-tp">{formatCost(part.base_tp || 0)}</strong>
             </span>
           </div>
 
@@ -296,7 +296,7 @@ function PartCard({
                       <span className="text-sm font-medium text-blue-600">
                         EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-purple-600">
+                      <span className="text-sm font-medium text-tp">
                         TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
                       </span>
                     </div>
@@ -320,7 +320,7 @@ function PartCard({
                       <span className="text-sm font-medium text-blue-600">
                         EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-purple-600">
+                      <span className="text-sm font-medium text-tp">
                         TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
                       </span>
                     </div>
@@ -344,7 +344,7 @@ function PartCard({
                       <span className="text-sm font-medium text-blue-600">
                         EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-purple-600">
+                      <span className="text-sm font-medium text-tp">
                         TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
                       </span>
                     </div>
@@ -510,7 +510,7 @@ function AddedAdvancedChip({
                   <span className="text-sm font-medium text-blue-600">
                     EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                   </span>
-                  <span className="text-sm font-medium text-purple-600">
+                  <span className="text-sm font-medium text-tp">
                     TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
                   </span>
                 </div>
@@ -532,7 +532,7 @@ function AddedAdvancedChip({
                   <span className="text-sm font-medium text-blue-600">
                     EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                   </span>
-                  <span className="text-sm font-medium text-purple-600">
+                  <span className="text-sm font-medium text-tp">
                     TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
                   </span>
                 </div>
@@ -554,7 +554,7 @@ function AddedAdvancedChip({
                   <span className="text-sm font-medium text-blue-600">
                     EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                   </span>
-                  <span className="text-sm font-medium text-purple-600">
+                  <span className="text-sm font-medium text-tp">
                     TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
                   </span>
                 </div>

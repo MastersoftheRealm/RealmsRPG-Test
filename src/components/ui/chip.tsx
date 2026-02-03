@@ -72,9 +72,9 @@ const chipVariants = cva(
         /** @deprecated Use 'default' - context provides meaning */
         weakness: 'bg-danger-100 text-danger-700 border-danger-300',
         /** @deprecated Use 'default' - context provides meaning */
-        power: 'bg-purple-100 text-purple-800 border-purple-300',
+        power: 'bg-power-light text-power-text border-power-border',
         /** @deprecated Use 'default' - context provides meaning */
-        technique: 'bg-orange-100 text-orange-800 border-orange-300',
+        technique: 'bg-martial-light text-martial-text border-martial-border',
       },
       size: {
         sm: 'px-2 py-0.5 text-xs',

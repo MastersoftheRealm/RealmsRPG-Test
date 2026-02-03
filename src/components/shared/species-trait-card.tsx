@@ -107,12 +107,12 @@ const CATEGORY_CONFIG: Record<TraitCategory, {
     icon: Sparkles,
     label: 'Characteristic',
     colors: {
-      bg: 'bg-purple-50',
-      border: 'border-purple-200',
-      text: 'text-purple-800',
-      iconColor: 'text-purple-500',
-      selectedBg: 'bg-purple-100',
-      selectedBorder: 'border-purple-400',
+      bg: 'bg-power-light',
+      border: 'border-power-border',
+      text: 'text-power-text',
+      iconColor: 'text-power',
+      selectedBg: 'bg-power-light',
+      selectedBorder: 'border-power',
     },
   },
 };

@@ -185,7 +185,7 @@ export function LevelUpModal({
             description="For skills"
           />
           <GainCard
-            icon={<Star className="w-5 h-5 text-purple-500" />}
+            icon={<Star className="w-5 h-5 text-power" />}
             label="Feats"
             value={`+${gains.archetypeFeats}`}
             description="Archetype & Character"

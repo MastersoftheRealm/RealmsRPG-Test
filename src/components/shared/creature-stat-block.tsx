@@ -278,12 +278,12 @@ export function CreatureStatBlock({
             
             <div className="flex flex-wrap gap-3 text-xs">
               {creature.powerProficiency !== undefined && creature.powerProficiency > 0 && (
-                <span className="flex items-center gap-1 text-purple-700">
+                <span className="flex items-center gap-1 text-power-text">
                   <Zap className="w-3 h-3" /> Power +{creature.powerProficiency}
                 </span>
               )}
               {creature.martialProficiency !== undefined && creature.martialProficiency > 0 && (
-                <span className="flex items-center gap-1 text-orange-700">
+                <span className="flex items-center gap-1 text-martial-text">
                   <Swords className="w-3 h-3" /> Martial +{creature.martialProficiency}
                 </span>
               )}
@@ -337,7 +337,7 @@ export function CreatureStatBlock({
             <div className="space-y-2 pt-2 border-t border-border-light">
               {creature.powers && creature.powers.length > 0 && (
                 <div className="text-xs">
-                  <span className="font-semibold text-purple-700">Powers: </span>
+                  <span className="font-semibold text-power-text">Powers: </span>
                   <span className="text-text-secondary">
                     {creature.powers.map(p => p.name).join(', ')}
                   </span>
@@ -345,7 +345,7 @@ export function CreatureStatBlock({
               )}
               {creature.techniques && creature.techniques.length > 0 && (
                 <div className="text-xs">
-                  <span className="font-semibold text-orange-700">Techniques: </span>
+                  <span className="font-semibold text-martial-text">Techniques: </span>
                   <span className="text-text-secondary">
                     {creature.techniques.map(t => t.name).join(', ')}
                   </span>

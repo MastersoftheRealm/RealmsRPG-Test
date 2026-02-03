@@ -108,14 +108,14 @@ export const CATEGORY_COLORS: Record<CategoryType, CategoryColors> = {
     border: 'border-danger-300',
   },
   power: {
-    bg: 'bg-purple-100',
-    text: 'text-purple-800',
-    border: 'border-purple-300',
+    bg: 'bg-power-light',
+    text: 'text-power-text',
+    border: 'border-power-border',
   },
   technique: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-800',
-    border: 'border-orange-300',
+    bg: 'bg-martial-light',
+    text: 'text-martial-text',
+    border: 'border-martial-border',
   },
   equipment: {
     bg: 'bg-neutral-100',
@@ -140,7 +140,7 @@ export function getCategoryClasses(category: CategoryType): string {
  */
 export const BADGE_COLORS = {
   blue: 'bg-info-100 text-info-800',
-  purple: 'bg-purple-100 text-purple-800',
+  purple: 'bg-power-light text-power-text',
   green: 'bg-success-100 text-success-700',
   yellow: 'bg-warning-100 text-warning-800',
   red: 'bg-danger-100 text-danger-700',
@@ -160,7 +160,7 @@ export const ROLL_TYPE_COLORS = {
   attack: 'border-l-danger-500',
   damage: 'border-l-warning-500',
   skill: 'border-l-info-500',
-  save: 'border-l-purple-500',
+  save: 'border-l-power',
   healing: 'border-l-success-500',
   initiative: 'border-l-orange-500',
   custom: 'border-l-neutral-500',

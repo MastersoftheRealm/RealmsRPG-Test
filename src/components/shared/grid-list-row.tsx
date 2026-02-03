@@ -132,7 +132,7 @@ export interface GridListRowProps {
 
 const BADGE_COLORS = {
   blue: 'bg-info-100 text-info-700',
-  purple: 'bg-purple-100 text-purple-800',
+  purple: 'bg-power-light text-power-text',
   green: 'bg-success-100 text-success-700',
   amber: 'bg-amber-100 text-amber-800',
   gray: 'bg-surface-alt text-text-secondary',
@@ -145,7 +145,7 @@ const CHIP_STYLES = {
   tag: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
   warning: 'bg-danger-50 border-danger-200 text-danger-700 hover:bg-danger-100',
   success: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
-  archetype: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100',
+  archetype: 'bg-power-light border-power-border text-power-text hover:bg-power-light/80',
   skill: 'bg-info-50 border-info-200 text-info-700 hover:bg-info-100',
 };
 
