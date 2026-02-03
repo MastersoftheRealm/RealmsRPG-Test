@@ -28,6 +28,10 @@ export { ItemCard } from './item-card';
 export { ItemList } from './item-list';
 export { ItemSelectionModal } from './item-selection-modal';
 
+// Modal components
+export { LoginPromptModal } from './login-prompt-modal';
+export { DeleteConfirmModal } from './delete-confirm-modal';
+
 // ============================================================================
 // GridListRow - UNIFIED expandable list row component
 // ============================================================================

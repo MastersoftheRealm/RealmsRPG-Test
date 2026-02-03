@@ -181,5 +181,3 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
     </Modal>
   );
 }
-  );
-}

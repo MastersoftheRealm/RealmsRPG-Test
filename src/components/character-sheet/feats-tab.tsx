@@ -326,7 +326,7 @@ export function FeatsTab({
             {archetypeFeats.map((feat, index) => {
               const enriched = enrichFeat(feat);
               const uses = enriched.maxUses > 0 ? { 
-                current: enriched.currentUses, 
+                current: enriched.currentUses ?? enriched.maxUses, 
                 max: enriched.maxUses 
               } : undefined;
               
@@ -378,7 +378,7 @@ export function FeatsTab({
             {characterFeats.map((feat, index) => {
               const enriched = enrichFeat(feat);
               const uses = enriched.maxUses > 0 ? { 
-                current: enriched.currentUses, 
+                current: enriched.currentUses ?? enriched.maxUses, 
                 max: enriched.maxUses 
               } : undefined;
               
@@ -420,7 +420,7 @@ export function FeatsTab({
             {stateFeats.map((feat, index) => {
               const enriched = enrichFeat(feat);
               const uses = enriched.maxUses > 0 ? { 
-                current: enriched.currentUses, 
+                current: enriched.currentUses ?? enriched.maxUses, 
                 max: enriched.maxUses 
               } : undefined;
               

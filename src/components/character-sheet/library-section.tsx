@@ -15,7 +15,7 @@ import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
-import { PartChipList, type PartData, EditSectionToggle, RollButton, SectionHeader, QuantitySelector, QuantityBadge, GridListRow, type ColumnValue, type ChipData } from '@/components/shared';
+import { PartChipList, type PartData, EditSectionToggle, RollButton, SectionHeader, QuantitySelector, QuantityBadge, GridListRow, SelectionToggle, type ColumnValue, type ChipData } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
@@ -482,7 +482,7 @@ export function LibrarySection({
                     const isInnate = power.innate === true;
                     const energyCost = power.cost ?? 0;
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                    const partChips = useMemo(() => partsToPartData(power.parts, powerPartsDb), [power.parts, powerPartsDb]);
+                    const partChips = useMemo(() => partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const })), [power.parts, powerPartsDb]);
                     
                     const columns: ColumnValue[] = [
                       { key: 'action', value: power.actionType || '-' },
@@ -526,7 +526,7 @@ export function LibrarySection({
                     return (
                       <GridListRow
                         key={power.id || `innate-${i}`}
-                        id={power.id || String(i)}
+                        id={String(power.id || i)}
                         name={power.name}
                         description={power.description}
                         columns={columns}
@@ -567,7 +567,7 @@ export function LibrarySection({
                     const isInnate = power.innate === true;
                     const energyCost = power.cost ?? 0;
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                    const partChips = useMemo(() => partsToPartData(power.parts, powerPartsDb), [power.parts, powerPartsDb]);
+                    const partChips = useMemo(() => partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const })), [power.parts, powerPartsDb]);
                     
                     const columns: ColumnValue[] = [
                       { key: 'action', value: power.actionType || '-' },
@@ -611,7 +611,7 @@ export function LibrarySection({
                     return (
                       <GridListRow
                         key={power.id || `regular-${i}`}
-                        id={power.id || String(i)}
+                        id={String(power.id || i)}
                         name={power.name}
                         description={power.description}
                         columns={columns}
@@ -674,7 +674,7 @@ export function LibrarySection({
               techniques.map((tech, i) => {
                 const energyCost = tech.cost ?? 0;
                 const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                const partChips = useMemo(() => partsToPartData(tech.parts, techniquePartsDb), [tech.parts, techniquePartsDb]);
+                const partChips = useMemo(() => partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const })), [tech.parts, techniquePartsDb]);
                 
                 const columns: ColumnValue[] = [
                   { key: 'action', value: tech.actionType || '-' },
@@ -712,7 +712,7 @@ export function LibrarySection({
                 return (
                   <GridListRow
                     key={tech.id || i}
-                    id={tech.id || String(i)}
+                    id={String(tech.id || i)}
                     name={tech.name}
                     description={tech.description}
                     columns={columns}
@@ -755,24 +755,24 @@ export function LibrarySection({
               {weapons.length > 0 ? (
                 weapons.map((item, i) => {
                   const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
-                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb), [item.properties, itemPropertiesDb]);
+                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const })), [item.properties, itemPropertiesDb]);
                   const columns: ColumnValue[] = [
-                    { label: 'Damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', valueClassName: 'text-red-600 font-medium' },
+                    { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium' },
                   ];
                   
                   return (
                     <GridListRow
                       key={item.id || i}
-                      title={item.name}
+                      id={String(item.id || i)}
+                      name={item.name}
                       columns={columns}
                       gridColumns="1.4fr 1fr 0.8fr"
                       chips={propertyChips}
                       equipped={item.equipped}
                       leftSlot={onToggleEquipWeapon && (
                         <SelectionToggle
-                          selected={item.equipped || false}
-                          onChange={() => onToggleEquipWeapon(item.id || String(i))}
-                          icon="check"
+                          isSelected={item.equipped || false}
+                          onToggle={() => onToggleEquipWeapon(item.id || String(i))}
                           label={item.equipped ? 'Unequip' : 'Equip'}
                         />
                       )}
@@ -821,24 +821,24 @@ export function LibrarySection({
               />
               {armor.length > 0 ? (
                 armor.map((item, i) => {
-                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb), [item.properties, itemPropertiesDb]);
+                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const })), [item.properties, itemPropertiesDb]);
                   const columns: ColumnValue[] = [
-                    { label: 'DR', value: item.armor !== undefined ? String(item.armor) : '-', valueClassName: 'text-blue-600 font-medium' },
+                    { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium' },
                   ];
                   
                   return (
                     <GridListRow
                       key={item.id || i}
-                      title={item.name}
+                      id={String(item.id || i)}
+                      name={item.name}
                       columns={columns}
                       gridColumns="1.4fr 1fr 0.8fr"
                       chips={propertyChips}
                       equipped={item.equipped}
                       leftSlot={onToggleEquipArmor && (
                         <SelectionToggle
-                          selected={item.equipped || false}
-                          onChange={() => onToggleEquipArmor(item.id || String(i))}
-                          icon="check"
+                          isSelected={item.equipped || false}
+                          onToggle={() => onToggleEquipArmor(item.id || String(i))}
                           label={item.equipped ? 'Unequip' : 'Equip'}
                         />
                       )}
@@ -866,12 +866,13 @@ export function LibrarySection({
               />
               {equipment.length > 0 ? (
                 equipment.map((item, i) => {
-                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb), [item.properties, itemPropertiesDb]);
+                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const })), [item.properties, itemPropertiesDb]);
                   
                   return (
                     <GridListRow
                       key={item.id || i}
-                      title={item.name}
+                      id={String(item.id || i)}
+                      name={item.name}
                       columns={[]}
                       chips={propertyChips}
                       quantity={item.quantity}

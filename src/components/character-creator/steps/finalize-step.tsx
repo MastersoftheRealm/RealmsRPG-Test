@@ -12,7 +12,7 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAuth, useRTDBSkills } from '@/hooks';
 import { cn } from '@/lib/utils';
-import { Spinner, Button, Alert } from '@/components/ui';
+import { Spinner, Button, Alert, Modal } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
 import { LoginPromptModal } from '@/components/shared';
@@ -42,79 +42,87 @@ function ValidationModal({
   onSave?: () => void;
   isSaving?: boolean;
 }) {
-  if (!isOpen) return null;
-  
   const hasErrors = issues.some(i => i.severity === 'error');
   const isValid = issues.length === 0;
+
+  // Custom header for Modal
+  const modalHeader = (
+    <div className={cn(
+      'p-4 border-b flex items-center gap-3',
+      isValid ? 'bg-green-50' : hasErrors ? 'bg-red-50' : 'bg-amber-50'
+    )}>
+      <span className="text-2xl">{isValid ? '✅' : hasErrors ? '⚠️' : '📋'}</span>
+      <h2 className="text-xl font-bold">
+        {isValid ? 'Character Ready!' : hasErrors ? 'Issues Found' : 'Review Needed'}
+      </h2>
+    </div>
+  );
+
+  // Custom footer for Modal
+  const modalFooter = (
+    <div className="p-4 border-t flex justify-end gap-3">
+      <Button
+        variant="secondary"
+        onClick={onClose}
+        disabled={isSaving}
+      >
+        {isValid ? 'Cancel' : 'Go Back & Fix'}
+      </Button>
+      {/* Show Save button when valid */}
+      {isValid && onSave && (
+        <Button
+          variant="success"
+          onClick={onSave}
+          disabled={isSaving}
+          isLoading={isSaving}
+        >
+          ✓ Create Character
+        </Button>
+      )}
+      {/* Show Continue Anyway when there are warnings but no errors */}
+      {!hasErrors && !isValid && onContinueAnyway && (
+        <Button
+          onClick={onContinueAnyway}
+          disabled={isSaving}
+          className="bg-amber-500 text-white hover:bg-amber-600"
+        >
+          Save Anyway
+        </Button>
+      )}
+    </div>
+  );
   
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-xl max-w-lg w-full max-h-[80vh] overflow-hidden">
-        <div className={cn(
-          'p-4 border-b flex items-center gap-3',
-          isValid ? 'bg-green-50' : hasErrors ? 'bg-red-50' : 'bg-amber-50'
-        )}>
-          <span className="text-2xl">{isValid ? '✅' : hasErrors ? '⚠️' : '📋'}</span>
-          <h2 className="text-xl font-bold">
-            {isValid ? 'Character Ready!' : hasErrors ? 'Issues Found' : 'Review Needed'}
-          </h2>
-        </div>
-        
-        <div className="p-4 overflow-y-auto max-h-[50vh]">
-          {isValid ? (
-            <p className="text-text-secondary text-center py-8">
-              Your character is complete and ready for adventure!
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {issues.map((issue, idx) => (
-                <div 
-                  key={idx} 
-                  className={cn(
-                    'p-3 rounded-lg flex gap-3',
-                    issue.severity === 'error' ? 'bg-red-50' : 'bg-amber-50'
-                  )}
-                >
-                  <span className="text-xl flex-shrink-0">{issue.emoji}</span>
-                  <p className="text-text-secondary">{issue.message}</p>
-                </div>
-              ))}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      header={modalHeader}
+      footer={modalFooter}
+      showCloseButton={false}
+      contentClassName="p-4 overflow-y-auto max-h-[50vh]"
+    >
+      {isValid ? (
+        <p className="text-text-secondary text-center py-8">
+          Your character is complete and ready for adventure!
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {issues.map((issue, idx) => (
+            <div 
+              key={idx} 
+              className={cn(
+                'p-3 rounded-lg flex gap-3',
+                issue.severity === 'error' ? 'bg-red-50' : 'bg-amber-50'
+              )}
+            >
+              <span className="text-xl flex-shrink-0">{issue.emoji}</span>
+              <p className="text-text-secondary">{issue.message}</p>
             </div>
-          )}
+          ))}
         </div>
-        
-        <div className="p-4 border-t flex justify-end gap-3">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={isSaving}
-          >
-            {isValid ? 'Cancel' : 'Go Back & Fix'}
-          </Button>
-          {/* Show Save button when valid */}
-          {isValid && onSave && (
-            <Button
-              variant="success"
-              onClick={onSave}
-              disabled={isSaving}
-              isLoading={isSaving}
-            >
-              ✓ Create Character
-            </Button>
-          )}
-          {/* Show Continue Anyway when there are warnings but no errors */}
-          {!hasErrors && !isValid && onContinueAnyway && (
-            <Button
-              onClick={onContinueAnyway}
-              disabled={isSaving}
-              className="bg-amber-500 text-white hover:bg-amber-600"
-            >
-              Save Anyway
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 }
 
@@ -744,7 +752,7 @@ export function FinalizeStep() {
             <span className="text-text-muted text-sm">Equipment: </span>
             <span className="text-sm text-text-secondary">
               {draft.equipment.inventory.map(i => 
-                i.quantity > 1 ? `${i.name} ×${i.quantity}` : i.name
+                (i.quantity ?? 1) > 1 ? `${i.name} ×${i.quantity ?? 1}` : i.name
               ).join(', ')}
             </span>
           </div>

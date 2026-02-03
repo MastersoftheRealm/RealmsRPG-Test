@@ -124,7 +124,7 @@ function ExpandableSubSkillRow({
           isSelected={isSelected}
           onToggle={onToggle}
           size="sm"
-          ariaLabel={isSelected ? 'Remove skill' : 'Add skill'}
+          label={isSelected ? 'Remove skill' : 'Add skill'}
         />
       </div>
       

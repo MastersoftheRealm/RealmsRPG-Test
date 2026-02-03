@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Modal, SearchInput, Button } from '@/components/ui';
 import { GridListRow, QuantitySelector } from '@/components/shared';
