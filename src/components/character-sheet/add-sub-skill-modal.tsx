@@ -15,8 +15,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { X, ChevronDown, ChevronRight, Check, Plus, AlertCircle } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Select } from '@/components/ui';
+import { SelectionToggle } from '@/components/shared';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 
 interface CharacterSkill {
@@ -118,20 +119,13 @@ function ExpandableSubSkillRow({
           ))}
         </div>
         
-        {/* Selection Toggle - uses + for unselected, checkmark for selected */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className={cn(
-            'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
-            isSelected 
-              ? 'bg-primary-600 border-primary-600 text-white' 
-              : 'border-border-medium hover:border-primary-400 text-text-muted hover:text-primary-600'
-          )}
-          aria-label={isSelected ? 'Remove skill' : 'Add skill'}
-        >
-          {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-        </button>
+        {/* Selection Toggle */}
+        <SelectionToggle
+          isSelected={isSelected}
+          onToggle={onToggle}
+          size="sm"
+          ariaLabel={isSelected ? 'Remove skill' : 'Add skill'}
+        />
       </div>
       
       {/* Expanded Content */}

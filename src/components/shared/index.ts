@@ -104,6 +104,8 @@ export type {
   FilterOption as SelectionFilterOption,
 } from './unified-selection-modal';
 
-// Modals
-export { LoginPromptModal } from './login-prompt-modal';
-export { DeleteConfirmModal } from './delete-confirm-modal';
+// QuantitySelector - Unified quantity +/- controls
+// Use for: equipment quantity, item counts, stacks
+export { QuantitySelector, QuantityBadge } from './quantity-selector';
+export type { QuantitySelectorProps, QuantityBadgeProps } from './quantity-selector';
+

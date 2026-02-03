@@ -8,10 +8,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Minus, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Modal, SearchInput, Button } from '@/components/ui';
-import { GridListRow } from '@/components/shared';
+import { GridListRow, QuantitySelector } from '@/components/shared';
 import { formatDamageDisplay } from '@/lib/utils';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
@@ -25,52 +25,6 @@ interface AddLibraryItemModalProps {
   itemType: ItemType;
   existingIds: Set<string>;
   onAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
-}
-
-// Quantity selector component for equipment items
-function QuantitySelector({
-  quantity,
-  onChange,
-  min = 1,
-  max = 99,
-}: {
-  quantity: number;
-  onChange: (value: number) => void;
-  min?: number;
-  max?: number;
-}) {
-  return (
-    <div 
-      className="flex items-center gap-1" 
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        onClick={(e) => { e.stopPropagation(); onChange(Math.max(min, quantity - 1)); }}
-        disabled={quantity <= min}
-        className={cn(
-          'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-          quantity > min
-            ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
-            : 'bg-surface text-text-muted cursor-not-allowed'
-        )}
-      >
-        <Minus className="w-3 h-3" />
-      </button>
-      <span className="w-8 text-center text-sm font-medium text-text-primary">{quantity}</span>
-      <button
-        onClick={(e) => { e.stopPropagation(); onChange(Math.min(max, quantity + 1)); }}
-        disabled={quantity >= max}
-        className={cn(
-          'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
-          quantity < max
-            ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
-            : 'bg-surface text-text-muted cursor-not-allowed'
-        )}
-      >
-        <Plus className="w-3 h-3" />
-      </button>
-    </div>
-  );
 }
 
 export function AddLibraryItemModal({

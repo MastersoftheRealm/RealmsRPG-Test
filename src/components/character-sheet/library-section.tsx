@@ -15,7 +15,7 @@ import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
-import { PartChipList, type PartData, EditSectionToggle, RollButton, SectionHeader } from '@/components/shared';
+import { PartChipList, type PartData, EditSectionToggle, RollButton, SectionHeader, QuantitySelector, QuantityBadge } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
@@ -539,38 +539,19 @@ function ItemCard({ item, type, isEditMode, propertiesDb = [], onRemove, onToggl
             {/* Quantity display with optional +/- controls for equipment */}
             {type === 'equipment' && (item.quantity || 1) >= 1 && (
               isEditMode && onQuantityChange ? (
-                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onQuantityChange(-1); }}
-                    disabled={(item.quantity || 1) <= 1}
-                    className={cn(
-                      'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
-                      (item.quantity || 1) > 1
-                        ? 'bg-surface hover:bg-surface-alt text-text-secondary'
-                        : 'bg-surface text-border-light cursor-not-allowed'
-                    )}
-                    title="Decrease quantity"
-                  >
-                    −
-                  </button>
-                  <span className="text-xs text-text-muted min-w-[1.5rem] text-center">×{item.quantity || 1}</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onQuantityChange(1); }}
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold bg-surface hover:bg-surface-alt text-text-secondary transition-colors"
-                    title="Increase quantity"
-                  >
-                    +
-                  </button>
-                </div>
+                <QuantitySelector
+                  quantity={item.quantity || 1}
+                  onChange={(val) => onQuantityChange(val - (item.quantity || 1))}
+                  size="sm"
+                  min={1}
+                />
               ) : (
-                (item.quantity || 1) > 1 && (
-                  <span className="text-xs text-text-muted">×{item.quantity}</span>
-                )
+                <QuantityBadge quantity={item.quantity || 1} />
               )
             )}
             {/* For weapons/armor, show quantity only if > 1 */}
             {type !== 'equipment' && item.quantity && item.quantity > 1 && (
-              <span className="text-xs text-text-muted">×{item.quantity}</span>
+              <QuantityBadge quantity={item.quantity} />
             )}
           </div>
           <div className="flex items-center gap-2 text-sm text-text-muted">

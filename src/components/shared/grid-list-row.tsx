@@ -23,6 +23,7 @@ import { ChevronDown, Edit, Trash2, Copy, Zap, Check, Plus, AlertCircle } from '
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
+import { QuantitySelector, QuantityBadge } from './quantity-selector';
 
 // =============================================================================
 // Types
@@ -112,6 +113,10 @@ export interface GridListRowProps {
   innate?: boolean;
   /** Uses tracking for feats with limited uses */
   uses?: { current: number; max: number };
+  /** Quantity for stackable items (equipment, consumables) */
+  quantity?: number;
+  /** Callback when quantity changes (enables +/- controls) */
+  onQuantityChange?: (delta: number) => void;
   
   // ===== UI Options =====
   /** Start expanded */
@@ -180,6 +185,8 @@ export function GridListRow({
   equipped = false,
   innate = false,
   uses,
+  quantity,
+  onQuantityChange,
   // UI options
   defaultExpanded = false,
   expanded: controlledExpanded,
@@ -298,6 +305,19 @@ export function GridListRow({
               <span className="text-xs text-text-muted flex-shrink-0">
                 ({uses.current}/{uses.max})
               </span>
+            )}
+            {/* Quantity display - editable if onQuantityChange provided */}
+            {quantity !== undefined && quantity > 0 && (
+              onQuantityChange ? (
+                <QuantitySelector
+                  quantity={quantity}
+                  onChange={(val) => onQuantityChange(val - quantity)}
+                  size="sm"
+                  min={1}
+                />
+              ) : (
+                <QuantityBadge quantity={quantity} className="flex-shrink-0" />
+              )
             )}
             {/* Inline badges for compact view */}
             {compact && badges.length > 0 && (
