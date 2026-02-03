@@ -13,7 +13,7 @@ import { ref, get } from 'firebase/database';
 import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
-import { Spinner, IconButton, Alert, Checkbox } from '@/components/ui';
+import { Spinner, IconButton, Alert, Checkbox, Modal } from '@/components/ui';
 import { SearchInput, SortHeader, GridListRow, type ChipData } from '@/components/shared';
 import type { Character } from '@/types';
 
@@ -267,47 +267,92 @@ export function AddFeatModal({
     }
   };
 
-  if (!isOpen) return null;
+  // Custom header for Modal
+  const modalHeader = (
+    <div className="px-6 py-4 border-b border-border-light bg-gradient-to-r from-primary-50 to-surface">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-text-primary">
+            Add {featType === 'archetype' ? 'Archetype' : 'Character'} Feat
+          </h2>
+          <p className="text-sm text-text-muted mt-0.5">
+            Select feats to add to your character. Feats are filtered by your level and requirements.
+          </p>
+        </div>
+        <IconButton
+          label="Close modal"
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+        >
+          <X className="w-5 h-5" />
+        </IconButton>
+      </div>
+    </div>
+  );
+  
+  // Custom footer for Modal
+  const modalFooter = (
+    <div className="flex items-center justify-between px-6 py-4 border-t border-border-light bg-surface-alt">
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-text-muted">
+          {filteredFeats.length} feats available
+        </span>
+        {selectedFeats.length > 0 && (
+          <span className="text-sm font-medium text-primary-600">
+            {selectedFeats.length} selected
+          </span>
+        )}
+      </div>
+      <div className="flex gap-3">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 rounded-lg text-text-secondary hover:bg-surface transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleConfirm}
+          disabled={selectedFeats.length === 0}
+          className={cn(
+            'px-6 py-2 rounded-lg font-medium transition-colors',
+            selectedFeats.length > 0
+              ? 'bg-primary-600 text-white hover:bg-primary-700'
+              : 'bg-surface text-text-muted cursor-not-allowed'
+          )}
+        >
+          Add Selected
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
-        {/* Header - Codex style */}
-        <div className="px-6 py-4 border-b border-border-light bg-gradient-to-r from-primary-50 to-surface">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-text-primary">
-                Add {featType === 'archetype' ? 'Archetype' : 'Character'} Feat
-              </h2>
-              <p className="text-sm text-text-muted mt-0.5">
-                Select feats to add to your character. Feats are filtered by your level and requirements.
-              </p>
-            </div>
-            <IconButton
-              label="Close modal"
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-            >
-              <X className="w-5 h-5" />
-            </IconButton>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="px-6 py-4 border-b border-border-subtle bg-surface-alt space-y-3">
-          {/* Search */}
-          <SearchInput
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search feats by name, description, or tags..."
-          />
-          
-          {/* Filter row */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Category filter */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-text-muted">Category:</label>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="full"
+      header={modalHeader}
+      footer={modalFooter}
+      showCloseButton={false}
+      flexLayout
+      contentClassName=""
+      className="max-h-[85vh]"
+    >
+      {/* Search and Filters */}
+      <div className="px-6 py-4 border-b border-border-subtle bg-surface-alt space-y-3">
+        {/* Search */}
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search feats by name, description, or tags..."
+        />
+        
+        {/* Filter row */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Category filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-text-muted">Category:</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -413,41 +458,6 @@ export function AddFeatModal({
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border-light bg-surface-alt">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-text-muted">
-              {filteredFeats.length} feats available
-            </span>
-            {selectedFeats.length > 0 && (
-              <span className="text-sm font-medium text-primary-600">
-                {selectedFeats.length} selected
-              </span>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-text-secondary hover:bg-surface transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={selectedFeats.length === 0}
-              className={cn(
-                'px-6 py-2 rounded-lg font-medium transition-colors',
-                selectedFeats.length > 0
-                  ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-surface text-text-muted cursor-not-allowed'
-              )}
-            >
-              Add Selected
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+      </Modal>
   );
 }

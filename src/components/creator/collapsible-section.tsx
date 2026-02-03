@@ -67,7 +67,7 @@ export function CollapsibleSection({
             </div>
           </div>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => onEnabledChange?.(true)}
           >

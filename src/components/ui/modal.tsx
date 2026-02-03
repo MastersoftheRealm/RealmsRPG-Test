@@ -5,6 +5,10 @@
  * ================
  * Reusable modal/dialog with portal rendering and animation.
  * Matches vanilla site's modal-pop animation.
+ * 
+ * Supports two modes:
+ * 1. Simple mode: Pass title/description for standard header + children as content
+ * 2. Custom mode: Pass header/footer slots for full control over layout
  */
 
 import * as React from 'react';
@@ -16,12 +20,22 @@ import { IconButton } from './icon-button';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Simple mode: title text for header */
   title?: string;
+  /** Simple mode: description text for header */
   description?: string;
+  /** Custom mode: full control over header content */
+  header?: React.ReactNode;
+  /** Custom mode: footer content (e.g., action buttons, selection count) */
+  footer?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** Content area className (use for custom padding/layout) */
+  contentClassName?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   showCloseButton?: boolean;
+  /** Use flex layout for scrollable content with sticky header/footer */
+  flexLayout?: boolean;
 }
 
 const sizeClasses = {
@@ -38,10 +52,14 @@ export function Modal({
   onClose,
   title,
   description,
+  header,
+  footer,
   children,
   className,
+  contentClassName,
   size = 'md',
   showCloseButton = true,
+  flexLayout = false,
 }: ModalProps) {
   const [mounted, setMounted] = React.useState(false);
   const [animating, setAnimating] = React.useState(false);
@@ -74,6 +92,10 @@ export function Modal({
 
   if (!mounted || !isOpen) return null;
 
+  // Determine if we're using simple mode (title/description) or custom mode (header slot)
+  const hasSimpleHeader = (title || description) && !header;
+  const hasCustomHeader = !!header;
+
   const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -90,7 +112,7 @@ export function Modal({
       <div
         className={cn(
           'relative z-10 w-full rounded-2xl bg-surface shadow-2xl',
-          'max-h-[90vh] overflow-auto',
+          flexLayout ? 'flex flex-col max-h-[90vh]' : 'max-h-[90vh] overflow-auto',
           // Animation matching vanilla: scale + translateY
           'animate-modal-pop',
           sizeClasses[size],
@@ -101,8 +123,8 @@ export function Modal({
         aria-labelledby={title ? 'modal-title' : undefined}
         aria-describedby={description ? 'modal-description' : undefined}
       >
-        {/* Header */}
-        {(title || description) && (
+        {/* Simple Header (title/description mode) */}
+        {hasSimpleHeader && (
           <div className="border-b border-border-light px-6 py-4">
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
@@ -117,8 +139,11 @@ export function Modal({
           </div>
         )}
         
+        {/* Custom Header (slot mode) */}
+        {hasCustomHeader && header}
+        
         {/* Close button */}
-        {showCloseButton && (
+        {showCloseButton && !hasCustomHeader && (
           <IconButton
             variant="ghost"
             onClick={onClose}
@@ -130,7 +155,15 @@ export function Modal({
         )}
         
         {/* Content */}
-        <div className="p-6">{children}</div>
+        <div className={cn(
+          flexLayout ? 'flex-1 min-h-0 overflow-y-auto' : '',
+          contentClassName ?? 'p-6'
+        )}>
+          {children}
+        </div>
+        
+        {/* Footer (optional slot) */}
+        {footer && footer}
       </div>
     </div>
   );

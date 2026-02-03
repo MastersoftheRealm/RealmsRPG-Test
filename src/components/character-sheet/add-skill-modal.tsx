@@ -15,7 +15,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
-import { Spinner, SearchInput, IconButton, Alert, Button } from '@/components/ui';
+import { Spinner, SearchInput, IconButton, Alert, Button, Modal } from '@/components/ui';
 import { GridListRow } from '@/components/shared';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 
@@ -118,28 +118,59 @@ export function AddSkillModal({
     }
   };
 
-  if (!isOpen) return null;
+  // Custom header for Modal
+  const modalHeader = (
+    <div className="flex items-center justify-between px-5 py-4 border-b border-border-light bg-gradient-to-r from-primary-50 to-surface">
+      <div>
+        <h2 className="text-xl font-bold text-text-primary">Add Skills</h2>
+        <p className="text-sm text-text-muted mt-0.5">
+          Select skills to add to your character
+        </p>
+      </div>
+      <IconButton
+        label="Close modal"
+        variant="ghost"
+        size="sm"
+        onClick={onClose}
+      >
+        <X className="w-5 h-5" />
+      </IconButton>
+    </div>
+  );
+
+  // Custom footer for Modal
+  const modalFooter = (
+    <div className="flex items-center justify-between px-5 py-4 border-t border-border-light bg-surface-alt">
+      <span className="text-sm text-text-secondary font-medium">
+        {selectedSkills.length} skill{selectedSkills.length !== 1 ? 's' : ''} selected
+      </span>
+      <div className="flex gap-3">
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleConfirm}
+          disabled={selectedSkills.length === 0}
+        >
+          Add Selected {selectedSkills.length > 0 ? `(${selectedSkills.length})` : ''}
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border-light rounded-t-xl bg-gradient-to-r from-primary-50 to-surface">
-          <div>
-            <h2 className="text-xl font-bold text-text-primary">Add Skills</h2>
-            <p className="text-sm text-text-muted mt-0.5">
-              Select skills to add to your character
-            </p>
-          </div>
-          <IconButton
-            label="Close modal"
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-          >
-            <X className="w-5 h-5" />
-          </IconButton>
-        </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="xl"
+      header={modalHeader}
+      footer={modalFooter}
+      showCloseButton={false}
+      flexLayout
+      contentClassName=""
+      className="max-h-[85vh]"
+    >
 
         {/* Search & Filters */}
         <div className="px-5 py-4 border-b border-border-light bg-surface-alt space-y-3">
@@ -215,26 +246,6 @@ export function AddSkillModal({
             </div>
           )}
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-border-light bg-surface-alt rounded-b-xl">
-          <span className="text-sm text-text-secondary font-medium">
-            {selectedSkills.length} skill{selectedSkills.length !== 1 ? 's' : ''} selected
-          </span>
-          <div className="flex gap-3">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleConfirm}
-              disabled={selectedSkills.length === 0}
-            >
-              Add Selected {selectedSkills.length > 0 ? `(${selectedSkills.length})` : ''}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+      </Modal>
   );
 }

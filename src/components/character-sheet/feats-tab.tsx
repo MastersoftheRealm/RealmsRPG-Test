@@ -2,7 +2,7 @@
  * Feats Tab Component
  * ====================
  * Combined view of traits and feats for the library section
- * Uses CollapsibleListItem for consistent library-style display
+ * Uses GridListRow for consistent library-style display unified with site-wide patterns
  */
 
 'use client';
@@ -10,7 +10,7 @@
 import { useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { Button, Collapsible } from '@/components/ui';
-import { CollapsibleListItem } from '@/components/shared';
+import { GridListRow } from '@/components/shared';
 
 // =============================================================================
 // Types
@@ -248,18 +248,26 @@ export function FeatsTab({
             {/* All traits (species + selected) - enriched with RTDB data */}
             {allTraitsWithCategories.map((trait, index) => {
               const enriched = enrichTrait(trait.name);
+              const badges = trait.category ? [{ label: getCategoryLabel(trait.category), color: 'gray' as const }] : undefined;
+              const uses = enriched.maxUses > 0 ? { 
+                current: traitUses[trait.name] ?? enriched.maxUses, 
+                max: enriched.maxUses 
+              } : undefined;
+              
               return (
-                <CollapsibleListItem
+                <GridListRow
                   key={`${trait.category}-${index}`}
+                  id={`${trait.category}-${index}`}
                   name={enriched.name}
                   description={enriched.description}
-                  subtext={getCategoryLabel(trait.category)}
-                  maxUses={enriched.maxUses}
-                  currentUses={traitUses[trait.name] ?? enriched.maxUses}
-                  onUsesChange={enriched.maxUses > 0 && onTraitUsesChange 
+                  badges={badges}
+                  uses={uses}
+                  onQuantityChange={enriched.maxUses > 0 && onTraitUsesChange 
                     ? (delta) => onTraitUsesChange(trait.name, delta) 
                     : undefined}
-                  recoveryPeriod={enriched.recoveryPeriod}
+                  requirements={enriched.recoveryPeriod ? (
+                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recoveryPeriod}</span>
+                  ) : undefined}
                   compact
                 />
               );
@@ -268,17 +276,25 @@ export function FeatsTab({
             {/* Legacy traits array - enriched with RTDB data */}
             {traits.map((trait, index) => {
               const enriched = enrichTrait(trait.name);
+              const uses = enriched.maxUses > 0 ? { 
+                current: traitUses[trait.name] ?? enriched.maxUses, 
+                max: enriched.maxUses 
+              } : undefined;
+              const recoveryText = enriched.recoveryPeriod || trait.recoveryPeriod;
+              
               return (
-                <CollapsibleListItem
+                <GridListRow
                   key={`trait-${index}`}
+                  id={`trait-${index}`}
                   name={enriched.name}
                   description={enriched.description || trait.description}
-                  maxUses={enriched.maxUses || trait.maxUses}
-                  currentUses={traitUses[trait.name] ?? enriched.maxUses}
-                  onUsesChange={enriched.maxUses > 0 && onTraitUsesChange 
+                  uses={uses}
+                  onQuantityChange={enriched.maxUses > 0 && onTraitUsesChange 
                     ? (delta) => onTraitUsesChange(trait.name, delta) 
                     : undefined}
-                  recoveryPeriod={enriched.recoveryPeriod || trait.recoveryPeriod}
+                  requirements={recoveryText ? (
+                    <span className="text-xs text-text-muted italic">Recovers: {recoveryText}</span>
+                  ) : undefined}
                   compact
                 />
               );
@@ -309,17 +325,24 @@ export function FeatsTab({
           <div className="space-y-2">
             {archetypeFeats.map((feat, index) => {
               const enriched = enrichFeat(feat);
+              const uses = enriched.maxUses > 0 ? { 
+                current: enriched.currentUses, 
+                max: enriched.maxUses 
+              } : undefined;
+              
               return (
-                <CollapsibleListItem
+                <GridListRow
                   key={feat.id || index}
+                  id={String(feat.id || index)}
                   name={enriched.name}
                   description={enriched.description}
-                  maxUses={enriched.maxUses}
-                  currentUses={enriched.currentUses}
-                  onUsesChange={onFeatUsesChange 
+                  uses={uses}
+                  onQuantityChange={onFeatUsesChange 
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
                     : undefined}
-                  recoveryPeriod={enriched.recovery}
+                  requirements={enriched.recovery ? (
+                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recovery}</span>
+                  ) : undefined}
                   compact
                 />
               );
@@ -354,17 +377,24 @@ export function FeatsTab({
           <div className="space-y-2">
             {characterFeats.map((feat, index) => {
               const enriched = enrichFeat(feat);
+              const uses = enriched.maxUses > 0 ? { 
+                current: enriched.currentUses, 
+                max: enriched.maxUses 
+              } : undefined;
+              
               return (
-                <CollapsibleListItem
+                <GridListRow
                   key={feat.id || index}
+                  id={String(feat.id || index)}
                   name={enriched.name}
                   description={enriched.description}
-                  maxUses={enriched.maxUses}
-                  currentUses={enriched.currentUses}
-                  onUsesChange={onFeatUsesChange 
+                  uses={uses}
+                  onQuantityChange={onFeatUsesChange 
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
                     : undefined}
-                  recoveryPeriod={enriched.recovery}
+                  requirements={enriched.recovery ? (
+                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recovery}</span>
+                  ) : undefined}
                   compact
                 />
               );
@@ -389,18 +419,25 @@ export function FeatsTab({
           <div className="space-y-2">
             {stateFeats.map((feat, index) => {
               const enriched = enrichFeat(feat);
+              const uses = enriched.maxUses > 0 ? { 
+                current: enriched.currentUses, 
+                max: enriched.maxUses 
+              } : undefined;
+              
               return (
-                <CollapsibleListItem
+                <GridListRow
                   key={feat.id || index}
+                  id={String(feat.id || index)}
                   name={enriched.name}
                   description={enriched.description}
-                  subtext="State"
-                  maxUses={enriched.maxUses}
-                  currentUses={enriched.currentUses}
-                  onUsesChange={onFeatUsesChange 
+                  badges={[{ label: 'State', color: 'blue' }]}
+                  uses={uses}
+                  onQuantityChange={onFeatUsesChange 
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
                     : undefined}
-                  recoveryPeriod={enriched.recovery}
+                  requirements={enriched.recovery ? (
+                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recovery}</span>
+                  ) : undefined}
                   compact
                 />
               );

@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
-import { EditSectionToggle, RollButton } from '@/components/shared';
+import { EditSectionToggle, RollButton, SectionHeader } from '@/components/shared';
 import type { Character, Abilities, Item } from '@/types';
 
 interface ArchetypeSectionProps {
@@ -137,7 +137,7 @@ function AttackBonusesTable({
 
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
-      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Attack Bonuses</h4>
+      <SectionHeader title="Attack Bonuses" className="mb-2" />
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-text-muted">
@@ -248,7 +248,7 @@ function WeaponsSection({
 
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
-      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Weapons</h4>
+      <SectionHeader title="Weapons" className="mb-2" />
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-text-muted">
@@ -397,7 +397,7 @@ function ArmorSection({
 
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
-      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Armor</h4>
+      <SectionHeader title="Armor" className="mb-2" />
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-text-muted">
@@ -628,9 +628,7 @@ export function ArchetypeSection({
       {/* Mixed Archetype Milestone Choices */}
       {archetypeType === 'mixed' && milestoneLevels.length > 0 && (
         <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-purple-50 border border-amber-200 rounded-lg">
-          <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">
-            Milestone Choices
-          </h4>
+          <SectionHeader title="Milestone Choices" className="mb-2" />
           <div className="flex flex-wrap gap-2">
             {milestoneLevels.map((milestoneLevel) => {
               const currentChoice = archetypeChoices[milestoneLevel];

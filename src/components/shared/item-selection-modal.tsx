@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, Check } from 'lucide-react';
 import { ItemList } from './item-list';
-import { IconButton, Button } from '@/components/ui';
+import { IconButton, Button, Modal } from '@/components/ui';
 import type { DisplayItem, FilterOption, SortOption } from '@/types/items';
 
 interface ItemSelectionModalProps {
@@ -92,114 +92,87 @@ export function ItemSelectionModal({
     setValidationError(undefined);
   };
   
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-  
-  // Prevent body scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-  
-  if (!isOpen) return null;
+  // Note: Modal component handles escape key and body scroll lock
   
   const selectedCount = selectedIds.size;
-  
-  return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-    >
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+
+  // Custom header for Modal
+  const modalHeader = (
+    <div className="flex items-start justify-between gap-4 p-4 border-b border-border">
+      <div>
+        <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
+          {title}
+        </h2>
+        {description && (
+          <p className="text-sm text-text-muted mt-1">{description}</p>
+        )}
+      </div>
+      <IconButton
+        label="Close modal"
+        variant="ghost"
         onClick={onClose}
-      />
+      >
+        <X className="w-5 h-5" />
+      </IconButton>
+    </div>
+  );
+
+  // Custom footer for Modal
+  const modalFooter = (
+    <div className="flex items-center justify-between gap-4 p-4 border-t border-border bg-surface-alt">
+      {/* Selection count */}
+      <div className="text-sm text-text-muted">
+        {selectedCount} selected
+        {maxSelections && ` / ${maxSelections} max`}
+      </div>
       
-      {/* Modal */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] m-4 flex flex-col bg-surface rounded-xl shadow-xl border border-border overflow-hidden">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 p-4 border-b border-border">
-          <div>
-            <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
-              {title}
-            </h2>
-            {description && (
-              <p className="text-sm text-text-muted mt-1">{description}</p>
-            )}
-          </div>
-          <IconButton
-            label="Close modal"
-            variant="ghost"
-            onClick={onClose}
-          >
-            <X className="w-5 h-5" />
-          </IconButton>
-        </div>
-        
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-4">
-          <ItemList
-            items={items}
-            mode="select"
-            selectedIds={selectedIds}
-            onSelectionChange={handleSelectionChange}
-            maxSelections={maxSelections}
-            filterOptions={filterOptions}
-            sortOptions={sortOptions}
-            searchPlaceholder={searchPlaceholder}
-            loading={loading}
-            emptyMessage="No items available"
-          />
-        </div>
-        
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-4 p-4 border-t border-border bg-surface-alt">
-          {/* Selection count */}
-          <div className="text-sm text-text-muted">
-            {selectedCount} selected
-            {maxSelections && ` / ${maxSelections} max`}
-          </div>
-          
-          {/* Validation error */}
-          {validationError && (
-            <div className="text-sm text-danger-600">{validationError}</div>
-          )}
-          
-          {/* Actions */}
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleConfirm}
-              disabled={selectedCount === 0}
-            >
-              <Check className="w-4 h-4" />
-              Confirm Selection
-            </Button>
-          </div>
-        </div>
+      {/* Validation error */}
+      {validationError && (
+        <div className="text-sm text-danger-600">{validationError}</div>
+      )}
+      
+      {/* Actions */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          onClick={handleConfirm}
+          disabled={selectedCount === 0}
+        >
+          <Check className="w-4 h-4" />
+          Confirm Selection
+        </Button>
       </div>
     </div>
+  );
+  
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="full"
+      header={modalHeader}
+      footer={modalFooter}
+      showCloseButton={false}
+      flexLayout
+      contentClassName="p-4"
+      className="max-h-[90vh]"
+    >
+      <ItemList
+        items={items}
+        mode="select"
+        selectedIds={selectedIds}
+        onSelectionChange={handleSelectionChange}
+        maxSelections={maxSelections}
+        filterOptions={filterOptions}
+        sortOptions={sortOptions}
+        searchPlaceholder={searchPlaceholder}
+        loading={loading}
+        emptyMessage="No items available"
+      />
+    </Modal>
   );
 }
 
