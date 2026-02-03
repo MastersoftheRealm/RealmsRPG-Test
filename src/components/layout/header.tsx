@@ -14,22 +14,22 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks';
 
 const navLinks = [
-  { href: '/library', label: 'Library' },
   { href: '/characters', label: 'Characters' },
+  { href: '/library', label: 'Library' },
   { href: '/codex', label: 'Codex' },
-  {
-    label: 'Rules',
-    dropdown: [
-      { href: '/rules', label: 'Core Rulebook' },
-      { href: '/resources', label: 'Resources' },
-    ],
-  },
   {
     label: 'Creators',
     dropdown: [
       { href: '/power-creator', label: 'Powers' },
       { href: '/technique-creator', label: 'Techniques' },
       { href: '/item-creator', label: 'Armaments' },
+    ],
+  },
+  {
+    label: 'Rules',
+    dropdown: [
+      { href: '/rules', label: 'Core Rulebook' },
+      { href: '/resources', label: 'Resources' },
     ],
   },
   {

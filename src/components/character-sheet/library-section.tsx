@@ -32,7 +32,8 @@ interface RTDBPart {
   op_3_tp?: number;
 }
 
-// Helper to convert power/technique parts to PartData format, with optional RTDB enrichment
+// Helper to convert power/technique parts to PartData format, with RTDB enrichment
+// The saved part data only has option levels - TP costs come from RTDB
 function partsToPartData(
   parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
   rtdbParts: RTDBPart[] = []
@@ -41,7 +42,7 @@ function partsToPartData(
   
   return parts.map(part => {
     if (typeof part === 'string') {
-      // String-only part - look up in RTDB for description
+      // String-only part - look up in RTDB for description and TP
       const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
       return { 
         name: part,
@@ -50,17 +51,29 @@ function partsToPartData(
       };
     }
     
-    // Full part data with TP info - still try to get description from RTDB
+    // Full part data - look up TP costs from RTDB by id or name
     const partName = part.name || part.id || 'Unknown Part';
-    const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
+    const partId = part.id;
     
-    const tpCost = (part.base_tp ?? 0) + 
-                   (part.op_1_tp ?? 0) * (part.op_1_lvl ?? 0) + 
-                   (part.op_2_tp ?? 0) * (part.op_2_lvl ?? 0) + 
-                   (part.op_3_tp ?? 0) * (part.op_3_lvl ?? 0);
+    // Try to find RTDB part by id first, then by name
+    let rtdbPart = rtdbParts.find(p => partId && String(p.id) === String(partId));
+    if (!rtdbPart) {
+      rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
+    }
+    
+    // Calculate TP cost using RTDB values + saved option levels
+    const base_tp = rtdbPart?.base_tp ?? 0;
+    const op_1_tp = rtdbPart?.op_1_tp ?? 0;
+    const op_2_tp = rtdbPart?.op_2_tp ?? 0;
+    const op_3_tp = rtdbPart?.op_3_tp ?? 0;
+    
+    const tpCost = base_tp + 
+                   op_1_tp * (part.op_1_lvl ?? 0) + 
+                   op_2_tp * (part.op_2_lvl ?? 0) + 
+                   op_3_tp * (part.op_3_lvl ?? 0);
     
     return {
-      name: partName,
+      name: rtdbPart?.name || partName,
       description: rtdbPart?.description,
       tpCost: tpCost > 0 ? tpCost : undefined,
       optionLevels: {
@@ -72,17 +85,47 @@ function partsToPartData(
   });
 }
 
-// Helper to convert item properties to PartData format
-function propertiesToPartData(properties?: Item['properties']): PartData[] {
+/** RTDB property data for enrichment */
+interface RTDBProperty {
+  id: string | number;
+  name: string;
+  description?: string;
+  base_tp?: number;
+  tp_cost?: number;
+}
+
+// Helper to convert item properties to PartData format, with RTDB enrichment
+function propertiesToPartData(
+  properties?: Item['properties'],
+  rtdbProperties: RTDBProperty[] = []
+): PartData[] {
   if (!properties || properties.length === 0) return [];
   
   return properties.map(prop => {
     if (typeof prop === 'string') {
-      return { name: prop, category: 'property' };
+      // String-only property - look up in RTDB for description
+      const rtdbProp = rtdbProperties.find(p => p.name?.toLowerCase() === prop.toLowerCase());
+      return { 
+        name: prop,
+        description: rtdbProp?.description,
+        tpCost: rtdbProp?.base_tp ?? rtdbProp?.tp_cost,
+        category: 'property'
+      };
     }
-    // ItemProperty has id, name, value - no description
+    
+    // Property object - look up in RTDB by id or name
+    const propId = prop.id;
+    const propName = prop.name || 'Unknown Property';
+    
+    let rtdbProp = rtdbProperties.find(p => propId && String(p.id) === String(propId));
+    if (!rtdbProp) {
+      rtdbProp = rtdbProperties.find(p => p.name?.toLowerCase() === propName.toLowerCase());
+    }
+    
     return { 
-      name: prop.name, 
+      name: rtdbProp?.name || propName,
+      description: rtdbProp?.description,
+      tpCost: rtdbProp?.base_tp ?? rtdbProp?.tp_cost,
       category: 'property' 
     };
   });
@@ -140,6 +183,7 @@ interface LibrarySectionProps {
   // Parts RTDB data for enrichment (descriptions, TP costs)
   powerPartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
   techniquePartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
+  itemPropertiesDb?: Array<{ id: string | number; name: string; description?: string; base_tp?: number; tp_cost?: number }>;
   // Feats tab props
   ancestry?: {
     selectedTraits?: string[];
@@ -448,6 +492,7 @@ interface ItemCardProps {
   item: Item;
   type: 'weapon' | 'armor' | 'equipment';
   isEditMode?: boolean;
+  propertiesDb?: RTDBProperty[];
   onRemove?: () => void;
   onToggleEquip?: () => void;
   onRollAttack?: () => void;
@@ -455,11 +500,11 @@ interface ItemCardProps {
   onQuantityChange?: (delta: number) => void;
 }
 
-function ItemCard({ item, type, isEditMode, onRemove, onToggleEquip, onRollAttack, onRollDamage, onQuantityChange }: ItemCardProps) {
+function ItemCard({ item, type, isEditMode, propertiesDb = [], onRemove, onToggleEquip, onRollAttack, onRollDamage, onQuantityChange }: ItemCardProps) {
   const [expanded, setExpanded] = useState(false);
   
-  // Convert properties to PartData format for chips
-  const propertyChips = useMemo(() => propertiesToPartData(item.properties), [item.properties]);
+  // Convert properties to PartData format for chips, enriched with RTDB descriptions
+  const propertyChips = useMemo(() => propertiesToPartData(item.properties, propertiesDb), [item.properties, propertiesDb]);
   const hasExpandableContent = item.description || propertyChips.length > 0;
 
   return (
@@ -643,6 +688,7 @@ export function LibrarySection({
   onUnarmedProwessChange,
   powerPartsDb = [],
   techniquePartsDb = [],
+  itemPropertiesDb = [],
   // Feats props
   ancestry,
   vanillaTraits,
@@ -934,13 +980,14 @@ export function LibrarySection({
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Weapons</h4>
                 {isEditMode && onAddWeapon && (
-                  <button
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
                     onClick={onAddWeapon}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-surface-alt text-text-secondary rounded hover:bg-surface transition-colors"
+                    label="Add weapon"
                   >
-                    <Plus className="w-3 h-3" />
-                    Add
-                  </button>
+                    <Plus className="w-4 h-4" />
+                  </IconButton>
                 )}
               </div>
               {/* Weapons list */}
@@ -953,6 +1000,7 @@ export function LibrarySection({
                       item={item} 
                       type="weapon"
                       isEditMode={isEditMode}
+                      propertiesDb={itemPropertiesDb}
                       onRemove={onRemoveWeapon ? () => onRemoveWeapon(item.id || String(i)) : undefined}
                       onToggleEquip={onToggleEquipWeapon ? () => onToggleEquipWeapon(item.id || String(i)) : undefined}
                       onRollAttack={rollContext ? () => rollContext.rollAttack(item.name, attackBonus) : undefined}
@@ -970,13 +1018,14 @@ export function LibrarySection({
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Armor</h4>
                 {isEditMode && onAddArmor && (
-                  <button
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
                     onClick={onAddArmor}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-surface-alt text-text-secondary rounded hover:bg-surface transition-colors"
+                    label="Add armor"
                   >
-                    <Plus className="w-3 h-3" />
-                    Add
-                  </button>
+                    <Plus className="w-4 h-4" />
+                  </IconButton>
                 )}
               </div>
               {armor.length > 0 ? (
@@ -986,6 +1035,7 @@ export function LibrarySection({
                     item={item} 
                     type="armor"
                     isEditMode={isEditMode}
+                    propertiesDb={itemPropertiesDb}
                     onRemove={onRemoveArmor ? () => onRemoveArmor(item.id || String(i)) : undefined}
                     onToggleEquip={onToggleEquipArmor ? () => onToggleEquipArmor(item.id || String(i)) : undefined}
                   />
@@ -1000,13 +1050,14 @@ export function LibrarySection({
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Equipment</h4>
                 {isEditMode && onAddEquipment && (
-                  <button
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
                     onClick={onAddEquipment}
-                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-surface-alt text-text-secondary rounded hover:bg-surface transition-colors"
+                    label="Add equipment"
                   >
-                    <Plus className="w-3 h-3" />
-                    Add
-                  </button>
+                    <Plus className="w-4 h-4" />
+                  </IconButton>
                 )}
               </div>
               {equipment.length > 0 ? (
@@ -1016,6 +1067,7 @@ export function LibrarySection({
                     item={item} 
                     type="equipment"
                     isEditMode={isEditMode}
+                    propertiesDb={itemPropertiesDb}
                     onRemove={onRemoveEquipment ? () => onRemoveEquipment(item.id || String(i)) : undefined}
                     onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id || String(i), delta) : undefined}
                   />

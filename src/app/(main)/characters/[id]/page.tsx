@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
-import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
+import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
@@ -143,6 +143,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // RTDB parts data for enrichment (descriptions, TP costs)
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
   
   // RTDB equipment for enrichment fallback (codex items)
   const { data: rtdbEquipment = [] } = useEquipment();
@@ -1200,6 +1201,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
                   powerPartsDb={powerPartsDb}
                   techniquePartsDb={techniquePartsDb}
+                  itemPropertiesDb={itemPropertiesDb}
                   // Feats tab props
                   // Cast ancestry to any to accommodate nullable fields from RTDB (selectedFlaw may be null)
                   ancestry={character.ancestry as any}
