@@ -2,14 +2,26 @@
  * Notes Tab
  * =========
  * Physical attributes, movement calculations, and character notes
- * Matches vanilla site's notes functionality
+ * Features:
+ * - All text fields are always editable (not just in edit mode)
+ * - Support for multiple named notes with add/delete functionality
+ * - Weight/height still require edit mode for modification
  */
 
 'use client';
 
 import { useState, useCallback } from 'react';
+import { Plus, X, ChevronDown, ChevronRight, Edit2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { IconButton } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
 import type { Abilities } from '@/types';
+
+export interface CharacterNote {
+  id: string;
+  name: string;
+  content: string;
+}
 
 interface NotesTabProps {
   weight: number;
@@ -17,6 +29,8 @@ interface NotesTabProps {
   appearance: string;
   archetypeDesc: string;
   notes: string;
+  // New: array of named notes
+  namedNotes?: CharacterNote[];
   abilities: Abilities;
   isEditMode?: boolean;
   onWeightChange?: (value: number) => void;
@@ -24,6 +38,102 @@ interface NotesTabProps {
   onAppearanceChange?: (value: string) => void;
   onArchetypeDescChange?: (value: string) => void;
   onNotesChange?: (value: string) => void;
+  // New: handlers for named notes
+  onAddNote?: () => void;
+  onUpdateNote?: (id: string, updates: Partial<CharacterNote>) => void;
+  onDeleteNote?: (id: string) => void;
+}
+
+// Collapsible note component with editable name
+function NoteCard({
+  note,
+  onUpdate,
+  onDelete,
+  isEditMode,
+}: {
+  note: CharacterNote;
+  onUpdate?: (updates: Partial<CharacterNote>) => void;
+  onDelete?: () => void;
+  isEditMode?: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(note.name);
+
+  const handleNameSubmit = () => {
+    if (nameInput.trim() && nameInput !== note.name) {
+      onUpdate?.({ name: nameInput.trim() });
+    }
+    setIsEditingName(false);
+  };
+
+  return (
+    <div className="border border-border-light rounded-lg overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-surface-alt">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-text-muted hover:text-text-primary transition-colors"
+        >
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
+        </button>
+        
+        {isEditingName ? (
+          <input
+            type="text"
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            onBlur={handleNameSubmit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleNameSubmit();
+              if (e.key === 'Escape') {
+                setNameInput(note.name);
+                setIsEditingName(false);
+              }
+            }}
+            className="flex-1 px-2 py-0.5 text-sm font-medium border border-primary-300 rounded focus:ring-2 focus:ring-primary-500"
+            autoFocus
+          />
+        ) : (
+          <span
+            className="flex-1 text-sm font-medium text-text-primary cursor-pointer hover:text-primary-600"
+            onClick={() => setIsEditingName(true)}
+            title="Click to rename"
+          >
+            {note.name}
+            <Edit2 className="w-3 h-3 inline ml-1 text-text-muted" />
+          </span>
+        )}
+        
+        {isEditMode && onDelete && (
+          <IconButton
+            variant="danger"
+            size="sm"
+            onClick={onDelete}
+            label="Delete note"
+          >
+            <X className="w-4 h-4" />
+          </IconButton>
+        )}
+      </div>
+      
+      {/* Content - always editable */}
+      {isExpanded && (
+        <div className="p-3">
+          <textarea
+            value={note.content}
+            onChange={(e) => onUpdate?.({ content: e.target.value })}
+            placeholder="Write your note here..."
+            className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function NotesTab({
@@ -32,6 +142,7 @@ export function NotesTab({
   appearance = '',
   archetypeDesc = '',
   notes = '',
+  namedNotes = [],
   abilities,
   isEditMode = false,
   onWeightChange,
@@ -39,6 +150,9 @@ export function NotesTab({
   onAppearanceChange,
   onArchetypeDescChange,
   onNotesChange,
+  onAddNote,
+  onUpdateNote,
+  onDeleteNote,
 }: NotesTabProps) {
   const rollContext = useRollsOptional();
   
@@ -184,7 +298,7 @@ export function NotesTab({
         </div>
       </div>
 
-      {/* Appearance */}
+      {/* Appearance - always editable */}
       <div>
         <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
           Appearance
@@ -192,14 +306,12 @@ export function NotesTab({
         <textarea
           value={appearance}
           onChange={(e) => onAppearanceChange?.(e.target.value)}
-          readOnly={!isEditMode}
           placeholder="Describe your character's appearance..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-surface-alt"
-          disabled={!isEditMode}
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
         />
       </div>
 
-      {/* Archetype Description */}
+      {/* Archetype Description - always editable */}
       <div>
         <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
           Archetype Description
@@ -207,26 +319,59 @@ export function NotesTab({
         <textarea
           value={archetypeDesc}
           onChange={(e) => onArchetypeDescChange?.(e.target.value)}
-          readOnly={!isEditMode}
           placeholder="Describe your character's archetype background..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-surface-alt"
-          disabled={!isEditMode}
+          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
         />
       </div>
 
-      {/* Notes */}
+      {/* General Notes - always editable */}
       <div>
         <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
-          Notes
+          General Notes
         </h3>
         <textarea
           value={notes}
           onChange={(e) => onNotesChange?.(e.target.value)}
-          readOnly={!isEditMode}
           placeholder="Additional notes, backstory, goals..."
-          className="w-full min-h-[120px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y disabled:bg-surface-alt"
-          disabled={!isEditMode}
+          className="w-full min-h-[120px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
         />
+      </div>
+
+      {/* Named Notes Section */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+            Custom Notes
+          </h3>
+          {onAddNote && (
+            <IconButton
+              variant="ghost"
+              size="sm"
+              onClick={onAddNote}
+              label="Add new note"
+            >
+              <Plus className="w-4 h-4" />
+            </IconButton>
+          )}
+        </div>
+        
+        {namedNotes.length > 0 ? (
+          <div className="space-y-3">
+            {namedNotes.map((note) => (
+              <NoteCard
+                key={note.id}
+                note={note}
+                onUpdate={onUpdateNote ? (updates) => onUpdateNote(note.id, updates) : undefined}
+                onDelete={onDeleteNote ? () => onDeleteNote(note.id) : undefined}
+                isEditMode={isEditMode}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted italic py-4 text-center">
+            No custom notes yet. Click + to add one.
+          </p>
+        )}
       </div>
     </div>
   );

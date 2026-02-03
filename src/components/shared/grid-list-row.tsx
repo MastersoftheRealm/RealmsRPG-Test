@@ -100,6 +100,18 @@ export interface GridListRowProps {
   onDelete?: () => void;
   onDuplicate?: () => void;
   
+  // ===== Character Sheet Slots (Phase 1 Unification) =====
+  /** Left slot content (e.g., innate toggle, equip checkbox) - renders before name */
+  leftSlot?: ReactNode;
+  /** Right slot content (e.g., use button, roll buttons) - renders after columns */
+  rightSlot?: ReactNode;
+  /** Visual state: item is equipped (green border/bg styling) */
+  equipped?: boolean;
+  /** Visual state: item is innate (purple styling) */
+  innate?: boolean;
+  /** Uses tracking for feats with limited uses */
+  uses?: { current: number; max: number };
+  
   // ===== UI Options =====
   /** Start expanded */
   defaultExpanded?: boolean;
@@ -161,6 +173,13 @@ export function GridListRow({
   onEdit,
   onDelete,
   onDuplicate,
+  // Character sheet slots (Phase 1 Unification)
+  leftSlot,
+  rightSlot,
+  equipped = false,
+  innate = false,
+  uses,
+  // UI options
   defaultExpanded = false,
   expanded: controlledExpanded,
   onExpandChange,
@@ -199,8 +218,16 @@ export function GridListRow({
 
   // Determine row styling based on state
   const rowStyles = cn(
-    'bg-surface transition-all rounded-lg border border-border-light overflow-hidden',
+    'bg-surface transition-all rounded-lg border overflow-hidden',
+    // Selection state
     isSelected && 'bg-primary-50 border-l-4 border-l-primary-500',
+    // Equipped state (green styling)
+    equipped && !isSelected && 'border-green-300 bg-green-50',
+    // Innate state (purple styling)
+    innate && !isSelected && !equipped && 'border-violet-300 bg-violet-50',
+    // Default border
+    !isSelected && !equipped && !innate && 'border-border-light',
+    // Disabled state
     disabled && 'opacity-50',
     className
   );
@@ -222,16 +249,30 @@ export function GridListRow({
             onClick={(e) => { e.stopPropagation(); if (!disabled) onSelect?.(); }}
             disabled={disabled}
             className={cn(
-              'w-10 flex-shrink-0 flex items-center justify-center border-r transition-colors',
+              'w-10 flex-shrink-0 flex items-center justify-center transition-colors',
               isSelected 
-                ? 'bg-primary-500 text-white' 
-                : 'bg-surface-alt text-text-muted hover:bg-surface',
-              disabled && 'cursor-not-allowed'
+                ? 'bg-primary-600 text-white' 
+                : 'bg-surface text-text-muted hover:bg-primary-50 hover:text-primary-600',
+              disabled && 'cursor-not-allowed opacity-50'
             )}
-            aria-label={isSelected ? 'Deselect' : 'Select'}
+            aria-label={isSelected ? 'Remove from selection' : 'Add to selection'}
           >
-            {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            <div className={cn(
+              'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
+              isSelected 
+                ? 'bg-primary-600 border-primary-600 text-white' 
+                : 'border-border-medium hover:border-primary-400'
+            )}>
+              {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            </div>
           </button>
+        )}
+        
+        {/* Left Slot - renders before clickable content (e.g., equip toggle, innate toggle) */}
+        {leftSlot && (
+          <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            {leftSlot}
+          </div>
         )}
         
         {/* Clickable Row Content */}
@@ -246,12 +287,26 @@ export function GridListRow({
           )}
           style={gridStyle}
         >
-          {/* Name column */}
+          {/* Name column with optional state indicators */}
           <div className={cn(
-            'font-medium text-text-primary truncate',
+            'font-medium text-text-primary truncate flex items-center gap-2',
             useFlex && 'flex-1'
           )}>
-            {name}
+            <span className="truncate">{name}</span>
+            {/* Equipped indicator */}
+            {equipped && (
+              <span className="text-green-600 flex-shrink-0">✓</span>
+            )}
+            {/* Innate indicator */}
+            {innate && (
+              <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 text-violet-600 flex-shrink-0">★</span>
+            )}
+            {/* Uses display */}
+            {uses && (
+              <span className="text-xs text-text-muted flex-shrink-0">
+                ({uses.current}/{uses.max})
+              </span>
+            )}
             {/* Inline badges for compact view */}
             {compact && badges.length > 0 && (
               <span className="ml-2 inline-flex gap-1">
@@ -318,6 +373,13 @@ export function GridListRow({
             </div>
           )}
         </button>
+        
+        {/* Right Slot - renders after clickable content (e.g., roll buttons, use button) */}
+        {rightSlot && (
+          <div className="flex items-center flex-shrink-0 pr-2" onClick={(e) => e.stopPropagation()}>
+            {rightSlot}
+          </div>
+        )}
       </div>
 
       {/* Mobile summary row (only when grid mode with columns) */}

@@ -8,7 +8,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Minus, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils/cn';
 import { Modal, SearchInput, Button } from '@/components/ui';
 import { GridListRow } from '@/components/shared';
 import { formatDamageDisplay } from '@/lib/utils';
@@ -26,6 +27,52 @@ interface AddLibraryItemModalProps {
   onAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
 }
 
+// Quantity selector component for equipment items
+function QuantitySelector({
+  quantity,
+  onChange,
+  min = 1,
+  max = 99,
+}: {
+  quantity: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+}) {
+  return (
+    <div 
+      className="flex items-center gap-1" 
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={(e) => { e.stopPropagation(); onChange(Math.max(min, quantity - 1)); }}
+        disabled={quantity <= min}
+        className={cn(
+          'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+          quantity > min
+            ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
+            : 'bg-surface text-text-muted cursor-not-allowed'
+        )}
+      >
+        <Minus className="w-3 h-3" />
+      </button>
+      <span className="w-8 text-center text-sm font-medium text-text-primary">{quantity}</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); onChange(Math.min(max, quantity + 1)); }}
+        disabled={quantity >= max}
+        className={cn(
+          'w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors',
+          quantity < max
+            ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
+            : 'bg-surface text-text-muted cursor-not-allowed'
+        )}
+      >
+        <Plus className="w-3 h-3" />
+      </button>
+    </div>
+  );
+}
+
 export function AddLibraryItemModal({
   isOpen,
   onClose,
@@ -35,6 +82,8 @@ export function AddLibraryItemModal({
 }: AddLibraryItemModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Track quantities for equipment items (id -> quantity)
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   
   // Fetch user library based on item type
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
@@ -45,6 +94,7 @@ export function AddLibraryItemModal({
   useEffect(() => {
     if (isOpen) {
       setSelectedIds(new Set());
+      setQuantities({});
       setSearchQuery('');
     }
   }, [isOpen]);
@@ -98,11 +148,26 @@ export function AddLibraryItemModal({
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
+        // Also remove quantity tracking when deselected
+        setQuantities(q => {
+          const newQ = { ...q };
+          delete newQ[id];
+          return newQ;
+        });
       } else {
         newSet.add(id);
+        // Initialize quantity to 1 for equipment
+        if (itemType === 'equipment') {
+          setQuantities(q => ({ ...q, [id]: 1 }));
+        }
       }
       return newSet;
     });
+  };
+  
+  // Update quantity for an item
+  const updateQuantity = (id: string, quantity: number) => {
+    setQuantities(prev => ({ ...prev, [id]: quantity }));
   };
   
   // Handle confirm
@@ -153,7 +218,8 @@ export function AddLibraryItemModal({
         damage: i.damage || '',
         armor: i.armorValue || 0,
         equipped: false,
-        quantity: 1,
+        // Use selected quantity for equipment, default to 1 for weapons/armor
+        quantity: itemType === 'equipment' ? (quantities[i.id] || 1) : 1,
       }));
       onAdd(equipmentItems);
     }
@@ -208,19 +274,36 @@ export function AddLibraryItemModal({
             </div>
           ) : (
             <div className="space-y-2 p-2">
-              {filteredItems.map((item) => (
-                <GridListRow
-                  key={item.id}
-                  id={item.id}
-                  name={item.name}
-                  description={item.description || 'No description available.'}
-                  columns={getItemColumns(item, itemType)}
-                  selectable
-                  isSelected={selectedIds.has(item.id)}
-                  onSelect={() => toggleSelection(item.id)}
-                  compact
-                />
-              ))}
+              {filteredItems.map((item) => {
+                const isSelected = selectedIds.has(item.id);
+                const showQuantity = itemType === 'equipment' && isSelected;
+                
+                return (
+                  <div key={item.id} className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <GridListRow
+                        id={item.id}
+                        name={item.name}
+                        description={item.description || 'No description available.'}
+                        columns={getItemColumns(item, itemType)}
+                        selectable
+                        isSelected={isSelected}
+                        onSelect={() => toggleSelection(item.id)}
+                        compact
+                      />
+                    </div>
+                    {/* Quantity selector for selected equipment items */}
+                    {showQuantity && (
+                      <div className="flex-shrink-0 px-2">
+                        <QuantitySelector
+                          quantity={quantities[item.id] || 1}
+                          onChange={(qty) => updateQuantity(item.id, qty)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

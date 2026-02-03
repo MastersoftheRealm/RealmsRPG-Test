@@ -2,6 +2,19 @@
  * Button Component
  * ==================
  * Reusable button with variants using class-variance-authority
+ * 
+ * RECOMMENDED VARIANTS (use these):
+ * - primary: Main CTA, important actions
+ * - secondary: Alternative actions, cancel buttons
+ * - danger: Destructive actions (delete, remove)
+ * - ghost: Minimal emphasis, inline actions
+ * - link: Text link styling
+ * 
+ * DEPRECATED VARIANTS (avoid, will be removed):
+ * - gradient: Use 'primary' instead
+ * - success: Use 'primary' instead (context provides meaning)
+ * - outline: Use 'secondary' instead
+ * - utility: Use 'secondary' or 'ghost' instead
  */
 
 import * as React from 'react';
@@ -15,14 +28,21 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // RECOMMENDED VARIANTS
         primary: 'bg-gradient-to-b from-primary-500 to-primary-700 text-primary-foreground hover:from-primary-400 hover:to-primary-600 hover:shadow-lg focus-visible:ring-primary-accent',
-        gradient: 'bg-gradient-to-r from-primary-light to-primary text-primary-foreground hover:from-primary-500 hover:to-primary-600 focus-visible:ring-primary-accent shadow-md',
         secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-border',
         danger: 'bg-gradient-to-b from-danger-600 to-danger-dark text-white hover:shadow-lg focus-visible:ring-danger',
-        success: 'bg-gradient-to-b from-success-500 to-success-dark text-white hover:shadow-lg focus-visible:ring-success',
         ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-border',
         link: 'text-primary-600 underline-offset-4 hover:underline focus-visible:ring-primary-accent',
+        
+        // DEPRECATED VARIANTS (kept for backwards compatibility, prefer alternatives above)
+        /** @deprecated Use 'primary' instead */
+        gradient: 'bg-gradient-to-r from-primary-light to-primary text-primary-foreground hover:from-primary-500 hover:to-primary-600 focus-visible:ring-primary-accent shadow-md',
+        /** @deprecated Use 'primary' instead - context provides meaning */
+        success: 'bg-gradient-to-b from-success-500 to-success-dark text-white hover:shadow-lg focus-visible:ring-success',
+        /** @deprecated Use 'secondary' instead */
         outline: 'border-2 border-primary-700 text-primary-700 bg-transparent hover:bg-primary-50 focus-visible:ring-primary-accent',
+        /** @deprecated Use 'secondary' or 'ghost' instead */
         utility: 'bg-utility-300 text-white hover:bg-utility-400 focus-visible:ring-utility-300',
       },
       size: {

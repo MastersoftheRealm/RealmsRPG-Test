@@ -15,7 +15,7 @@ import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
-import { PartChipList, type PartData, EditSectionToggle, RollButton } from '@/components/shared';
+import { PartChipList, type PartData, EditSectionToggle, RollButton, SectionHeader } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
@@ -276,8 +276,8 @@ function PowerCard({ power, innateEnergy, currentEnergy, isEditMode, partsDb = [
     )}>
       {/* Header row with vanilla-style grid layout */}
       <div className="flex items-stretch">
-        {/* Innate toggle checkbox in edit mode */}
-        {isEditMode && onToggleInnate && (
+        {/* Innate toggle checkbox - always visible if handler provided */}
+        {onToggleInnate && (
           <button
             onClick={() => onToggleInnate(!isInnate)}
             className={cn(
@@ -583,8 +583,8 @@ function ItemCard({ item, type, isEditMode, propertiesDb = [], onRemove, onToggl
           </div>
         </button>
         
-        {/* Attack/Damage roll buttons for weapons */}
-        {type === 'weapon' && !isEditMode && (
+        {/* Attack/Damage roll buttons for weapons - always visible */}
+        {type === 'weapon' && (
           <div className="flex items-center gap-1 pr-2">
             {onRollAttack && (
               <RollButton
@@ -977,19 +977,19 @@ export function LibrarySection({
           <div className="space-y-6">
             {/* Weapons Section */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Weapons</h4>
-                {isEditMode && onAddWeapon && (
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onAddWeapon}
-                    label="Add weapon"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </IconButton>
-                )}
-              </div>
+              <SectionHeader 
+                title="Weapons" 
+                count={weapons.length}
+                onAdd={onAddWeapon}
+                addLabel="Add weapon"
+              />
+              {/* Column headers for weapon actions */}
+              {weapons.length > 0 && (
+                <div className="flex items-center justify-end gap-2 text-xs text-text-muted mb-1 pr-2">
+                  <span className="w-16 text-center">Attack</span>
+                  <span className="w-16 text-center">Damage</span>
+                </div>
+              )}
               {/* Weapons list */}
               {weapons.length > 0 ? (
                 weapons.map((item, i) => {
@@ -1015,19 +1015,12 @@ export function LibrarySection({
             
             {/* Armor Section */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Armor</h4>
-                {isEditMode && onAddArmor && (
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onAddArmor}
-                    label="Add armor"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </IconButton>
-                )}
-              </div>
+              <SectionHeader 
+                title="Armor" 
+                count={armor.length}
+                onAdd={onAddArmor}
+                addLabel="Add armor"
+              />
               {armor.length > 0 ? (
                 armor.map((item, i) => (
                   <ItemCard 
@@ -1047,19 +1040,12 @@ export function LibrarySection({
             
             {/* Equipment Section */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold text-text-muted uppercase tracking-wide">Equipment</h4>
-                {isEditMode && onAddEquipment && (
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onAddEquipment}
-                    label="Add equipment"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </IconButton>
-                )}
-              </div>
+              <SectionHeader 
+                title="Equipment" 
+                count={equipment.length}
+                onAdd={onAddEquipment}
+                addLabel="Add equipment"
+              />
               {equipment.length > 0 ? (
                 equipment.map((item, i) => (
                   <ItemCard 

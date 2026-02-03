@@ -3,6 +3,19 @@
  * ===============
  * Small tag/badge for displaying labels
  * Uses design system colors from globals.css
+ * 
+ * RECOMMENDED VARIANTS:
+ * - default: Neutral chips, general purpose
+ * - primary: Emphasized/highlighted chips
+ * - Category-based (action, activation, area, duration, target, special, restriction):
+ *   Semantic colors for power/technique parts - these are domain-specific and necessary
+ * - Status (success, warning, danger): For validation/feedback states
+ * 
+ * DEPRECATED VARIANTS (avoid, will be removed):
+ * - secondary, outline, accent: Use 'default' instead
+ * - weapon, armor, shield: Use 'default' - context provides meaning
+ * - feat, proficiency, weakness, power, technique: Use 'default' - let context provide meaning
+ * - info: Use 'default' or 'primary' instead
  */
 
 import * as React from 'react';
@@ -15,13 +28,11 @@ const chipVariants = cva(
   {
     variants: {
       variant: {
+        // RECOMMENDED VARIANTS
         default: 'bg-surface-alt text-text-secondary border-border-light',
         primary: 'bg-primary-700 text-primary-foreground border-primary-600',
-        secondary: 'bg-surface text-text-secondary border-border-light',
-        outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
-        accent: 'bg-accent-chip text-primary-700 border-accent-200',
         
-        // Category-based colors using design system tokens
+        // Category-based colors for power/technique parts (KEEP - domain-specific)
         action: 'bg-category-action text-category-action-text border-category-action-border',
         activation: 'bg-category-activation text-category-activation-text border-category-activation-border',
         area: 'bg-category-area text-category-area-text border-category-area-border',
@@ -30,23 +41,40 @@ const chipVariants = cva(
         special: 'bg-category-special text-category-special-text border-category-special-border',
         restriction: 'bg-category-restriction text-category-restriction-text border-category-restriction-border',
         
-        // Equipment types
-        weapon: 'bg-warning-100 text-warning-800 border-warning-300',
-        armor: 'bg-info-100 text-info-800 border-info-300',
-        shield: 'bg-success-100 text-success-700 border-success-300',
-        
-        // Character content types
-        feat: 'bg-pink-100 text-pink-800 border-pink-300',
-        proficiency: 'bg-info-50 text-primary-600 border-info-200',
-        weakness: 'bg-danger-100 text-danger-700 border-danger-300',
-        power: 'bg-purple-100 text-purple-800 border-purple-300',
-        technique: 'bg-orange-100 text-orange-800 border-orange-300',
-        
-        // Status colors
+        // Status colors (KEEP - semantic feedback)
         success: 'bg-success-light text-success-700 border-success-300',
         danger: 'bg-danger-light text-danger-700 border-danger-300',
         warning: 'bg-warning-light text-warning-700 border-warning-300',
+        
+        // DEPRECATED VARIANTS (kept for backwards compatibility)
+        /** @deprecated Use 'default' instead */
+        secondary: 'bg-surface text-text-secondary border-border-light',
+        /** @deprecated Use 'default' instead */
+        outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
+        /** @deprecated Use 'primary' instead */
+        accent: 'bg-accent-chip text-primary-700 border-accent-200',
+        /** @deprecated Use 'default' instead */
         info: 'bg-info-light text-info-700 border-info-300',
+        
+        // Equipment types - DEPRECATED (context provides meaning)
+        /** @deprecated Use 'default' - context provides meaning */
+        weapon: 'bg-warning-100 text-warning-800 border-warning-300',
+        /** @deprecated Use 'default' - context provides meaning */
+        armor: 'bg-info-100 text-info-800 border-info-300',
+        /** @deprecated Use 'default' - context provides meaning */
+        shield: 'bg-success-100 text-success-700 border-success-300',
+        
+        // Character content types - DEPRECATED (context provides meaning)
+        /** @deprecated Use 'default' - context provides meaning */
+        feat: 'bg-pink-100 text-pink-800 border-pink-300',
+        /** @deprecated Use 'default' - context provides meaning */
+        proficiency: 'bg-info-50 text-primary-600 border-info-200',
+        /** @deprecated Use 'default' - context provides meaning */
+        weakness: 'bg-danger-100 text-danger-700 border-danger-300',
+        /** @deprecated Use 'default' - context provides meaning */
+        power: 'bg-purple-100 text-purple-800 border-purple-300',
+        /** @deprecated Use 'default' - context provides meaning */
+        technique: 'bg-orange-100 text-orange-800 border-orange-300',
       },
       size: {
         sm: 'px-2 py-0.5 text-xs',

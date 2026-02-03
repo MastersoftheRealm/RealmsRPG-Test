@@ -41,6 +41,8 @@ interface SheetHeaderProps {
   onEnergyPointsChange?: (value: number) => void;
   onPortraitChange?: (file: File) => void;
   isUploadingPortrait?: boolean;
+  // Character name editing
+  onNameChange?: (name: string) => void;
   // Speed/Evasion base editing
   speedBase?: number;
   evasionBase?: number;
@@ -389,6 +391,7 @@ export function SheetHeader({
   onEnergyPointsChange,
   onPortraitChange,
   isUploadingPortrait = false,
+  onNameChange,
   speedBase = 6,
   evasionBase = 10,
   onSpeedBaseChange,
@@ -398,6 +401,10 @@ export function SheetHeader({
 }: SheetHeaderProps) {
   const currentHealth = character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
+  
+  // State for editing character name
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(character.name || '');
   
   // Check if character can level up (XP >= level * 4)
   const xp = character.experience ?? 0;
@@ -427,15 +434,23 @@ export function SheetHeader({
   // Get health color for styling
   const healthColor = getHealthColor(currentHealth, calculatedStats.maxHealth);
 
+  // Handle name editing
+  const handleNameSubmit = () => {
+    if (nameInput.trim() && nameInput !== character.name && onNameChange) {
+      onNameChange(nameInput.trim());
+    }
+    setIsEditingName(false);
+  };
+
   return (
     <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left: Portrait and Identity */}
-        <div className="flex gap-4 flex-shrink-0">
-          {/* Portrait */}
+        <div className="flex gap-4 flex-shrink-0 items-center">
+          {/* Portrait - Larger and vertically centered */}
           <div 
             className={cn(
-              "relative w-24 h-24 md:w-28 md:h-28 rounded-lg overflow-hidden bg-surface flex-shrink-0 border-2",
+              "relative w-28 h-28 md:w-36 md:h-36 rounded-xl overflow-hidden bg-surface flex-shrink-0 border-3 shadow-lg",
               healthColor === 'green' && 'border-green-400',
               healthColor === 'orange' && 'border-orange-400',
               healthColor === 'red' && 'border-red-400',
@@ -452,12 +467,12 @@ export function SheetHeader({
                 "object-cover transition-opacity",
                 isUploadingPortrait && "opacity-50"
               )}
-              sizes="(max-width: 768px) 96px, 112px"
+              sizes="(max-width: 768px) 112px, 144px"
             />
             {/* Upload overlay in edit mode */}
             {isEditMode && onPortraitChange && (
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-2xl">
+                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity text-3xl">
                   📷
                 </span>
               </div>
@@ -472,9 +487,39 @@ export function SheetHeader({
           
           {/* Character Identity - Clean unified format */}
           <div className="flex flex-col justify-center min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate">
-              {character.name}
-            </h1>
+            {/* Editable Name */}
+            {isEditMode && onNameChange ? (
+              isEditingName ? (
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onBlur={handleNameSubmit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleNameSubmit();
+                    if (e.key === 'Escape') {
+                      setNameInput(character.name || '');
+                      setIsEditingName(false);
+                    }
+                  }}
+                  className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  autoFocus
+                />
+              ) : (
+                <h1
+                  className="text-2xl md:text-3xl font-bold text-text-primary truncate cursor-pointer hover:text-primary-600 transition-colors group"
+                  onClick={() => setIsEditingName(true)}
+                  title="Click to edit name"
+                >
+                  {character.name}
+                  <span className="ml-2 text-lg opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
+                </h1>
+              )
+            ) : (
+              <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate">
+                {character.name}
+              </h1>
+            )}
             
             {/* Level X Species */}
             <p className="text-base text-text-primary">

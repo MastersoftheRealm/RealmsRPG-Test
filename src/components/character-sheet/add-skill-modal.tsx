@@ -5,7 +5,7 @@
  * Features:
  * - Matches Codex skills page design
  * - Ability filter (dropdown)
- * - Expandable skill rows with descriptions
+ * - Uses GridListRow for consistent UI (Phase 3: Modal Unification)
  * - Fully rounded edges
  * - Header with title and skill count
  */
@@ -14,8 +14,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { X, ChevronDown, ChevronRight, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button } from '@/components/ui';
+import { GridListRow } from '@/components/shared';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 
 interface AddSkillModalProps {
@@ -34,83 +35,13 @@ const ABILITY_OPTIONS = [
   { value: 'charisma', label: 'Charisma' },
 ];
 
-function ExpandableSkillRow({
-  skill,
-  isSelected,
-  onToggle,
-}: {
-  skill: RTDBSkill;
-  isSelected: boolean;
-  onToggle: () => void;
-}) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Format abilities for display
-  const abilities = skill.ability?.split(',').map(a => a.trim()).filter(Boolean) || [];
-  
-  return (
-    <div className={cn(
-      'border rounded-lg transition-colors hover:border-primary-200',
-      isSelected ? 'border-primary-400 bg-primary-50' : 'border-border-light'
-    )}>
-      {/* Header Row - Entire row is clickable to expand */}
-      <div 
-        className="flex items-center gap-3 p-3 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {/* Expand Button */}
-        <span
-          className="text-text-muted transition-transform"
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
-        >
-          {isExpanded ? (
-            <ChevronDown className="w-4 h-4" />
-          ) : (
-            <ChevronRight className="w-4 h-4" />
-          )}
-        </span>
-        
-        {/* Skill Name */}
-        <span className="font-medium text-text-primary flex-1">{skill.name}</span>
-        
-        {/* Abilities */}
-        <div className="flex gap-1">
-          {abilities.map(ability => (
-            <span 
-              key={ability}
-              className="px-2 py-0.5 text-xs font-medium rounded bg-surface-alt text-text-secondary capitalize"
-            >
-              {ability.slice(0, 3).toUpperCase()}
-            </span>
-          ))}
-        </div>
-        
-        {/* Selection Toggle */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          className={cn(
-            'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
-            isSelected 
-              ? 'bg-primary-600 border-primary-600 text-white' 
-              : 'border-border-medium hover:border-primary-400'
-          )}
-          aria-label={isSelected ? 'Deselect skill' : 'Select skill'}
-        >
-          {isSelected && <Check className="w-4 h-4" />}
-        </button>
-      </div>
-      
-      {/* Expanded Description */}
-      {isExpanded && skill.description && (
-        <div className="px-3 pb-3 pt-0">
-          <div className="pl-7 text-sm text-text-secondary bg-surface-alt rounded-lg p-3">
-            {skill.description}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+// Helper to format ability badges for GridListRow
+function formatAbilityBadges(abilityString?: string): Array<{ label: string; color: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }> {
+  if (!abilityString) return [];
+  return abilityString.split(',').map(a => a.trim()).filter(Boolean).map(ability => ({
+    label: ability.slice(0, 3).toUpperCase(),
+    color: 'gray' as const
+  }));
 }
 
 export function AddSkillModal({
@@ -269,11 +200,16 @@ export function AddSkillModal({
           {!loading && !error && filteredSkills.length > 0 && (
             <div className="space-y-2 mt-2">
               {filteredSkills.map(skill => (
-                <ExpandableSkillRow
+                <GridListRow
                   key={skill.id}
-                  skill={skill}
+                  id={skill.id}
+                  name={skill.name}
+                  description={skill.description}
+                  badges={formatAbilityBadges(skill.ability)}
+                  selectable
                   isSelected={selectedSkills.some(s => s.id === skill.id)}
-                  onToggle={() => toggleSkill(skill)}
+                  onSelect={() => toggleSkill(skill)}
+                  compact
                 />
               ))}
             </div>

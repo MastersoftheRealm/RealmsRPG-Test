@@ -10,6 +10,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
@@ -212,6 +213,7 @@ const POWER_COLUMNS = [
 ];
 
 function PowersTab({ onDelete }: TabProps) {
+  const router = useRouter();
   const { data: powers, isLoading, error } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
   const [search, setSearch] = useState('');
@@ -379,9 +381,9 @@ function PowersTab({ onDelete }: TabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={power.tp}
               costLabel="TP"
-              onEdit={() => { window.location.href = `/power-creator?edit=${power.id}`; }}
+              onEdit={() => router.push(`/power-creator?edit=${power.id}`)}
               onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-              onDuplicate={() => { window.location.href = `/power-creator?copy=${power.id}`; }}
+              onDuplicate={() => router.push(`/power-creator?copy=${power.id}`)}
             />
           ))
         )}
@@ -405,6 +407,7 @@ const TECHNIQUE_COLUMNS = [
 ];
 
 function TechniquesTab({ onDelete }: TabProps) {
+  const router = useRouter();
   const { data: techniques, isLoading, error } = useUserTechniques();
   const { data: partsDb = [] } = useTechniqueParts();
   const [search, setSearch] = useState('');
@@ -562,9 +565,9 @@ function TechniquesTab({ onDelete }: TabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={tech.tp}
               costLabel="TP"
-              onEdit={() => { window.location.href = `/technique-creator?edit=${tech.id}`; }}
+              onEdit={() => router.push(`/technique-creator?edit=${tech.id}`)}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() => { window.location.href = `/technique-creator?copy=${tech.id}`; }}
+              onDuplicate={() => router.push(`/technique-creator?copy=${tech.id}`)}
             />
           ))
         )}
@@ -620,6 +623,7 @@ function formatDamageValue(damage: unknown): string {
 }
 
 function ItemsTab({ onDelete }: TabProps) {
+  const router = useRouter();
   const { data: items, isLoading, error } = useUserItems();
   const { data: propertiesDb = [] } = useItemProperties();
   const [search, setSearch] = useState('');
@@ -799,9 +803,9 @@ function ItemsTab({ onDelete }: TabProps) {
               chipsLabel="Properties & Proficiencies"
               totalCost={item.tp}
               costLabel="TP"
-              onEdit={() => { window.location.href = `/item-creator?edit=${item.id}`; }}
+              onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-              onDuplicate={() => { window.location.href = `/item-creator?copy=${item.id}`; }}
+              onDuplicate={() => router.push(`/item-creator?copy=${item.id}`)}
             />
           ))
         )}
@@ -815,6 +819,7 @@ function ItemsTab({ onDelete }: TabProps) {
 // =============================================================================
 
 function CreaturesTab({ onDelete }: TabProps) {
+  const router = useRouter();
   const { data: creatures, isLoading, error } = useUserCreatures();
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
@@ -928,9 +933,9 @@ function CreaturesTab({ onDelete }: TabProps) {
                 feats: creature.feats,
                 armaments: creature.armaments,
               }}
-              onEdit={() => { window.location.href = `/creature-creator?edit=${creature.docId}`; }}
+              onEdit={() => router.push(`/creature-creator?edit=${creature.docId}`)}
               onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
-              onDuplicate={() => { window.location.href = `/creature-creator?copy=${creature.docId}`; }}
+              onDuplicate={() => router.push(`/creature-creator?copy=${creature.docId}`)}
             />
           ))}
         </div>

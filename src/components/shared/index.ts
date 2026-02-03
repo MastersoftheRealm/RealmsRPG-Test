@@ -39,6 +39,11 @@ export { ItemSelectionModal } from './item-selection-modal';
 export { GridListRow } from './grid-list-row';
 export type { ColumnValue, ChipData, GridListRowProps } from './grid-list-row';
 
+// SectionHeader - UNIFIED section header with optional add button
+// Use for ALL section headers: Powers, Techniques, Weapons, Armor, Equipment, Feats, Skills
+export { SectionHeader } from './section-header';
+export type { SectionHeaderProps } from './section-header';
+
 // Part/Property chip components (reusable across Library, Character Sheet, Codex)
 export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';
 export type { PartData } from './part-chip';

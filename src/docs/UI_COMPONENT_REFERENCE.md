@@ -33,9 +33,10 @@ These primitives use `class-variance-authority` (CVA) for variant definitions an
 
 ## Chips & badges
 
-- `Chip` — small inline badge with many `variant` tokens (default, primary, outline, accent, equipment, content types, status colors) and `size` (`sm|md|lg`). Supports `interactive` variant and optional `onRemove` callback that renders a remove button. File: [src/components/ui/chip.tsx](src/components/ui/chip.tsx#L1).
+- `Chip` — small inline badge with `variant` tokens and `size` (`sm|md|lg`). Supports `interactive` variant and optional `onRemove` callback. File: [src/components/ui/chip.tsx](src/components/ui/chip.tsx#L1).
+  - **Recommended variants:** `default`, `primary`, category-based (action, activation, area, duration, target, special, restriction), status (success, warning, danger)
+  - **Deprecated variants:** `secondary`, `outline`, `accent`, `info`, equipment types (weapon, armor, shield), content types (feat, proficiency, weakness, power, technique) — use `default` instead, let context provide meaning
   - Key props: `variant`, `size`, `interactive`, `onRemove`.
-  - Styling: CVA `chipVariants` with many named variants (category tokens are used; see file for full list).
 
 - `ExpandableChip` — interactive chip that expands into description content, keyboard-accessible (Enter / Space), category-based styling, optional `cost`, `sublabel`. File: [src/components/ui/expandable-chip.tsx](src/components/ui/expandable-chip.tsx#L1).
   - Key props: `label`, `description?`, `category?`, `sublabel?`, `cost?`, `defaultExpanded?`, `expandable?`.
@@ -94,6 +95,35 @@ Shared list helpers live in `src/components/shared/list-components.tsx` and are 
 
 Usage notes: these building blocks are composable. `FilterSection` uses the `Collapsible` pattern but is implemented specifically for list filters.
 
+### SectionHeader (NEW - Phase 1 Unification)
+
+Standardized section header pattern with optional add button and count display. File: [src/components/shared/section-header.tsx](src/components/shared/section-header.tsx#L1).
+
+- Props: `title`, `count?`, `onAdd?`, `addLabel?`, `rightContent?`, `size?` (`sm|md|lg`), `bordered?`
+- Usage: All section headers in character sheet (Powers, Techniques, Weapons, Armor, Equipment, Feats)
+- Pattern: When `onAdd` is provided, displays a `+` IconButton — always visible (not edit-mode dependent)
+
+```tsx
+<SectionHeader 
+  title="Weapons" 
+  count={weapons.length}
+  onAdd={onAddWeapon}
+  addLabel="Add weapon"
+/>
+```
+
+### GridListRow (Extended - Phase 1 Unification)
+
+The unified expandable list row now supports character sheet use cases with new props:
+
+- `leftSlot` — Content rendered before the name (e.g., equip toggle, innate toggle)
+- `rightSlot` — Content rendered after columns (e.g., roll buttons, use button)
+- `equipped` — Boolean for green equipped state styling
+- `innate` — Boolean for purple innate state styling
+- `uses` — `{ current: number; max: number }` for feats with limited uses
+
+These slots allow `GridListRow` to replace custom character sheet components (PowerCard, TechniqueCard, ItemCard) while maintaining flexibility.
+
 ## Feedback / loading
 
 - `Spinner`, `LoadingOverlay`, `LoadingState` — unified loading visuals with size and variant options. See [src/components/ui/spinner.tsx](src/components/ui/spinner.tsx#L1).
@@ -102,7 +132,10 @@ Usage notes: these building blocks are composable. `FilterSection` uses the `Col
 
 ## Buttons & icon buttons
 
-- `Button` (primary/shared) uses CVA for variants (primary/outline/ghost/etc) and sizes.
+- `Button` (primary/shared) uses CVA for variants and sizes. See [src/components/ui/button.tsx](src/components/ui/button.tsx#L1).
+  - **Recommended variants:** `primary`, `secondary`, `danger`, `ghost`, `link`
+  - **Deprecated variants:** `gradient` (use primary), `success` (use primary), `outline` (use secondary), `utility` (use secondary/ghost)
+  
 - `IconButton` — used for modal close, small icon actions; requires `label` prop. See [src/components/ui/icon-button.tsx](src/components/ui/icon-button.tsx#L1).
 
 ## Shared utilities & styles
