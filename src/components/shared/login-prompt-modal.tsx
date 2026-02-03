@@ -33,8 +33,6 @@ export function LoginPromptModal({
 }: LoginPromptModalProps) {
   const router = useRouter();
 
-  if (!isOpen) return null;
-
   const handleLogin = () => {
     // Store the return path in sessionStorage so we can redirect back after login
     sessionStorage.setItem('loginRedirect', returnPath);
