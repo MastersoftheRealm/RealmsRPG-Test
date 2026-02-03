@@ -88,66 +88,44 @@ export function HealthEnergyAllocator({
         
         <div className="flex items-center gap-4">
           {/* Health Points - Green colors, show total prominently */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-bold text-green-600">{maxHp} HP</span>
-              <span className="text-xs text-text-muted">+{hpBonus} pts</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ValueStepper
-                value={hpBonus}
-                onChange={onHpChange}
-                min={0}
-                max={maxHpBonus}
-                size="sm"
-                variant="compact"
-                colorVariant="health"
-                enableHoldRepeat={enableHoldRepeat}
-                disabled={disabled}
-                hideValue
-                decrementTitle="Remove HP points"
-                incrementTitle="Add HP points"
-              />
-              <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden mx-1">
-                <div
-                  className="h-full bg-green-500 transition-all duration-200"
-                  style={{ width: `${(hpBonus / poolTotal) * 100}%` }}
-                />
-              </div>
-            </div>
+          <div className="flex-1 flex items-center gap-2">
+            <span className="text-lg font-bold text-green-600 min-w-[60px]">{maxHp} HP</span>
+            <ValueStepper
+              value={hpBonus}
+              onChange={onHpChange}
+              min={0}
+              max={maxHpBonus}
+              size="sm"
+              variant="compact"
+              colorVariant="health"
+              enableHoldRepeat={enableHoldRepeat}
+              disabled={disabled}
+              decrementTitle="Remove HP points"
+              incrementTitle="Add HP points"
+            />
+            <span className="text-xs text-text-muted whitespace-nowrap">pts</span>
           </div>
           
           {/* Divider */}
           <div className="w-px h-10 bg-border-light" />
           
           {/* Energy Points - Blue colors, show total prominently */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-bold text-blue-600">{maxEnergy} EN</span>
-              <span className="text-xs text-text-muted">+{energyBonus} pts</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ValueStepper
-                value={energyBonus}
-                onChange={onEnergyChange}
-                min={0}
-                max={maxEnergyBonus}
-                size="sm"
-                variant="compact"
-                colorVariant="energy"
-                enableHoldRepeat={enableHoldRepeat}
-                disabled={disabled}
-                hideValue
-                decrementTitle="Remove Energy points"
-                incrementTitle="Add Energy points"
-              />
-              <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden mx-1">
-                <div
-                  className="h-full bg-blue-500 transition-all duration-200"
-                  style={{ width: `${(energyBonus / poolTotal) * 100}%` }}
-                />
-              </div>
-            </div>
+          <div className="flex-1 flex items-center gap-2">
+            <span className="text-lg font-bold text-blue-600 min-w-[60px]">{maxEnergy} EN</span>
+            <ValueStepper
+              value={energyBonus}
+              onChange={onEnergyChange}
+              min={0}
+              max={maxEnergyBonus}
+              size="sm"
+              variant="compact"
+              colorVariant="energy"
+              enableHoldRepeat={enableHoldRepeat}
+              disabled={disabled}
+              decrementTitle="Remove Energy points"
+              incrementTitle="Add Energy points"
+            />
+            <span className="text-xs text-text-muted whitespace-nowrap">pts</span>
           </div>
         </div>
         
@@ -187,61 +165,39 @@ export function HealthEnergyAllocator({
 
       <div className="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2">
         {/* HP Allocator - Show total prominently, points secondary */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-lg font-bold text-green-600">{maxHp} HP</span>
-            <span className="text-sm text-text-muted">+{hpBonus} pts</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ValueStepper
-              value={hpBonus}
-              onChange={onHpChange}
-              min={0}
-              max={maxHpBonus}
-              size="lg"
-              colorVariant="health"
-              enableHoldRepeat={enableHoldRepeat}
-              disabled={disabled}
-              hideValue
-              decrementTitle="Remove HP points"
-              incrementTitle="Add HP points"
-            />
-            <div className="flex-1 h-3 bg-surface rounded-full overflow-hidden">
-              <div
-                className="h-full bg-green-500 transition-all duration-200"
-                style={{ width: `${poolTotal > 0 ? (hpBonus / poolTotal) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold text-green-600 min-w-[70px]">{maxHp} HP</span>
+          <ValueStepper
+            value={hpBonus}
+            onChange={onHpChange}
+            min={0}
+            max={maxHpBonus}
+            size="lg"
+            colorVariant="health"
+            enableHoldRepeat={enableHoldRepeat}
+            disabled={disabled}
+            decrementTitle="Remove HP points"
+            incrementTitle="Add HP points"
+          />
+          <span className="text-sm text-text-muted whitespace-nowrap">pts</span>
         </div>
 
         {/* Energy Allocator - Show total prominently, points secondary */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-lg font-bold text-blue-600">{maxEnergy} EN</span>
-            <span className="text-sm text-text-muted">+{energyBonus} pts</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ValueStepper
-              value={energyBonus}
-              onChange={onEnergyChange}
-              min={0}
-              max={maxEnergyBonus}
-              size="lg"
-              colorVariant="energy"
-              enableHoldRepeat={enableHoldRepeat}
-              disabled={disabled}
-              hideValue
-              decrementTitle="Remove Energy points"
-              incrementTitle="Add Energy points"
-            />
-            <div className="flex-1 h-3 bg-surface rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-500 transition-all duration-200"
-                style={{ width: `${poolTotal > 0 ? (energyBonus / poolTotal) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold text-blue-600 min-w-[70px]">{maxEnergy} EN</span>
+          <ValueStepper
+            value={energyBonus}
+            onChange={onEnergyChange}
+            min={0}
+            max={maxEnergyBonus}
+            size="lg"
+            colorVariant="energy"
+            enableHoldRepeat={enableHoldRepeat}
+            disabled={disabled}
+            decrementTitle="Remove Energy points"
+            incrementTitle="Add Energy points"
+          />
+          <span className="text-sm text-text-muted whitespace-nowrap">pts</span>
         </div>
       </div>
     </div>

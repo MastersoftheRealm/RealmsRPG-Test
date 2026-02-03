@@ -235,8 +235,8 @@ export function AbilityScoreEditor({
                   )}
                 </div>
 
-                {/* Show cost indicator for high values */}
-                {isEditMode && useHighAbilityCost && value >= 3 && (
+                {/* Show cost indicator for high values only if more can be added */}
+                {isEditMode && useHighAbilityCost && value >= 3 && canInc && (
                   <p className="text-[10px] text-amber-600 font-medium text-center mt-1">
                     Next: {increaseCost + 1}pt
                   </p>

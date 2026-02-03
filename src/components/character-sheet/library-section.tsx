@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
@@ -482,7 +482,7 @@ export function LibrarySection({
                     const isInnate = power.innate === true;
                     const energyCost = power.cost ?? 0;
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                    const partChips = useMemo(() => partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const })), [power.parts, powerPartsDb]);
+                    const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
                     
                     const columns: ColumnValue[] = [
                       { key: 'action', value: power.actionType || '-' },
@@ -567,7 +567,7 @@ export function LibrarySection({
                     const isInnate = power.innate === true;
                     const energyCost = power.cost ?? 0;
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                    const partChips = useMemo(() => partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const })), [power.parts, powerPartsDb]);
+                    const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
                     
                     const columns: ColumnValue[] = [
                       { key: 'action', value: power.actionType || '-' },
@@ -674,7 +674,7 @@ export function LibrarySection({
               techniques.map((tech, i) => {
                 const energyCost = tech.cost ?? 0;
                 const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                const partChips = useMemo(() => partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const })), [tech.parts, techniquePartsDb]);
+                const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
                 
                 const columns: ColumnValue[] = [
                   { key: 'action', value: tech.actionType || '-' },
@@ -755,7 +755,7 @@ export function LibrarySection({
               {weapons.length > 0 ? (
                 weapons.map((item, i) => {
                   const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
-                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const })), [item.properties, itemPropertiesDb]);
+                  const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                   const columns: ColumnValue[] = [
                     { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium' },
                   ];
@@ -821,7 +821,7 @@ export function LibrarySection({
               />
               {armor.length > 0 ? (
                 armor.map((item, i) => {
-                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const })), [item.properties, itemPropertiesDb]);
+                  const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                   const columns: ColumnValue[] = [
                     { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium' },
                   ];
@@ -866,7 +866,7 @@ export function LibrarySection({
               />
               {equipment.length > 0 ? (
                 equipment.map((item, i) => {
-                  const propertyChips = useMemo(() => propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const })), [item.properties, itemPropertiesDb]);
+                  const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                   
                   return (
                     <GridListRow

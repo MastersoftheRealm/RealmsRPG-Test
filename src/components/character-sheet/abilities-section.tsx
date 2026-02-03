@@ -297,8 +297,8 @@ export function AbilitiesSection({
                 />
               )}
               
-              {/* Cost indicator in edit mode */}
-              {showEditControls && value >= 3 && (
+              {/* Cost indicator in edit mode - only show if can increment */}
+              {showEditControls && value >= 3 && canIncrease && (
                 <span className="text-[10px] text-amber-600 font-medium mt-1">
                   Next: {cost + (value >= 3 ? 1 : 0)}pt
                 </span>
