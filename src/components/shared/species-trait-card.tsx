@@ -8,9 +8,10 @@
  * Supports limited uses tracking with +/- controls.
  */
 
-import { Heart, Star, Sparkles, AlertTriangle, Check } from 'lucide-react';
+import { Heart, Star, Sparkles, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { DecrementButton, IncrementButton } from './value-stepper';
+import { SelectionToggle } from './selection-toggle';
 
 // =============================================================================
 // Types
@@ -187,18 +188,15 @@ export function SpeciesTraitCard({
       aria-disabled={disabled}
     >
       <div className="flex items-start gap-3">
-        {/* Selection checkbox (for selectable traits) */}
+        {/* Selection toggle (for selectable traits) */}
         {selectable && (
-          <div 
-            className={cn(
-              'mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
-              selected 
-                ? 'bg-primary-600 border-primary-600' 
-                : 'border-border-light bg-surface',
-              disabled && 'opacity-50'
-            )}
-          >
-            {selected && <Check className="w-3 h-3 text-white" />}
+          <div className="mt-0.5 flex-shrink-0">
+            <SelectionToggle
+              isSelected={!!selected}
+              onToggle={onToggle || (() => {})}
+              disabled={disabled}
+              size="sm"
+            />
           </div>
         )}
         

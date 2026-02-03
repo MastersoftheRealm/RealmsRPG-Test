@@ -15,11 +15,11 @@ import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
-import { SearchInput, DecrementButton, IncrementButton, GridListRow, type ChipData } from '@/components/shared';
+import { SearchInput, GridListRow, type ChipData } from '@/components/shared';
 import { FilterSection, SelectFilter } from '@/components/codex';
 import { Spinner, Button } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
-import { ChevronDown, ChevronUp, AlertCircle, Swords, Check } from 'lucide-react';
+import { AlertCircle, Swords, Check, Minus, Plus } from 'lucide-react';
 import type { Item } from '@/types';
 
 // Unarmed Prowess constants
@@ -76,7 +76,6 @@ export function EquipmentStep() {
   
   const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   const isLoading = userItemsLoading || rtdbLoading;
   const error = rtdbError;
@@ -538,123 +537,103 @@ export function EquipmentStep() {
             {filteredEquipment.length} {activeTab}{filteredEquipment.length !== 1 ? 's' : ''} found
           </div>
 
-          {/* Equipment List - Codex-like style */}
-          <div className="border border-border-light rounded-lg mb-8 max-h-[400px] overflow-y-auto divide-y divide-border-light">
+          {/* Equipment List - Using GridListRow */}
+          <div className="space-y-2 mb-8 max-h-[400px] overflow-y-auto pr-1">
             {filteredEquipment.length === 0 ? (
-              <div className="text-center py-8 text-text-muted">
+              <div className="text-center py-8 text-text-muted border border-border-light rounded-lg">
                 {activeTab === 'weapon' || activeTab === 'armor' ? (
                   <div className="flex flex-col items-center gap-2">
-                <AlertCircle className="w-8 h-8 text-text-muted" />
-                <p>No {activeTab}s found in your library.</p>
-                <p className="text-sm">
-                  Create {activeTab}s using the{' '}
-                  <a href="/item-creator" className="text-primary-600 hover:underline">
-                    Item Creator
-                  </a>{' '}
-                  to add them here.
-                </p>
+                    <AlertCircle className="w-8 h-8 text-text-muted" />
+                    <p>No {activeTab}s found in your library.</p>
+                    <p className="text-sm">
+                      Create {activeTab}s using the{' '}
+                      <a href="/item-creator" className="text-primary-600 hover:underline">
+                        Item Creator
+                      </a>{' '}
+                      to add them here.
+                    </p>
+                  </div>
+                ) : (
+                  <p>No {activeTab}s found.</p>
+                )}
               </div>
             ) : (
-              <p>No {activeTab}s found.</p>
-            )}
-          </div>
-        ) : (
-          filteredEquipment.map(item => {
-            const cost = item.gold_cost || item.currency || 0;
-            const quantity = getItemQuantity(item.id);
-            const canAfford = cost <= remainingCurrency;
-            const isExpanded = expandedItem === item.id;
-            
-            return (
-              <div key={item.id} className="bg-surface">
-                {/* Item Row */}
-                <div className="flex items-center gap-3 px-4 py-3 hover:bg-surface-alt">
-                  {/* Quantity Controls */}
-                  <div className="flex items-center gap-1">
-                    <DecrementButton
-                      onClick={() => removeItem(item.id)}
+              filteredEquipment.map(item => {
+                const cost = item.gold_cost || item.currency || 0;
+                const quantity = getItemQuantity(item.id);
+                const canAfford = cost <= remainingCurrency;
+                
+                // Build badges for display
+                const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
+                if (item.damage) badges.push({ label: formatDamageDisplay(item.damage), color: 'red' });
+                if (item.armor_value) badges.push({ label: `+${item.armor_value} DR`, color: 'blue' });
+                if (item.rarity && item.rarity !== 'Common') badges.push({ label: item.rarity, color: 'amber' });
+                
+                // Build property chips
+                const chips: ChipData[] = item.properties.map(prop => ({
+                  name: prop,
+                  category: 'tag' as const,
+                }));
+                
+                // Quantity controls as left slot
+                const quantityControls = (
+                  <div className="flex items-center gap-1 px-2">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
                       disabled={quantity === 0}
-                      size="sm"
-                    />
+                      className={cn(
+                        'w-6 h-6 rounded-full flex items-center justify-center transition-colors',
+                        quantity > 0
+                          ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
+                          : 'bg-surface text-text-muted cursor-not-allowed'
+                      )}
+                      title="Remove one"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
                     <span className={cn(
-                      'w-8 text-center font-bold',
+                      'w-6 text-center font-bold text-sm',
                       quantity > 0 ? 'text-primary-600' : 'text-text-muted'
                     )}>
                       {quantity}
                     </span>
-                    <IncrementButton
-                      onClick={() => addItem(item)}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); addItem(item); }}
                       disabled={!canAfford}
-                      size="sm"
-                    />
-                  </div>
-                  
-                  {/* Item Info */}
-                  <button 
-                    onClick={() => setExpandedItem(isExpanded ? null : item.id)}
-                    className="flex-1 flex items-center justify-between text-left"
-                  >
-                    <div className="flex-1">
-                      <span className="font-medium text-text-primary">{item.name}</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        {item.damage && (
-                          <span className="px-2 py-0.5 text-xs bg-red-50 text-red-700 rounded">
-                            {formatDamageDisplay(item.damage)}
-                          </span>
-                        )}
-                        {item.armor_value && (
-                          <span className="px-2 py-0.5 text-xs bg-blue-50 text-blue-700 rounded">
-                            +{item.armor_value} Armor
-                          </span>
-                        )}
-                        {item.properties.slice(0, 2).map(prop => (
-                          <span key={prop} className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded">
-                            {prop}
-                          </span>
-                        ))}
-                        {item.properties.length > 2 && (
-                          <span className="text-xs text-text-muted">+{item.properties.length - 2}</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <span className={cn(
-                        'font-bold',
-                        canAfford ? 'text-amber-600' : 'text-red-500'
-                      )}>
-                        {cost}c
-                      </span>
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-text-muted" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-text-muted" />
+                      className={cn(
+                        'w-6 h-6 rounded-full flex items-center justify-center transition-colors',
+                        canAfford
+                          ? 'bg-primary-100 text-primary-600 hover:bg-primary-200'
+                          : 'bg-surface text-text-muted cursor-not-allowed'
                       )}
-                    </div>
-                  </button>
-                </div>
-                
-                {/* Expanded Details */}
-                {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 bg-surface-alt border-t border-border-light">
-                    {item.description && (
-                      <p className="text-text-secondary text-sm mb-2">{item.description}</p>
-                    )}
-                    {item.properties.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {item.properties.map(prop => (
-                          <span key={prop} className="px-2 py-1 text-xs bg-surface border border-border-light rounded">
-                            {prop}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                      title={canAfford ? 'Add one' : 'Cannot afford'}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
                   </div>
-                )}
-              </div>
-            );
-          })
-        )}
+                );
+                
+                return (
+                  <GridListRow
+                    key={item.id}
+                    id={item.id}
+                    name={item.name}
+                    description={item.description}
+                    leftSlot={quantityControls}
+                    columns={[
+                      { key: 'Cost', value: `${cost}c`, highlight: !canAfford, className: canAfford ? 'text-amber-600 font-bold' : 'text-red-500 font-bold' },
+                      { key: 'Source', value: item.source === 'library' ? 'Library' : 'Standard', hideOnMobile: true },
+                    ]}
+                    badges={badges}
+                    chips={chips}
+                    chipsLabel="Properties"
+                    compact
+                  />
+                );
+              })
+            )}
           </div>
         </>
       )}

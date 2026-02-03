@@ -15,9 +15,10 @@
 import { useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip, Button, Alert } from '@/components/ui';
+import { SelectionToggle } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useSpecies, useTraits, useRTDBSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait } from '@/hooks';
-import { Heart, AlertTriangle, Sparkles, Star, Check } from 'lucide-react';
+import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 
 interface ResolvedTrait extends Trait {
   found: boolean;
@@ -421,25 +422,21 @@ function TraitSection({
       border: 'border-border-light',
       header: 'bg-surface-alt',
       selected: 'border-primary-400 bg-primary-50',
-      check: 'bg-primary-600 border-primary-600',
     },
     ancestry: {
       border: 'border-amber-200',
       header: 'bg-amber-50',
       selected: 'border-amber-400 bg-amber-50',
-      check: 'bg-amber-600 border-amber-600',
     },
     characteristic: {
       border: 'border-blue-200',
       header: 'bg-blue-50',
       selected: 'border-blue-400 bg-blue-50',
-      check: 'bg-blue-600 border-blue-600',
     },
     flaw: {
       border: 'border-red-200',
       header: 'bg-red-50',
       selected: 'border-red-400 bg-red-50',
-      check: 'bg-red-600 border-red-600',
     },
   };
 
@@ -462,22 +459,20 @@ function TraitSection({
           return (
             <div
               key={trait.id}
-              onClick={() => selectable && onToggle(trait.id)}
               className={cn(
                 'px-4 py-3 transition-colors',
-                selectable && 'cursor-pointer hover:bg-surface-alt',
+                selectable && 'hover:bg-surface-alt',
                 isSelected && styles.selected
               )}
             >
               <div className="flex items-start gap-3">
                 {selectable && (
-                  <div className={cn(
-                    'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors',
-                    isSelected
-                      ? `${styles.check} text-white`
-                      : 'border-border-light bg-surface'
-                  )}>
-                    {isSelected && <Check className="w-3 h-3" />}
+                  <div className="flex-shrink-0 mt-0.5">
+                    <SelectionToggle
+                      isSelected={isSelected}
+                      onToggle={() => onToggle(trait.id)}
+                      size="sm"
+                    />
                   </div>
                 )}
                 <div className="flex-1">

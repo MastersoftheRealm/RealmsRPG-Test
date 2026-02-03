@@ -51,13 +51,16 @@ export function SkillsStep() {
     return draft.skills || {};
   });
 
-  // Calculate used points - species skills count against skill points like any other skill
+  // Calculate used points - species skills get 1st point free (proficiency)
   const usedPoints = useMemo(() => {
     return Object.entries(allocations).reduce((sum, [skillId, val]) => {
-      // All skills count against skill points, including species skills
+      // Species skills get their first point free
+      if (speciesSkillIds.has(skillId)) {
+        return sum + Math.max(0, val - 1); // First point is free
+      }
       return sum + val;
     }, 0);
-  }, [allocations]);
+  }, [allocations, speciesSkillIds]);
 
   const remainingPoints = totalSkillPoints - usedPoints;
 
@@ -337,7 +340,7 @@ interface SkillAllocatorProps {
 function SkillAllocator({ skill, value, onAllocate, canIncrease, isSpeciesSkill }: SkillAllocatorProps) {
   const [showDescription, setShowDescription] = useState(false);
   
-  // Species skills have a minimum of 1 (proficient)
+  // Species skills have a minimum of 1 (proficient) - first point is free
   const effectiveMin = isSpeciesSkill ? 1 : 0;
   const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
   
@@ -357,7 +360,7 @@ function SkillAllocator({ skill, value, onAllocate, canIncrease, isSpeciesSkill 
           </button>
           <span className="font-medium text-text-primary">{skill.name}</span>
           {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(Species Skill)</span>
+            <span className="text-xs text-blue-600 font-medium">(Species +1 Free)</span>
           )}
         </div>
         
@@ -392,7 +395,7 @@ interface SubSkillAllocatorProps {
 }
 
 function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, baseSkillName, isSpeciesSkill }: SubSkillAllocatorProps) {
-  // Species skills have a minimum of 1 (proficient)
+  // Species skills have a minimum of 1 (proficient) - first point is free
   const effectiveMin = isSpeciesSkill ? 1 : 0;
   const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
   
@@ -415,17 +418,12 @@ function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, 
             {skill.name}
           </span>
           {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(Species Skill)</span>
+            <span className="text-xs text-blue-600 font-medium">(+1 Free)</span>
           )}
         </div>
         
         {isSpeciesSkill || isUnlocked ? (
           <div className="flex items-center gap-2">
-            {isSpeciesSkill && (
-              <span className="text-xs text-blue-600 font-medium px-2 py-0.5 bg-blue-100 rounded">
-                ✓ Proficient
-              </span>
-            )}
             <ValueStepper
               value={effectiveValue}
               onChange={(newValue) => onAllocate(newValue - effectiveValue)}

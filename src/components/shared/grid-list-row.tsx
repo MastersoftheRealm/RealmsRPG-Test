@@ -217,9 +217,8 @@ export function GridListRow({
   };
   
   const handleRowClick = () => {
-    if (selectable && !disabled && onSelect) {
-      onSelect();
-    } else if (showExpander) {
+    // Row click always toggles expansion, selection is handled by SelectionToggle button
+    if (showExpander) {
       setExpanded(!isExpanded);
     }
   };
