@@ -18,7 +18,7 @@ import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTe
 export interface EnrichedPower extends CharacterPower {
   // Display fields from library
   description: string;
-  energy?: number;
+  cost?: number; // Energy cost of the power
   actionType?: string;
   area?: string;
   duration?: string;
@@ -44,7 +44,7 @@ export interface EnrichedPower extends CharacterPower {
 export interface EnrichedTechnique extends CharacterTechnique {
   // Display fields from library
   description: string;
-  energyCost?: number;
+  cost?: number; // Energy cost of the technique
   actionType?: string;
   weaponName?: string;
   damageStr?: string;
@@ -252,7 +252,7 @@ export function enrichTechniques(
         })),
         libraryItem,
         // Calculated display fields from deriveTechniqueDisplay
-        energyCost: displayData.energy,
+        cost: displayData.energy,
         actionType: displayData.actionType,
         weaponName: displayData.weaponName,
         damageStr: displayData.damageStr,

@@ -712,8 +712,7 @@ export function LibrarySection({
               {techniques.length > 0 ? (
                 <div className="space-y-1">
                   {techniques.map((tech, i) => {
-                    // EnrichedTechnique uses 'energyCost', raw CharacterTechnique uses 'cost'
-                    const energyCost = (tech as any).energyCost ?? tech.cost ?? 0;
+                    const energyCost = tech.cost ?? 0;
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                     const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
                     
