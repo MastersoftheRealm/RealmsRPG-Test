@@ -183,7 +183,7 @@ export function SpeciesModal({
             </h4>
             <div className="flex flex-wrap gap-2">
               {Object.entries(species.ability_bonuses).map(([ability, bonus]) => (
-                <Chip key={ability} variant="success">
+                <Chip key={ability} variant="primary">
                   {ability.substring(0, 3).toUpperCase()} +{bonus}
                 </Chip>
               ))}

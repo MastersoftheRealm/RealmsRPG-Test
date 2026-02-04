@@ -109,3 +109,18 @@ export type {
 export { QuantitySelector, QuantityBadge } from './quantity-selector';
 export type { QuantitySelectorProps, QuantityBadgeProps } from './quantity-selector';
 
+// ============================================================================
+// FILTER COMPONENTS
+// ============================================================================
+// Reusable filter components for any list/grid filtering needs.
+// Use for: Codex, Library, Character Sheet modals, etc.
+
+export {
+  ChipSelect,
+  AbilityRequirementFilter,
+  type AbilityRequirement,
+  TagFilter,
+  CheckboxFilter,
+  SelectFilter,
+  FilterSection as SharedFilterSection,
+} from './filters';

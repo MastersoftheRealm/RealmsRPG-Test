@@ -118,15 +118,18 @@ CSS classes available:
 ```tsx
 import { Button } from '@/components/ui';
 
-// Variants
+// RECOMMENDED Variants
 <Button variant="primary">Primary Action</Button>
 <Button variant="secondary">Secondary</Button>
 <Button variant="danger">Delete</Button>
-<Button variant="success">Confirm</Button>
 <Button variant="ghost">Ghost</Button>
-<Button variant="outline">Outline</Button>
-<Button variant="utility">Utility</Button>
 <Button variant="link">Link</Button>
+
+// DEPRECATED (avoid - will be removed)
+// <Button variant="success"> // Use 'primary' instead
+// <Button variant="outline"> // Use 'secondary' instead
+// <Button variant="utility"> // Use 'secondary' or 'ghost' instead
+// <Button variant="gradient"> // Use 'primary' instead
 
 // Sizes
 <Button size="sm">Small</Button>
@@ -140,8 +143,8 @@ import { Button } from '@/components/ui';
 ```
 
 CSS classes available:
-- `.btn-primary`, `.btn-secondary`, `.btn-danger`, `.btn-success`
-- `.btn-outline`, `.btn-ghost`, `.btn-utility`, `.btn-icon`
+- `.btn-primary`, `.btn-secondary`, `.btn-danger`
+- `.btn-ghost`, `.btn-icon`
 - `.btn-stepper` - +/- stepper buttons
 
 > **Note:** Navigation buttons (back/continue) now use the `<Button>` component with `variant="secondary"` for back and default for continue.
@@ -177,22 +180,26 @@ CSS classes available:
 ```tsx
 import { Chip } from '@/components/ui';
 
-// Basic variants
+// RECOMMENDED Variants
 <Chip variant="default">Default</Chip>
-<Chip variant="primary">Primary</Chip>
-<Chip variant="accent">Accent</Chip>
+<Chip variant="primary">Primary (selected state)</Chip>
 
-// Category variants
+// Category variants (domain-specific, keep using)
 <Chip variant="action">Action</Chip>
 <Chip variant="activation">Activation</Chip>
 <Chip variant="area">Area</Chip>
 <Chip variant="duration">Duration</Chip>
 
-// Status variants
+// Status variants (for feedback only)
 <Chip variant="success">Success</Chip>
 <Chip variant="danger">Error</Chip>
 <Chip variant="warning">Warning</Chip>
-<Chip variant="info">Info</Chip>
+
+// DEPRECATED (avoid - will be removed)
+// <Chip variant="accent"> // Use 'default' instead
+// <Chip variant="info"> // Use 'default' instead
+// <Chip variant="secondary"> // Use 'default' instead
+// <Chip variant="outline"> // Use 'default' instead
 
 // Removable
 <Chip onRemove={() => {}}>Removable</Chip>
@@ -245,7 +252,7 @@ import { CreatorSummaryPanel } from '@/components/creator';
   ]}
 >
   {/* Optional children (alerts, etc.) */}
-  <Alert variant="success">Saved!</Alert>
+  <Alert variant="info">Draft saved</Alert>
 </CreatorSummaryPanel>
 ```
 

@@ -45,17 +45,17 @@ const toastIcons: Record<ToastType, React.ReactNode> = {
 };
 
 const toastStyles: Record<ToastType, string> = {
-  success: 'border-l-4 border-l-green-500 bg-green-50 text-green-800',
-  error: 'border-l-4 border-l-red-500 bg-red-50 text-red-800',
-  warning: 'border-l-4 border-l-amber-500 bg-amber-50 text-amber-800',
-  info: 'border-l-4 border-l-blue-500 bg-blue-50 text-blue-800',
+  success: 'border-l-4 border-l-success-500 bg-success-light text-success-700',
+  error: 'border-l-4 border-l-danger-500 bg-danger-light text-danger-700',
+  warning: 'border-l-4 border-l-warning-500 bg-warning-light text-warning-700',
+  info: 'border-l-4 border-l-info-500 bg-info-light text-info-700',
 };
 
 const iconStyles: Record<ToastType, string> = {
-  success: 'text-green-500',
-  error: 'text-red-500',
-  warning: 'text-amber-500',
-  info: 'text-blue-500',
+  success: 'text-success-500',
+  error: 'text-danger-500',
+  warning: 'text-warning-500',
+  info: 'text-info-500',
 };
 
 function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {

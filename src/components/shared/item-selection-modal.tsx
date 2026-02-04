@@ -36,7 +36,9 @@ interface ItemSelectionModalProps {
   validateSelection?: (selected: DisplayItem[]) => { valid: boolean; message?: string };
   
   // Loading
+  /** @deprecated Use isLoading instead */
   loading?: boolean;
+  isLoading?: boolean;
 }
 
 export function ItemSelectionModal({
@@ -53,7 +55,10 @@ export function ItemSelectionModal({
   searchPlaceholder,
   validateSelection,
   loading = false,
+  isLoading,
 }: ItemSelectionModalProps) {
+  // Support both loading and isLoading props (isLoading takes precedence)
+  const showLoading = isLoading ?? loading;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(initialSelectedIds);
   const [validationError, setValidationError] = useState<string>();
   
@@ -169,7 +174,7 @@ export function ItemSelectionModal({
         filterOptions={filterOptions}
         sortOptions={sortOptions}
         searchPlaceholder={searchPlaceholder}
-        loading={loading}
+        isLoading={showLoading}
         emptyMessage="No items available"
       />
     </Modal>

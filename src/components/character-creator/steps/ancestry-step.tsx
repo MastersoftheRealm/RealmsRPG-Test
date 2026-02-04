@@ -226,7 +226,7 @@ export function AncestryStep() {
               <span className="text-xs text-text-muted uppercase">Species Skills:</span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {speciesSkillNames.map(skillName => (
-                  <Chip key={skillName} variant="info" size="sm">
+                  <Chip key={skillName} variant="default" size="sm">
                     {skillName}
                   </Chip>
                 ))}

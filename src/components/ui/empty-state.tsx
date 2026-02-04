@@ -9,11 +9,13 @@ import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 import { Button } from './button';
 
-interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Main heading */
   title: string;
-  /** Description text */
+  /** Description text (alias: message) */
   description?: string;
+  /** Alias for description for backward compatibility */
+  message?: string;
   /** Icon to display (optional) */
   icon?: React.ReactNode;
   /** Primary action button */
@@ -21,7 +23,7 @@ interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
     label: string;
     onClick: () => void;
     variant?: 'primary' | 'secondary';
-  };
+  } | React.ReactNode;
   /** Secondary action button */
   secondaryAction?: {
     label: string;
@@ -55,6 +57,7 @@ const sizeClasses = {
 export function EmptyState({
   title,
   description,
+  message,
   icon,
   action,
   secondaryAction,
@@ -63,6 +66,11 @@ export function EmptyState({
   ...props
 }: EmptyStateProps) {
   const sizes = sizeClasses[size];
+  // Support both 'description' and 'message' props for backward compatibility
+  const displayMessage = description || message;
+  
+  // Check if action is a React node or an action object
+  const isActionObject = action && typeof action === 'object' && 'label' in action && 'onClick' in action;
 
   return (
     <div
@@ -86,19 +94,23 @@ export function EmptyState({
       <h3 className={cn('font-semibold text-text-primary', sizes.title)}>
         {title}
       </h3>
-      {description && (
+      {displayMessage && (
         <p className={cn('mt-2 text-text-muted max-w-md', sizes.description)}>
-          {description}
+          {displayMessage}
         </p>
       )}
-      {(action || secondaryAction) && (
+      {/* Support both action object and React node */}
+      {action && !isActionObject && (
+        <div className="mt-6">{action}</div>
+      )}
+      {(isActionObject || secondaryAction) && (
         <div className="mt-6 flex items-center gap-3">
-          {action && (
+          {isActionObject && (
             <Button
-              variant={action.variant === 'secondary' ? 'secondary' : 'primary'}
-              onClick={action.onClick}
+              variant={(action as { variant?: 'primary' | 'secondary' }).variant === 'secondary' ? 'secondary' : 'primary'}
+              onClick={(action as { onClick: () => void }).onClick}
             >
-              {action.label}
+              {(action as { label: string }).label}
             </Button>
           )}
           {secondaryAction && (

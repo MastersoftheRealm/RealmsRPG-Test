@@ -590,7 +590,6 @@ function EncounterTrackerContent() {
             {!encounter.isActive ? (
               <>
                 <Button
-                  variant="success"
                   onClick={startCombat}
                   disabled={encounter.combatants.length === 0}
                 >
@@ -772,9 +771,9 @@ function EncounterTrackerContent() {
                     name="combatantType"
                     checked={newCombatant.combatantType === 'companion'}
                     onChange={() => setNewCombatant(prev => ({ ...prev, combatantType: 'companion', isAlly: true }))}
-                    className="w-4 h-4 text-purple-600"
+                    className="w-4 h-4 text-companion"
                   />
-                  <span className="text-sm text-purple-700 font-medium">Companion</span>
+                  <span className="text-sm text-companion-text font-medium">Companion</span>
                 </label>
               </div>
               
@@ -785,7 +784,6 @@ function EncounterTrackerContent() {
               />
               
               <Button
-                variant="success"
                 onClick={addCombatant}
                 disabled={!newCombatant.name.trim()}
                 className="w-full font-bold"
@@ -806,7 +804,7 @@ function EncounterTrackerContent() {
                   className={cn(
                     'px-2 py-1 text-xs rounded-full cursor-help',
                     condition.leveled 
-                      ? 'bg-purple-100 text-purple-700' 
+                      ? 'bg-companion-light text-companion-text' 
                       : 'bg-surface-alt text-text-secondary'
                   )}
                 >
@@ -815,7 +813,7 @@ function EncounterTrackerContent() {
               ))}
             </div>
             <div className="mt-3 text-xs text-text-muted space-y-1">
-              <p><span className="inline-block w-3 h-3 rounded-full bg-purple-100 mr-1"></span>Purple = Leveled (has levels)</p>
+              <p><span className="inline-block w-3 h-3 rounded-full bg-companion-light mr-1"></span>Purple = Leveled (has levels)</p>
               <p><span className="inline-block w-3 h-3 rounded-full bg-indigo-100 mr-1"></span>Indigo = Custom condition</p>
               <p className="pt-1">Click name to ↑ level, × to ↓ level (removes at 0)</p>
             </div>
@@ -1025,13 +1023,13 @@ function CombatantCard({
             
             {/* Badges - Inline */}
             {combatant.combatantType === 'companion' && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-purple-100 text-purple-700 rounded font-medium">
+              <span className="px-1.5 py-0.5 text-[10px] bg-companion-light text-companion-text rounded font-medium">
                 Companion
               </span>
             )}
             {combatant.isSurprised && (
               <span 
-                className="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 rounded font-medium cursor-pointer hover:bg-amber-200"
+                className="px-1.5 py-0.5 text-[10px] bg-warning-light text-warning-700 rounded font-medium cursor-pointer hover:bg-warning-200"
                 onClick={() => onUpdate({ isSurprised: false })}
                 title="Click to remove surprised"
               >
@@ -1135,8 +1133,8 @@ function CombatantCard({
                     key={cond.name}
                     className={cn(
                       'px-2 py-0.5 text-xs rounded-full flex items-center gap-1 select-none',
-                      isCustom ? 'bg-indigo-100 text-indigo-800' :
-                      isLeveled ? 'bg-purple-100 text-purple-800' : 'bg-amber-100 text-amber-800'
+                      isCustom ? 'bg-info-100 text-info-700' :
+                      isLeveled ? 'bg-companion-light text-companion-text' : 'bg-warning-light text-warning-700'
                     )}
                     title={condDef?.description ?? 'Custom condition (leveled). Left-click to increase, right-click to decrease level.'}
                     onContextMenu={(e) => {
@@ -1308,7 +1306,7 @@ function CombatantCard({
                 <button
                   onClick={handleAddCustomCondition}
                   disabled={!customCondition.trim()}
-                  className="px-3 py-1 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+                  className="px-3 py-1 text-sm bg-companion text-white rounded hover:bg-companion-dark disabled:opacity-50"
                 >
                   Add Custom
                 </button>

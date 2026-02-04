@@ -35,22 +35,22 @@ interface LoadFromLibraryModalProps<T extends LibraryItem> {
 const TYPE_CONFIG: Record<LibraryItemType, { icon: React.ReactNode; color: string; emptyText: string }> = {
   power: {
     icon: <Zap className="w-5 h-5" />,
-    color: 'text-blue-600',
+    color: 'text-energy',
     emptyText: 'No saved powers found. Create some powers first!',
   },
   technique: {
     icon: <Sword className="w-5 h-5" />,
-    color: 'text-red-600',
+    color: 'text-martial',
     emptyText: 'No saved techniques found. Create some techniques first!',
   },
   item: {
     icon: <Shield className="w-5 h-5" />,
-    color: 'text-amber-600',
+    color: 'text-tp',
     emptyText: 'No saved items found. Create some items first!',
   },
   creature: {
     icon: <FileText className="w-5 h-5" />,
-    color: 'text-green-600',
+    color: 'text-success',
     emptyText: 'No saved creatures found. Create some creatures first!',
   },
 };

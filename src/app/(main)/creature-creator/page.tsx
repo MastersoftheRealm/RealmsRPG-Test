@@ -912,7 +912,6 @@ function CreatureCreatorContent() {
               Reset
             </Button>
             <Button
-              variant="success"
               onClick={handleSave}
               disabled={saving}
               isLoading={saving}
@@ -936,13 +935,13 @@ function CreatureCreatorContent() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-health-light rounded-lg">
               <span className="text-text-secondary">HP</span>
-              <span className="font-bold text-red-600">{stats.maxHealth}</span>
+              <span className="font-bold text-health">{stats.maxHealth}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-energy-light rounded-lg">
               <span className="text-text-secondary">EN</span>
-              <span className="font-bold text-blue-600">{stats.maxEnergy}</span>
+              <span className="font-bold text-energy">{stats.maxEnergy}</span>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-alt rounded-lg">
               <span className="text-text-secondary">SPD</span>
@@ -961,16 +960,16 @@ function CreatureCreatorContent() {
         {/* Quick feature tags */}
         <div className="flex flex-wrap gap-2 mt-3">
           {creature.resistances.map(r => (
-            <span key={r} className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded">{r} Res.</span>
+            <span key={r} className="px-2 py-0.5 text-xs bg-success-light text-success-700 rounded">{r} Res.</span>
           ))}
           {creature.weaknesses.map(w => (
-            <span key={w} className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded">{w} Weak</span>
+            <span key={w} className="px-2 py-0.5 text-xs bg-danger-light text-danger-700 rounded">{w} Weak</span>
           ))}
           {creature.immunities.map(i => (
-            <span key={i} className="px-2 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">{i} Imm.</span>
+            <span key={i} className="px-2 py-0.5 text-xs bg-power-light text-power-text rounded">{i} Imm.</span>
           ))}
           {creature.senses.map(s => (
-            <span key={s} className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">{s}</span>
+            <span key={s} className="px-2 py-0.5 text-xs bg-info-light text-info-700 rounded">{s}</span>
           ))}
         </div>
       </div>
@@ -980,8 +979,9 @@ function CreatureCreatorContent() {
           {/* Basic Info */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Basic Information</h3>
-            <div className="grid md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
+            <div className="space-y-4">
+              {/* Name row */}
+              <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
                 <Input
                   type="text"
@@ -990,23 +990,20 @@ function CreatureCreatorContent() {
                   placeholder="Creature name..."
                 />
               </div>
-              <div>
+              {/* Level, Type, Size row - all same width */}
+              <div className="grid grid-cols-3 gap-4">
                 <Select
                   label="Level"
                   value={String(creature.level)}
                   onChange={(e) => updateCreature({ level: parseFloat(e.target.value) })}
                   options={LEVEL_OPTIONS}
                 />
-              </div>
-              <div>
                 <Select
                   label="Type"
                   value={creature.type}
                   onChange={(e) => updateCreature({ type: e.target.value })}
                   options={CREATURE_TYPE_OPTIONS}
                 />
-              </div>
-              <div>
                 <Select
                   label="Size"
                   value={creature.size}
@@ -1129,7 +1126,7 @@ function CreatureCreatorContent() {
                 <ChipList 
                   items={creature.weaknesses} 
                   onRemove={(item) => removeFromArray('weaknesses', item)}
-                  color="bg-red-100 text-red-800"
+                  color="bg-danger-light text-danger-700"
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}
@@ -1143,7 +1140,7 @@ function CreatureCreatorContent() {
                 <ChipList 
                   items={creature.immunities} 
                   onRemove={(item) => removeFromArray('immunities', item)}
-                  color="bg-purple-100 text-purple-800"
+                  color="bg-power-light text-power-text"
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}
@@ -1164,7 +1161,7 @@ function CreatureCreatorContent() {
                 <ExpandableChipList 
                   items={creature.senses} 
                   onRemove={(item) => removeFromArray('senses', item)}
-                  color="bg-blue-100 text-blue-800"
+                  color="bg-info-light text-info-700"
                   descriptions={senseDescriptions}
                 />
                 <AddItemDropdown
@@ -1474,22 +1471,24 @@ function CreatureCreatorContent() {
         </div>
 
         {/* Creature Summary Sidebar */}
-        <CreatorSummaryPanel
-          title="Creature Summary"
-          quickStats={[
-            { label: 'HP', value: stats.maxHealth, color: 'bg-red-50 text-red-600' },
-            { label: 'EN', value: stats.maxEnergy, color: 'bg-blue-50 text-blue-600' },
-            { label: 'SPD', value: stats.speed, color: 'bg-surface-alt' },
-            { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt' },
-          ]}
-          items={[
-            { label: 'Ability Points', remaining: stats.abilityRemaining },
-            { label: 'Skill Points', remaining: stats.skillRemaining },
-            { label: 'Feat Points', remaining: stats.featRemaining, variant: 'warning' },
-            { label: 'Training Points', remaining: stats.trainingPoints, variant: 'warning' },
-            { label: 'Currency', remaining: stats.currency, variant: 'warning' },
-          ]}
-        />
+        <div className="self-start">
+          <CreatorSummaryPanel
+            title="Creature Summary"
+            quickStats={[
+              { label: 'HP', value: stats.maxHealth, color: 'bg-red-50 text-red-600' },
+              { label: 'EN', value: stats.maxEnergy, color: 'bg-blue-50 text-blue-600' },
+              { label: 'SPD', value: stats.speed, color: 'bg-surface-alt' },
+              { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt' },
+            ]}
+            items={[
+              { label: 'Ability Points', remaining: stats.abilityRemaining },
+              { label: 'Skill Points', remaining: stats.skillRemaining },
+              { label: 'Feat Points', remaining: stats.featRemaining, variant: 'warning' },
+              { label: 'Training Points', remaining: stats.trainingPoints, variant: 'warning' },
+              { label: 'Currency', remaining: stats.currency, variant: 'warning' },
+            ]}
+          />
+        </div>
       </div>
 
       {/* Modals - using shared ItemSelectionModal */}

@@ -88,7 +88,7 @@ export function TagFilter({
           {selectedTags.map(tag => (
             <Chip
               key={tag}
-              variant="success"
+              variant="primary"
               size="sm"
               onRemove={() => onRemove(tag)}
             >

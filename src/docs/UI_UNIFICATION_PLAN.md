@@ -479,13 +479,19 @@ Currently, character sheet has NO headers for powers/techniques. Add them:
 2. ✅ Created `SectionHeader` component with title, count, onAdd props
 3. ✅ Added deprecation notes to Button variants (gradient, success, outline, utility → use primary/secondary)
 4. ✅ Added deprecation notes to Chip variants (equipment types, content types → use default)
+5. ✅ Moved filter components from `codex/filters/` to `shared/filters/` for reuse
+6. ✅ Consolidated EmptyState (list-components now re-exports from ui/empty-state)
+7. ✅ Consolidated LoadingSpinner → LoadingState (deprecated LoadingSpinner)
+8. ✅ Standardized `loading` prop → `isLoading` across components
+9. ✅ Fixed all deprecated variant usages in actual code (success → primary, info → default)
+10. ✅ Fixed hardcoded colors in creature-stat-block.tsx → design tokens
 
-### Phase 2: Character Sheet Migration (Week 2)
-1. Replace `PowerCard` with `GridListRow` + slots
-2. Replace `TechniqueCard` with `GridListRow` + slots
-3. Replace `ItemCard` with `GridListRow` + slots
-4. Replace `CollapsibleListItem` with `GridListRow` for feats
-5. Add column headers to all list sections
+### Phase 2: Character Sheet Migration (Week 2) ✅ COMPLETED
+1. ✅ Replace `PowerCard` with `GridListRow` + slots — Already done in library-section.tsx
+2. ✅ Replace `TechniqueCard` with `GridListRow` + slots — Already done in library-section.tsx
+3. ✅ Replace `ItemCard` with `GridListRow` + slots — Already done in library-section.tsx
+4. ✅ Replace `CollapsibleListItem` with `GridListRow` for feats — Already done in feats-tab.tsx
+5. ✅ Add column headers to all list sections — Powers, Techniques, Weapons all have headers
 6. ✅ Unify add buttons using `SectionHeader`
 
 ### Phase 3: Modal Unification (Week 3) 🔄 IN PROGRESS
@@ -684,3 +690,64 @@ addLabel?: string
 
 *Document created: 2026-02-03*
 *Last updated: 2026-02-03*
+
+---
+
+## 🎉 UNIFICATION COMPLETE
+
+### Summary of Completed Work
+
+**Phase 1: Component Foundation** ✅
+- Extended `GridListRow` with character sheet slots
+- Created `SectionHeader` component
+- Deprecated unnecessary Button/Chip variants
+- Moved filter components to `shared/filters/`
+- Consolidated EmptyState and LoadingSpinner
+- Standardized `isLoading` prop naming
+- Fixed all deprecated variant usages in code
+
+**Phase 2: Character Sheet Migration** ✅
+- All sections now use `GridListRow` (powers, techniques, weapons, armor, equipment, feats)
+- Column headers added to all list sections
+- Unified add buttons using `SectionHeader`
+
+**Phase 3: Modal Unification** ✅
+- All modals use `GridListRow` for list display
+- Consistent footer pattern (selection count + Cancel/Add)
+- `AddSubSkillModal` deferred (unique base skill selector feature)
+
+**Phase 4: Behavioral Alignment** ✅
+- Removed edit-mode restrictions on equipping/innate toggles
+- Add buttons always visible
+- Roll buttons always visible
+
+**Phase 5: Library Alignment** ✅
+- Library uses `SortHeader` and Next.js router
+- Filter components reusable from `shared/filters/`
+
+**Design Token Migration** ✅
+- Migrated hardcoded Tailwind colors to semantic tokens:
+  - `amber-*` → `tp-*` (Training Points)
+  - `blue-*` → `energy-*` (Energy resource)
+  - `purple-*` → `companion-*` / `power-*` (Companions, Power archetype)
+  - `green-*` → `success-*` / `health-*` (Success states, HP)
+  - `red-*` → `danger-*` / `health-*` (Danger states)
+
+**Phase 6: Creator Improvements** ✅ (Feb 2026)
+- Login redirect to last visited page (login/register pages)
+- Fixed ability allocation cost display (2pt not 3pt)
+- Renamed "Health & Energy Allocation" to "Health/Energy Allocation"
+- Standardized page widths (characters page now uses `xl` like library/codex)
+- Creature Creator Basic Info layout improved (Name row, Level/Type/Size aligned)
+- Creature Summary sticky behavior fixed (self-start wrapper)
+- Power Creator: Category auto-select first part on change
+- Technique Creator: Category auto-select first part on change
+- Item Creator: Weapon damage types limited to physical only
+- All default values verified: weapon damage 1d4, armor DR 0
+
+### Remaining Future Work
+- `AddSubSkillModal` GridListRow migration (low priority - unique UX requirements)
+- ESLint rules to enforce design system usage (enhancement)
+- Extract shared `CreatorPartCard` component from power/technique creators (reduces ~240 lines of duplication)
+- Adopt `useCreatorCache` hook in all creators (requires state refactor)
+- Extract inline components from creature-creator (ChipList, AddItemDropdown, DefenseBlock)

@@ -213,22 +213,29 @@ export function ListContainer({
 }
 
 // =============================================================================
-// Empty State
+// Empty State - Re-export from ui/ for backward compatibility
 // =============================================================================
 
-export interface EmptyStateProps {
+// Re-export unified EmptyState from ui/ 
+// The ui/empty-state has more features (action buttons, sizes)
+export { EmptyState } from '@/components/ui/empty-state';
+export type { EmptyStateProps } from '@/components/ui/empty-state';
+
+// Legacy simplified EmptyState kept as SimpleEmptyState for any edge cases
+export interface LegacyEmptyStateProps {
   icon?: React.ReactNode;
   title: string;
   message?: string;
   action?: React.ReactNode;
 }
 
-export function EmptyState({ 
+/** @deprecated Use EmptyState from '@/components/ui' instead */
+export function SimpleEmptyState({ 
   icon, 
   title, 
   message, 
   action 
-}: EmptyStateProps) {
+}: LegacyEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {icon && (
@@ -246,9 +253,16 @@ export function EmptyState({
 }
 
 // =============================================================================
-// Loading State - Uses unified Spinner from ui
+// Loading State - Re-export from ui/ for backward compatibility
 // =============================================================================
 
+// Re-export LoadingState from ui/spinner for consistency
+export { LoadingState } from '@/components/ui/spinner';
+
+/** 
+ * @deprecated Use LoadingState from '@/components/ui/spinner' instead 
+ * Kept for backward compatibility with existing imports
+ */
 export function LoadingSpinner({ className }: { className?: string }) {
   return (
     <div className={cn('flex items-center justify-center py-12', className)}>

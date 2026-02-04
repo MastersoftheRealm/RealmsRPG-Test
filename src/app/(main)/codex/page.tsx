@@ -346,14 +346,18 @@ function FeatsTab() {
         {isLoading ? 'Loading...' : `${filteredFeats.length} feats found`}
       </div>
 
-      {/* Column Headers */}
-      <div className="hidden lg:grid grid-cols-6 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
+      {/* Column Headers - aligned with GridListRow grid */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}
+      >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="REQ. LEVEL" col="lvl_req" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ABILITY" col="ability" sortState={sortState} onSort={handleSort} />
         <SortHeader label="RECOVERY" col="rec_period" sortState={sortState} onSort={handleSort} />
         <SortHeader label="USES" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
+        <div></div> {/* Expand icon column */}
       </div>
 
       {/* Feat List */}
@@ -614,11 +618,15 @@ function SkillsTab() {
         {isLoading ? 'Loading...' : `${filteredSkills.length} skills found`}
       </div>
 
-      {/* Column Headers */}
-      <div className="hidden lg:grid grid-cols-3 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
+      {/* Column Headers - aligned with GridListRow grid */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: SKILL_GRID_COLUMNS }}
+      >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
         <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
+        <div></div> {/* Expand icon column */}
       </div>
 
       {/* Skill List */}
@@ -813,11 +821,12 @@ function SpeciesTab() {
         {isLoading ? 'Loading...' : `${filteredSpecies.length} species found`}
       </div>
 
+      {/* Column Headers - note: Species uses custom card, not GridListRow */}
       <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
         <SortHeader label="SIZES" col="sizes" sortState={sortState} onSort={handleSort} />
-        <div>DESCRIPTION</div>
+        <span>DESCRIPTION</span>
       </div>
 
       <div className="flex flex-col gap-2 lg:mt-0">
@@ -1075,12 +1084,16 @@ function EquipmentTab() {
         {isLoading ? 'Loading...' : `${filteredEquipment.length} items found`}
       </div>
 
-      {/* Header Row - Matching style of other tabs */}
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
+      {/* Header Row - aligned with GridListRow grid */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: EQUIPMENT_GRID_COLUMNS }}
+      >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <SortHeader label="COST" col="cost" sortState={sortState} onSort={handleSort} />
         <SortHeader label="RARITY" col="rarity" sortState={sortState} onSort={handleSort} />
+        <div></div> {/* Expand icon column */}
       </div>
         
       <div className="flex flex-col gap-2 lg:mt-0">
@@ -1222,13 +1235,17 @@ function PropertiesTab() {
         {isLoading ? 'Loading...' : `${filteredProperties.length} properties found`}
       </div>
 
-      {/* Header Row - Matching style of other tabs */}
-      <div className="hidden lg:grid grid-cols-5 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
+      {/* Header Row - aligned with GridListRow grid */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: PROPERTY_GRID_COLUMNS }}
+      >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="ITEM POINTS" col="ip" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="TRAINING POINTS" col="tp" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="CURRENCY MULTIPLIER" col="cost" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="ITEM PTS" col="ip" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="TP" col="tp" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="COST MULT" col="cost" sortState={sortState} onSort={handleSort} />
+        <div></div> {/* Expand icon column */}
       </div>
         
       <div className="flex flex-col gap-2 lg:mt-0">
@@ -1397,11 +1414,16 @@ function PartsTab() {
         {isLoading ? 'Loading...' : `${filteredParts.length} parts found`}
       </div>
 
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
+      {/* Header Row - aligned with GridListRow grid */}
+      <div 
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: PART_GRID_COLUMNS }}
+      >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
-        <div>ENERGY</div>
-        <div>TRAINING POINTS</div>
+        <span>ENERGY</span>
+        <span>TP</span>
+        <div></div> {/* Expand icon column */}
       </div>
 
       <div className="flex flex-col gap-2 lg:mt-0">

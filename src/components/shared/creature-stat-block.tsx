@@ -164,11 +164,12 @@ function TagList({ label, items, variant = 'default' }: {
 }) {
   if (!items || items.length === 0) return null;
   
+  // Use design tokens for consistent theming
   const colors = {
     default: 'bg-surface-alt text-text-secondary',
-    success: 'bg-green-100 text-green-700',
-    danger: 'bg-red-100 text-red-700',
-    warning: 'bg-yellow-100 text-yellow-700',
+    success: 'bg-success-light text-success-700',
+    danger: 'bg-danger-light text-danger-700',
+    warning: 'bg-warning-light text-warning-700',
   };
   
   return (

@@ -49,8 +49,8 @@ const categoryStyles: Record<string, string> = {
   target: 'bg-category-target-bg text-category-target-text border-category-target-border',
   special: 'bg-category-special-bg text-category-special-text border-category-special-border',
   restriction: 'bg-category-restriction-bg text-category-restriction-text border-category-restriction-border',
-  cost: 'bg-category-action-bg text-category-action-text border-category-action-border',
-  proficiency: 'bg-amber-50 text-amber-800 border-amber-200',
+  cost: 'bg-tp-light text-tp-text border-tp-border',
+  proficiency: 'bg-tp-light text-tp-text border-tp-border',
   property: 'bg-surface-alt text-text-secondary border-border-light',
   default: 'bg-primary-50 text-primary-700 border-primary-200',
 };
@@ -91,7 +91,7 @@ export function PartChip({
         canExpand && 'cursor-pointer hover:shadow-md',
         !canExpand && 'cursor-default',
         isExpanded && 'ring-2 ring-offset-1',
-        isExpanded && hasTP ? 'ring-amber-400' : isExpanded && 'ring-primary-400',
+        isExpanded && hasTP ? 'ring-tp' : isExpanded && 'ring-primary-400',
         className
       )}
     >
@@ -108,7 +108,7 @@ export function PartChip({
       {part.energyCost !== undefined && part.energyCost > 0 && (
         <>
           <span className="opacity-40">|</span>
-          <span className="text-xs font-semibold text-blue-600">
+          <span className="text-xs font-semibold text-energy">
             {part.energyCost} EP
           </span>
         </>
@@ -149,7 +149,7 @@ export function PartChipDetails({ part, className }: PartChipDetailsProps) {
       <div className="flex items-start justify-between gap-2 mb-2">
         <h5 className="font-semibold text-text-primary">{part.name}</h5>
         {(part.tpCost ?? 0) > 0 && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-tp-light text-tp-text">
             <Zap className="w-3 h-3" />
             {part.tpCost} TP
           </span>

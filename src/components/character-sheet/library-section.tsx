@@ -395,7 +395,6 @@ export function LibrarySection({
           
           {activeTabData?.onAdd && (
             <Button
-              variant="success"
               size="sm"
               onClick={activeTabData.onAdd}
             >
@@ -414,7 +413,6 @@ export function LibrarySection({
             {activeTabData?.onAdd && (
               <div className="flex justify-end mb-3">
                 <Button
-                  variant="success"
                   size="sm"
                   onClick={activeTabData.onAdd}
                 >
@@ -651,7 +649,6 @@ export function LibrarySection({
             {activeTabData?.onAdd && (
               <div className="flex justify-end mb-3">
                 <Button
-                  variant="success"
                   size="sm"
                   onClick={activeTabData.onAdd}
                 >

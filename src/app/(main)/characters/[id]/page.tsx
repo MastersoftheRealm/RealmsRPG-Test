@@ -1066,10 +1066,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
               <Button
                 size="sm"
                 onClick={handleToggleEditMode}
-                variant={isEditMode ? 'success' : 'secondary'}
+                variant={isEditMode ? 'primary' : 'secondary'}
                 className={cn(
                   'relative',
-                  isEditMode && 'bg-green-600 hover:bg-green-700'
+                  isEditMode && 'bg-success-600 hover:bg-success-700'
                 )}
               >
                 {isEditMode ? '✓ Done' : '🖉 Edit'}

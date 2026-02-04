@@ -87,7 +87,7 @@ export function SpeciesStep() {
               {s.ability_bonuses && Object.keys(s.ability_bonuses).length > 0 && (
                 <div className="flex gap-1 mt-2">
                   {Object.entries(s.ability_bonuses).map(([ability, bonus]) => (
-                    <Chip key={ability} variant="success" size="sm">
+                    <Chip key={ability} variant="primary" size="sm">
                       {ability.substring(0, 3).toUpperCase()} +{bonus}
                     </Chip>
                   ))}

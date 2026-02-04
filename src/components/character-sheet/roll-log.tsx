@@ -171,7 +171,7 @@ export function RollLog({ className }: RollLogProps) {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary-dark to-[#053357] text-white">
+        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary-dark to-primary-700 text-white">
           <h3 className="font-bold text-base tracking-wide">🎲 Roll Log</h3>
           <button
             onClick={clearHistory}
@@ -193,7 +193,7 @@ export function RollLog({ className }: RollLogProps) {
         </div>
 
         {/* Dice Builder */}
-        <div className="p-3 bg-gradient-to-r from-primary-dark to-[#053357] border-t-2 border-border-light">
+        <div className="p-3 bg-gradient-to-r from-primary-dark to-primary-700 border-t-2 border-border-light">
           {/* Roll Type & Title */}
           <div className="flex gap-2 mb-3">
             <select
@@ -290,7 +290,7 @@ export function RollLog({ className }: RollLogProps) {
           'w-14 h-14 rounded-full shadow-lg transition-all duration-300',
           'flex items-center justify-center',
           'bg-gradient-to-br from-primary-light to-primary-dark hover:scale-110',
-          isOpen && 'from-primary-dark to-[#021a2e]'
+          isOpen && 'from-primary-dark to-primary-900'
         )}
         aria-label={isOpen ? 'Close roll log' : 'Open roll log'}
       >

@@ -71,7 +71,6 @@ function ValidationModal({
       {/* Show Save button when valid */}
       {isValid && onSave && (
         <Button
-          variant="success"
           onClick={onSave}
           disabled={isSaving}
           isLoading={isSaving}
@@ -159,7 +158,7 @@ function HealthEnergyAllocationSection() {
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-text-primary">Health & Energy Allocation</h3>
+        <h3 className="font-bold text-text-primary">Health/Energy Allocation</h3>
         <div className="text-xs text-text-muted">
           Base HP: {baseHealth} | Base EN: {baseEnergy}
         </div>
@@ -834,10 +833,10 @@ export function FinalizeStep() {
           onClick={handleValidateAndSave}
           disabled={saving}
           isLoading={saving}
-          variant={validationIssues.some(i => i.severity === 'error') ? 'secondary' : 'success'}
+          variant={validationIssues.some(i => i.severity === 'error') ? 'secondary' : 'primary'}
           className={cn(
             'px-8 py-3',
-            !saving && validationIssues.some(i => i.severity === 'error') && 'bg-amber-500 hover:bg-amber-600 text-white'
+            !saving && validationIssues.some(i => i.severity === 'error') && 'bg-warning-500 hover:bg-warning-600 text-white'
           )}
         >
           {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}

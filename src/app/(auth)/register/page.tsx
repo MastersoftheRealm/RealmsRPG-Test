@@ -6,8 +6,8 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,13 +19,21 @@ import { registerSchema, type RegisterFormData } from '@/lib/validation';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Button, Alert } from '@/components/ui';
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [firebaseReady, setFirebaseReady] = useState(false);
   const [auth, setAuth] = useState<Auth | null>(null);
   const [db, setDb] = useState<Firestore | null>(null);
+  
+  // Get redirect path from URL params or sessionStorage
+  const getRedirectPath = () => {
+    const urlRedirect = searchParams.get('redirect');
+    const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
+    return urlRedirect || sessionRedirect || '/characters';
+  };
 
   // Wait for Firebase to initialize
   useEffect(() => {
@@ -83,7 +91,9 @@ export default function RegisterPage() {
         uid: userCredential.user.uid,
       });
 
-      router.push('/characters');
+      // Clear the stored redirect path
+      sessionStorage.removeItem('loginRedirect');
+      router.push(getRedirectPath());
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
@@ -120,7 +130,9 @@ export default function RegisterPage() {
         }, { merge: true });
       }
       
-      router.push('/characters');
+      // Clear the stored redirect path
+      sessionStorage.removeItem('loginRedirect');
+      router.push(getRedirectPath());
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
       setError(getAuthErrorMessage(err));
@@ -238,6 +250,20 @@ export default function RegisterPage() {
         </Link>
       </p>
     </AuthCard>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <AuthCard title="Join the Adventure" subtitle="Create your account to begin">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500" />
+        </div>
+      </AuthCard>
+    }>
+      <RegisterContent />
+    </Suspense>
   );
 }
 

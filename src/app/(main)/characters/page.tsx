@@ -54,7 +54,7 @@ function CharactersContent() {
 
   if (isLoading) {
     return (
-      <PageContainer>
+      <PageContainer size="xl">
         <PageHeader title="Characters" />
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
@@ -71,7 +71,7 @@ function CharactersContent() {
 
   if (error) {
     return (
-      <PageContainer>
+      <PageContainer size="xl">
         <PageHeader title="Characters" />
         <Alert variant="danger" title="Error loading characters">
           Something went wrong while loading your characters. Please try again.
@@ -84,7 +84,7 @@ function CharactersContent() {
   const hasCharacters = characters && characters.length > 0;
 
   return (
-    <PageContainer>
+    <PageContainer size="xl">
       <PageHeader title="Characters" />
       
       {hasCharacters ? (

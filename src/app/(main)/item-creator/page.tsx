@@ -941,7 +941,6 @@ function ItemCreatorContent() {
               Reset
             </Button>
             <Button
-              variant="success"
               onClick={handleSave}
               disabled={saving || !name.trim()}
               isLoading={saving}

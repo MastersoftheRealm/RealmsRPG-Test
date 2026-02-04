@@ -188,7 +188,7 @@ function PartCard({
           </span>
           <span className="font-medium text-text-primary truncate">{part.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
-            <span className="text-blue-600">EN: {formatCost(partEnergy)}</span>
+            <span className="text-energy">EN: {formatCost(partEnergy)}</span>
             <span className="text-tp">TP: {formatCost(partTP)}</span>
           </span>
         </button>
@@ -278,7 +278,7 @@ function PartCard({
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
-              Base Energy: <strong className="text-blue-600">{formatCost(part.base_en || 0)}</strong>
+              Base Energy: <strong className="text-energy">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
               Base TP: <strong className="text-tp">{formatCost(part.base_tp || 0)}</strong>
@@ -289,11 +289,11 @@ function PartCard({
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
             <div className="space-y-3 pt-2 border-t border-border-light">
               {hasOption(1) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="bg-energy-light border border-energy-border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-blue-800">Option 1</span>
-                      <span className="text-sm font-medium text-blue-600">
+                      <span className="text-sm font-semibold text-energy-text">Option 1</span>
+                      <span className="text-sm font-medium text-energy">
                         EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp">
@@ -313,11 +313,11 @@ function PartCard({
               )}
 
               {hasOption(2) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="bg-energy-light border border-energy-border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-blue-800">Option 2</span>
-                      <span className="text-sm font-medium text-blue-600">
+                      <span className="text-sm font-semibold text-energy-text">Option 2</span>
+                      <span className="text-sm font-medium text-energy">
                         EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp">
@@ -337,11 +337,11 @@ function PartCard({
               )}
 
               {hasOption(3) && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="bg-energy-light border border-energy-border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-blue-800">Option 3</span>
-                      <span className="text-sm font-medium text-blue-600">
+                      <span className="text-sm font-semibold text-energy-text">Option 3</span>
+                      <span className="text-sm font-medium text-energy">
                         EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp">
@@ -507,7 +507,7 @@ function AddedAdvancedChip({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 1</span>
-                  <span className="text-sm font-medium text-blue-600">
+                  <span className="text-sm font-medium text-energy">
                     EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                   </span>
                   <span className="text-sm font-medium text-tp">
@@ -529,7 +529,7 @@ function AddedAdvancedChip({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 2</span>
-                  <span className="text-sm font-medium text-blue-600">
+                  <span className="text-sm font-medium text-energy">
                     EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                   </span>
                   <span className="text-sm font-medium text-tp">
@@ -551,7 +551,7 @@ function AddedAdvancedChip({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 3</span>
-                  <span className="text-sm font-medium text-blue-600">
+                  <span className="text-sm font-medium text-energy">
                     EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                   </span>
                   <span className="text-sm font-medium text-tp">
@@ -1290,7 +1290,6 @@ function PowerCreatorContent() {
               Reset
             </Button>
             <Button
-              variant="success"
               onClick={handleSave}
               disabled={saving || !name.trim()}
               isLoading={saving}

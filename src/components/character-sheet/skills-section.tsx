@@ -274,7 +274,6 @@ export function SkillsSection({
           {showEditControls && (
             <>
               <Button
-                variant="success"
                 size="sm"
                 onClick={onAddSkill}
               >

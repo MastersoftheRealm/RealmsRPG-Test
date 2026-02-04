@@ -42,7 +42,9 @@ interface ItemListProps {
   showHeader?: boolean;
   showCount?: boolean;
   emptyMessage?: string;
+  /** @deprecated Use isLoading instead */
   loading?: boolean;
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -66,8 +68,12 @@ export function ItemList({
   showCount = true,
   emptyMessage = 'No items found',
   loading = false,
+  isLoading,
   className = '',
 }: ItemListProps) {
+  // Support both loading and isLoading props (isLoading takes precedence)
+  const showLoading = isLoading ?? loading;
+  
   // Local state
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
   const [filterState, setFilterState] = useState<FilterState>({ search: '' });
@@ -401,14 +407,14 @@ export function ItemList({
       )}
       
       {/* Loading state */}
-      {loading && (
+      {showLoading && (
         <div className="flex items-center justify-center py-12">
           <Spinner size="md" />
         </div>
       )}
       
       {/* Empty state */}
-      {!loading && displayItems.length === 0 && (
+      {!showLoading && displayItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground">{emptyMessage}</p>
           {hasActiveFilters && (
@@ -425,7 +431,7 @@ export function ItemList({
       )}
       
       {/* Item list/grid */}
-      {!loading && displayItems.length > 0 && (
+      {!showLoading && displayItems.length > 0 && (
         <div className={
           currentLayout === 'grid' 
             ? `grid ${gridCols[columns]} gap-3`

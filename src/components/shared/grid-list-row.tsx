@@ -139,14 +139,14 @@ const BADGE_COLORS = {
   blue: 'bg-info-100 text-info-700',
   purple: 'bg-power-light text-power-text',
   green: 'bg-success-100 text-success-700',
-  amber: 'bg-amber-100 text-amber-800',
+  amber: 'bg-tp-light text-tp-text',
   gray: 'bg-surface-alt text-text-secondary',
   red: 'bg-danger-100 text-danger-700',
 };
 
 const CHIP_STYLES = {
   default: 'bg-primary-50 border-primary-200 text-primary-700 hover:bg-primary-100',
-  cost: 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100',
+  cost: 'bg-tp-light border-tp-border text-tp-text hover:bg-tp-light/80',
   tag: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
   warning: 'bg-danger-50 border-danger-200 text-danger-700 hover:bg-danger-100',
   success: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
@@ -470,7 +470,7 @@ export function GridListRow({
               {/* Total Cost */}
               {totalCost !== undefined && totalCost > 0 && (
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-tp-light text-tp-text">
                     <Zap className="w-4 h-4" />
                     Total {costLabel}: {totalCost}
                   </span>
@@ -532,7 +532,7 @@ export function GridListRow({
                               <div className="flex items-start justify-between gap-2 mb-2">
                                 <h5 className="font-semibold text-text-primary">{chip.name}</h5>
                                 {hasCost && (
-                                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-tp-light text-tp-text">
                                     <Zap className="w-3 h-3" />
                                     {chip.cost} {chip.costLabel || costLabel}
                                   </span>

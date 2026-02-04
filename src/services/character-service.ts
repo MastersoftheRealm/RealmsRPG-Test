@@ -17,6 +17,7 @@ import {
   DocumentData,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
+import { removeUndefined } from '@/lib/utils';
 import type { Character, CharacterSummary } from '@/types';
 
 /**
@@ -35,26 +36,6 @@ function requireUserId(): string {
  */
 function getCharactersCollection(userId: string) {
   return collection(db, 'users', userId, 'character');
-}
-
-/**
- * Remove undefined values from an object recursively.
- */
-function removeUndefined<T extends Record<string, unknown>>(obj: T): T {
-  if (Array.isArray(obj)) {
-    return obj.map(removeUndefined) as unknown as T;
-  } else if (obj && typeof obj === 'object') {
-    const clean: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(obj)) {
-      if (v !== undefined) {
-        clean[k] = typeof v === 'object' && v !== null 
-          ? removeUndefined(v as Record<string, unknown>) 
-          : v;
-      }
-    }
-    return clean as T;
-  }
-  return obj;
 }
 
 /**

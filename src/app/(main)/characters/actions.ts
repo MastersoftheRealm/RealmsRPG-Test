@@ -17,35 +17,12 @@ import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/firebase/session';
 import { getAdminFirestore } from '@/lib/firebase/server';
 import { FieldValue } from 'firebase-admin/firestore';
+import { removeUndefined } from '@/lib/utils';
 import type { Character } from '@/types';
 
 // =============================================================================
 // Helper Functions
 // =============================================================================
-
-/**
- * Remove undefined values from an object recursively.
- */
-function removeUndefined<T extends Record<string, unknown>>(obj: T): T {
-  if (Array.isArray(obj)) {
-    return obj.map(item => 
-      typeof item === 'object' && item !== null 
-        ? removeUndefined(item as Record<string, unknown>) 
-        : item
-    ) as unknown as T;
-  } else if (obj && typeof obj === 'object') {
-    const clean: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(obj)) {
-      if (v !== undefined) {
-        clean[k] = typeof v === 'object' && v !== null 
-          ? removeUndefined(v as Record<string, unknown>) 
-          : v;
-      }
-    }
-    return clean as T;
-  }
-  return obj;
-}
 
 /**
  * Prepare character data for saving.
