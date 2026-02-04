@@ -24,6 +24,7 @@
 import { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ABILITY_ABBR, ABILITY_OPTIONS, formatBonus } from '@/lib/constants/skills';
 import { IconButton } from '@/components/ui';
 import { ValueStepper, RollButton } from '@/components/shared';
 
@@ -100,31 +101,7 @@ export interface SkillRowProps {
   className?: string;
 }
 
-// =============================================================================
-// Constants
-// =============================================================================
-
-const ABILITY_ABBR: Record<string, string> = {
-  strength: 'STR',
-  vitality: 'VIT',
-  agility: 'AGI',
-  acuity: 'ACU',
-  intelligence: 'INT',
-  charisma: 'CHA',
-};
-
-const ABILITY_OPTIONS = [
-  { value: 'strength', label: 'STR' },
-  { value: 'vitality', label: 'VIT' },
-  { value: 'agility', label: 'AGI' },
-  { value: 'acuity', label: 'ACU' },
-  { value: 'intelligence', label: 'INT' },
-  { value: 'charisma', label: 'CHA' },
-];
-
-function formatBonus(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`;
-}
+// Constants imported from @/lib/constants/skills
 
 // =============================================================================
 // Component

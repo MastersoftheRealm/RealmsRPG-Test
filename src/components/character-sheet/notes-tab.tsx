@@ -13,7 +13,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Plus, X, ChevronDown, ChevronRight, Edit2 } from 'lucide-react';
+import { Plus, X, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
@@ -73,18 +73,10 @@ function NoteCard({
   return (
     <div className="border border-border-light rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-surface-alt">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-text-muted hover:text-text-primary transition-colors"
-        >
-          {isExpanded ? (
-            <ChevronDown className="w-4 h-4" />
-          ) : (
-            <ChevronRight className="w-4 h-4" />
-          )}
-        </button>
-        
+      <div 
+        className="flex items-center gap-2 px-3 py-2 bg-surface-alt cursor-pointer"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         {isEditingName ? (
           <input
             type="text"

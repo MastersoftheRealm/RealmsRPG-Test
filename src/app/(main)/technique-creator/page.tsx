@@ -686,7 +686,7 @@ function TechniqueCreatorContent() {
 
   if (isLoading) {
     return (
-      <PageContainer size="content">
+      <PageContainer size="xl">
         <LoadingState message="Loading technique parts..." />
       </PageContainer>
     );
@@ -694,7 +694,7 @@ function TechniqueCreatorContent() {
 
   if (error) {
     return (
-      <PageContainer size="content">
+      <PageContainer size="xl">
         <Alert variant="danger">
           Failed to load technique parts: {error.message}
         </Alert>
@@ -703,7 +703,7 @@ function TechniqueCreatorContent() {
   }
 
   return (
-    <PageContainer size="content">
+    <PageContainer size="xl">
       <PageHeader
         icon={<Swords className="w-8 h-8 text-red-600" />}
         title="Technique Creator"

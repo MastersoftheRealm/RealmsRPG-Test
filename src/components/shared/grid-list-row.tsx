@@ -249,10 +249,10 @@ export function GridListRow({
   return (
     <div className={rowStyles}>
       {/* Main Row */}
-      <div className="flex">
+      <div className="flex items-center">
         {/* Left Slot - renders before clickable content (e.g., equip toggle, innate toggle) */}
         {leftSlot && (
-          <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="flex-shrink-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             {leftSlot}
           </div>
         )}

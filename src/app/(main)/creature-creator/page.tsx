@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper, ItemSelectionModal, ItemCard } from '@/components/shared';
+import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper, ItemSelectionModal, ItemCard, SkillRow } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
 import {
@@ -890,7 +890,7 @@ function CreatureCreatorContent() {
   };
 
   return (
-    <PageContainer size="content">
+    <PageContainer size="xl">
       <PageHeader
         icon={<Skull className="w-8 h-8 text-primary-600" />}
         title="Creature Creator"
@@ -1226,50 +1226,26 @@ function CreatureCreatorContent() {
             {creature.skills.length === 0 ? (
               <p className="text-sm text-text-muted italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
             ) : (
-              <div className="border border-border-light rounded-lg divide-y divide-border-light mb-4">
-                {creature.skills.map(skill => (
-                  <div key={skill.name} className="flex items-center justify-between py-2.5 px-4 hover:bg-surface-alt transition-colors">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => removeSkill(skill.name)}
-                        className="w-5 h-5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center text-sm font-medium transition-colors"
-                        title="Remove skill"
-                      >
-                        ×
-                      </button>
-                      {/* For creatures, all skills are automatically proficient */}
-                      <div className="w-4 h-4 rounded-full border-2 bg-primary-600 border-primary-600" title="Proficient (all creature skills are proficient)" />
-                      <div className="flex flex-col">
-                        <span className="font-medium text-text-secondary">{skill.name}</span>
-                        {skillAbilityMap.get(skill.name) && (
-                          <span className="text-xs text-text-muted capitalize">{skillAbilityMap.get(skill.name)}</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <ValueStepper
-                        value={skill.value}
-                        onChange={(newValue) => updateSkill(skill.name, { value: newValue })}
-                        min={0}
-                        size="sm"
-                        enableHoldRepeat
-                      />
-                      {/* Show full bonus: ability + skill value (all creature skills are proficient) */}
-                      {(() => {
-                        const bonus = getSkillBonus(skill.name, skill.value, skill.proficient);
-                        return (
-                          <span className={cn(
-                            'w-12 text-right font-bold',
-                            bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-text-muted'
-                          )}>
-                            {bonus >= 0 ? '+' : ''}{bonus}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-2 mb-4">
+                {creature.skills.map(skill => {
+                  const bonus = getSkillBonus(skill.name, skill.value, skill.proficient);
+                  const ability = skillAbilityMap.get(skill.name);
+                  return (
+                    <SkillRow
+                      key={skill.name}
+                      id={skill.name}
+                      name={skill.name}
+                      proficient={true} // All creature skills are proficient
+                      value={skill.value}
+                      bonus={bonus}
+                      ability={ability}
+                      onValueChange={(delta) => updateSkill(skill.name, { value: skill.value + delta })}
+                      canIncrease={stats.skillRemaining > 0}
+                      onRemove={() => removeSkill(skill.name)}
+                      variant="card"
+                    />
+                  );
+                })}
               </div>
             )}
             

@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Check, Edit, Trash2, Copy, Eye, AlertCircle } from 'lucide-react';
+import { Check, Edit, Trash2, Copy, Eye, AlertCircle } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import type { DisplayItem, ListMode, ItemActions } from '@/types/items';
@@ -187,22 +187,6 @@ export function ItemCard({
           )}
           
           {/* Expand/collapse indicator */}
-          {hasDetails && !isManageable && (
-            <IconButton
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsExpanded(!isExpanded);
-              }}
-              label={isExpanded ? 'Collapse' : 'Expand'}
-            >
-              {isExpanded 
-                ? <ChevronUp className="w-4 h-4" /> 
-                : <ChevronDown className="w-4 h-4" />
-              }
-            </IconButton>
-          )}
         </div>
       </div>
       

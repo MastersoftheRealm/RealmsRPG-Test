@@ -1167,6 +1167,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
               
               <div className="flex flex-col">
                 <LibrarySection
+                  className="flex-1"
                   powers={enrichedData?.powers || character.powers || []}
                   techniques={enrichedData?.techniques || character.techniques || []}
                   weapons={enrichedData?.weapons || (character.equipment?.weapons || []) as Item[]}
@@ -1208,6 +1209,33 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onAppearanceChange={(v) => setCharacter(prev => prev ? { ...prev, appearance: v } : null)}
                   onArchetypeDescChange={(v) => setCharacter(prev => prev ? { ...prev, archetypeDesc: v } : null)}
                   onNotesChange={(v) => setCharacter(prev => prev ? { ...prev, notes: v } : null)}
+                  // Custom notes props
+                  namedNotes={character.namedNotes}
+                  onAddNote={() => {
+                    const newNote = {
+                      id: `note_${Date.now()}`,
+                      name: 'New Note',
+                      content: '',
+                    };
+                    setCharacter(prev => prev ? {
+                      ...prev,
+                      namedNotes: [...(prev.namedNotes || []), newNote],
+                    } : null);
+                  }}
+                  onUpdateNote={(id, updates) => {
+                    setCharacter(prev => prev ? {
+                      ...prev,
+                      namedNotes: (prev.namedNotes || []).map(note =>
+                        note.id === id ? { ...note, ...updates } : note
+                      ),
+                    } : null);
+                  }}
+                  onDeleteNote={(id) => {
+                    setCharacter(prev => prev ? {
+                      ...prev,
+                      namedNotes: (prev.namedNotes || []).filter(note => note.id !== id),
+                    } : null);
+                  }}
                   // Proficiencies tab props
                   level={character.level}
                   archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
@@ -1238,7 +1266,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   featsDb={featsDb}
                   traitUses={character.traitUses}
                   onTraitUsesChange={handleTraitUsesChange}
-                  className="flex-1"
                 />
               </div>
             </div>

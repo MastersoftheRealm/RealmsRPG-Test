@@ -18,6 +18,7 @@ import { X } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Modal } from '@/components/ui';
 import { GridListRow } from '@/components/shared';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
+import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
 interface AddSkillModalProps {
   isOpen: boolean;
@@ -25,15 +26,6 @@ interface AddSkillModalProps {
   existingSkillNames: string[];
   onAdd: (skills: RTDBSkill[]) => void;
 }
-
-const ABILITY_OPTIONS = [
-  { value: 'strength', label: 'Strength' },
-  { value: 'vitality', label: 'Vitality' },
-  { value: 'agility', label: 'Agility' },
-  { value: 'acuity', label: 'Acuity' },
-  { value: 'intelligence', label: 'Intelligence' },
-  { value: 'charisma', label: 'Charisma' },
-];
 
 // Helper to format ability badges for GridListRow
 function formatAbilityBadges(abilityString?: string): Array<{ label: string; color: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }> {
@@ -188,7 +180,7 @@ export function AddSkillModal({
               className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">All Abilities</option>
-              {ABILITY_OPTIONS.map(opt => (
+              {ABILITY_FILTER_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>

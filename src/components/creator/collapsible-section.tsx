@@ -93,11 +93,6 @@ export function CollapsibleSection({
           <div className="text-left">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-primary">{title}</h3>
-              {typeof itemCount === 'number' && (
-                <span className="px-2 py-0.5 text-xs font-medium bg-surface-alt text-secondary rounded-full">
-                  {itemCount}
-                </span>
-              )}
               {points && (
                 <span className={cn(
                   'px-2 py-0.5 text-xs font-medium rounded-full',
@@ -127,12 +122,6 @@ export function CollapsibleSection({
               Remove
             </Button>
           )}
-          <span className={cn(
-            'text-xl text-tertiary transition-transform',
-            isExpanded && 'rotate-180'
-          )}>
-            ▼
-          </span>
         </div>
       </button>
 

@@ -15,10 +15,11 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { X, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Select, Modal } from '@/components/ui';
 import { SelectionToggle } from '@/components/shared';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
+import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
 interface CharacterSkill {
   id?: string;
@@ -33,15 +34,6 @@ interface AddSubSkillModalProps {
   existingSkillNames: string[];
   onAdd: (skills: Array<RTDBSkill & { selectedBaseSkillId?: string; autoAddBaseSkill?: RTDBSkill }>) => void;
 }
-
-const ABILITY_OPTIONS = [
-  { value: 'strength', label: 'Strength' },
-  { value: 'vitality', label: 'Vitality' },
-  { value: 'agility', label: 'Agility' },
-  { value: 'acuity', label: 'Acuity' },
-  { value: 'intelligence', label: 'Intelligence' },
-  { value: 'charisma', label: 'Charisma' },
-];
 
 function ExpandableSubSkillRow({
   skill,
@@ -76,21 +68,9 @@ function ExpandableSubSkillRow({
     )}>
       {/* Header Row - Entire row is clickable to expand */}
       <div 
-        className="flex items-center gap-3 p-3 cursor-pointer"
+        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-surface-alt/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        {/* Expand Button */}
-        <span
-          className="text-text-muted transition-transform"
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
-        >
-          {isExpanded ? (
-            <ChevronDown className="w-4 h-4" />
-          ) : (
-            <ChevronRight className="w-4 h-4" />
-          )}
-        </span>
-        
         {/* Skill Name */}
         <div className="flex-1">
           <span className="font-medium text-text-primary">{skill.name}</span>
@@ -341,9 +321,13 @@ export function AddSubSkillModal({
   // Custom footer for Modal
   const modalFooter = (
     <div className="flex items-center justify-between px-5 py-4 border-t border-border-light bg-surface-alt">
-      <span className="text-sm text-text-secondary font-medium">
-        {selectedSkills.length} sub-skill{selectedSkills.length !== 1 ? 's' : ''} selected
-      </span>
+      {selectedSkills.length > 0 ? (
+        <span className="text-sm text-text-secondary font-medium">
+          {selectedSkills.length} selected
+        </span>
+      ) : (
+        <span></span>
+      )}
       <div className="flex gap-3">
         <Button variant="secondary" onClick={onClose}>
           Cancel
@@ -353,7 +337,7 @@ export function AddSubSkillModal({
           onClick={handleConfirm}
           disabled={selectedSkills.length === 0}
         >
-          Add Selected {selectedSkills.length > 0 ? `(${selectedSkills.length})` : ''}
+          Add Selected
         </Button>
       </div>
     </div>
@@ -389,7 +373,7 @@ export function AddSubSkillModal({
                 className="px-3 py-1.5 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">All</option>
-                {ABILITY_OPTIONS.map(opt => (
+                {ABILITY_FILTER_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>

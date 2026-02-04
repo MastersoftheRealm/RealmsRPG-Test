@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
-import { ChevronDown } from 'lucide-react';
 
 export interface CollapsibleProps {
   title: React.ReactNode;
@@ -99,9 +98,6 @@ export function Collapsible({
         <div className="flex items-center gap-2">
           {icon}
           <span>{title}</span>
-          {typeof count === 'number' && (
-            <span className="text-xs text-text-muted">({count})</span>
-          )}
           {badge}
         </div>
         <div className="flex items-center gap-2">
@@ -110,12 +106,6 @@ export function Collapsible({
               {action}
             </div>
           )}
-          <ChevronDown
-            className={cn(
-              'w-5 h-5 text-text-muted transition-transform duration-200',
-              isOpen && 'rotate-180'
-            )}
-          />
         </div>
       </button>
 

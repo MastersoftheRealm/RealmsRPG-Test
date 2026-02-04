@@ -12,7 +12,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
-import { NotesTab } from './notes-tab';
+import { NotesTab, type CharacterNote } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
 import { 
@@ -149,6 +149,37 @@ function propertiesToPartData(
   });
 }
 
+/**
+ * Calculate weapon attack bonus based on weapon properties
+ * - Finesse: Use agility instead of strength
+ * - Range: Use acuity instead of strength
+ * - Default: Use strength
+ */
+function getWeaponAttackBonus(
+  weapon: Item,
+  abilities?: Abilities
+): { bonus: number; abilityName: string } {
+  if (!abilities) return { bonus: 0, abilityName: 'Strength' };
+  
+  const props = (weapon.properties || []).map(p => 
+    typeof p === 'string' ? p : (p as { name?: string }).name || ''
+  );
+  
+  // Finesse uses agility
+  if (props.some(p => p.toLowerCase() === 'finesse')) {
+    return { bonus: abilities.agility, abilityName: 'Agility' };
+  }
+  
+  // Range uses acuity (also check if weapon has a range property > melee)
+  if (props.some(p => p.toLowerCase() === 'range') || 
+      (weapon as Item & { range?: string | number }).range) {
+    return { bonus: abilities.acuity, abilityName: 'Acuity' };
+  }
+  
+  // Default to strength
+  return { bonus: abilities.strength, abilityName: 'Strength' };
+}
+
 interface LibrarySectionProps {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
@@ -192,6 +223,11 @@ interface LibrarySectionProps {
   onAppearanceChange?: (value: string) => void;
   onArchetypeDescChange?: (value: string) => void;
   onNotesChange?: (value: string) => void;
+  // Named notes (custom notes)
+  namedNotes?: CharacterNote[];
+  onAddNote?: () => void;
+  onUpdateNote?: (id: string, updates: Partial<CharacterNote>) => void;
+  onDeleteNote?: (id: string) => void;
   // Proficiencies tab props
   level?: number;
   archetypeAbility?: number;
@@ -344,6 +380,11 @@ export function LibrarySection({
   onAppearanceChange,
   onArchetypeDescChange,
   onNotesChange,
+  // Custom notes props
+  namedNotes,
+  onAddNote,
+  onUpdateNote,
+  onDeleteNote,
   // Proficiencies props
   level = 1,
   archetypeAbility = 0,
@@ -408,7 +449,7 @@ export function LibrarySection({
   };
 
   return (
-    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6 relative", className)}>
+    <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6 relative flex flex-col", className)}>
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
@@ -510,8 +551,11 @@ export function LibrarySection({
                       
                       const innateToggle = onTogglePowerInnate ? (
                         <button
-                          onClick={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
-                          className="px-2 text-violet-600 hover:text-violet-700 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTogglePowerInnate(power.id || String(i), !isInnate);
+                          }}
+                          className="w-10 h-10 flex items-center justify-center text-violet-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all text-xl"
                           title="Remove from innate"
                         >
                           ★
@@ -602,8 +646,11 @@ export function LibrarySection({
                       
                       const innateToggle = onTogglePowerInnate ? (
                         <button
-                          onClick={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
-                          className="px-2 text-text-muted hover:text-violet-600 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTogglePowerInnate(power.id || String(i), !isInnate);
+                          }}
+                          className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-all text-xl"
                           title="Set as innate"
                         >
                           ☆
@@ -665,7 +712,8 @@ export function LibrarySection({
               {techniques.length > 0 ? (
                 <div className="space-y-1">
                   {techniques.map((tech, i) => {
-                    const energyCost = tech.cost ?? 0;
+                    // EnrichedTechnique uses 'energyCost', raw CharacterTechnique uses 'cost'
+                    const energyCost = (tech as any).energyCost ?? tech.cost ?? 0;
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                     const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
                     
@@ -789,7 +837,8 @@ export function LibrarySection({
               {weapons.length > 0 ? (
                 <div className="space-y-1">
                   {weapons.map((item, i) => {
-                    const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
+                    // Calculate attack bonus based on weapon properties (finesse/range/default)
+                    const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities);
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                     const columns: ColumnValue[] = [
                       { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium' },
@@ -815,11 +864,10 @@ export function LibrarySection({
                         rightSlot={rollContext && (
                           <div className="flex items-center gap-1">
                             <RollButton
-                              value={0}
-                              displayValue="⚔️"
+                              value={attackBonus}
                               onClick={() => rollContext.rollAttack(item.name, attackBonus)}
                               size="sm"
-                              title="Roll attack"
+                              title={`Roll attack (${abilityName})`}
                             />
                             {item.damage && typeof item.damage === 'string' && (
                               <RollButton
@@ -869,10 +917,26 @@ export function LibrarySection({
                   {armor.map((item, i) => {
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                     const itemWithCrit = item as Item & { critRange?: string | number };
+                    // Get ability requirement from enriched data
+                    const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
+                    const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
+                    
                     const columns: ColumnValue[] = [
                       { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium' },
                       { key: 'crit', value: itemWithCrit.critRange ?? '-' },
                     ];
+                    
+                    // Build expanded content with requirements
+                    const expandedDetails: string[] = [];
+                    if (abilityReq?.name && abilityReq?.level) {
+                      expandedDetails.push(`Requires ${abilityReq.name} ${abilityReq.level}+`);
+                    }
+                    if (agilityRed && agilityRed > 0) {
+                      expandedDetails.push(`Agility Reduction: -${agilityRed}`);
+                    }
+                    if (item.description) {
+                      expandedDetails.push(item.description);
+                    }
                     
                     return (
                       <GridListRow
@@ -891,10 +955,19 @@ export function LibrarySection({
                           />
                         )}
                         onDelete={onRemoveArmor && isEditMode ? () => onRemoveArmor(item.id || String(i)) : undefined}
-                        expandedContent={item.description ? (
-                          <p className="text-sm text-text-muted italic whitespace-pre-wrap">
-                            {item.description}
-                          </p>
+                        expandedContent={expandedDetails.length > 0 ? (
+                          <div className="space-y-1">
+                            {expandedDetails.map((detail, idx) => (
+                              <p key={idx} className={cn(
+                                "text-sm whitespace-pre-wrap",
+                                idx < expandedDetails.length - 1 || !item.description 
+                                  ? "text-text-secondary font-medium" 
+                                  : "text-text-muted italic"
+                              )}>
+                                {detail}
+                              </p>
+                            ))}
+                          </div>
                         ) : undefined}
                       />
                     );
@@ -996,6 +1069,7 @@ export function LibrarySection({
             appearance={appearance}
             archetypeDesc={archetypeDesc}
             notes={notes}
+            namedNotes={namedNotes}
             abilities={abilities}
             isEditMode={isEditMode}
             onWeightChange={onWeightChange}
@@ -1003,6 +1077,9 @@ export function LibrarySection({
             onAppearanceChange={onAppearanceChange}
             onArchetypeDescChange={onArchetypeDescChange}
             onNotesChange={onNotesChange}
+            onAddNote={onAddNote}
+            onUpdateNote={onUpdateNote}
+            onDeleteNote={onDeleteNote}
           />
         )}
 

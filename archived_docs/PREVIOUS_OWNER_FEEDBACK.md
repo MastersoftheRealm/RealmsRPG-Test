@@ -319,3 +319,21 @@ All header row/list header style update: a light blue for all list header works 
 random: make the health below half color a yellower orange, it's too red right now and makes the health seem red before terminal, but it needs to be distinguishable enough from terminal red. we can also deepen the red of terminal red. 
 
 allow editing character name with a pencil icon at the characters name, as well as editing character XP (not in edit mode, at any time you can adjust the XP value.) Auto-capitalize the characters power ability, not lower case. (charisma --> Charisma).
+
+2/4/2026 4:00pm
+
+Wesbite review: 
+
+Character sheet: Capitalize all section list item headers, (name, uses, rec). Alter our shared components so that if there's no value for uses/recovery, we don't have "-" in it's place, instead it's empty space where the truncated description can spill over. Also, remove the "rec." row for recovery, we can simply but "PR" or "FR" representing full or partial after the uses without needing a second column (it will be part of the uses column)
+'
+Doesn't allow me to hit the innate stars to make powers innate, and also the stars need to be more vertically centered, larger to hit, etc.
+
+Power loading errors: powers/techniques/armaments don't load/calculation their costs properly in list views, the energy and sometimes TP values are entirely wrong. 
+
+Audit the previous owner feedback documents from today and yesterday and look for areas we missed, didn't fully implement, overlooked, etc. (use more recent notes over older ones, older notes are at top, newer is lower in the list).
+
+Techniques aren't loading with energy or TP values.
+
+inventory tab list items seem to still be different styles and stuff than the other tabs, do we hae inline styles? also the equip buttons don't work/equip the items, (assuming the "+" on the left are equip buttons) they also need to be more centered vertically and match sizing with the item list card thingy. Also inconsistencies with previous notes here as well.
+
+Notes tab: no + to the right of custom notes. Again this was asked for in previous dialog, so there's likely many things overlooked.

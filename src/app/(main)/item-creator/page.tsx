@@ -902,7 +902,7 @@ function ItemCreatorContent() {
 
   if (isLoading) {
     return (
-      <PageContainer size="content">
+      <PageContainer size="xl">
         <LoadingState message="Loading item properties..." />
       </PageContainer>
     );
@@ -910,7 +910,7 @@ function ItemCreatorContent() {
 
   if (error) {
     return (
-      <PageContainer size="content">
+      <PageContainer size="xl">
         <Alert variant="danger">
           Failed to load item properties: {error.message}
         </Alert>
@@ -919,7 +919,7 @@ function ItemCreatorContent() {
   }
 
   return (
-    <PageContainer size="content">
+    <PageContainer size="xl">
       <PageHeader
         icon={<Sword className="w-8 h-8 text-amber-600" />}
         title="Armament Creator"

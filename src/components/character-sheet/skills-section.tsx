@@ -7,16 +7,18 @@
  * - Table with columns: Prof (dot), Skill Name, Ability (abbr), Bonus (roll button)
  * - Sub-skills are indented with "└" prefix
  * - Roll buttons have gradient styling matching abilities section
+ * 
+ * Uses the shared SkillRow component for consistent skill display across the site.
  */
 
 'use client';
 
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
-import { RollButton, PointStatus, EditSectionToggle, getEditState } from '@/components/shared';
-import { Button, IconButton } from '@/components/ui';
+import { PointStatus, EditSectionToggle, getEditState, SkillRow } from '@/components/shared';
+import { Button } from '@/components/ui';
 import type { Abilities } from '@/types';
 
 interface Skill {
@@ -45,27 +47,7 @@ interface SkillsSectionProps {
   className?: string;
 }
 
-const ABILITY_ABBR: Record<string, string> = {
-  strength: 'STR',
-  vitality: 'VIT',
-  agility: 'AGI',
-  acuity: 'ACU',
-  intelligence: 'INT',
-  charisma: 'CHA',
-};
-
-const ABILITY_OPTIONS = [
-  { value: 'strength', label: 'STR' },
-  { value: 'vitality', label: 'VIT' },
-  { value: 'agility', label: 'AGI' },
-  { value: 'acuity', label: 'ACU' },
-  { value: 'intelligence', label: 'INT' },
-  { value: 'charisma', label: 'CHA' },
-];
-
-function formatBonus(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`;
-}
+// Note: ABILITY_ABBR, ABILITY_OPTIONS, formatBonus are now in SkillRow component
 
 // Note: RollButton is now imported from @/components/shared
 
@@ -334,145 +316,44 @@ export function SkillsSection({
             {orderedSkills.map((skill) => {
               const isSubSkill = Boolean(skill.baseSkill);
               const bonus = getSkillBonus(skill);
-              const abilityAbbr = ABILITY_ABBR[(skill.ability || 'strength').toLowerCase()] || 'STR';
               const isFromSpecies = isSpeciesSkill(skill.name);
               
-              // Get available abilities for this skill (from RTDB data or fallback to all)
-              const skillAbilityOptions = skill.availableAbilities && skill.availableAbilities.length > 0
-                ? ABILITY_OPTIONS.filter(opt => 
-                    skill.availableAbilities!.some(a => a.toLowerCase() === opt.value)
-                  )
-                : ABILITY_OPTIONS;
-              
               return (
-                <tr 
-                  key={skill.id} 
-                  className={cn(
-                    'border-b border-border-subtle transition-colors',
-                    isSubSkill ? 'bg-surface-alt' : 'bg-surface',
-                    !showEditControls && 'hover:bg-blue-50'
-                  )}
-                >
-                  {/* Proficiency Dot */}
-                  <td className="py-2 text-center">
-                    {!isSubSkill && (
-                      <button
-                        onClick={() => showEditControls && handleProfToggle(skill)}
-                        disabled={!showEditControls || isFromSpecies}
-                        className={cn(
-                          'w-4 h-4 rounded-full inline-block transition-all',
-                          skill.prof 
-                            ? 'bg-blue-600 border-2 border-blue-600' 
-                            : 'bg-orange-400 border-2 border-orange-400',
-                          showEditControls && !isFromSpecies && 'cursor-pointer hover:scale-110',
-                          isFromSpecies && 'opacity-70'
-                        )}
-                        title={isFromSpecies 
-                          ? 'Species skill (locked)' 
-                          : skill.prof 
-                            ? 'Proficient (click to toggle)' 
-                            : 'Not proficient (click to toggle)'
-                        }
-                      />
-                    )}
-                  </td>
-                  
-                  {/* Skill Name */}
-                  <td className={cn(
-                    'py-2 pl-2 font-medium',
-                    isSubSkill ? 'text-text-muted italic' : 'text-text-primary'
-                  )}>
-                    {isSubSkill && <span className="text-text-muted mr-1">└</span>}
-                    {skill.name}
-                    {isFromSpecies && (
-                      <span className="ml-1 text-xs text-text-muted">(Species)</span>
-                    )}
-                  </td>
-                  
-                  {/* Ability */}
-                  <td className="py-2 text-center">
-                    {showEditControls && onSkillChange && skillAbilityOptions.length > 1 ? (
-                      <select
-                        value={skill.ability || skillAbilityOptions[0]?.value || 'strength'}
-                        onChange={(e) => onSkillChange(skill.id, { ability: e.target.value })}
-                        className="text-xs px-1 py-0.5 rounded border border-border-light bg-surface-alt text-text-secondary cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {skillAbilityOptions.map(opt => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="text-xs text-text-muted font-semibold">
-                        {abilityAbbr}
-                      </span>
-                    )}
-                  </td>
-                  
-                  {/* Bonus Roll Button */}
-                  <td className="py-2 text-center">
-                    {showEditControls ? (
-                      <span className={cn(
-                        'inline-block min-w-[40px] font-bold',
-                        bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-text-secondary'
-                      )}>
-                        {formatBonus(bonus)}
-                      </span>
-                    ) : (
-                      <RollButton
-                        value={bonus}
-                        onClick={() => rollContext?.rollSkill?.(skill.name, bonus)}
-                        size="sm"
-                        title={`Roll ${skill.name}`}
-                      />
-                    )}
-                  </td>
-                  
-                  {/* Skill Value +/- (edit mode) */}
-                  {showEditControls && (
-                    <td className="py-2 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => handleSkillDecrease(skill)}
-                          disabled={skill.skill_val <= 0 && !skill.prof}
-                          className={cn(
-                            'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-                            (skill.skill_val > 0 || skill.prof)
-                              ? 'bg-surface hover:bg-surface-alt text-text-secondary'
-                              : 'bg-surface text-border-light cursor-not-allowed'
-                          )}
-                        >
-                          −
-                        </button>
-                        <span className="w-6 text-center font-mono text-sm">
-                          {skill.skill_val}
-                        </span>
-                        <button
-                          onClick={() => handleSkillIncrease(skill)}
-                          className="w-6 h-6 rounded bg-surface hover:bg-surface-alt flex items-center justify-center text-sm font-bold text-text-secondary transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </td>
-                  )}
-                  
-                  {/* Remove button (edit mode) */}
-                  {showEditControls && (
-                    <td className="py-2 text-center">
-                      {onRemoveSkill && (
-                        <IconButton
-                          variant="danger"
-                          size="sm"
-                          onClick={() => onRemoveSkill(skill.id)}
-                          label="Remove skill"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      )}
-                    </td>
-                  )}
-                </tr>
+                <SkillRow
+                  key={skill.id}
+                  id={skill.id}
+                  name={skill.name}
+                  isSubSkill={isSubSkill}
+                  baseSkillName={skill.baseSkill}
+                  proficient={skill.prof || false}
+                  canToggleProficiency={showEditControls && !isFromSpecies}
+                  onToggleProficiency={() => handleProfToggle(skill)}
+                  value={skill.skill_val}
+                  bonus={bonus}
+                  ability={skill.ability}
+                  availableAbilities={skill.availableAbilities}
+                  onAbilityChange={showEditControls && onSkillChange 
+                    ? (newAbility) => onSkillChange(skill.id, { ability: newAbility })
+                    : undefined
+                  }
+                  isEditing={showEditControls}
+                  onValueChange={(delta) => {
+                    if (delta > 0) {
+                      handleSkillIncrease(skill);
+                    } else if (delta < 0) {
+                      handleSkillDecrease(skill);
+                    }
+                  }}
+                  canIncrease={remaining === undefined || remaining > 0}
+                  onRemove={showEditControls && onRemoveSkill 
+                    ? () => onRemoveSkill(skill.id) 
+                    : undefined
+                  }
+                  showRollButton={!showEditControls}
+                  onRoll={() => rollContext?.rollSkill?.(skill.name, bonus)}
+                  isSpeciesSkill={isFromSpecies}
+                  variant="table"
+                />
               );
             })}
           </tbody>

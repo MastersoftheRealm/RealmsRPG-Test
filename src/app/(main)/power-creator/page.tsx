@@ -1251,7 +1251,7 @@ function PowerCreatorContent() {
 
   if (isLoading) {
     return (
-      <PageContainer size="content">
+      <PageContainer size="xl">
         <LoadingState message="Loading power parts..." />
       </PageContainer>
     );
@@ -1259,7 +1259,7 @@ function PowerCreatorContent() {
 
   if (error) {
     return (
-      <PageContainer size="content">
+      <PageContainer size="xl">
         <Alert variant="danger">
           Failed to load power parts: {error.message}
         </Alert>
@@ -1268,7 +1268,7 @@ function PowerCreatorContent() {
   }
 
   return (
-    <PageContainer size="content">
+    <PageContainer size="xl">
       <PageHeader
         icon={<Wand2 className="w-8 h-8 text-primary-600" />}
         title="Power Creator"

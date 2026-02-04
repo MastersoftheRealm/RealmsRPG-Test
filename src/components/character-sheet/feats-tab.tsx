@@ -97,44 +97,52 @@ interface FeatsTabProps {
 
 const TRAIT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
-  { key: 'description', label: 'Description', width: '2fr', sortable: false },
-  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
-  { key: 'recovery', label: 'Rec.', width: '4rem', align: 'center' },
+  { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
+  { key: 'uses', label: 'Uses', width: '6rem', align: 'center' },
 ];
 
-const TRAIT_GRID = '1fr 2fr 5rem 4rem';
+const TRAIT_GRID = '1fr 2.5fr 6rem';
 
 const FEAT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
-  { key: 'description', label: 'Description', width: '2fr', sortable: false },
-  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
-  { key: 'recovery', label: 'Rec.', width: '4rem', align: 'center' },
+  { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
+  { key: 'uses', label: 'Uses', width: '6rem', align: 'center' },
 ];
 
-const FEAT_GRID = '1fr 2fr 5rem 4rem';
+const FEAT_GRID = '1fr 2.5fr 6rem';
 
 // =============================================================================
 // Helper: Truncate description for collapsed view
 // =============================================================================
 
 function truncateText(text: string | undefined, maxLength: number = 80): string {
-  if (!text) return '-';
+  if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.substring(0, maxLength).trim() + '...';
 }
 
 // =============================================================================
-// Helper: Format recovery period abbreviation
+// Helper: Format recovery period abbreviation (PR = Partial, FR = Full)
 // =============================================================================
 
-function formatRecovery(recovery: string | undefined): string {
-  if (!recovery) return '-';
+function formatRecoveryAbbrev(recovery: string | undefined): string {
+  if (!recovery) return '';
   const lower = recovery.toLowerCase();
-  if (lower.includes('partial')) return 'Partial';
-  if (lower.includes('full')) return 'Full';
-  if (lower.includes('short')) return 'Short';
-  if (lower.includes('long')) return 'Long';
-  return recovery.substring(0, 6);
+  if (lower.includes('partial')) return 'PR';
+  if (lower.includes('full')) return 'FR';
+  if (lower.includes('short')) return 'SR';
+  if (lower.includes('long')) return 'LR';
+  return '';
+}
+
+// Helper: Format uses with recovery suffix (e.g., "2/3 PR" or empty if no uses)
+function formatUsesWithRecovery(
+  uses: { current: number; max: number } | undefined,
+  recovery: string | undefined
+): string {
+  if (!uses || uses.max === 0) return '';
+  const recAbbrev = formatRecoveryAbbrev(recovery);
+  return recAbbrev ? `${uses.current}/${uses.max} ${recAbbrev}` : `${uses.current}/${uses.max}`;
 }
 
 // =============================================================================
@@ -358,9 +366,8 @@ export function FeatsTab({
                   description={trait.description}
                   gridColumns={TRAIT_GRID}
                   columns={[
-                    { key: 'description', value: truncateText(trait.description), hideOnMobile: true },
-                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
-                    { key: 'recovery', value: formatRecovery(trait.recoveryPeriod) },
+                    { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
+                    { key: 'uses', value: formatUsesWithRecovery(uses, trait.recoveryPeriod) },
                   ]}
                   badges={categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined}
                   uses={uses}
@@ -410,9 +417,8 @@ export function FeatsTab({
                   description={feat.description}
                   gridColumns={FEAT_GRID}
                   columns={[
-                    { key: 'description', value: truncateText(feat.description), hideOnMobile: true },
-                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
-                    { key: 'recovery', value: formatRecovery(feat.recovery) },
+                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                    { key: 'uses', value: formatUsesWithRecovery(uses, feat.recovery) },
                   ]}
                   uses={uses}
                   onQuantityChange={onFeatUsesChange
@@ -464,9 +470,8 @@ export function FeatsTab({
                   description={feat.description}
                   gridColumns={FEAT_GRID}
                   columns={[
-                    { key: 'description', value: truncateText(feat.description), hideOnMobile: true },
-                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
-                    { key: 'recovery', value: formatRecovery(feat.recovery) },
+                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                    { key: 'uses', value: formatUsesWithRecovery(uses, feat.recovery) },
                   ]}
                   uses={uses}
                   onQuantityChange={onFeatUsesChange
@@ -517,9 +522,8 @@ export function FeatsTab({
                   description={feat.description}
                   gridColumns={FEAT_GRID}
                   columns={[
-                    { key: 'description', value: truncateText(feat.description), hideOnMobile: true },
-                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
-                    { key: 'recovery', value: formatRecovery(feat.recovery) },
+                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                    { key: 'uses', value: formatUsesWithRecovery(uses, feat.recovery) },
                   ]}
                   badges={[{ label: typeLabel, color: 'blue' }]}
                   uses={uses}

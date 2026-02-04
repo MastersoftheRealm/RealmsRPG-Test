@@ -90,8 +90,10 @@ export function EquipmentStep() {
   }, [currentUnarmedProwess]);
 
   // Get available unarmed prowess levels based on character level
+  // In character creator, only show levels that are actually available (filter out future levels)
   const availableUnarmedLevels = useMemo(() => {
     const charLevel = draft.level || 1;
+    // Only show levels the character can actually select - hide higher levels entirely
     return UNARMED_PROWESS_LEVELS.filter(up => up.charLevel <= charLevel);
   }, [draft.level]);
   

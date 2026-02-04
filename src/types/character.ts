@@ -109,6 +109,12 @@ export interface Character {
   experience?: number;
   description?: string;
   notes?: string;
+  // Named notes (custom notes with titles)
+  namedNotes?: Array<{
+    id: string;
+    name: string;
+    content: string;
+  }>;
   
   // Physical attributes
   weight?: number;

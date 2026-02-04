@@ -76,6 +76,13 @@ export interface EnrichedItem {
     name: string;
     description?: string;
   }>;
+  // Armor-specific fields
+  critRange?: number;
+  agilityReduction?: number;
+  abilityRequirement?: {
+    name?: string;
+    level?: number;
+  };
   // Original library item for reference
   libraryItem?: UserItem;
   // Flag if not found in library
@@ -315,6 +322,10 @@ export function enrichItems(
         damage: libraryItem.damage,
         armorValue: libraryItem.armorValue,
         properties: propertyNames,
+        // Armor-specific fields
+        critRange: libraryItem.criticalRangeIncrease,
+        agilityReduction: libraryItem.agilityReduction,
+        abilityRequirement: libraryItem.abilityRequirement,
         libraryItem,
       };
     }
