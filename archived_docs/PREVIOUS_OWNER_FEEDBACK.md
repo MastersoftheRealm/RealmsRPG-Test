@@ -305,3 +305,17 @@ Weapons: Name, Range, TP, Currency, Rarity, Attack (roll button with proper atta
 Armor: Name, Damage Reduction (DMG RED if needs to be shortened), Critical range (CRIT RNG), TP, currency, Rarirty.  Other details in expanded view that aren't includeded due to header space constraints but would be included normally, such as agility requirement if any, and ability requirement if any, if we have space for these in the header we can abbrivate them and put them in before currency/rarirty.
 
 For this character library refactoring use common sense, best practice, unification principles, context from the codebase, etc for best result implementation. Don't avoid implementing changes/removing inline designs because of what's been done before, use this as the guide.
+
+10:00pm 2/3/2026
+
+Website fixes review.
+
+Modal fix notes: still can't utilize list header ascending/descending sorting, remove the "add" text from the column, it looked better w/o it. 
+
+Many modal still don't have proper list views such as weapons, armors, equipments, powers, techniques. we need headers in the modals (to match the character library/library page headers) as well as list view mechanics like other modals such as feats and skills, these should already be shared components/styles that are utilized by all modals that add these things.
+
+All header row/list header style update: a light blue for all list header works best and cleanest, header with headers for rows should be rounded at the edges and not go to the borders of the modal/tab/screen across the website, rounded edges brought in to match the list items would look sleeker and cleaner.
+
+random: make the health below half color a yellower orange, it's too red right now and makes the health seem red before terminal, but it needs to be distinguishable enough from terminal red. we can also deepen the red of terminal red. 
+
+allow editing character name with a pencil icon at the characters name, as well as editing character XP (not in edit mode, at any time you can adjust the XP value.) Auto-capitalize the characters power ability, not lower case. (charisma --> Charisma).
