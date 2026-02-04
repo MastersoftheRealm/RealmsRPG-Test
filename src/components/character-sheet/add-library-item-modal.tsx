@@ -11,7 +11,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Loader2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Modal, SearchInput, Button } from '@/components/ui';
-import { GridListRow, QuantitySelector } from '@/components/shared';
+import { GridListRow, QuantitySelector, ListHeader } from '@/components/shared';
+import type { SortState } from '@/components/shared';
 import { formatDamageDisplay } from '@/lib/utils';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
@@ -38,6 +39,8 @@ export function AddLibraryItemModal({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   // Track quantities for equipment items (id -> quantity)
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  // Sort state for list
+  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
   
   // Fetch user library based on item type
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
@@ -80,9 +83,9 @@ export function AddLibraryItemModal({
     }
   }, [itemType, userPowers, userTechniques, userItems, powersLoading, techniquesLoading, itemsLoading]);
   
-  // Filter by search query and exclude already added items
+  // Filter by search query and exclude already added items, then sort
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
+    let result = items.filter(item => {
       // Exclude already added
       if (existingIds.has(item.id)) return false;
       
@@ -94,7 +97,33 @@ export function AddLibraryItemModal({
       }
       return true;
     });
-  }, [items, existingIds, searchQuery]);
+    
+    // Sort by current sort state
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortState.col === 'name') {
+        cmp = a.name.localeCompare(b.name);
+      } else if (sortState.col === 'level') {
+        // For powers/techniques - parts count
+        const aVal = (a as UserPower | UserTechnique).parts?.length || 0;
+        const bVal = (b as UserPower | UserTechnique).parts?.length || 0;
+        cmp = aVal - bVal;
+      } else if (sortState.col === 'damage') {
+        // For weapons
+        const aVal = formatDamageForSort((a as UserItem).damage);
+        const bVal = formatDamageForSort((b as UserItem).damage);
+        cmp = aVal.localeCompare(bVal);
+      } else if (sortState.col === 'armor') {
+        // For armor
+        const aVal = (a as UserItem).armorValue || 0;
+        const bVal = (b as UserItem).armorValue || 0;
+        cmp = aVal - bVal;
+      }
+      return cmp * sortState.dir;
+    });
+    
+    return result;
+  }, [items, existingIds, searchQuery, sortState]);
   
   // Toggle selection
   const toggleSelection = (id: string) => {
@@ -161,20 +190,33 @@ export function AddLibraryItemModal({
       }));
       onAdd(techniques);
     } else {
-      const equipmentItems: Item[] = (selectedItems as UserItem[]).map(i => ({
-        id: i.id,
-        name: i.name,
-        description: i.description || '',
-        // Convert properties to string names for Item type compatibility
-        properties: (i.properties || [])
-          .map(p => typeof p === 'string' ? p : p.name)
-          .filter((name): name is string => typeof name === 'string'),
-        damage: i.damage || '',
-        armor: i.armorValue || 0,
-        equipped: false,
-        // Use selected quantity for equipment, default to 1 for weapons/armor
-        quantity: itemType === 'equipment' ? (quantities[i.id] || 1) : 1,
-      }));
+      const equipmentItems: Item[] = (selectedItems as UserItem[]).map(i => {
+        // Convert SavedDamage[] to string format for Item type
+        let damageStr = '';
+        if (Array.isArray(i.damage) && i.damage.length > 0) {
+          const dmg = i.damage[0];
+          if (dmg.amount && dmg.size && dmg.type && dmg.type !== 'none') {
+            damageStr = `${dmg.amount}d${dmg.size} ${dmg.type}`;
+          }
+        } else if (typeof i.damage === 'string') {
+          damageStr = i.damage;
+        }
+        
+        return {
+          id: i.id,
+          name: i.name,
+          description: i.description || '',
+          // Convert properties to string names for Item type compatibility
+          properties: (i.properties || [])
+            .map(p => typeof p === 'string' ? p : p.name)
+            .filter((name): name is string => typeof name === 'string'),
+          damage: damageStr,
+          armor: i.armorValue || 0,
+          equipped: false,
+          // Use selected quantity for equipment, default to 1 for weapons/armor
+          quantity: itemType === 'equipment' ? (quantities[i.id] || 1) : 1,
+        };
+      });
       onAdd(equipmentItems);
     }
     
@@ -227,7 +269,21 @@ export function AddLibraryItemModal({
               )}
             </div>
           ) : (
-            <div className="space-y-2 p-2">
+            <div className="p-2">
+              {/* List Header with sorting */}
+              <ListHeader
+                columns={getListHeaderColumns(itemType)}
+                sortState={sortState}
+                onSort={(col) => {
+                  setSortState(prev => ({
+                    col,
+                    dir: (prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1) as 1 | -1
+                  }));
+                }}
+                hasSelectionColumn
+              />
+              
+              <div className="space-y-2">
               {filteredItems.map((item) => {
                 const isSelected = selectedIds.has(item.id);
                 const showQuantity = itemType === 'equipment' && isSelected;
@@ -258,6 +314,7 @@ export function AddLibraryItemModal({
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
         </div>
@@ -315,6 +372,39 @@ function getItemColumns(item: UserPower | UserTechnique | UserItem, itemType: It
     ] : [];
   }
   return [];
+}
+
+// Helper to format damage for sorting
+function formatDamageForSort(damage: unknown): string {
+  if (!damage) return '';
+  if (typeof damage === 'string') return damage;
+  if (Array.isArray(damage) && damage.length > 0) {
+    const d = damage[0];
+    return `${d.amount || 0}d${d.size || 0} ${d.type || ''}`;
+  }
+  return '';
+}
+
+// Get ListHeader columns based on item type
+function getListHeaderColumns(itemType: ItemType) {
+  const baseColumns = [
+    { key: 'name', label: 'Name', sortable: true },
+  ];
+  
+  switch (itemType) {
+    case 'power':
+      return [...baseColumns, { key: 'level', label: 'Level', sortable: true, align: 'center' as const }];
+    case 'technique':
+      return [...baseColumns, { key: 'level', label: 'Parts', sortable: true, align: 'center' as const }];
+    case 'weapon':
+      return [...baseColumns, { key: 'damage', label: 'Damage', sortable: true, align: 'center' as const }];
+    case 'armor':
+      return [...baseColumns, { key: 'armor', label: 'Armor', sortable: true, align: 'center' as const }];
+    case 'equipment':
+      return baseColumns;
+    default:
+      return baseColumns;
+  }
 }
 
 export default AddLibraryItemModal;

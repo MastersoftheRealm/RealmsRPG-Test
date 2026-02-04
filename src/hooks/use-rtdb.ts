@@ -377,10 +377,12 @@ async function fetchPowerParts(): Promise<PowerPart[]> {
         const part = p as Record<string, unknown>;
         return (part.type as string)?.toLowerCase() === 'power';
       })
-      .map(([id, p]) => {
+      .map(([key, p]) => {
         const part = p as Record<string, unknown>;
+        // Use the 'id' field from the part data if available, otherwise use the key
+        const partId = part.id !== undefined ? String(part.id) : key;
         return {
-          id,
+          id: partId,
           name: (part.name as string) || '',
           description: (part.description as string) || '',
           category: (part.category as string) || '',
@@ -411,10 +413,12 @@ async function fetchTechniqueParts(): Promise<TechniquePart[]> {
         const part = p as Record<string, unknown>;
         return (part.type as string)?.toLowerCase() === 'technique';
       })
-      .map(([id, p]) => {
+      .map(([key, p]) => {
         const part = p as Record<string, unknown>;
+        // Use the 'id' field from the part data if available, otherwise use the key
+        const partId = part.id !== undefined ? String(part.id) : key;
         return {
-          id,
+          id: partId,
           name: (part.name as string) || '',
           description: (part.description as string) || '',
           category: (part.category as string) || '',
@@ -441,10 +445,12 @@ async function fetchTechniqueParts(): Promise<TechniquePart[]> {
 /** Fetch ALL parts (both power and technique) for Codex Parts tab */
 async function fetchParts(): Promise<Part[]> {
   return fetchRTDBData<Part>('parts', (data) =>
-    Object.entries(data).map(([id, p]) => {
+    Object.entries(data).map(([key, p]) => {
       const part = p as Record<string, unknown>;
+      // Use the 'id' field from the part data if available, otherwise use the key
+      const partId = part.id !== undefined ? String(part.id) : key;
       return {
-        id,
+        id: partId,
         name: (part.name as string) || '',
         description: (part.description as string) || '',
         category: (part.category as string) || '',
@@ -469,10 +475,12 @@ async function fetchParts(): Promise<Part[]> {
 
 async function fetchItemProperties(): Promise<ItemProperty[]> {
   return fetchRTDBData<ItemProperty>('properties', (data) =>
-    Object.entries(data).map(([id, p]) => {
+    Object.entries(data).map(([key, p]) => {
       const prop = p as Record<string, unknown>;
+      // Use the 'id' field from the property data if available, otherwise use the key
+      const propId = prop.id !== undefined ? String(prop.id) : key;
       return {
-        id,
+        id: propId,
         name: (prop.name as string) || '',
         description: (prop.description as string) || '',
         type: ((prop.type as string) || 'general') as 'weapon' | 'armor' | 'shield' | 'general',
@@ -495,10 +503,12 @@ async function fetchItemProperties(): Promise<ItemProperty[]> {
 async function fetchEquipment(): Promise<EquipmentItem[]> {
   // Note: RTDB uses 'items' path for equipment data
   return fetchRTDBData<EquipmentItem>('items', (data) =>
-    Object.entries(data).map(([id, e]) => {
+    Object.entries(data).map(([key, e]) => {
       const equip = e as Record<string, unknown>;
+      // Use the 'id' field from the equipment data if available, otherwise use the key
+      const equipId = equip.id !== undefined ? String(equip.id) : key;
       return {
-        id,
+        id: equipId,
         name: (equip.name as string) || '',
         type: ((equip.type as string) || 'equipment') as 'weapon' | 'armor' | 'equipment',
         subtype: equip.subtype as string | undefined,

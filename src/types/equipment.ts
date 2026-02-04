@@ -44,12 +44,19 @@ export type DamageType =
   | 'spiritual'
   | 'psychic';
 
+/** Damage entry for items */
+export interface DamageEntry {
+  amount?: number | string;
+  size?: number | string;
+  type?: string;
+}
+
 /** Base item interface */
 export interface Item {
   id: number | string;
   name: string;
   description?: string;
-  type?: 'weapon' | 'armor' | 'equipment' | string;
+  type?: 'weapon' | 'armor' | 'equipment' | 'shield' | string;
   rarity?: ItemRarity;
   cost?: number;
   weight?: number;
@@ -57,8 +64,8 @@ export interface Item {
   // Equipped state
   equipped?: boolean;
   quantity?: number;
-  // Combat stats (for display)
-  damage?: string;
+  // Combat stats (for display) - supports both string and array formats
+  damage?: string | DamageEntry[];
   armor?: number;
   range?: number;
 }

@@ -111,8 +111,8 @@ export function Modal({
       {/* Modal */}
       <div
         className={cn(
-          'relative z-10 w-full rounded-2xl bg-surface shadow-2xl',
-          flexLayout ? 'flex flex-col max-h-[90vh]' : 'max-h-[90vh] overflow-auto',
+          'relative z-10 w-full rounded-2xl bg-surface shadow-2xl border border-border-light',
+          flexLayout ? 'flex flex-col max-h-[90vh]' : 'max-h-[90vh] overflow-auto scrollbar-thin',
           // Animation matching vanilla: scale + translateY
           'animate-modal-pop',
           sizeClasses[size],
@@ -125,7 +125,7 @@ export function Modal({
       >
         {/* Simple Header (title/description mode) */}
         {hasSimpleHeader && (
-          <div className="border-b border-border-light px-6 py-4">
+          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-50 rounded-xl border-b border-border-light">
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
                 {title}
@@ -156,7 +156,7 @@ export function Modal({
         
         {/* Content */}
         <div className={cn(
-          flexLayout ? 'flex-1 min-h-0 overflow-y-auto' : '',
+          flexLayout ? 'flex-1 min-h-0 overflow-y-auto scrollbar-thin' : '',
           contentClassName ?? 'p-6'
         )}>
           {children}

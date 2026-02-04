@@ -301,6 +301,90 @@
   h3, h4, h5, h6 {
     @apply text-title font-semibold;
   }
+
+  /* ---------------------------------------------------------------------------
+     CUSTOM SCROLLBAR - Minimal, non-intrusive design
+     Thin by default, expands on hover, overlay style
+     --------------------------------------------------------------------------- */
+  
+  /* Firefox scrollbar styling */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  }
+  
+  *:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+  }
+
+  /* Webkit (Chrome, Safari, Edge) scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 9999px;
+    transition: background 0.2s ease, width 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Scrollable container with hover-expand scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 9999px;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Hide scrollbar until hover (for cleaner look) */
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .scrollbar-hidden:hover {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-hidden:hover::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 }
 
 /* =============================================================================

@@ -14,6 +14,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import Image from 'next/image';
+import { Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { HealthEnergyAllocator } from '@/components/creator';
@@ -43,6 +44,8 @@ interface SheetHeaderProps {
   isUploadingPortrait?: boolean;
   // Character name editing
   onNameChange?: (name: string) => void;
+  // Experience editing
+  onExperienceChange?: (value: number) => void;
   // Speed/Evasion base editing
   speedBase?: number;
   evasionBase?: number;
@@ -206,10 +209,12 @@ function ResourceInput({
   const percentage = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
   
   // Bar color: gold when above max, otherwise normal colors
+  // Half health = amber/yellow-orange (distinguishable from terminal red)
+  // Terminal = deep crimson red
   const barColorClass = isAboveMax 
     ? 'bg-amber-400' // Gold when above max
     : colorVariant === 'health' 
-      ? (percentage > 50 ? 'bg-green-500' : percentage > 25 ? 'bg-orange-500' : 'bg-red-500')
+      ? (percentage > 50 ? 'bg-green-500' : percentage > 25 ? 'bg-amber-500' : 'bg-red-700')
       : colorVariant === 'energy' ? 'bg-blue-500' : 'bg-primary-500';
   
   return (
@@ -392,6 +397,7 @@ export function SheetHeader({
   onPortraitChange,
   isUploadingPortrait = false,
   onNameChange,
+  onExperienceChange,
   speedBase = 6,
   evasionBase = 10,
   onSpeedBaseChange,
@@ -406,10 +412,23 @@ export function SheetHeader({
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(character.name || '');
   
+  // State for editing XP
+  const [isEditingXP, setIsEditingXP] = useState(false);
+  const [xpInput, setXpInput] = useState(String(character.experience ?? 0));
+  
   // Check if character can level up (XP >= level * 4)
   const xp = character.experience ?? 0;
   const level = character.level || 1;
   const canLevelUp = xp >= (level * 4);
+
+  // Handle XP submission
+  const handleXPSubmit = () => {
+    const value = parseInt(xpInput, 10);
+    if (!isNaN(value) && value >= 0 && onExperienceChange) {
+      onExperienceChange(value);
+    }
+    setIsEditingXP(false);
+  };
 
   // Calculate H/E pool (vanilla formula: 18 + 12*(level-1))
   const totalHEPool = 18 + 12 * (level - 1);
@@ -452,8 +471,8 @@ export function SheetHeader({
             className={cn(
               "relative w-28 h-28 md:w-36 md:h-36 rounded-xl overflow-hidden bg-surface flex-shrink-0 border-3 shadow-lg",
               healthColor === 'green' && 'border-green-400',
-              healthColor === 'orange' && 'border-orange-400',
-              healthColor === 'red' && 'border-red-400',
+              healthColor === 'orange' && 'border-amber-400',
+              healthColor === 'red' && 'border-red-600',
               isEditMode && onPortraitChange && "cursor-pointer group"
             )}
             onClick={handlePortraitClick}
@@ -487,37 +506,35 @@ export function SheetHeader({
           
           {/* Character Identity - Clean unified format */}
           <div className="flex flex-col justify-center min-w-0">
-            {/* Editable Name */}
-            {isEditMode && onNameChange ? (
-              isEditingName ? (
-                <input
-                  type="text"
-                  value={nameInput}
-                  onChange={(e) => setNameInput(e.target.value)}
-                  onBlur={handleNameSubmit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleNameSubmit();
-                    if (e.key === 'Escape') {
-                      setNameInput(character.name || '');
-                      setIsEditingName(false);
-                    }
-                  }}
-                  className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500"
-                  autoFocus
-                />
-              ) : (
-                <h1
-                  className="text-2xl md:text-3xl font-bold text-text-primary truncate cursor-pointer hover:text-primary-600 transition-colors group"
-                  onClick={() => setIsEditingName(true)}
-                  title="Click to edit name"
-                >
-                  {character.name}
-                  <span className="ml-2 text-lg opacity-0 group-hover:opacity-100 transition-opacity">✏️</span>
-                </h1>
-              )
+            {/* Editable Name - Always available with pencil icon */}
+            {isEditingName && onNameChange ? (
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onBlur={handleNameSubmit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleNameSubmit();
+                  if (e.key === 'Escape') {
+                    setNameInput(character.name || '');
+                    setIsEditingName(false);
+                  }
+                }}
+                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500"
+                autoFocus
+              />
             ) : (
-              <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate">
+              <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate flex items-center gap-2">
                 {character.name}
+                {onNameChange && (
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="text-gray-400 hover:text-primary-600 transition-colors"
+                    title="Edit name"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
               </h1>
             )}
             
@@ -531,17 +548,53 @@ export function SheetHeader({
               {character.archetype?.name || 'No Archetype'}
               {(character.pow_abil || character.mart_abil) && ': '}
               {character.pow_abil && (
-                <span className="text-category-power">{character.pow_abil}</span>
+                <span className="text-category-power capitalize">{character.pow_abil}</span>
               )}
               {character.pow_abil && character.mart_abil && ' / '}
               {character.mart_abil && (
-                <span className="text-category-technique">{character.mart_abil}</span>
+                <span className="text-category-technique capitalize">{character.mart_abil}</span>
               )}
             </p>
             
-            {/* XP Display */}
-            <p className="text-base text-text-primary flex items-center gap-2">
-              <span>XP: {character.experience ?? 0}</span>
+            {/* XP Display - Always editable with pencil icon */}
+            <div className="text-base text-text-primary flex items-center gap-2">
+              {isEditingXP && onExperienceChange ? (
+                <div className="flex items-center gap-1">
+                  <span>XP:</span>
+                  <input
+                    type="number"
+                    value={xpInput}
+                    onChange={(e) => setXpInput(e.target.value)}
+                    onBlur={handleXPSubmit}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleXPSubmit();
+                      if (e.key === 'Escape') {
+                        setXpInput(String(character.experience ?? 0));
+                        setIsEditingXP(false);
+                      }
+                    }}
+                    className="w-16 px-1 py-0 text-base border-2 border-primary-400 rounded focus:ring-2 focus:ring-primary-500"
+                    min={0}
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <>
+                  <span>XP: {character.experience ?? 0}</span>
+                  {onExperienceChange && (
+                    <button
+                      onClick={() => {
+                        setXpInput(String(character.experience ?? 0));
+                        setIsEditingXP(true);
+                      }}
+                      className="text-gray-400 hover:text-primary-600 transition-colors"
+                      title="Edit XP"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </>
+              )}
               {canLevelUp && (
                 <span 
                   className="text-success-600 animate-pulse text-sm font-medium" 
@@ -550,7 +603,7 @@ export function SheetHeader({
                   ⬆ Level up!
                 </span>
               )}
-            </p>
+            </div>
           </div>
         </div>
 

@@ -22,7 +22,6 @@ import {
   SearchInput,
   SortHeader,
   ColumnHeaders,
-  ResultsCount,
   ListContainer,
   LoadingSpinner,
   ErrorDisplay,
@@ -52,6 +51,10 @@ import {
   useDeleteTechnique,
   useDeleteItem,
   useDeleteCreature,
+  useDuplicatePower,
+  useDuplicateTechnique,
+  useDuplicateItem,
+  useDuplicateCreature,
   usePowerParts,
   useTechniqueParts,
   useItemProperties,
@@ -216,6 +219,7 @@ function PowersTab({ onDelete }: TabProps) {
   const router = useRouter();
   const { data: powers, isLoading, error } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
+  const duplicatePower = useDuplicatePower();
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
@@ -335,9 +339,6 @@ function PowersTab({ onDelete }: TabProps) {
         />
       </div>
       
-      {/* Results Count */}
-      <ResultsCount count={filteredData.length} itemLabel="power" isLoading={isLoading} />
-      
       {/* Column Headers - Grid aligned */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -352,11 +353,10 @@ function PowersTab({ onDelete }: TabProps) {
             onSort={handleSort}
           />
         ))}
-        <div></div> {/* Expand icon column */}
       </div>
       
       {/* Power List */}
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
@@ -381,9 +381,9 @@ function PowersTab({ onDelete }: TabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={power.tp}
               costLabel="TP"
-              onEdit={() => router.push(`/power-creator?edit=${power.id}`)}
+              onEdit={() => window.open(`/power-creator?edit=${power.id}`, '_blank')}
               onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-              onDuplicate={() => router.push(`/power-creator?copy=${power.id}`)}
+              onDuplicate={() => duplicatePower.mutate(power.id)}
             />
           ))
         )}
@@ -410,6 +410,7 @@ function TechniquesTab({ onDelete }: TabProps) {
   const router = useRouter();
   const { data: techniques, isLoading, error } = useUserTechniques();
   const { data: partsDb = [] } = useTechniqueParts();
+  const duplicateTechnique = useDuplicateTechnique();
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
@@ -520,9 +521,6 @@ function TechniquesTab({ onDelete }: TabProps) {
         />
       </div>
       
-      {/* Results Count */}
-      <ResultsCount count={filteredData.length} itemLabel="technique" isLoading={isLoading} />
-      
       {/* Column Headers - Grid aligned */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -537,11 +535,10 @@ function TechniquesTab({ onDelete }: TabProps) {
             onSort={handleSort}
           />
         ))}
-        <div></div> {/* Expand icon column */}
       </div>
       
       {/* Technique List */}
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
@@ -565,9 +562,9 @@ function TechniquesTab({ onDelete }: TabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={tech.tp}
               costLabel="TP"
-              onEdit={() => router.push(`/technique-creator?edit=${tech.id}`)}
+              onEdit={() => window.open(`/technique-creator?edit=${tech.id}`, '_blank')}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() => router.push(`/technique-creator?copy=${tech.id}`)}
+              onDuplicate={() => duplicateTechnique.mutate(tech.id)}
             />
           ))
         )}
@@ -591,13 +588,35 @@ const ARMAMENT_COLUMNS = [
   { key: 'damage', label: 'Damage' },
 ];
 
-// Helper to format damage from various formats (string or object)
+// Helper to format damage from various formats (string, object, or array)
 function formatDamageValue(damage: unknown): string {
   if (!damage) return '';
   
   // If it's already a string, return it
   if (typeof damage === 'string') {
     return damage;
+  }
+  
+  // If it's an array, format each entry and join
+  if (Array.isArray(damage)) {
+    const formatted = damage.map(d => {
+      if (typeof d === 'string') return d;
+      if (typeof d === 'object' && d !== null) {
+        const entry = d as { size?: number | string; amount?: number | string; type?: string };
+        const parts: string[] = [];
+        if (entry.amount && entry.size) {
+          parts.push(`${entry.amount}d${entry.size}`);
+        } else if (entry.amount) {
+          parts.push(String(entry.amount));
+        }
+        if (entry.type && entry.type !== 'none') {
+          parts.push(String(entry.type));
+        }
+        return parts.join(' ');
+      }
+      return '';
+    }).filter(Boolean);
+    return formatted.join(', ') || '';
   }
   
   // If it's an object with {size, amount, type}, format it
@@ -612,7 +631,7 @@ function formatDamageValue(damage: unknown): string {
       parts.push(String(d.amount));
     }
     
-    if (d.type) {
+    if (d.type && d.type !== 'none') {
       parts.push(String(d.type));
     }
     
@@ -626,6 +645,7 @@ function ItemsTab({ onDelete }: TabProps) {
   const router = useRouter();
   const { data: items, isLoading, error } = useUserItems();
   const { data: propertiesDb = [] } = useItemProperties();
+  const duplicateItem = useDuplicateItem();
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
@@ -757,9 +777,6 @@ function ItemsTab({ onDelete }: TabProps) {
         />
       </div>
       
-      {/* Results Count */}
-      <ResultsCount count={filteredData.length} itemLabel="armament" isLoading={isLoading} />
-      
       {/* Column Headers - Grid aligned */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -774,11 +791,10 @@ function ItemsTab({ onDelete }: TabProps) {
             onSort={handleSort}
           />
         ))}
-        <div></div> {/* Expand icon column */}
       </div>
       
       {/* Armament List */}
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingSpinner />
         ) : filteredData.length === 0 ? (
@@ -803,9 +819,9 @@ function ItemsTab({ onDelete }: TabProps) {
               chipsLabel="Properties & Proficiencies"
               totalCost={item.tp}
               costLabel="TP"
-              onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
+              onEdit={() => window.open(`/item-creator?edit=${item.id}`, '_blank')}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-              onDuplicate={() => router.push(`/item-creator?copy=${item.id}`)}
+              onDuplicate={() => duplicateItem.mutate(item.id)}
             />
           ))
         )}
@@ -821,6 +837,7 @@ function ItemsTab({ onDelete }: TabProps) {
 function CreaturesTab({ onDelete }: TabProps) {
   const router = useRouter();
   const { data: creatures, isLoading, error } = useUserCreatures();
+  const duplicateCreature = useDuplicateCreature();
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
@@ -884,9 +901,6 @@ function CreaturesTab({ onDelete }: TabProps) {
         />
       </div>
       
-      {/* Results Count - Above headers to match Codex */}
-      <ResultsCount count={filteredCreatures.length} itemLabel="creature" isLoading={isLoading} />
-      
       <ColumnHeaders
         columns={[
           { key: 'name', label: 'Name', width: '2fr' },
@@ -933,9 +947,9 @@ function CreaturesTab({ onDelete }: TabProps) {
                 feats: creature.feats,
                 armaments: creature.armaments,
               }}
-              onEdit={() => router.push(`/creature-creator?edit=${creature.docId}`)}
+              onEdit={() => window.open(`/creature-creator?edit=${creature.docId}`, '_blank')}
               onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
-              onDuplicate={() => router.push(`/creature-creator?copy=${creature.docId}`)}
+              onDuplicate={() => duplicateCreature.mutate(creature.docId)}
             />
           ))}
         </div>

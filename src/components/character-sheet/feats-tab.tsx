@@ -1,16 +1,23 @@
 /**
- * Feats Tab Component
- * ====================
- * Combined view of traits and feats for the library section
- * Uses GridListRow for consistent library-style display unified with site-wide patterns
+ * Feats Tab Component - Refactored
+ * =================================
+ * Combined view of traits and feats for the character sheet.
+ * Uses unified components: SectionHeader, ListHeader, GridListRow
+ * 
+ * Sections:
+ * - Traits (no + button - species/ancestry granted)
+ * - Archetype Feats (+)
+ * - Character Feats (+)
+ * - State Feats (+) - only shown if character has any
+ * 
+ * List Headers: Name, Description (truncated), Uses, Recovery
  */
 
 'use client';
 
-import { useMemo } from 'react';
-import { Plus } from 'lucide-react';
-import { Button, Collapsible } from '@/components/ui';
-import { GridListRow } from '@/components/shared';
+import { useMemo, useState, useCallback } from 'react';
+import { SectionHeader, ListHeader, GridListRow } from '@/components/shared';
+import type { SortState, ListColumn } from '@/components/shared';
 
 // =============================================================================
 // Types
@@ -23,7 +30,6 @@ interface TraitData {
   recoveryPeriod?: string;
 }
 
-/** RTDB trait data for enrichment */
 interface RTDBTrait {
   id: string;
   name: string;
@@ -32,7 +38,6 @@ interface RTDBTrait {
   rec_period?: string;
 }
 
-/** RTDB feat data for enrichment */
 interface RTDBFeat {
   id: string;
   name: string;
@@ -59,7 +64,6 @@ interface CharacterAncestry {
   selectedCharacteristic?: string | null;
 }
 
-/** Legacy vanilla site trait fields (stored at top level) */
 interface VanillaTraitFields {
   ancestryTraits?: string[];
   flawTrait?: string | null;
@@ -68,32 +72,69 @@ interface VanillaTraitFields {
 }
 
 interface FeatsTabProps {
-  // Traits from ancestry (new format)
   ancestry?: CharacterAncestry;
-  // Legacy vanilla trait fields (stored at top level on character)
   vanillaTraits?: VanillaTraitFields;
-  // Species traits from RTDB (automatically granted based on character's species)
   speciesTraitsFromRTDB?: string[];
-  // Character's traits (legacy format)
   traits?: TraitData[];
-  // RTDB traits for enrichment (max uses, descriptions)
   traitsDb?: RTDBTrait[];
-  // RTDB feats for enrichment (descriptions, uses)
   featsDb?: RTDBFeat[];
-  // Current trait uses (trait name -> uses remaining)
   traitUses?: Record<string, number>;
-  // Feats by category
   archetypeFeats?: FeatData[];
   characterFeats?: FeatData[];
-  stateFeats?: FeatData[]; // Temporary condition-based feats
-  // Edit mode
+  stateFeats?: FeatData[];
   isEditMode?: boolean;
-  // Callbacks
   onFeatUsesChange?: (featId: string, delta: number) => void;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
+  onAddStateFeat?: () => void;
   onRemoveFeat?: (featId: string) => void;
+}
+
+// =============================================================================
+// Column Definitions
+// =============================================================================
+
+const TRAIT_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'description', label: 'Description', width: '2fr', sortable: false },
+  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
+  { key: 'recovery', label: 'Rec.', width: '4rem', align: 'center' },
+];
+
+const TRAIT_GRID = '1fr 2fr 5rem 4rem';
+
+const FEAT_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'description', label: 'Description', width: '2fr', sortable: false },
+  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
+  { key: 'recovery', label: 'Rec.', width: '4rem', align: 'center' },
+];
+
+const FEAT_GRID = '1fr 2fr 5rem 4rem';
+
+// =============================================================================
+// Helper: Truncate description for collapsed view
+// =============================================================================
+
+function truncateText(text: string | undefined, maxLength: number = 80): string {
+  if (!text) return '-';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + '...';
+}
+
+// =============================================================================
+// Helper: Format recovery period abbreviation
+// =============================================================================
+
+function formatRecovery(recovery: string | undefined): string {
+  if (!recovery) return '-';
+  const lower = recovery.toLowerCase();
+  if (lower.includes('partial')) return 'Partial';
+  if (lower.includes('full')) return 'Full';
+  if (lower.includes('short')) return 'Short';
+  if (lower.includes('long')) return 'Long';
+  return recovery.substring(0, 6);
 }
 
 // =============================================================================
@@ -116,101 +157,98 @@ export function FeatsTab({
   onTraitUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
+  onAddStateFeat,
   onRemoveFeat,
 }: FeatsTabProps) {
-  // Helper to find trait in RTDB and enrich with uses data
-  // Supports lookup by name OR by ID (in case traits are stored as IDs)
-  const enrichTrait = (traitNameOrId: string) => {
-    // Try to find by name first
+  // Sort state for each section
+  const [traitSort, setTraitSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [archetypeFeatSort, setArchetypeFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [characterFeatSort, setCharacterFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [stateFeatSort, setStateFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
+
+  // Helper to toggle sort
+  const toggleSort = useCallback((current: SortState, col: string): SortState => {
+    if (current.col === col) {
+      return { col, dir: current.dir === 1 ? -1 : 1 };
+    }
+    return { col, dir: 1 };
+  }, []);
+
+  // Enrich trait with RTDB data
+  const enrichTrait = useCallback((traitNameOrId: string) => {
     let dbTrait = traitsDb.find(t => t.name.toLowerCase() === traitNameOrId.toLowerCase());
-    
-    // If not found by name, try by ID
     if (!dbTrait) {
       dbTrait = traitsDb.find(t => t.id === traitNameOrId);
     }
-    
     return {
-      name: dbTrait?.name || traitNameOrId, // Use enriched name if found, otherwise original
+      name: dbTrait?.name || traitNameOrId,
       description: dbTrait?.description,
       maxUses: dbTrait?.uses_per_rec ?? 0,
       recoveryPeriod: dbTrait?.rec_period,
     };
-  };
-  
-  // Helper to enrich feat with RTDB data
-  const enrichFeat = (feat: FeatData) => {
-    // Try to find by ID first, then by name
+  }, [traitsDb]);
+
+  // Enrich feat with RTDB data
+  const enrichFeat = useCallback((feat: FeatData) => {
     let dbFeat = featsDb.find(f => f.id === String(feat.id));
     if (!dbFeat) {
       dbFeat = featsDb.find(f => f.name.toLowerCase() === feat.name.toLowerCase());
     }
-    
     return {
       ...feat,
       description: feat.description || dbFeat?.description || dbFeat?.effect,
       maxUses: feat.maxUses ?? dbFeat?.max_uses ?? 0,
       recovery: feat.recovery || dbFeat?.rec_period,
     };
-  };
-  
-  // Category label formatting
+  }, [featsDb]);
+
+  // Category label for traits
   const getCategoryLabel = (category: string) => {
-    if (category === 'species') return ''; // No label for species traits
+    if (category === 'species') return '';
     return category.charAt(0).toUpperCase() + category.slice(1);
   };
-  
-  // Collect all traits:
-  // 1. Species traits from RTDB are ALWAYS included (automatic based on species)
-  // 2. Selected traits (ancestry, flaw, characteristic) come from ancestry object OR vanilla format
+
+  // Collect all traits with categories
   const allTraitsWithCategories = useMemo(() => {
     const result: { name: string; category: 'ancestry' | 'flaw' | 'characteristic' | 'species' }[] = [];
     
-    // 1. Species traits are always included (automatic, not selectable)
-    // First try RTDB species traits (preferred source)
+    // Species traits
     if (speciesTraitsFromRTDB?.length) {
       speciesTraitsFromRTDB.forEach(name => {
         result.push({ name, category: 'species' });
       });
     } else if (vanillaTraits?.speciesTraits?.length) {
-      // Fallback to vanilla format if RTDB not available
       vanillaTraits.speciesTraits.forEach(name => {
         result.push({ name, category: 'species' });
       });
     }
     
-    // 2. Selected traits from new format (ancestry object)
+    // Selected traits from new format
     if (ancestry?.selectedTraits?.length) {
       ancestry.selectedTraits.forEach(name => {
         result.push({ name, category: 'ancestry' });
       });
     }
-    
     if (ancestry?.selectedFlaw) {
       result.push({ name: ancestry.selectedFlaw, category: 'flaw' });
     }
-    
     if (ancestry?.selectedCharacteristic) {
       result.push({ name: ancestry.selectedCharacteristic, category: 'characteristic' });
     }
     
-    // 3. If no new format selected traits, try vanilla format (only for selected traits, not species)
-    const hasNewFormatSelectedTraits = 
+    // Vanilla format fallback
+    const hasNewFormat = 
       (ancestry?.selectedTraits?.length ?? 0) > 0 ||
       ancestry?.selectedFlaw ||
       ancestry?.selectedCharacteristic;
     
-    if (!hasNewFormatSelectedTraits && vanillaTraits) {
-      // Add flaw first (like vanilla)
+    if (!hasNewFormat && vanillaTraits) {
       if (vanillaTraits.flawTrait) {
         result.push({ name: vanillaTraits.flawTrait, category: 'flaw' });
       }
-      
-      // Add characteristic
       if (vanillaTraits.characteristicTrait) {
         result.push({ name: vanillaTraits.characteristicTrait, category: 'characteristic' });
       }
-      
-      // Add ancestry traits
       if (vanillaTraits.ancestryTraits?.length) {
         vanillaTraits.ancestryTraits.forEach(name => {
           result.push({ name, category: 'ancestry' });
@@ -221,261 +259,292 @@ export function FeatsTab({
     return result;
   }, [ancestry, vanillaTraits, speciesTraitsFromRTDB]);
 
-  // Check if we have any traits
-  const hasTraits = allTraitsWithCategories.length > 0 || traits.length > 0;
-  const hasArchetypeFeats = archetypeFeats.length > 0;
-  const hasCharacterFeats = characterFeats.length > 0;
-  const hasStateFeats = stateFeats.length > 0;
+  // Process and sort traits
+  const processedTraits = useMemo(() => {
+    const enriched = allTraitsWithCategories.map(t => ({
+      ...t,
+      ...enrichTrait(t.name),
+    }));
+    
+    // Add legacy traits
+    traits.forEach(trait => {
+      const e = enrichTrait(trait.name);
+      enriched.push({
+        name: e.name,
+        description: e.description || trait.description,
+        maxUses: e.maxUses || trait.maxUses || 0,
+        recoveryPeriod: e.recoveryPeriod || trait.recoveryPeriod,
+        category: 'species' as const,
+      });
+    });
+    
+    // Sort
+    return [...enriched].sort((a, b) => {
+      const aVal = a[traitSort.col as keyof typeof a] ?? '';
+      const bVal = b[traitSort.col as keyof typeof b] ?? '';
+      const cmp = String(aVal).localeCompare(String(bVal));
+      return traitSort.dir === 1 ? cmp : -cmp;
+    });
+  }, [allTraitsWithCategories, traits, enrichTrait, traitSort]);
 
-  // Total counts
-  const totalTraits = allTraitsWithCategories.length + traits.length;
-  const totalArchetypeFeats = archetypeFeats.length;
-  const totalCharacterFeats = characterFeats.length;
-  const totalStateFeats = stateFeats.length;
+  // Process and sort archetype feats
+  const processedArchetypeFeats = useMemo(() => {
+    const enriched = archetypeFeats.map(enrichFeat);
+    return [...enriched].sort((a, b) => {
+      const aVal = a[archetypeFeatSort.col as keyof typeof a] ?? '';
+      const bVal = b[archetypeFeatSort.col as keyof typeof b] ?? '';
+      const cmp = String(aVal).localeCompare(String(bVal));
+      return archetypeFeatSort.dir === 1 ? cmp : -cmp;
+    });
+  }, [archetypeFeats, enrichFeat, archetypeFeatSort]);
+
+  // Process and sort character feats
+  const processedCharacterFeats = useMemo(() => {
+    const enriched = characterFeats.map(enrichFeat);
+    return [...enriched].sort((a, b) => {
+      const aVal = a[characterFeatSort.col as keyof typeof a] ?? '';
+      const bVal = b[characterFeatSort.col as keyof typeof b] ?? '';
+      const cmp = String(aVal).localeCompare(String(bVal));
+      return characterFeatSort.dir === 1 ? cmp : -cmp;
+    });
+  }, [characterFeats, enrichFeat, characterFeatSort]);
+
+  // Process and sort state feats
+  const processedStateFeats = useMemo(() => {
+    const enriched = stateFeats.map(f => ({
+      ...enrichFeat(f),
+      stateType: f.type || 'character',
+    }));
+    return [...enriched].sort((a, b) => {
+      const aVal = a[stateFeatSort.col as keyof typeof a] ?? '';
+      const bVal = b[stateFeatSort.col as keyof typeof b] ?? '';
+      const cmp = String(aVal).localeCompare(String(bVal));
+      return stateFeatSort.dir === 1 ? cmp : -cmp;
+    });
+  }, [stateFeats, enrichFeat, stateFeatSort]);
+
+  const hasTraits = processedTraits.length > 0;
+  const hasArchetypeFeats = processedArchetypeFeats.length > 0;
+  const hasCharacterFeats = processedCharacterFeats.length > 0;
+  const hasStateFeats = processedStateFeats.length > 0;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-6">
       {/* Traits Section */}
-      {hasTraits && (
-        <Collapsible 
-          title="Traits" 
-          count={totalTraits}
-          defaultOpen
-          headerClassName="bg-gradient-to-r from-green-50 to-blue-50"
-          className="mb-3"
-        >
-          <div className="space-y-2">
-            {/* All traits (species + selected) - enriched with RTDB data */}
-            {allTraitsWithCategories.map((trait, index) => {
-              const enriched = enrichTrait(trait.name);
-              const badges = trait.category ? [{ label: getCategoryLabel(trait.category), color: 'gray' as const }] : undefined;
-              const uses = enriched.maxUses > 0 ? { 
-                current: traitUses[trait.name] ?? enriched.maxUses, 
-                max: enriched.maxUses 
+      <div>
+        <SectionHeader title="Traits" />
+        {hasTraits && (
+          <ListHeader
+            columns={TRAIT_COLUMNS}
+            gridColumns={TRAIT_GRID}
+            sortState={traitSort}
+            onSort={(col) => setTraitSort(toggleSort(traitSort, col))}
+          />
+        )}
+        {hasTraits ? (
+          <div className="space-y-1">
+            {processedTraits.map((trait, index) => {
+              const uses = trait.maxUses > 0 ? {
+                current: traitUses[trait.name] ?? trait.maxUses,
+                max: trait.maxUses,
               } : undefined;
+              const categoryLabel = trait.category ? getCategoryLabel(trait.category) : undefined;
               
               return (
                 <GridListRow
                   key={`${trait.category}-${index}`}
                   id={`${trait.category}-${index}`}
-                  name={enriched.name}
-                  description={enriched.description}
-                  badges={badges}
+                  name={trait.name}
+                  description={trait.description}
+                  gridColumns={TRAIT_GRID}
+                  columns={[
+                    { key: 'description', value: truncateText(trait.description), hideOnMobile: true },
+                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
+                    { key: 'recovery', value: formatRecovery(trait.recoveryPeriod) },
+                  ]}
+                  badges={categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined}
                   uses={uses}
-                  onQuantityChange={enriched.maxUses > 0 && onTraitUsesChange 
-                    ? (delta) => onTraitUsesChange(trait.name, delta) 
+                  onQuantityChange={trait.maxUses > 0 && onTraitUsesChange
+                    ? (delta) => onTraitUsesChange(trait.name, delta)
                     : undefined}
-                  requirements={enriched.recoveryPeriod ? (
-                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recoveryPeriod}</span>
-                  ) : undefined}
-                  compact
-                />
-              );
-            })}
-            
-            {/* Legacy traits array - enriched with RTDB data */}
-            {traits.map((trait, index) => {
-              const enriched = enrichTrait(trait.name);
-              const uses = enriched.maxUses > 0 ? { 
-                current: traitUses[trait.name] ?? enriched.maxUses, 
-                max: enriched.maxUses 
-              } : undefined;
-              const recoveryText = enriched.recoveryPeriod || trait.recoveryPeriod;
-              
-              return (
-                <GridListRow
-                  key={`trait-${index}`}
-                  id={`trait-${index}`}
-                  name={enriched.name}
-                  description={enriched.description || trait.description}
-                  uses={uses}
-                  onQuantityChange={enriched.maxUses > 0 && onTraitUsesChange 
-                    ? (delta) => onTraitUsesChange(trait.name, delta) 
-                    : undefined}
-                  requirements={recoveryText ? (
-                    <span className="text-xs text-text-muted italic">Recovers: {recoveryText}</span>
-                  ) : undefined}
-                  compact
-                />
-              );
-            })}
-          </div>
-        </Collapsible>
-      )}
-
-      {/* Archetype Feats Section */}
-      <Collapsible 
-        title="Archetype Feats" 
-        count={totalArchetypeFeats}
-        defaultOpen
-        headerClassName="bg-amber-50"
-        className="mb-3"
-        action={isEditMode && onAddArchetypeFeat && (
-          <Button
-            size="sm"
-            onClick={onAddArchetypeFeat}
-            className="bg-amber-100 text-amber-700 hover:bg-amber-200"
-          >
-            <Plus className="w-3 h-3" />
-            Add
-          </Button>
-        )}
-      >
-        {hasArchetypeFeats ? (
-          <div className="space-y-2">
-            {archetypeFeats.map((feat, index) => {
-              const enriched = enrichFeat(feat);
-              const uses = enriched.maxUses > 0 ? { 
-                current: enriched.currentUses ?? enriched.maxUses, 
-                max: enriched.maxUses 
-              } : undefined;
-              
-              return (
-                <GridListRow
-                  key={feat.id || index}
-                  id={String(feat.id || index)}
-                  name={enriched.name}
-                  description={enriched.description}
-                  uses={uses}
-                  onQuantityChange={onFeatUsesChange 
-                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
-                    : undefined}
-                  requirements={enriched.recovery ? (
-                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recovery}</span>
-                  ) : undefined}
                   compact
                 />
               );
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-muted italic text-center py-2">
+          <p className="text-sm text-text-muted italic text-center py-4">
+            No traits
+          </p>
+        )}
+      </div>
+
+      {/* Archetype Feats Section */}
+      <div>
+        <SectionHeader 
+          title="Archetype Feats" 
+          onAdd={onAddArchetypeFeat}
+          addLabel="Add archetype feat"
+        />
+        {hasArchetypeFeats && (
+          <ListHeader
+            columns={FEAT_COLUMNS}
+            gridColumns={FEAT_GRID}
+            sortState={archetypeFeatSort}
+            onSort={(col) => setArchetypeFeatSort(toggleSort(archetypeFeatSort, col))}
+          />
+        )}
+        {hasArchetypeFeats ? (
+          <div className="space-y-1">
+            {processedArchetypeFeats.map((feat, index) => {
+              const uses = feat.maxUses > 0 ? {
+                current: feat.currentUses ?? feat.maxUses,
+                max: feat.maxUses,
+              } : undefined;
+              
+              return (
+                <GridListRow
+                  key={feat.id || index}
+                  id={String(feat.id || index)}
+                  name={feat.name}
+                  description={feat.description}
+                  gridColumns={FEAT_GRID}
+                  columns={[
+                    { key: 'description', value: truncateText(feat.description), hideOnMobile: true },
+                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
+                    { key: 'recovery', value: formatRecovery(feat.recovery) },
+                  ]}
+                  uses={uses}
+                  onQuantityChange={onFeatUsesChange
+                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
+                    : undefined}
+                  onDelete={isEditMode && onRemoveFeat 
+                    ? () => onRemoveFeat(String(feat.id || index)) 
+                    : undefined}
+                  compact
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted italic text-center py-4">
             No archetype feats selected
           </p>
         )}
-      </Collapsible>
+      </div>
 
       {/* Character Feats Section */}
-      <Collapsible 
-        title="Character Feats" 
-        count={totalCharacterFeats}
-        defaultOpen
-        headerClassName="bg-surface-alt"
-        className="mb-3"
-        action={isEditMode && onAddCharacterFeat && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onAddCharacterFeat}
-          >
-            <Plus className="w-3 h-3" />
-            Add
-          </Button>
+      <div>
+        <SectionHeader 
+          title="Character Feats" 
+          onAdd={onAddCharacterFeat}
+          addLabel="Add character feat"
+        />
+        {hasCharacterFeats && (
+          <ListHeader
+            columns={FEAT_COLUMNS}
+            gridColumns={FEAT_GRID}
+            sortState={characterFeatSort}
+            onSort={(col) => setCharacterFeatSort(toggleSort(characterFeatSort, col))}
+          />
         )}
-      >
         {hasCharacterFeats ? (
-          <div className="space-y-2">
-            {characterFeats.map((feat, index) => {
-              const enriched = enrichFeat(feat);
-              const uses = enriched.maxUses > 0 ? { 
-                current: enriched.currentUses ?? enriched.maxUses, 
-                max: enriched.maxUses 
+          <div className="space-y-1">
+            {processedCharacterFeats.map((feat, index) => {
+              const uses = feat.maxUses > 0 ? {
+                current: feat.currentUses ?? feat.maxUses,
+                max: feat.maxUses,
               } : undefined;
               
               return (
                 <GridListRow
                   key={feat.id || index}
                   id={String(feat.id || index)}
-                  name={enriched.name}
-                  description={enriched.description}
+                  name={feat.name}
+                  description={feat.description}
+                  gridColumns={FEAT_GRID}
+                  columns={[
+                    { key: 'description', value: truncateText(feat.description), hideOnMobile: true },
+                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
+                    { key: 'recovery', value: formatRecovery(feat.recovery) },
+                  ]}
                   uses={uses}
-                  onQuantityChange={onFeatUsesChange 
-                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
+                  onQuantityChange={onFeatUsesChange
+                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
-                  requirements={enriched.recovery ? (
-                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recovery}</span>
-                  ) : undefined}
+                  onDelete={isEditMode && onRemoveFeat 
+                    ? () => onRemoveFeat(String(feat.id || index)) 
+                    : undefined}
                   compact
                 />
               );
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-muted italic text-center py-2">
+          <p className="text-sm text-text-muted italic text-center py-4">
             No character feats selected
           </p>
         )}
-      </Collapsible>
+      </div>
 
-      {/* State Feats Section (only show if any exist) */}
+      {/* State Feats Section - only show if any exist */}
       {hasStateFeats && (
-        <Collapsible 
-          title="State Feats" 
-          count={totalStateFeats}
-          defaultOpen
-          headerClassName="bg-blue-50"
-          className="mb-3"
-        >
-          <div className="space-y-2">
-            {stateFeats.map((feat, index) => {
-              const enriched = enrichFeat(feat);
-              const uses = enriched.maxUses > 0 ? { 
-                current: enriched.currentUses ?? enriched.maxUses, 
-                max: enriched.maxUses 
+        <div>
+          <SectionHeader 
+            title="State Feats" 
+            onAdd={onAddStateFeat}
+            addLabel="Add state feat"
+          />
+          <ListHeader
+            columns={FEAT_COLUMNS}
+            gridColumns={FEAT_GRID}
+            sortState={stateFeatSort}
+            onSort={(col) => setStateFeatSort(toggleSort(stateFeatSort, col))}
+          />
+          <div className="space-y-1">
+            {processedStateFeats.map((feat, index) => {
+              const uses = feat.maxUses > 0 ? {
+                current: feat.currentUses ?? feat.maxUses,
+                max: feat.maxUses,
               } : undefined;
+              const typeLabel = feat.stateType === 'archetype' ? 'Archetype' : 'Character';
               
               return (
                 <GridListRow
                   key={feat.id || index}
                   id={String(feat.id || index)}
-                  name={enriched.name}
-                  description={enriched.description}
-                  badges={[{ label: 'State', color: 'blue' }]}
+                  name={feat.name}
+                  description={feat.description}
+                  gridColumns={FEAT_GRID}
+                  columns={[
+                    { key: 'description', value: truncateText(feat.description), hideOnMobile: true },
+                    { key: 'uses', value: uses ? `${uses.current}/${uses.max}` : '-' },
+                    { key: 'recovery', value: formatRecovery(feat.recovery) },
+                  ]}
+                  badges={[{ label: typeLabel, color: 'blue' }]}
                   uses={uses}
-                  onQuantityChange={onFeatUsesChange 
-                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta) 
+                  onQuantityChange={onFeatUsesChange
+                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
-                  requirements={enriched.recovery ? (
-                    <span className="text-xs text-text-muted italic">Recovers: {enriched.recovery}</span>
-                  ) : undefined}
+                  onDelete={isEditMode && onRemoveFeat 
+                    ? () => onRemoveFeat(String(feat.id || index)) 
+                    : undefined}
                   compact
                 />
               );
             })}
           </div>
-        </Collapsible>
+        </div>
       )}
 
       {/* Empty state */}
       {!hasTraits && !hasArchetypeFeats && !hasCharacterFeats && !hasStateFeats && (
-        <div className="text-center py-8">
-          <p className="text-text-muted text-sm italic">
-            No traits or feats to display
-          </p>
-          {isEditMode && (onAddArchetypeFeat || onAddCharacterFeat) && (
-            <div className="flex justify-center gap-2 mt-4">
-              {onAddArchetypeFeat && (
-                <Button
-                  onClick={onAddArchetypeFeat}
-                  className="bg-amber-100 text-amber-700 hover:bg-amber-200"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Archetype Feat
-                </Button>
-              )}
-              {onAddCharacterFeat && (
-                <Button
-                  variant="secondary"
-                  onClick={onAddCharacterFeat}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Character Feat
-                </Button>
-              )}
-            </div>
-          )}
+        <div className="text-center py-8 text-text-muted">
+          <p className="text-sm italic">No traits or feats to display</p>
         </div>
       )}
     </div>
   );
 }
+
+export default FeatsTab;

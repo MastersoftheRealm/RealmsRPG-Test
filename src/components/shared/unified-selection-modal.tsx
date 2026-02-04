@@ -23,7 +23,6 @@ import {
   GridListRow, 
   SearchInput, 
   SortHeader, 
-  ResultsCount,
   FilterSection,
   QuantitySelector,
   type SortState,
@@ -281,18 +280,11 @@ export function UnifiedSelectionModal({
           </FilterSection>
         )}
         
-        {/* Results count */}
-        <ResultsCount 
-          count={filteredItems.length} 
-          itemLabel={itemLabel} 
-          isLoading={isLoading}
-        />
-        
         {/* Column Headers (if columns defined) */}
         {columns.length > 0 && (
           <div 
             className="hidden lg:grid gap-2 px-4 py-2 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wider rounded-t-lg"
-            style={gridColumns ? { gridTemplateColumns: gridColumns } : undefined}
+            style={gridColumns ? { gridTemplateColumns: `${gridColumns} 2.5rem` } : undefined}
           >
             {columns.map(col => (
               col.sortable !== false ? (
@@ -307,7 +299,7 @@ export function UnifiedSelectionModal({
                 <span key={col.key}>{col.label}</span>
               )
             ))}
-            <div></div> {/* Space for selection toggle */}
+            <span className="text-center">Add</span>
           </div>
         )}
         
@@ -341,7 +333,7 @@ export function UnifiedSelectionModal({
                         columns={item.columns}
                         chips={item.chips}
                         badges={item.badges}
-                        gridColumns={gridColumns}
+                        gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
                         selectable
                         isSelected={isSelected}
                         onSelect={() => toggleSelection(item.id)}

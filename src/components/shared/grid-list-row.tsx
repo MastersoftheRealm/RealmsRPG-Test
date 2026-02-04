@@ -19,7 +19,7 @@
  */
 
 import { useState, ReactNode } from 'react';
-import { ChevronDown, Edit, Trash2, Copy, Zap, Check, Plus, AlertCircle } from 'lucide-react';
+import { Edit, Trash2, Copy, Zap, Check, Plus, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
@@ -250,22 +250,6 @@ export function GridListRow({
     <div className={rowStyles}>
       {/* Main Row */}
       <div className="flex">
-        {/* Selection Button (for modals) - uses unified SelectionToggle */}
-        {selectable && (
-          <div className={cn(
-            'w-10 flex-shrink-0 flex items-center justify-center',
-            disabled && 'cursor-not-allowed opacity-50'
-          )}>
-            <SelectionToggle
-              isSelected={!!isSelected}
-              onToggle={() => !disabled && onSelect?.()}
-              disabled={disabled}
-              size="md"
-              label={isSelected ? 'Remove from selection' : 'Add to selection'}
-            />
-          </div>
-        )}
-        
         {/* Left Slot - renders before clickable content (e.g., equip toggle, innate toggle) */}
         {leftSlot && (
           <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -372,23 +356,29 @@ export function GridListRow({
             </div>
           )}
           
-          {/* Expand icon */}
-          {showExpander && (
-            <div className={cn('flex items-center justify-end', useFlex && 'ml-2')}>
-              <ChevronDown 
-                className={cn(
-                  'w-4 h-4 text-text-muted transition-transform',
-                  isExpanded && 'rotate-180'
-                )} 
-              />
-            </div>
-          )}
+
         </button>
         
         {/* Right Slot - renders after clickable content (e.g., roll buttons, use button) */}
         {rightSlot && (
           <div className="flex items-center flex-shrink-0 pr-2" onClick={(e) => e.stopPropagation()}>
             {rightSlot}
+          </div>
+        )}
+        
+        {/* Selection Button (for modals) - uses unified SelectionToggle - positioned on right */}
+        {selectable && (
+          <div className={cn(
+            'w-10 flex-shrink-0 flex items-center justify-center',
+            disabled && 'cursor-not-allowed opacity-50'
+          )}>
+            <SelectionToggle
+              isSelected={!!isSelected}
+              onToggle={() => !disabled && onSelect?.()}
+              disabled={disabled}
+              size="md"
+              label={isSelected ? 'Remove from selection' : 'Add to selection'}
+            />
           </div>
         )}
       </div>
@@ -414,7 +404,7 @@ export function GridListRow({
         <div className={cn(
           'border-t border-border-light bg-surface-alt',
           compact ? 'px-3 pb-3 pt-2' : 'px-4 pb-4 pt-2',
-          selectable && 'ml-10' // Indent when selection button present
+          selectable && 'mr-10' // Indent on right when selection button present
         )}>
           {/* Custom expanded content takes precedence */}
           {expandedContent ? (

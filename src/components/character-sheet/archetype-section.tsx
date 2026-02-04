@@ -277,8 +277,8 @@ function WeaponsSection({
             if (weapon.damage) {
               if (Array.isArray(weapon.damage)) {
                 const parts = weapon.damage
-                  .filter((d: { amount?: number; size?: number; type?: string }) => d && d.amount && d.size)
-                  .map((d: { amount?: number; size?: number; type?: string }) => ({
+                  .filter((d: { amount?: number | string; size?: number | string; type?: string }) => d && d.amount && d.size)
+                  .map((d: { amount?: number | string; size?: number | string; type?: string }) => ({
                     dice: `${d.amount}d${d.size}`,
                     type: d.type && d.type !== 'none' ? d.type : ''
                   }));

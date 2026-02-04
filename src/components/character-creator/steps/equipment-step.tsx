@@ -60,7 +60,7 @@ interface SelectedItem {
   type: string;
   cost: number;
   quantity: number;
-  damage?: string;
+  damage?: string | Array<{ amount?: number | string; size?: number | string; type?: string }>;
   armor?: number;
   properties: string[];
 }
@@ -531,11 +531,6 @@ export function EquipmentStep() {
               </div>
             </div>
           </FilterSection>
-
-          {/* Results count */}
-          <div className="text-sm text-text-muted mb-2">
-            {filteredEquipment.length} {activeTab}{filteredEquipment.length !== 1 ? 's' : ''} found
-          </div>
 
           {/* Equipment List - Using GridListRow */}
           <div className="space-y-2 mb-8 max-h-[400px] overflow-y-auto pr-1">

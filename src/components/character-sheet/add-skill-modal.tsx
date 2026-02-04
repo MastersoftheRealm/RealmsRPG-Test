@@ -192,19 +192,14 @@ export function AddSkillModal({
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
-            
-            {/* Results count */}
-            <span className="text-sm text-text-muted ml-auto">
-              {filteredSkills.length} skill{filteredSkills.length !== 1 ? 's' : ''} available
-            </span>
           </div>
         </div>
 
         {/* Column Headers */}
-        <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wider">
+        <div className="grid grid-cols-[1fr_auto_2.5rem] gap-4 px-5 py-3 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wider">
           <span className="pl-7">Skill Name</span>
           <span>Abilities</span>
-          <span className="w-6"></span>
+          <span className="text-center">Add</span>
         </div>
 
         {/* Content */}

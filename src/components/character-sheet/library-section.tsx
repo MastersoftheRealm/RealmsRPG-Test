@@ -8,14 +8,32 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
 import { FeatsTab } from './feats-tab';
-import { PartChipList, type PartData, EditSectionToggle, RollButton, SectionHeader, QuantitySelector, QuantityBadge, GridListRow, SelectionToggle, type ColumnValue, type ChipData } from '@/components/shared';
+import { 
+  PartChipList, 
+  type PartData, 
+  EditSectionToggle, 
+  RollButton, 
+  SectionHeader, 
+  QuantitySelector, 
+  QuantityBadge, 
+  GridListRow, 
+  SelectionToggle, 
+  type ColumnValue, 
+  type ChipData,
+  TabSummarySection,
+  SummaryItem,
+  SummaryRow,
+  ListHeader,
+  type ListColumn,
+  type SortState,
+} from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
@@ -241,6 +259,49 @@ interface LibrarySectionProps {
 
 type TabType = 'powers' | 'techniques' | 'inventory' | 'feats' | 'proficiencies' | 'notes';
 
+// =============================================================================
+// Column Definitions for ListHeader
+// =============================================================================
+
+const POWER_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.4fr' },
+  { key: 'action', label: 'Action', width: '1fr' },
+  { key: 'damage', label: 'Damage', width: '1fr' },
+  { key: 'energy', label: 'Energy', width: '0.8fr', align: 'center' },
+  { key: 'area', label: 'Area', width: '0.7fr' },
+  { key: 'duration', label: 'Duration', width: '0.7fr' },
+];
+const POWER_GRID = '1.4fr 1fr 1fr 0.8fr 0.7fr 0.7fr';
+
+const TECHNIQUE_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.4fr' },
+  { key: 'action', label: 'Action', width: '1fr' },
+  { key: 'weapon', label: 'Weapon', width: '1fr' },
+  { key: 'energy', label: 'Energy', width: '0.8fr', align: 'center' },
+];
+const TECHNIQUE_GRID = '1.4fr 1fr 1fr 0.8fr';
+
+const WEAPON_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'damage', label: 'Damage', width: '0.8fr', align: 'center' },
+  { key: 'range', label: 'Range', width: '0.6fr', align: 'center' },
+  { key: 'actions', label: 'Actions', width: '8rem', sortable: false, align: 'center' },
+];
+const WEAPON_GRID = '1fr 0.8fr 0.6fr 8rem';
+
+const ARMOR_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'dr', label: 'DR', width: '0.5fr', align: 'center' },
+  { key: 'crit', label: 'Crit', width: '0.5fr', align: 'center' },
+];
+const ARMOR_GRID = '1fr 0.5fr 0.5fr';
+
+const EQUIPMENT_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'quantity', label: 'Qty', width: '4rem', align: 'center' },
+];
+const EQUIPMENT_GRID = '1fr 4rem';
+
 export function LibrarySection({
   powers,
   techniques,
@@ -311,6 +372,21 @@ export function LibrarySection({
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
   const rollContext = useRollsOptional();
   
+  // Sort state for each section
+  const [powerSort, setPowerSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [techniqueSort, setTechniqueSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [weaponSort, setWeaponSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [armorSort, setArmorSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
+  
+  // Helper to toggle sort
+  const toggleSort = useCallback((current: SortState, col: string): SortState => {
+    if (current.col === col) {
+      return { col, dir: current.dir === 1 ? -1 : 1 };
+    }
+    return { col, dir: 1 };
+  }, []);
+  
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
   const tabs: { id: TabType; label: string; onAdd?: () => void }[] = [
@@ -353,458 +429,422 @@ export function LibrarySection({
         className="mb-4"
       />
 
-      {/* Armament Proficiency Display - only for weapons/armor/equipment tabs */}
-      {activeTab === 'inventory' && martialProficiency !== undefined && (
-        <div className="mb-3 px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-text-secondary">⚔️ Armament Proficiency:</span>
-            <span className="font-bold text-orange-600">{calculateArmamentProficiency(martialProficiency)} TP</span>
-            <span className="text-xs text-text-muted">(Max training points)</span>
-          </div>
-        </div>
-      )}
-
-      {/* Currency + Add Button Row - only show for inventory tab */}
-      {activeTab === 'inventory' && (
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-text-muted">💰</span>
-            {/* Currency is ALWAYS editable, not just in edit mode */}
-            <input
-              type="text"
-              value={currencyInput}
-              onChange={(e) => setCurrencyInput(e.target.value)}
-              onBlur={handleCurrencyBlur}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const raw = currencyInput.trim();
-                  let newValue = currency;
-                  if (raw.startsWith('+')) newValue = currency + (parseInt(raw.substring(1)) || 0);
-                  else if (raw.startsWith('-')) newValue = currency - (parseInt(raw.substring(1)) || 0);
-                  else newValue = parseInt(raw) || 0;
-                  newValue = Math.max(0, newValue);
-                  setCurrencyInput(String(newValue));
-                  onCurrencyChange?.(newValue);
-                }
-              }}
-              className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500"
-              title="Use +5, -10, or a number"
-            />
-            <span className="text-sm text-text-muted">currency</span>
-          </div>
-          
-          {activeTabData?.onAdd && (
-            <Button
-              size="sm"
-              onClick={activeTabData.onAdd}
-            >
-              <Plus className="w-4 h-4" />
-              Add
-            </Button>
-          )}
-        </div>
-      )}
-
       {/* Content */}
       <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
         {activeTab === 'powers' && (
           <>
-            {/* Add Power button - always visible at top of tab */}
-            {activeTabData?.onAdd && (
-              <div className="flex justify-end mb-3">
-                <Button
-                  size="sm"
-                  onClick={activeTabData.onAdd}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Power
-                </Button>
-              </div>
-            )}
-
-            {/* Powers Column Headers - like vanilla site */}
-            {powers.length > 0 && (
-              <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr_0.7fr_0.7fr] gap-1 px-2 py-1.5 bg-surface-alt border-b border-border-light text-xs font-semibold text-text-muted uppercase tracking-wide">
-                <span className="pl-5">Name</span>
-                <span>Action</span>
-                <span>Damage</span>
-                <span>Energy</span>
-                <span>Area</span>
-                <span>Duration</span>
-              </div>
-            )}
-
-            {/* Innate Energy Tracking Box - shows when character has innate energy */}
+            {/* Innate Energy Summary */}
             {innateEnergy > 0 && (
-              <div className="p-3 bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-lg mb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-violet-600">✨ Innate Energy</span>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="px-2 py-0.5 bg-violet-100 text-violet-600 rounded">
-                        Threshold: {innateThreshold}
-                      </span>
-                      <span className="text-text-muted">×</span>
-                      <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded">
-                        Pools: {innatePools}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-violet-600">
-                      {currentInnateEnergy !== undefined ? currentInnateEnergy : innateEnergy}
-                    </span>
-                    <span className="text-sm text-text-muted">/ {innateEnergy}</span>
-                  </div>
-                </div>
+              <TabSummarySection variant="power">
+                <SummaryRow>
+                  <SummaryItem 
+                    icon="✨" 
+                    label="Innate Energy" 
+                    value={`${currentInnateEnergy !== undefined ? currentInnateEnergy : innateEnergy} / ${innateEnergy}`}
+                    highlight
+                    highlightColor="power"
+                  />
+                  <SummaryItem 
+                    label="Threshold" 
+                    value={innateThreshold}
+                  />
+                  <SummaryItem 
+                    label="Pools" 
+                    value={innatePools}
+                  />
+                </SummaryRow>
                 <p className="text-xs text-text-muted mt-1">
                   Innate powers use this energy pool instead of regular energy
                 </p>
-              </div>
+              </TabSummarySection>
             )}
 
             {/* Innate Powers Section */}
-            {powers.filter(p => p.innate === true).length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 px-2 py-1 bg-violet-50 border border-violet-200 rounded">
-                  <span className="text-xs font-semibold text-violet-600 uppercase tracking-wide">
-                    ★ Innate Powers
-                  </span>
-                  <span className="text-xs text-violet-500">
-                    ({powers.filter(p => p.innate === true).length} power{powers.filter(p => p.innate === true).length !== 1 ? 's' : ''})
-                  </span>
+            <div className="mb-4">
+              <SectionHeader 
+                title="Innate Powers" 
+                onAdd={onTogglePowerInnate ? undefined : onAddPower}
+                addLabel="Add innate power"
+              />
+              {powers.filter(p => p.innate === true).length > 0 && (
+                <ListHeader
+                  columns={POWER_COLUMNS}
+                  gridColumns={POWER_GRID}
+                  sortState={powerSort}
+                  onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
+                />
+              )}
+              {powers.filter(p => p.innate === true).length > 0 ? (
+                <div className="space-y-1">
+                  {powers
+                    .filter(p => p.innate === true)
+                    .map((power, i) => {
+                      const isInnate = power.innate === true;
+                      const energyCost = power.cost ?? 0;
+                      const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
+                      const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
+                      
+                      const columns: ColumnValue[] = [
+                        { key: 'action', value: power.actionType || '-' },
+                        { key: 'damage', value: power.damage || '-' },
+                        { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
+                        { key: 'area', value: power.area || '-' },
+                        { key: 'duration', value: power.duration || '-' },
+                      ];
+                      
+                      const useButton = !isEditMode && onUsePower && energyCost > 0 ? (
+                        <button
+                          onClick={() => onUsePower(power.id || String(i), energyCost)}
+                          disabled={!canUse}
+                          className={cn(
+                            'px-2 py-1 text-xs font-medium rounded transition-colors',
+                            canUse 
+                              ? 'bg-violet-100 text-violet-700 hover:bg-violet-200' 
+                              : 'bg-surface text-text-muted cursor-not-allowed'
+                          )}
+                          title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
+                        >
+                          Use ({energyCost})
+                        </button>
+                      ) : undefined;
+                      
+                      const innateToggle = onTogglePowerInnate ? (
+                        <button
+                          onClick={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
+                          className="px-2 text-violet-600 hover:text-violet-700 transition-colors"
+                          title="Remove from innate"
+                        >
+                          ★
+                        </button>
+                      ) : undefined;
+                      
+                      return (
+                        <GridListRow
+                          key={power.id || `innate-${i}`}
+                          id={String(power.id || i)}
+                          name={power.name}
+                          description={power.description}
+                          columns={columns}
+                          gridColumns={POWER_GRID}
+                          chips={partChips}
+                          chipsLabel="Parts"
+                          innate={isInnate}
+                          leftSlot={innateToggle}
+                          rightSlot={useButton}
+                          onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
+                          compact
+                          expandedContent={
+                            power.range ? (
+                              <div className="text-xs text-text-muted">
+                                <span className="font-medium">Range:</span> {power.range}
+                              </div>
+                            ) : undefined
+                          }
+                        />
+                      );
+                    })}
                 </div>
-                {powers
-                  .filter(p => p.innate === true)
-                  .map((power, i) => {
-                    const isInnate = power.innate === true;
-                    const energyCost = power.cost ?? 0;
-                    const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                    const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
-                    
-                    const columns: ColumnValue[] = [
-                      { key: 'action', value: power.actionType || '-' },
-                      { key: 'damage', value: power.damage || '-' },
-                      { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
-                      { key: 'area', value: power.area || '-' },
-                      { key: 'duration', value: power.duration || '-' },
-                    ];
-                    
-                    const useButton = !isEditMode && onUsePower && energyCost > 0 ? (
-                      <button
-                        onClick={() => onUsePower(power.id || String(i), energyCost)}
-                        disabled={!canUse}
-                        className={cn(
-                          'px-2 py-1 text-xs font-medium rounded transition-colors',
-                          canUse 
-                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                            : 'bg-surface text-text-muted cursor-not-allowed'
-                        )}
-                        title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
-                      >
-                        Use ({energyCost})
-                      </button>
-                    ) : undefined;
-                    
-                    const innateToggle = onTogglePowerInnate ? (
-                      <button
-                        onClick={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
-                        className={cn(
-                          'px-2 transition-colors',
-                          isInnate 
-                            ? 'text-violet-600 hover:text-violet-700' 
-                            : 'text-text-muted hover:text-violet-600'
-                        )}
-                        title={isInnate ? 'Remove from innate' : 'Set as innate'}
-                      >
-                        {isInnate ? '★' : '☆'}
-                      </button>
-                    ) : undefined;
-                    
-                    return (
-                      <GridListRow
-                        key={power.id || `innate-${i}`}
-                        id={String(power.id || i)}
-                        name={power.name}
-                        description={power.description}
-                        columns={columns}
-                        gridColumns="1.4fr 1fr 1fr 0.8fr 0.7fr 0.7fr"
-                        chips={partChips}
-                        chipsLabel="Parts"
-                        innate={isInnate}
-                        leftSlot={innateToggle}
-                        rightSlot={useButton}
-                        onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
-                        compact
-                        expandedContent={
-                          power.range ? (
-                            <div className="text-xs text-text-muted">
-                              <span className="font-medium">Range:</span> {power.range}
-                            </div>
-                          ) : undefined
-                        }
-                      />
-                    );
-                  })}
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-text-muted italic text-center py-4">
+                  No innate powers — click ☆ on a power to mark it as innate
+                </p>
+              )}
+            </div>
 
             {/* Regular Powers Section */}
-            {powers.filter(p => p.innate !== true).length > 0 && (
-              <div className="space-y-2">
-                {powers.filter(p => p.innate === true).length > 0 && (
-                  <div className="flex items-center gap-2 px-2 py-1 bg-blue-50 border border-blue-200 rounded">
-                    <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-                      Regular Powers
-                    </span>
-                  </div>
-                )}
-                {powers
-                  .filter(p => p.innate !== true)
-                  .map((power, i) => {
-                    const isInnate = power.innate === true;
-                    const energyCost = power.cost ?? 0;
-                    const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                    const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
-                    
-                    const columns: ColumnValue[] = [
-                      { key: 'action', value: power.actionType || '-' },
-                      { key: 'damage', value: power.damage || '-' },
-                      { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
-                      { key: 'area', value: power.area || '-' },
-                      { key: 'duration', value: power.duration || '-' },
-                    ];
-                    
-                    const useButton = !isEditMode && onUsePower && energyCost > 0 ? (
-                      <button
-                        onClick={() => onUsePower(power.id || String(i), energyCost)}
-                        disabled={!canUse}
-                        className={cn(
-                          'px-2 py-1 text-xs font-medium rounded transition-colors',
-                          canUse 
-                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                            : 'bg-surface text-text-muted cursor-not-allowed'
-                        )}
-                        title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
-                      >
-                        Use ({energyCost})
-                      </button>
-                    ) : undefined;
-                    
-                    const innateToggle = onTogglePowerInnate ? (
-                      <button
-                        onClick={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
-                        className={cn(
-                          'px-2 transition-colors',
-                          isInnate 
-                            ? 'text-violet-600 hover:text-violet-700' 
-                            : 'text-text-muted hover:text-violet-600'
-                        )}
-                        title={isInnate ? 'Remove from innate' : 'Set as innate'}
-                      >
-                        {isInnate ? '★' : '☆'}
-                      </button>
-                    ) : undefined;
-                    
-                    return (
-                      <GridListRow
-                        key={power.id || `regular-${i}`}
-                        id={String(power.id || i)}
-                        name={power.name}
-                        description={power.description}
-                        columns={columns}
-                        gridColumns="1.4fr 1fr 1fr 0.8fr 0.7fr 0.7fr"
-                        chips={partChips}
-                        chipsLabel="Parts"
-                        innate={isInnate}
-                        leftSlot={innateToggle}
-                        rightSlot={useButton}
-                        onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
-                        compact
-                        expandedContent={
-                          power.range ? (
-                            <div className="text-xs text-text-muted">
-                              <span className="font-medium">Range:</span> {power.range}
-                            </div>
-                          ) : undefined
-                        }
-                      />
-                    );
-                  })}
-              </div>
-            )}
-
-            {/* Empty state */}
-            {powers.length === 0 && (
-              <p className="text-text-muted text-sm italic text-center py-4">
-                No powers learned
-              </p>
-            )}
+            <div>
+              <SectionHeader 
+                title="Powers" 
+                onAdd={onAddPower}
+                addLabel="Add power"
+              />
+              {powers.filter(p => p.innate !== true).length > 0 && (
+                <ListHeader
+                  columns={POWER_COLUMNS}
+                  gridColumns={POWER_GRID}
+                  sortState={powerSort}
+                  onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
+                />
+              )}
+              {powers.filter(p => p.innate !== true).length > 0 ? (
+                <div className="space-y-1">
+                  {powers
+                    .filter(p => p.innate !== true)
+                    .map((power, i) => {
+                      const isInnate = power.innate === true;
+                      const energyCost = power.cost ?? 0;
+                      const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
+                      const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
+                      
+                      const columns: ColumnValue[] = [
+                        { key: 'action', value: power.actionType || '-' },
+                        { key: 'damage', value: power.damage || '-' },
+                        { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
+                        { key: 'area', value: power.area || '-' },
+                        { key: 'duration', value: power.duration || '-' },
+                      ];
+                      
+                      const useButton = !isEditMode && onUsePower && energyCost > 0 ? (
+                        <button
+                          onClick={() => onUsePower(power.id || String(i), energyCost)}
+                          disabled={!canUse}
+                          className={cn(
+                            'px-2 py-1 text-xs font-medium rounded transition-colors',
+                            canUse 
+                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+                              : 'bg-surface text-text-muted cursor-not-allowed'
+                          )}
+                          title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
+                        >
+                          Use ({energyCost})
+                        </button>
+                      ) : undefined;
+                      
+                      const innateToggle = onTogglePowerInnate ? (
+                        <button
+                          onClick={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
+                          className="px-2 text-text-muted hover:text-violet-600 transition-colors"
+                          title="Set as innate"
+                        >
+                          ☆
+                        </button>
+                      ) : undefined;
+                      
+                      return (
+                        <GridListRow
+                          key={power.id || `regular-${i}`}
+                          id={String(power.id || i)}
+                          name={power.name}
+                          description={power.description}
+                          columns={columns}
+                          gridColumns={POWER_GRID}
+                          chips={partChips}
+                          chipsLabel="Parts"
+                          innate={isInnate}
+                          leftSlot={innateToggle}
+                          rightSlot={useButton}
+                          onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
+                          compact
+                          expandedContent={
+                            power.range ? (
+                              <div className="text-xs text-text-muted">
+                                <span className="font-medium">Range:</span> {power.range}
+                              </div>
+                            ) : undefined
+                          }
+                        />
+                      );
+                    })}
+                </div>
+              ) : (
+                <p className="text-sm text-text-muted italic text-center py-4">
+                  No powers learned
+                </p>
+              )}
+            </div>
           </>
         )}
 
         {activeTab === 'techniques' && (
           <>
-            {/* Add Technique button - always visible at top of tab */}
-            {activeTabData?.onAdd && (
-              <div className="flex justify-end mb-3">
-                <Button
-                  size="sm"
-                  onClick={activeTabData.onAdd}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Technique
-                </Button>
-              </div>
-            )}
-
-            {/* Techniques Column Headers - like vanilla site */}
-            {techniques.length > 0 && (
-              <div className="grid grid-cols-[1.4fr_1fr_1fr_0.8fr] gap-1 px-2 py-1.5 bg-surface-alt border-b border-border-light text-xs font-semibold text-text-muted uppercase tracking-wide">
-                <span className="pl-5">Name</span>
-                <span>Action</span>
-                <span>Weapon</span>
-                <span>Energy</span>
-              </div>
-            )}
-            {techniques.length > 0 ? (
-              techniques.map((tech, i) => {
-                const energyCost = tech.cost ?? 0;
-                const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
-                const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
-                
-                const columns: ColumnValue[] = [
-                  { key: 'action', value: tech.actionType || '-' },
-                  { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined },
-                  { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
-                ];
-                
-                const useButton = !isEditMode && onUseTechnique && energyCost > 0 ? (
-                  <button
-                    onClick={() => onUseTechnique(tech.id || String(i), energyCost)}
-                    disabled={!canUse}
-                    className={cn(
-                      'px-2 py-1 text-xs font-medium rounded transition-colors',
-                      canUse 
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                        : 'bg-surface text-text-muted cursor-not-allowed'
-                    )}
-                    title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
-                  >
-                    Use ({energyCost})
-                  </button>
-                ) : undefined;
-                
-                const extraInfo = (tech.range || tech.damage) ? (
-                  <div className="flex flex-wrap gap-3 text-xs text-text-muted">
-                    {tech.range && (
-                      <span><span className="font-medium">Range:</span> {tech.range}</span>
-                    )}
-                    {tech.damage && (
-                      <span><span className="font-medium">Damage:</span> {tech.damage}</span>
-                    )}
-                  </div>
-                ) : undefined;
-                
-                return (
-                  <GridListRow
-                    key={tech.id || i}
-                    id={String(tech.id || i)}
-                    name={tech.name}
-                    description={tech.description}
-                    columns={columns}
-                    gridColumns="1.4fr 1fr 1fr 0.8fr"
-                    chips={partChips}
-                    chipsLabel="Parts"
-                    rightSlot={useButton}
-                    onDelete={isEditMode && onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
-                    compact
-                    expandedContent={extraInfo}
-                  />
-                );
-              })
-            ) : (
-              <p className="text-text-muted text-sm italic text-center py-4">
-                No techniques learned
-              </p>
-            )}
+            {/* Techniques Section */}
+            <div>
+              <SectionHeader 
+                title="Techniques" 
+                onAdd={onAddTechnique}
+                addLabel="Add technique"
+              />
+              {techniques.length > 0 && (
+                <ListHeader
+                  columns={TECHNIQUE_COLUMNS}
+                  gridColumns={TECHNIQUE_GRID}
+                  sortState={techniqueSort}
+                  onSort={(col) => setTechniqueSort(toggleSort(techniqueSort, col))}
+                />
+              )}
+              {techniques.length > 0 ? (
+                <div className="space-y-1">
+                  {techniques.map((tech, i) => {
+                    const energyCost = tech.cost ?? 0;
+                    const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
+                    const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
+                    
+                    const columns: ColumnValue[] = [
+                      { key: 'action', value: tech.actionType || '-' },
+                      { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined },
+                      { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
+                    ];
+                    
+                    const useButton = !isEditMode && onUseTechnique && energyCost > 0 ? (
+                      <button
+                        onClick={() => onUseTechnique(tech.id || String(i), energyCost)}
+                        disabled={!canUse}
+                        className={cn(
+                          'px-2 py-1 text-xs font-medium rounded transition-colors',
+                          canUse 
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                            : 'bg-surface text-text-muted cursor-not-allowed'
+                        )}
+                        title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
+                      >
+                        Use ({energyCost})
+                      </button>
+                    ) : undefined;
+                    
+                    const extraInfo = (tech.range || tech.damage) ? (
+                      <div className="flex flex-wrap gap-3 text-xs text-text-muted">
+                        {tech.range && (
+                          <span><span className="font-medium">Range:</span> {tech.range}</span>
+                        )}
+                        {tech.damage && (
+                          <span><span className="font-medium">Damage:</span> {tech.damage}</span>
+                        )}
+                      </div>
+                    ) : undefined;
+                    
+                    return (
+                      <GridListRow
+                        key={tech.id || i}
+                        id={String(tech.id || i)}
+                        name={tech.name}
+                        description={tech.description}
+                        columns={columns}
+                        gridColumns={TECHNIQUE_GRID}
+                        chips={partChips}
+                        chipsLabel="Parts"
+                        rightSlot={useButton}
+                        onDelete={isEditMode && onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
+                        compact
+                        expandedContent={extraInfo}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-text-muted italic text-center py-4">
+                  No techniques learned
+                </p>
+              )}
+            </div>
           </>
         )}
 
         {activeTab === 'inventory' && (
           <div className="space-y-6">
+            {/* Inventory Summary: Currency + Armament Proficiency */}
+            <TabSummarySection variant="currency">
+              <SummaryRow>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">💰</span>
+                  <input
+                    type="text"
+                    value={currencyInput}
+                    onChange={(e) => setCurrencyInput(e.target.value)}
+                    onBlur={handleCurrencyBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const raw = currencyInput.trim();
+                        let newValue = currency;
+                        if (raw.startsWith('+')) newValue = currency + (parseInt(raw.substring(1)) || 0);
+                        else if (raw.startsWith('-')) newValue = currency - (parseInt(raw.substring(1)) || 0);
+                        else newValue = parseInt(raw) || 0;
+                        newValue = Math.max(0, newValue);
+                        setCurrencyInput(String(newValue));
+                        onCurrencyChange?.(newValue);
+                      }
+                    }}
+                    className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500 bg-white"
+                    title="Use +5, -10, or a number"
+                  />
+                  <span className="text-sm text-text-muted">currency</span>
+                </div>
+                {martialProficiency !== undefined && (
+                  <SummaryItem 
+                    icon="⚔️" 
+                    label="Armament Proficiency" 
+                    value={`${calculateArmamentProficiency(martialProficiency)} TP`}
+                    highlight
+                    highlightColor="warning"
+                  />
+                )}
+              </SummaryRow>
+            </TabSummarySection>
+
             {/* Weapons Section */}
             <div>
               <SectionHeader 
                 title="Weapons" 
-                count={weapons.length}
                 onAdd={onAddWeapon}
                 addLabel="Add weapon"
               />
-              {/* Column headers for weapon actions */}
               {weapons.length > 0 && (
-                <div className="flex items-center justify-end gap-2 text-xs text-text-muted mb-1 pr-2">
-                  <span className="w-16 text-center">Attack</span>
-                  <span className="w-16 text-center">Damage</span>
-                </div>
+                <ListHeader
+                  columns={WEAPON_COLUMNS}
+                  gridColumns={WEAPON_GRID}
+                  sortState={weaponSort}
+                  onSort={(col) => setWeaponSort(toggleSort(weaponSort, col))}
+                  hasSelectionColumn
+                />
               )}
-              {/* Weapons list */}
               {weapons.length > 0 ? (
-                weapons.map((item, i) => {
-                  const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
-                  const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
-                  const columns: ColumnValue[] = [
-                    { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium' },
-                  ];
-                  
-                  return (
-                    <GridListRow
-                      key={item.id || i}
-                      id={String(item.id || i)}
-                      name={item.name}
-                      columns={columns}
-                      gridColumns="1.4fr 1fr 0.8fr"
-                      chips={propertyChips}
-                      equipped={item.equipped}
-                      leftSlot={onToggleEquipWeapon && (
-                        <SelectionToggle
-                          isSelected={item.equipped || false}
-                          onToggle={() => onToggleEquipWeapon(item.id || String(i))}
-                          label={item.equipped ? 'Unequip' : 'Equip'}
-                        />
-                      )}
-                      rightSlot={rollContext && (
-                        <div className="flex items-center gap-1">
-                          <RollButton
-                            value={0}
-                            displayValue="⚔️ Atk"
-                            onClick={() => rollContext.rollAttack(item.name, attackBonus)}
-                            size="sm"
-                            title="Roll attack"
+                <div className="space-y-1">
+                  {weapons.map((item, i) => {
+                    const attackBonus = (item as Item & { attackBonus?: number }).attackBonus ?? 0;
+                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
+                    const columns: ColumnValue[] = [
+                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium' },
+                      { key: 'range', value: (item as Item & { range?: string }).range || 'Melee' },
+                    ];
+                    
+                    return (
+                      <GridListRow
+                        key={item.id || i}
+                        id={String(item.id || i)}
+                        name={item.name}
+                        columns={columns}
+                        gridColumns={WEAPON_GRID}
+                        chips={propertyChips}
+                        equipped={item.equipped}
+                        leftSlot={onToggleEquipWeapon && (
+                          <SelectionToggle
+                            isSelected={item.equipped || false}
+                            onToggle={() => onToggleEquipWeapon(item.id || String(i))}
+                            label={item.equipped ? 'Unequip' : 'Equip'}
                           />
-                          {item.damage && typeof item.damage === 'string' && (
+                        )}
+                        rightSlot={rollContext && (
+                          <div className="flex items-center gap-1">
                             <RollButton
                               value={0}
-                              displayValue="💥 Dmg"
-                              variant="danger"
-                              onClick={() => rollContext.rollDamage(item.damage as string)}
+                              displayValue="⚔️"
+                              onClick={() => rollContext.rollAttack(item.name, attackBonus)}
                               size="sm"
-                              title="Roll damage"
+                              title="Roll attack"
                             />
-                          )}
-                        </div>
-                      )}
-                      onDelete={onRemoveWeapon && isEditMode ? () => onRemoveWeapon(item.id || String(i)) : undefined}
-                      expandedContent={item.description ? (
-                        <p className="text-sm text-text-muted italic whitespace-pre-wrap">
-                          {item.description}
-                        </p>
-                      ) : undefined}
-                    />
-                  );
-                })
+                            {item.damage && typeof item.damage === 'string' && (
+                              <RollButton
+                                value={0}
+                                displayValue="💥"
+                                variant="danger"
+                                onClick={() => rollContext.rollDamage(item.damage as string)}
+                                size="sm"
+                                title="Roll damage"
+                              />
+                            )}
+                          </div>
+                        )}
+                        onDelete={onRemoveWeapon && isEditMode ? () => onRemoveWeapon(item.id || String(i)) : undefined}
+                        expandedContent={item.description ? (
+                          <p className="text-sm text-text-muted italic whitespace-pre-wrap">
+                            {item.description}
+                          </p>
+                        ) : undefined}
+                      />
+                    );
+                  })}
+                </div>
               ) : (
-                <p className="text-text-muted text-sm italic text-center py-2">No weapons (see Unarmed Prowess in Archetype section)</p>
+                <p className="text-sm text-text-muted italic text-center py-4">No weapons (see Unarmed Prowess in Archetype section)</p>
               )}
             </div>
             
@@ -812,44 +852,56 @@ export function LibrarySection({
             <div>
               <SectionHeader 
                 title="Armor" 
-                count={armor.length}
                 onAdd={onAddArmor}
                 addLabel="Add armor"
               />
+              {armor.length > 0 && (
+                <ListHeader
+                  columns={ARMOR_COLUMNS}
+                  gridColumns={ARMOR_GRID}
+                  sortState={armorSort}
+                  onSort={(col) => setArmorSort(toggleSort(armorSort, col))}
+                  hasSelectionColumn
+                />
+              )}
               {armor.length > 0 ? (
-                armor.map((item, i) => {
-                  const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
-                  const columns: ColumnValue[] = [
-                    { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium' },
-                  ];
-                  
-                  return (
-                    <GridListRow
-                      key={item.id || i}
-                      id={String(item.id || i)}
-                      name={item.name}
-                      columns={columns}
-                      gridColumns="1.4fr 1fr 0.8fr"
-                      chips={propertyChips}
-                      equipped={item.equipped}
-                      leftSlot={onToggleEquipArmor && (
-                        <SelectionToggle
-                          isSelected={item.equipped || false}
-                          onToggle={() => onToggleEquipArmor(item.id || String(i))}
-                          label={item.equipped ? 'Unequip' : 'Equip'}
-                        />
-                      )}
-                      onDelete={onRemoveArmor && isEditMode ? () => onRemoveArmor(item.id || String(i)) : undefined}
-                      expandedContent={item.description ? (
-                        <p className="text-sm text-text-muted italic whitespace-pre-wrap">
-                          {item.description}
-                        </p>
-                      ) : undefined}
-                    />
-                  );
-                })
+                <div className="space-y-1">
+                  {armor.map((item, i) => {
+                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
+                    const itemWithCrit = item as Item & { critRange?: string | number };
+                    const columns: ColumnValue[] = [
+                      { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium' },
+                      { key: 'crit', value: itemWithCrit.critRange ?? '-' },
+                    ];
+                    
+                    return (
+                      <GridListRow
+                        key={item.id || i}
+                        id={String(item.id || i)}
+                        name={item.name}
+                        columns={columns}
+                        gridColumns={ARMOR_GRID}
+                        chips={propertyChips}
+                        equipped={item.equipped}
+                        leftSlot={onToggleEquipArmor && (
+                          <SelectionToggle
+                            isSelected={item.equipped || false}
+                            onToggle={() => onToggleEquipArmor(item.id || String(i))}
+                            label={item.equipped ? 'Unequip' : 'Equip'}
+                          />
+                        )}
+                        onDelete={onRemoveArmor && isEditMode ? () => onRemoveArmor(item.id || String(i)) : undefined}
+                        expandedContent={item.description ? (
+                          <p className="text-sm text-text-muted italic whitespace-pre-wrap">
+                            {item.description}
+                          </p>
+                        ) : undefined}
+                      />
+                    );
+                  })}
+                </div>
               ) : (
-                <p className="text-text-muted text-sm italic text-center py-2">No armor</p>
+                <p className="text-sm text-text-muted italic text-center py-4">No armor</p>
               )}
             </div>
             
@@ -857,34 +909,47 @@ export function LibrarySection({
             <div>
               <SectionHeader 
                 title="Equipment" 
-                count={equipment.length}
                 onAdd={onAddEquipment}
                 addLabel="Add equipment"
               />
+              {equipment.length > 0 && (
+                <ListHeader
+                  columns={EQUIPMENT_COLUMNS}
+                  gridColumns={EQUIPMENT_GRID}
+                  sortState={equipmentSort}
+                  onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+                />
+              )}
               {equipment.length > 0 ? (
-                equipment.map((item, i) => {
-                  const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
-                  
-                  return (
-                    <GridListRow
-                      key={item.id || i}
-                      id={String(item.id || i)}
-                      name={item.name}
-                      columns={[]}
-                      chips={propertyChips}
-                      quantity={item.quantity}
-                      onQuantityChange={onEquipmentQuantityChange && isEditMode ? (delta) => onEquipmentQuantityChange(item.id || String(i), delta) : undefined}
-                      onDelete={onRemoveEquipment && isEditMode ? () => onRemoveEquipment(item.id || String(i)) : undefined}
-                      expandedContent={item.description ? (
-                        <p className="text-sm text-text-muted italic whitespace-pre-wrap">
-                          {item.description}
-                        </p>
-                      ) : undefined}
-                    />
-                  );
-                })
+                <div className="space-y-1">
+                  {equipment.map((item, i) => {
+                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
+                    const columns: ColumnValue[] = [
+                      { key: 'quantity', value: item.quantity ?? 1 },
+                    ];
+                    
+                    return (
+                      <GridListRow
+                        key={item.id || i}
+                        id={String(item.id || i)}
+                        name={item.name}
+                        columns={columns}
+                        gridColumns={EQUIPMENT_GRID}
+                        chips={propertyChips}
+                        quantity={item.quantity}
+                        onQuantityChange={onEquipmentQuantityChange && isEditMode ? (delta) => onEquipmentQuantityChange(item.id || String(i), delta) : undefined}
+                        onDelete={onRemoveEquipment && isEditMode ? () => onRemoveEquipment(item.id || String(i)) : undefined}
+                        expandedContent={item.description ? (
+                          <p className="text-sm text-text-muted italic whitespace-pre-wrap">
+                            {item.description}
+                          </p>
+                        ) : undefined}
+                      />
+                    );
+                  })}
+                </div>
               ) : (
-                <p className="text-text-muted text-sm italic text-center py-2">No equipment</p>
+                <p className="text-sm text-text-muted italic text-center py-4">No equipment</p>
               )}
             </div>
           </div>

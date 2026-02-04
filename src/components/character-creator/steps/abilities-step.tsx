@@ -43,7 +43,7 @@ export function AbilitiesStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-text-primary mb-2">Assign Ability Scores</h1>
+      <h1 className="text-2xl font-bold text-text-primary mb-2">Assign Abilities</h1>
       <p className="text-text-secondary mb-6">
         Distribute your ability points. You can reduce abilities below 0 to gain extra points.
         {powerAbility && <span className="text-power"> Power archetype ability highlighted.</span>}

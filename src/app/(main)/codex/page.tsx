@@ -341,11 +341,6 @@ function FeatsTab() {
         </div>
       </FilterSection>
 
-      {/* Results Count */}
-      <div className="text-sm text-text-muted mb-4">
-        {isLoading ? 'Loading...' : `${filteredFeats.length} feats found`}
-      </div>
-
       {/* Column Headers - aligned with GridListRow grid */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -357,11 +352,10 @@ function FeatsTab() {
         <SortHeader label="ABILITY" col="ability" sortState={sortState} onSort={handleSort} />
         <SortHeader label="RECOVERY" col="rec_period" sortState={sortState} onSort={handleSort} />
         <SortHeader label="USES" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
-        <div></div> {/* Expand icon column */}
       </div>
 
       {/* Feat List */}
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
         ) : filteredFeats.length === 0 ? (
@@ -613,11 +607,6 @@ function SkillsTab() {
         </div>
       </FilterSection>
 
-      {/* Results Count */}
-      <div className="text-sm text-text-muted mb-4">
-        {isLoading ? 'Loading...' : `${filteredSkills.length} skills found`}
-      </div>
-
       {/* Column Headers - aligned with GridListRow grid */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -626,11 +615,10 @@ function SkillsTab() {
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
         <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
-        <div></div> {/* Expand icon column */}
       </div>
 
       {/* Skill List */}
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
         ) : filteredSkills.length === 0 ? (
@@ -817,10 +805,6 @@ function SpeciesTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-text-muted mb-4">
-        {isLoading ? 'Loading...' : `${filteredSpecies.length} species found`}
-      </div>
-
       {/* Column Headers - note: Species uses custom card, not GridListRow */}
       <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
@@ -829,7 +813,7 @@ function SpeciesTab() {
         <span>DESCRIPTION</span>
       </div>
 
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
         ) : filteredSpecies.length === 0 ? (
@@ -1080,10 +1064,6 @@ function EquipmentTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-text-muted mb-4">
-        {isLoading ? 'Loading...' : `${filteredEquipment.length} items found`}
-      </div>
-
       {/* Header Row - aligned with GridListRow grid */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -1093,10 +1073,9 @@ function EquipmentTab() {
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <SortHeader label="COST" col="cost" sortState={sortState} onSort={handleSort} />
         <SortHeader label="RARITY" col="rarity" sortState={sortState} onSort={handleSort} />
-        <div></div> {/* Expand icon column */}
       </div>
         
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
         ) : filteredEquipment.length === 0 ? (
@@ -1231,10 +1210,6 @@ function PropertiesTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-text-muted mb-4">
-        {isLoading ? 'Loading...' : `${filteredProperties.length} properties found`}
-      </div>
-
       {/* Header Row - aligned with GridListRow grid */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -1245,10 +1220,9 @@ function PropertiesTab() {
         <SortHeader label="ITEM PTS" col="ip" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TP" col="tp" sortState={sortState} onSort={handleSort} />
         <SortHeader label="COST MULT" col="cost" sortState={sortState} onSort={handleSort} />
-        <div></div> {/* Expand icon column */}
       </div>
         
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
         ) : filteredProperties.length === 0 ? (
@@ -1410,10 +1384,6 @@ function PartsTab() {
         </div>
       </FilterSection>
 
-      <div className="text-sm text-text-muted mb-4">
-        {isLoading ? 'Loading...' : `${filteredParts.length} parts found`}
-      </div>
-
       {/* Header Row - aligned with GridListRow grid */}
       <div 
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
@@ -1423,10 +1393,9 @@ function PartsTab() {
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <span>ENERGY</span>
         <span>TP</span>
-        <div></div> {/* Expand icon column */}
       </div>
 
-      <div className="flex flex-col gap-2 lg:mt-0">
+      <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
         ) : filteredParts.length === 0 ? (

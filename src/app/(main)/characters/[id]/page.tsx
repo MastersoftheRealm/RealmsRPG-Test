@@ -382,6 +382,18 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
+  // Experience change handler (always available)
+  const handleExperienceChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? { ...prev, experience: value } : null);
+  }, [character]);
+  
+  // Name change handler (always available)
+  const handleNameChange = useCallback((name: string) => {
+    if (!character) return;
+    setCharacter(prev => prev ? { ...prev, name } : null);
+  }, [character]);
+  
   // Portrait upload handler
   const handlePortraitChange = useCallback(async (file: File) => {
     if (!character || !user || !storage) return;
@@ -1099,6 +1111,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}
                 isUploadingPortrait={uploadingPortrait}
+                onNameChange={handleNameChange}
+                onExperienceChange={handleExperienceChange}
                 speedBase={character.speedBase ?? 6}
                 evasionBase={character.evasionBase ?? 10}
                 onSpeedBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, speedBase: v } : null)}

@@ -8,7 +8,7 @@
  * - Character creator (select ancestry traits, equipment, etc.)
  * - Creature creator (select abilities, powers, etc.)
  * 
- * Design: Light blue + icon → Light green check when selected
+ * Design: Sleek backgroundless + icon → Green check when selected
  * Smooth animation between states for polished feel
  */
 
@@ -31,15 +31,15 @@ export interface SelectionToggleProps {
 }
 
 const SIZE_STYLES = {
-  sm: 'w-5 h-5',
-  md: 'w-6 h-6',
-  lg: 'w-8 h-8',
+  sm: 'w-6 h-6',
+  md: 'w-8 h-8',
+  lg: 'w-10 h-10',
 };
 
 const ICON_SIZES = {
-  sm: 'w-3 h-3',
-  md: 'w-4 h-4',
-  lg: 'w-5 h-5',
+  sm: 'w-4 h-4',
+  md: 'w-5 h-5',
+  lg: 'w-6 h-6',
 };
 
 export function SelectionToggle({
@@ -61,25 +61,25 @@ export function SelectionToggle({
       aria-label={label || (isSelected ? 'Remove selection' : 'Add selection')}
       aria-pressed={isSelected}
       className={cn(
-        'rounded-full flex items-center justify-center transition-all duration-200 ease-out',
+        'flex items-center justify-center transition-all duration-200 ease-out',
         SIZE_STYLES[size],
         isSelected
-          ? 'bg-success-500 text-white shadow-sm scale-105'
-          : 'bg-primary-100 text-primary-600 hover:bg-primary-200 hover:scale-105',
-        disabled && 'opacity-50 cursor-not-allowed hover:scale-100',
+          ? 'text-success-600'
+          : 'text-text-muted hover:text-primary-600',
+        disabled && 'opacity-40 cursor-not-allowed',
         className
       )}
     >
       <span
         className={cn(
-          'transition-transform duration-200',
-          isSelected ? 'rotate-0' : 'rotate-0'
+          'transition-all duration-200 ease-out',
+          isSelected ? 'scale-110' : 'scale-100 hover:scale-110'
         )}
       >
         {isSelected ? (
-          <Check className={cn(ICON_SIZES[size], 'stroke-[3]')} />
+          <Check className={cn(ICON_SIZES[size], 'stroke-[2.5]')} />
         ) : (
-          <Plus className={cn(ICON_SIZES[size], 'stroke-[2.5]')} />
+          <Plus className={cn(ICON_SIZES[size], 'stroke-[2]')} />
         )}
       </span>
     </button>

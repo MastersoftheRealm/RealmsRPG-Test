@@ -3,6 +3,8 @@
  * =================
  * Shows training points and proficiencies extracted from powers, techniques, and equipment
  * Matches vanilla site's proficiencies functionality
+ * 
+ * Uses unified components: SectionHeader, TabSummarySection
  */
 
 'use client';
@@ -11,6 +13,7 @@ import { useMemo } from 'react';
 import { Chip } from '@/components/ui';
 import { Check, Swords, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 /** RTDB part data for enrichment */
@@ -278,14 +281,16 @@ function ProficiencySection({ title, profs }: ProficiencySectionProps) {
 
   return (
     <div className="mb-4">
-      <div className="flex items-center justify-between px-3 py-2 bg-surface-alt rounded-t-lg border border-border-light">
-        <span className="font-semibold text-sm text-text-secondary">{title}</span>
-        <span className="text-sm text-text-muted">
-          TP: <span className="font-semibold text-primary-600">{totalTP}</span>
-        </span>
-      </div>
+      <SectionHeader 
+        title={title}
+        rightContent={
+          <span className="text-xs text-text-muted">
+            TP: <span className="font-semibold text-primary-600">{totalTP}</span>
+          </span>
+        }
+      />
       
-      <div className="border border-t-0 border-border-light rounded-b-lg p-3">
+      <div className="px-2 py-3">
         {profs.size === 0 ? (
           <p className="text-sm text-text-muted italic text-center py-2">No proficiencies</p>
         ) : (
@@ -358,36 +363,42 @@ export function ProficienciesTab({
   const trainingPoints = baseTP + (archetypeAbility * level) + (2 * (level - 1)) - totalSpent;
 
   return (
-    <div>
-      {/* Training Points Box */}
-      <div className="flex justify-center mb-6">
-        <div className="px-8 py-4 bg-surface-alt border border-border-light rounded-xl shadow-sm">
-          <div className="text-center">
-            <span className="text-lg font-semibold text-text-secondary">Training Points: </span>
-            <span className={`text-2xl font-bold ${trainingPoints >= 0 ? 'text-primary-600' : 'text-red-600'}`}>
-              {trainingPoints}
-            </span>
-          </div>
-          <div className="text-xs text-text-muted text-center mt-1">
-            {baseTP} base + ({archetypeAbility} × {level}) + {2 * (level - 1)} bonus - {totalSpent} spent
-          </div>
+    <div className="space-y-4">
+      {/* Training Points Summary */}
+      <TabSummarySection variant="default">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <SummaryRow>
+            <SummaryItem 
+              icon="📊" 
+              label="Training Points" 
+              value={trainingPoints}
+              highlight
+              highlightColor={trainingPoints >= 0 ? 'primary' : 'danger'}
+            />
+            <SummaryItem 
+              label="Spent" 
+              value={totalSpent}
+            />
+          </SummaryRow>
+          <span className="text-xs text-text-muted">
+            {baseTP} base + ({archetypeAbility} × {level}) + {2 * (level - 1)} bonus
+          </span>
         </div>
-      </div>
+      </TabSummarySection>
 
       {/* Unarmed Prowess Section - shown in edit mode or if character has it */}
       {(isEditMode || unarmedProwess > 0) && (
         <div className="mb-4">
-          <div className="flex items-center justify-between px-3 py-2 bg-surface-alt rounded-t-lg border border-border-light">
-            <div className="flex items-center gap-2">
-              <Swords className="w-4 h-4 text-amber-600" />
-              <span className="font-semibold text-sm text-text-secondary">Unarmed Prowess</span>
-            </div>
-            <span className="text-sm text-text-muted">
-              TP: <span className="font-semibold text-primary-600">{unarmedProwessTP}</span>
-            </span>
-          </div>
+          <SectionHeader 
+            title="Unarmed Prowess"
+            rightContent={
+              <span className="text-xs text-text-muted">
+                TP: <span className="font-semibold text-primary-600">{unarmedProwessTP}</span>
+              </span>
+            }
+          />
           
-          <div className="border border-t-0 border-border-light rounded-b-lg p-3">
+          <div className="px-2 py-3">
             {isEditMode ? (
               <div className="space-y-2">
                 {/* Only show levels that are available at the character's level */}

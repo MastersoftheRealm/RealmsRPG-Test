@@ -6,7 +6,7 @@
  */
 
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
-import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
+import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
 import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage } from '@/lib/calculators';
 
@@ -66,10 +66,10 @@ export interface EnrichedItem {
   id: string;
   name: string;
   description?: string;
-  type: 'weapon' | 'armor' | 'equipment';
+  type: 'weapon' | 'armor' | 'equipment' | 'shield';
   equipped?: boolean;
   // Display fields
-  damage?: string;
+  damage?: string | SavedDamage[];
   armorValue?: number;
   properties?: string[];
   displayProperties?: Array<{

@@ -3,8 +3,11 @@
 /**
  * SectionHeader - Unified Section Header Component
  * =================================================
- * Standardized header pattern for ALL section lists across the site.
- * Includes optional add button, count display, and consistent styling.
+ * Minimal, sleek header pattern for ALL section lists across the site.
+ * Simple title on left, optional + button on far right.
+ * NO counts, NO backgrounds - just clean text and functionality.
+ * 
+ * Based on Equipment tab design (the cleanest current implementation).
  * 
  * Part of Phase 1 UI Unification: "Learn it once, learn it forever"
  * 
@@ -21,11 +24,9 @@ import { IconButton } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 export interface SectionHeaderProps {
-  /** Section title (displayed in uppercase) */
+  /** Section title */
   title: string;
-  /** Item count to display next to title */
-  count?: number;
-  /** Callback for add button - if provided, shows + button */
+  /** Callback for add button - if provided, shows + button on far right */
   onAdd?: () => void;
   /** Accessibility label for add button (defaults to "Add {title}") */
   addLabel?: string;
@@ -33,45 +34,35 @@ export interface SectionHeaderProps {
   rightContent?: ReactNode;
   /** Custom className for container */
   className?: string;
-  /** Size variant */
+  /** Size variant - controls text size and spacing */
   size?: 'sm' | 'md' | 'lg';
-  /** Whether to show a border below */
-  bordered?: boolean;
 }
 
 const sizeStyles = {
-  sm: 'text-xs mb-1',
-  md: 'text-sm mb-2',
-  lg: 'text-base mb-3',
+  sm: 'text-xs py-1.5',
+  md: 'text-sm py-2',
+  lg: 'text-base py-2.5',
 };
 
 export function SectionHeader({
   title,
-  count,
   onAdd,
   addLabel,
   rightContent,
   className,
   size = 'sm',
-  bordered = false,
 }: SectionHeaderProps) {
   return (
     <div 
       className={cn(
         'flex items-center justify-between',
         sizeStyles[size],
-        bordered && 'pb-2 border-b border-border-light',
         className
       )}
     >
-      {/* Left: Title and count */}
-      <h4 className="font-semibold text-text-muted uppercase tracking-wide flex items-center gap-2">
+      {/* Left: Title only - clean, minimal */}
+      <h4 className="font-semibold text-text-muted uppercase tracking-wide">
         {title}
-        {count !== undefined && (
-          <span className="text-xs text-text-muted font-normal">
-            ({count})
-          </span>
-        )}
       </h4>
       
       {/* Right: Custom content and/or add button */}
@@ -83,6 +74,7 @@ export function SectionHeader({
             size="sm"
             onClick={onAdd}
             label={addLabel || `Add ${title.toLowerCase()}`}
+            className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
           >
             <Plus className="w-4 h-4" />
           </IconButton>

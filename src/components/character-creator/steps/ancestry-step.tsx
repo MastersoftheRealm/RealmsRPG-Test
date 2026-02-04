@@ -467,11 +467,11 @@ function TraitSection({
             >
               <div className="flex items-start gap-3">
                 {selectable && (
-                  <div className="flex-shrink-0 mt-0.5">
+                  <div className="flex-shrink-0 self-center">
                     <SelectionToggle
                       isSelected={isSelected}
                       onToggle={() => onToggle(trait.id)}
-                      size="sm"
+                      size="lg"
                     />
                   </div>
                 )}

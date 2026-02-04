@@ -48,9 +48,24 @@ export type { ColumnValue, ChipData, GridListRowProps } from './grid-list-row';
 export { SectionHeader } from './section-header';
 export type { SectionHeaderProps } from './section-header';
 
+// TabSummarySection - Compact top section for tab summary info
+// Use for: innate energy, currency, armament proficiency, physical attributes, etc.
+export { TabSummarySection, SummaryItem, SummaryRow } from './tab-summary-section';
+export type { TabSummarySectionProps, SummaryItemProps, SummaryRowProps } from './tab-summary-section';
+
+// ListHeader - Sortable column headers for list views
+// Use for ALL list headers matching Codex/Library patterns
+export { ListHeader } from './list-header';
+export type { ListHeaderProps, ListColumn } from './list-header';
+
 // Part/Property chip components (reusable across Library, Character Sheet, Codex)
 export { PartChip as PartChipComponent, PartChipDetails, PartChipList, PropertyChipList } from './part-chip';
 export type { PartData } from './part-chip';
+
+// SkillRow - UNIFIED skill display component
+// Use for ALL skill rows across: character sheet, character creator, creature creator
+export { SkillRow } from './skill-row';
+export type { SkillRowProps } from './skill-row';
 
 // List components (shared between Codex and Library)
 export {

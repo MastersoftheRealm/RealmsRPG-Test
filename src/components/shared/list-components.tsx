@@ -202,8 +202,8 @@ export function ListContainer({
   return (
     <div 
       className={cn(
-        'flex flex-col gap-2',
-        hasHeader ? 'rounded-b-lg' : 'rounded-lg',
+        'flex flex-col gap-1',
+        hasHeader ? 'rounded-b-lg mt-2' : 'rounded-lg',
         className
       )}
     >

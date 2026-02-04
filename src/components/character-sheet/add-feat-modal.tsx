@@ -66,8 +66,8 @@ function parseFeatLevel(name: string): { baseName: string; level: number; hasLev
   return { baseName: name, level: 1, hasLevel: false };
 }
 
-// Grid columns for feat modal
-const MODAL_FEAT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr 0.8fr';
+// Grid columns for feat modal (includes 2.5rem for Add button on right)
+const MODAL_FEAT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr 0.8fr 2.5rem';
 
 export function AddFeatModal({
   isOpen,
@@ -405,6 +405,7 @@ export function AddFeatModal({
           <SortHeader label="Rec." col="rec_period" sortState={sortState} onSort={handleSort} />
           <SortHeader label="Uses" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
           <SortHeader label="Category" col="category" sortState={sortState} onSort={handleSort} />
+          <span className="text-center">Add</span>
         </div>
 
         {/* Feat List - Scrollable */}

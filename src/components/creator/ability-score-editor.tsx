@@ -245,7 +245,7 @@ export function AbilityScoreEditor({
               
               {/* Description below card (not in compact mode) */}
               {!compact && (
-                <p className="text-xs text-text-muted text-center mt-1.5 px-1 line-clamp-2">
+                <p className="text-xs text-text-muted text-center mt-1.5 px-1 line-clamp-2 min-h-[2.5rem]">
                   {info.description}
                 </p>
               )}
