@@ -21,6 +21,9 @@ import { PointStatus, EditSectionToggle, getEditState, SkillRow } from '@/compon
 import { Button } from '@/components/ui';
 import type { Abilities } from '@/types';
 
+// Game rule: skill values are capped at 3
+const MAX_SKILL_VALUE = 3;
+
 interface Skill {
   id: string;
   name: string;
@@ -72,15 +75,20 @@ export function SkillsSection({
   const showEditControls = isEditMode && isSectionEditing;
   
   // Check if a skill is from species (locked)
-  const isSpeciesSkill = (skillName: string): boolean => {
-    return speciesSkills.includes(skillName);
+  // Species skills may be stored as IDs or names, so check both
+  const isSpeciesSkill = (skillName: string, skillId?: string): boolean => {
+    return speciesSkills.some(ss => {
+      const ssLower = String(ss).toLowerCase();
+      return ssLower === skillName.toLowerCase() || 
+             (skillId && ssLower === String(skillId).toLowerCase());
+    });
   };
   
   // Handle proficiency toggle with proper logic
   const handleProfToggle = (skill: Skill) => {
     if (!onSkillChange) return;
     
-    const isFromSpecies = isSpeciesSkill(skill.name);
+    const isFromSpecies = isSpeciesSkill(skill.name, skill.id);
     if (isFromSpecies) return; // Species skills can't have proficiency toggled
     
     if (skill.prof) {
@@ -97,7 +105,7 @@ export function SkillsSection({
     if (!onSkillChange) return;
     
     const isSubSkill = Boolean(skill.baseSkill);
-    const isFromSpecies = isSpeciesSkill(skill.name);
+    const isFromSpecies = isSpeciesSkill(skill.name, skill.id);
     
     if (isSubSkill) {
       // Sub-skill logic
@@ -111,7 +119,8 @@ export function SkillsSection({
         // Make proficient and set skill_val to 1
         onSkillChange(skill.id, { prof: true, skill_val: 1 });
       } else {
-        // Already proficient: increase skill_val
+        // Already proficient: increase skill_val (capped at MAX_SKILL_VALUE)
+        if (skill.skill_val >= MAX_SKILL_VALUE) return;
         onSkillChange(skill.id, { skill_val: skill.skill_val + 1 });
       }
     } else {
@@ -120,7 +129,8 @@ export function SkillsSection({
         // Not proficient: make proficient first (don't increase value)
         onSkillChange(skill.id, { prof: true });
       } else {
-        // Already proficient or species skill: increase skill_val
+        // Already proficient or species skill: increase skill_val (capped at MAX_SKILL_VALUE)
+        if (skill.skill_val >= MAX_SKILL_VALUE) return;
         onSkillChange(skill.id, { skill_val: skill.skill_val + 1 });
       }
     }
@@ -186,13 +196,15 @@ export function SkillsSection({
     return result;
   }, [baseSkills, subSkillsByParent]);
   
-  // Calculate total skill points spent
+  // Calculate total skill points spent (excluding species skill proficiency costs)
   const totalSpent = useMemo(() => {
     return skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;
-      // Proficiency costs 1 for base skills only
+      // Proficiency costs 1 for base skills, but species skills are free
       if (skill.prof && !skill.baseSkill) {
-        cost += 1;
+        if (!isSpeciesSkill(skill.name, skill.id)) {
+          cost += 1;
+        }
       }
       return sum + cost;
     }, 0);
@@ -272,7 +284,7 @@ export function SkillsSection({
               </Button>
             </>
           )}
-          {totalSkillPoints !== undefined && (
+          {showEditControls && totalSkillPoints !== undefined && (
             <PointStatus
               total={totalSkillPoints}
               spent={totalSpent}
@@ -316,7 +328,7 @@ export function SkillsSection({
             {orderedSkills.map((skill) => {
               const isSubSkill = Boolean(skill.baseSkill);
               const bonus = getSkillBonus(skill);
-              const isFromSpecies = isSpeciesSkill(skill.name);
+              const isFromSpecies = isSpeciesSkill(skill.name, skill.id);
               
               return (
                 <SkillRow
@@ -344,7 +356,7 @@ export function SkillsSection({
                       handleSkillDecrease(skill);
                     }
                   }}
-                  canIncrease={remaining === undefined || remaining > 0}
+                  canIncrease={(remaining === undefined || remaining > 0) && skill.skill_val < MAX_SKILL_VALUE}
                   onRemove={showEditControls && onRemoveSkill 
                     ? () => onRemoveSkill(skill.id) 
                     : undefined

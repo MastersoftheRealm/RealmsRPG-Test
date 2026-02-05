@@ -13,8 +13,7 @@ import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
 import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
-import { cn } from '@/lib/utils';
-import { LoadingState, Button } from '@/components/ui';
+import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPoints } from '@/lib/game/formulas';
 import {
@@ -31,6 +30,7 @@ import {
   AddSubSkillModal,
   LevelUpModal,
   RecoveryModal,
+  SheetActionToolbar,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
@@ -179,6 +179,21 @@ export default function CharacterSheetPage({ params }: PageParams) {
     return species?.species_traits || [];
   }, [character, allSpecies]);
   
+  // Look up character's species skills (auto-granted proficiencies that don't cost choosable skill points)
+  const characterSpeciesSkills = useMemo(() => {
+    if (!character || !allSpecies.length) return [] as string[];
+    
+    const speciesId = character.ancestry?.id;
+    const speciesName = character.ancestry?.name || character.species;
+    
+    let species = allSpecies.find(s => String(s.id) === String(speciesId));
+    if (!species && speciesName) {
+      species = allSpecies.find(s => s.name.toLowerCase() === speciesName?.toLowerCase());
+    }
+    
+    return (species?.skills || []) as string[];
+  }, [character, allSpecies]);
+  
   // Load character data
   useEffect(() => {
     async function loadCharacter() {
@@ -239,14 +254,24 @@ export default function CharacterSheetPage({ params }: PageParams) {
       }
     });
     
-    // Skill points: 2 + (level * 3)
-    const totalSkillPoints = 2 + (level * 3);
+    // Skill points: 2 + (level * 3), but species auto-allocates 2 points
+    // For display, show only choosable points: total - speciesCost, spent - speciesCost
+    const rawTotalSkillPoints = 2 + (level * 3);
+    const speciesSkillCount = characterSpeciesSkills.length;
+    const totalSkillPoints = rawTotalSkillPoints - speciesSkillCount;
     
-    // Calculate spent skill points
-    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string }>;
+    // Calculate spent skill points (exclude species skill proficiency costs)
+    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string; name?: string; id?: string }>;
     let spentSkillPoints = skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;
-      if (skill.prof && !skill.baseSkill) cost += 1;
+      // Proficiency costs 1 for base skills, but species skills are free
+      if (skill.prof && !skill.baseSkill) {
+        const isSpecies = characterSpeciesSkills.some(ss => 
+          String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
+          String(ss) === String(skill.id || '')
+        );
+        if (!isSpecies) cost += 1;
+      }
       return sum + cost;
     }, 0);
     
@@ -263,7 +288,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       spentSkillPoints,
       availableSkillPoints: totalSkillPoints - spentSkillPoints,
     };
-  }, [character]);
+  }, [character, characterSpeciesSkills]);
   
   // Calculate archetype progression (innate energy, threshold, pools, bonus feats)
   const archetypeProgression = useMemo(() => {
@@ -296,12 +321,20 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
     const hePointsRemaining = totalHEPoints - spentHEPoints;
     
-    // Calculate skill points: 2 + (level * 3)
-    const totalSkillPoints = 2 + (level * 3);
-    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string }>;
+    // Calculate skill points: 2 + (level * 3) minus species auto-allocated skills
+    const rawTotalSkillPoints = 2 + (level * 3);
+    const speciesCount = characterSpeciesSkills.length;
+    const totalSkillPoints = rawTotalSkillPoints - speciesCount;
+    const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string; name?: string; id?: string }>;
     const spentSkillPoints = skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;
-      if (skill.prof && !skill.baseSkill) cost += 1;
+      if (skill.prof && !skill.baseSkill) {
+        const isSpecies = characterSpeciesSkills.some(ss => 
+          String(ss).toLowerCase() === String(skill.name || '').toLowerCase() ||
+          String(ss) === String(skill.id || '')
+        );
+        if (!isSpecies) cost += 1;
+      }
       return sum + cost;
     }, 0);
     // Defense skills cost 2 per point
@@ -325,7 +358,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       archetypeFeatsRemaining > 0 ||
       characterFeatsRemaining > 0
     );
-  }, [character]);
+  }, [character, characterSpeciesSkills]);
   
   // Auto-save with debounce
   const { hasUnsavedChanges, isSaving, lastSaved, saveNow } = useAutoSave({
@@ -350,7 +383,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
     onSaveStart: () => setSaving(true),
     onSaveComplete: () => {
       setSaving(false);
-      showToast('Character saved', 'success', 2000);
     },
     onSaveError: (err) => {
       console.error('Auto-save failed:', err);
@@ -869,6 +901,33 @@ export default function CharacterSheetPage({ params }: PageParams) {
     }
     setFeatModalType(null);
   }, [character]);
+
+  // Remove feat handler
+  const handleRemoveFeat = useCallback((featId: string) => {
+    if (!character) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      // Try removing from archetype feats first
+      const archetypeFeats = prev.archetypeFeats || [];
+      const archetypeIdx = archetypeFeats.findIndex(f => String(f.id) === featId || f.name === featId);
+      if (archetypeIdx !== -1) {
+        return {
+          ...prev,
+          archetypeFeats: archetypeFeats.filter((_, i) => i !== archetypeIdx),
+        };
+      }
+      // Then try character feats
+      const charFeats = prev.feats || [];
+      const charIdx = charFeats.findIndex(f => String(f.id) === featId || f.name === featId);
+      if (charIdx !== -1) {
+        return {
+          ...prev,
+          feats: charFeats.filter((_, i) => i !== charIdx),
+        };
+      }
+      return prev;
+    });
+  }, [character]);
   
   // Add skills handler - accepts skills from add-skill or add-sub-skill modals
   const handleAddSkills = useCallback((newSkills: Array<{ 
@@ -1158,64 +1217,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
   return (
     <RollProvider>
       <div className="min-h-screen bg-background pb-8">
-        {/* Action Bar */}
-        <div className="sticky top-20 z-40 bg-surface border-b border-border-light shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-            <Link
-              href="/characters"
-              className="text-text-secondary hover:text-text-primary flex items-center gap-1"
-            >
-              ← Characters
-            </Link>
-            
-            <div className="flex items-center gap-2">
-              {(saving || isSaving) && (
-                <span className="text-sm text-text-muted">Saving...</span>
-              )}
-              {hasUnsavedChanges && !saving && !isSaving && (
-                <span className="text-sm text-amber-600">Unsaved changes</span>
-              )}
-              {lastSaved && !hasUnsavedChanges && !saving && (
-                <span className="text-sm text-green-600">Saved</span>
-              )}
-              
-              <Button
-                size="sm"
-                onClick={() => setShowLevelUpModal(true)}
-                className="bg-violet-100 text-violet-600 hover:bg-violet-200"
-              >
-                ⬆️ Level Up
-              </Button>
-              
-              <Button
-                size="sm"
-                onClick={() => setShowRecoveryModal(true)}
-                className="bg-blue-100 text-blue-700 hover:bg-blue-200"
-              >
-                😴 Recover
-              </Button>
-              
-              <Button
-                size="sm"
-                onClick={handleToggleEditMode}
-                variant={isEditMode ? 'primary' : 'secondary'}
-                className={cn(
-                  'relative',
-                  isEditMode && 'bg-success-600 hover:bg-success-700'
-                )}
-              >
-                {isEditMode ? '✓ Done' : '🖉 Edit'}
-                {/* Notification dot for unapplied points */}
-                {hasUnappliedPoints && !isEditMode && (
-                  <span 
-                    className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"
-                    title="You have unspent points!"
-                  />
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+        {/* Floating Action Toolbar */}
+        <SheetActionToolbar
+          isEditMode={isEditMode}
+          hasUnappliedPoints={hasUnappliedPoints}
+          hasUnsavedChanges={hasUnsavedChanges}
+          isSaving={saving || isSaving}
+          lastSaved={lastSaved}
+          onToggleEditMode={handleToggleEditMode}
+          onRecovery={() => setShowRecoveryModal(true)}
+          onLevelUp={() => setShowLevelUpModal(true)}
+        />
         
         {/* Character Sheet Content */}
         <div className="max-w-[1600px] mx-auto px-4 pt-4">
@@ -1263,7 +1275,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   skills={skills}
                   abilities={character.abilities}
                   isEditMode={isEditMode}
-                  totalSkillPoints={calculateSkillPoints(character.level || 1)}
+                  totalSkillPoints={calculateSkillPoints(character.level || 1) - characterSpeciesSkills.length}
+                  speciesSkills={characterSpeciesSkills}
                   onSkillChange={handleSkillChange}
                   onRemoveSkill={handleRemoveSkill}
                   onAddSkill={() => setSkillModalType('skill')}
@@ -1381,6 +1394,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onFeatUsesChange={handleFeatUsesChange}
                   onAddArchetypeFeat={() => setFeatModalType('archetype')}
                   onAddCharacterFeat={() => setFeatModalType('character')}
+                  onRemoveFeat={handleRemoveFeat}
                   // Traits enrichment props
                   traitsDb={traitsDb}
                   featsDb={featsDb}

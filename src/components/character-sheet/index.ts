@@ -20,3 +20,5 @@ export { AddSkillModal } from './add-skill-modal';
 export { AddSubSkillModal } from './add-sub-skill-modal';
 export { LevelUpModal } from './level-up-modal';
 export { RecoveryModal } from './recovery-modal';
+export { SheetActionToolbar } from './sheet-action-toolbar';
+export { FeatsTab } from './feats-tab';

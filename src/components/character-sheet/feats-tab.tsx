@@ -424,7 +424,7 @@ export function FeatsTab({
                   onQuantityChange={onFeatUsesChange
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
-                  onDelete={isEditMode && onRemoveFeat 
+                  onDelete={onRemoveFeat 
                     ? () => onRemoveFeat(String(feat.id || index)) 
                     : undefined}
                   compact
@@ -477,7 +477,7 @@ export function FeatsTab({
                   onQuantityChange={onFeatUsesChange
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
-                  onDelete={isEditMode && onRemoveFeat 
+                  onDelete={onRemoveFeat 
                     ? () => onRemoveFeat(String(feat.id || index)) 
                     : undefined}
                   compact
@@ -530,7 +530,7 @@ export function FeatsTab({
                   onQuantityChange={onFeatUsesChange
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
-                  onDelete={isEditMode && onRemoveFeat 
+                  onDelete={onRemoveFeat 
                     ? () => onRemoveFeat(String(feat.id || index)) 
                     : undefined}
                   compact

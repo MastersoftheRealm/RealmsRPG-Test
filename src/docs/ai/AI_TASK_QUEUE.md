@@ -480,10 +480,11 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-022
   title: Library feats tab - enable feat deletion via pencil icon
   priority: high
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/library-section.tsx
-    - src/components/character-sheet/feat-list-item.tsx
+    - src/components/character-sheet/feats-tab.tsx
+    - src/app/(main)/characters/[id]/page.tsx
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -492,12 +493,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Feats can be deleted from the library feats tab
     - Delete action is accessible without edit mode
     - Confirmation dialog before deletion
-  notes: ""
+  notes: "DONE 2026-02-05: Added onRemoveFeat to LibrarySectionProps, wired through to FeatsTab. Created handleRemoveFeat handler in page.tsx that removes from archetypeFeats or feats arrays by ID/name. Removed isEditMode guard so feats can be deleted without edit mode."
 
 - id: TASK-023
   title: "BUG: Custom note name edit should not collapse the note"
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/notes-tab.tsx
   created_at: 2026-02-05
@@ -508,7 +509,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Clicking to edit a custom note name does not collapse the note
     - Name editing happens inline while note remains expanded
     - Clicking elsewhere or pressing Enter/Escape closes edit mode
-  notes: ""
+  notes: "DONE 2026-02-05: Added e.stopPropagation() to both the name span onClick and input onClick handlers in NoteCard component. The parent div's onClick toggles collapse, so stopping propagation prevents collapse when interacting with name editing."
 
 - id: TASK-024
   title: Energy cost buttons for Powers/Techniques - match roll button styles
@@ -532,7 +533,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-025
   title: Update Innate Energy tab summary text and centering
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/library-section.tsx
   created_at: 2026-02-05
@@ -542,12 +543,12 @@ Agents should **create new tasks** during their work when they discover addition
   acceptance_criteria:
     - Updated summary text as specified
     - Summary content is centered
-  notes: ""
+  notes: "DONE 2026-02-05: Changed text from 'Innate powers use this energy pool instead of regular energy' to 'Innate powers have no cost to use. You may have powers with energy costs up to your innate energy.' Added text-center class."
 
 - id: TASK-026
   title: Power/Technique display formatting - capitalize and abbreviate
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/library-section.tsx
     - src/components/shared/grid-list-row.tsx
@@ -565,12 +566,12 @@ Agents should **create new tasks** during their work when they discover addition
     - "Target" shown for single target abilities
     - Duration capitalized and abbreviated (MIN, RNDS, RND)
     - Focus/sustain details only in expanded view
-  notes: ""
+  notes: "DONE 2026-02-06: Added formatDamageType, formatArea, formatDuration helpers in library-section.tsx. Applied to both innate and regular power column values. Capitalize damage types, 'Target' for single target, abbreviate durations (MIN/RNDS/RND/HR/Conc./Instant), strip parenthetical focus/sustain details."
 
 - id: TASK-027
   title: Remove invalid "radiant" damage type from Power Creator
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/power-creator/page.tsx
     - src/lib/constants/power-parts.ts
@@ -582,7 +583,7 @@ Agents should **create new tasks** during their work when they discover addition
     - "Radiant" damage type removed from power creator options
     - Only valid Realms damage types available
     - Part IDs used correctly (not names)
-  notes: ""
+  notes: "DONE 2026-02-06: Removed 'radiant' from MAGIC_DAMAGE_TYPES and ALL_DAMAGE_TYPES in creator-constants.ts, replaced with 'light' (proper Realms name). Kept 'radiant' → LIGHT_DAMAGE mapping in mechanic-builder.ts and power-calc.ts as legacy fallback."
 
 - id: TASK-028
   title: List headers - use all caps consistently
@@ -605,7 +606,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-029
   title: List header column alignment - center over list items
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/library-section.tsx
     - src/components/shared/list-header.tsx
@@ -618,12 +619,12 @@ Agents should **create new tasks** during their work when they discover addition
     - All column headers centered over their data columns
     - NAME column left-aligned
     - Grid template columns match between header and rows
-  notes: ""
+  notes: "Added align prop to ColumnValue, restructured grid templates to match row slots, centered all data columns"
 
 - id: TASK-030
   title: Remove "Character Saved" toast - keep only top bar save state
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/characters/[id]/page.tsx
     - src/components/character-sheet/header-section.tsx
@@ -635,12 +636,12 @@ Agents should **create new tasks** during their work when they discover addition
     - "Character Saved" toast/prompt removed
     - Top bar save state indicator remains functional
     - "Unsaved Changes" indicator still works
-  notes: ""
+  notes: "DONE 2026-02-06: Removed showToast('Character saved'...) from onSaveComplete callback in characters/[id]/page.tsx. Top bar Saved/Unsaved indicator remains."
 
 - id: TASK-031
   title: Relocate character sheet top bar actions to side icons
   priority: high
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/characters/[id]/page.tsx
     - src/components/character-sheet/header-section.tsx
@@ -654,12 +655,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Save state indicator relocated appropriately
     - Back to characters link removed
     - UI remains intuitive and accessible
-  notes: ""
+  notes: "Created SheetActionToolbar floating component with Edit/Recovery/LevelUp/Save icons, replaced sticky top bar"
 
 - id: TASK-032
   title: Dice Roller overhaul - match vanilla site design with enhancements
   priority: high
-  status: not-started
+  status: done
   related_files:
     - src/components/shared/dice-roller.tsx
     - src/components/shared/dice-log.tsx
@@ -681,12 +682,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Custom roll modifier input preserved
     - Last 20 rolls saved to localStorage
     - Logs persist across refresh and navigation
-  notes: ""
+  notes: "Rewrote roll-log with custom dice PNGs, localStorage persistence, grouped dice display, crit bonuses"
 
 - id: TASK-033
   title: Chip expansion behavior - expand in place without separate bubble
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/ui/chip.tsx
     - src/components/shared/expandable-chip.tsx
@@ -699,7 +700,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Same styling maintained when expanded
     - Informational-only chips (tags, trait types, feat types) don't expand
     - Smooth expand/collapse animation
-  notes: ""
+  notes: "Chips now expand inline with same styling, tag chips non-expandable, smooth transitions"
 
 - id: TASK-034
   title: "BUG: Fix armor/weapon equip toggle functionality"
@@ -723,7 +724,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-035
   title: Equipment/Inventory tab fixes - quantity, tags, height
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/library-section.tsx
   created_at: 2026-02-05
@@ -739,12 +740,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Currency, rarity, category tags displayed
     - Truncated descriptions visible in collapsed view
     - Consistent row height with other tabs
-  notes: ""
+  notes: "Added type column, rarity/cost badges, description prop, quantity always editable, compact mode"
 
 - id: TASK-036
   title: Archetype ability indicators - purple/red outlines instead of yellow
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/archetype-section.tsx
     - src/components/character-sheet/abilities-section.tsx
@@ -762,12 +763,12 @@ Agents should **create new tasks** during their work when they discover addition
     - No yellow outlines
     - No power/martial text labels by abilities
     - Consistent with character creator indicators
-  notes: ""
+  notes: "DONE 2026-02-06: Replaced emoji indicators (🔮/⚔️) with colored border outlines - purple (border-purple-400) for power ability, red (border-red-400) for martial. Removed yellow border-amber-300 and emoji labels."
 
 - id: TASK-037
   title: Ability edit mode - center skill/ability points display
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/abilities-section.tsx
     - src/components/character-sheet/skills-section.tsx
@@ -780,4 +781,293 @@ Agents should **create new tasks** during their work when they discover addition
     - Styles match character creator and creature creator
     - Both resource displays use consistent, analogous styling
     - Clear visual hierarchy and easy to read
-  notes: ""
+  notes: "DONE 2026-02-06: Changed abilities edit mode point display from flex-wrap with flex-1 spacer to flex-col items-center with justify-center. Points now centered, max info centered below."
+
+- id: TASK-038
+  title: Remove hold-to-increase from ability/defense steppers
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/shared/value-stepper.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Remove enableHoldRepeat from ability and defense steppers. Hold-to-increase is only useful for pool allocation (HP/EN), not for ability scores and defense values which change in small discrete amounts.
+  acceptance_criteria:
+    - Ability score steppers no longer have hold-to-repeat
+    - Defense skill steppers no longer have hold-to-repeat
+    - HP/EN pool steppers still have hold-to-repeat
+    - Dice roller steppers still have hold-to-repeat
+  notes: "DONE 2026-02-05: Removed enableHoldRepeat prop from all 4 stepper buttons in abilities-section.tsx (2 ability DecrementButton/IncrementButton, 2 defense DecrementButton/IncrementButton). HP/EN and dice roller steppers still have hold-to-repeat enabled."
+
+- id: TASK-039
+  title: Implement skill value cap (max 3) and defense bonus validation
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Enforce game rules for skill and defense caps:
+    - Skill values cannot exceed 3 for any given skill
+    - Defense bonuses from skill points cannot exceed level (e.g., can't increase defense bonus to 4 via skill points until level 4+)
+    - Defense bonus from base ability is unrestricted (e.g., 3 int = +3 mental fort is fine at level 1)
+    - Only the skill-point-allocated portion of defense is capped by level
+  acceptance_criteria:
+    - Skill values capped at 3 (increment disabled at 3)
+    - Defense skill point allocation capped by character level
+    - Ability-derived defense bonus not affected by cap
+    - Validation clear to user (disabled buttons, tooltip explanations)
+  notes: "DONE 2026-02-06: Added MAX_SKILL_VALUE=3 constant. Added cap checks in handleSkillIncrease for both sub-skills and base skills. Updated canIncrease prop to include skill_val < MAX_SKILL_VALUE check. Defense validation already in place (capped at level)."
+
+- id: TASK-040
+  title: Character library UI - capitalize Currency, bigger tabs, defense button style
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/shared/roll-button.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Three library UI improvements:
+    1. Capitalize "Currency" label and visually separate it from armament proficiency
+    2. Increase font size of library tabs and make them more visible
+    3. Make defense roll buttons same style/color as ability roll buttons (currently less saturated utility colors vs primary blue)
+  acceptance_criteria:
+    - "Currency" label capitalized
+    - Currency section clearly separated from armament proficiency
+    - Tab font size increased and more visually prominent
+    - Defense roll buttons use same gradient/saturation as ability roll buttons
+  notes: "DONE 2026-02-05: Capitalized 'Currency' label with font-medium. Separated currency from armament proficiency with border-t divider. Changed TabNavigation size from 'sm' to 'md' for larger tab font. Changed defense RollButton variant from 'defense' (utility colors) to 'primary' (matching ability roll buttons)."
+
+- id: TASK-041
+  title: Character/profile picture upload modal with crop
+  priority: high
+  status: not-started
+  related_files:
+    - src/components/shared/image-upload-modal.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/app/(main)/my-account/page.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Create an image upload modal for character portraits and profile pictures. Features:
+    - Upload from device, drag and drop support
+    - Show accepted image types and sizes, recommended aspect ratio
+    - Translucent frame overlay showing crop area (rectangle for character portrait, circle for profile icon)
+    - Drag/pinch to position and scale image within frame
+    - Preview before confirming
+    - Sleek, clean design matching site styles
+  acceptance_criteria:
+    - Upload modal with drag-and-drop support
+    - Image manipulation (drag, scale) within crop frame
+    - Rectangle frame for character portrait, circle for profile icon
+    - Shows accepted formats, recommended sizes
+    - Clean modal UI matching site design
+    - Works for both character sheet and profile picture
+  notes: "Complex feature - may need to be broken into phases"
+
+- id: TASK-042
+  title: Separate species name from level line in character sheet header
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    In the character sheet header, species name is currently combined with level on the same line ("Level 1 Human"). Separate them so species is on its own line or visually distinct from the level display.
+  acceptance_criteria:
+    - Species name visually separated from level
+    - Clean header layout maintained
+    - Both pieces of info still clearly visible
+  notes: "DONE 2026-02-05: Changed 'Level X SpeciesName' to 'Level X · SpeciesName' with species in font-medium span for visual distinction. Uses middle dot separator."
+
+- id: TASK-043
+  title: Hide skill point display in non-edit mode
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    In non-edit mode, the skill point current/max display (PointStatus) in the top right of the skills list should be hidden. Only show skill point allocation info when in edit mode.
+  acceptance_criteria:
+    - PointStatus hidden when not in edit mode
+    - PointStatus visible when in edit mode
+    - No layout shift when toggling edit mode
+  notes: "DONE 2026-02-05: Wrapped PointStatus in showEditControls conditional so skill point current/max is only visible in edit mode."
+
+- id: TASK-044
+  title: Fix skill point calculation - show 3/3 not 5/5 at level 1
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/character-creator/page.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Game rules: Level 1 characters have 5 skill points total, but species forces 2 into set skills. Display available skill points as 3/3 (not 5/5) at level 1, with +3 each level. Creature creator should show 5/5 since no species selection. The 2 species skill points are pre-allocated and not available for player choice.
+  acceptance_criteria:
+    - Character sheet shows 3/3 skill points at level 1 (5 total - 2 species = 3 choosable)
+    - Character creator shows 3/3 at level 1
+    - Creature creator shows 5/5 at level 1
+    - +3 skill points per level for all
+    - Species proficiency skills still granted automatically
+  notes: "DONE 2026-02-06: Added characterSpeciesSkills useMemo in page.tsx. Subtracted species count from totalSkillPoints (3 at level 1 instead of 5). Excluded species proficiency from spent calculations in both page.tsx and skills-section.tsx. Updated speciesSkills prop with characterSpeciesSkills. Updated character creator skills-step.tsx to subtract speciesSkillIds.size."
+
+- id: TASK-045
+  title: Unify HP/EN pool allocation styles across sheet and creators
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/creator/health-energy-allocator.tsx
+    - src/app/(main)/character-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    The HealthEnergyAllocator in the character sheet uses variant="inline" which looks different from the character/creature creator versions. Unify the styles so all three use the same visual design, colors, and layout.
+  acceptance_criteria:
+    - Character sheet HP/EN allocation matches creator designs
+    - Same colors, spacing, and visual weight across all instances
+    - HealthEnergyAllocator variants produce visually consistent output
+  notes: "DONE 2026-02-06: Redesigned inline variant to match card variant: state-based borders (green complete, red overspent, neutral default), matching header with label and spent/total display, removed gradient background."
+
+- id: TASK-046
+  title: Username change with validation (uniqueness, filtering, rate limit)
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/my-account/page.tsx
+    - src/stores/auth-store.ts
+    - src/lib/firebase/auth.ts
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Implement username change functionality with:
+    - Uniqueness check against Firestore
+    - Inappropriate name filtering
+    - Rate limit to once per week
+    Discovered during TASK-012 security audit as a gap.
+  acceptance_criteria:
+    - Username change form in My Account
+    - Uniqueness validation before save
+    - Basic inappropriate name filter
+    - Rate limiting (once per week)
+  notes: "Created during TASK-012 audit. Requires backend Firestore rules."
+
+- id: TASK-047
+  title: Auth provider detection for My Account settings
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/my-account/page.tsx
+    - src/lib/firebase/auth.ts
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Detect auth provider (Google/Apple/email) and show/hide appropriate My Account settings.
+    Google/Apple users cannot change email (no password for reauth). Show appropriate options per auth method.
+  acceptance_criteria:
+    - Detect auth provider from Firebase user object
+    - Hide email/password change for OAuth users
+    - Show relevant options per provider
+  notes: "Created during TASK-012 audit."
+
+- id: TASK-048
+  title: Library tab ordering - default to Feats
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Enforce tab order: Feats → Powers → Techniques → Inventory → Proficiencies → Notes.
+    Default open tab should be Feats.
+  acceptance_criteria:
+    - Tabs render in specified order
+    - Default active tab is Feats
+  notes: "From curated feedback §3."
+
+- id: TASK-049
+  title: Sortable list headers (column sorting)
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/shared/list-header.tsx
+    - src/components/shared/sort-header.tsx
+    - src/components/character-sheet/library-section.tsx
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Make list column headers clickable to sort by that column. Sort ascending/descending on click.
+    Apply across library, codex, and modal list views.
+  acceptance_criteria:
+    - Clickable column headers with sort direction indicator
+    - Sort state persists within session
+    - Works across all list views
+  notes: "From curated feedback §3/§6."
+
+- id: TASK-050
+  title: Creature creator fixes (prowess, dropdowns, summary scroll)
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Bundle of creature creator fixes:
+    1. Hide unarmed prowess options > level 1 for new characters
+    2. Fix dropdown alignment issues
+    3. Make summary scroll behavior consistent
+  acceptance_criteria:
+    - Prowess options filtered by level
+    - Dropdowns properly aligned
+    - Summary scrolls consistently
+  notes: "From curated feedback §7 bugs."
+
+- id: TASK-051
+  title: Implement modern thin scrollbars sitewide
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/globals.css
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Add modern thin scrollbar styling across the site using CSS.
+    Use scrollbar-width: thin and custom ::-webkit-scrollbar styles.
+  acceptance_criteria:
+    - Thin scrollbars on all scrollable containers
+    - Works in Chrome, Firefox, Safari
+    - Subtle, non-intrusive appearance
+  notes: "From curated feedback §5 UI."
+
+- id: TASK-052
+  title: Character creator - persist skill allocations on tab switch
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/character-creator/page.tsx
+    - src/stores/character-creator-store.ts
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Skill allocations in character creator are lost when switching tabs. Persist them in the creator store
+    so they survive tab navigation.
+  acceptance_criteria:
+    - Skill allocations persist when switching to another step and back
+    - Values restored correctly on return to skills step
+  notes: "From curated feedback §7 bugs."

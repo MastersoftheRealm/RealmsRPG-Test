@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useCallback, useState } from 'react';
+import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 
 // Types
 export interface DieResult {
@@ -76,6 +76,9 @@ const DIE_MAX: Record<string, number> = {
   d20: 20,
 };
 
+const STORAGE_KEY = 'realms-roll-log';
+const MAX_PERSISTED_ROLLS = 20;
+
 export function RollProvider({ 
   children, 
   maxHistory = 50 
@@ -83,7 +86,28 @@ export function RollProvider({
   children: React.ReactNode;
   maxHistory?: number;
 }) {
-  const [rolls, setRolls] = useState<RollEntry[]>([]);
+  const [rolls, setRolls] = useState<RollEntry[]>(() => {
+    // Hydrate from localStorage on mount
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as RollEntry[];
+        // Restore Date objects from ISO strings
+        return parsed.map(r => ({ ...r, timestamp: new Date(r.timestamp) }));
+      }
+    } catch { /* ignore parse errors */ }
+    return [];
+  });
+  
+  // Persist to localStorage whenever rolls change
+  useEffect(() => {
+    try {
+      // Only persist the last MAX_PERSISTED_ROLLS
+      const toStore = rolls.slice(0, MAX_PERSISTED_ROLLS);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+    } catch { /* ignore storage errors */ }
+  }, [rolls]);
   
   // Subscribers to be notified when a new roll is added
   const subscribersRef = React.useRef<Set<(roll: RollEntry) => void>>(new Set());

@@ -13,7 +13,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Plus, X, Edit2 } from 'lucide-react';
+import { Plus, X, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
@@ -83,6 +83,7 @@ function NoteCard({
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             onBlur={handleNameSubmit}
+            onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleNameSubmit();
               if (e.key === 'Escape') {
@@ -96,11 +97,14 @@ function NoteCard({
         ) : (
           <span
             className="flex-1 text-sm font-medium text-text-primary cursor-pointer hover:text-primary-600"
-            onClick={() => setIsEditingName(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditingName(true);
+            }}
             title="Click to rename"
           >
             {note.name}
-            <Edit2 className="w-3 h-3 inline ml-1 text-text-muted" />
+            <Pencil className="w-3 h-3 inline ml-1 text-text-muted" />
           </span>
         )}
         

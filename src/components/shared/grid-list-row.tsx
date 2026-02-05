@@ -40,6 +40,8 @@ export interface ColumnValue {
   className?: string;
   /** Hide on mobile */
   hideOnMobile?: boolean;
+  /** Text alignment */
+  align?: 'left' | 'center' | 'right';
 }
 
 export interface ChipData {
@@ -328,6 +330,8 @@ export function GridListRow({
                 'text-sm truncate',
                 col.hideOnMobile !== false && 'hidden lg:block',
                 col.highlight ? 'text-primary-600 font-medium' : 'text-text-secondary',
+                col.align === 'center' && 'text-center',
+                col.align === 'right' && 'text-right',
                 col.className
               )}
             >
@@ -487,24 +491,24 @@ export function GridListRow({
                       const hasCost = (chip.cost ?? 0) > 0;
                       const isChipExpanded = expandedChipIndex === index;
                       const category = chip.category || (hasCost ? 'cost' : 'default');
+                      // Tag-only chips (no description and no cost) are informational — don't expand
+                      const isExpandable = !!(chip.description || hasCost) && category !== 'tag';
                       
                       return (
-                        <div 
+                        <button
                           key={index}
+                          onClick={isExpandable ? (e) => handleChipClick(index, e) : (e) => e.stopPropagation()}
                           className={cn(
-                            'flex flex-col',
-                            isChipExpanded && 'w-full'
+                            'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',
+                            isExpandable ? 'cursor-pointer' : 'cursor-default',
+                            CHIP_STYLES[category],
+                            isChipExpanded
+                              ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2'
+                              : 'px-3 py-1.5'
                           )}
                         >
-                          <button
-                            onClick={(e) => handleChipClick(index, e)}
-                            className={cn(
-                              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all',
-                              'border cursor-pointer',
-                              CHIP_STYLES[category],
-                              isChipExpanded && 'ring-2 ring-offset-1 ring-current'
-                            )}
-                          >
+                          {/* Chip header row */}
+                          <span className="inline-flex items-center gap-1.5">
                             <span>{chip.name}</span>
                             {chip.level && chip.level > 1 && (
                               <span className="text-xs opacity-75">(Lv.{chip.level})</span>
@@ -515,25 +519,14 @@ export function GridListRow({
                                 <span className="text-xs font-semibold">{chip.costLabel || costLabel}: {chip.cost}</span>
                               </>
                             )}
-                          </button>
-                          {/* Inline expanded details - shows below the chip when expanded */}
-                          {isChipExpanded && (
-                            <div className="mt-2 p-3 rounded-lg bg-surface border border-border shadow-sm w-full">
-                              <div className="flex items-start justify-between gap-2 mb-2">
-                                <h5 className="font-semibold text-text-primary">{chip.name}</h5>
-                                {hasCost && (
-                                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-tp-light text-tp-text">
-                                    <Zap className="w-3 h-3" />
-                                    {chip.cost} {chip.costLabel || costLabel}
-                                  </span>
-                                )}
-                              </div>
-                              {chip.description && (
-                                <p className="text-sm text-text-secondary">{chip.description}</p>
-                              )}
-                            </div>
+                          </span>
+                          {/* Inline expanded content — same chip, same colors */}
+                          {isChipExpanded && chip.description && (
+                            <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed">
+                              {chip.description}
+                            </span>
                           )}
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

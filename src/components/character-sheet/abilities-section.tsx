@@ -213,25 +213,26 @@ export function AbilitiesSection({
       
       {/* Header with Point Trackers */}
       {showEditControls && (
-        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-surface-secondary rounded-lg">
-          {totalAbilityPoints !== undefined && (
-            <PointStatus
-              label="Ability Points"
-              spent={spentAbilityPoints ?? calculatedSpentAbilityPoints}
-              total={totalAbilityPoints}
-              variant="inline"
-            />
-          )}
-          {totalSkillPoints !== undefined && (
-            <PointStatus
-              label="Skill Points (Defenses)"
-              spent={(spentSkillPoints ?? 0) + calculatedDefenseSpent}
-              total={totalSkillPoints}
-              variant="inline"
-            />
-          )}
-          <div className="flex-1" />
-          <div className="text-xs text-text-muted self-center">
+        <div className="flex flex-col items-center gap-2 mb-4 p-3 bg-surface-secondary rounded-lg">
+          <div className="flex flex-wrap justify-center gap-4">
+            {totalAbilityPoints !== undefined && (
+              <PointStatus
+                label="Ability Points"
+                spent={spentAbilityPoints ?? calculatedSpentAbilityPoints}
+                total={totalAbilityPoints}
+                variant="inline"
+              />
+            )}
+            {totalSkillPoints !== undefined && (
+              <PointStatus
+                label="Skill Points (Defenses)"
+                spent={(spentSkillPoints ?? 0) + calculatedDefenseSpent}
+                total={totalSkillPoints}
+                variant="inline"
+              />
+            )}
+          </div>
+          <div className="text-xs text-text-muted">
             Max ability: +{maxAbility} | Defense skill: 2sp each (max +{maxDefenseSkill})
           </div>
         </div>
@@ -254,15 +255,13 @@ export function AbilitiesSection({
               key={ability}
               className={cn(
                 'flex flex-col items-center p-3 bg-gradient-to-b from-surface to-surface-alt rounded-xl border-2 transition-all',
-                isArchetype ? 'border-amber-300' : 'border-border-light',
+                isPower ? 'border-purple-400' : isMartial ? 'border-red-400' : 'border-border-light',
                 !showEditControls && 'hover:shadow-md'
               )}
             >
-              {/* Ability Name with small emoji indicators */}
-              <span className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2 flex items-center gap-1">
+              {/* Ability Name */}
+              <span className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
                 {info.name}
-                {isPower && <span title="Power Ability" className="text-[10px]">🔮</span>}
-                {isMartial && <span title="Martial Ability" className="text-[10px]">⚔️</span>}
               </span>
               
               {/* Ability Value / Roll Button */}
@@ -272,7 +271,6 @@ export function AbilitiesSection({
                     onClick={() => onAbilityChange?.(ability, value - 1)}
                     disabled={!canDecrease}
                     size="sm"
-                    enableHoldRepeat
                   />
                   <span className={cn(
                     'text-2xl font-bold min-w-[56px] text-center',
@@ -285,7 +283,6 @@ export function AbilitiesSection({
                     disabled={!canIncrease}
                     size="sm"
                     title={canIncrease ? `Cost: ${cost} point${cost > 1 ? 's' : ''}` : `Max at level ${level}`}
-                    enableHoldRepeat
                   />
                 </div>
               ) : (
@@ -343,7 +340,6 @@ export function AbilitiesSection({
                       onClick={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
                       disabled={!canDecreaseDefense}
                       size="xs"
-                      enableHoldRepeat
                     />
                     <span className="text-sm font-bold min-w-[36px] text-center text-blue-600">
                       {formatBonus(defenseBonus)}
@@ -353,13 +349,12 @@ export function AbilitiesSection({
                       disabled={!canIncreaseDefense}
                       size="xs"
                       title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max at level ${level}`}
-                      enableHoldRepeat
                     />
                   </div>
                 ) : (
                   <RollButton
                     value={defenseBonus}
-                    variant="defense"
+                    variant="primary"
                     onClick={() => rollContext?.rollDefense?.(defenseKey, defenseBonus)}
                     size="sm"
                     title={`Roll ${defenseInfo.name} save`}

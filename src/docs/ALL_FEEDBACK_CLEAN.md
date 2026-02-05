@@ -263,3 +263,51 @@ Notes
 - Context: Ability edit mode skill/ability points
 - Priority: Medium
 - "In ability edit mode in character sheet: center the skill/ability points things in their row so they're more easily visible. Make styles match other instances (ability allocation in character/creature creators, skill point allocation in skill creators). Styles for both resources should be analogous to each other."
+
+2/5/2026 — Steppers / Abilities / Defenses
+- Context: ValueStepper hold-to-increase behavior
+- Priority: High
+- "Exponential speed steppers: we don't need hold to increase functionality on steppers for ability and defense increase, these types of steppers are mostly useful for allocating/adjusting pools like health and energy, not abilities and defenses."
+- Expected: Remove enableHoldRepeat from ability/defense steppers; keep only for HP/EN pools
+
+2/5/2026 — Character Sheet / Skills / Caps & Validation
+- Context: Skill and defense value caps, game rules
+- Priority: High
+- "Skill values (not bonuses) cannot exceed 3. Defense bonuses cannot exceed your level based on increases granted by allocating skill points. The bonus could be 3 from an ability of 3 (e.g., mental fort. of 3 from 3 int at level 1), but you couldn't increase defense bonus to 4 using skill points until level 4 or higher, or intelligence increased to 4."
+- Expected: Enforce skill value cap of 3, enforce defense bonus cap based on level/ability
+
+2/5/2026 — Character Library / UI Improvements
+- Context: Library tabs, currency display, defense buttons
+- Priority: Medium
+- "Capitalize 'Currency' and separate the currency from the armament proficiency more. Increase font size of tabs, make them more visible. Make defense roll buttons the same style and color as others (they're less saturated)."
+- Expected: Capitalize Currency label, bigger tab fonts, defense buttons match primary variant
+
+2/5/2026 — Character/Profile Picture Upload
+- Context: Profile and character picture upload
+- Priority: High
+- "When uploading a character or profile picture, make a modal that lets you upload, choose from device, drag and drop, etc. Show accepted image types/sizes, recommended ratio, and let you manipulate/drag the picture into a translucent frame for cropping. Use best practice, make it sleek, robust, and clean."
+- Expected: Full image upload modal with crop/preview for character portrait and profile icon
+
+2/5/2026 — Character Sheet Header / Species Line
+- Context: Species name + level display
+- Priority: Medium
+- "Separate the species name from the level line in the character sheet header."
+- Expected: Species name on its own line, not combined with "Level X SpeciesName"
+
+2/5/2026 — Character Sheet / Skills / Point Display
+- Context: Skill point current/max visibility
+- Priority: Medium
+- "In non-edit mode, skill point max/current on the top right of the skill list shouldn't be visible."
+- Expected: Hide PointStatus when not in edit mode
+
+2/5/2026 — Character Sheet / Skills / Skill Point Calculation
+- Context: Skill points at level 1
+- Priority: High
+- "All creatures/characters at level 1 have 5 skill points, but species forces 2 into proficiency. Display available skill points as 3/3 instead of 3/5 or 5/5 at level 1, since players only choose where 3 go. +3 each level. Creature creator shows 5/5 since no species selection."
+- Expected: Character sheet/creator shows 3/3 (not 5/5), creature creator shows 5/5
+
+2/5/2026 — Character Sheet / Health-Energy Allocation Styles
+- Context: HP/EN pool allocation styles
+- Priority: High
+- "Why is the styles for health pool allocation different than character creator/creature creator? They should all be the same stylistic design, colors, etc."
+- Expected: Unify HealthEnergyAllocator styles across character sheet, character creator, creature creator

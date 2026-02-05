@@ -21,3 +21,4 @@ Notes for the human prompter
 
 Security
 - Do not include secrets in prompts or files. Use cloud secret manager and deployment procedures in `SECRETS_SETUP.md`.
+#codebase

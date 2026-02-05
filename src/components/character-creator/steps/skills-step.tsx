@@ -27,7 +27,8 @@ export function SkillsStep() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Strength']));
 
   // Get skill points based on level (default level 1)
-  const totalSkillPoints = calculateSkillPoints(draft.level || 1);
+  // Subtract species skill count since those are auto-allocated and not choosable
+  const rawSkillPoints = calculateSkillPoints(draft.level || 1);
   
   // Get species skill IDs (granted free proficiencies)
   // Species skills are now stored as IDs, not names
@@ -44,6 +45,9 @@ export function SkillsStep() {
     // Species.skills is now an array of skill IDs (strings)
     return new Set((species?.skills || []).map(id => String(id)));
   }, [draft.ancestry?.id, draft.ancestry?.name, draft.species, allSpecies]);
+  
+  // Choosable skill points = raw total minus species auto-allocated skills
+  const totalSkillPoints = rawSkillPoints - speciesSkillIds.size;
   
   // Initialize skill allocations from draft or create empty
   // CharacterSkills is Record<string, number>

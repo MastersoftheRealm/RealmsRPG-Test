@@ -71,22 +71,34 @@ export function HealthEnergyAllocator({
   // Inline variant for character sheet edit mode
   if (variant === 'inline') {
     return (
-      <div className="p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-border-light">
-        <div className="flex items-center justify-between mb-2">
+      <div className={cn(
+        'rounded-xl border',
+        isOverspent ? 'border-danger-300 bg-danger-light' : 
+        isComplete ? 'border-success-300 bg-success-light' : 
+        'border-border-light bg-surface-secondary'
+      )}>
+        {/* Pool Status Header */}
+        <div className={cn(
+          'flex items-center justify-between px-4 py-1.5 border-b',
+          isOverspent ? 'border-danger-300' : 
+          isComplete ? 'border-success-300' : 
+          'border-border-light'
+        )}>
           <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
-            H/E Pool Allocation
+            HP/EN Pool
           </span>
           <span className={cn(
-            'text-xs font-bold px-2 py-0.5 rounded-full',
-            remaining > 0 ? 'bg-green-100 text-green-700' :
-            remaining < 0 ? 'bg-red-100 text-red-700' :
-            'bg-surface-alt text-text-secondary'
+            'text-xs font-bold',
+            isOverspent ? 'text-danger-600' : 
+            isComplete ? 'text-success-600' : 
+            'text-info-600'
           )}>
-            {remaining} / {poolTotal} remaining
+            {spent} / {poolTotal}
+            {isOverspent && <span className="ml-1">({remaining})</span>}
           </span>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 px-4 py-3">
           {/* Health Points - Green colors, show total prominently */}
           <div className="flex-1 flex items-center gap-2">
             <span className="text-lg font-bold text-green-600 min-w-[60px]">{maxHp} HP</span>
@@ -128,10 +140,6 @@ export function HealthEnergyAllocator({
             <span className="text-xs text-text-muted whitespace-nowrap">pts</span>
           </div>
         </div>
-        
-        <p className="text-[10px] text-text-muted mt-2 text-center">
-          Total pool: 18 + 12 × (level - 1) = {poolTotal}
-        </p>
       </div>
     );
   }

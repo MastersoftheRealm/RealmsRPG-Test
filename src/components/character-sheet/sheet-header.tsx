@@ -538,9 +538,9 @@ export function SheetHeader({
               </h1>
             )}
             
-            {/* Level X Species */}
+            {/* Level and Species - separated */}
             <p className="text-base text-text-primary">
-              Level {character.level} {character.ancestry?.name || character.species || 'Unknown'}
+              Level {character.level} · <span className="font-medium">{character.ancestry?.name || character.species || 'Unknown'}</span>
             </p>
             
             {/* Archetype: Abilities */}

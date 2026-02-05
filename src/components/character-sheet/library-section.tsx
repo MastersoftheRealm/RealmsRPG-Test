@@ -114,6 +114,59 @@ interface RTDBProperty {
   tp_cost?: number;
 }
 
+// =============================================================================
+// Power/Technique Display Formatters
+// =============================================================================
+
+/** Capitalize first letter of each word in a string */
+function capitalizeWords(str: string): string {
+  return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/** Format area/target display: "1 target" → "Target", capitalize others */
+function formatArea(area: string | undefined): string {
+  if (!area) return '-';
+  const lower = area.toLowerCase().trim();
+  if (lower === '1 target' || lower === 'single target' || lower === 'target') return 'Target';
+  return capitalizeWords(area);
+}
+
+/** Format duration display: abbreviate and capitalize, strip focus/sustain details */
+function formatDuration(duration: string | undefined): string {
+  if (!duration) return '-';
+  const lower = duration.toLowerCase().trim();
+  
+  // Strip parenthetical details like (Focus), (Sustain) for overview
+  const withoutParens = lower.replace(/\s*\(.*?\)\s*/g, '').trim();
+  
+  // Instant/Instantaneous
+  if (withoutParens === 'instant' || withoutParens === 'instantaneous') return 'Instant';
+  
+  // Concentration
+  if (withoutParens === 'concentration') return 'Conc.';
+  
+  // Minutes
+  const minMatch = withoutParens.match(/^(\d+)\s*min(ute)?s?$/);
+  if (minMatch) return `${minMatch[1]} MIN`;
+  
+  // Rounds
+  const rndMatch = withoutParens.match(/^(\d+)\s*rounds?$/);
+  if (rndMatch) return rndMatch[1] === '1' ? '1 RND' : `${rndMatch[1]} RNDS`;
+  
+  // Hours
+  const hrMatch = withoutParens.match(/^(\d+)\s*hours?$/);
+  if (hrMatch) return `${hrMatch[1]} HR`;
+  
+  // Capitalize whatever remains
+  return capitalizeWords(withoutParens);
+}
+
+/** Format damage type: capitalize */
+function formatDamageType(damage: string | undefined): string {
+  if (!damage) return '-';
+  return capitalizeWords(damage);
+}
+
 // Helper to convert item properties to PartData format, with RTDB enrichment
 function propertiesToPartData(
   properties?: Item['properties'],
@@ -292,6 +345,7 @@ interface LibrarySectionProps {
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
+  onRemoveFeat?: (featId: string) => void;
   className?: string;
 }
 
@@ -303,29 +357,26 @@ type TabType = 'powers' | 'techniques' | 'inventory' | 'feats' | 'proficiencies'
 
 const POWER_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
-  { key: 'action', label: 'Action', width: '1fr' },
-  { key: 'damage', label: 'Damage', width: '1fr' },
-  { key: 'area', label: 'Area', width: '0.7fr' },
-  { key: 'duration', label: 'Duration', width: '0.7fr' },
-  { key: 'energy', label: 'Energy', width: '4rem', align: 'center', sortable: false },
+  { key: 'action', label: 'Action', width: '1fr', align: 'center' },
+  { key: 'damage', label: 'Damage', width: '1fr', align: 'center' },
+  { key: 'area', label: 'Area', width: '0.7fr', align: 'center' },
+  { key: 'duration', label: 'Duration', width: '0.7fr', align: 'center' },
 ];
-const POWER_GRID = '1.4fr 1fr 1fr 0.7fr 0.7fr 4rem';
+const POWER_GRID = '1.4fr 1fr 1fr 0.7fr 0.7fr';
 
 const TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
-  { key: 'action', label: 'Action', width: '1fr' },
-  { key: 'weapon', label: 'Weapon', width: '1fr' },
-  { key: 'energy', label: 'Energy', width: '4rem', align: 'center', sortable: false },
+  { key: 'action', label: 'Action', width: '1fr', align: 'center' },
+  { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
 ];
-const TECHNIQUE_GRID = '1.4fr 1fr 1fr 4rem';
+const TECHNIQUE_GRID = '1.4fr 1fr 1fr';
 
 const WEAPON_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
   { key: 'damage', label: 'Damage', width: '0.8fr', align: 'center' },
   { key: 'range', label: 'Range', width: '0.6fr', align: 'center' },
-  { key: 'actions', label: 'Actions', width: '8rem', sortable: false, align: 'center' },
 ];
-const WEAPON_GRID = '1fr 0.8fr 0.6fr 8rem';
+const WEAPON_GRID = '1fr 0.8fr 0.6fr';
 
 const ARMOR_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
@@ -336,9 +387,10 @@ const ARMOR_GRID = '1fr 0.5fr 0.5fr';
 
 const EQUIPMENT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'type', label: 'Type', width: '0.6fr', align: 'center' },
   { key: 'quantity', label: 'Qty', width: '4rem', align: 'center' },
 ];
-const EQUIPMENT_GRID = '1fr 4rem';
+const EQUIPMENT_GRID = '1fr 0.6fr 4rem';
 
 export function LibrarySection({
   powers,
@@ -409,6 +461,7 @@ export function LibrarySection({
   onTraitUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
+  onRemoveFeat,
   className,
 }: LibrarySectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>('feats');
@@ -468,7 +521,7 @@ export function LibrarySection({
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
         variant="underline"
-        size="sm"
+        size="md"
         className="mb-4"
       />
 
@@ -496,8 +549,8 @@ export function LibrarySection({
                     value={innatePools}
                   />
                 </SummaryRow>
-                <p className="text-xs text-text-muted mt-1">
-                  Innate powers use this energy pool instead of regular energy
+                <p className="text-xs text-text-muted mt-1 text-center">
+                  Innate powers have no cost to use. You may have powers with energy costs up to your innate energy.
                 </p>
               </TabSummarySection>
             )}
@@ -528,10 +581,10 @@ export function LibrarySection({
                       const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
                       
                       const columns: ColumnValue[] = [
-                        { key: 'action', value: power.actionType || '-' },
-                        { key: 'damage', value: power.damage || '-' },
-                        { key: 'area', value: power.area || '-' },
-                        { key: 'duration', value: power.duration || '-' },
+                        { key: 'action', value: power.actionType || '-', align: 'center' },
+                        { key: 'damage', value: formatDamageType(power.damage), align: 'center' },
+                        { key: 'area', value: formatArea(power.area), align: 'center' },
+                        { key: 'duration', value: formatDuration(power.duration), align: 'center' },
                       ];
                       
                       // Energy button in rightmost column - styled like roll button
@@ -616,10 +669,10 @@ export function LibrarySection({
                       const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
                       
                       const columns: ColumnValue[] = [
-                        { key: 'action', value: power.actionType || '-' },
-                        { key: 'damage', value: power.damage || '-' },
-                        { key: 'area', value: power.area || '-' },
-                        { key: 'duration', value: power.duration || '-' },
+                        { key: 'action', value: power.actionType || '-', align: 'center' },
+                        { key: 'damage', value: formatDamageType(power.damage), align: 'center' },
+                        { key: 'area', value: formatArea(power.area), align: 'center' },
+                        { key: 'duration', value: formatDuration(power.duration), align: 'center' },
                       ];
                       
                       // Energy button in rightmost column - styled like roll button
@@ -705,8 +758,8 @@ export function LibrarySection({
                     const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
                     
                     const columns: ColumnValue[] = [
-                      { key: 'action', value: tech.actionType || '-' },
-                      { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined },
+                      { key: 'action', value: tech.actionType || '-', align: 'center' },
+                      { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined, align: 'center' },
                     ];
                     
                     // Energy button in rightmost column - styled like roll button
@@ -764,7 +817,7 @@ export function LibrarySection({
 
         {activeTab === 'inventory' && (
           <div className="space-y-6">
-            {/* Inventory Summary: Currency + Armament Proficiency */}
+            {/* Inventory Summary: Currency */}
             <TabSummarySection variant="currency">
               <SummaryRow>
                 <div className="flex items-center gap-2">
@@ -789,18 +842,23 @@ export function LibrarySection({
                     className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500 bg-white"
                     title="Use +5, -10, or a number"
                   />
-                  <span className="text-sm text-text-muted">currency</span>
+                  <span className="text-sm font-medium text-text-muted">Currency</span>
                 </div>
-                {martialProficiency !== undefined && (
-                  <SummaryItem 
-                    icon="⚔️" 
-                    label="Armament Proficiency" 
-                    value={`${calculateArmamentProficiency(martialProficiency)} TP`}
-                    highlight
-                    highlightColor="warning"
-                  />
-                )}
               </SummaryRow>
+              {martialProficiency !== undefined && (
+                <>
+                  <div className="border-t border-border-light my-2" />
+                  <SummaryRow>
+                    <SummaryItem 
+                      icon="⚔️" 
+                      label="Armament Proficiency" 
+                      value={`${calculateArmamentProficiency(martialProficiency)} TP`}
+                      highlight
+                      highlightColor="warning"
+                    />
+                  </SummaryRow>
+                </>
+              )}
             </TabSummarySection>
 
             {/* Weapons Section */}
@@ -816,7 +874,6 @@ export function LibrarySection({
                   gridColumns={WEAPON_GRID}
                   sortState={weaponSort}
                   onSort={(col) => setWeaponSort(toggleSort(weaponSort, col))}
-                  hasSelectionColumn
                 />
               )}
               {weapons.length > 0 ? (
@@ -826,8 +883,8 @@ export function LibrarySection({
                     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities);
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                     const columns: ColumnValue[] = [
-                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium' },
-                      { key: 'range', value: (item as Item & { range?: string }).range || 'Melee' },
+                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium', align: 'center' },
+                      { key: 'range', value: (item as Item & { range?: string }).range || 'Melee', align: 'center' },
                     ];
                     
                     return (
@@ -894,7 +951,6 @@ export function LibrarySection({
                   gridColumns={ARMOR_GRID}
                   sortState={armorSort}
                   onSort={(col) => setArmorSort(toggleSort(armorSort, col))}
-                  hasSelectionColumn
                 />
               )}
               {armor.length > 0 ? (
@@ -907,8 +963,8 @@ export function LibrarySection({
                     const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
                     
                     const columns: ColumnValue[] = [
-                      { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium' },
-                      { key: 'crit', value: itemWithCrit.critRange ?? '-' },
+                      { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium', align: 'center' },
+                      { key: 'crit', value: itemWithCrit.critRange ?? '-', align: 'center' },
                     ];
                     
                     // Build expanded content with requirements
@@ -982,26 +1038,39 @@ export function LibrarySection({
                 <div className="space-y-1">
                   {equipment.map((item, i) => {
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
+                    
+                    // Capitalize item type for display
+                    const itemType = item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : '-';
+                    
                     const columns: ColumnValue[] = [
-                      { key: 'quantity', value: item.quantity ?? 1 },
+                      { key: 'type', value: itemType, align: 'center' },
+                      { key: 'quantity', value: item.quantity ?? 1, align: 'center' },
                     ];
+                    
+                    // Build badges from item metadata
+                    const badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }> = [];
+                    if (item.rarity && item.rarity !== 'common') {
+                      const rarityColor = item.rarity === 'legendary' ? 'amber' : item.rarity === 'epic' ? 'purple' : item.rarity === 'rare' ? 'blue' : 'green';
+                      badges.push({ label: item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1), color: rarityColor });
+                    }
+                    if (item.cost !== undefined && item.cost > 0) {
+                      badges.push({ label: `${item.cost}g`, color: 'amber' });
+                    }
                     
                     return (
                       <GridListRow
                         key={item.id || i}
                         id={String(item.id || i)}
                         name={item.name}
+                        description={item.description}
                         columns={columns}
                         gridColumns={EQUIPMENT_GRID}
                         chips={propertyChips}
+                        badges={badges}
                         quantity={item.quantity}
-                        onQuantityChange={onEquipmentQuantityChange && isEditMode ? (delta) => onEquipmentQuantityChange(item.id || item.name || String(i), delta) : undefined}
+                        onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id || item.name || String(i), delta) : undefined}
                         onDelete={onRemoveEquipment ? () => onRemoveEquipment(item.id || item.name || String(i)) : undefined}
-                        expandedContent={item.description ? (
-                          <p className="text-sm text-text-muted italic whitespace-pre-wrap">
-                            {item.description}
-                          </p>
-                        ) : undefined}
+                        compact
                       />
                     );
                   })}
@@ -1028,6 +1097,7 @@ export function LibrarySection({
             onTraitUsesChange={onTraitUsesChange}
             onAddArchetypeFeat={onAddArchetypeFeat}
             onAddCharacterFeat={onAddCharacterFeat}
+            onRemoveFeat={onRemoveFeat}
           />
         )}
 

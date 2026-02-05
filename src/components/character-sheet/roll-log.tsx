@@ -2,16 +2,17 @@
  * Roll Log Component
  * ==================
  * Fixed-position dice rolling panel matching vanilla site's roll-log.
- * Features: Dice pool builder, roll history, color-coded roll types,
- * critical success/fail highlighting, and smooth animations.
- * Uses RollContext to share roll state with other components.
+ * Features: Custom dice images, dice pool builder, roll history,
+ * color-coded roll types, critical success/fail highlighting,
+ * modifier input, and localStorage persistence via RollContext.
  */
 
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils/cn';
-import { Dices, X, Trash2, Plus, Minus } from 'lucide-react';
+import { Minus, Plus, Trash2 } from 'lucide-react';
 import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-context';
 
 // Re-export types for convenience
@@ -23,7 +24,17 @@ const DIE_MAX: Record<DieType, number> = {
   d4: 4, d6: 6, d8: 8, d10: 10, d12: 12, d20: 20,
 };
 
-// Roll type colors
+// Dice image paths (matching vanilla site assets)
+const DIE_IMAGES: Record<DieType, string> = {
+  d4: '/images/D4.png',
+  d6: '/images/D6.png',
+  d8: '/images/D8.png',
+  d10: '/images/D10.png',
+  d12: '/images/D12.png',
+  d20: '/images/D20_1.png',
+};
+
+// Roll type colors (left border accent)
 const ROLL_TYPE_COLORS: Record<RollType, string> = {
   attack: 'border-l-red-500',
   damage: 'border-l-orange-500',
@@ -58,6 +69,7 @@ interface RollLogProps {
 export function RollLog({ className }: RollLogProps) {
   const { rolls, addRoll, clearHistory, subscribeToRolls } = useRolls();
   const [isOpen, setIsOpen] = React.useState(false);
+  const listRef = React.useRef<HTMLDivElement>(null);
   
   // Subscribe to roll events to auto-open the log
   React.useEffect(() => {
@@ -67,20 +79,25 @@ export function RollLog({ className }: RollLogProps) {
     return unsubscribe;
   }, [subscribeToRolls]);
   
+  // Scroll to top when new roll added (newest first)
+  React.useEffect(() => {
+    if (isOpen && listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
+  }, [rolls.length, isOpen]);
+  
   // Dice pool state (local to the manual dice builder)
   const [dicePool, setDicePool] = React.useState<Record<DieType, number>>({
     d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0,
   });
   const [modifier, setModifier] = React.useState(0);
-  const [rollType, setRollType] = React.useState<RollType>('custom');
-  const [rollTitle, setRollTitle] = React.useState('');
 
-  // Add a die to pool
+  // Add a die to pool (left click)
   const addDie = (type: DieType) => {
     setDicePool(prev => ({ ...prev, [type]: Math.min(prev[type] + 1, 20) }));
   };
 
-  // Remove a die from pool
+  // Remove a die from pool (right click)
   const removeDie = (type: DieType) => {
     setDicePool(prev => ({ ...prev, [type]: Math.max(prev[type] - 1, 0) }));
   };
@@ -123,41 +140,39 @@ export function RollLog({ className }: RollLogProps) {
 
     total += modifier;
 
-    // Check for critical
+    // Check for critical (only when rolling exactly 1d20)
     const isCrit = hasD20 && d20Value === 20;
     const isCritFail = hasD20 && d20Value === 1;
 
+    // Apply crit bonuses matching game rules
+    let critMessage: string | undefined;
+    if (isCrit) {
+      total += 2;
+      critMessage = 'Natural 20! +2 to the total!';
+    } else if (isCritFail) {
+      total -= 2;
+      critMessage = 'Natural 1! -2 from the total!';
+    }
+
     const newRoll: RollEntry = {
       id: generateRollId(),
-      type: rollType,
-      title: rollTitle || `${rollType.charAt(0).toUpperCase() + rollType.slice(1)} Roll`,
+      type: 'custom',
+      title: 'Custom Roll',
       dice: diceResults,
       modifier,
       total,
       isCrit,
       isCritFail,
+      critMessage,
       timestamp: new Date(),
     };
 
     addRoll(newRoll);
     clearPool();
-    setRollTitle('');
   };
 
   // Get total dice count in pool
   const totalDice = Object.values(dicePool).reduce((a, b) => a + b, 0);
-
-  // Format dice formula
-  const getDiceFormula = () => {
-    const parts: string[] = [];
-    Object.entries(dicePool).forEach(([type, count]) => {
-      if (count > 0) parts.push(`${count}${type}`);
-    });
-    if (modifier !== 0) {
-      parts.push(modifier > 0 ? `+${modifier}` : `${modifier}`);
-    }
-    return parts.join(' + ') || 'No dice selected';
-  };
 
   return (
     <div className={cn('fixed bottom-5 right-5 z-[1000] flex flex-col items-end', className)}>
@@ -175,14 +190,15 @@ export function RollLog({ className }: RollLogProps) {
           <h3 className="font-bold text-base tracking-wide">🎲 Roll Log</h3>
           <button
             onClick={clearHistory}
-            className="px-3 py-1.5 rounded-md bg-white/15 border border-white/30 text-white text-xs font-semibold hover:bg-white/25 transition-colors"
+            className="px-3 py-1.5 rounded-md bg-white/15 border border-white/30 text-white text-xs font-semibold hover:bg-white/25 transition-colors flex items-center gap-1"
           >
-            Clear All
+            <Trash2 className="w-3 h-3" />
+            Clear
           </button>
         </div>
 
         {/* Roll History */}
-        <div className="flex-1 overflow-y-auto p-2 bg-surface-alt">
+        <div ref={listRef} className="flex-1 overflow-y-auto p-2 bg-surface-alt">
           {rolls.length === 0 ? (
             <p className="text-center text-text-muted italic py-10">No rolls yet. Build your dice pool below!</p>
           ) : (
@@ -194,78 +210,65 @@ export function RollLog({ className }: RollLogProps) {
 
         {/* Dice Builder */}
         <div className="p-3 bg-gradient-to-r from-primary-dark to-primary-700 border-t-2 border-border-light">
-          {/* Roll Type & Title */}
-          <div className="flex gap-2 mb-3">
-            <select
-              value={rollType}
-              onChange={(e) => setRollType(e.target.value as RollType)}
-              className="flex-1 px-2 py-1.5 rounded bg-white/10 border border-white/30 text-white text-sm"
-            >
-              <option value="custom" className="text-gray-900">Custom</option>
-              <option value="attack" className="text-gray-900">Attack</option>
-              <option value="damage" className="text-gray-900">Damage</option>
-              <option value="skill" className="text-gray-900">Skill</option>
-              <option value="ability" className="text-gray-900">Ability</option>
-              <option value="defense" className="text-gray-900">Defense</option>
-            </select>
-            <input
-              type="text"
-              value={rollTitle}
-              onChange={(e) => setRollTitle(e.target.value)}
-              placeholder="Roll name..."
-              className="flex-1 px-2 py-1.5 rounded bg-white/10 border border-white/30 text-white placeholder-white/50 text-sm"
-            />
-          </div>
-
-          {/* Dice Grid */}
-          <div className="grid grid-cols-6 gap-1 mb-3">
+          {/* Dice Grid - clickable images with labels and counts */}
+          <div className="grid grid-cols-6 gap-1.5 mb-3">
             {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DieType[]).map((die) => (
               <button
                 key={die}
                 onClick={() => addDie(die)}
                 onContextMenu={(e) => { e.preventDefault(); removeDie(die); }}
                 className={cn(
-                  'flex flex-col items-center justify-center py-2 px-1 rounded',
-                  'bg-white/10 hover:bg-white/20 transition-colors text-white',
-                  dicePool[die] > 0 && 'ring-2 ring-yellow-400'
+                  'relative flex flex-col items-center justify-center py-1.5 px-1 rounded-lg',
+                  'bg-white/10 hover:bg-white/25 transition-all cursor-pointer',
+                  dicePool[die] > 0 && 'ring-2 ring-yellow-400 bg-white/20'
                 )}
+                title={`Left-click: add ${die} · Right-click: remove`}
               >
-                <span className="text-xs font-bold">{die}</span>
+                <Image
+                  src={DIE_IMAGES[die]}
+                  alt={die}
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain drop-shadow-md"
+                />
+                <span className="text-[10px] font-bold text-white/80 mt-0.5">{die}</span>
                 {dicePool[die] > 0 && (
-                  <span className="text-yellow-400 text-sm font-bold">{dicePool[die]}</span>
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-yellow-400 text-yellow-900 text-xs font-bold shadow">
+                    {dicePool[die]}
+                  </span>
                 )}
               </button>
             ))}
           </div>
 
-          {/* Modifier */}
+          {/* Modifier Row */}
           <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/70 text-xs font-semibold">MOD</span>
               <button
                 onClick={() => setModifier(m => m - 1)}
                 className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
               >
-                <Minus className="w-4 h-4" />
+                <Minus className="w-3.5 h-3.5" />
               </button>
-              <span className="text-white font-bold min-w-[40px] text-center">
+              <span className="text-white font-bold min-w-[36px] text-center text-sm">
                 {modifier >= 0 ? '+' : ''}{modifier}
               </span>
               <button
                 onClick={() => setModifier(m => m + 1)}
                 className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
-            <span className="text-white/70 text-xs flex-1 text-center">
-              {getDiceFormula()}
-            </span>
-            <button
-              onClick={clearPool}
-              className="text-white/70 hover:text-white text-xs"
-            >
-              Clear
-            </button>
+            {totalDice > 0 && (
+              <button
+                onClick={clearPool}
+                className="text-white/60 hover:text-white text-xs underline"
+              >
+                Clear pool
+              </button>
+            )}
           </div>
 
           {/* Roll Button */}
@@ -273,48 +276,70 @@ export function RollLog({ className }: RollLogProps) {
             onClick={executeRoll}
             disabled={totalDice === 0}
             className={cn(
-              'w-full py-2.5 rounded-lg font-bold text-white transition-all',
-              'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
-              'disabled:from-neutral-500 disabled:to-neutral-600 disabled:cursor-not-allowed'
+              'w-full py-2.5 rounded-lg font-bold text-white transition-all text-sm',
+              'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-md',
+              'disabled:from-neutral-500 disabled:to-neutral-600 disabled:cursor-not-allowed disabled:shadow-none'
             )}
           >
-            🎲 Roll {totalDice > 0 ? `(${totalDice} dice)` : ''}
+            {totalDice > 0 ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}` : 'Select dice to roll'}
           </button>
         </div>
       </div>
 
-      {/* Toggle Button */}
+      {/* Toggle Button - custom d20 image matching vanilla site */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           'w-14 h-14 rounded-full shadow-lg transition-all duration-300',
           'flex items-center justify-center',
-          'bg-gradient-to-br from-primary-light to-primary-dark hover:scale-110',
+          'bg-gradient-to-br from-primary-light to-primary-dark hover:scale-110 active:scale-95',
           isOpen && 'from-primary-dark to-primary-900'
         )}
         aria-label={isOpen ? 'Close roll log' : 'Open roll log'}
       >
-        <Dices className="w-7 h-7 text-white" />
+        <Image
+          src="/images/RD20.png"
+          alt="Roll Dice"
+          width={36}
+          height={36}
+          className="w-9 h-9 object-contain drop-shadow-md"
+        />
       </button>
     </div>
   );
 }
 
+/**
+ * Group dice results by type for display
+ */
+function groupDiceByType(dice: DieResult[]): { type: DieType; results: DieResult[] }[] {
+  const groups = new Map<DieType, DieResult[]>();
+  for (const die of dice) {
+    const existing = groups.get(die.type as DieType) || [];
+    existing.push(die);
+    groups.set(die.type as DieType, existing);
+  }
+  return Array.from(groups.entries()).map(([type, results]) => ({ type, results }));
+}
+
 function RollEntryCard({ roll }: { roll: RollEntry }) {
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  const diceGroups = groupDiceByType(roll.dice);
+  const diceSubtotal = roll.dice.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <div
       className={cn(
-        'bg-surface rounded-lg mb-2 p-3 shadow-sm border-l-4 animate-slide-in-right',
+        'bg-surface rounded-lg mb-2 p-3 shadow-sm border-l-4',
         ROLL_TYPE_COLORS[roll.type],
         roll.isCrit && 'ring-2 ring-green-400',
         roll.isCritFail && 'ring-2 ring-red-400'
       )}
     >
-      {/* Header */}
+      {/* Header: icon + title + time */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-sm">{ROLL_TYPE_ICONS[roll.type]}</span>
@@ -323,39 +348,65 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         <span className="text-xs text-text-muted">{formatTime(roll.timestamp)}</span>
       </div>
 
-      {/* Dice Results */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {roll.dice.map((die, i) => (
-          <span
-            key={i}
-            className={cn(
-              'inline-flex items-center justify-center min-w-[28px] h-7 px-1.5 rounded text-sm font-bold',
-              die.type === 'd20'
-                ? cn(
-                    'w-9 h-9 text-base border-2',
-                    die.isMax && 'bg-green-100 border-green-500 text-green-800',
-                    die.isMin && 'bg-red-100 border-red-500 text-red-800',
-                    !die.isMax && !die.isMin && 'bg-surface-alt border-border-light text-text-primary'
-                  )
-                : cn(
-                    'bg-amber-100 border border-amber-400 text-amber-800'
-                  )
-            )}
-          >
-            {die.value}
-          </span>
+      {/* Dice Groups: image + notation + individual results */}
+      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+        {diceGroups.map((group, gi) => (
+          <div key={gi} className="flex items-center gap-1.5">
+            <Image
+              src={DIE_IMAGES[group.type]}
+              alt={group.type}
+              width={22}
+              height={22}
+              className="w-[22px] h-[22px] object-contain opacity-80"
+            />
+            <span className="text-xs font-semibold text-text-muted">
+              {group.results.length}{group.type}:
+            </span>
+            {group.results.map((die, di) => (
+              <span
+                key={di}
+                className={cn(
+                  'inline-flex items-center justify-center min-w-[24px] h-6 px-1 rounded text-xs font-bold',
+                  die.type === 'd20'
+                    ? cn(
+                        'w-7 h-7 text-sm border-2',
+                        die.isMax && 'bg-green-100 border-green-500 text-green-800',
+                        die.isMin && 'bg-red-100 border-red-500 text-red-800',
+                        !die.isMax && !die.isMin && 'bg-surface-alt border-border-light text-text-primary'
+                      )
+                    : cn(
+                        die.isMax ? 'bg-green-100 border border-green-400 text-green-800' :
+                        die.isMin ? 'bg-red-100 border border-red-400 text-red-800' :
+                        'bg-amber-50 border border-amber-300 text-amber-800'
+                      )
+                )}
+              >
+                {die.value}
+              </span>
+            ))}
+          </div>
         ))}
-        
-        {roll.modifier !== 0 && (
-          <span className="text-text-muted font-semibold">
-            {roll.modifier > 0 ? '+' : ''}{roll.modifier}
-          </span>
-        )}
-        
-        <span className="text-text-muted">=</span>
+      </div>
+
+      {/* Result line: subtotal + modifier = total */}
+      <div className="flex items-center gap-1.5 mt-1">
+        {roll.modifier !== 0 ? (
+          <>
+            <span className="text-xs text-text-muted font-medium">{diceSubtotal}</span>
+            <span className="text-xs text-text-muted">
+              {roll.modifier > 0 ? '+' : '−'}{Math.abs(roll.modifier)}
+            </span>
+            <span className="text-xs text-text-muted">=</span>
+          </>
+        ) : roll.dice.length > 1 ? (
+          <>
+            <span className="text-xs text-text-muted font-medium">{diceSubtotal}</span>
+            <span className="text-xs text-text-muted">=</span>
+          </>
+        ) : null}
         
         <span className={cn(
-          'font-bold text-lg px-3 py-0.5 rounded border',
+          'font-bold text-base px-2.5 py-0.5 rounded border',
           roll.isCrit && 'bg-green-100 border-green-400 text-green-800',
           roll.isCritFail && 'bg-red-100 border-red-400 text-red-800',
           !roll.isCrit && !roll.isCritFail && 'bg-blue-50 border-blue-200 text-primary-dark'
@@ -364,15 +415,14 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         </span>
       </div>
 
-      {/* Crit Indicators */}
-      {roll.isCrit && (
-        <div className="mt-2 inline-block px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-gradient-to-r from-green-500 to-teal-500 text-white animate-pulse-dot">
-          Critical Success!
-        </div>
-      )}
-      {roll.isCritFail && (
-        <div className="mt-2 inline-block px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-gradient-to-r from-red-500 to-red-600 text-white animate-pulse-dot">
-          Critical Fail!
+      {/* Crit Message */}
+      {roll.critMessage && (
+        <div className={cn(
+          'mt-2 inline-block px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide text-white',
+          roll.isCrit && 'bg-gradient-to-r from-green-500 to-teal-500',
+          roll.isCritFail && 'bg-gradient-to-r from-red-500 to-red-600',
+        )}>
+          {roll.isCrit ? 'Natural 20!' : roll.isCritFail ? 'Natural 1!' : ''}
         </div>
       )}
     </div>
