@@ -150,3 +150,116 @@ Notes
 - To refresh the curated top section, paste a batch of raw log entries and request: "Consolidate and update curated feedback" — the agent will re-run the summarization and update the curated sections.
 - This file is intended to be the canonical owner-feedback source for engineering planning and triage.
 
+2/5/2026 — Character Sheet / Recovery
+- Context: Character Sheet, Recovery button
+- Priority: High
+- "Recovery Modal: When you hit recovery on the character sheet, it should open a clean sleek modal (matching site styles/designs etc) that allows you to choose between full recovery (which restores HP current to the Max value, same with energy current to it's max value, it also restores all uses of all feats/traits to their max values. Partial recovery is different and also has options. First, if you take a partial recovery you choose between 2, 4, and 6 hours of recovery. With 2 hours you get bath 1/4 of your current/max hp, or you can choose to get 1/2 of your hp or energy instead (not both), this stacks for each 2 hours, ie with 4 hours you get half back to both, or 3/4 back to one, 1/4 to the other, or full to one, none to the other, and so on with 6 hours being 3/4 back to both, full to one 1/2 to the other, etc. We could also have an automatic partial recovery option where you select the hours, then it automatically determines the 'best' option for the time recovered and the optimal amount of 1/4ths to spend on hp en or both (ie if you have 10/12 HP but 0/20 EN and took a 4 hour partial recovery, it would choose whatever options grants the most percentage of the resource back overall, so for 4 hours that's 4/4ths of hp/en to divide, so it'd automatically give all to energy since that's 20 total EN gained (100% of energy) over the option of of 1/4 to HP (2 hp = 16.67% of hp) and 3/4 to EN (75% of EN) for a total of 91.6% resources regained. Remember, when it comes to fractions we round up, so if you have 9HP max and recovered half, you'd regain 5 not 4 hp. In cases where it's indifferent, it'd give you a spread between both, ie if you have 5/10 HP and 10/20 EN it'd grant 1/4 to both for a 2 hour partial recovery, granting 3 HP and 5 EN. Use best logic and common sense for this. No matter the type of partial recovery, make the ui sleek, simple, and useable. Also, partial recoveries automatically set all trait/feat uses with a use recovery period of 'Partial' sets the current value to the max value, it doesn't reset feats/traits with uses 'Full' to max though."
+
+2/5/2026 — Character Sheet / Notes / BUG
+- Context: Character Notes → Physical Attributes & Movement
+- Priority: Medium
+- "BUG: Users are able to set Weight and Height to negative values. Minimum Weight and Height can't be set below 1."
+- Steps: Go to character sheet → Notes → Physical Attributes & Movement → edit weight/height
+- Expected: Weight and Height have a minimum value of 1
+
+2/5/2026 — Character Sheet / Inventory / BUG
+- Context: Character Notes → Inventory
+- Priority: High
+- "BUG: Unable to remove items from inventory. Users are unable to remove items from their 'Inventory'. Items can be removed from the User's 'Inventory'."
+- Steps: Go to character sheet → Notes → Inventory → add an item → try to remove it
+- Expected: Items can be removed from the inventory
+
+2/5/2026 — Character Sheet / Edit Mode / Character Name & XP
+- Context: Character Sheet Header
+- Priority: High
+- "Only allow editing of character name in edit mode. Allow editing of XP in any mode."
+
+2/5/2026 — Character Sheet / UI / Pencil Edit Icons
+- Context: Site-wide edit icon consistency
+- Priority: High
+- "We use different pen/pencil icons across the page to represent editing. Unify to one style - prefer the ones with no button background, simplistic design (like the ones for character name/XP, skills, etc., not the one over abilities with a circle around it permanently). Pencil edit icon color schemes should all be blue, green, or red, dependent on if things may be spent or not (i.e. name pencil would be blue since the name isn't under or overspent)."
+
+2/5/2026 — Character Sheet / Library / Feat Deletion
+- Context: Library tab pencil icon
+- Priority: High
+- "The pencil icon in the character library is useless, it should allow the deletion of feats on the feats tab."
+
+2/5/2026 — Character Sheet / Custom Notes / BUG
+- Context: Custom note name editing
+- Priority: Medium
+- "BUG: When you hit the name on the custom note to edit or add a name to it, it collapses. It shouldn't collapse since you're editing something, not clicking to collapse it."
+
+2/5/2026 — Character Sheet / Powers & Techniques / Energy Buttons
+- Context: Powers/Techniques list items
+- Priority: High
+- "Technique/powers list item buttons: the energy for these should be in button form with the same styles as roll buttons to show you can spend the resource if you click the button."
+
+2/5/2026 — Character Sheet / Powers / Innate Energy Summary
+- Context: Innate power tab summary
+- Priority: Medium
+- "Innate energy power tab summary: Remove 'Innate powers use this energy pool instead of regular energy'. Instead: 'Innate powers have no cost to use. You may have powers with energy costs up to your innate energy.' Also center the summary content."
+
+2/5/2026 — Character Sheet / Powers / Display Formatting
+- Context: Power list items display
+- Priority: Medium
+- "Power list items: Capitalize the damage types 'Radiant' instead of 'radiant'. For area in power list items, for 1 target have it say 'Target' instead. Capitalize duration 'Rounds' instead of 'rounds'."
+
+2/5/2026 — Power Creator / Data
+- Context: Power Creator damage types
+- Priority: Medium
+- "Power Creator: Remove the damage type 'radiant' - that isn't a Realms damage type. Reference vanilla site for proper damage types and their related part names. (In React site we use IDs for mechanic parts not names)."
+
+2/5/2026 — Character Sheet / Library / List Headers
+- Context: All item lists in library
+- Priority: High
+- "Item list headers, character library: Always have full caps for headers for list items. 'NAME ACTION DAMAGE ENERGY' instead of 'Name Action Damage Energy'."
+
+2/5/2026 — Character Sheet / Library / Column Alignment
+- Context: Power item list and other header lists
+- Priority: Medium
+- "Power item list headers: Ensure the header is centered over the list items (action should be centered over the action type, not right/left aligned). Only exception is name, which is always left centered both header and list items. Duration seems too long - abbreviate where possible and don't include focus/sustain values in overview (include in expanded view instead). Use '4 MIN' instead of '4 minutes (Focus)', '2 RNDS' or '1 RND' etc."
+
+2/5/2026 — Character Sheet / UI / Character Saved Prompt
+- Context: Save state UI
+- Priority: Low
+- "Remove the 'Character Saved' prompt thingy, we only need the 'Unsaved Changes' and 'Saved' UI at the top of the character sheet instead."
+
+2/5/2026 — Character Sheet / UI / Top Bar Relocation
+- Context: Character Sheet top bar
+- Priority: High
+- "Remove the top bar by relocating the options for recovery, level up, edit mode, and save state to icons on the side of the screen (like the dice roller icon but in the top right or somewhere unintrusive). Remove the back to characters arrow/link - the nav bar already has a quick link to the characters tab."
+
+2/5/2026 — Dice Roller / UI Overhaul
+- Context: Dice roller/log
+- Priority: High
+- "Dice roller should work/look more like the original one in the vanilla site, using our custom images from the vanilla site. Keep: ability to add modifier/bonus to custom roll. Don't need to name the roll - just call it 'Custom Roll' in the log. Fix: Show what/how many dice with an image each time you roll, then result plus bonus, then total. Add ability to select dice icons instead of adding numbers, but also implement labeling (1d10 below the 1d10 icon). Dice logs should be saved not cleared on refresh - only last 20 rolls need to be saved."
+
+2/5/2026 — Character Sheet / UI / Chip Expansion
+- Context: Chip expanded functionality
+- Priority: Medium
+- "When you expand a chip, prefer the chip doesn't create a separate bubble for the expanded description - instead expand the chip you clicked on, displacing other chips above/below it, keeping same coloring/styling. Some chips are purely informational and need not expand (tag chips for feats, subtext chips for traits denoting ancestry/flaw/characteristic, codex subtext for character feat/state feat)."
+
+2/5/2026 — Character Sheet / Powers & Techniques / Duplicate Energy Columns
+- Context: Powers and techniques list
+- Priority: High
+- "Duplicate energy columns and energy buttons in powers and techniques. Need only the buttons in the energy row. Energy row can be moved to the most right row. 'Use' button should not say 'Use (X)' - just 'X' where X is the energy. Styles should match roll buttons."
+
+2/5/2026 — Character Sheet / Inventory / Equip Buttons
+- Context: Armor/weapons equip functionality
+- Priority: High
+- "BUG: Armor/weapons still won't become equipped when I hit the equip + button. Better as a circle or other symbol to select/to be filled to show it's equipped."
+
+2/5/2026 — Character Sheet / Inventory / Equipment Tab Issues
+- Context: Equipment/Inventory tab
+- Priority: Medium
+- "Equipment tab issues: needs ability to increase/decrease amount outside edit mode, missing currency/rarity/category tags, could have truncated descriptions after name column like feats/traits. Inventory list items seem taller height-wise than other tabs with larger font or scale - seems off."
+
+2/5/2026 — Character Sheet / Archetype Ability Indicators
+- Context: Archetype ability selection
+- Priority: Medium
+- "For archetype ability (power/martial or both): use the same indicator logic as character creator - selected power ability outlined in power purple, martial ability in martial red, instead of current yellow outlining. Get rid of the 'power' and 'martial' symbols by ability names - they're ugly."
+
+2/5/2026 — Character Sheet / Ability Edit Mode / Centering
+- Context: Ability edit mode skill/ability points
+- Priority: Medium
+- "In ability edit mode in character sheet: center the skill/ability points things in their row so they're more easily visible. Make styles match other instances (ability allocation in character/creature creators, skill point allocation in skill creators). Styles for both resources should be analogous to each other."

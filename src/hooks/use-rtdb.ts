@@ -165,6 +165,8 @@ export interface Trait {
   name: string;
   description: string;
   species?: string[];
+  uses_per_rec?: number;
+  rec_period?: string;
 }
 
 export interface EquipmentItem {

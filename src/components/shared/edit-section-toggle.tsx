@@ -3,8 +3,9 @@
 /**
  * Edit Section Toggle Component
  * ==============================
- * Blue pencil icon indicator for editable sections in edit mode.
+ * Simple pencil icon indicator for editable sections.
  * Matches vanilla site behavior with color-coded states.
+ * NO circular backgrounds - just clean icon styling.
  * 
  * States:
  * - normal (blue): Standard editable section
@@ -26,20 +27,20 @@ interface EditSectionToggleProps {
   title?: string;
   /** Additional CSS classes */
   className?: string;
-  /** Whether the section is actively being edited */
+  /** Whether the section is actively being edited (adds subtle glow) */
   isActive?: boolean;
 }
 
 const STATE_COLORS: Record<EditState, { icon: string; glow?: string }> = {
   'normal': {
-    icon: 'text-blue-500',
+    icon: 'text-blue-500 hover:text-blue-600',
   },
   'has-points': {
-    icon: 'text-green-500',
+    icon: 'text-green-500 hover:text-green-600',
     glow: 'drop-shadow-[0_0_3px_rgba(34,197,94,0.5)]',
   },
   'over-budget': {
-    icon: 'text-red-500',
+    icon: 'text-red-500 hover:text-red-600',
     glow: 'drop-shadow-[0_0_3px_rgba(239,68,68,0.5)]',
   },
 };
@@ -61,18 +62,18 @@ export function EditSectionToggle({
         onClick?.();
       }}
       className={cn(
-        'p-1 rounded-full transition-all duration-200 hover:scale-110',
+        'p-0.5 transition-all duration-200 hover:scale-110',
         colors.icon,
         colors.glow,
-        isActive && 'bg-blue-100 ring-2 ring-blue-300',
-        onClick && 'cursor-pointer hover:bg-blue-50',
+        isActive && 'scale-110',
+        onClick && 'cursor-pointer',
         !onClick && 'cursor-default',
         className
       )}
       title={title}
       aria-label={title}
     >
-      <Pencil className="w-5 h-5" />
+      <Pencil className="w-4 h-4" />
     </button>
   );
 }

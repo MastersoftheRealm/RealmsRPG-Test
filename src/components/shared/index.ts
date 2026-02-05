@@ -108,6 +108,11 @@ export type { TraitData, TraitCategory, SpeciesTraitCardProps, TraitGroupProps }
 export { SelectionToggle } from './selection-toggle';
 export type { SelectionToggleProps } from './selection-toggle';
 
+// EquipToggle - Circle toggle for equipped state (armor, weapons)
+// Use for: armor/weapon equipped state toggle
+export { EquipToggle } from './equip-toggle';
+export type { EquipToggleProps } from './equip-toggle';
+
 // UnifiedSelectionModal - One modal pattern for all selection scenarios
 // Use for: adding skills, feats, powers, techniques, equipment, etc.
 // Works in: character sheet, character creator, creature creator
@@ -139,3 +144,14 @@ export {
   SelectFilter,
   FilterSection as SharedFilterSection,
 } from './filters';
+
+// ThemeToggle - Dark/Light/System theme switcher
+export { ThemeToggle } from './theme-toggle';
+
+// PoweredMartialSlider - Allocation slider for powered-martial characters
+export { PoweredMartialSlider } from './powered-martial-slider';
+export type { PoweredMartialSliderProps } from './powered-martial-slider';
+
+// InnateToggle - Toggle for marking powers/techniques as innate
+export { InnateToggle } from './innate-toggle';
+export type { InnateToggleProps } from './innate-toggle';

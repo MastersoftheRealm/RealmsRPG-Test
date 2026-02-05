@@ -19,3 +19,4 @@ export { AddFeatModal } from './add-feat-modal';
 export { AddSkillModal } from './add-skill-modal';
 export { AddSubSkillModal } from './add-sub-skill-modal';
 export { LevelUpModal } from './level-up-modal';
+export { RecoveryModal } from './recovery-modal';

@@ -6,7 +6,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import { Nunito, Nunito_Sans } from 'next/font/google';
-import { AuthProvider, QueryProvider } from '@/components/providers';
+import { AuthProvider, QueryProvider, ThemeProvider } from '@/components/providers';
 import { ToastProvider } from '@/components/ui';
 import './globals.css';
 
@@ -55,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${nunito.variable} ${nunitoSans.variable}`}>
+    <html lang="en" className={`${nunito.variable} ${nunitoSans.variable}`} suppressHydrationWarning>
       <head>
         {/* Nova Flat font from Google Fonts (not available in next/font/google) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -63,13 +63,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Nova+Flat&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-surface text-on-surface font-sans antialiased">
-        <QueryProvider>
-          <AuthProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

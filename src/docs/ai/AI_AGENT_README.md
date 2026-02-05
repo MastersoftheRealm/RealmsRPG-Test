@@ -8,12 +8,18 @@ Where to look
 - `src/docs/ai/AI_TASK_QUEUE.md`: prioritized actionable tasks (machine-parseable YAML-like list).
 - `src/docs/ai/AI_REQUEST_TEMPLATE.md`: canonical template to format extracted requests.
 - `src/docs/ai/AI_CHANGELOG.md`: append-only agent change log with date/agent/summary/files/PR.
+- `src/docs/ai/TASK_CREATION_GUIDE.md`: comprehensive guide on when and how to create new tasks dynamically.
 
 Agent Responsibilities
 - On session start: read `AI_AGENT_README.md` then `AI_TASK_QUEUE.md` and `ALL_FEEDBACK_CLEAN.md`.
 - Convert raw feedback into `AI_TASK_QUEUE.md` entries using `AI_REQUEST_TEMPLATE.md`.
 - When performing work: create a branch, open a PR, and append a changelog entry to `AI_CHANGELOG.md`.
 - Update `AI_TASK_QUEUE.md` task status (not-started → in-progress → done).
+- **Create new tasks dynamically** when discovering work during audits, investigations, or task implementation:
+  - During audits/reviews: create tasks based on findings instead of just documenting issues
+  - When completing tasks: create follow-up tasks if additional work is discovered
+  - For complex tasks: break into phases by creating sub-tasks with dependencies
+  - Always act on discoveries - don't let valuable audit insights go unutilized
 
 Session prompt & automation
 - A recommended session prompt is stored at `src/docs/ai/AGENT_SESSION_PROMPT.md` — use it at session start.

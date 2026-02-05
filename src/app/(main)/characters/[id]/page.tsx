@@ -30,6 +30,7 @@ import {
   AddSkillModal,
   AddSubSkillModal,
   LevelUpModal,
+  RecoveryModal,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
@@ -128,6 +129,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [addModalType, setAddModalType] = useState<AddModalType>(null);
   const [featModalType, setFeatModalType] = useState<FeatModalType>(null);
   const [skillModalType, setSkillModalType] = useState<SkillModalType>(null);
@@ -481,19 +483,95 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
-  // Long rest handler
-  const handleLongRest = useCallback(() => {
+  // Full recovery handler - restores all HP, EN, and all feat/trait uses
+  const handleFullRecovery = useCallback(() => {
     if (!character || !calculatedStats) return;
     
-    if (confirm('Take a long rest? This will restore all health and energy to maximum and clear all conditions.')) {
-      setCharacter(prev => prev ? {
-        ...prev,
-        health: { current: calculatedStats.maxHealth, max: calculatedStats.maxHealth },
-        energy: { current: calculatedStats.maxEnergy, max: calculatedStats.maxEnergy },
-        conditions: [] // Clear all conditions on rest
-      } : null);
+    // Reset all feat uses to max
+    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => ({
+      ...feat,
+      currentUses: feat.maxUses || feat.currentUses,
+    }));
+    
+    const resetCharacterFeats = (character.feats || []).map(feat => ({
+      ...feat,
+      currentUses: feat.maxUses || feat.currentUses,
+    }));
+    
+    // Reset all trait uses to max
+    const resetTraitUses: Record<string, number> = {};
+    if (character.traitUses) {
+      Object.keys(character.traitUses).forEach(traitName => {
+        const trait = traitsDb.find(t => t.name === traitName);
+        if (trait?.uses_per_rec) {
+          resetTraitUses[traitName] = trait.uses_per_rec;
+        }
+      });
     }
-  }, [character, calculatedStats]);
+    
+    setCharacter(prev => prev ? {
+      ...prev,
+      health: { current: calculatedStats.maxHealth, max: calculatedStats.maxHealth },
+      energy: { current: calculatedStats.maxEnergy, max: calculatedStats.maxEnergy },
+      conditions: [], // Clear all conditions
+      archetypeFeats: resetArchetypeFeats,
+      feats: resetCharacterFeats,
+      traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
+    } : null);
+    
+    showToast('Full recovery complete!', 'success');
+  }, [character, calculatedStats, traitsDb, showToast]);
+  
+  // Partial recovery handler - restores specified HP/EN and resets partial-recovery feats/traits
+  const handlePartialRecovery = useCallback((hpRestored: number, enRestored: number, resetPartialFeats: boolean) => {
+    if (!character || !calculatedStats) return;
+    
+    const currentHP = character.health?.current ?? calculatedStats.maxHealth;
+    const currentEN = character.energy?.current ?? calculatedStats.maxEnergy;
+    
+    // Reset feats with "Partial" recovery to max uses
+    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => ({
+      ...feat,
+      currentUses: resetPartialFeats && feat.recovery?.toLowerCase().includes('partial')
+        ? feat.maxUses || feat.currentUses
+        : feat.currentUses,
+    }));
+    
+    const resetCharacterFeats = (character.feats || []).map(feat => ({
+      ...feat,
+      currentUses: resetPartialFeats && feat.recovery?.toLowerCase().includes('partial')
+        ? feat.maxUses || feat.currentUses
+        : feat.currentUses,
+    }));
+    
+    // Reset trait uses for "Partial" recovery traits
+    const resetTraitUses: Record<string, number> = {};
+    if (character.traitUses && resetPartialFeats) {
+      Object.keys(character.traitUses).forEach(traitName => {
+        const trait = traitsDb.find(t => t.name === traitName);
+        if (trait?.uses_per_rec && trait.rec_period?.toLowerCase().includes('partial')) {
+          resetTraitUses[traitName] = trait.uses_per_rec;
+        }
+      });
+    }
+    
+    setCharacter(prev => prev ? {
+      ...prev,
+      health: { 
+        current: Math.min(currentHP + hpRestored, calculatedStats.maxHealth), 
+        max: calculatedStats.maxHealth 
+      },
+      energy: { 
+        current: Math.min(currentEN + enRestored, calculatedStats.maxEnergy), 
+        max: calculatedStats.maxEnergy 
+      },
+      archetypeFeats: resetArchetypeFeats,
+      feats: resetCharacterFeats,
+      traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
+    } : null);
+    
+    showToast(`Recovered ${hpRestored} HP and ${enRestored} EN`, 'success');
+  }, [character, calculatedStats, traitsDb, showToast]);
   
   // Level up handler
   const handleLevelUp = useCallback((newLevel: number) => {
@@ -610,27 +688,41 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Remove weapon handler
+  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
   const handleRemoveWeapon = useCallback((itemId: string | number) => {
     if (!character) return;
+    const idStr = String(itemId);
     setCharacter(prev => prev ? {
       ...prev,
       equipment: {
         ...prev.equipment,
-        weapons: ((prev.equipment?.weapons as Item[]) || []).filter(w => w.id !== itemId && String(w.id) !== String(itemId))
+        weapons: ((prev.equipment?.weapons as Item[]) || []).filter(w => {
+          const matches = w.id === itemId || 
+                         String(w.id) === idStr || 
+                         w.name === idStr || 
+                         w.name?.toLowerCase() === idStr.toLowerCase();
+          return !matches;
+        })
       }
     } : null);
   }, [character]);
   
   // Toggle equip weapon handler
+  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
   const handleToggleEquipWeapon = useCallback((itemId: string | number) => {
     if (!character) return;
+    const idStr = String(itemId);
     setCharacter(prev => prev ? {
       ...prev,
       equipment: {
         ...prev.equipment,
-        weapons: ((prev.equipment?.weapons as Item[]) || []).map(w => 
-          (w.id === itemId || String(w.id) === String(itemId)) ? { ...w, equipped: !w.equipped } : w
-        )
+        weapons: ((prev.equipment?.weapons as Item[]) || []).map(w => {
+          const matches = w.id === itemId || 
+                         String(w.id) === idStr || 
+                         w.name === idStr || 
+                         w.name?.toLowerCase() === idStr.toLowerCase();
+          return matches ? { ...w, equipped: !w.equipped } : w;
+        })
       }
     } : null);
   }, [character]);
@@ -648,27 +740,41 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Remove armor handler
+  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
   const handleRemoveArmor = useCallback((itemId: string | number) => {
     if (!character) return;
+    const idStr = String(itemId);
     setCharacter(prev => prev ? {
       ...prev,
       equipment: {
         ...prev.equipment,
-        armor: ((prev.equipment?.armor as Item[]) || []).filter(a => a.id !== itemId && String(a.id) !== String(itemId))
+        armor: ((prev.equipment?.armor as Item[]) || []).filter(a => {
+          const matches = a.id === itemId || 
+                         String(a.id) === idStr || 
+                         a.name === idStr || 
+                         a.name?.toLowerCase() === idStr.toLowerCase();
+          return !matches;
+        })
       }
     } : null);
   }, [character]);
   
   // Toggle equip armor handler
+  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
   const handleToggleEquipArmor = useCallback((itemId: string | number) => {
     if (!character) return;
+    const idStr = String(itemId);
     setCharacter(prev => prev ? {
       ...prev,
       equipment: {
         ...prev.equipment,
-        armor: ((prev.equipment?.armor as Item[]) || []).map(a => 
-          (a.id === itemId || String(a.id) === String(itemId)) ? { ...a, equipped: !a.equipped } : a
-        )
+        armor: ((prev.equipment?.armor as Item[]) || []).map(a => {
+          const matches = a.id === itemId || 
+                         String(a.id) === idStr || 
+                         a.name === idStr || 
+                         a.name?.toLowerCase() === idStr.toLowerCase();
+          return matches ? { ...a, equipped: !a.equipped } : a;
+        })
       }
     } : null);
   }, [character]);
@@ -686,24 +792,38 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Remove equipment handler
+  // Note: Match by ID, name, or string comparison since equipment may be stored as {name} without ID
   const handleRemoveEquipment = useCallback((itemId: string | number) => {
     if (!character) return;
+    const idStr = String(itemId);
     setCharacter(prev => prev ? {
       ...prev,
       equipment: {
         ...prev.equipment,
-        items: ((prev.equipment?.items as Item[]) || []).filter(e => e.id !== itemId && String(e.id) !== String(itemId))
+        items: ((prev.equipment?.items as Item[]) || []).filter(e => {
+          const matches = e.id === itemId || 
+                         String(e.id) === idStr || 
+                         e.name === idStr || 
+                         e.name?.toLowerCase() === idStr.toLowerCase();
+          return !matches;
+        })
       }
     } : null);
   }, [character]);
   
   // Equipment quantity change handler (+/-)
+  // Note: Match by ID, name, or string comparison since equipment may be stored as {name} without ID
   const handleEquipmentQuantityChange = useCallback((itemId: string | number, delta: number) => {
     if (!character) return;
+    const idStr = String(itemId);
     setCharacter(prev => {
       if (!prev) return null;
       const items = ((prev.equipment?.items as Item[]) || []).map(item => {
-        if (item.id === itemId || String(item.id) === String(itemId)) {
+        const matches = item.id === itemId || 
+                       String(item.id) === idStr || 
+                       item.name === idStr || 
+                       item.name?.toLowerCase() === idStr.toLowerCase();
+        if (matches) {
           const newQty = Math.max(1, (item.quantity || 1) + delta);
           return { ...item, quantity: newQty };
         }
@@ -1069,7 +1189,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
               
               <Button
                 size="sm"
-                onClick={handleLongRest}
+                onClick={() => setShowRecoveryModal(true)}
                 className="bg-blue-100 text-blue-700 hover:bg-blue-200"
               >
                 😴 Recover
@@ -1111,7 +1231,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}
                 isUploadingPortrait={uploadingPortrait}
-                onNameChange={handleNameChange}
+                onNameChange={isEditMode ? handleNameChange : undefined}
                 onExperienceChange={handleExperienceChange}
                 speedBase={character.speedBase ?? 6}
                 evasionBase={character.evasionBase ?? 10}
@@ -1330,6 +1450,44 @@ export default function CharacterSheetPage({ params }: PageParams) {
           onClose={() => setShowLevelUpModal(false)}
           character={character}
           onConfirm={handleLevelUp}
+        />
+      )}
+      
+      {/* Recovery Modal */}
+      {character && calculatedStats && (
+        <RecoveryModal
+          isOpen={showRecoveryModal}
+          onClose={() => setShowRecoveryModal(false)}
+          currentHealth={character.health?.current ?? calculatedStats.maxHealth}
+          maxHealth={calculatedStats.maxHealth}
+          currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
+          maxEnergy={calculatedStats.maxEnergy}
+          feats={[
+            ...(character.archetypeFeats || []).map(f => ({
+              id: f.id || f.name,
+              name: f.name,
+              currentUses: f.currentUses,
+              maxUses: f.maxUses,
+              recovery: f.recovery,
+            })),
+            ...(character.feats || []).map(f => ({
+              id: f.id || f.name,
+              name: f.name,
+              currentUses: f.currentUses,
+              maxUses: f.maxUses,
+              recovery: f.recovery,
+            })),
+          ]}
+          traits={traitsDb
+            .filter(t => character.traitUses?.[t.name] !== undefined)
+            .map(t => ({
+              name: t.name,
+              currentUses: character.traitUses?.[t.name],
+              maxUses: t.uses_per_rec,
+              recovery: t.rec_period,
+            }))}
+          onConfirmFullRecovery={handleFullRecovery}
+          onConfirmPartialRecovery={handlePartialRecovery}
         />
       )}
     </div>

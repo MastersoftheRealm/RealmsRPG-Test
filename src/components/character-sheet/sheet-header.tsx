@@ -14,7 +14,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import Image from 'next/image';
-import { Edit2 } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { HealthEnergyAllocator } from '@/components/creator';
@@ -529,10 +529,10 @@ export function SheetHeader({
                 {onNameChange && (
                   <button
                     onClick={() => setIsEditingName(true)}
-                    className="text-gray-400 hover:text-primary-600 transition-colors"
+                    className="text-blue-500 hover:text-blue-600 transition-colors hover:scale-110"
                     title="Edit name"
                   >
-                    <Edit2 className="w-5 h-5" />
+                    <Pencil className="w-4 h-4" />
                   </button>
                 )}
               </h1>
@@ -587,10 +587,10 @@ export function SheetHeader({
                         setXpInput(String(character.experience ?? 0));
                         setIsEditingXP(true);
                       }}
-                      className="text-gray-400 hover:text-primary-600 transition-colors"
+                      className="text-blue-500 hover:text-blue-600 transition-colors hover:scale-110"
                       title="Edit XP"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </button>
                   )}
                 </>

@@ -12,8 +12,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBSkills, useSpecies, type RTDBSkill } from '@/hooks';
-import { calculateSkillPoints } from '@/lib/game/formulas';
-import { ValueStepper } from '@/components/shared';
+import { calculateSkillPoints, calculateSkillBonusWithProficiency } from '@/lib/game/formulas';
+import { SkillRow } from '@/components/shared';
 import { Button, Alert } from '@/components/ui';
 
 const ABILITY_ORDER = ['Strength', 'Vitality', 'Agility', 'Acuity', 'Intelligence', 'Charisma'];
@@ -63,6 +63,12 @@ export function SkillsStep() {
   }, [allocations, speciesSkillIds]);
 
   const remainingPoints = totalSkillPoints - usedPoints;
+
+  // Helper to get skill bonus using the game formula
+  const getSkillBonus = useCallback((skill: RTDBSkill, value: number, isProficient: boolean): number => {
+    if (!draft.abilities) return 0;
+    return calculateSkillBonusWithProficiency(skill.ability, value, draft.abilities, isProficient);
+  }, [draft.abilities]);
 
   // Group skills by ability - some skills appear in multiple ability categories
   // Sub-skills are grouped with their base skills in each ability section
@@ -264,16 +270,28 @@ export function SkillsStep() {
                     ];
                     const hasSubSkills = skillSubSkills.length > 0;
                     const baseSkillValue = allocations[skill.id] || 0;
+                    const isSpeciesSkill = speciesSkillIds.has(skill.id);
+                    const effectiveValue = isSpeciesSkill ? Math.max(1, baseSkillValue) : baseSkillValue;
+                    
+                    // Get primary ability for this skill (comma-separated string)
+                    const skillAbility = skill.ability.split(',')[0].trim().toLowerCase();
                     
                     return (
                       <div key={`${ability}-${skill.id}`}>
-                        {/* Base Skill */}
-                        <SkillAllocator
-                          skill={skill}
-                          value={baseSkillValue}
-                          onAllocate={(delta) => handleAllocate(skill.id, delta)}
+                        {/* Base Skill - using shared SkillRow component */}
+                        <SkillRow
+                          id={skill.id}
+                          name={skill.name}
+                          value={effectiveValue}
+                          bonus={getSkillBonus(skill, effectiveValue, effectiveValue > 0)}
+                          proficient={effectiveValue > 0}
+                          ability={skillAbility}
+                          isEditing={true}
+                          onValueChange={(delta) => handleAllocate(skill.id, delta)}
+                          minValue={isSpeciesSkill ? 1 : 0}
                           canIncrease={remainingPoints > 0}
-                          isSpeciesSkill={speciesSkillIds.has(skill.id)}
+                          isSpeciesSkill={isSpeciesSkill}
+                          variant="card"
                         />
                         
                         {/* Sub-Skills (nested under base skill) */}
@@ -281,16 +299,27 @@ export function SkillsStep() {
                           <div className="ml-6 mt-2 pl-3 border-l-2 border-border-light space-y-2">
                             {skillSubSkills.map(subSkill => {
                               const isUnlocked = baseSkillValue > 0;
+                              const subIsSpeciesSkill = speciesSkillIds.has(subSkill.id);
+                              const subValue = allocations[subSkill.id] || 0;
+                              const effectiveSubValue = subIsSpeciesSkill ? Math.max(1, subValue) : subValue;
+                              
                               return (
-                                <SubSkillAllocator
+                                <SkillRow
                                   key={subSkill.id}
-                                  skill={subSkill}
-                                  value={allocations[subSkill.id] || 0}
-                                  onAllocate={(delta) => handleAllocate(subSkill.id, delta)}
+                                  id={subSkill.id}
+                                  name={subSkill.name}
+                                  isSubSkill={true}
+                                  value={effectiveSubValue}
+                                  bonus={getSkillBonus(subSkill, effectiveSubValue, effectiveSubValue > 0)}
+                                  proficient={effectiveSubValue > 0}
+                                  isEditing={true}
+                                  onValueChange={(delta) => handleAllocate(subSkill.id, delta)}
+                                  minValue={subIsSpeciesSkill ? 1 : 0}
                                   canIncrease={remainingPoints > 0}
-                                  isUnlocked={isUnlocked}
+                                  isUnlocked={isUnlocked || subIsSpeciesSkill}
                                   baseSkillName={skill.name}
-                                  isSpeciesSkill={speciesSkillIds.has(subSkill.id)}
+                                  isSpeciesSkill={subIsSpeciesSkill}
+                                  variant="compact"
                                 />
                               );
                             })}
@@ -324,119 +353,6 @@ export function SkillsStep() {
         >
           Continue →
         </Button>
-      </div>
-    </div>
-  );
-}
-
-interface SkillAllocatorProps {
-  skill: RTDBSkill;
-  value: number;
-  onAllocate: (delta: number) => void;
-  canIncrease: boolean;
-  isSpeciesSkill?: boolean;
-}
-
-function SkillAllocator({ skill, value, onAllocate, canIncrease, isSpeciesSkill }: SkillAllocatorProps) {
-  const [showDescription, setShowDescription] = useState(false);
-  
-  // Species skills have a minimum of 1 (proficient) - first point is free
-  const effectiveMin = isSpeciesSkill ? 1 : 0;
-  const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
-  
-  return (
-    <div className={cn(
-      'p-3 rounded-lg border transition-colors',
-      isSpeciesSkill ? 'bg-blue-50 border-blue-200' : 
-        value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-surface-alt border-border-light'
-    )}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowDescription(!showDescription)}
-            className="text-text-muted hover:text-text-secondary text-sm"
-          >
-            ℹ️
-          </button>
-          <span className="font-medium text-text-primary">{skill.name}</span>
-          {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(Species +1 Free)</span>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <ValueStepper
-            value={effectiveValue}
-            onChange={(newValue) => onAllocate(newValue - effectiveValue)}
-            min={effectiveMin}
-            max={canIncrease ? undefined : effectiveValue}
-            size="sm"
-          />
-        </div>
-      </div>
-      
-      {showDescription && skill.description && (
-        <p className="text-xs text-text-secondary mt-2 border-t border-border-light pt-2">
-          {skill.description}
-        </p>
-      )}
-    </div>
-  );
-}
-
-interface SubSkillAllocatorProps {
-  skill: RTDBSkill;
-  value: number;
-  onAllocate: (delta: number) => void;
-  canIncrease: boolean;
-  isUnlocked: boolean;
-  baseSkillName: string;
-  isSpeciesSkill?: boolean;
-}
-
-function SubSkillAllocator({ skill, value, onAllocate, canIncrease, isUnlocked, baseSkillName, isSpeciesSkill }: SubSkillAllocatorProps) {
-  // Species skills have a minimum of 1 (proficient) - first point is free
-  const effectiveMin = isSpeciesSkill ? 1 : 0;
-  const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
-  
-  return (
-    <div className={cn(
-      'p-2 rounded-lg border transition-colors text-sm',
-      isSpeciesSkill ? 'bg-blue-50 border-blue-200' :
-        !isUnlocked && 'opacity-50 bg-surface border-border-light',
-      !isSpeciesSkill && isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
-      !isSpeciesSkill && isUnlocked && value === 0 && 'bg-surface-alt border-border-light'
-    )}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-text-muted">↳</span>
-          <span className={cn(
-            'font-medium',
-            isSpeciesSkill ? 'text-blue-700' :
-              isUnlocked ? 'text-text-primary' : 'text-text-muted'
-          )}>
-            {skill.name}
-          </span>
-          {isSpeciesSkill && (
-            <span className="text-xs text-blue-600 font-medium">(+1 Free)</span>
-          )}
-        </div>
-        
-        {isSpeciesSkill || isUnlocked ? (
-          <div className="flex items-center gap-2">
-            <ValueStepper
-              value={effectiveValue}
-              onChange={(newValue) => onAllocate(newValue - effectiveValue)}
-              min={effectiveMin}
-              max={canIncrease ? undefined : effectiveValue}
-              size="xs"
-            />
-          </div>
-        ) : (
-          <span className="text-xs text-text-muted italic">
-            Requires {baseSkillName}
-          </span>
-        )}
       </div>
     </div>
   );

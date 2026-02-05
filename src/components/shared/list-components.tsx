@@ -56,7 +56,7 @@ export function SortHeader({
     <button
       onClick={() => onSort(col)}
       className={cn(
-        'flex items-center gap-1 text-left text-sm font-medium text-text-secondary hover:text-text-primary transition-colors',
+        'flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary transition-colors',
         isActive && 'text-primary-600',
         className
       )}

@@ -29,6 +29,7 @@ Purpose: a compact, machine- and human-friendly reference so agents know where t
 
 - **Agent workflow preferences (owner policy):**
   - Agents may implement changes directly and open PRs; prefer to implement when the fix is unambiguous.
+  - **Create new tasks dynamically** during work: when audits/investigations reveal issues, create follow-up tasks immediately rather than just documenting findings. Break complex work into phases by creating sub-tasks.
   - Ask the owner only when multiple UX/architecture options exist or when data/permissions are unclear.
   - Do not autopush/auto-merge without explicit `--autopush` approval from owner.
   - On PR: include screenshots for visual changes, update `src/docs/ai/AI_TASK_QUEUE.md` `status` and add PR link to `notes`, append summary to `src/docs/ai/AI_CHANGELOG.md`.

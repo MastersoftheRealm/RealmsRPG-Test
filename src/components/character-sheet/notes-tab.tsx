@@ -182,14 +182,16 @@ export function NotesTab({
   }, [rollContext, fallDice]);
 
   const handleWeightBlur = () => {
-    const value = parseInt(weightInput) || 70;
+    const value = Math.max(1, parseInt(weightInput) || 1);
+    setWeightInput(String(value));
     if (value !== weight && onWeightChange) {
       onWeightChange(value);
     }
   };
 
   const handleHeightBlur = () => {
-    const value = parseInt(heightInput) || 170;
+    const value = Math.max(1, parseInt(heightInput) || 1);
+    setHeightInput(String(value));
     if (value !== height && onHeightChange) {
       onHeightChange(value);
     }
@@ -208,6 +210,7 @@ export function NotesTab({
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
+                    min="1"
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     onBlur={handleWeightBlur}
@@ -227,6 +230,7 @@ export function NotesTab({
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
+                    min="1"
                     value={heightInput}
                     onChange={(e) => setHeightInput(e.target.value)}
                     onBlur={handleHeightBlur}

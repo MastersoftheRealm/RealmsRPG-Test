@@ -10,6 +10,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { PoweredMartialSlider } from '@/components/shared';
 
 export type ArchetypeType = 'martial' | 'power' | 'powered-martial';
 
@@ -122,61 +123,13 @@ export function ArchetypeSelector({
 
       {/* Powered-Martial Slider */}
       {value === 'powered-martial' && (
-        <div className="p-4 rounded-xl bg-surface-secondary border border-border-light">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-secondary">Proficiency Allocation</span>
-            <span className="text-sm text-tertiary">
-              Total: {maxProficiency} points
-            </span>
-          </div>
-
-          {/* Slider Labels */}
-          <div className="flex justify-between mb-2">
-            <div className="text-center">
-              <span className="text-xs text-tertiary block">Power</span>
-              <span className="text-lg font-bold text-violet-500">{sliderValue}</span>
-            </div>
-            <div className="text-center">
-              <span className="text-xs text-tertiary block">Martial</span>
-              <span className="text-lg font-bold text-red-600">{maxProficiency - sliderValue}</span>
-            </div>
-          </div>
-
-          {/* Custom Slider */}
-          <div className="relative py-2">
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-gradient-to-r from-violet-500 to-red-500" />
-            <input
-              type="range"
-              min={0}
-              max={maxProficiency}
-              value={sliderValue}
-              onChange={(e) => handleSliderChange(parseInt(e.target.value))}
-              disabled={disabled}
-              className={cn(
-                'relative w-full h-6 appearance-none bg-transparent cursor-pointer',
-                'range-slider',
-                disabled && 'opacity-50 cursor-not-allowed'
-              )}
-              style={{
-                // Custom thumb styling via CSS variables
-                WebkitAppearance: 'none',
-              }}
-            />
-          </div>
-
-          {/* Tick marks */}
-          <div className="flex justify-between px-1 mt-1">
-            {Array.from({ length: maxProficiency + 1 }).map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'w-1 h-1 rounded-full',
-                  i === sliderValue ? 'bg-primary-600' : 'bg-border-light'
-                )}
-              />
-            ))}
-          </div>
-        </div>
+        <PoweredMartialSlider
+          powerValue={sliderValue}
+          martialValue={maxProficiency - sliderValue}
+          maxPoints={maxProficiency}
+          onChange={(power, _martial) => handleSliderChange(power)}
+          disabled={disabled}
+        />
       )}
 
       {/* Non-slider display for Martial/Power */}

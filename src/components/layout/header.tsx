@@ -9,9 +9,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks';
+import { Button } from '@/components/ui';
+import { ThemeToggle } from '@/components/shared';
 
 const navLinks = [
   { href: '/characters', label: 'Characters' },
@@ -43,8 +45,18 @@ const navLinks = [
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Handle login click - store current path for redirect after login
+  const handleLoginClick = () => {
+    // Store current path in sessionStorage for redirect after login
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('loginRedirect', pathname);
+    }
+    router.push('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-surface-secondary border-b border-divider h-20">
@@ -93,10 +105,16 @@ export function Header() {
                 </button>
                 {/* Hover bridge: invisible pseudo-element to prevent dropdown from closing */}
                 <div className="hidden group-hover:block absolute right-0 top-full pt-4 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-4">
-                  <div className="w-48 bg-surface rounded-lg shadow-lg border border-border-light py-2">
+                  <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
                     <Link href="/my-account" className="block px-4 py-2 text-text-secondary hover:bg-surface-alt">
                       My Account
                     </Link>
+                    {/* Divider */}
+                    <div className="border-t border-border-light my-1" />
+                    {/* Theme Toggle */}
+                    <ThemeToggle />
+                    {/* Divider */}
+                    <div className="border-t border-border-light my-1" />
                     <button
                       onClick={() => signOut()}
                       className="w-full text-left px-4 py-2 text-text-secondary hover:bg-surface-alt"
@@ -107,15 +125,14 @@ export function Header() {
                 </div>
               </div>
             ) : (
-              <Link href="/login">
-                <Image
-                  src="/images/ProfileIcon.png"
-                  alt="Sign In"
-                  width={40}
-                  height={40}
-                  className="w-10 h-10"
-                />
-              </Link>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleLoginClick}
+                className="font-semibold"
+              >
+                Login
+              </Button>
             )}
 
             {/* Mobile menu button */}

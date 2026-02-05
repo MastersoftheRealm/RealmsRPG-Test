@@ -25,6 +25,7 @@ import {
   QuantityBadge, 
   GridListRow, 
   SelectionToggle, 
+  EquipToggle,
   type ColumnValue, 
   type ChipData,
   TabSummarySection,
@@ -33,6 +34,7 @@ import {
   ListHeader,
   type ListColumn,
   type SortState,
+  InnateToggle,
 } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
@@ -303,19 +305,19 @@ const POWER_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
   { key: 'action', label: 'Action', width: '1fr' },
   { key: 'damage', label: 'Damage', width: '1fr' },
-  { key: 'energy', label: 'Energy', width: '0.8fr', align: 'center' },
   { key: 'area', label: 'Area', width: '0.7fr' },
   { key: 'duration', label: 'Duration', width: '0.7fr' },
+  { key: 'energy', label: 'Energy', width: '4rem', align: 'center', sortable: false },
 ];
-const POWER_GRID = '1.4fr 1fr 1fr 0.8fr 0.7fr 0.7fr';
+const POWER_GRID = '1.4fr 1fr 1fr 0.7fr 0.7fr 4rem';
 
 const TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
   { key: 'action', label: 'Action', width: '1fr' },
   { key: 'weapon', label: 'Weapon', width: '1fr' },
-  { key: 'energy', label: 'Energy', width: '0.8fr', align: 'center' },
+  { key: 'energy', label: 'Energy', width: '4rem', align: 'center', sortable: false },
 ];
-const TECHNIQUE_GRID = '1.4fr 1fr 1fr 0.8fr';
+const TECHNIQUE_GRID = '1.4fr 1fr 1fr 4rem';
 
 const WEAPON_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
@@ -528,38 +530,31 @@ export function LibrarySection({
                       const columns: ColumnValue[] = [
                         { key: 'action', value: power.actionType || '-' },
                         { key: 'damage', value: power.damage || '-' },
-                        { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
                         { key: 'area', value: power.area || '-' },
                         { key: 'duration', value: power.duration || '-' },
                       ];
                       
-                      const useButton = !isEditMode && onUsePower && energyCost > 0 ? (
-                        <button
+                      // Energy button in rightmost column - styled like roll button
+                      const energyButton = onUsePower && energyCost > 0 ? (
+                        <RollButton
+                          value={energyCost}
+                          displayValue={String(energyCost)}
                           onClick={() => onUsePower(power.id || String(i), energyCost)}
                           disabled={!canUse}
-                          className={cn(
-                            'px-2 py-1 text-xs font-medium rounded transition-colors',
-                            canUse 
-                              ? 'bg-violet-100 text-violet-700 hover:bg-violet-200' 
-                              : 'bg-surface text-text-muted cursor-not-allowed'
-                          )}
-                          title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
-                        >
-                          Use ({energyCost})
-                        </button>
-                      ) : undefined;
+                          variant="primary"
+                          size="sm"
+                          title={canUse ? `Use power (costs ${energyCost} EP)` : 'Not enough energy'}
+                        />
+                      ) : energyCost > 0 ? (
+                        <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
+                      ) : null;
                       
                       const innateToggle = onTogglePowerInnate ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onTogglePowerInnate(power.id || String(i), !isInnate);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-violet-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all text-xl"
-                          title="Remove from innate"
-                        >
-                          ★
-                        </button>
+                        <InnateToggle
+                          isInnate={isInnate}
+                          onToggle={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
+                          size="md"
+                        />
                       ) : undefined;
                       
                       return (
@@ -574,7 +569,7 @@ export function LibrarySection({
                           chipsLabel="Parts"
                           innate={isInnate}
                           leftSlot={innateToggle}
-                          rightSlot={useButton}
+                          rightSlot={energyButton}
                           onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                           compact
                           expandedContent={
@@ -623,38 +618,31 @@ export function LibrarySection({
                       const columns: ColumnValue[] = [
                         { key: 'action', value: power.actionType || '-' },
                         { key: 'damage', value: power.damage || '-' },
-                        { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
                         { key: 'area', value: power.area || '-' },
                         { key: 'duration', value: power.duration || '-' },
                       ];
                       
-                      const useButton = !isEditMode && onUsePower && energyCost > 0 ? (
-                        <button
+                      // Energy button in rightmost column - styled like roll button
+                      const energyButton = onUsePower && energyCost > 0 ? (
+                        <RollButton
+                          value={energyCost}
+                          displayValue={String(energyCost)}
                           onClick={() => onUsePower(power.id || String(i), energyCost)}
                           disabled={!canUse}
-                          className={cn(
-                            'px-2 py-1 text-xs font-medium rounded transition-colors',
-                            canUse 
-                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-                              : 'bg-surface text-text-muted cursor-not-allowed'
-                          )}
-                          title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
-                        >
-                          Use ({energyCost})
-                        </button>
-                      ) : undefined;
+                          variant="primary"
+                          size="sm"
+                          title={canUse ? `Use power (costs ${energyCost} EP)` : 'Not enough energy'}
+                        />
+                      ) : energyCost > 0 ? (
+                        <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
+                      ) : null;
                       
                       const innateToggle = onTogglePowerInnate ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onTogglePowerInnate(power.id || String(i), !isInnate);
-                          }}
-                          className="w-10 h-10 flex items-center justify-center text-text-muted hover:text-violet-500 hover:bg-violet-50 rounded-lg transition-all text-xl"
-                          title="Set as innate"
-                        >
-                          ☆
-                        </button>
+                        <InnateToggle
+                          isInnate={isInnate}
+                          onToggle={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
+                          size="md"
+                        />
                       ) : undefined;
                       
                       return (
@@ -669,7 +657,7 @@ export function LibrarySection({
                           chipsLabel="Parts"
                           innate={isInnate}
                           leftSlot={innateToggle}
-                          rightSlot={useButton}
+                          rightSlot={energyButton}
                           onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                           compact
                           expandedContent={
@@ -719,24 +707,22 @@ export function LibrarySection({
                     const columns: ColumnValue[] = [
                       { key: 'action', value: tech.actionType || '-' },
                       { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined },
-                      { key: 'energy', value: energyCost > 0 ? energyCost : '-', highlight: energyCost > 0 },
                     ];
                     
-                    const useButton = !isEditMode && onUseTechnique && energyCost > 0 ? (
-                      <button
+                    // Energy button in rightmost column - styled like roll button
+                    const energyButton = onUseTechnique && energyCost > 0 ? (
+                      <RollButton
+                        value={energyCost}
+                        displayValue={String(energyCost)}
                         onClick={() => onUseTechnique(tech.id || String(i), energyCost)}
                         disabled={!canUse}
-                        className={cn(
-                          'px-2 py-1 text-xs font-medium rounded transition-colors',
-                          canUse 
-                            ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                            : 'bg-surface text-text-muted cursor-not-allowed'
-                        )}
-                        title={canUse ? `Use (costs ${energyCost} EP)` : 'Not enough energy'}
-                      >
-                        Use ({energyCost})
-                      </button>
-                    ) : undefined;
+                        variant="success"
+                        size="sm"
+                        title={canUse ? `Use technique (costs ${energyCost} EP)` : 'Not enough energy'}
+                      />
+                    ) : energyCost > 0 ? (
+                      <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
+                    ) : null;
                     
                     const extraInfo = (tech.range || tech.damage) ? (
                       <div className="flex flex-wrap gap-3 text-xs text-text-muted">
@@ -759,7 +745,7 @@ export function LibrarySection({
                         gridColumns={TECHNIQUE_GRID}
                         chips={partChips}
                         chipsLabel="Parts"
-                        rightSlot={useButton}
+                        rightSlot={energyButton}
                         onDelete={isEditMode && onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
                         compact
                         expandedContent={extraInfo}
@@ -854,9 +840,9 @@ export function LibrarySection({
                         chips={propertyChips}
                         equipped={item.equipped}
                         leftSlot={onToggleEquipWeapon && (
-                          <SelectionToggle
-                            isSelected={item.equipped || false}
-                            onToggle={() => onToggleEquipWeapon(item.id || String(i))}
+                          <EquipToggle
+                            isEquipped={item.equipped || false}
+                            onToggle={() => onToggleEquipWeapon(item.id || item.name || String(i))}
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
@@ -880,7 +866,7 @@ export function LibrarySection({
                             )}
                           </div>
                         )}
-                        onDelete={onRemoveWeapon && isEditMode ? () => onRemoveWeapon(item.id || String(i)) : undefined}
+                        onDelete={onRemoveWeapon ? () => onRemoveWeapon(item.id || item.name || String(i)) : undefined}
                         expandedContent={item.description ? (
                           <p className="text-sm text-text-muted italic whitespace-pre-wrap">
                             {item.description}
@@ -947,13 +933,13 @@ export function LibrarySection({
                         chips={propertyChips}
                         equipped={item.equipped}
                         leftSlot={onToggleEquipArmor && (
-                          <SelectionToggle
-                            isSelected={item.equipped || false}
-                            onToggle={() => onToggleEquipArmor(item.id || String(i))}
+                          <EquipToggle
+                            isEquipped={item.equipped || false}
+                            onToggle={() => onToggleEquipArmor(item.id || item.name || String(i))}
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
-                        onDelete={onRemoveArmor && isEditMode ? () => onRemoveArmor(item.id || String(i)) : undefined}
+                        onDelete={onRemoveArmor ? () => onRemoveArmor(item.id || item.name || String(i)) : undefined}
                         expandedContent={expandedDetails.length > 0 ? (
                           <div className="space-y-1">
                             {expandedDetails.map((detail, idx) => (
@@ -1009,8 +995,8 @@ export function LibrarySection({
                         gridColumns={EQUIPMENT_GRID}
                         chips={propertyChips}
                         quantity={item.quantity}
-                        onQuantityChange={onEquipmentQuantityChange && isEditMode ? (delta) => onEquipmentQuantityChange(item.id || String(i), delta) : undefined}
-                        onDelete={onRemoveEquipment && isEditMode ? () => onRemoveEquipment(item.id || String(i)) : undefined}
+                        onQuantityChange={onEquipmentQuantityChange && isEditMode ? (delta) => onEquipmentQuantityChange(item.id || item.name || String(i), delta) : undefined}
+                        onDelete={onRemoveEquipment ? () => onRemoveEquipment(item.id || item.name || String(i)) : undefined}
                         expandedContent={item.description ? (
                           <p className="text-sm text-text-muted italic whitespace-pre-wrap">
                             {item.description}

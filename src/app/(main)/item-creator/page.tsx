@@ -13,7 +13,8 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
@@ -344,9 +345,12 @@ interface ItemCreatorCache {
 
 function ItemCreatorContent() {
   const { user } = useAuthStore();
+  const searchParams = useSearchParams();
+  const editItemId = searchParams.get('edit');
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -477,6 +481,92 @@ function ItemCreatorContent() {
     // Clear ability requirement when armament type changes (different types have different requirements)
     setAbilityRequirement(null);
   }, [armamentType]);
+
+  // Load item for editing from URL parameter
+  useEffect(() => {
+    if (!editItemId || !userItems.length || !itemProperties.length || isInitialized) return;
+    
+    // Find the item to edit
+    const itemToEdit = userItems.find(item => item.docId === editItemId || item.id === editItemId);
+    if (!itemToEdit) {
+      console.warn(`Item with ID ${editItemId} not found in library`);
+      setIsInitialized(true);
+      return;
+    }
+    
+    // Populate form with item data
+    setIsEditMode(true);
+    setName(itemToEdit.name);
+    setDescription(itemToEdit.description || '');
+    
+    // Set armament type
+    const itemType = itemToEdit.type?.charAt(0).toUpperCase() + itemToEdit.type?.slice(1).toLowerCase();
+    if (itemType === 'Weapon' || itemType === 'Armor' || itemType === 'Shield') {
+      setArmamentType(itemType as ArmamentType);
+    }
+    
+    // Restore damage config (for weapons)
+    if (itemToEdit.damage && Array.isArray(itemToEdit.damage) && itemToEdit.damage.length > 0) {
+      const dmg = itemToEdit.damage[0];
+      setDamage({
+        amount: Number(dmg.amount) || 1,
+        size: Number(dmg.size) || 4,
+        type: dmg.type || 'slashing',
+      });
+    }
+    
+    // Restore two-handed
+    setIsTwoHanded(itemToEdit.isTwoHanded || false);
+    
+    // Restore range
+    setRangeLevel(itemToEdit.rangeLevel || 0);
+    
+    // Restore armor-specific fields
+    if (itemToEdit.armorValue !== undefined) {
+      setDamageReduction(itemToEdit.armorValue);
+    }
+    if (itemToEdit.agilityReduction !== undefined) {
+      setAgilityReduction(itemToEdit.agilityReduction);
+    }
+    if (itemToEdit.criticalRangeIncrease !== undefined) {
+      setCriticalRangeIncrease(itemToEdit.criticalRangeIncrease);
+    }
+    
+    // Restore ability requirement
+    if (itemToEdit.abilityRequirement) {
+      setAbilityRequirement({
+        id: 0, // Will need to find the right property ID
+        name: itemToEdit.abilityRequirement.name || '',
+        level: itemToEdit.abilityRequirement.level || 0,
+      });
+    }
+    
+    // Restore properties
+    if (itemToEdit.properties && itemToEdit.properties.length > 0) {
+      const restoredProps: SelectedProperty[] = [];
+      for (const savedProp of itemToEdit.properties) {
+        const propId = typeof savedProp === 'string' ? null : savedProp.id;
+        const propName = typeof savedProp === 'string' ? savedProp : savedProp.name;
+        
+        const foundProp = propId
+          ? itemProperties.find(p => String(p.id) === String(propId))
+          : itemProperties.find(p => p.name?.toLowerCase() === propName?.toLowerCase());
+        
+        if (foundProp) {
+          restoredProps.push({
+            property: foundProp,
+            op_1_lvl: typeof savedProp === 'object' ? (savedProp.op_1_lvl || 0) : 0,
+          });
+        }
+      }
+      setSelectedProperties(restoredProps);
+    }
+    
+    // Clear localStorage cache when loading for edit (don't want to mix with cached data)
+    localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
+    
+    setIsInitialized(true);
+  }, [editItemId, userItems, itemProperties, isInitialized]);
 
   // Range display string
   const rangeDisplay = useMemo(() => {
@@ -1403,7 +1493,9 @@ function ItemCreatorContent() {
 export default function ItemCreatorPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
-      <ItemCreatorContent />
+      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+        <ItemCreatorContent />
+      </Suspense>
     </div>
   );
 }

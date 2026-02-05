@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
-import { EditSectionToggle, RollButton, SectionHeader } from '@/components/shared';
+import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider } from '@/components/shared';
 import type { Character, Abilities, Item } from '@/types';
 
 interface ArchetypeSectionProps {
@@ -589,31 +589,52 @@ export function ArchetypeSection({
 
       {/* Proficiencies - only show non-zero values (unless editing) */}
       {(martialProf > 0 || powerProf > 0 || showEditControls) && (
-        <div className={cn(
-          'grid gap-4 mb-4',
-          (martialProf > 0 || showEditControls) && (powerProf > 0 || showEditControls) ? 'grid-cols-2' : 'grid-cols-1'
-        )}>
-          {(martialProf > 0 || showEditControls) && (
-            <ProficiencyMeter 
-              label="Martial" 
-              value={martialProf}
-              color="red"
-              isEditMode={showEditControls}
-              onIncrease={() => onMartialProfChange?.(martialProf + 1)}
-              onDecrease={() => onMartialProfChange?.(martialProf - 1)}
-            />
+        <>
+          {/* Powered-Martial Slider - show compact slider when both proficiencies exist and in edit mode */}
+          {showEditControls && martialProf > 0 && powerProf > 0 && (
+            <div className="mb-4">
+              <PoweredMartialSlider
+                powerValue={powerProf}
+                martialValue={martialProf}
+                maxPoints={totalProfPoints}
+                onChange={(power, martial) => {
+                  onPowerProfChange?.(power);
+                  onMartialProfChange?.(martial);
+                }}
+                compact
+              />
+            </div>
           )}
-          {(powerProf > 0 || showEditControls) && (
-            <ProficiencyMeter 
-              label="Power" 
-              value={powerProf}
-              color="purple"
-              isEditMode={showEditControls}
-              onIncrease={() => onPowerProfChange?.(powerProf + 1)}
-              onDecrease={() => onPowerProfChange?.(powerProf - 1)}
-            />
+          
+          {/* Standard Proficiency Meters - show when not powered-martial or not in edit mode */}
+          {(!showEditControls || !(martialProf > 0 && powerProf > 0)) && (
+            <div className={cn(
+              'grid gap-4 mb-4',
+              (martialProf > 0 || showEditControls) && (powerProf > 0 || showEditControls) ? 'grid-cols-2' : 'grid-cols-1'
+            )}>
+              {(martialProf > 0 || showEditControls) && (
+                <ProficiencyMeter 
+                  label="Martial" 
+                  value={martialProf}
+                  color="red"
+                  isEditMode={showEditControls}
+                  onIncrease={() => onMartialProfChange?.(martialProf + 1)}
+                  onDecrease={() => onMartialProfChange?.(martialProf - 1)}
+                />
+              )}
+              {(powerProf > 0 || showEditControls) && (
+                <ProficiencyMeter 
+                  label="Power" 
+                  value={powerProf}
+                  color="purple"
+                  isEditMode={showEditControls}
+                  onIncrease={() => onPowerProfChange?.(powerProf + 1)}
+                  onDecrease={() => onPowerProfChange?.(powerProf - 1)}
+                />
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
       
       {/* Proficiency Points Display - three-state coloring */}

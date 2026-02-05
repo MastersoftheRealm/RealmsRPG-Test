@@ -224,8 +224,9 @@ function PowersTab({ onDelete }: TabProps) {
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
   // Transform powers to display format
+  // Note: Shows powers even if partsDb isn't loaded yet (costs will be 0 until RTDB loads)
   const cardData = useMemo(() => {
-    if (!powers || !partsDb.length) return [];
+    if (!powers) return [];
     
     return powers.map(power => {
       const display = derivePowerDisplay(
@@ -414,8 +415,9 @@ function TechniquesTab({ onDelete }: TabProps) {
   const [search, setSearch] = useState('');
   const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
   
+  // Note: Shows techniques even if partsDb isn't loaded yet (costs will be 0 until RTDB loads)
   const cardData = useMemo(() => {
-    if (!techniques || !partsDb.length) return [];
+    if (!techniques) return [];
     
     return techniques.map(tech => {
       const display = deriveTechniqueDisplay(
@@ -819,7 +821,7 @@ function ItemsTab({ onDelete }: TabProps) {
               chipsLabel="Properties & Proficiencies"
               totalCost={item.tp}
               costLabel="TP"
-              onEdit={() => window.open(`/item-creator?edit=${item.id}`, '_blank')}
+              onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
               onDuplicate={() => duplicateItem.mutate(item.id)}
             />
