@@ -1,0 +1,35 @@
+name: AI Task Verifier
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Run reconcile (dry-run)
+        run: |
+          node scripts/reconcile_tasks.js
+
+      - name: Upload reconcile report
+        uses: actions/upload-artifact@v4
+        with:
+          name: reconcile-report
+          path: reports/task-reconcile-report.json

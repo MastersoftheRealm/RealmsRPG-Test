@@ -1,0 +1,150 @@
+{
+  "generated_at": "2026-02-05T19:21:47.003Z",
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "Unify skill rows across creators",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [
+        "src/components/charactersheet/skillssection.tsx",
+        "src/components/shared/skillrow.tsx",
+        "created_at:20260205",
+        "created_by:agent",
+        "description:Replaceinlineskillimplementationsincharactercreatorandcreaturecreatorwiththeshared`SkillRow`component.",
+        "acceptance_criteria:",
+        "AllthreeskillUIsuse`SkillRow`with`variant`prop",
+        "`npmrunbuild`passes",
+        "Manualverify:addskillincreator,save,reload",
+        "notes:\"\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-002",
+      "title": "Audit lists and modals for `ListHeader` adoption",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-003",
+      "title": "Show weapon damage in Library and wire Edit -> Item Creator",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/library/page.tsx",
+        "src/components/charactersheet/librarysection.tsx",
+        "src/app/(main)/itemcreator/page.tsx",
+        "created_at:20260205",
+        "created_by:owner",
+        "description:|",
+        "Librarylist(Armaments)currentlydoesnotshowcomputedweapondamage.TheEditactionshouldopentheItemCreatorwiththeitemloadedforediting(nofullpageredirectifpossible).Duplicatinganitemshouldcopydataandstayonthelibraryoropenthecreatorwiththecopyloaded.",
+        "acceptance_criteria:",
+        "LibraryarmamentslistshowsaDamagecolumnwithcomputeddamageforweapons.",
+        "Editactionopens`itemcreator`with`?edit=<id>`(ornavigatesinapp)andpopulatestheeditorwiththeitem'sdata.",
+        "Duplicatepreservesdataandopenscreatorwiththenewcopyloaded(orperformsinplacecopyandupdateslist).",
+        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-004",
+      "title": "Fix RTDB enrichment so list views compute EN/TP/C correctly",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [
+        "src/lib/dataenrichment.ts",
+        "src/components/charactersheet/librarysection.tsx",
+        "src/components/shared/gridlistrow.tsx",
+        "src/app/(main)/powercreator/page.tsx",
+        "src/app/(main)/techniquecreator/page.tsx",
+        "created_at:20260205",
+        "created_by:owner",
+        "description:|",
+        "Enrichmentpipelinemustresolvesavedpart/propertyIDsagainstRTDBrecordsandcompute/displaythefinalEnergy(EN),TrainingPoints(TP),andCurrency(C)valuesinalllistviews(library,creators,charactersheet).SomesavedentriesonlyincludeIDsandlackcomputedtotals.",
+        "acceptance_criteria:",
+        "`enrichPowers`/`enrichTechniques`produce`cost`/`tp`/`currency`fieldsconsistently.",
+        "Libraryandcreatorlistsdisplaycomputedcostsinsteadofblank/incorrectvalues.",
+        "`npmrunbuild`passesandmanualspotcheckof3itemsshowscorrectvalues.",
+        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-005",
+      "title": "Fix Innate toggle hit area and alignment in list rows",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/gridlistrow.tsx",
+        "src/components/charactersheet/librarysection.tsx",
+        "src/components/shared/skillrow.tsx",
+        "created_at:20260205",
+        "created_by:owner",
+        "description:|",
+        "Innate(star)toggleinpower/techniquelistrowsisdifficulttohitandnotverticallycentered.Improveclicktarget,alignment,andaccessibilitysotogglinginnateworksreliablyoutsideeditmode.",
+        "acceptance_criteria:",
+        "Innatetogglehasaminimum40x40pxhitareaandisverticallycentered.",
+        "Toggleworksinbothlistandexpandedrowviewswithoutrequiringeditmode.",
+        "Manualverificationondesktop/mobilepasses.",
+        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-006",
+      "title": "Fix missing/incorrect EN/TP display for Powers/Techniques/Armaments",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [
+        "src/lib/dataenrichment.ts",
+        "src/components/charactersheet/librarysection.tsx",
+        "src/components/shared/gridlistrow.tsx",
+        "created_at:20260205",
+        "created_by:owner",
+        "description:|",
+        "Listsforpowers,techniques,andarmamentsintermittentlyshowmissingorincorrectEnergy(EN)orTrainingPoint(TP)values.Investigatewhereenrichmentorrendertimecalculationsdroporrenamefields(energyvscostvsenergyCost)andmakefieldsconsistentacrossenrichmentandUI.",
+        "acceptance_criteria:",
+        "`dataenrichment`outputsuse`cost`consistentlyfordisplay.",
+        "Listrenderersreadthesamefieldnamesanddisplaycorrectnumbers.",
+        "Manualspotcheckacrosslibraryandcharactersheetshowscorrectvalues.",
+        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-007",
+      "title": "2/3/2026 20:27 — Library / Creators - 'The armaments (weapons/shields with da...",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-008",
+      "title": "2/3/2026 21:00 — Creators / UI - RTDB enrichment: saved powers/techniques sto...",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-009",
+      "title": "2/4/2026 16:00 — Character Sheet - 'Innate star doesn't toggle in the UI (hit...",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-010",
+      "title": "2/4/2026 16:00 — Powers/Techniques - 'Powers/techniques/armaments sometimes d...",
+      "status": "not-started",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    }
+  ]
+}

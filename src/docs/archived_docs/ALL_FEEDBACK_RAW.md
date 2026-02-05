@@ -1,3 +1,7 @@
+This document contains all feedback with oldest first, newest last, that the owner of the website has given to AI agents to impliment, it may or may not have all already been implimented, but it has all be at one point sent to the AI agent to impliment and follow.
+
+Newer/more updated feedback may build upon alraedy implimented changes, and overrides previous sugguestions if there's any conflict.
+
 Refined react prompt
 
 Role & Primary Goal
