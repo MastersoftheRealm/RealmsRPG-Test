@@ -503,14 +503,14 @@ function EncounterTrackerContent() {
           <p className="text-text-secondary">
             Manage combat encounters, track initiative, and monitor combatant status.
           </p>
-          <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+          <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
             <Save className="w-3 h-3" />
             Auto-saved to browser
           </p>
         </div>
         <div className="flex items-center gap-2 text-lg">
           {encounter.isActive && (
-            <div className="px-4 py-2 bg-red-100 text-red-800 rounded-lg font-bold">
+            <div className="px-4 py-2 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 rounded-lg font-bold">
               Round {encounter.round} • Turn {encounter.currentTurnIndex + 1}/{sortedCombatants.length}
             </div>
           )}
@@ -686,9 +686,9 @@ function EncounterTrackerContent() {
                     name="combatantType"
                     checked={newCombatant.combatantType === 'ally'}
                     onChange={() => setNewCombatant(prev => ({ ...prev, combatantType: 'ally', isAlly: true }))}
-                    className="w-4 h-4 text-blue-600"
+                    className="w-4 h-4 text-blue-600 dark:text-blue-400"
                   />
-                  <span className="text-sm text-blue-700 font-medium">Ally</span>
+                  <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">Ally</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -696,9 +696,9 @@ function EncounterTrackerContent() {
                     name="combatantType"
                     checked={newCombatant.combatantType === 'enemy'}
                     onChange={() => setNewCombatant(prev => ({ ...prev, combatantType: 'enemy', isAlly: false }))}
-                    className="w-4 h-4 text-red-600"
+                    className="w-4 h-4 text-red-600 dark:text-red-400"
                   />
-                  <span className="text-sm text-red-700 font-medium">Enemy</span>
+                  <span className="text-sm text-red-700 dark:text-red-300 font-medium">Enemy</span>
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -708,7 +708,7 @@ function EncounterTrackerContent() {
                     onChange={() => setNewCombatant(prev => ({ ...prev, combatantType: 'companion', isAlly: true }))}
                     className="w-4 h-4 text-companion"
                   />
-                  <span className="text-sm text-companion-text font-medium">Companion</span>
+                  <span className="text-sm text-companion-text dark:text-violet-300 font-medium">Companion</span>
                 </label>
               </div>
               

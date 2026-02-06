@@ -81,7 +81,7 @@ function ExpandableSubSkillRow({
           </span>
           {/* Warning if base skill will be auto-added */}
           {!hasBaseSkill && !isAnyBaseSkill && (
-            <span className="ml-2 text-xs text-amber-600 flex items-center gap-1 inline-flex">
+            <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 inline-flex">
               <AlertCircle className="w-3 h-3" />
               Will add {baseSkillName}
             </span>
@@ -122,8 +122,8 @@ function ExpandableSubSkillRow({
       
       {/* Base skill selector for "any base skill" sub-skills */}
       {isAnyBaseSkill && isSelected && onBaseSkillSelect && (
-        <div className="mx-3 mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <label className="block text-sm font-medium text-blue-800 mb-2">
+        <div className="mx-3 mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-600/50 rounded-lg">
+          <label className="block text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
             Choose which base skill to associate with {skill.name}:
           </label>
           <Select

@@ -2,6 +2,20 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: TASK-098 — Dark mode contrast fixes | files: recovery-modal.tsx, innate-toggle.tsx, skill-row.tsx, dice-roller.tsx, CombatantCard.tsx, theme-toggle.tsx, proficiencies-tab.tsx, tab-summary-section.tsx, grid-list-row.tsx, add-sub-skill-modal.tsx, encounter-tracker/page.tsx, AI_TASK_QUEUE.md | TASK: TASK-098 | Summary:
+  - Recovery modal: allocation buttons (violet), hours selection hover, manual allocation labels, preview text, automatic caption
+  - Innate toggle: active state dark variant, hover text contrast
+  - Skill row: bonus colors (green/red/blue) for table/card/compact variants
+  - Dice roller: history button, last roll total, modifier, roll total in history
+  - CombatantCard: isDead, isDragOver, Current/Down badges, HP/EN labels, condition pills, damage/heal/energy pills, Conditions button, Remove hover
+  - Theme toggle: selected state for inline and dropdown
+  - Proficiencies tab: unarmed prowess selected state, TP cost chip
+  - Tab summary section: SummaryItem highlightColors (primary, success, warning, danger, power, martial)
+  - Grid list row: innate badge (★)
+  - Add sub skill modal: base skill info box, amber hint text
+  - Encounter tracker page: auto-saved text, round badge, Ally/Enemy/Companion radio labels
+  - Build passes
+
 - 2026-02-06 | agent:cursor | Session: TASK-096 — Split encounter-tracker page | files: encounter-tracker/page.tsx, CombatantCard.tsx, encounter-tracker-types.ts, encounter-tracker-constants.ts | Summary:
   - Extracted CombatantCard (~380 lines) to separate file
   - Extracted encounter-tracker-types.ts (Combatant, CombatantCondition, ConditionDef, EncounterState, CombatantCardProps)

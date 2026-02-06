@@ -121,7 +121,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           onClick={() => setShowHistory(!showHistory)}
           className={cn(
             'p-2 rounded-lg transition-colors',
-            showHistory ? 'bg-primary-100 text-primary-700' : 'text-text-muted hover:bg-surface-alt'
+            showHistory ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' : 'text-text-muted hover:bg-surface-alt'
           )}
           title="Roll history"
         >
@@ -200,7 +200,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
               <div className="text-sm text-text-secondary mb-1">
                 {lastRoll.count}d{lastRoll.dieType}{formatModifier(lastRoll.modifier)}
               </div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">
+              <div className="text-4xl font-bold text-primary-600 dark:text-primary-400 mb-2">
                 {lastRoll.total}
               </div>
               <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -219,7 +219,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                 {lastRoll.modifier !== 0 && (
                   <span className={cn(
                     'px-2 py-0.5',
-                    lastRoll.modifier > 0 ? 'text-green-600' : 'text-red-600'
+                    lastRoll.modifier > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                   )}>
                     {formatModifier(lastRoll.modifier)}
                   </span>
@@ -260,7 +260,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                     <span className="text-xs text-text-muted">
                       [{roll.results.join(', ')}]
                     </span>
-                    <span className="font-bold text-primary-600">= {roll.total}</span>
+                    <span className="font-bold text-primary-600 dark:text-primary-400">= {roll.total}</span>
                   </div>
                 </div>
               ))}

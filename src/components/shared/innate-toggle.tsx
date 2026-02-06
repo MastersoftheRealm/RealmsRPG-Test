@@ -54,8 +54,8 @@ export function InnateToggle({
         sizeClasses[size],
         // Innate state
         isInnate
-          ? 'text-violet-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30 active:bg-violet-100'
-          : 'text-text-muted hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/30 active:bg-violet-100',
+          ? 'text-violet-500 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30 dark:hover:text-violet-300 active:bg-violet-100 dark:active:bg-violet-800/40'
+          : 'text-text-muted hover:text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/30 dark:hover:text-violet-300 active:bg-violet-100 dark:active:bg-violet-800/40',
         // Disabled state
         disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent',
         className

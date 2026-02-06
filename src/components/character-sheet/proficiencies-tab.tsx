@@ -412,7 +412,7 @@ export function ProficienciesTab({
                       key={prowessLevel.level}
                       className={cn(
                         'flex items-center gap-3 p-2 rounded-lg border transition-all',
-                        isSelected ? 'bg-primary-50 border-primary-300' : 'bg-surface border-border-light',
+                        isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600/50' : 'bg-surface border-border-light',
                         canToggle && 'cursor-pointer hover:border-primary-300'
                       )}
                       onClick={() => {
@@ -436,7 +436,7 @@ export function ProficienciesTab({
                         <span className="text-sm font-medium text-text-primary">{prowessLevel.name}</span>
                         <span className="text-xs text-text-muted ml-2">({prowessLevel.damage})</span>
                       </div>
-                      <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                      <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded">
                         {tpCost} TP
                       </span>
                     </div>

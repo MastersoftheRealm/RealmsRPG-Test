@@ -291,7 +291,7 @@ export function GridListRow({
             )}
             {/* Innate indicator */}
             {innate && (
-              <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 text-violet-600 flex-shrink-0">★</span>
+              <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
             )}
             {/* Uses display */}
             {uses && (

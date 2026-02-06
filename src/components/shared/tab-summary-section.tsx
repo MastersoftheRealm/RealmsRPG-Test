@@ -71,12 +71,12 @@ export interface SummaryItemProps {
 }
 
 const highlightColors = {
-  primary: 'text-primary-600',
-  success: 'text-green-600',
-  warning: 'text-amber-600',
-  danger: 'text-red-600',
-  power: 'text-violet-600',
-  martial: 'text-green-700',
+  primary: 'text-primary-600 dark:text-primary-400',
+  success: 'text-green-600 dark:text-green-400',
+  warning: 'text-amber-600 dark:text-amber-400',
+  danger: 'text-red-600 dark:text-red-400',
+  power: 'text-violet-600 dark:text-violet-400',
+  martial: 'text-green-700 dark:text-green-400',
 };
 
 export function SummaryItem({

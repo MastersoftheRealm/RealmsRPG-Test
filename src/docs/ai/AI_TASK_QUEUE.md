@@ -2241,3 +2241,34 @@ Agents should **create new tasks** during their work when they discover addition
     - All 5 filter components use cn() instead of template literals
     - filter-group class definition verified in globals.css
     - npm run build passes
+
+- id: TASK-098
+  title: "Fix dark mode contrast and missing variants — audit follow-up"
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/recovery-modal.tsx
+    - src/components/shared/innate-toggle.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/character-sheet/dice-roller.tsx
+    - src/app/(main)/encounter-tracker/CombatantCard.tsx
+    - src/components/shared/theme-toggle.tsx
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/components/shared/tab-summary-section.tsx
+    - src/components/shared/grid-list-row.tsx
+    - src/components/character-sheet/add-sub-skill-modal.tsx
+    - src/app/(main)/encounter-tracker/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Dark mode audit identified contrast issues: missing dark: variants, text too dark for dark backgrounds,
+    elements too bright, hover/active states with poor contrast. Fix per audit: recovery-modal (allocation
+    buttons, labels, preview text), innate-toggle (active state), skill-row (bonus colors), dice-roller,
+    CombatantCard (badges, inputs, pills), theme-toggle (selected state), proficiencies-tab, tab-summary-section
+    SummaryItem highlightColors, grid-list-row innate badge, add-sub-skill-modal info box, encounter-tracker page.
+  acceptance_criteria:
+    - All identified components have appropriate dark: variants for colored backgrounds/text
+    - No text too dark for dark backgrounds (use text-*-300/400 for dark mode)
+    - Hover/active states have dark: variants where needed
+    - npm run build passes
+  notes: "Done 2026-02-06: Fixed recovery-modal (allocation buttons, labels, preview text), innate-toggle (active state), skill-row (bonus colors), dice-roller, CombatantCard (badges, inputs, pills), theme-toggle, proficiencies-tab, tab-summary-section highlightColors, grid-list-row innate badge, add-sub-skill-modal info box, encounter-tracker page."

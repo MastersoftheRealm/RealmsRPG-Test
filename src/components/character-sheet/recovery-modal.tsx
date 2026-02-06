@@ -281,7 +281,7 @@ export function RecoveryModal({
                       'flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-all',
                       hours === h
                         ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                        : 'border-border-light hover:border-amber-300'
+                        : 'border-border-light hover:border-amber-300 dark:hover:border-amber-600/50 dark:hover:bg-amber-900/20'
                     )}
                   >
                     {h} hours
@@ -306,8 +306,8 @@ export function RecoveryModal({
                   className={cn(
                     'flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg border-2 transition-all',
                     allocationMode === 'automatic'
-                      ? 'border-violet-500 bg-violet-50 text-violet-700'
-                      : 'border-border-light hover:border-violet-300'
+                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+                      : 'border-border-light hover:border-violet-300 dark:hover:border-violet-600/50 dark:hover:bg-violet-900/20'
                   )}
                 >
                   <Sparkles className="w-4 h-4" />
@@ -318,8 +318,8 @@ export function RecoveryModal({
                   className={cn(
                     'flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg border-2 transition-all',
                     allocationMode === 'manual'
-                      ? 'border-violet-500 bg-violet-50 text-violet-700'
-                      : 'border-border-light hover:border-violet-300'
+                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+                      : 'border-border-light hover:border-violet-300 dark:hover:border-violet-600/50 dark:hover:bg-violet-900/20'
                   )}
                 >
                   <Sun className="w-4 h-4" />
@@ -332,11 +332,11 @@ export function RecoveryModal({
             {allocationMode === 'manual' && (
               <div className="space-y-3 p-4 bg-surface-alt rounded-lg">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1 text-green-600 font-medium">
+                  <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
                     <Heart className="w-4 h-4" />
                     HP: {hpQuarters}/{totalQuarters}
                   </span>
-                  <span className="flex items-center gap-1 text-blue-600 font-medium">
+                  <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
                     EN: {totalQuarters - hpQuarters}/{totalQuarters}
                     <Zap className="w-4 h-4" />
                   </span>
@@ -376,9 +376,9 @@ export function RecoveryModal({
                   <div>
                     <div className="text-xs text-text-muted">Health</div>
                     <div className="font-bold">
-                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-green-600' : 'text-text-muted')}>{newHealth}</span>
+                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-green-600 dark:text-green-400' : 'text-text-muted')}>{newHealth}</span>
                     </div>
-                    <div className="text-xs text-green-600">
+                    <div className="text-xs text-green-600 dark:text-green-400">
                       +{hpRestored} HP ({currentAllocation.hp}/{totalQuarters} quarters)
                     </div>
                   </div>
@@ -390,9 +390,9 @@ export function RecoveryModal({
                   <div>
                     <div className="text-xs text-text-muted">Energy</div>
                     <div className="font-bold">
-                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-green-600' : 'text-text-muted')}>{newEnergy}</span>
+                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-green-600 dark:text-green-400' : 'text-text-muted')}>{newEnergy}</span>
                     </div>
-                    <div className="text-xs text-green-600">
+                    <div className="text-xs text-green-600 dark:text-green-400">
                       +{enRestored} EN ({currentAllocation.en}/{totalQuarters} quarters)
                     </div>
                   </div>
@@ -410,7 +410,7 @@ export function RecoveryModal({
               )}
               
               {allocationMode === 'automatic' && (
-                <p className="mt-3 text-xs text-amber-700 italic">
+                <p className="mt-3 text-xs text-amber-700 dark:text-amber-300 italic">
                   Automatic mode optimizes allocation for maximum total recovery.
                 </p>
               )}

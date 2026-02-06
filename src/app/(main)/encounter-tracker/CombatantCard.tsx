@@ -113,8 +113,8 @@ export function CombatantCard({
       className={cn(
         'bg-surface rounded-xl shadow-md p-3 transition-all',
         isCurrentTurn && 'ring-2 ring-primary-500 shadow-lg',
-        isDead && 'bg-red-50 opacity-75',
-        isDragOver && 'ring-2 ring-amber-400 bg-amber-50',
+        isDead && 'bg-red-50 dark:bg-red-900/30 opacity-75',
+        isDragOver && 'ring-2 ring-amber-400 bg-amber-50 dark:bg-amber-900/30',
         isDragging && 'opacity-50',
         'border-l-4',
         getBorderColor()
@@ -188,7 +188,7 @@ export function CombatantCard({
             )}
             {combatant.isSurprised && (
               <span
-                className="px-1.5 py-0.5 text-[10px] bg-warning-light text-warning-700 rounded font-medium cursor-pointer hover:bg-warning-200"
+                className="px-1.5 py-0.5 text-[10px] bg-warning-light dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 rounded font-medium cursor-pointer hover:bg-warning-200 dark:hover:bg-warning-800/40"
                 onClick={() => onUpdate({ isSurprised: false })}
                 title="Click to remove surprised"
               >
@@ -196,12 +196,12 @@ export function CombatantCard({
               </span>
             )}
             {isCurrentTurn && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-primary-100 text-primary-700 rounded font-medium">
+              <span className="px-1.5 py-0.5 text-[10px] bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded font-medium">
                 Current
               </span>
             )}
             {isDead && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-red-100 text-red-700 rounded font-medium">
+              <span className="px-1.5 py-0.5 text-[10px] bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded font-medium">
                 Down
               </span>
             )}
@@ -221,14 +221,14 @@ export function CombatantCard({
 
           <div className="flex items-center gap-3 mb-2">
             <div className="flex items-center gap-1 flex-1">
-              <span className="text-xs text-red-600 font-medium w-6">HP</span>
+              <span className="text-xs text-red-600 dark:text-red-400 font-medium w-6">HP</span>
               <input
                 type="number"
                 value={combatant.currentHealth}
                 onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                 className={cn(
                   'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium',
-                  combatant.currentHealth <= 0 ? 'border-red-300 bg-red-50 text-red-700' : 'border-border-light'
+                  combatant.currentHealth <= 0 ? 'border-red-300 dark:border-red-600/50 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'border-border-light'
                 )}
               />
               <span className="text-text-muted text-xs">/</span>
@@ -251,7 +251,7 @@ export function CombatantCard({
             </div>
 
             <div className="flex items-center gap-1 flex-1">
-              <span className="text-xs text-blue-600 font-medium w-6">EN</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium w-6">EN</span>
               <input
                 type="number"
                 value={combatant.currentEnergy}
@@ -285,8 +285,8 @@ export function CombatantCard({
                     key={cond.name}
                     className={cn(
                       'px-2 py-0.5 text-xs rounded-full flex items-center gap-1 select-none',
-                      isCustom ? 'bg-info-100 text-info-700' :
-                      isLeveled ? 'bg-companion-light text-companion-text' : 'bg-warning-light text-warning-700'
+                      isCustom ? 'bg-info-100 dark:bg-info-900/40 text-info-700 dark:text-info-300' :
+                      isLeveled ? 'bg-companion-light dark:bg-violet-900/40 text-companion-text dark:text-violet-300' : 'bg-warning-light dark:bg-warning-900/30 text-warning-700 dark:text-warning-300'
                     )}
                     title={condDef?.description ?? 'Custom condition (leveled). Left-click to increase, right-click to decrease level.'}
                     onContextMenu={(e) => {
@@ -306,7 +306,7 @@ export function CombatantCard({
                     </span>
                     <button
                       onClick={() => isLeveled ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)}
-                      className="hover:text-red-600 font-bold"
+                      className="hover:text-red-600 dark:hover:text-red-400 font-bold"
                       title={isLeveled ? 'Decrease level (removes at 0)' : 'Remove condition'}
                     >
                       ×
@@ -317,19 +317,19 @@ export function CombatantCard({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border-subtle">
-            <div className="flex items-center gap-0.5 bg-red-50 rounded px-1.5 py-0.5">
+            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border-subtle">
+            <div className="flex items-center gap-0.5 bg-red-50 dark:bg-red-900/30 rounded px-1.5 py-0.5">
               <input
                 type="number"
                 value={damageInput}
                 onChange={(e) => setDamageInput(e.target.value)}
                 placeholder="−"
-                className="w-10 px-1 py-0.5 text-xs bg-white border border-red-200 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-red-200 dark:border-red-600/50 rounded text-center"
                 onKeyDown={(e) => e.key === 'Enter' && handleDamage()}
               />
               <button
                 onClick={handleDamage}
-                className="px-1.5 py-0.5 text-xs text-red-700 hover:text-red-900 font-medium"
+                className="px-1.5 py-0.5 text-xs text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-200 font-medium"
                 title="Apply damage"
               >
                 Dmg
@@ -340,30 +340,30 @@ export function CombatantCard({
                 value={healInput}
                 onChange={(e) => setHealInput(e.target.value)}
                 placeholder="+"
-                className="w-10 px-1 py-0.5 text-xs bg-white border border-green-200 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-green-200 dark:border-green-600/50 rounded text-center"
                 onKeyDown={(e) => e.key === 'Enter' && handleHeal()}
               />
               <button
                 onClick={handleHeal}
-                className="px-1.5 py-0.5 text-xs text-green-700 hover:text-green-900 font-medium"
+                className="px-1.5 py-0.5 text-xs text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 font-medium"
                 title="Apply healing"
               >
                 Heal
               </button>
             </div>
 
-            <div className="flex items-center gap-0.5 bg-blue-50 rounded px-1.5 py-0.5">
+            <div className="flex items-center gap-0.5 bg-blue-50 dark:bg-blue-900/30 rounded px-1.5 py-0.5">
               <input
                 type="number"
                 value={energyDrainInput}
                 onChange={(e) => setEnergyDrainInput(e.target.value)}
                 placeholder="−"
-                className="w-10 px-1 py-0.5 text-xs bg-white border border-blue-200 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-blue-200 dark:border-blue-600/50 rounded text-center"
                 onKeyDown={(e) => e.key === 'Enter' && handleEnergyDrain()}
               />
               <button
                 onClick={handleEnergyDrain}
-                className="px-1.5 py-0.5 text-xs text-blue-700 hover:text-blue-900 font-medium"
+                className="px-1.5 py-0.5 text-xs text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200 font-medium"
                 title="Drain energy"
               >
                 Use
@@ -374,12 +374,12 @@ export function CombatantCard({
                 value={energyRestoreInput}
                 onChange={(e) => setEnergyRestoreInput(e.target.value)}
                 placeholder="+"
-                className="w-10 px-1 py-0.5 text-xs bg-white border border-cyan-200 rounded text-center"
+                className="w-10 px-1 py-0.5 text-xs bg-white dark:bg-surface border border-cyan-200 dark:border-cyan-600/50 rounded text-center"
                 onKeyDown={(e) => e.key === 'Enter' && handleEnergyRestore()}
               />
               <button
                 onClick={handleEnergyRestore}
-                className="px-1.5 py-0.5 text-xs text-cyan-700 hover:text-cyan-900 font-medium"
+                className="px-1.5 py-0.5 text-xs text-cyan-700 dark:text-cyan-300 hover:text-cyan-900 dark:hover:text-cyan-200 font-medium"
                 title="Restore energy"
               >
                 Rest
@@ -390,7 +390,7 @@ export function CombatantCard({
               onClick={() => setShowConditions(!showConditions)}
               className={cn(
                 'px-2 py-0.5 text-xs rounded',
-                showConditions ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                showConditions ? 'bg-amber-500 text-white' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50'
               )}
             >
               {showConditions ? '▲' : '▼'} Cond
@@ -406,7 +406,7 @@ export function CombatantCard({
               </button>
               <button
                 onClick={onRemove}
-                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-red-100 hover:text-red-700"
+                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-700 dark:hover:text-red-300"
                 title="Remove combatant"
               >
                 ✕

@@ -218,7 +218,7 @@ export function SkillRow({
           {isEditing || !showRollButton ? (
             <span className={cn(
               'inline-block min-w-[40px] font-bold',
-              bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-text-secondary'
+              bonus > 0 ? 'text-green-600 dark:text-green-400' : bonus < 0 ? 'text-red-600 dark:text-red-400' : 'text-text-secondary'
             )}>
               {formatBonus(bonus)}
             </span>
@@ -330,7 +330,7 @@ export function SkillRow({
             </div>
             
             {isSpeciesSkill && (
-              <span className="text-xs text-blue-600 font-medium">(Species +1 Free)</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(Species +1 Free)</span>
             )}
           </div>
           
@@ -350,7 +350,7 @@ export function SkillRow({
                 {/* Bonus display */}
                 <span className={cn(
                   'w-12 text-right font-bold',
-                  bonus > 0 ? 'text-green-600' : bonus < 0 ? 'text-red-600' : 'text-text-muted'
+                  bonus > 0 ? 'text-green-600 dark:text-green-400' : bonus < 0 ? 'text-red-600 dark:text-red-400' : 'text-text-muted'
                 )}>
                   {formatBonus(bonus)}
                 </span>
@@ -388,7 +388,7 @@ export function SkillRow({
               {name}
             </span>
             {isSpeciesSkill && (
-              <span className="text-xs text-blue-600 font-medium">(+1 Free)</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(+1 Free)</span>
             )}
           </div>
           
