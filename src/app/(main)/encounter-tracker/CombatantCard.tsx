@@ -12,6 +12,14 @@ import { ValueStepper } from '@/components/shared';
 import { CONDITION_OPTIONS } from './encounter-tracker-constants';
 import type { CombatantCardProps } from './encounter-tracker-types';
 
+function getHealthBarColor(current: number, max: number): string {
+  if (max <= 0) return 'bg-red-500';
+  const pct = (current / max) * 100;
+  if (pct > 50) return 'bg-green-500';
+  if (pct > 25) return 'bg-amber-500';
+  return 'bg-red-700';
+}
+
 export function CombatantCard({
   combatant,
   isCurrentTurn,
@@ -33,6 +41,7 @@ export function CombatantCard({
   onDragOver,
   onDragLeave,
   onDrop,
+  variant = 'full',
 }: CombatantCardProps) {
   const [damageInput, setDamageInput] = useState('');
   const [healInput, setHealInput] = useState('');
@@ -50,7 +59,7 @@ export function CombatantCard({
 
   const handleDamage = () => {
     const amount = parseInt(damageInput);
-    if (amount > 0) {
+    if (amount > 0 && onDamage) {
       onDamage(amount);
       setDamageInput('');
     }
@@ -58,7 +67,7 @@ export function CombatantCard({
 
   const handleHeal = () => {
     const amount = parseInt(healInput);
-    if (amount > 0) {
+    if (amount > 0 && onHeal) {
       onHeal(amount);
       setHealInput('');
     }
@@ -66,7 +75,7 @@ export function CombatantCard({
 
   const handleEnergyDrain = () => {
     const amount = parseInt(energyDrainInput);
-    if (amount > 0) {
+    if (amount > 0 && onEnergyDrain) {
       onEnergyDrain(amount);
       setEnergyDrainInput('');
     }
@@ -74,7 +83,7 @@ export function CombatantCard({
 
   const handleEnergyRestore = () => {
     const amount = parseInt(energyRestoreInput);
-    if (amount > 0) {
+    if (amount > 0 && onEnergyRestore) {
       onEnergyRestore(amount);
       setEnergyRestoreInput('');
     }
@@ -206,73 +215,133 @@ export function CombatantCard({
               </span>
             )}
 
-            <div className="flex items-center gap-1 ml-auto">
-              <span className="text-xs text-text-muted">AP:</span>
+            <div className={cn('flex items-center gap-1 ml-auto', variant === 'compact' && 'gap-2')}>
+              <span className={cn('text-text-muted', variant === 'compact' ? 'text-sm font-medium' : 'text-xs')}>AP:</span>
               <ValueStepper
                 value={combatant.ap}
                 onChange={(value) => onUpdateAP(value - combatant.ap)}
                 min={0}
                 max={10}
-                size="xs"
+                size={variant === 'compact' ? 'sm' : 'xs'}
                 enableHoldRepeat
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex items-center gap-1 flex-1">
-              <span className="text-xs text-red-600 dark:text-red-400 font-medium w-6">HP</span>
-              <input
-                type="number"
-                value={combatant.currentHealth}
-                onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
-                className={cn(
-                  'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium',
-                  combatant.currentHealth <= 0 ? 'border-red-300 dark:border-red-600/50 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'border-border-light'
-                )}
-              />
-              <span className="text-text-muted text-xs">/</span>
-              <input
-                type="number"
-                value={combatant.maxHealth}
-                onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
-                className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
-              />
-              <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden max-w-20">
-                <div
+          {variant === 'compact' ? (
+            <div className="flex items-center gap-3 mb-2">
+              <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50')}>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-red-700 dark:text-red-400 mb-0.5">Health</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={combatant.currentHealth}
+                    onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
+                    className={cn(
+                      'w-10 px-0.5 py-0 text-sm font-bold rounded border text-center',
+                      'border-red-300 dark:border-red-800 text-red-800 dark:text-red-300'
+                    )}
+                  />
+                  <span className="text-xs text-red-700 dark:text-red-400">/ {combatant.maxHealth}</span>
+                  <ValueStepper
+                    value={combatant.currentHealth}
+                    onChange={(v) => onUpdate({ currentHealth: Math.max(0, v) })}
+                    min={0}
+                    colorVariant="health"
+                    size="xs"
+                    variant="compact"
+                    hideValue
+                    enableHoldRepeat
+                  />
+                </div>
+                <div className="relative h-1.5 mt-1 bg-surface rounded-full overflow-hidden">
+                  <div
+                    className={cn('absolute inset-y-0 left-0 transition-all rounded-full', getHealthBarColor(combatant.currentHealth, combatant.maxHealth))}
+                    style={{ width: `${Math.max(0, Math.min(100, healthPercent))}%` }}
+                  />
+                </div>
+              </div>
+              <div className={cn('flex flex-col flex-1 min-w-0 p-2 rounded-lg border', 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/50')}>
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400 mb-0.5">Energy</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={combatant.currentEnergy}
+                    onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
+                    className="w-10 px-0.5 py-0 text-sm font-bold rounded border border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-300 text-center"
+                  />
+                  <span className="text-xs text-blue-700 dark:text-blue-400">/ {combatant.maxEnergy}</span>
+                  <ValueStepper
+                    value={combatant.currentEnergy}
+                    onChange={(v) => onUpdate({ currentEnergy: Math.max(0, v) })}
+                    min={0}
+                    colorVariant="energy"
+                    size="xs"
+                    variant="compact"
+                    hideValue
+                    enableHoldRepeat
+                  />
+                </div>
+                <div className="relative h-1.5 mt-1 bg-surface rounded-full overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 bg-blue-500 transition-all rounded-full"
+                    style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center gap-1 flex-1">
+                <span className="text-xs text-red-600 dark:text-red-400 font-medium w-6">HP</span>
+                <input
+                  type="number"
+                  value={combatant.currentHealth}
+                  onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                   className={cn(
-                    'h-full transition-all',
-                    healthPercent > 50 ? 'bg-green-500' :
-                    healthPercent > 25 ? 'bg-yellow-500' : 'bg-red-500'
+                    'w-12 px-1 py-0.5 text-xs border rounded text-center font-medium',
+                    combatant.currentHealth <= 0 ? 'border-red-300 dark:border-red-600/50 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'border-border-light'
                   )}
-                  style={{ width: `${Math.max(0, Math.min(100, healthPercent))}%` }}
                 />
+                <span className="text-text-muted text-xs">/</span>
+                <input
+                  type="number"
+                  value={combatant.maxHealth}
+                  onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
+                  className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
+                />
+                <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden max-w-20">
+                  <div
+                    className={cn('h-full transition-all', getHealthBarColor(combatant.currentHealth, combatant.maxHealth))}
+                    style={{ width: `${Math.max(0, Math.min(100, healthPercent))}%` }}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-1 flex-1">
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium w-6">EN</span>
-              <input
-                type="number"
-                value={combatant.currentEnergy}
-                onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center font-medium"
-              />
-              <span className="text-text-muted text-xs">/</span>
-              <input
-                type="number"
-                value={combatant.maxEnergy}
-                onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
-                className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
-              />
-              <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden max-w-20">
-                <div
-                  className="h-full bg-blue-500 transition-all"
-                  style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
+              <div className="flex items-center gap-1 flex-1">
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium w-6">EN</span>
+                <input
+                  type="number"
+                  value={combatant.currentEnergy}
+                  onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
+                  className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center font-medium"
                 />
+                <span className="text-text-muted text-xs">/</span>
+                <input
+                  type="number"
+                  value={combatant.maxEnergy}
+                  onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
+                  className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center"
+                />
+                <div className="flex-1 h-2 bg-surface-alt rounded-full overflow-hidden max-w-20">
+                  <div
+                    className="h-full bg-blue-500 transition-all"
+                    style={{ width: `${Math.max(0, Math.min(100, energyPercent))}%` }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {combatant.conditions.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-3">
@@ -318,6 +387,8 @@ export function CombatantCard({
           )}
 
             <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border-subtle">
+            {variant === 'full' && onDamage && onHeal && onEnergyDrain && onEnergyRestore && (
+            <>
             <div className="flex items-center gap-0.5 bg-red-50 dark:bg-red-900/30 rounded px-1.5 py-0.5">
               <input
                 type="number"
@@ -385,6 +456,8 @@ export function CombatantCard({
                 Rest
               </button>
             </div>
+            </>
+            )}
 
             <button
               onClick={() => setShowConditions(!showConditions)}
@@ -393,7 +466,7 @@ export function CombatantCard({
                 showConditions ? 'bg-amber-500 text-white' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/50'
               )}
             >
-              {showConditions ? '▲' : '▼'} Cond
+              {showConditions ? '▲' : '▼'} Conditions
             </button>
 
             <div className="ml-auto flex items-center gap-1">

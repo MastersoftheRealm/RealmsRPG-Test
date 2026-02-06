@@ -57,13 +57,16 @@ export interface CombatantCardProps {
   onRemoveCondition: (condition: string) => void;
   onUpdateConditionLevel: (condition: string, delta: number) => void;
   onUpdateAP: (delta: number) => void;
-  onDamage: (amount: number) => void;
-  onHeal: (amount: number) => void;
-  onEnergyDrain: (amount: number) => void;
-  onEnergyRestore: (amount: number) => void;
+  /** Optional: when omitted, compact mode uses ValueStepper-only HP/EN (no damage/heal/use/rest) */
+  onDamage?: (amount: number) => void;
+  onHeal?: (amount: number) => void;
+  onEnergyDrain?: (amount: number) => void;
+  onEnergyRestore?: (amount: number) => void;
   onDragStart: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
   onDragOver: (e: DragEvent<HTMLDivElement>) => void;
   onDragLeave: () => void;
   onDrop: (e: DragEvent<HTMLDivElement>) => void;
+  /** Compact/quick-reference mode: ResourceInput-style HP/EN, no damage/heal buttons, larger AP */
+  variant?: 'full' | 'compact';
 }

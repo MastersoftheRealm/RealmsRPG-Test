@@ -48,14 +48,21 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
   // Initialize local state from Firestore
   useEffect(() => {
     if (encounterData && !isInitialized) {
       setEncounter(encounterData);
+      setNameInput(encounterData.name || '');
       setIsInitialized(true);
     }
   }, [encounterData, isInitialized]);
+
+  useEffect(() => {
+    if (encounter?.name && !isEditingName) setNameInput(encounter.name);
+  }, [encounter?.name, isEditingName]);
 
   // Auto-save to Firestore
   const { isSaving, hasUnsavedChanges } = useAutoSave({
@@ -312,36 +319,6 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     });
   };
 
-  const applyDamage = useCallback((id: string, amount: number) => {
-    setEncounter(prev => {
-      if (!prev) return prev;
-      const c = prev.combatants.find(c => c.id === id);
-      if (!c) return prev;
-      return { ...prev, combatants: prev.combatants.map(cb => cb.id === id ? { ...cb, currentHealth: Math.max(0, cb.currentHealth - amount) } : cb) };
-    });
-  }, []);
-
-  const applyHealing = useCallback((id: string, amount: number) => {
-    setEncounter(prev => {
-      if (!prev) return prev;
-      return { ...prev, combatants: prev.combatants.map(cb => cb.id === id ? { ...cb, currentHealth: Math.min(cb.maxHealth, cb.currentHealth + amount) } : cb) };
-    });
-  }, []);
-
-  const applyEnergyDrain = useCallback((id: string, amount: number) => {
-    setEncounter(prev => {
-      if (!prev) return prev;
-      return { ...prev, combatants: prev.combatants.map(cb => cb.id === id ? { ...cb, currentEnergy: Math.max(0, cb.currentEnergy - amount) } : cb) };
-    });
-  }, []);
-
-  const applyEnergyRestore = useCallback((id: string, amount: number) => {
-    setEncounter(prev => {
-      if (!prev) return prev;
-      return { ...prev, combatants: prev.combatants.map(cb => cb.id === id ? { ...cb, currentEnergy: Math.min(cb.maxEnergy, cb.currentEnergy + amount) } : cb) };
-    });
-  }, []);
-
   if (isLoading) {
     return <PageContainer size="full"><div className="flex items-center justify-center py-20"><LoadingState message="Loading encounter..." size="lg" /></div></PageContainer>;
   }
@@ -368,7 +345,44 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           <Link href="/encounters" className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-600 mb-2 text-sm">
             <ChevronLeft className="w-4 h-4" /> Back to Encounters
           </Link>
-          <h1 className="text-3xl font-bold text-text-primary">{encounter.name}</h1>
+          {isEditingName ? (
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              onBlur={() => {
+                const trimmed = nameInput.trim();
+                if (trimmed && trimmed !== encounter.name) {
+                  setEncounter(prev => prev ? { ...prev, name: trimmed } : prev);
+                } else {
+                  setNameInput(encounter.name || '');
+                }
+                setIsEditingName(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const trimmed = nameInput.trim();
+                  if (trimmed && trimmed !== encounter.name) {
+                    setEncounter(prev => prev ? { ...prev, name: trimmed } : prev);
+                  }
+                  setIsEditingName(false);
+                } else if (e.key === 'Escape') {
+                  setNameInput(encounter.name || '');
+                  setIsEditingName(false);
+                }
+              }}
+              className="text-3xl font-bold text-text-primary bg-transparent border-b-2 border-primary-500 outline-none w-full max-w-md"
+              autoFocus
+            />
+          ) : (
+            <h1
+              className="text-3xl font-bold text-text-primary cursor-pointer hover:text-primary-600 hover:underline"
+              onClick={() => setIsEditingName(true)}
+              title="Click to edit encounter name"
+            >
+              {encounter.name}
+            </h1>
+          )}
           <p className="text-text-secondary">Combat Encounter{encounter.description ? ` \u2014 ${encounter.description}` : ''}</p>
           <p className="text-xs mt-1 flex items-center gap-1">
             {isSaving ? (
@@ -382,18 +396,18 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
         </div>
         <div className="flex items-center gap-2 text-lg">
           {encounter.isActive && (
-            <div className="px-4 py-2 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 rounded-lg font-bold">
+            <div className="px-4 py-2 bg-surface-alt text-text-primary rounded-lg font-bold">
               Round {encounter.round} &bull; Turn {encounter.currentTurnIndex + 1}/{sortedCombatants.length}
             </div>
           )}
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-4 gap-6">
+      <div className="grid lg:grid-cols-4 gap-6 lg:items-stretch">
         {/* Combatant List */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
           {/* Combat Controls */}
-          <div className="bg-surface rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4 sticky top-4 z-10">
+          <div className="bg-surface rounded-xl shadow-md p-4 flex flex-wrap items-center gap-4 flex-shrink-0">
             {!encounter.isActive ? (
               <>
                 <Button onClick={startCombat} disabled={encounter.combatants.length === 0}>Start Encounter</Button>
@@ -411,12 +425,12 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           </div>
 
           {!encounter.isActive && sortedCombatants.length > 0 && (
-            <div className="text-xs text-text-muted flex items-center gap-4 px-2">
+            <div className="text-xs text-text-muted flex items-center gap-4 px-2 flex-shrink-0">
               <span>Drag the grip handle to reorder. Surprised creatures go last in round 1. Companions always go last.</span>
             </div>
           )}
 
-          <div className="space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 scroll-smooth">
+          <div className="space-y-3 overflow-y-auto pr-2 scroll-smooth flex-1 min-h-[300px]">
             {sortedCombatants.length === 0 ? (
               <div className="bg-surface rounded-xl shadow-md p-8 text-center text-text-muted">
                 No combatants added yet. Add some using the panel on the right.
@@ -436,15 +450,12 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
                   onRemoveCondition={(condition) => removeCondition(combatant.id, condition)}
                   onUpdateConditionLevel={(condition, delta) => updateConditionLevel(combatant.id, condition, delta)}
                   onUpdateAP={(delta) => updateAP(combatant.id, delta)}
-                  onDamage={(amount) => applyDamage(combatant.id, amount)}
-                  onHeal={(amount) => applyHealing(combatant.id, amount)}
-                  onEnergyDrain={(amount) => applyEnergyDrain(combatant.id, amount)}
-                  onEnergyRestore={(amount) => applyEnergyRestore(combatant.id, amount)}
                   onDragStart={(e) => handleDragStart(e, combatant.id)}
                   onDragEnd={handleDragEnd}
                   onDragOver={(e) => handleDragOver(e, combatant.id)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, combatant.id)}
+                  variant="compact"
                 />
               ))
             )}
@@ -452,8 +463,8 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
         </div>
 
         {/* Add Combatant Panel */}
-        <div className="space-y-6">
-          <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
+        <div className="space-y-6 flex flex-col min-h-0">
+          <div className="bg-surface rounded-xl shadow-md p-6 flex-shrink-0">
             <h3 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h3>
 
             {/* Quick add buttons */}

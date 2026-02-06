@@ -2,13 +2,13 @@
  * Skill Encounter Page
  * =====================
  * Skill encounter tracker: DS, participants, roll tracking, success/failure.
- * Based on GAME_RULES.md skill encounter mechanics.
+ * Per GAME_RULES: roll >= DS = 1 + floor((roll-DS)/5) successes; roll < DS = 1 + floor((DS-roll)/5) failures.
+ * Successes and failures cancel; net = successes - failures.
  */
 
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import {
@@ -22,6 +22,7 @@ import {
   XCircle,
   RotateCcw,
   Users,
+  HandHelping,
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
 import {
@@ -34,6 +35,7 @@ import {
 import { ValueStepper } from '@/components/shared';
 import { useEncounter, useSaveEncounter, useAutoSave } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
+import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import type { Encounter, SkillParticipant, SkillEncounterState, TrackedCombatant } from '@/types/encounter';
 
 function generateId(): string {
@@ -54,7 +56,6 @@ export default function SkillEncounterPage({ params }: PageParams) {
 
 function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
-  const router = useRouter();
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
 
@@ -62,26 +63,44 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const [isInitialized, setIsInitialized] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newParticipantName, setNewParticipantName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
-  // Initialize local state from Firestore
+  // Initialize local state from Firestore (strip legacy requiredSuccesses/requiredFailures)
   useEffect(() => {
     if (encounterData && !isInitialized) {
-      // Ensure skillEncounter state exists
       const enc = { ...encounterData };
       if (!enc.skillEncounter) {
         enc.skillEncounter = {
           difficultyScore: 10,
-          requiredSuccesses: 2,
-          requiredFailures: 3,
           participants: [],
           currentSuccesses: 0,
           currentFailures: 0,
         };
+      } else {
+        const sk = enc.skillEncounter as unknown as Record<string, unknown>;
+        delete sk.requiredSuccesses;
+        delete sk.requiredFailures;
+        // Migrate legacy participants: compute successCount/failureCount from rollValue if missing
+        const participants = (sk.participants as SkillParticipant[]) || [];
+        const ds = (sk.difficultyScore as number) ?? 10;
+        sk.participants = participants.map((p) => {
+          if (p.hasRolled && p.rollValue != null && (p.successCount == null && p.failureCount == null)) {
+            const { successes, failures } = computeSkillRollResult(p.rollValue, ds);
+            return { ...p, successCount: successes, failureCount: failures };
+          }
+          return p;
+        });
       }
+      setNameInput(enc.name || '');
       setEncounter(enc);
       setIsInitialized(true);
     }
   }, [encounterData, isInitialized]);
+
+  useEffect(() => {
+    if (encounter?.name && !isEditingName) setNameInput(encounter.name);
+  }, [encounter?.name, isEditingName]);
 
   // Auto-save
   const { isSaving, hasUnsavedChanges } = useAutoSave({
@@ -97,18 +116,9 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   const skill = encounter?.skillEncounter;
 
-  // Computed outcome
-  const outcome = useMemo(() => {
-    if (!skill) return 'in-progress';
-    if (skill.currentSuccesses >= skill.requiredSuccesses) return 'success';
-    if (skill.currentFailures >= skill.requiredFailures) return 'failure';
-    return 'in-progress';
-  }, [skill]);
+  // Net = successes - failures (they cancel)
+  const netSuccesses = skill ? skill.currentSuccesses - skill.currentFailures : 0;
 
-  const successPercent = skill ? Math.min(100, (skill.currentSuccesses / skill.requiredSuccesses) * 100) : 0;
-  const failurePercent = skill ? Math.min(100, (skill.currentFailures / skill.requiredFailures) * 100) : 0;
-
-  // Update skill encounter state
   const updateSkill = useCallback((updates: Partial<SkillEncounterState>) => {
     setEncounter((prev) => {
       if (!prev || !prev.skillEncounter) return prev;
@@ -116,7 +126,6 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     });
   }, []);
 
-  // Add participant manually
   const addParticipant = () => {
     if (!newParticipantName.trim()) return;
     const participant: SkillParticipant = {
@@ -129,15 +138,13 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     setNewParticipantName('');
   };
 
-  // Add participants from modal
   const addParticipantsFromModal = (participants: SkillParticipant[]) => {
     updateSkill({ participants: [...(skill?.participants || []), ...participants] });
     setShowAddModal(false);
   };
 
-  // Also handle onAdd for combatant-shaped data (from combat tab of modal)
   const addCombatantsAsParticipants = (combatants: TrackedCombatant[]) => {
-    const participants: SkillParticipant[] = combatants.map(c => ({
+    const participants: SkillParticipant[] = combatants.map((c) => ({
       id: c.id,
       name: c.name,
       hasRolled: false,
@@ -148,27 +155,49 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     setShowAddModal(false);
   };
 
-  // Remove participant
   const removeParticipant = (id: string) => {
     if (!skill) return;
-    updateSkill({ participants: skill.participants.filter((p) => p.id !== id) });
+    const p = skill.participants.find((x) => x.id === id);
+    let dSuccesses = 0;
+    let dFailures = 0;
+    if (p && p.hasRolled && !p.isHelping) {
+      dSuccesses = p.successCount ?? 0;
+      dFailures = p.failureCount ?? 0;
+    }
+    updateSkill({
+      participants: skill.participants.filter((x) => x.id !== id),
+      currentSuccesses: Math.max(0, skill.currentSuccesses - dSuccesses),
+      currentFailures: Math.max(0, skill.currentFailures - dFailures),
+    });
   };
 
-  // Update participant roll
   const updateParticipantRoll = (id: string, rollValue: number) => {
     if (!skill) return;
-    const isSuccess = rollValue >= skill.difficultyScore;
+    const { successes, failures } = computeSkillRollResult(rollValue, skill.difficultyScore);
+    const prev = skill.participants.find((p) => p.id === id);
+    const prevSuccess = prev?.successCount ?? 0;
+    const prevFail = prev?.failureCount ?? 0;
+    const deltaSuccess = successes - prevSuccess;
+    const deltaFail = failures - prevFail;
     const updatedParticipants = skill.participants.map((p) => {
-      if (p.id !== id) return p;
-      return { ...p, rollValue, isSuccess, hasRolled: true };
+      if (p.id !== id)
+        return p;
+      return {
+        ...p,
+        rollValue,
+        successCount: successes,
+        failureCount: failures,
+        isSuccess: successes > 0,
+        hasRolled: true,
+      };
     });
-    // Recompute totals
-    const currentSuccesses = updatedParticipants.filter((p) => p.hasRolled && p.isSuccess).length;
-    const currentFailures = updatedParticipants.filter((p) => p.hasRolled && !p.isSuccess).length;
-    updateSkill({ participants: updatedParticipants, currentSuccesses, currentFailures });
+    updateSkill({
+      participants: updatedParticipants,
+      currentSuccesses: Math.max(0, skill.currentSuccesses + deltaSuccess),
+      currentFailures: Math.max(0, skill.currentFailures + deltaFail),
+    });
   };
 
-  // Update participant skill used
   const updateParticipantSkill = (id: string, skillUsed: string) => {
     if (!skill) return;
     updateSkill({
@@ -176,43 +205,74 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     });
   };
 
-  // Clear a participant's roll
-  const clearParticipantRoll = (id: string) => {
+  const setParticipantHelping = (id: string, isHelping: boolean) => {
     if (!skill) return;
-    const updatedParticipants = skill.participants.map((p) => {
-      if (p.id !== id) return p;
-      return { ...p, rollValue: undefined, isSuccess: undefined, hasRolled: false };
-    });
-    const currentSuccesses = updatedParticipants.filter((p) => p.hasRolled && p.isSuccess).length;
-    const currentFailures = updatedParticipants.filter((p) => p.hasRolled && !p.isSuccess).length;
-    updateSkill({ participants: updatedParticipants, currentSuccesses, currentFailures });
+    const p = skill.participants.find((x) => x.id === id);
+    if (!p) return;
+    let dSuccesses = 0;
+    let dFailures = 0;
+    if (p.hasRolled && !p.isHelping) {
+      dSuccesses = p.successCount ?? 0;
+      dFailures = p.failureCount ?? 0;
+    }
+    if (isHelping) {
+      updateSkill({
+        participants: skill.participants.map((x) =>
+          x.id === id ? { ...x, isHelping: true } : x
+        ),
+        currentSuccesses: Math.max(0, skill.currentSuccesses - dSuccesses),
+        currentFailures: Math.max(0, skill.currentFailures - dFailures),
+      });
+    } else {
+      const { successes, failures } = computeSkillRollResult(p.rollValue ?? 0, skill.difficultyScore);
+      updateSkill({
+        participants: skill.participants.map((x) =>
+          x.id === id ? { ...x, isHelping: false } : x
+        ),
+        currentSuccesses: skill.currentSuccesses + successes,
+        currentFailures: skill.currentFailures + failures,
+      });
+    }
   };
 
-  // Reset all rolls
-  const resetAllRolls = () => {
+  const clearParticipantRoll = (id: string) => {
+    if (!skill) return;
+    const p = skill.participants.find((x) => x.id === id);
+    const dSuccesses = p?.hasRolled && !p?.isHelping ? (p.successCount ?? 0) : 0;
+    const dFailures = p?.hasRolled && !p?.isHelping ? (p.failureCount ?? 0) : 0;
+    const updatedParticipants = skill.participants.map((x) => {
+      if (x.id !== id) return x;
+      return {
+        ...x,
+        rollValue: undefined,
+        successCount: undefined,
+        failureCount: undefined,
+        isSuccess: undefined,
+        hasRolled: false,
+      };
+    });
+    updateSkill({
+      participants: updatedParticipants,
+      currentSuccesses: Math.max(0, skill.currentSuccesses - dSuccesses),
+      currentFailures: Math.max(0, skill.currentFailures - dFailures),
+    });
+  };
+
+  const restartEncounter = () => {
     if (!skill) return;
     updateSkill({
       participants: skill.participants.map((p) => ({
         ...p,
         rollValue: undefined,
+        successCount: undefined,
+        failureCount: undefined,
         isSuccess: undefined,
         hasRolled: false,
-        skillUsed: undefined,
+        isHelping: false,
       })),
       currentSuccesses: 0,
       currentFailures: 0,
     });
-    setEncounter((prev) => prev ? { ...prev, status: 'active' } : prev);
-  };
-
-  // Start encounter
-  const startEncounter = () => {
-    setEncounter((prev) => prev ? { ...prev, status: 'active' } : prev);
-  };
-
-  // Mark complete
-  const completeEncounter = () => {
-    setEncounter((prev) => prev ? { ...prev, status: 'completed' } : prev);
   };
 
   if (isLoading) {
@@ -246,7 +306,6 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   return (
     <PageContainer size="xl">
-      {/* Header */}
       <div className="mb-6">
         <Link
           href="/encounters"
@@ -256,7 +315,45 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
         </Link>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary">{encounter.name}</h1>
+            {isEditingName ? (
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onBlur={() => {
+                  const trimmed = nameInput.trim();
+                  if (trimmed && trimmed !== encounter.name) {
+                    setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
+                  } else {
+                    setNameInput(encounter.name || '');
+                  }
+                  setIsEditingName(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const trimmed = nameInput.trim();
+                    if (trimmed && trimmed !== encounter.name) {
+                      setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
+                    }
+                    setIsEditingName(false);
+                  } else if (e.key === 'Escape') {
+                    setNameInput(encounter.name || '');
+                    setIsEditingName(false);
+                  }
+                }}
+                className="text-3xl font-bold text-text-primary bg-transparent border-b-2 border-primary-500 outline-none w-full max-w-md"
+                autoFocus
+              />
+            ) : (
+              <h1
+                className="text-3xl font-bold text-text-primary cursor-pointer hover:text-primary-600 hover:underline"
+                onClick={() => setIsEditingName(true)}
+                title="Click to edit encounter name"
+              >
+                {encounter.name}
+              </h1>
+            )}
+
             <p className="text-text-secondary">
               Skill Encounter{encounter.description ? ` \u2014 ${encounter.description}` : ''}
             </p>
@@ -276,79 +373,29 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
               )}
             </p>
           </div>
-
-          {/* Outcome badge */}
-          {outcome !== 'in-progress' && (
-            <div
-              className={cn(
-                'px-4 py-2 rounded-lg text-lg font-bold',
-                outcome === 'success'
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-              )}
-            >
-              {outcome === 'success' ? 'Success!' : 'Failure!'}
-            </div>
-          )}
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Area - Participants */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Progress Bars */}
-          <div className="bg-surface rounded-xl border border-border-light p-4 space-y-3">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-green-700 dark:text-green-300">
-                  Successes: {skill.currentSuccesses} / {skill.requiredSuccesses}
-                </span>
-                <span className="text-text-muted">{Math.round(successPercent)}%</span>
-              </div>
-              <div className="h-3 bg-surface-alt rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-green-500 rounded-full transition-all"
-                  style={{ width: `${successPercent}%` }}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-red-700 dark:text-red-300">
-                  Failures: {skill.currentFailures} / {skill.requiredFailures}
-                </span>
-                <span className="text-text-muted">{Math.round(failurePercent)}%</span>
-              </div>
-              <div className="h-3 bg-surface-alt rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-red-500 rounded-full transition-all"
-                  style={{ width: `${failurePercent}%` }}
-                />
-              </div>
-            </div>
+          {/* Success/Failure Tracker: failures left, neutral middle, successes right, bubbles */}
+          <div className="bg-surface rounded-xl border border-border-light p-4">
+            <h3 className="text-sm font-semibold text-text-secondary mb-3">Progress</h3>
+            <SuccessFailureTracker
+              successes={skill.currentSuccesses}
+              failures={skill.currentFailures}
+            />
           </div>
 
           {/* Action bar */}
           <div className="bg-surface rounded-xl border border-border-light p-4 flex flex-wrap items-center gap-3">
-            {encounter.status === 'preparing' && (
-              <Button onClick={startEncounter} disabled={skill.participants.length === 0}>
-                Start Encounter
-              </Button>
-            )}
-            {encounter.status === 'active' && (
-              <>
-                <Button variant="ghost" onClick={resetAllRolls}>
-                  <RotateCcw className="w-4 h-4" /> New Round
-                </Button>
-                {outcome !== 'in-progress' && (
-                  <Button onClick={completeEncounter}>Mark Complete</Button>
-                )}
-              </>
-            )}
+            <Button variant="ghost" onClick={restartEncounter}>
+              <RotateCcw className="w-4 h-4" /> Restart Encounter
+            </Button>
             <div className="ml-auto text-sm text-text-muted">
               {skill.participants.length} participant{skill.participants.length !== 1 ? 's' : ''}
-              {' \u00b7 '}
-              {skill.participants.filter((p) => p.hasRolled).length} rolled
+              {' · '}
+              {skill.participants.filter((p) => p.hasRolled || p.isHelping).length} acted
             </div>
           </div>
 
@@ -368,6 +415,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
                   onUpdateRoll={(val) => updateParticipantRoll(p.id, val)}
                   onUpdateSkill={(s) => updateParticipantSkill(p.id, s)}
                   onClearRoll={() => clearParticipantRoll(p.id)}
+                  onSetHelping={(v) => setParticipantHelping(p.id, v)}
                   onRemove={() => removeParticipant(p.id)}
                 />
               ))
@@ -375,69 +423,32 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           </div>
         </div>
 
-        {/* Sidebar - Configuration & Add */}
+        {/* Sidebar */}
         <div className="space-y-6">
-          {/* DS Configuration */}
           <div className="bg-surface rounded-xl border border-border-light p-6">
             <h3 className="font-bold text-text-primary mb-4 flex items-center gap-2">
               <Brain className="w-5 h-5 text-blue-500" /> Configuration
             </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Difficulty Score (DS)
-                </label>
-                <ValueStepper
-                  value={skill.difficultyScore}
-                  onChange={(val) => updateSkill({ difficultyScore: val })}
-                  min={1}
-                  max={40}
-                  size="sm"
-                  enableHoldRepeat
-                />
-                <p className="text-xs text-text-muted mt-1">
-                  Default: 10 + half party level. Roll &ge; DS = success.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Required Successes
-                </label>
-                <ValueStepper
-                  value={skill.requiredSuccesses}
-                  onChange={(val) => updateSkill({ requiredSuccesses: val })}
-                  min={1}
-                  max={50}
-                  size="sm"
-                  enableHoldRepeat
-                />
-                <p className="text-xs text-text-muted mt-1">
-                  Default: # participants + 1
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Required Failures
-                </label>
-                <ValueStepper
-                  value={skill.requiredFailures}
-                  onChange={(val) => updateSkill({ requiredFailures: val })}
-                  min={1}
-                  max={50}
-                  size="sm"
-                  enableHoldRepeat
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Difficulty Score (DS)
+              </label>
+              <ValueStepper
+                value={skill.difficultyScore}
+                onChange={(val) => updateSkill({ difficultyScore: val })}
+                min={1}
+                max={40}
+                size="sm"
+                enableHoldRepeat
+              />
+              <p className="text-xs text-text-muted mt-1">
+                Roll ≥ DS = success. Each 5 over/under adds extra success/failure.
+              </p>
             </div>
           </div>
 
-          {/* Add Participants */}
           <div className="bg-surface rounded-xl border border-border-light p-6">
             <h3 className="font-bold text-text-primary mb-4">Add Participants</h3>
-
             <Button
               variant="secondary"
               className="w-full mb-4"
@@ -445,7 +456,6 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
             >
               From Library / Campaign
             </Button>
-
             <div className="flex gap-2">
               <Input
                 value={newParticipantName}
@@ -459,29 +469,23 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
             </div>
           </div>
 
-          {/* Game Rules Reference */}
           <div className="bg-surface rounded-xl border border-border-light p-6">
             <h3 className="font-bold text-text-primary mb-3">Quick Reference</h3>
             <div className="space-y-2 text-xs text-text-muted">
               <p>
-                <strong className="text-text-secondary">Skill Encounter Action:</strong> Costs 2 AP
+                <strong className="text-text-secondary">Success:</strong> roll ≥ DS; +1 per 5 over
               </p>
               <p>
-                <strong className="text-text-secondary">Average DS:</strong> 10 + half party level
+                <strong className="text-text-secondary">Failure:</strong> roll &lt; DS; +1 per 5 under
               </p>
               <p>
-                <strong className="text-text-secondary">Required Successes:</strong> # characters + 1
-              </p>
-              <p>
-                <strong className="text-text-secondary">Power/Technique Bonus:</strong> +1 per 5
-                Energy cost
+                <strong className="text-text-secondary">Net:</strong> successes − failures
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Add Modal */}
       {showAddModal && (
         <AddCombatantModal
           onClose={() => setShowAddModal(false)}
@@ -494,9 +498,49 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   );
 }
 
-// ---------------------------------------------------------------------------
-// Participant Card
-// ---------------------------------------------------------------------------
+function SuccessFailureTracker({ successes, failures }: { successes: number; failures: number }) {
+  const net = successes - failures;
+  const maxBubbles = Math.max(10, successes + failures, Math.abs(net) + 4);
+  const failBubbles = Math.min(failures, maxBubbles);
+  const successBubbles = Math.min(successes, maxBubbles);
+
+  return (
+    <div className="flex items-center justify-center gap-2">
+      {/* Failures (left) */}
+      <div className="flex items-center gap-1">
+        {Array.from({ length: failBubbles }).map((_, i) => (
+          <div
+            key={`f-${i}`}
+            className="w-4 h-4 rounded-full bg-red-500 dark:bg-red-600"
+            title="Failure"
+          />
+        ))}
+        {failures > 0 && (
+          <span className="text-xs font-medium text-red-700 dark:text-red-300 ml-1">{failures}</span>
+        )}
+      </div>
+
+      {/* Neutral (middle) */}
+      <div className="px-4 py-2 rounded-lg bg-surface-alt text-text-muted text-sm font-medium min-w-[4rem] text-center">
+        {net === 0 ? '0' : net > 0 ? `+${net}` : net}
+      </div>
+
+      {/* Successes (right) */}
+      <div className="flex items-center gap-1">
+        {successes > 0 && (
+          <span className="text-xs font-medium text-green-700 dark:text-green-300 mr-1">{successes}</span>
+        )}
+        {Array.from({ length: successBubbles }).map((_, i) => (
+          <div
+            key={`s-${i}`}
+            className="w-4 h-4 rounded-full bg-green-500 dark:bg-green-600"
+            title="Success"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ParticipantCard({
   participant,
@@ -504,6 +548,7 @@ function ParticipantCard({
   onUpdateRoll,
   onUpdateSkill,
   onClearRoll,
+  onSetHelping,
   onRemove,
 }: {
   participant: SkillParticipant;
@@ -511,9 +556,12 @@ function ParticipantCard({
   onUpdateRoll: (value: number) => void;
   onUpdateSkill: (skill: string) => void;
   onClearRoll: () => void;
+  onSetHelping: (v: boolean) => void;
   onRemove: () => void;
 }) {
   const [rollInput, setRollInput] = useState('');
+  const hasActed = participant.hasRolled || participant.isHelping;
+  const isSuccess = (participant.successCount ?? 0) > 0;
 
   const submitRoll = () => {
     const val = parseInt(rollInput, 10);
@@ -526,17 +574,20 @@ function ParticipantCard({
     <div
       className={cn(
         'flex items-center gap-4 p-4 bg-surface rounded-xl border transition-colors',
-        participant.hasRolled
-          ? participant.isSuccess
-            ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10'
-            : 'border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-900/10'
-          : 'border-border-light'
+        participant.isHelping
+          ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/10'
+          : hasActed
+            ? isSuccess
+              ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10'
+              : 'border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-900/10'
+            : 'border-border-light'
       )}
     >
-      {/* Status icon */}
       <div className="flex-shrink-0">
-        {participant.hasRolled ? (
-          participant.isSuccess ? (
+        {participant.isHelping ? (
+          <span title="Helping (doesn't count)"><HandHelping className="w-6 h-6 text-amber-600" /></span>
+        ) : hasActed ? (
+          isSuccess ? (
             <CheckCircle2 className="w-6 h-6 text-green-600" />
           ) : (
             <XCircle className="w-6 h-6 text-red-600" />
@@ -546,7 +597,6 @@ function ParticipantCard({
         )}
       </div>
 
-      {/* Name & skill */}
       <div className="flex-1 min-w-0">
         <div className="font-medium text-text-primary">{participant.name}</div>
         <div className="flex items-center gap-2 mt-1">
@@ -557,28 +607,35 @@ function ParticipantCard({
             placeholder="Skill used..."
             className="text-xs bg-transparent border-b border-border-light text-text-secondary focus:border-primary-500 focus:outline-none px-0 py-0.5 w-32"
           />
-          {participant.notes && (
-            <span className="text-xs text-text-muted truncate">{participant.notes}</span>
+          {participant.hasRolled && participant.rollValue != null && (
+            <span className="text-xs text-text-muted">
+              {(participant.successCount ?? 0) > 0
+                ? `${participant.successCount}S`
+                : (participant.failureCount ?? 0) > 0
+                  ? `${participant.failureCount}F`
+                  : ''}
+            </span>
           )}
         </div>
       </div>
 
-      {/* Roll input or result */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {participant.hasRolled ? (
+        {participant.isHelping ? (
+          <Button size="sm" variant="ghost" onClick={() => onSetHelping(false)}>
+            Undo Helping
+          </Button>
+        ) : participant.hasRolled ? (
           <>
             <div
               className={cn(
                 'px-3 py-1 rounded-lg font-bold text-sm',
-                participant.isSuccess
+                isSuccess
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
               )}
             >
               {participant.rollValue}
-              <span className="text-xs font-normal ml-1">
-                vs {ds}
-              </span>
+              <span className="text-xs font-normal ml-1">vs {ds}</span>
             </div>
             <button
               onClick={onClearRoll}
@@ -595,17 +652,24 @@ function ParticipantCard({
               value={rollInput}
               onChange={(e) => setRollInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && submitRoll()}
-              placeholder="Roll"
+              placeholder="Total"
               className="w-16 px-2 py-1 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-500 focus:outline-none"
             />
             <Button size="sm" onClick={submitRoll} disabled={!rollInput}>
-              Roll
+              Submit
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onSetHelping(true)}
+              title="Mark as helping — doesn't count toward encounter"
+            >
+              <HandHelping className="w-4 h-4" />
             </Button>
           </>
         )}
       </div>
 
-      {/* Remove */}
       <button
         onClick={onRemove}
         className="p-1.5 text-text-muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"

@@ -19,6 +19,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase/client';
+import { removeUndefined } from '@/lib/utils/object';
 import type { Encounter, EncounterSummary } from '@/types/encounter';
 
 function requireUserId(): string {
@@ -103,11 +104,12 @@ export async function createEncounter(
   data: Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> {
   const userId = requireUserId();
-  const docRef = await addDoc(encountersCollection(userId), {
+  const clean = removeUndefined({
     ...data,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  } as Record<string, unknown>);
+  const docRef = await addDoc(encountersCollection(userId), clean);
   return docRef.id;
 }
 

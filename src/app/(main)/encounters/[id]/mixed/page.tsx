@@ -239,8 +239,10 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   const outcome = useMemo(() => {
     if (!skill) return 'in-progress';
-    if (skill.currentSuccesses >= skill.requiredSuccesses) return 'success';
-    if (skill.currentFailures >= skill.requiredFailures) return 'failure';
+    const reqS = skill.requiredSuccesses ?? 999;
+    const reqF = skill.requiredFailures ?? 999;
+    if (skill.currentSuccesses >= reqS) return 'success';
+    if (skill.currentFailures >= reqF) return 'failure';
     return 'in-progress';
   }, [skill]);
 
@@ -395,15 +397,15 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
             <div className="bg-surface rounded-xl border border-border-light p-4 space-y-3">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-green-700 dark:text-green-300">Successes: {skill.currentSuccesses} / {skill.requiredSuccesses}</span>
+                  <span className="font-medium text-green-700 dark:text-green-300">Successes: {skill.currentSuccesses} / {skill.requiredSuccesses ?? '—'}</span>
                 </div>
-                <div className="h-3 bg-surface-alt rounded-full overflow-hidden"><div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.min(100, (skill.currentSuccesses / skill.requiredSuccesses) * 100)}%` }} /></div>
+                <div className="h-3 bg-surface-alt rounded-full overflow-hidden"><div className="h-full bg-green-500 rounded-full transition-all" style={{ width: Math.min(100, ((skill.requiredSuccesses ?? 1) > 0 ? (skill.currentSuccesses / (skill.requiredSuccesses ?? 1)) * 100 : 0)) + '%' }}></div></div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-red-700 dark:text-red-300">Failures: {skill.currentFailures} / {skill.requiredFailures}</span>
+                  <span className="font-medium text-red-700 dark:text-red-300">Failures: {skill.currentFailures} / {skill.requiredFailures ?? '—'}</span>
                 </div>
-                <div className="h-3 bg-surface-alt rounded-full overflow-hidden"><div className="h-full bg-red-500 rounded-full transition-all" style={{ width: `${Math.min(100, (skill.currentFailures / skill.requiredFailures) * 100)}%` }} /></div>
+                <div className="h-3 bg-surface-alt rounded-full overflow-hidden"><div className="h-full bg-red-500 rounded-full transition-all" style={{ width: Math.min(100, ((skill.requiredFailures ?? 1) > 0 ? (skill.currentFailures / (skill.requiredFailures ?? 1)) * 100 : 0)) + '%' }}></div></div>
               </div>
               {outcome !== 'in-progress' && (
                 <div className={cn('text-center py-2 rounded-lg font-bold', outcome === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300')}>
@@ -437,11 +439,11 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Required Successes</label>
-                  <ValueStepper value={skill.requiredSuccesses} onChange={v => updateSkill({ requiredSuccesses: v })} min={1} max={50} size="sm" enableHoldRepeat />
+                  <ValueStepper value={skill.requiredSuccesses ?? 2} onChange={v => updateSkill({ requiredSuccesses: v })} min={1} max={50} size="sm" enableHoldRepeat />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Required Failures</label>
-                  <ValueStepper value={skill.requiredFailures} onChange={v => updateSkill({ requiredFailures: v })} min={1} max={50} size="sm" enableHoldRepeat />
+                  <ValueStepper value={skill.requiredFailures ?? 3} onChange={v => updateSkill({ requiredFailures: v })} min={1} max={50} size="sm" enableHoldRepeat />
                 </div>
               </div>
             </div>

@@ -5,6 +5,19 @@
  * Based on formulas from GAME_RULES.md and formulas.ts.
  */
 
+/**
+ * Compute successes or failures from a skill roll vs Difficulty Score.
+ * Per GAME_RULES: Success = roll >= DS (+1 per 5 over); Failure = roll < DS (+1 per 5 under).
+ */
+export function computeSkillRollResult(roll: number, ds: number): { successes: number; failures: number } {
+  if (roll >= ds) {
+    const successes = 1 + Math.floor((roll - ds) / 5);
+    return { successes, failures: 0 };
+  }
+  const failures = 1 + Math.floor((ds - roll) / 5);
+  return { successes: 0, failures };
+}
+
 import { calculateHealthEnergyPool } from './formulas';
 import { CREATURE_CONSTANTS } from './constants';
 

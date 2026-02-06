@@ -33,9 +33,15 @@ export interface SkillParticipant {
   name: string;
   hasRolled: boolean;
   rollValue?: number;
-  isSuccess?: boolean;
+  /** Successes contributed by this roll (1 + floor((roll-DS)/5) when roll >= DS) */
+  successCount?: number;
+  /** Failures contributed by this roll (1 + floor((DS-roll)/5) when roll < DS) */
+  failureCount?: number;
+  isSuccess?: boolean; // legacy, derived from successCount > 0
   skillUsed?: string;
   notes?: string;
+  /** When true, participant helped but roll doesn't count toward encounter totals */
+  isHelping?: boolean;
   /** Source tracking */
   sourceType?: CombatantSource;
   sourceId?: string;
@@ -45,16 +51,16 @@ export interface SkillParticipant {
 export interface SkillEncounterState {
   /** Difficulty Score — default: 10 + floor(partyLevel / 2) */
   difficultyScore: number;
-  /** Required successes — default: # participants + 1 */
-  requiredSuccesses: number;
-  /** Required failures — configurable by RM */
-  requiredFailures: number;
   /** Participants in the skill encounter */
   participants: SkillParticipant[];
-  /** Running total of successes */
+  /** Running total of successes (each 5 over DS = +1) */
   currentSuccesses: number;
-  /** Running total of failures */
+  /** Running total of failures (each 5 under DS = +1). Net = successes - failures */
   currentFailures: number;
+  /** @deprecated Legacy: optional target for successes (mixed page) */
+  requiredSuccesses?: number;
+  /** @deprecated Legacy: optional target for failures (mixed page) */
+  requiredFailures?: number;
 }
 
 /** Full encounter document stored in Firestore */
@@ -114,8 +120,6 @@ export function createDefaultEncounter(
       ? {
           skillEncounter: {
             difficultyScore: 10,
-            requiredSuccesses: 2,
-            requiredFailures: 3,
             participants: [],
             currentSuccesses: 0,
             currentFailures: 0,
