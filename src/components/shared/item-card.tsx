@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { Check, Edit, Copy, Eye, AlertCircle, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import type { DisplayItem, ListMode, ItemActions } from '@/types/items';
@@ -67,19 +68,17 @@ export function ItemCard({
 
   return (
     <div
-      className={`
-        rounded-lg border transition-all duration-200
-        ${item.isSelected 
+      className={cn(
+        'rounded-lg border transition-all duration-200',
+        item.isSelected 
           ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500' 
-          : 'border-border-light bg-surface hover:border-primary-300'
-        }
-        ${item.isDisabled 
+          : 'border-border-light bg-surface hover:border-primary-300',
+        item.isDisabled 
           ? 'opacity-50 cursor-not-allowed' 
-          : isSelectable || hasDetails ? 'cursor-pointer' : ''
-        }
-        ${compact ? 'p-2' : 'p-3'}
-        ${className}
-      `}
+          : (isSelectable || hasDetails) && 'cursor-pointer',
+        compact ? 'p-2' : 'p-3',
+        className
+      )}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={isSelectable && !item.isDisabled ? 0 : undefined}
@@ -110,7 +109,7 @@ export function ItemCard({
           
           {/* Name and subtitle */}
           <div className="min-w-0 flex-1">
-            <h3 className={`font-medium text-text-primary truncate ${compact ? 'text-sm' : ''}`}>
+            <h3 className={cn('font-medium text-text-primary truncate', compact && 'text-sm')}>
               {item.name}
             </h3>
             {item.subtitle && (
@@ -193,11 +192,11 @@ export function ItemCard({
       
       {/* Badges row */}
       {item.badges && item.badges.length > 0 && (
-        <div className={`flex flex-wrap gap-1 ${compact ? 'mt-1' : 'mt-2'}`}>
+        <div className={cn('flex flex-wrap gap-1', compact ? 'mt-1' : 'mt-2')}>
           {item.badges.map((badge, i) => (
             <span 
               key={i}
-              className={`text-xs px-2 py-0.5 rounded-full ${badgeVariants[badge.variant]}`}
+              className={cn('text-xs px-2 py-0.5 rounded-full', badgeVariants[badge.variant])}
             >
               {badge.label}
             </span>

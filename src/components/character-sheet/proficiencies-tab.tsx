@@ -303,7 +303,7 @@ function ProficiencySection({ title, profs }: ProficiencySectionProps) {
               
               return (
                 <Chip
-                  key={index}
+                  key={prof.name + (prof.damageType || '')}
                   variant="proficiency"
                   size="sm"
                   title={prof.description || `${label} - TP: ${tp}`}

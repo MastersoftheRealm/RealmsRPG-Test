@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { Search, SortAsc, SortDesc, Filter, Grid, List, X } from 'lucide-react';
 import { Spinner, Button, IconButton } from '@/components/ui';
 import { ItemCard } from './item-card';
-import type { DisplayItem, ListMode, ItemActions, FilterOption, SortOption, FilterState, SortState } from '@/types/items';
+import type { DisplayItem, ListMode, ItemActions, FilterOption, SortOption, FilterState, ItemSortState } from '@/types/items';
 
 interface ItemListProps {
   items: DisplayItem[];
@@ -26,7 +26,7 @@ interface ItemListProps {
   // Filtering & Sorting
   filterOptions?: FilterOption[];
   sortOptions?: SortOption[];
-  defaultSort?: SortState;
+  defaultSort?: ItemSortState;
   
   // Search
   searchable?: boolean;
@@ -77,7 +77,7 @@ export function ItemList({
   // Local state
   const [internalSelectedIds, setInternalSelectedIds] = useState<Set<string>>(new Set());
   const [filterState, setFilterState] = useState<FilterState>({ search: '' });
-  const [sortState, setSortState] = useState<SortState>(defaultSort);
+  const [sortState, setSortState] = useState<ItemSortState>(defaultSort);
   const [currentLayout, setCurrentLayout] = useState(layout);
   const [showFilters, setShowFilters] = useState(false);
   

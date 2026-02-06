@@ -24,7 +24,8 @@
 import { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ABILITY_ABBR, ABILITY_OPTIONS, formatBonus } from '@/lib/constants/skills';
+import { ABILITY_ABBR, ABILITY_OPTIONS } from '@/lib/constants/skills';
+import { formatBonus } from '@/lib/utils';
 import { IconButton } from '@/components/ui';
 import { ValueStepper, RollButton } from '@/components/shared';
 

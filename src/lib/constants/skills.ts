@@ -38,7 +38,3 @@ export const ABILITY_FILTER_OPTIONS = [
 /** Type for ability option values */
 export type AbilityValue = typeof ABILITY_OPTIONS[number]['value'];
 
-/** Format a bonus number with +/- sign */
-export function formatBonus(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`;
-}

@@ -24,7 +24,8 @@ import { changeUsernameAction } from '@/app/(auth)/actions';
 import { auth, db, storage } from '@/lib/firebase/client';
 import { useAuthStore } from '@/stores';
 import { ProtectedRoute } from '@/components/layout';
-import { LoadingState, Button, Input, Alert, PageContainer } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { LoadingState, Button, Input, Alert, PageContainer, Spinner } from '@/components/ui';
 import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
@@ -332,7 +333,7 @@ function AccountContent() {
             )}
             {uploadingPicture && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <Spinner size="sm" variant="white" />
               </div>
             )}
           </div>
@@ -348,7 +349,7 @@ function AccountContent() {
             </Button>
             <p className="text-xs text-text-muted mt-1">JPG, PNG, GIF, or WebP. Max 5MB.</p>
             {pictureMessage && (
-              <p className={`text-xs mt-1 ${pictureMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={cn('text-xs mt-1', pictureMessage.type === 'success' ? 'text-green-600' : 'text-red-600')}>
                 {pictureMessage.text}
               </p>
             )}

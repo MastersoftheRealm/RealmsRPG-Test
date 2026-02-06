@@ -173,6 +173,27 @@ Append-only log. Agents must add an entry for each PR/merge.
   - TASK-035: Added type column and rarity/cost badges to equipment rows, enabled quantity editing outside edit mode, added description prop and compact mode
   - TASK-033: Rewrote chip expansion to expand inline (same chip grows with description below label, maintaining category colors), tag chips non-expandable, removed separate detail bubble
 
+- 2026-02-06 | agent:claude-opus | Session: Codebase Health Audit — Dead Code, Deduplication, Unification, Best Practices | files: lib/utils/*.ts, lib/utils/index.ts, lib/constants/skills.ts, lib/constants/colors.ts (deleted), lib/item-transformers.ts, components/shared/list-components.tsx, components/shared/list-header.tsx, components/shared/index.ts, components/shared/item-card.tsx, components/shared/grid-list-row.tsx, components/shared/roll-button.tsx, components/shared/skill-row.tsx, components/shared/unified-selection-modal.tsx, components/shared/item-list.tsx, components/shared/part-chip.tsx, components/creator/ability-score-editor.tsx, components/creator/LoadFromLibraryModal.tsx, components/character-sheet/abilities-section.tsx, components/character-sheet/roll-log.tsx, components/character-sheet/notes-tab.tsx, components/character-sheet/add-library-item-modal.tsx, components/character-sheet/proficiencies-tab.tsx, components/character-creator/steps/skills-step.tsx, components/character-creator/steps/species-step.tsx, components/character-creator/steps/finalize-step.tsx, app/(main)/codex/page.tsx, app/(main)/library/page.tsx, app/(main)/my-account/page.tsx, app/(auth)/login/page.tsx, app/(auth)/register/page.tsx, types/items.ts, types/index.ts | TASKs: TASK-090 | Summary:
+  - Consolidated 6 duplicate formatBonus functions into single canonical export in lib/utils/number.ts
+  - Removed ~60 unused utility exports from array.ts, number.ts, string.ts, object.ts (dead code)
+  - Consolidated 3 duplicate SortState type definitions into canonical export from list-header.tsx; renamed items.ts version to ItemSortState
+  - Removed deprecated/unused list-components exports (SimpleEmptyState, LoadingSpinner, ResultsCount, ListContainer)
+  - Deleted entirely unused lib/constants/colors.ts (BADGE_COLORS, ROLL_TYPE_COLORS, getCategoryClasses — never imported)
+  - Replaced 8 custom spinner implementations with shared Spinner component
+  - Replaced 6 inline textareas with Textarea component
+  - Fixed 6 hardcoded neutral-* colors in roll-log.tsx with design tokens
+  - Converted 6 template-literal classNames to cn() utility (item-card, recovery-modal, my-account)
+  - Fixed index-as-key in proficiencies-tab, grid-list-row, part-chip with stable keys
+  - Removed 2 console.debug statements from lib/firebase/client.ts (production cleanup)
+  - Created 7 follow-up tasks (TASK-091 through TASK-097) for remaining consolidation opportunities:
+    TASK-091: Extract useSort hook (eliminates 20+ duplicate toggleSort/handleSort)
+    TASK-092: Import SortState type from shared (11 inline definitions)
+    TASK-093: Remaining template literal → cn() conversions (9 instances)
+    TASK-094: Inline button → Button component (5 instances)
+    TASK-095: Raw inputs → Input/SearchInput (2 instances)
+    TASK-096: Split large page components >1000 lines (6 files)
+    TASK-097: Unify filter component className patterns (5 files)
+
 Entry format (required fields on task completion):
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 

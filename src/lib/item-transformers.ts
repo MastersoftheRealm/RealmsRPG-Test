@@ -6,18 +6,8 @@
  */
 
 import type { DisplayItem, TransformContext, ItemBadge, ItemStat, ItemDetail } from '@/types/items';
-import { formatDamageDisplay } from '@/lib/utils/string';
-
-// Helper: Format number with sign
-export function formatBonus(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`;
-}
-
-// Helper: Capitalize first letter
-export function capitalize(str: string): string {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
+import { formatDamageDisplay, capitalize } from '@/lib/utils/string';
+import { formatBonus } from '@/lib/utils/number';
 
 // Helper: Format currency
 export function formatCurrency(amount: number): string {

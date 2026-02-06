@@ -26,6 +26,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
+import { formatBonus } from '@/lib/utils';
 
 const rollButtonVariants = cva(
   // Base styles - consistent across all variants
@@ -89,13 +90,6 @@ const rollButtonVariants = cva(
     },
   }
 );
-
-/**
- * Format a number as a bonus string (+X or -X)
- */
-function formatBonus(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`;
-}
 
 export interface RollButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'>,

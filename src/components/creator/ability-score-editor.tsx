@@ -18,7 +18,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatBonus } from '@/lib/utils';
 import { PointStatus, DecrementButton, IncrementButton } from '@/components/shared';
 import type { AbilityName, Abilities } from '@/types';
 
@@ -61,10 +61,6 @@ const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; descr
   intelligence: { name: 'Intelligence', shortName: 'INT', description: 'Knowledge and mental power' },
   charisma: { name: 'Charisma', shortName: 'CHA', description: 'Social influence and presence' },
 };
-
-function formatBonus(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`;
-}
 
 /**
  * Calculate total point cost for an ability value.

@@ -94,7 +94,7 @@ export interface FilterState {
   [key: string]: string | string[] | boolean | number | [number, number] | undefined;
 }
 
-export interface SortState {
+export interface ItemSortState {
   field: string;
   direction: 'asc' | 'desc';
 }

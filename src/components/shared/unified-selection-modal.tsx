@@ -16,9 +16,9 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Modal, Button, IconButton } from '@/components/ui';
+import { Modal, Button, IconButton, Spinner } from '@/components/ui';
 import { 
   GridListRow, 
   SearchInput, 
@@ -307,7 +307,7 @@ export function UnifiedSelectionModal({
         <div className="flex-1 overflow-y-auto border border-border-light rounded-lg">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+              <Spinner size="md" />
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-text-muted">

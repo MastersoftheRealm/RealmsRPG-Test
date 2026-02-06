@@ -72,24 +72,22 @@ export {
   SearchInput,
   SortHeader,
   FilterSection,
-  ResultsCount,
   ColumnHeaders,
-  ListContainer,
   EmptyState as ListEmptyState,
-  LoadingSpinner,
+  LoadingState,
   ErrorDisplay,
 } from './list-components';
 export type { 
   SearchInputProps, 
-  SortState, 
   SortHeaderProps, 
   FilterSectionProps,
-  ResultsCountProps,
   ColumnHeaderProps,
-  ListContainerProps,
   EmptyStateProps,
   ErrorDisplayProps,
 } from './list-components';
+
+// SortState canonical export — from list-header.tsx
+export type { SortState } from './list-header';
 
 // Creature components
 export { CreatureStatBlock } from './creature-stat-block';

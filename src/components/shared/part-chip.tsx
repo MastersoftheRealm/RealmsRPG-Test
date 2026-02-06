@@ -221,7 +221,7 @@ export function PartChipList({
       <div className="flex flex-wrap gap-2">
         {parts.map((part, index) => (
           <PartChip
-            key={index}
+            key={`${part.name}-${index}`}
             part={part}
             size={size}
             isExpanded={expandedIndex === index}

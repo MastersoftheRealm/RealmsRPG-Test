@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Types Index
  * ============
  * Export all TypeScript types
@@ -82,7 +82,7 @@ export type {
   FilterOption,
   SortOption,
   FilterState,
-  SortState,
+  ItemSortState,
   ItemCategory,
   ItemTransformer,
   TransformContext,

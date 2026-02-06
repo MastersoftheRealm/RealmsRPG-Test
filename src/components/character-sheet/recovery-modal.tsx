@@ -376,7 +376,7 @@ export function RecoveryModal({
                   <div>
                     <div className="text-xs text-text-muted">Health</div>
                     <div className="font-bold">
-                      {currentHealth} → <span className={hpRestored > 0 ? 'text-green-600' : 'text-text-muted'}>{newHealth}</span>
+                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-green-600' : 'text-text-muted')}>{newHealth}</span>
                     </div>
                     <div className="text-xs text-green-600">
                       +{hpRestored} HP ({currentAllocation.hp}/{totalQuarters} quarters)
@@ -390,7 +390,7 @@ export function RecoveryModal({
                   <div>
                     <div className="text-xs text-text-muted">Energy</div>
                     <div className="font-bold">
-                      {currentEnergy} → <span className={enRestored > 0 ? 'text-green-600' : 'text-text-muted'}>{newEnergy}</span>
+                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-green-600' : 'text-text-muted')}>{newEnergy}</span>
                     </div>
                     <div className="text-xs text-green-600">
                       +{enRestored} EN ({currentAllocation.en}/{totalQuarters} quarters)
@@ -426,7 +426,7 @@ export function RecoveryModal({
           <Button 
             variant="primary" 
             onClick={handleConfirm}
-            className={mode === 'full' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700'}
+            className={cn(mode === 'full' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700')}
           >
             {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
           </Button>

@@ -571,7 +571,7 @@ export function GridListRow({
                       const isExpandable = !!(chip.description || hasCost) && category !== 'tag';
                       return (
                         <button
-                          key={index}
+                          key={`${chip.name}-${category}-${index}`}
                           onClick={isExpandable ? (e) => handleChipClick(index, e) : (e) => e.stopPropagation()}
                           className={cn(
                             'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',

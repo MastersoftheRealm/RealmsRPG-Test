@@ -8,9 +8,9 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { X, FileText, Zap, Sword, Shield, Loader2 } from 'lucide-react';
+import { X, FileText, Zap, Sword, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SearchInput, IconButton, Alert, Modal } from '@/components/ui';
+import { SearchInput, IconButton, Alert, Modal, Spinner } from '@/components/ui';
 import { GridListRow, ListHeader, type SortState } from '@/components/shared';
 
 export type LibraryItemType = 'power' | 'technique' | 'item' | 'creature';
@@ -144,7 +144,7 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
       <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+            <Spinner size="md" />
           </div>
         ) : error ? (
           <Alert variant="danger" className="mx-4">

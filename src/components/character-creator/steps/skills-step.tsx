@@ -14,7 +14,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useRTDBSkills, useSpecies, type RTDBSkill } from '@/hooks';
 import { calculateSkillPoints, calculateSkillBonusWithProficiency } from '@/lib/game/formulas';
 import { SkillRow } from '@/components/shared';
-import { Button, Alert } from '@/components/ui';
+import { Button, Alert, Spinner } from '@/components/ui';
 
 const ABILITY_ORDER = ['Strength', 'Vitality', 'Agility', 'Acuity', 'Intelligence', 'Charisma'];
 
@@ -179,7 +179,7 @@ export function SkillsStep() {
   if (isLoading) {
     return (
       <div className="max-w-4xl mx-auto flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+        <Spinner size="md" />
       </div>
     );
   }

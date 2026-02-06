@@ -12,7 +12,6 @@
 import { useState } from 'react';
 import { ChevronDown, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Spinner } from '@/components/ui/spinner';
 
 // Re-export SearchInput from UI for backward compatibility
 // Use the fully-featured version from ui/search-input
@@ -30,10 +29,9 @@ export interface SearchInputProps {
 // Sort Header
 // =============================================================================
 
-export interface SortState {
-  col: string;
-  dir: 1 | -1;
-}
+// SortState re-exported from list-header.tsx (canonical location)
+import type { SortState } from './list-header';
+export type { SortState } from './list-header';
 
 export interface SortHeaderProps {
   label: string;
@@ -107,32 +105,6 @@ export function FilterSection({
 }
 
 // =============================================================================
-// Results Count
-// =============================================================================
-
-export interface ResultsCountProps {
-  count: number;
-  itemLabel?: string;
-  isLoading?: boolean;
-}
-
-export function ResultsCount({ 
-  count, 
-  itemLabel = 'item', 
-  isLoading = false 
-}: ResultsCountProps) {
-  if (isLoading) {
-    return <div className="text-sm text-text-muted mb-4">Loading...</div>;
-  }
-  
-  return (
-    <div className="text-sm text-text-muted mb-4">
-      {count} {itemLabel}{count !== 1 ? 's' : ''} found
-    </div>
-  );
-}
-
-// =============================================================================
 // Column Headers (for table-like lists)
 // =============================================================================
 
@@ -176,34 +148,6 @@ export function ColumnHeaders({
 }
 
 // =============================================================================
-// List Container
-// =============================================================================
-
-export interface ListContainerProps {
-  children: React.ReactNode;
-  hasHeader?: boolean;
-  className?: string;
-}
-
-export function ListContainer({ 
-  children, 
-  hasHeader = true,
-  className,
-}: ListContainerProps) {
-  return (
-    <div 
-      className={cn(
-        'flex flex-col gap-1',
-        hasHeader ? 'rounded-b-lg mt-2' : 'rounded-lg',
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-// =============================================================================
 // Empty State - Re-export from ui/ for backward compatibility
 // =============================================================================
 
@@ -212,55 +156,10 @@ export function ListContainer({
 export { EmptyState } from '@/components/ui/empty-state';
 export type { EmptyStateProps } from '@/components/ui/empty-state';
 
-// Legacy simplified EmptyState kept as SimpleEmptyState for any edge cases
-export interface LegacyEmptyStateProps {
-  icon?: React.ReactNode;
-  title: string;
-  message?: string;
-  action?: React.ReactNode;
-}
-
-/** @deprecated Use EmptyState from '@/components/ui' instead */
-export function SimpleEmptyState({ 
-  icon, 
-  title, 
-  message, 
-  action 
-}: LegacyEmptyStateProps) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      {icon && (
-        <div className="w-16 h-16 mb-4 rounded-full bg-surface-alt flex items-center justify-center text-text-muted">
-          {icon}
-        </div>
-      )}
-      <h3 className="text-lg font-medium text-text-primary mb-2">{title}</h3>
-      {message && (
-        <p className="text-text-muted mb-6 max-w-sm">{message}</p>
-      )}
-      {action}
-    </div>
-  );
-}
-
 // =============================================================================
 // Loading State - Re-export from ui/ for backward compatibility
 // =============================================================================
-
-// Re-export LoadingState from ui/spinner for consistency
 export { LoadingState } from '@/components/ui/spinner';
-
-/** 
- * @deprecated Use LoadingState from '@/components/ui/spinner' instead 
- * Kept for backward compatibility with existing imports
- */
-export function LoadingSpinner({ className }: { className?: string }) {
-  return (
-    <div className={cn('flex items-center justify-center py-12', className)}>
-      <Spinner size="md" />
-    </div>
-  );
-}
 
 // =============================================================================
 // Error State

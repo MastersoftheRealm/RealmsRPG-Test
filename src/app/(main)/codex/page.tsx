@@ -21,7 +21,7 @@ import {
 import {
   SearchInput,
   SortHeader,
-  LoadingSpinner as LoadingState,
+  LoadingState,
   ErrorDisplay as ErrorState,
   PropertyChipList,
   GridListRow,

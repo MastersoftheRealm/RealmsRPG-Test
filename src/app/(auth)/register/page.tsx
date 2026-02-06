@@ -17,6 +17,7 @@ import { doc, setDoc, Firestore } from 'firebase/firestore';
 import { waitForFirebase, auth as firebaseAuth, db as firebaseDb } from '@/lib/firebase/client';
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
+import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
 
 function RegisterContent() {
@@ -263,7 +264,7 @@ export default function RegisterPage() {
     <Suspense fallback={
       <AuthCard title="Join the Adventure" subtitle="Create your account to begin">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500" />
+          <Spinner size="md" />
         </div>
       </AuthCard>
     }>

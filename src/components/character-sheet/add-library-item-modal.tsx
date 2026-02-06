@@ -8,9 +8,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { Modal, SearchInput, Button } from '@/components/ui';
+import { Modal, SearchInput, Button, Spinner } from '@/components/ui';
 import { GridListRow, QuantitySelector, ListHeader } from '@/components/shared';
 import type { SortState } from '@/components/shared';
 import { formatDamageDisplay } from '@/lib/utils';
@@ -252,7 +252,7 @@ export function AddLibraryItemModal({
         <div className="flex-1 overflow-y-auto border border-border-light rounded-lg">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+              <Spinner size="md" />
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-text-muted">

@@ -278,7 +278,7 @@ export function RollLog({ className }: RollLogProps) {
             className={cn(
               'w-full py-2.5 rounded-lg font-bold text-white transition-all text-sm',
               'bg-success-600 hover:bg-success-700 focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2',
-              'disabled:bg-neutral-500 disabled:cursor-not-allowed disabled:opacity-70'
+              'disabled:bg-text-muted disabled:cursor-not-allowed disabled:opacity-70'
             )}
           >
             {totalDice > 0 ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}` : 'Select dice to roll'}
@@ -355,7 +355,7 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         {/* Dice notation + roll value (light grey) */}
         {diceGroups.map((group, gi) => (
           <div key={gi} className="flex items-center gap-1">
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 text-xs font-medium">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt text-text-secondary text-xs font-medium">
               <Image
                 src={DIE_IMAGES[group.type]}
                 alt={group.type}
@@ -375,12 +375,12 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
                         'border',
                         die.isMax && 'bg-green-100 border-green-500 text-green-800',
                         die.isMin && 'bg-red-100 border-red-500 text-red-800',
-                        !die.isMax && !die.isMin && 'bg-neutral-100 text-neutral-600 border-neutral-300'
+                        !die.isMax && !die.isMin && 'bg-surface-alt text-text-secondary border-border-light'
                       )
                     : cn(
                         die.isMax ? 'bg-green-100 border border-green-400 text-green-800' :
                         die.isMin ? 'bg-red-100 border border-red-400 text-red-800' :
-                        'bg-neutral-100 text-neutral-600 border border-neutral-300'
+                        'bg-surface-alt text-text-secondary border border-border-light'
                       )
                 )}
               >
@@ -393,7 +393,7 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         {/* + Bonus (green) when modifier present */}
         {showModifier && (
           <>
-            <span className="text-neutral-400 text-xs">+</span>
+            <span className="text-text-muted text-xs">+</span>
             <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-success-50 text-success-700 text-xs font-semibold border border-success-200">
               {roll.modifier > 0 ? '+' : ''}{roll.modifier}
             </span>
@@ -403,7 +403,7 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         {/* = Total (blue) */}
         {(showSubtotal || roll.dice.length === 1) && (
           <>
-            <span className="text-neutral-400 text-xs">=</span>
+            <span className="text-text-muted text-xs">=</span>
             <span className={cn(
               'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold',
               roll.isCrit && 'bg-green-100 border border-green-400 text-green-800',

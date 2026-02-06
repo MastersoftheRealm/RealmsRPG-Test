@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Firebase Client-Side Configuration
  * ===================================
  * Client-side Firebase initialization for use in React components.
@@ -88,8 +88,7 @@ async function initializeFirebaseClient() {
       isTokenAutoRefreshEnabled: true
     });
   } catch (appCheckError) {
-    // App Check may already be initialized
-    console.debug('App Check initialization skipped:', appCheckError);
+    // App Check may already be initialized — silently skip
   }
   
   return { app, auth, db, rtdb, storage, functions, appCheck };
@@ -127,8 +126,7 @@ function suppressConnectionWarnings() {
         message.includes('message channel closed before a response was received') ||
         message.includes('WebSocket connection to') && message.includes('failed')
       ) {
-        // Log at debug level instead
-        console.debug('[Firebase Connection]', ...args);
+        // Suppress benign Firebase connection noise
         return;
       }
     }

@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Chip, Button, Alert } from '@/components/ui';
+import { Chip, Button, Alert, Spinner } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useSpecies, useTraits, type Species } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
@@ -42,7 +42,7 @@ export function SpeciesStep() {
   if (speciesLoading) {
     return (
       <div className="max-w-4xl mx-auto flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+        <Spinner size="md" />
       </div>
     );
   }

@@ -22,8 +22,7 @@ import {
   SearchInput,
   SortHeader,
   ColumnHeaders,
-  ListContainer,
-  LoadingSpinner,
+  LoadingState,
   ErrorDisplay,
   ListEmptyState,
   type ChipData,
@@ -359,7 +358,7 @@ function PowersTab({ onDelete }: TabProps) {
       {/* Power List */}
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
-          <LoadingSpinner />
+          <LoadingState />
         ) : filteredData.length === 0 ? (
           <div className="py-12 text-center text-text-muted">No powers match your search.</div>
         ) : (
@@ -542,7 +541,7 @@ function TechniquesTab({ onDelete }: TabProps) {
       {/* Technique List */}
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
-          <LoadingSpinner />
+          <LoadingState />
         ) : filteredData.length === 0 ? (
           <div className="py-12 text-center text-text-muted">No techniques match your search.</div>
         ) : (
@@ -798,7 +797,7 @@ function ItemsTab({ onDelete }: TabProps) {
       {/* Armament List */}
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
-          <LoadingSpinner />
+          <LoadingState />
         ) : filteredData.length === 0 ? (
           <div className="py-12 text-center text-text-muted">No armaments match your search.</div>
         ) : (
@@ -914,7 +913,7 @@ function CreaturesTab({ onDelete }: TabProps) {
       />
       
       {isLoading ? (
-        <LoadingSpinner />
+        <LoadingState />
       ) : filteredCreatures.length === 0 ? (
         <div className="py-12 text-center text-text-muted">No creatures match your search.</div>
       ) : (

@@ -15,7 +15,7 @@
 import { useState, useCallback } from 'react';
 import { Plus, X, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { IconButton } from '@/components/ui';
+import { IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
 import type { Abilities } from '@/types';
@@ -123,11 +123,11 @@ function NoteCard({
       {/* Content - always editable */}
       {isExpanded && (
         <div className="p-3">
-          <textarea
+          <Textarea
             value={note.content}
             onChange={(e) => onUpdate?.({ content: e.target.value })}
             placeholder="Write your note here..."
-            className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
+            className="min-h-[80px]"
           />
         </div>
       )}
@@ -276,33 +276,33 @@ export function NotesTab({
       {/* Appearance - always editable */}
       <div>
         <SectionHeader title="Appearance" />
-        <textarea
+        <Textarea
           value={appearance}
           onChange={(e) => onAppearanceChange?.(e.target.value)}
           placeholder="Describe your character's appearance..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
+          className="min-h-[80px]"
         />
       </div>
 
       {/* Archetype Description - always editable */}
       <div>
         <SectionHeader title="Archetype Description" />
-        <textarea
+        <Textarea
           value={archetypeDesc}
           onChange={(e) => onArchetypeDescChange?.(e.target.value)}
           placeholder="Describe your character's archetype background..."
-          className="w-full min-h-[80px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
+          className="min-h-[80px]"
         />
       </div>
 
       {/* General Notes - always editable */}
       <div>
         <SectionHeader title="General Notes" />
-        <textarea
+        <Textarea
           value={notes}
           onChange={(e) => onNotesChange?.(e.target.value)}
           placeholder="Additional notes, backstory, goals..."
-          className="w-full min-h-[120px] px-3 py-2 text-sm border border-border-light rounded-lg focus:ring-2 focus:ring-primary-500 resize-y bg-surface"
+          className="min-h-[120px]"
         />
       </div>
 

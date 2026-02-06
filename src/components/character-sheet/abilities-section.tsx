@@ -12,7 +12,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
 import { RollButton, PointStatus, EditSectionToggle, getEditState, DecrementButton, IncrementButton } from '@/components/shared';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
@@ -80,10 +80,6 @@ const ABILITY_CONSTRAINTS = {
 // =============================================================================
 // Helper Functions
 // =============================================================================
-
-function formatBonus(value: number): string {
-  return value >= 0 ? `+${value}` : `${value}`;
-}
 
 /** Cost to go from currentValue to currentValue+1 (abilities 4+ cost 2 points) */
 function getAbilityIncreaseCost(currentValue: number): number {

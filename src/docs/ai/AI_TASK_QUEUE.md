@@ -1896,3 +1896,341 @@ Agents should **create new tasks** during their work when they discover addition
     - Visual consistency with creature creator add modals
     - npm run build passes
   notes: "DONE 2026-02-06: LoadFromLibraryModal now uses GridListRow, ListHeader with sort, hasSelectionColumn; selectable rows."
+
+- id: TASK-090
+  title: "Codebase health audit — dead code removal, deduplication, shared component unification, best practices"
+  priority: high
+  status: done
+  related_files:
+    - src/lib/utils/array.ts
+    - src/lib/utils/number.ts
+    - src/lib/utils/string.ts
+    - src/lib/utils/object.ts
+    - src/lib/utils/index.ts
+    - src/lib/constants/skills.ts
+    - src/lib/item-transformers.ts
+    - src/components/shared/list-components.tsx
+    - src/components/shared/list-header.tsx
+    - src/components/shared/index.ts
+    - src/components/shared/item-card.tsx
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/roll-button.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/shared/item-list.tsx
+    - src/components/shared/part-chip.tsx
+    - src/components/creator/ability-score-editor.tsx
+    - src/components/creator/LoadFromLibraryModal.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/roll-log.tsx
+    - src/components/character-sheet/notes-tab.tsx
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/components/character-creator/steps/skills-step.tsx
+    - src/components/character-creator/steps/species-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/app/(main)/codex/page.tsx
+    - src/app/(main)/library/page.tsx
+    - src/app/(main)/my-account/page.tsx
+    - src/app/(auth)/login/page.tsx
+    - src/app/(auth)/register/page.tsx
+    - src/types/items.ts
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Comprehensive codebase health audit addressing dead code, duplicate definitions,
+    missing shared component usage, design token violations, and React/Tailwind best practices.
+    
+    Changes:
+    1. Consolidated 6 duplicate formatBonus functions → single canonical export in lib/utils/number.ts
+    2. Removed ~60 unused utility exports from array.ts, number.ts, string.ts, object.ts
+    3. Consolidated 3 duplicate SortState types → canonical export from list-header.tsx (renamed items.ts to ItemSortState)
+    4. Removed deprecated list-components exports (SimpleEmptyState, LoadingSpinner, ResultsCount, ListContainer)
+    5. Deleted entirely unused lib/constants/colors.ts
+    6. Replaced 8 custom spinner implementations with shared Spinner component
+    7. Replaced 6 inline textareas with shared Textarea component
+    8. Fixed 6 hardcoded neutral-* colors in roll-log.tsx → design tokens
+    9. Converted 6 template-literal classNames to cn() utility
+    10. Fixed index-as-key issues in proficiencies-tab, grid-list-row, part-chip
+  acceptance_criteria:
+    - No duplicate formatBonus definitions
+    - Dead utility exports removed
+    - Single canonical SortState type
+    - No deprecated component exports remaining
+    - All spinners use shared Spinner component
+    - All textareas use shared Textarea component
+    - No hardcoded neutral-* colors outside auth
+    - Template literals replaced with cn()
+    - Stable keys for mapped elements
+    - npm run build passes
+  notes: "DONE 2026-02-06: Comprehensive audit complete. 30+ files updated across 10 categories."
+
+# ============================================================================
+# Phase 3: Codebase Simplification & Consolidation (from audit follow-up)
+# ============================================================================
+
+- id: TASK-091
+  title: "Extract shared useSort hook — eliminate 20+ duplicate toggleSort/handleSort implementations"
+  priority: high
+  status: not-started
+  related_files:
+    - src/components/shared/list-header.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/character-sheet/add-skill-modal.tsx
+    - src/components/character-sheet/add-sub-skill-modal.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/creator/LoadFromLibraryModal.tsx
+    - src/app/(main)/codex/page.tsx
+    - src/app/(main)/library/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    The single biggest duplication in the codebase. The exact same sorting logic is
+    copy-pasted across 15+ files in two forms:
+    
+    **Form A — standalone function (5 instances):**
+    ```ts
+    const toggleSort = useCallback((current: SortState, col: string): SortState => {
+      if (current.col === col) return { col, dir: current.dir === 1 ? -1 : 1 };
+      return { col, dir: 1 };
+    }, []);
+    ```
+    Files: library-section, feats-tab, add-skill-modal, add-sub-skill-modal, LoadFromLibraryModal
+    
+    **Form B — inline setSortState (15+ instances):**
+    ```ts
+    const handleSort = useCallback((col: string) => {
+      setSortState(prev => ({
+        col,
+        dir: prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1,
+      }));
+    }, []);
+    ```
+    Files: codex (6 tabs), library (4 tabs), add-feat-modal, unified-selection-modal, add-library-item-modal
+    
+    Additionally, `sortByCol` (generic array sort by SortState column) appears in library-section
+    and similar inline sort logic in 10+ other files.
+    
+    **Solution:** Create a `useSort` hook in `src/hooks/use-sort.ts` that returns:
+    - `sortState` — the current `SortState`
+    - `handleSort(col)` — the toggle handler (pass directly to ListHeader onSort)
+    - `sortItems(items)` — generic sort function using localeCompare
+    
+    Also export a standalone `toggleSort(current, col)` pure function and a 
+    `sortByColumn(items, sortState)` utility for non-hook contexts.
+    
+    Then replace all 20+ instances with the shared hook/utility.
+  acceptance_criteria:
+    - `useSort` hook exists in src/hooks/use-sort.ts
+    - Standalone `toggleSort` and `sortByColumn` utilities exported
+    - All 5 standalone toggleSort functions replaced
+    - All 15+ inline handleSort patterns replaced
+    - All inline sortByCol logic replaced
+    - npm run build passes
+    - Sorting behavior unchanged across all pages
+
+- id: TASK-092
+  title: "Import SortState type from shared instead of inline definitions"
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/library/page.tsx
+    - src/app/(main)/codex/page.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    11 instances across 3 files use `useState<{ col: string; dir: 1 | -1 }>` inline
+    instead of importing the canonical `SortState` type from `@/components/shared`.
+    
+    Files and instance counts:
+    - library/page.tsx: 4 instances (PowersTab, TechniquesTab, ArmamentsTab, CreaturesTab)
+    - codex/page.tsx: 6 instances (FeatsTab, SkillsTab, SpeciesTab, EquipmentTab, PropertiesTab, PartsTab)
+    - add-feat-modal.tsx: 1 instance
+    
+    Replace all with: `useState<SortState>({ col: 'name', dir: 1 })`
+    Add: `import type { SortState } from '@/components/shared'`
+    
+    NOTE: If TASK-091 (useSort hook) is done first, this task is already covered.
+  acceptance_criteria:
+    - No inline `{ col: string; dir: 1 | -1 }` type annotations remain
+    - All use imported SortState type
+    - npm run build passes
+
+- id: TASK-093
+  title: "Remaining template literal → cn() conversions"
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/shared/item-list.tsx
+    - src/components/shared/filters/tag-filter.tsx
+    - src/components/shared/filters/select-filter.tsx
+    - src/components/shared/filters/ability-requirement-filter.tsx
+    - src/components/shared/filters/checkbox-filter.tsx
+    - src/components/shared/filters/chip-select.tsx
+    - src/app/(main)/codex/page.tsx
+    - src/components/shared/item-card.tsx
+    - src/app/(main)/about/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    9 remaining instances of template literal className patterns that should use cn():
+    
+    1. item-list.tsx:231 — `className={\`space-y-4 ${className}\`}`
+    2. tag-filter.tsx:46 — `className={\`filter-group ${className}\`}`
+    3. select-filter.tsx:28 — `className={\`filter-group ${className}\`}`
+    4. ability-requirement-filter.tsx:58 — `className={\`filter-group ${className}\`}`
+    5. checkbox-filter.tsx:32 — `className={\`filter-group ${className}\`}`
+    6. chip-select.tsx:42 — `className={\`filter-group ${className}\`}`
+    7. codex/page.tsx:1454 — inline chip styling template literal
+    8. item-card.tsx:258 — conditional ternary without cn()
+    9. about/page.tsx:218 — transition class ternary without cn()
+    
+    For all: import cn from '@/lib/utils' and replace template literals.
+    Items 2-6 are all the same pattern in filter components — batch fix.
+  acceptance_criteria:
+    - No template literal className patterns remain in components or app directories
+    - All use cn() from @/lib/utils
+    - npm run build passes
+
+- id: TASK-094
+  title: "Replace inline button styling with Button component"
+  priority: medium
+  status: not-started
+  related_files:
+    - src/components/character-sheet/notes-tab.tsx
+    - src/components/character-sheet/dice-roller.tsx
+    - src/app/(main)/encounter-tracker/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/power-creator/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    5 raw `<button>` elements with full inline styling that should use the shared
+    `<Button>` component for visual consistency and reduced code:
+    
+    1. notes-tab.tsx:264 — Fall damage roll button
+       `px-2 py-0.5 text-sm font-bold bg-primary-600 text-white rounded hover:bg-primary-700`
+       → `<Button variant="primary" size="sm">`
+    
+    2. dice-roller.tsx:189 — Roll button
+       `w-full py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700`
+       → `<Button variant="primary" size="lg" className="w-full rounded-xl">`
+    
+    3. encounter-tracker/page.tsx:1291 — Add condition button
+       `px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-700`
+       → `<Button variant="primary" size="sm" className="bg-amber-600 hover:bg-amber-700">`
+    
+    4. item-creator/page.tsx:1399 — Add property button
+       `px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700`
+       → `<Button variant="primary" className="bg-amber-600 hover:bg-amber-700">`
+    
+    5. power-creator/page.tsx:1543 — Add part button
+       `px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700`
+       → `<Button variant="primary">`
+  acceptance_criteria:
+    - All 5 inline button patterns replaced with Button component
+    - Visual appearance unchanged
+    - npm run build passes
+
+- id: TASK-095
+  title: "Replace remaining raw inputs with Input/SearchInput components"
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/shared/item-list.tsx
+    - src/components/shared/filters/ability-requirement-filter.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    2 raw `<input>` elements with inline styling that should use shared components:
+    
+    1. item-list.tsx:241 — search input with icon overlay
+       Full inline styling + Search icon positioned absolutely.
+       → Replace with `<SearchInput>` from @/components/ui
+    
+    2. ability-requirement-filter.tsx:75 — number input for max value
+       `w-20 px-3 py-2 border border-border-light rounded-md text-sm ...`
+       → Replace with `<Input type="number" className="w-20" />`
+  acceptance_criteria:
+    - Both raw inputs replaced with shared components
+    - npm run build passes
+
+- id: TASK-096
+  title: "Split large page components (>1000 lines) into focused sub-components"
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/codex/page.tsx
+    - src/app/(main)/encounter-tracker/page.tsx
+    - src/app/(main)/library/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    6 files exceed 1000 lines and should be decomposed for maintainability:
+    
+    1. power-creator/page.tsx (~1673 lines)
+       → Extract: PowerFormFields, PowerPartsEditor, PowerSummaryPanel
+    
+    2. characters/[id]/page.tsx (~1586 lines)
+       → Extract: CharacterSheetContent, CharacterSheetModals, CharacterSheetHandlers (custom hook)
+    
+    3. creature-creator/page.tsx (~1580 lines)
+       → Extract: CreatureFormFields, CreatureSkillsEditor, CreatureSummaryPanel
+    
+    4. codex/page.tsx (~1451 lines)
+       → Extract each tab into its own component: CodexFeatsTab, CodexSkillsTab, 
+         CodexSpeciesTab, CodexEquipmentTab, CodexPropertiesTab, CodexPartsTab
+    
+    5. encounter-tracker/page.tsx (~1327 lines)
+       → Extract: CombatantList, CombatantCard, ConditionManager, InitiativeTracker
+    
+    6. library/page.tsx (large)
+       → Extract each tab: LibraryPowersTab, LibraryTechniquesTab, etc.
+    
+    Start with codex and library since they have the most repeated patterns
+    (each tab is structurally identical with its own sort/filter/render).
+    
+    NOTE: This is a large refactor. Do incrementally — one file at a time.
+    TASK-091 (useSort hook) should be done first as it eliminates the biggest
+    repeated pattern inside these large files.
+  acceptance_criteria:
+    - Each extracted component is <400 lines
+    - No behavioral changes
+    - All pages render identically
+    - npm run build passes
+
+- id: TASK-097
+  title: "Unify filter component className patterns — extract filter-group class"
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/shared/filters/tag-filter.tsx
+    - src/components/shared/filters/select-filter.tsx
+    - src/components/shared/filters/ability-requirement-filter.tsx
+    - src/components/shared/filters/checkbox-filter.tsx
+    - src/components/shared/filters/chip-select.tsx
+    - src/app/globals.css
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    All 5 filter components use the same pattern:
+    `className={\`filter-group ${className}\`}`
+    
+    The `filter-group` CSS class is defined in globals.css. These should:
+    1. Import cn() from @/lib/utils
+    2. Use `className={cn('filter-group', className)}` for proper class merging
+    3. Verify the filter-group class definition in globals.css is consistent
+    
+    This is partially covered by TASK-093 but grouped here as a focused batch
+    since all 5 are the same pattern in the same directory.
+  acceptance_criteria:
+    - All 5 filter components use cn() instead of template literals
+    - filter-group class definition verified in globals.css
+    - npm run build passes

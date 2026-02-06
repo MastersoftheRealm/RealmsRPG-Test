@@ -12,7 +12,7 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAuth, useRTDBSkills } from '@/hooks';
 import { cn } from '@/lib/utils';
-import { Spinner, Button, Alert, Modal } from '@/components/ui';
+import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
 import { LoginPromptModal } from '@/components/shared';
@@ -763,29 +763,25 @@ export function FinalizeStep() {
       
       {/* Description (Optional) */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-text-secondary mb-2">
-          Description (Optional)
-        </label>
-        <textarea
+        <Textarea
+          label="Description (Optional)"
           value={draft.description || ''}
           onChange={(e) => updateDraft({ description: e.target.value })}
           placeholder="Describe your character's appearance, personality, or background..."
           rows={4}
-          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
+          className="resize-none"
         />
       </div>
       
       {/* Notes (Optional) */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-text-secondary mb-2">
-          Notes (Optional)
-        </label>
-        <textarea
+        <Textarea
+          label="Notes (Optional)"
           value={draft.notes || ''}
           onChange={(e) => updateDraft({ notes: e.target.value })}
           placeholder="Any additional notes about your character..."
           rows={3}
-          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors resize-none"
+          className="resize-none"
         />
       </div>
       
