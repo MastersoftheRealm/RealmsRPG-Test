@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Codex Page - Full Implementation
  * =================================
  * Complete game reference matching vanilla site functionality.
@@ -374,47 +374,46 @@ function FeatsTab() {
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 
 function FeatCard({ feat }: { feat: Feat }) {
-  // Build badges from feat type flags
-  const badges: Array<{ label: string; color: 'blue' | 'purple' | 'gray' }> = [];
-  if (feat.char_feat) badges.push({ label: 'Character Feat', color: 'blue' });
-  if (feat.state_feat) badges.push({ label: 'State Feat', color: 'purple' });
-  if (feat.category) badges.push({ label: feat.category, color: 'gray' });
+  // Build detail sections (Type, Category, Tags, Requirements) - consistent header+chips format
+  const detailSections: Array<{ label: string; chips: { name: string; category?: 'default' | 'tag' | 'skill' | 'archetype' }[]; hideLabelIfSingle?: boolean }> = [];
   
-  // Build tag chips
-  const tagChips = feat.tags?.map(tag => ({
-    name: tag,
-    category: 'tag' as const,
-  })) || [];
-
-  // Build requirements content
-  const requirementsContent = (
-    <div className="space-y-1 text-sm">
-      {feat.ability_req?.length > 0 && (
-        <div>
-          <span className="font-medium text-text-secondary">Ability Requirements:</span>{' '}
-          <span className="text-text-muted">
-            {feat.ability_req.map((a, i) => {
-              const val = feat.abil_req_val?.[i];
-              return `${a}${typeof val === 'number' ? ` ${val}` : ''}`;
-            }).join(', ')}
-          </span>
-        </div>
-      )}
-      {feat.skill_req?.length > 0 && (
-        <div>
-          <span className="font-medium text-text-secondary">Skill Requirements:</span>{' '}
-          <span className="text-text-muted">
-            {feat.skill_req.map((s, i) => {
-              const val = feat.skill_req_val?.[i];
-              return `${s}${typeof val === 'number' ? ` ${val}` : ''}`;
-            }).join(', ')}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-
-  const hasRequirements = (feat.ability_req?.length ?? 0) > 0 || (feat.skill_req?.length ?? 0) > 0;
+  // Type: Character/Archetype, State
+  const typeChips: { name: string; category: 'skill' | 'archetype' }[] = [];
+  if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
+  else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
+  if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
+  if (typeChips.length > 0) {
+    detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
+  }
+  
+  // Category
+  if (feat.category) {
+    detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
+  }
+  
+  // Tags
+  const tagChips = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
+  if (tagChips.length > 0) {
+    detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
+  }
+  
+  // Ability Requirements
+  const abilityReqChips = (feat.ability_req || []).map((a, i) => {
+    const val = feat.abil_req_val?.[i];
+    return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
+  });
+  if (abilityReqChips.length > 0) {
+    detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
+  }
+  
+  // Skill Requirements
+  const skillReqChips = (feat.skill_req || []).map((s, i) => {
+    const val = feat.skill_req_val?.[i];
+    return { name: `${s}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+  });
+  if (skillReqChips.length > 0) {
+    detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
+  }
 
   return (
     <GridListRow
@@ -429,10 +428,7 @@ function FeatCard({ feat }: { feat: Feat }) {
         { key: 'Recovery', value: feat.rec_period || '-' },
         { key: 'Uses', value: feat.uses_per_rec || '-' },
       ]}
-      badges={badges}
-      chips={tagChips}
-      chipsLabel="Tags"
-      requirements={hasRequirements ? requirementsContent : undefined}
+      detailSections={detailSections.length > 0 ? detailSections : undefined}
     />
   );
 }
@@ -1109,16 +1105,18 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
     });
   }, [item.properties, propertiesDb]);
 
-  // Build additional info for expanded view
-  const statsContent = (
-    <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
-      {item.damage && <span><strong>Damage:</strong> {formatDamageDisplay(item.damage)}</span>}
-      {item.armor_value !== undefined && <span><strong>Armor:</strong> {item.armor_value}</span>}
-      {item.weight !== undefined && <span><strong>Weight:</strong> {item.weight} kg</span>}
-    </div>
-  );
-
-  const hasStats = item.damage || item.armor_value !== undefined || item.weight !== undefined;
+  // Build detail sections - consistent header+chips format
+  const detailSections: Array<{ label: string; chips: { name: string; description?: string; category?: 'default' }[]; hideLabelIfSingle?: boolean }> = [];
+  if (propertyChips.length > 0) {
+    detailSections.push({ label: 'Properties', chips: propertyChips, hideLabelIfSingle: true });
+  }
+  const statsChips: { name: string; category: 'default' }[] = [];
+  if (item.damage) statsChips.push({ name: `Damage: ${formatDamageDisplay(item.damage)}`, category: 'default' });
+  if (item.armor_value !== undefined) statsChips.push({ name: `Armor: ${item.armor_value}`, category: 'default' });
+  if (item.weight !== undefined) statsChips.push({ name: `Weight: ${item.weight} kg`, category: 'default' });
+  if (statsChips.length > 0) {
+    detailSections.push({ label: 'Stats', chips: statsChips, hideLabelIfSingle: true });
+  }
 
   return (
     <GridListRow
@@ -1131,9 +1129,7 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
         { key: 'Cost', value: cost > 0 ? `${cost}c` : '-', highlight: true },
         { key: 'Rarity', value: item.rarity || '-' },
       ]}
-      chips={propertyChips}
-      chipsLabel="Properties"
-      requirements={hasStats ? statsContent : undefined}
+      detailSections={detailSections.length > 0 ? detailSections : undefined}
     />
   );
 }
@@ -1425,12 +1421,14 @@ function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefi
   return String(en);
 }
 
-function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends (infer T)[] | undefined ? T : never }) {
-  // Build badges array
-  const badges: Array<{ label: string; color?: 'blue' | 'gray' | 'green' | 'purple' | 'red' | 'amber' }> = [];
-  if (part.mechanic) badges.push({ label: 'Mechanic', color: 'amber' });
+const CHIP_SECTION_STYLES: Record<string, string> = {
+  default: 'bg-primary-50 border-primary-200 text-primary-700',
+  archetype: 'bg-power-light border-power-border text-power-text',
+  skill: 'bg-info-50 border-info-200 text-info-700',
+};
 
-  // Build chips for expanded view
+function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends (infer T)[] | undefined ? T : never }) {
+  // Build type chips - consistent header+chips format
   const typeChips: ChipData[] = [
     {
       name: part.type === 'power' ? 'Power' : 'Technique',
@@ -1440,32 +1438,50 @@ function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends 
   if (part.mechanic) typeChips.push({ name: 'Mechanic', category: 'default' });
   if (part.percentage) typeChips.push({ name: 'Percentage Cost', category: 'archetype' });
 
-  // Build options content for expanded view
+  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [
+    { label: 'Type', chips: typeChips, hideLabelIfSingle: true },
+  ];
+
   const hasOptions = part.op_1_desc || part.op_2_desc || part.op_3_desc;
   const optionsContent = hasOptions ? (
-    <div className="space-y-2 text-sm mt-3">
-      <div className="font-medium text-text-secondary">Options:</div>
-      {part.op_1_desc && (
-        <div className="pl-4 text-text-muted">
-          1. {part.op_1_desc} 
-          {part.op_1_en !== undefined && part.op_1_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_1_en, part.percentage)})`}
-          {part.op_1_tp !== undefined && part.op_1_tp !== 0 && ` (TP: ${part.op_1_tp})`}
+    <div className="space-y-4">
+      <div className="space-y-3">
+        <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Type</h4>
+        <div className="flex flex-wrap gap-2">
+          {typeChips.map((chip, i) => (
+            <span
+              key={i}
+              className={`inline-flex items-center rounded-xl border px-3 py-1.5 text-sm font-medium ${CHIP_SECTION_STYLES[chip.category || 'default']}`}
+            >
+              {chip.name}
+            </span>
+          ))}
         </div>
-      )}
-      {part.op_2_desc && (
-        <div className="pl-4 text-text-muted">
-          2. {part.op_2_desc}
-          {part.op_2_en !== undefined && part.op_2_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_2_en, part.percentage)})`}
-          {part.op_2_tp !== undefined && part.op_2_tp !== 0 && ` (TP: ${part.op_2_tp})`}
-        </div>
-      )}
-      {part.op_3_desc && (
-        <div className="pl-4 text-text-muted">
-          3. {part.op_3_desc}
-          {part.op_3_en !== undefined && part.op_3_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_3_en, part.percentage)})`}
-          {part.op_3_tp !== undefined && part.op_3_tp !== 0 && ` (TP: ${part.op_3_tp})`}
-        </div>
-      )}
+      </div>
+      <div className="space-y-2 text-sm">
+        <div className="font-medium text-text-secondary">Options</div>
+        {part.op_1_desc && (
+          <div className="pl-4 text-text-muted">
+            1. {part.op_1_desc} 
+            {part.op_1_en !== undefined && part.op_1_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_1_en, part.percentage)})`}
+            {part.op_1_tp !== undefined && part.op_1_tp !== 0 && ` (TP: ${part.op_1_tp})`}
+          </div>
+        )}
+        {part.op_2_desc && (
+          <div className="pl-4 text-text-muted">
+            2. {part.op_2_desc}
+            {part.op_2_en !== undefined && part.op_2_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_2_en, part.percentage)})`}
+            {part.op_2_tp !== undefined && part.op_2_tp !== 0 && ` (TP: ${part.op_2_tp})`}
+          </div>
+        )}
+        {part.op_3_desc && (
+          <div className="pl-4 text-text-muted">
+            3. {part.op_3_desc}
+            {part.op_3_en !== undefined && part.op_3_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_3_en, part.percentage)})`}
+            {part.op_3_tp !== undefined && part.op_3_tp !== 0 && ` (TP: ${part.op_3_tp})`}
+          </div>
+        )}
+      </div>
     </div>
   ) : undefined;
 
@@ -1480,9 +1496,7 @@ function PartCard({ part }: { part: ReturnType<typeof useParts>['data'] extends 
         { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-blue-600' },
         { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-tp' },
       ]}
-      badges={badges}
-      chips={typeChips}
-      chipsLabel="Type"
+      detailSections={hasOptions ? undefined : detailSections}
       expandedContent={optionsContent}
     />
   );

@@ -18,7 +18,7 @@ import { Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { ValueStepper, ImageUploadModal } from '@/components/shared';
+import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/shared';
 import type { Character } from '@/types';
 
 interface CalculatedStats {
@@ -191,17 +191,17 @@ function ResourceInput({
     setInputValue(String(newValue));
   };
   
-  // Color classes based on variant
+  // Color classes based on variant (softer in dark mode)
   const bgColor = colorVariant === 'health' 
-    ? 'bg-red-50 border-red-200' 
+    ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50' 
     : colorVariant === 'energy'
-      ? 'bg-blue-50 border-blue-200'
+      ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/50'
       : 'bg-surface-alt border-border-light';
   
   const labelColor = colorVariant === 'health'
-    ? 'text-red-700'
+    ? 'text-red-700 dark:text-red-400'
     : colorVariant === 'energy'
-      ? 'text-blue-700'
+      ? 'text-blue-700 dark:text-blue-400'
       : 'text-text-secondary';
   
   // Calculate bar percentage - cap at 100% for display but allow tracking above max
@@ -240,8 +240,8 @@ function ResourceInput({
           className={cn(
             'w-12 text-center text-lg font-bold rounded border px-1 py-0.5',
             'focus:outline-none focus:ring-2 focus:ring-primary-500',
-            colorVariant === 'health' && 'border-red-300 text-red-800',
-            colorVariant === 'energy' && 'border-blue-300 text-blue-800',
+            colorVariant === 'health' && 'border-red-300 dark:border-red-800 text-red-800 dark:text-red-300',
+            colorVariant === 'energy' && 'border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-300',
             colorVariant === 'default' && 'border-border-light text-text-primary'
           )}
         />
@@ -276,7 +276,22 @@ function ResourceInput({
 }
 
 /**
+ * Pencil state for Speed/Evasion base: red when over default, green when under
+ */
+function getSpeedEvasionPencilState(
+  baseValue: number | undefined,
+  defaultBase: number | undefined
+): 'normal' | 'has-points' | 'over-budget' {
+  if (baseValue === undefined || defaultBase === undefined) return 'normal';
+  if (baseValue > defaultBase) return 'over-budget'; // increasing base = red
+  if (baseValue < defaultBase) return 'has-points';  // decreasing base = green
+  return 'normal';
+}
+
+/**
  * Large stat block for Speed and Evasion
+ * - Pencil icon toggles base editing visibility (like other sections)
+ * - Red when base > default, green when base < default
  */
 function LargeStatBlock({ 
   label, 
@@ -297,22 +312,33 @@ function LargeStatBlock({
   minBase?: number;
   maxBase?: number;
 }) {
-  // Check if base is overridden from default
-  const isOverridden = defaultBase !== undefined && baseValue !== undefined && baseValue !== defaultBase;
+  const [isEditingBase, setIsEditingBase] = useState(false);
+  const pencilState = getSpeedEvasionPencilState(baseValue, defaultBase);
+  const showEditControls = isEditMode && onChange && baseValue !== undefined && isEditingBase;
   
   return (
     <div className="flex flex-col items-center p-4 bg-surface-alt rounded-xl border border-border-light min-w-[100px]">
-      <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide">{label}</span>
+      <div className="flex items-center gap-1.5 w-full justify-center">
+        <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide">{label}</span>
+        {isEditMode && onChange && (
+          <EditSectionToggle
+            onClick={() => setIsEditingBase(prev => !prev)}
+            state={pencilState}
+            isActive={isEditingBase}
+            title={isEditingBase ? 'Hide base editing' : 'Edit base value'}
+          />
+        )}
+      </div>
       <span className="text-4xl font-bold text-text-primary mt-1">{value}</span>
       
-      {isEditMode && onChange && baseValue !== undefined && (
+      {showEditControls && (
         <div className="flex items-center gap-1 mt-2">
           <button
-            onClick={() => onChange(Math.max(minBase, baseValue - 1))}
-            disabled={baseValue <= minBase}
+            onClick={() => onChange(Math.max(minBase, baseValue! - 1))}
+            disabled={baseValue! <= minBase}
             className={cn(
               'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-              baseValue > minBase
+              baseValue! > minBase
                 ? 'bg-surface hover:bg-border-light text-text-secondary'
                 : 'bg-surface text-text-muted cursor-not-allowed'
             )}
@@ -321,16 +347,17 @@ function LargeStatBlock({
           </button>
           <span className={cn(
             'text-xs min-w-[3rem] text-center',
-            isOverridden ? 'text-danger-600 font-bold' : 'text-text-muted'
+            pencilState === 'over-budget' ? 'text-danger-600 font-bold' :
+            pencilState === 'has-points' ? 'text-success-600 font-bold' : 'text-text-muted'
           )}>
             Base: {baseValue}
           </span>
           <button
-            onClick={() => onChange(Math.min(maxBase, baseValue + 1))}
-            disabled={baseValue >= maxBase}
+            onClick={() => onChange(Math.min(maxBase, baseValue! + 1))}
+            disabled={baseValue! >= maxBase}
             className={cn(
               'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
-              baseValue < maxBase
+              baseValue! < maxBase
                 ? 'bg-surface hover:bg-border-light text-text-secondary'
                 : 'bg-surface text-text-muted cursor-not-allowed'
             )}

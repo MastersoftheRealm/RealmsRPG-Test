@@ -22,41 +22,39 @@ let adminRtdb: Database | null = null;
 /**
  * Get the Firebase Admin service account credentials.
  * In production, these come from Google Cloud Secret Manager (accessed via environment variables).
- * For local development, use GOOGLE_APPLICATION_CREDENTIALS or explicit config.
+ * Supports multiple formats for flexibility with existing Secret Manager setup.
  */
-function getServiceAccount() {
-  // Check for explicit service account JSON (local dev)
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+function getServiceAccount(): Record<string, unknown> | { projectId: string; clientEmail: string; privateKey: string } | null {
+  // 1. Full JSON key (FIREBASE_SERVICE_ACCOUNT_KEY or GOOGLE_APPLICATION_CREDENTIALS_JSON)
+  const jsonKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (jsonKey) {
     try {
-      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      const parsed = JSON.parse(jsonKey);
+      if (parsed.project_id && parsed.client_email && parsed.private_key) {
+        return parsed;
+      }
     } catch (e) {
-      console.warn('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', e);
+      console.warn('Failed to parse service account JSON key:', e);
     }
   }
-  
-  // Use individual environment variables from Secret Manager
-  // Note: Can't use FIREBASE_ prefix in Secret Manager, so we use SERVICE_ACCOUNT_*
+
+  // 2. Individual env vars from Secret Manager (SERVICE_ACCOUNT_EMAIL, SERVICE_ACCOUNT_PRIVATE_KEY)
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || 'realmsrpg-test';
   const clientEmail = process.env.SERVICE_ACCOUNT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = (process.env.SERVICE_ACCOUNT_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY)?.replace(/\\n/g, '\n');
-  
+
   if (clientEmail && privateKey) {
-    console.log('Using explicit service account credentials for project:', projectId);
     return { projectId, clientEmail, privateKey };
   }
-  
-  // Log which env vars are missing for debugging
-  if (!clientEmail) {
-    console.warn('SERVICE_ACCOUNT_EMAIL not set - session cookies may not work');
+
+  // Log which env vars are missing for debugging (only in dev to avoid log noise)
+  if (process.env.NODE_ENV !== 'production') {
+    if (!clientEmail) console.warn('SERVICE_ACCOUNT_EMAIL not set - session cookies may not work');
+    if (!privateKey) console.warn('SERVICE_ACCOUNT_PRIVATE_KEY not set - session cookies may not work');
   }
-  if (!privateKey) {
-    console.warn('SERVICE_ACCOUNT_PRIVATE_KEY not set - session cookies may not work');
-  }
-  
-  // Return null to use Application Default Credentials (ADC)
-  // This works automatically in Google Cloud environments (Cloud Functions, Cloud Run, etc.)
-  // Note: ADC may not support all Admin SDK features like createSessionCookie
-  console.log('Using Application Default Credentials (ADC)');
+
+  // 3. Fall back to Application Default Credentials (ADC)
+  // Works in Google Cloud (Cloud Run, Cloud Functions) when service account is attached
   return null;
 }
 

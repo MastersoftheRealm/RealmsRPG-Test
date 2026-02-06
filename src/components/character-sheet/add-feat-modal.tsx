@@ -429,11 +429,37 @@ export function AddFeatModal({
                 const { meets, warning } = checkRequirements(feat);
                 const isSelected = selectedFeats.some(f => f.id === feat.id);
                 
-                // Build chips from tags
-                const chips: ChipData[] = feat.tags?.map(tag => ({
-                  name: tag,
-                  category: 'tag' as const,
-                })) || [];
+                // Build detail sections (Type, Category, Tags, Requirements) - consistent header+chips format
+                const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
+                
+                const typeChips: ChipData[] = [];
+                if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
+                else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
+                if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
+                if (typeChips.length > 0) {
+                  detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
+                }
+                if (feat.category) {
+                  detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
+                }
+                const tagChips: ChipData[] = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
+                if (tagChips.length > 0) {
+                  detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
+                }
+                const abilityReqChips: ChipData[] = (feat.ability_req || []).map((a, i) => {
+                  const val = feat.abil_req_val?.[i];
+                  return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
+                });
+                if (abilityReqChips.length > 0) {
+                  detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
+                }
+                const skillReqChips: ChipData[] = (feat.skill_req || []).map((s, i) => {
+                  const val = feat.skill_req_val?.[i];
+                  return { name: `${s}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+                });
+                if (skillReqChips.length > 0) {
+                  detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
+                }
                 
                 return (
                   <GridListRow
@@ -447,8 +473,7 @@ export function AddFeatModal({
                       { key: 'Uses', value: feat.uses_per_rec || feat.max_uses || '-' },
                       { key: 'Category', value: feat.category || '-' },
                     ]}
-                    chips={chips}
-                    chipsLabel="Tags"
+                    detailSections={detailSections.length > 0 ? detailSections : undefined}
                     selectable
                     isSelected={isSelected}
                     onSelect={() => toggleFeat(feat)}

@@ -624,8 +624,7 @@ export function EquipmentStep() {
                       { key: 'Source', value: item.source === 'library' ? 'Library' : 'Standard', hideOnMobile: true },
                     ]}
                     badges={badges}
-                    chips={chips}
-                    chipsLabel="Properties"
+                    detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
                     compact
                   />
                 );

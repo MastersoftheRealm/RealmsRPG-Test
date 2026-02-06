@@ -245,14 +245,14 @@ export function ValueStepper({
 
   // Button color classes based on colorVariant
   const getDecrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-green-200 hover:bg-green-300 text-green-700';
-    if (colorVariant === 'energy') return 'bg-blue-200 hover:bg-blue-300 text-blue-700';
+    if (colorVariant === 'health') return 'bg-green-200 dark:bg-green-900/50 hover:bg-green-300 dark:hover:bg-green-800/50 text-green-700 dark:text-green-400';
+    if (colorVariant === 'energy') return 'bg-blue-200 dark:bg-blue-900/50 hover:bg-blue-300 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-400';
     return 'btn-stepper btn-stepper-danger';
   };
 
   const getIncrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-green-200 hover:bg-green-300 text-green-700';
-    if (colorVariant === 'energy') return 'bg-blue-200 hover:bg-blue-300 text-blue-700';
+    if (colorVariant === 'health') return 'bg-green-200 dark:bg-green-900/50 hover:bg-green-300 dark:hover:bg-green-800/50 text-green-700 dark:text-green-400';
+    if (colorVariant === 'energy') return 'bg-blue-200 dark:bg-blue-900/50 hover:bg-blue-300 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-400';
     return 'btn-stepper btn-stepper-success';
   };
 

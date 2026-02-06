@@ -499,22 +499,61 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
-  // Health points allocation handler
+  // Health points allocation handler — when increasing max, bump current if at full
   const handleHealthPointsChange = useCallback((value: number) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      healthPoints: Math.max(0, value)
-    } : null);
+    setCharacter(prev => {
+      if (!prev) return null;
+      const oldPoints = prev.healthPoints ?? 0;
+      const delta = value - oldPoints;
+      const newPoints = Math.max(0, value);
+      if (delta <= 0) {
+        return { ...prev, healthPoints: newPoints };
+      }
+      const level = prev.level || 1;
+      const vitality = prev.abilities?.vitality ?? 0;
+      const oldMax = vitality < 0
+        ? 8 + vitality + oldPoints
+        : 8 + (vitality * level) + oldPoints;
+      const currentHP = prev.health?.current ?? oldMax;
+      const shouldBump = currentHP >= oldMax;
+      const newCurrent = shouldBump ? currentHP + delta : currentHP;
+      return {
+        ...prev,
+        healthPoints: newPoints,
+        health: prev.health
+          ? { ...prev.health, current: newCurrent }
+          : { current: newCurrent, max: oldMax + delta },
+      };
+    });
   }, [character]);
   
-  // Energy points allocation handler
+  // Energy points allocation handler — when increasing max, bump current if at full
   const handleEnergyPointsChange = useCallback((value: number) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      energyPoints: Math.max(0, value)
-    } : null);
+    setCharacter(prev => {
+      if (!prev) return null;
+      const oldPoints = prev.energyPoints ?? 0;
+      const delta = value - oldPoints;
+      const newPoints = Math.max(0, value);
+      if (delta <= 0) {
+        return { ...prev, energyPoints: newPoints };
+      }
+      const level = prev.level || 1;
+      const powerAbil = prev.pow_abil?.toLowerCase() as AbilityName | undefined;
+      const powerVal = powerAbil ? (prev.abilities?.[powerAbil] ?? 0) : 0;
+      const oldMax = (powerVal * level) + oldPoints;
+      const currentEN = prev.energy?.current ?? oldMax;
+      const shouldBump = currentEN >= oldMax;
+      const newCurrent = shouldBump ? currentEN + delta : currentEN;
+      return {
+        ...prev,
+        energyPoints: newPoints,
+        energy: prev.energy
+          ? { ...prev.energy, current: newCurrent }
+          : { current: newCurrent, max: oldMax + delta },
+      };
+    });
   }, [character]);
   
   // Full recovery handler - restores all HP, EN, and all feat/trait uses

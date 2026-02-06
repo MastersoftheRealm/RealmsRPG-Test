@@ -128,6 +128,11 @@ Notes:
 - [x] Auto-capitalize archetype ability display. (TASK-056 — already implemented via CSS)
 - [ ] Match character library section heights to archetype section height. (TASK-062)
 - [ ] Fix creature creator basic info dropdown alignment and sizing. (TASK-063)
+- [x] Health/Energy edit: bump current with max when at full and increasing. (TASK-072)
+- [x] Speed/Evasion: pencil icon, hide base edit by default, red/green validation. (TASK-073)
+- [x] Dark mode: soften chip, stepper, health/energy, hover colors. (TASK-074)
+- [x] Fix /api/session 500 and Firebase Storage 403 for portraits/profile. (TASK-075, TASK-076)
+- [x] Fix username regex invalid character class. (TASK-077)
 - [x] Enable hold-to-repeat for creature creator Health/Energy allocation. (TASK-065)
 - [x] Remove hold-to-repeat from creature creator defense steppers. (TASK-066)
 - [x] Fix senses/movement item card vertical margins (equal padding). (TASK-067)
@@ -405,6 +410,36 @@ Notes
 - Priority: High
 - "At top: boxes with spendable resources (ability, skill, feat, training, currency). Below: summary points (Abilities, Archetype, level, type, size). Below: line items like 'Skills: Stealth +3, Athletics -1, ...' and similar for resistances, immunities, weaknesses. Reference D&D creature stat block."
 - Expected: Match other creators' resource box style; D&D stat block format for details (TASK-070)
+
+2/5/2026 — Character Sheet / Health-Energy Edit Mode
+- Context: Character sheet edit mode, Health/Energy allocation
+- Priority: High
+- "When editing health/energy and increasing it, if the current value is at the max, increase the current with the max increase (since that means a character was fully healthy and/or energized when increasing the value, so the current increases with the maximum in those cases.)"
+- Extracted to: TASK-072
+
+2/5/2026 — Character Sheet / Speed-Evasion Base Editing
+- Context: Character sheet, Speed/Evasion display
+- Priority: High
+- "Don't show speed/evasion base editing options, instead have a pencil icon by each as with other sections, require that to be clicked to show the option to edit it, and this way it can be red/green if under/over the proper values (in this case, increasing the base is red, and decreasing it is green)."
+- Extracted to: TASK-073
+
+2/5/2026 — Dark Mode / Color Contrast
+- Context: Dark mode theming
+- Priority: Medium
+- "Many colors are too contrasting in dark mode and need easier viewing colors to replace them, such as some chip colors, stepper colors, character sheet health/energy backgrounds, power proficiency background, item list headers, some hover-highlight colors (which also white out the hovered white font content of the hovered items) and many many more."
+- Extracted to: TASK-074
+
+2/5/2026 — Portrait / Session / Storage Errors
+- Context: Character portrait upload, profile picture
+- Priority: High
+- "/api/session 500 Internal Server Error; Firebase Storage 403 for portraits/ and profile-pictures/ (User does not have permission)."
+- Extracted to: TASK-075 (session), TASK-076 (storage rules)
+
+2/5/2026 — My Account / Username Regex
+- Context: Username change, Google user
+- Priority: High
+- "error updating username (google user): Pattern attribute value [a-zA-Z0-9_-]+ is not a valid regular expression: Invalid character in character class. POST my-account 500."
+- Extracted to: TASK-077
 
 2/5/2026 — Steppers / Unify Styles Sitewide
 - Context: ValueStepper, DecrementButton, IncrementButton

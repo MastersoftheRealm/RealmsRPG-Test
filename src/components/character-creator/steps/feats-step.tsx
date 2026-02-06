@@ -239,46 +239,46 @@ export function FeatsStep() {
     const requirements = checkRequirements(feat);
     const canSelect = (selectedList.length < maxForType || isSelected) && requirements.met;
     
-    // Build badges
-    const badges: Array<{ label: string; color: 'blue' | 'purple' | 'amber' | 'gray' }> = [];
-    if (isCharacterFeat) badges.push({ label: 'Character', color: 'blue' });
-    else badges.push({ label: 'Archetype', color: 'amber' });
-    if (feat.state_feat) badges.push({ label: 'State', color: 'purple' });
-    if (feat.category) badges.push({ label: feat.category, color: 'gray' });
+    // Build detail sections (Type, Category, Tags, Requirements) - consistent header+chips format
+    const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
     
-    // Build tag chips
-    const tagChips: ChipData[] = feat.tags?.map(tag => ({
-      name: tag,
-      category: 'tag' as const,
-    })) || [];
+    // Type: Character/Archetype, State
+    const typeChips: ChipData[] = [];
+    if (isCharacterFeat) typeChips.push({ name: 'Character Feat', category: 'skill' });
+    else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
+    if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
+    if (typeChips.length > 0) {
+      detailSections.push({ label: 'Type', chips: typeChips, hideLabelIfSingle: true });
+    }
     
-    // Requirements content
-    const requirementsContent = (feat.ability_req?.length > 0 || feat.skill_req?.length > 0) ? (
-      <div className="space-y-1 text-sm">
-        {feat.ability_req?.length > 0 && (
-          <div>
-            <span className="font-medium text-text-secondary">Ability Requirements:</span>{' '}
-            <span className="text-text-muted">
-              {feat.ability_req.map((a, i) => {
-                const val = feat.abil_req_val?.[i];
-                return `${a}${typeof val === 'number' ? ` ${val}+` : ''}`;
-              }).join(', ')}
-            </span>
-          </div>
-        )}
-        {feat.skill_req?.length > 0 && (
-          <div>
-            <span className="font-medium text-text-secondary">Skill Requirements:</span>{' '}
-            <span className="text-text-muted">
-              {feat.skill_req.map((s, i) => {
-                const val = feat.skill_req_val?.[i];
-                return `${s}${typeof val === 'number' ? ` ${val}+` : ''}`;
-              }).join(', ')}
-            </span>
-          </div>
-        )}
-      </div>
-    ) : undefined;
+    // Category
+    if (feat.category) {
+      detailSections.push({ label: 'Category', chips: [{ name: feat.category, category: 'default' }], hideLabelIfSingle: true });
+    }
+    
+    // Tags
+    const tagChips: ChipData[] = feat.tags?.map(tag => ({ name: tag, category: 'tag' as const })) || [];
+    if (tagChips.length > 0) {
+      detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
+    }
+    
+    // Ability Requirements
+    const abilityReqChips: ChipData[] = (feat.ability_req || []).map((a, i) => {
+      const val = feat.abil_req_val?.[i];
+      return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
+    });
+    if (abilityReqChips.length > 0) {
+      detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
+    }
+    
+    // Skill Requirements
+    const skillReqChips: ChipData[] = (feat.skill_req || []).map((s, i) => {
+      const val = feat.skill_req_val?.[i];
+      return { name: `${s}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+    });
+    if (skillReqChips.length > 0) {
+      detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
+    }
 
     return (
       <GridListRow
@@ -292,10 +292,7 @@ export function FeatsStep() {
           { key: 'Category', value: feat.category || '-' },
           { key: 'Uses', value: feat.uses_per_rec ? `${feat.uses_per_rec}/${feat.rec_period || 'rest'}` : '-' },
         ]}
-        badges={badges}
-        chips={tagChips}
-        chipsLabel="Tags"
-        requirements={requirementsContent}
+        detailSections={detailSections.length > 0 ? detailSections : undefined}
         selectable
         isSelected={isSelected}
         onSelect={() => canSelect && toggleFeat(feat, isCharacterFeat)}

@@ -76,6 +76,8 @@ export interface GridListRowProps {
   chips?: ChipData[];
   /** Label for chips section */
   chipsLabel?: string;
+  /** Multiple labeled chip sections for consistent metadata display (Tags, Requirements, Type, etc.). When provided, replaces chips/chipsLabel. */
+  detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
   /** Total cost (TP, etc.) to display */
   totalCost?: number;
   /** Cost label */
@@ -140,22 +142,22 @@ export interface GridListRowProps {
 // =============================================================================
 
 const BADGE_COLORS = {
-  blue: 'bg-info-100 text-info-700',
-  purple: 'bg-power-light text-power-text',
-  green: 'bg-success-100 text-success-700',
-  amber: 'bg-tp-light text-tp-text',
+  blue: 'bg-info-100 dark:bg-info-900/40 text-info-700 dark:text-info-400',
+  purple: 'bg-power-light dark:bg-power-900/30 text-power-text dark:text-power-300',
+  green: 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-400',
+  amber: 'bg-tp-light dark:bg-amber-900/30 text-tp-text dark:text-amber-400',
   gray: 'bg-surface-alt text-text-secondary',
-  red: 'bg-danger-100 text-danger-700',
+  red: 'bg-danger-100 dark:bg-danger-900/40 text-danger-700 dark:text-danger-400',
 };
 
 const CHIP_STYLES = {
-  default: 'bg-primary-50 border-primary-200 text-primary-700 hover:bg-primary-100',
-  cost: 'bg-tp-light border-tp-border text-tp-text hover:bg-tp-light/80',
-  tag: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
-  warning: 'bg-danger-50 border-danger-200 text-danger-700 hover:bg-danger-100',
-  success: 'bg-success-50 border-success-200 text-success-700 hover:bg-success-100',
-  archetype: 'bg-power-light border-power-border text-power-text hover:bg-power-light/80',
-  skill: 'bg-info-50 border-info-200 text-info-700 hover:bg-info-100',
+  default: 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-800/50 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-800/40',
+  cost: 'bg-tp-light dark:bg-amber-900/30 border-tp-border text-tp-text hover:bg-tp-light/80 dark:hover:bg-amber-800/30',
+  tag: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-800/40',
+  warning: 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-800/50 text-danger-700 dark:text-danger-400 hover:bg-danger-100 dark:hover:bg-danger-800/40',
+  success: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-800/40',
+  archetype: 'bg-power-light dark:bg-power-900/30 border-power-border text-power-text dark:text-power-300 hover:bg-power-light/80 dark:hover:bg-power-800/30',
+  skill: 'bg-info-50 dark:bg-info-900/30 border-info-200 dark:border-info-800/50 text-info-700 dark:text-info-400 hover:bg-info-100 dark:hover:bg-info-800/40',
 };
 
 // =============================================================================
@@ -170,6 +172,7 @@ export function GridListRow({
   gridColumns,
   chips = [],
   chipsLabel = 'Details',
+  detailSections,
   totalCost,
   costLabel = 'TP',
   badges = [],
@@ -212,7 +215,9 @@ export function GridListRow({
     onExpandChange?.(value);
   };
   
-  const hasDetails = description || chips.length > 0 || badges.length > 0 || requirements || expandedContent;
+  const hasDetailSections = (detailSections?.length ?? 0) > 0;
+  const hasChips = chips.length > 0 && !hasDetailSections;
+  const hasDetails = description || hasChips || hasDetailSections || badges.length > 0 || requirements || expandedContent;
   const showActions = onEdit || onDuplicate; // Delete is now inline X, not in expanded actions
   const showExpander = hasDetails || showActions || onDelete;
   
@@ -489,29 +494,81 @@ export function GridListRow({
                 </div>
               )}
               
-              {/* Requirements */}
-              {requirements && (
+              {/* Requirements - legacy raw content; prefer detailSections for structured display */}
+              {requirements && !hasDetailSections && (
                 <div className="mb-4 text-sm">
                   {requirements}
                 </div>
               )}
 
-              {/* Chips Section */}
-              {chips.length > 0 && (
+              {/* Detail Sections - multiple header+chips groups (Tags, Requirements, Type, etc.) */}
+              {hasDetailSections && detailSections!.map((section, sectionIdx) => {
+                const sectionChips = section.chips;
+                if (sectionChips.length === 0) return null;
+                const showLabel = !section.hideLabelIfSingle || sectionChips.length > 1;
+                const sectionOffset = detailSections!.slice(0, sectionIdx).reduce((sum, s) => sum + s.chips.length, 0);
+                return (
+                  <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
+                    {showLabel && (
+                      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                        {section.label}
+                      </h4>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {sectionChips.map((chip, chipIdx) => {
+                        const index = sectionOffset + chipIdx;
+                        const hasCost = (chip.cost ?? 0) > 0;
+                        const isChipExpanded = expandedChipIndex === index;
+                        const category = chip.category || (hasCost ? 'cost' : 'default');
+                        const isExpandable = !!(chip.description || hasCost) && category !== 'tag';
+                        return (
+                          <button
+                            key={chipIdx}
+                            onClick={isExpandable ? (e) => handleChipClick(index, e) : (e) => e.stopPropagation()}
+                            className={cn(
+                              'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',
+                              isExpandable ? 'cursor-pointer' : 'cursor-default',
+                              CHIP_STYLES[category],
+                              isChipExpanded ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2' : 'px-3 py-1.5'
+                            )}
+                          >
+                            <span className="inline-flex items-center gap-1.5">
+                              <span>{chip.name}</span>
+                              {chip.level && chip.level > 1 && (
+                                <span className="text-xs opacity-75">(Lv.{chip.level})</span>
+                              )}
+                              {hasCost && (
+                                <>
+                                  <span className="opacity-40">|</span>
+                                  <span className="text-xs font-semibold">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                </>
+                              )}
+                            </span>
+                            {isChipExpanded && chip.description && (
+                              <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed">
+                                {chip.description}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Chips Section - legacy single section */}
+              {hasChips && chips.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
                     {chipsLabel}
                   </h4>
-
-                  {/* Chips */}
                   <div className="flex flex-wrap gap-2">
                     {chips.map((chip, index) => {
                       const hasCost = (chip.cost ?? 0) > 0;
                       const isChipExpanded = expandedChipIndex === index;
                       const category = chip.category || (hasCost ? 'cost' : 'default');
-                      // Tag-only chips (no description and no cost) are informational — don't expand
                       const isExpandable = !!(chip.description || hasCost) && category !== 'tag';
-                      
                       return (
                         <button
                           key={index}
@@ -520,12 +577,9 @@ export function GridListRow({
                             'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',
                             isExpandable ? 'cursor-pointer' : 'cursor-default',
                             CHIP_STYLES[category],
-                            isChipExpanded
-                              ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2'
-                              : 'px-3 py-1.5'
+                            isChipExpanded ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2' : 'px-3 py-1.5'
                           )}
                         >
-                          {/* Chip header row */}
                           <span className="inline-flex items-center gap-1.5">
                             <span>{chip.name}</span>
                             {chip.level && chip.level > 1 && (
@@ -538,7 +592,6 @@ export function GridListRow({
                               </>
                             )}
                           </span>
-                          {/* Inline expanded content — same chip, same colors */}
                           {isChipExpanded && chip.description && (
                             <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed">
                               {chip.description}

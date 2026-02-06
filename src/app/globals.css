@@ -336,6 +336,17 @@
     --color-primary-100: #0a4a7a;
     --color-primary-600: #4f94cd;
     --color-primary-700: #77abd8;
+    /* Softer status colors for dark mode (less contrast, easier viewing) */
+    --color-success-light: #0d2818;
+    --color-success-600: #34d399;
+    --color-danger-light: #2d1515;
+    --color-danger-600: #f87171;
+    --color-health-light: #0d2818;
+    --color-energy-light: #0f172a;
+    --color-power-light: #1e1b24;
+    --color-martial-light: #241b1b;
+    --color-info-light: #0f172a;
+    --color-warning-light: #292419;
   }
   
   body {
@@ -655,19 +666,23 @@
 
   /* Status chip variants */
   .chip-success {
-    @apply bg-success-light text-success-700 border-success-300;
+    @apply bg-success-light text-success-700 border-success-300
+           dark:bg-success-900/30 dark:text-success-400 dark:border-success-800/50;
   }
   
   .chip-danger {
-    @apply bg-danger-light text-danger-700 border-danger-300;
+    @apply bg-danger-light text-danger-700 border-danger-300
+           dark:bg-danger-900/30 dark:text-danger-400 dark:border-danger-800/50;
   }
   
   .chip-warning {
-    @apply bg-warning-light text-warning-700 border-warning-300;
+    @apply bg-warning-light text-warning-700 border-warning-300
+           dark:bg-warning-900/30 dark:text-warning-400 dark:border-warning-800/50;
   }
   
   .chip-info {
-    @apply bg-info-light text-info-700 border-info-300;
+    @apply bg-info-light text-info-700 border-info-300
+           dark:bg-info-900/30 dark:text-info-400 dark:border-info-800/50;
   }
 
   /* ---------------------------------------------------------------------------
@@ -792,11 +807,12 @@
   
   .tab-nav-trigger {
     @apply px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-           border-transparent text-text-muted hover:text-text-primary hover:bg-neutral-100;
+           border-transparent text-text-muted hover:text-text-primary hover:bg-neutral-100
+           dark:hover:bg-neutral-800;
   }
   
   .tab-nav-trigger-active {
-    @apply border-primary-600 text-primary-700 bg-primary-50;
+    @apply border-primary-600 text-primary-700 bg-primary-50 dark:bg-primary-900/40 dark:text-primary-300;
   }
   
   /* Pill-style tabs (wizard steps, settings) */
@@ -823,13 +839,19 @@
   .btn-stepper-danger {
     @apply bg-red-50 text-red-600 border-red-200
            hover:bg-red-100 hover:border-red-300 active:bg-red-200
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200;
+           dark:bg-red-950/50 dark:text-red-400 dark:border-red-900/50
+           dark:hover:bg-red-900/40 dark:hover:border-red-800/50
+           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200
+           dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
   }
 
   .btn-stepper-success {
     @apply bg-green-50 text-green-600 border-green-200
            hover:bg-green-100 hover:border-green-300 active:bg-green-200
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200;
+           dark:bg-green-950/50 dark:text-green-400 dark:border-green-900/50
+           dark:hover:bg-green-900/40 dark:hover:border-green-800/50
+           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200
+           dark:disabled:bg-neutral-800 dark:disabled:text-neutral-500;
   }
 
   /* Interactive card hover effects */

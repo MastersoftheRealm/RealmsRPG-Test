@@ -2,6 +2,18 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-05 | agent:cursor | Session: TASK-074, TASK-075 — Dark mode + session API | files: globals.css, list-header.tsx, grid-list-row.tsx, value-stepper.tsx, sheet-header.tsx, server.ts, SECRETS_SETUP.md, AI_TASK_QUEUE.md | TASKs: TASK-074, TASK-075 | Summary:
+  - TASK-074: Dark mode — softer chip, stepper, ListHeader, GridListRow, health/energy, power/martial colors; CSS vars for status colors
+  - TASK-075: Added GOOGLE_APPLICATION_CREDENTIALS_JSON support for full service account JSON from Secret Manager
+  - Build passes
+
+- 2026-02-05 | agent:cursor | Session: TASK-072, TASK-073, TASK-076, TASK-077 — Character sheet + storage + username | files: characters/[id]/page.tsx, sheet-header.tsx, storage.rules, my-account/page.tsx, AI_TASK_QUEUE.md, ALL_FEEDBACK_CLEAN.md | TASKs: TASK-072, TASK-073, TASK-076, TASK-077 | Summary:
+  - TASK-072: Health/Energy allocation — when increasing max and current===max, bump current by same delta
+  - TASK-073: Speed/Evasion — pencil icon toggles base edit; red when base>default, green when base<default
+  - TASK-076: Storage rules — added portraits/{userId}/** and profile-pictures/{fileName} for authenticated users
+  - TASK-077: Username pattern — changed to [-a-zA-Z0-9_]+ to fix invalid character class error
+  - Build passes
+
 - 2026-02-05 | agent:cursor | Session: Roll Log, Modals, Buttons — feedback implementation | files: roll-context.tsx, roll-log.tsx, abilities-section.tsx, skills-section.tsx, add-feat-modal.tsx, add-skill-modal.tsx, modal.tsx, roll-button.tsx, dice-roller.tsx, ALL_FEEDBACK_CLEAN.md | Summary:
   - Roll Log titles: Removed "Save"/"Check"; abilities/defenses use display name only (e.g. "Acuity", "Discernment"); skills use "Athletics (STR)" format
   - Roll Log layout: Single-row boxes (1d20 X + Bonus = Total); roll=light grey, bonus=green, total=blue; smaller timestamp

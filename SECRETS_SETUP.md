@@ -30,14 +30,18 @@ The vanilla site already has these secrets configured. The Next.js app uses the 
 
 ### 2. Service Account Credentials (for Server-Side Features)
 
-For server-side session management and Admin SDK features, the following secrets are configured:
+For server-side session management and Admin SDK features, use **one** of these options:
 
+**Option A: Individual secrets** (recommended for Firebase Hosting)
 - `SERVICE_ACCOUNT_EMAIL` - The service account email address
 - `SERVICE_ACCOUNT_PRIVATE_KEY` - The service account private key
 
+**Option B: Full JSON key** (if you already have the full key in Secret Manager)
+- `GOOGLE_APPLICATION_CREDENTIALS_JSON` - The complete service account JSON (project_id, client_email, private_key)
+
 **Note:** Cannot use `FIREBASE_` prefix as it's reserved by Firebase.
 
-These are automatically injected as environment variables when deployed to Firebase Hosting.
+These are automatically injected as environment variables when deployed to Firebase Hosting. Add the secret name(s) to `firebase.json` → `hosting.frameworksBackend.secrets`.
 
 #### Creating/Updating Service Account Secrets
 
@@ -66,6 +70,8 @@ The `firebase.json` file must list the secrets in the `frameworksBackend.secrets
   }
 }
 ```
+
+If using the full JSON key instead, add `GOOGLE_APPLICATION_CREDENTIALS_JSON` to the secrets array (and ensure that secret exists in Secret Manager with the full service account JSON).
 
 ### 4. Deploy to Firebase Hosting
 

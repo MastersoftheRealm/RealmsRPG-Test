@@ -1462,3 +1462,119 @@ Agents should **create new tasks** during their work when they discover addition
     - Decrement/increment colors less stark - unify btn-stepper-danger and btn-stepper-success
     - DefenseBlock, abilities-section, health-energy-allocator, etc. use same visual language
   notes: "DONE 2026-02-05: Defense steppers xs->sm; btn-stepper colors softened (red-50/green-50, 600 text)."
+
+- id: TASK-072
+  title: Health/Energy edit mode — bump current when at max and increasing max
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/characters/[id]/page.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    When editing health/energy allocation and increasing the max (via healthPoints or energyPoints),
+    if the current value is already at the max, increase the current by the same amount as the max.
+    Rationale: a character who was fully healthy/energized when increasing the pool should stay at full.
+  acceptance_criteria:
+    - Increasing healthPoints when current HP === max HP bumps current HP by the same delta
+    - Increasing energyPoints when current EN === max EN bumps current EN by the same delta
+    - Decreasing points does not auto-adjust current (only when increasing)
+  notes: "DONE 2026-02-05: handleHealthPointsChange/handleEnergyPointsChange now bump current by delta when current>=max and delta>0."
+
+- id: TASK-073
+  title: Speed/Evasion base editing — pencil icon, hide by default, red/green validation
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Don't show speed/evasion base editing options by default. Add a pencil icon by each (like other sections).
+    Require clicking the pencil to show the edit option. When editing: red if base is over the proper value
+    (increasing base), green if under (decreasing base).
+  acceptance_criteria:
+    - Speed and Evasion show pencil icon; base editing hidden until pencil clicked
+    - Red indicator when base > default (over proper value)
+    - Green indicator when base < default (under proper value)
+    - Matches pencil-edit pattern used elsewhere (name, XP, skills)
+  notes: "Owner feedback 2026-02-05"
+
+- id: TASK-074
+  title: Dark mode — soften contrasting colors for easier viewing
+  priority: medium
+  status: done
+  related_files:
+    - src/app/globals.css
+    - src/components/ui/chip.tsx
+    - src/components/shared/value-stepper.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/library-section.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Many colors are too contrasting in dark mode. Replace with easier viewing colors: chip colors,
+    stepper colors, character sheet health/energy backgrounds, power proficiency background,
+    item list headers, hover-highlight colors (which also white out the hovered white font content).
+  acceptance_criteria:
+    - Chip, stepper, health/energy, power proficiency, item list header colors softened for dark mode
+    - Hover highlights no longer white out white font on hovered items
+    - Audit and fix other high-contrast elements
+  notes: "DONE 2026-02-05: Added dark mode CSS vars (success/danger/health/energy/power/martial-light); chip, stepper, ListHeader, GridListRow, ValueStepper, ResourceInput dark variants."
+
+- id: TASK-075
+  title: Fix /api/session 500 Internal Server Error
+  priority: high
+  status: done
+  related_files:
+    - src/app/api/session/route.ts
+    - src/lib/firebase/session.ts
+    - src/lib/firebase/server.ts
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    /api/session returns 500 when creating session from Firebase ID token. This blocks portrait
+    upload and profile picture upload flows. Likely causes: Firebase Admin SDK not configured
+    in production, or createSessionCookie failing.
+  acceptance_criteria:
+    - POST /api/session with valid idToken returns 200
+    - Session cookie is set correctly
+    - Portrait and profile picture upload flows work after login
+  notes: "DONE 2026-02-05: Added GOOGLE_APPLICATION_CREDENTIALS_JSON support (full JSON key) in server.ts; updated SECRETS_SETUP.md. If 500 persists, ensure SERVICE_ACCOUNT_EMAIL+PRIVATE_KEY or GOOGLE_APPLICATION_CREDENTIALS_JSON is in firebase.json secrets and Secret Manager."
+
+- id: TASK-076
+  title: Fix Firebase Storage rules for portraits and profile-pictures
+  priority: high
+  status: done
+  related_files:
+    - storage.rules
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Storage rules only allow user_uploads/{userId}/**. Uploads go to portraits/{userId}/** and
+    profile-pictures/{userId}.jpg. Add rules so authenticated users can read/write their own
+    portraits and profile pictures.
+  acceptance_criteria:
+    - portraits/{userId}/{allPaths=**} allow read, write if request.auth.uid == userId
+    - profile-pictures/{userId}.{ext} allow read, write if request.auth.uid == userId
+    - Portrait and profile picture uploads succeed
+  notes: "DONE 2026-02-05: Added portraits/{userId}/** and profile-pictures/{fileName} rules."
+
+- id: TASK-077
+  title: Fix username regex — invalid character class in pattern attribute
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/my-account/page.tsx
+    - src/app/(auth)/actions.ts
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Pattern attribute value [a-zA-Z0-9_-]+ causes "Invalid character in character class" in some
+    browsers (e.g. with unicodeSets /v flag). Fix by using hyphen at start of class: [-a-zA-Z0-9_]+
+    or escape it. Also fix any server-side validation using the same regex.
+  acceptance_criteria:
+    - Username input pattern validates correctly in all supported browsers
+    - No "Invalid regular expression" or "Invalid character in character class" errors
+    - POST my-account for username change succeeds (no 500)
+  notes: "DONE 2026-02-05: Changed pattern to [-a-zA-Z0-9_]+ (hyphen at start avoids character class issue)."
