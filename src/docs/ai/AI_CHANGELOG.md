@@ -2,6 +2,18 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: TASK-096 — Split encounter-tracker page | files: encounter-tracker/page.tsx, CombatantCard.tsx, encounter-tracker-types.ts, encounter-tracker-constants.ts | Summary:
+  - Extracted CombatantCard (~380 lines) to separate file
+  - Extracted encounter-tracker-types.ts (Combatant, CombatantCondition, ConditionDef, EncounterState, CombatantCardProps)
+  - Extracted encounter-tracker-constants.ts (STORAGE_KEY, CONDITION_OPTIONS)
+  - Main page reduced from ~1335 to ~855 lines; build passes
+
+- 2026-02-06 | agent:cursor | Session: TASK-096 — Split power-creator page | files: power-creator/page.tsx, PowerPartCard.tsx, PowerAdvancedMechanics.tsx, power-creator-types.ts, power-creator-constants.ts | Summary:
+  - Extracted PowerPartCard (~260 lines), PowerAdvancedMechanicsSection (~270 lines)
+  - Extracted power-creator-types.ts (SelectedPart, AdvancedPart, DamageConfig, RangeConfig)
+  - Extracted power-creator-constants.ts (POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS)
+  - Main page reduced from ~1673 to ~950 lines; build passes
+
 - 2026-02-06 | agent:cursor | Session: TASK-096 — Split codex and library pages | files: codex/page.tsx, CodexFeatsTab.tsx, CodexSkillsTab.tsx, CodexSpeciesTab.tsx, CodexEquipmentTab.tsx, CodexPropertiesTab.tsx, CodexPartsTab.tsx, library/page.tsx, LibraryPowersTab.tsx, LibraryTechniquesTab.tsx, LibraryItemsTab.tsx, LibraryCreaturesTab.tsx, AI_TASK_QUEUE.md | TASK: TASK-096 | Summary:
   - Codex: Extracted 6 tab components (Feats, Skills, Species, Equipment, Properties, Parts); main page ~65 lines
   - Library: Extracted 4 tab components (Powers, Techniques, Items, Creatures); main page ~165 lines
@@ -209,6 +221,13 @@ Append-only log. Agents must add an entry for each PR/merge.
 
 - 2026-02-06 | agent:claude-opus | TASK-091: Extract useSort hook | files: src/hooks/use-sort.ts, src/hooks/index.ts, LoadFromLibraryModal.tsx, add-skill-modal.tsx, add-sub-skill-modal.tsx, add-feat-modal.tsx, add-library-item-modal.tsx, unified-selection-modal.tsx, library-section.tsx, feats-tab.tsx, library/page.tsx, codex/page.tsx | TASK: TASK-091 | Summary:
   Created shared useSort hook with toggleSort and sortByColumn utilities. Replaced 20+ duplicate implementations across 12 files. Single source of truth for list sorting logic. (required fields on task completion):
+
+- 2026-02-06 | agent | TASK-096: Split creature-creator page | files: creature-creator/creature-creator-types.ts, creature-creator-constants.ts, CreatureCreatorHelpers.tsx, LoadCreatureModal.tsx, page.tsx | TASK: TASK-096 | Summary:
+  Extracted creature-creator (~1580 lines) into: creature-creator-types.ts (CreatureSkill, CreatureState), creature-creator-constants.ts (LEVEL_OPTIONS, SENSES, MOVEMENT_TYPES, SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID, initialState, CREATURE_CREATOR_CACHE_KEY), CreatureCreatorHelpers.tsx (ChipList, ExpandableChipList, AddItemDropdown, DefenseBlock, displayItemToSelectableItem), LoadCreatureModal.tsx. Main page reduced significantly. Build passes.
+
+- 2026-02-06 | agent | TASK-096: Split characters/[id] page | files: characters/[id]/character-sheet-utils.ts, CharacterSheetModals.tsx, page.tsx | TASK: TASK-096 | Summary:
+  Extracted character sheet (~1586 lines) into: character-sheet-utils.ts (calculateStats), CharacterSheetModals.tsx (AddLibraryItemModal, DeleteConfirmModal, AddFeatModal, AddSkillModal, AddSubSkillModal, LevelUpModal, RecoveryModal). Main page reduced by ~200 lines. Build passes.
+
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.

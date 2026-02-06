@@ -24,98 +24,16 @@ import {
   LibrarySection,
   RollLog,
   RollProvider,
-  AddLibraryItemModal,
-  AddFeatModal,
-  AddSkillModal,
-  AddSubSkillModal,
-  LevelUpModal,
-  RecoveryModal,
   SheetActionToolbar,
 } from '@/components/character-sheet';
-import { DeleteConfirmModal } from '@/components/shared';
 import { useToast } from '@/components/ui';
-import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
+import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-
-type AddModalType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null;
-type FeatModalType = 'archetype' | 'character' | null;
-type SkillModalType = 'skill' | 'subskill' | null;
+import { calculateStats } from './character-sheet-utils';
+import { CharacterSheetModals, type AddModalType, type FeatModalType, type SkillModalType } from './CharacterSheetModals';
 
 interface PageParams {
   params: Promise<{ id: string }>;
-}
-
-// Calculate stats from character data
-function calculateStats(character: Character) {
-  const abilities = character.abilities || {
-    strength: 0,
-    vitality: 0,
-    agility: 0,
-    acuity: 0,
-    intelligence: 0,
-    charisma: 0,
-  };
-  
-  const defenseVals: DefenseSkills = character.defenseSkills 
-    ? { ...DEFAULT_DEFENSE_SKILLS, ...character.defenseSkills }
-    : DEFAULT_DEFENSE_SKILLS;
-  
-  // Calculate defenses
-  const defenseBonuses = {
-    might: (abilities.strength || 0) + (defenseVals.might || 0),
-    fortitude: (abilities.vitality || 0) + (defenseVals.fortitude || 0),
-    reflex: (abilities.agility || 0) + (defenseVals.reflex || 0),
-    discernment: (abilities.acuity || 0) + (defenseVals.discernment || 0),
-    mentalFortitude: (abilities.intelligence || 0) + (defenseVals.mentalFortitude || 0),
-    resolve: (abilities.charisma || 0) + (defenseVals.resolve || 0),
-  };
-  
-  const defenseScores = Object.entries(defenseBonuses).reduce((acc, [key, val]) => {
-    acc[key] = 10 + val;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  // Speed = 6 + ceil(agility / 2)
-  const speedBase = character.speedBase ?? 6;
-  const speed = speedBase + Math.ceil((abilities.agility || 0) / 2);
-  
-  // Evasion = 10 + agility
-  const evasionBase = character.evasionBase ?? 10;
-  const evasion = evasionBase + (abilities.agility || 0);
-  
-  // Calculate armor from equipped armor items
-  const armorItems = (character.equipment?.armor || []) as Item[];
-  const armor = armorItems
-    .filter(item => item.equipped)
-    .reduce((sum, item) => sum + (item.armor || 0), 0);
-  
-  // Max Health = 8 + (vitality * level) + healthPoints
-  const level = character.level || 1;
-  const vitality = abilities.vitality || 0;
-  const healthPoints = character.healthPoints || 0;
-  const maxHealth = vitality < 0 
-    ? 8 + vitality + healthPoints 
-    : 8 + (vitality * level) + healthPoints;
-  
-  // Max Energy = (powerAbility * level) + energyPoints
-  const powerAbil = character.pow_abil?.toLowerCase() as AbilityName | undefined;
-  const powerAbilityValue = powerAbil ? (abilities[powerAbil] || 0) : 0;
-  const energyPoints = character.energyPoints || 0;
-  const maxEnergy = (powerAbilityValue * level) + energyPoints;
-  
-  // Terminal = maxHealth / 4 rounded up
-  const terminal = Math.ceil(maxHealth / 4);
-  
-  return {
-    maxHealth,
-    maxEnergy,
-    terminal,
-    speed,
-    evasion,
-    armor,
-    defenseBonuses,
-    defenseScores,
-  };
 }
 
 export default function CharacterSheetPage({ params }: PageParams) {
@@ -1473,112 +1391,34 @@ export default function CharacterSheetPage({ params }: PageParams) {
       
       {/* Fixed Roll Log */}
       <RollLog />
-      
-      {/* Add Item Modal */}
-      {addModalType && (
-        <AddLibraryItemModal
-          isOpen={!!addModalType}
-          onClose={() => setAddModalType(null)}
-          itemType={addModalType}
-          existingIds={existingIds}
-          onAdd={handleModalAdd}
-        />
-      )}
-      
-      {/* Feat Delete Confirmation Modal */}
-      {featToRemove && (
-        <DeleteConfirmModal
-          itemName={featToRemove.name}
-          itemType="feat"
-          deleteContext="character"
-          onConfirm={handleConfirmRemoveFeat}
-          onClose={() => setFeatToRemove(null)}
-        />
-      )}
-      
-      {/* Add Feat Modal */}
-      {character && featModalType && (
-        <AddFeatModal
-          isOpen={!!featModalType}
-          onClose={() => setFeatModalType(null)}
-          featType={featModalType}
-          character={character}
-          existingFeatIds={[
-            ...(character.archetypeFeats || []).map(f => f.id || f.name),
-            ...(character.feats || []).map(f => f.id || f.name),
-          ]}
-          onAdd={(feats) => handleAddFeats(feats, featModalType)}
-        />
-      )}
-      
-      {/* Add Skill Modal */}
-      {character && skillModalType === 'skill' && (
-        <AddSkillModal
-          isOpen={true}
-          onClose={() => setSkillModalType(null)}
-          existingSkillNames={skills.map(s => s.name)}
-          onAdd={handleAddSkills}
-        />
-      )}
-      
-      {/* Add Sub-Skill Modal */}
-      {character && skillModalType === 'subskill' && (
-        <AddSubSkillModal
-          isOpen={true}
-          onClose={() => setSkillModalType(null)}
-          characterSkills={skills.map(s => ({ name: s.name, prof: s.prof || false }))}
-          existingSkillNames={skills.map(s => s.name)}
-          onAdd={handleAddSkills}
-        />
-      )}
-      
-      {/* Level Up Modal */}
-      {character && (
-        <LevelUpModal
-          isOpen={showLevelUpModal}
-          onClose={() => setShowLevelUpModal(false)}
-          character={character}
-          onConfirm={handleLevelUp}
-        />
-      )}
-      
-      {/* Recovery Modal */}
-      {character && calculatedStats && (
-        <RecoveryModal
-          isOpen={showRecoveryModal}
-          onClose={() => setShowRecoveryModal(false)}
-          currentHealth={character.health?.current ?? calculatedStats.maxHealth}
-          maxHealth={calculatedStats.maxHealth}
-          currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
-          maxEnergy={calculatedStats.maxEnergy}
-          feats={[
-            ...(character.archetypeFeats || []).map(f => ({
-              id: f.id || f.name,
-              name: f.name,
-              currentUses: f.currentUses,
-              maxUses: f.maxUses,
-              recovery: f.recovery,
-            })),
-            ...(character.feats || []).map(f => ({
-              id: f.id || f.name,
-              name: f.name,
-              currentUses: f.currentUses,
-              maxUses: f.maxUses,
-              recovery: f.recovery,
-            })),
-          ]}
-          traits={traitsDb
-            .filter(t => character.traitUses?.[t.name] !== undefined)
-            .map(t => ({
-              name: t.name,
-              currentUses: character.traitUses?.[t.name],
-              maxUses: t.uses_per_rec,
-              recovery: t.rec_period,
-            }))}
-          onConfirmFullRecovery={handleFullRecovery}
-          onConfirmPartialRecovery={handlePartialRecovery}
-        />
-      )}
+
+      {/* Modals */}
+      <CharacterSheetModals
+        addModalType={addModalType}
+        setAddModalType={setAddModalType}
+        featModalType={featModalType}
+        setFeatModalType={setFeatModalType}
+        skillModalType={skillModalType}
+        setSkillModalType={setSkillModalType}
+        featToRemove={featToRemove}
+        setFeatToRemove={setFeatToRemove}
+        showLevelUpModal={showLevelUpModal}
+        setShowLevelUpModal={setShowLevelUpModal}
+        showRecoveryModal={showRecoveryModal}
+        setShowRecoveryModal={setShowRecoveryModal}
+        character={character}
+        calculatedStats={calculatedStats}
+        existingIds={existingIds}
+        skills={skills}
+        traitsDb={traitsDb}
+        onModalAdd={handleModalAdd}
+        onAddFeats={handleAddFeats}
+        onAddSkills={handleAddSkills}
+        onConfirmRemoveFeat={handleConfirmRemoveFeat}
+        onLevelUp={handleLevelUp}
+        onFullRecovery={handleFullRecovery}
+        onPartialRecovery={handlePartialRecovery}
+      />
     </div>
     </RollProvider>
   );

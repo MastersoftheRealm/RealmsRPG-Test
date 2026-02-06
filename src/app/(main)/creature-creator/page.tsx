@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper, UnifiedSelectionModal, ItemCard, SkillRow, type SelectableItem, type ColumnValue } from '@/components/shared';
+import { LoginPromptModal, UnifiedSelectionModal, ItemCard, SkillRow } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
 import {
@@ -27,10 +27,6 @@ import {
   displayItemToCreatureTechnique,
   displayItemToCreatureFeat,
   displayItemToCreatureArmament,
-  type CreaturePower,
-  type CreatureTechnique,
-  type CreatureFeat,
-  type CreatureArmament,
 } from './transformers';
 import { 
   calculateCreatureTrainingPoints, 
@@ -42,15 +38,10 @@ import {
   calculateSkillPoints,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
-import { IconButton, Button, Input, Select, PageContainer, PageHeader, Textarea, Modal } from '@/components/ui';
-import { X, Trash2, Skull, FolderOpen } from 'lucide-react';
+import { Button, Input, Select, PageContainer, PageHeader, Textarea } from '@/components/ui';
+import { Skull, FolderOpen } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
-import {
-  CREATURE_TYPES,
-  CREATURE_SIZES,
-  CONDITIONS,
-  CREATOR_CACHE_KEYS,
-} from '@/lib/game/creator-constants';
+import { CREATURE_SIZES, CONDITIONS } from '@/lib/game/creator-constants';
 import {
   HealthEnergyAllocator,
   AbilityScoreEditor,
@@ -61,468 +52,26 @@ import {
 } from '@/components/creator';
 import type { AbilityName } from '@/types';
 import type { DisplayItem } from '@/types/items';
-
-// =============================================================================
-// Creature-specific Constants
-// =============================================================================
-
-const LEVEL_OPTIONS = [
-  { value: '0.25', label: '1/4' },
-  { value: '0.5', label: '1/2' },
-  { value: '0.75', label: '3/4' },
-  ...Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })),
-];
-
-// Convert CREATURE_TYPES to Select options format
-const CREATURE_TYPE_OPTIONS = CREATURE_TYPES.map(type => ({ value: type, label: type }));
-
-// Damage types with proper capitalization for creatures (display only)
-const DAMAGE_TYPES = [
-  'Bludgeoning', 'Piercing', 'Slashing', 'Magic', 'Fire', 'Ice', 
-  'Lightning', 'Spiritual', 'Sonic', 'Poison', 'Necrotic', 'Acid', 'Psychic'
-];
-
-const SENSES = [
-  { value: 'Darkvision', label: 'Darkvision (6 spaces)', description: 'See in darkness up to 6 spaces as if it were dim light.' },
-  { value: 'Darkvision II', label: 'Darkvision II (12 spaces)', description: 'See in darkness up to 12 spaces as if it were dim light.' },
-  { value: 'Darkvision III', label: 'Darkvision III (24 spaces)', description: 'See in darkness up to 24 spaces as if it were dim light.' },
-  { value: 'Blindsense', label: 'Blindsense (3 spaces)', description: 'Detect creatures within 3 spaces without relying on sight.' },
-  { value: 'Blindsense II', label: 'Blindsense II (6 spaces)', description: 'Detect creatures within 6 spaces without relying on sight.' },
-  { value: 'Blindsense III', label: 'Blindsense III (12 spaces)', description: 'Detect creatures within 12 spaces without relying on sight.' },
-  { value: 'Amphibious', label: 'Amphibious', description: 'Can breathe air and water.' },
-  { value: 'All-Surface Climber', label: 'All-Surface Climber', description: 'Can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.' },
-  { value: 'Telepathy', label: 'Telepathy (12 spaces)', description: 'Mentally communicate with creatures within 12 spaces.' },
-  { value: 'Telepathy II', label: 'Telepathy II (48 spaces)', description: 'Mentally communicate with creatures within 48 spaces.' },
-  { value: 'Waterbreathing', label: 'Waterbreathing', description: 'Can breathe underwater.' },
-  { value: 'Unrestrained Movement', label: 'Unrestrained Movement', description: 'Movement is unaffected by difficult terrain, and spells and magical effects can neither reduce speed nor cause paralysis or restraint.' },
-];
-
-const MOVEMENT_TYPES = [
-  { value: 'Fly Half', label: 'Flying (Half Speed)', description: 'Gains a flying speed equal to half its walking speed.' },
-  { value: 'Fly', label: 'Flying II (Full Speed)', description: 'Gains a flying speed equal to its walking speed.' },
-  { value: 'Burrow', label: 'Burrow (Half Speed)', description: 'Gains a burrowing speed equal to half its walking speed.' },
-  { value: 'Burrow II', label: 'Burrow II (Full Speed)', description: 'Gains a burrowing speed equal to its walking speed.' },
-  { value: 'Jump', label: 'Jump (Long 3, High 2)', description: 'Long jump of 3 spaces and high jump of 2 spaces, with or without a running start.' },
-  { value: 'Jump II', label: 'Jump II (Long 4, High 3)', description: 'Long jump of 4 spaces and high jump of 3 spaces, with or without a running start.' },
-  { value: 'Jump III', label: 'Jump III (Long 5, High 4)', description: 'Long jump of 5 spaces and high jump of 4 spaces, with or without a running start.' },
-  { value: 'Speedy', label: 'Speedy (+2 spaces)', description: 'Walking speed is increased by 2 spaces.' },
-  { value: 'Speedy II', label: 'Speedy II (+4 spaces)', description: 'Walking speed is increased by 4 spaces.' },
-  { value: 'Speedy III', label: 'Speedy III (+6 spaces)', description: 'Walking speed is increased by 6 spaces.' },
-  { value: 'Slow', label: 'Slow (-2 spaces)', description: 'Walking speed is reduced by 2 spaces.' },
-  { value: 'Hover', label: 'Hover', description: 'Can remain in the air without expending movement (requires a flying speed).' },
-];
-
-// CONDITIONS and SKILLS imported from '@/lib/game/creator-constants'
-
-// Map sense/movement values to their creature feat IDs
-const SENSE_TO_FEAT_ID: Record<string, number> = {
-  'Darkvision': CREATURE_FEAT_IDS.DARKVISION,
-  'Darkvision II': CREATURE_FEAT_IDS.DARKVISION_II,
-  'Darkvision III': CREATURE_FEAT_IDS.DARKVISION_III,
-  'Blindsense': CREATURE_FEAT_IDS.BLINDSENSE,
-  'Blindsense II': CREATURE_FEAT_IDS.BLINDSENSE_II,
-  'Blindsense III': CREATURE_FEAT_IDS.BLINDSENSE_III,
-  'Amphibious': CREATURE_FEAT_IDS.AMPHIBIOUS,
-  'All-Surface Climber': CREATURE_FEAT_IDS.ALL_SURFACE_CLIMBER,
-  'Telepathy': CREATURE_FEAT_IDS.TELEPATHY,
-  'Telepathy II': CREATURE_FEAT_IDS.TELEPATHY_II,
-  'Waterbreathing': CREATURE_FEAT_IDS.WATERBREATHING,
-  'Unrestrained Movement': CREATURE_FEAT_IDS.UNRESTRAINED_MOVEMENT,
-};
-
-const MOVEMENT_TO_FEAT_ID: Record<string, number> = {
-  'Fly Half': CREATURE_FEAT_IDS.FLYING,
-  'Fly': CREATURE_FEAT_IDS.FLYING_II,
-  'Burrow': CREATURE_FEAT_IDS.BURROW,
-  'Burrow II': CREATURE_FEAT_IDS.BURROW_II,
-  'Jump': CREATURE_FEAT_IDS.JUMP,
-  'Jump II': CREATURE_FEAT_IDS.JUMP_II,
-  'Jump III': CREATURE_FEAT_IDS.JUMP_III,
-  'Speedy': CREATURE_FEAT_IDS.SPEEDY,
-  'Speedy II': CREATURE_FEAT_IDS.SPEEDY_II,
-  'Speedy III': CREATURE_FEAT_IDS.SPEEDY_III,
-  'Slow': CREATURE_FEAT_IDS.SLOW,
-  'Hover': CREATURE_FEAT_IDS.HOVER,
-};
-
-// =============================================================================
-// Types (remaining local types - others imported from transformers)
-// =============================================================================
-
-interface CreatureSkill {
-  name: string;
-  value: number;
-  proficient: boolean;
-}
-
-interface CreatureState {
-  name: string;
-  level: number;
-  type: string;
-  size: string;
-  description: string;
-  archetypeType: ArchetypeType;
-  abilities: {
-    strength: number;
-    vitality: number;
-    agility: number;
-    acuity: number;
-    intelligence: number;
-    charisma: number;
-  };
-  defenses: {
-    might: number;
-    fortitude: number;
-    reflex: number;
-    discernment: number;
-    mentalFortitude: number;
-    resolve: number;
-  };
-  hitPoints: number;
-  energyPoints: number;
-  powerProficiency: number;
-  martialProficiency: number;
-  resistances: string[];
-  weaknesses: string[];
-  immunities: string[];
-  conditionImmunities: string[];
-  senses: string[];
-  movementTypes: string[];
-  languages: string[];
-  skills: CreatureSkill[];
-  powers: CreaturePower[];
-  techniques: CreatureTechnique[];
-  feats: CreatureFeat[];
-  armaments: CreatureArmament[];
-  // Optional section toggles
-  enablePowers: boolean;
-  enableTechniques: boolean;
-  enableArmaments: boolean;
-}
-
-const initialState: CreatureState = {
-  name: '',
-  level: 1,
-  type: 'Humanoid',
-  size: 'medium',
-  description: '',
-  archetypeType: 'power',
-  abilities: {
-    strength: 0,
-    vitality: 0,
-    agility: 0,
-    acuity: 0,
-    intelligence: 0,
-    charisma: 0,
-  },
-  defenses: {
-    might: 0,
-    fortitude: 0,
-    reflex: 0,
-    discernment: 0,
-    mentalFortitude: 0,
-    resolve: 0,
-  },
-  hitPoints: 0,
-  energyPoints: 0,
-  powerProficiency: 2,
-  martialProficiency: 0,
-  enablePowers: false,
-  enableTechniques: false,
-  enableArmaments: false,
-  resistances: [],
-  weaknesses: [],
-  immunities: [],
-  conditionImmunities: [],
-  senses: [],
-  movementTypes: [],
-  languages: [],
-  skills: [],
-  powers: [],
-  techniques: [],
-  feats: [],
-  armaments: [],
-};
-
-// =============================================================================
-// Helper Components
-// =============================================================================
-
-function ChipList({ 
-  items, 
-  onRemove, 
-  color = 'bg-surface-alt text-text-secondary' 
-}: { 
-  items: string[]; 
-  onRemove: (item: string) => void;
-  color?: string;
-}) {
-  if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
-  
-  return (
-    <div className="flex flex-wrap gap-1">
-      {items.map(item => (
-        <span 
-          key={item} 
-          className={cn('px-2 py-1 rounded text-sm flex items-center gap-1', color)}
-        >
-          {item}
-          <button 
-            onClick={() => onRemove(item)} 
-            className="text-text-muted hover:text-danger-500"
-          >
-            ×
-          </button>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function ExpandableChipList({ 
-  items, 
-  onRemove, 
-  color = 'bg-surface-alt text-text-secondary',
-  rowHoverClass,
-  descriptions
-}: { 
-  items: string[]; 
-  onRemove: (item: string) => void;
-  color?: string;
-  rowHoverClass?: string;
-  descriptions: Record<string, string>;
-}) {
-  if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
-  
-  return (
-    <div className="flex flex-col gap-2">
-      {items.map(item => {
-        const description = descriptions[item];
-        
-        return (
-          <GridListRow
-            key={item}
-            id={item}
-            name={item}
-            description={description}
-            onDelete={() => onRemove(item)}
-            compact
-            className={color}
-            rowHoverClass={rowHoverClass}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-function AddItemDropdown({
-  options,
-  selectedItems,
-  onAdd,
-  placeholder,
-}: {
-  options: readonly { value: string; label: string }[] | readonly string[];
-  selectedItems: readonly string[];
-  onAdd: (item: string) => void;
-  placeholder: string;
-}) {
-  const [selectedValue, setSelectedValue] = useState('');
-  
-  const normalizedOptions = [...options].map(opt => 
-    typeof opt === 'string' ? { value: opt, label: opt } : opt
-  );
-  
-  const availableOptions = normalizedOptions.filter(
-    opt => !selectedItems.includes(opt.value)
-  );
-  
-  const handleAdd = () => {
-    if (selectedValue) {
-      onAdd(selectedValue);
-      setSelectedValue('');
-    }
-  };
-  
-  return (
-    <div className="flex items-center gap-2 mt-2">
-      <select
-        value={selectedValue}
-        onChange={(e) => setSelectedValue(e.target.value)}
-        className="flex-1 min-w-0 px-3 py-2 border border-border-light rounded-lg text-sm bg-surface"
-      >
-        <option value="">{placeholder}</option>
-        {availableOptions.map(opt => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-      <Button
-        size="sm"
-        onClick={handleAdd}
-        disabled={!selectedValue}
-        className="flex-shrink-0"
-      >
-        Add
-      </Button>
-    </div>
-  );
-}
-
-function DefenseBlock({
-  name,
-  baseValue,
-  bonusValue,
-  onChange,
-}: {
-  name: string;
-  baseValue: number;
-  bonusValue: number;
-  onChange: (value: number) => void;
-}) {
-  const totalValue = 10 + baseValue + bonusValue;
-  
-  return (
-    <div className="p-3 bg-surface-alt rounded-lg text-center">
-      <label className="block text-xs font-medium text-text-muted mb-1 uppercase">
-        {name}
-      </label>
-      <div className="text-2xl font-bold text-text-primary mb-1">{totalValue}</div>
-      <div className="flex items-center justify-center gap-1">
-        <DecrementButton
-          onClick={() => onChange(Math.max(0, bonusValue - 1))}
-          disabled={bonusValue <= 0}
-          size="sm"
-        />
-        <span className="text-xs text-text-muted w-8">+{bonusValue}</span>
-        <IncrementButton
-          onClick={() => onChange(bonusValue + 1)}
-          size="sm"
-        />
-      </div>
-    </div>
-  );
-}
-
-// =============================================================================
-// Modal Components (LoadCreatureModal, UnifiedSelectionModal for add modals)
-// =============================================================================
-
-/** Convert DisplayItem to SelectableItem for UnifiedSelectionModal; stores DisplayItem in data for conversion back */
-function displayItemToSelectableItem(item: DisplayItem, columns?: string[]): SelectableItem {
-  const cols: ColumnValue[] = [];
-  if (columns && columns.length > 0) {
-    columns.forEach(key => {
-      const stat = item.stats?.find((s: { label: string }) => s.label.toLowerCase() === key.toLowerCase());
-      const val = stat?.value ?? (key === 'Cost' && item.cost != null ? `${item.cost}${item.costLabel || ''}` : undefined) ?? item[key as keyof DisplayItem];
-      cols.push({ key, value: val != null ? String(val) : '-' });
-    });
-  } else if (item.stats && item.stats.length > 0) {
-    item.stats.slice(0, 4).forEach((s: { label: string; value: string | number }) => {
-      cols.push({ key: s.label, value: s.value ?? '-' });
-    });
-  } else if (item.cost != null) {
-    cols.push({ key: 'Points', value: `${item.cost}${item.costLabel || ''}` });
-  }
-  const badges = item.badges?.map(b => ({ label: b.label, color: 'gray' as const })) ?? [];
-  return {
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    columns: cols.length > 0 ? cols : undefined,
-    badges: badges.length > 0 ? badges : undefined,
-    data: item,
-  };
-}
-
-function LoadCreatureModal({
-  isOpen,
-  onClose,
-  onSelect,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (creature: CreatureState) => void;
-}) {
-  const { data: userCreatures = [] } = useUserCreatures();
-  
-  // Custom header for Modal
-  const modalHeader = (
-    <div className="p-4 border-b flex justify-between items-center">
-      <h2 className="text-xl font-bold">Load Creature from Library</h2>
-      <IconButton variant="ghost" onClick={onClose} label="Close"><X className="w-5 h-5" /></IconButton>
-    </div>
-  );
-  
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="xl"
-      header={modalHeader}
-      showCloseButton={false}
-      contentClassName="p-4 overflow-y-auto max-h-[60vh]"
-      className="max-h-[80vh]"
-    >
-      {userCreatures.length === 0 ? (
-        <p className="text-text-muted text-center py-8">No creatures in your library</p>
-      ) : (
-        <div className="space-y-2">
-          {userCreatures.map(c => (
-            <button
-              key={c.docId}
-              onClick={() => {
-                // Convert saved creature format to CreatureState
-                const loadedCreature: CreatureState = {
-                  name: c.name || '',
-                  level: c.level || 1,
-                  type: (c as unknown as CreatureState).type || 'Humanoid',
-                  size: (c as unknown as CreatureState).size || 'medium',
-                  description: c.description || '',
-                  archetypeType: (c as unknown as CreatureState).archetypeType || 'power',
-                  abilities: (c as unknown as CreatureState).abilities || initialState.abilities,
-                  defenses: (c as unknown as CreatureState).defenses || initialState.defenses,
-                  hitPoints: (c as unknown as CreatureState).hitPoints || 0,
-                  energyPoints: (c as unknown as CreatureState).energyPoints || 0,
-                  powerProficiency: (c as unknown as CreatureState).powerProficiency || 0,
-                  martialProficiency: (c as unknown as CreatureState).martialProficiency || 0,
-                  enablePowers: (c as unknown as CreatureState).enablePowers ?? ((c as unknown as CreatureState).powers?.length > 0),
-                  enableTechniques: (c as unknown as CreatureState).enableTechniques ?? ((c as unknown as CreatureState).techniques?.length > 0),
-                  enableArmaments: (c as unknown as CreatureState).enableArmaments ?? ((c as unknown as CreatureState).armaments?.length > 0),
-                  resistances: (c as unknown as CreatureState).resistances || [],
-                  weaknesses: (c as unknown as CreatureState).weaknesses || [],
-                  immunities: (c as unknown as CreatureState).immunities || [],
-                  conditionImmunities: (c as unknown as CreatureState).conditionImmunities || [],
-                  senses: (c as unknown as CreatureState).senses || [],
-                  movementTypes: (c as unknown as CreatureState).movementTypes || [],
-                  languages: (c as unknown as CreatureState).languages || [],
-                  skills: (c as unknown as CreatureState).skills || [],
-                  powers: (c as unknown as CreatureState).powers || [],
-                  techniques: (c as unknown as CreatureState).techniques || [],
-                  feats: (c as unknown as CreatureState).feats || [],
-                  armaments: (c as unknown as CreatureState).armaments || [],
-                };
-                onSelect(loadedCreature);
-                onClose();
-              }}
-              className="w-full p-3 text-left bg-surface-alt hover:bg-primary-50 rounded-lg border border-border-light"
-            >
-              <div className="font-medium">{c.name}</div>
-              <div className="text-sm text-text-muted">
-                Level {c.level} {(c as unknown as CreatureState).type || 'Creature'}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-// =============================================================================
-// LocalStorage Cache
-// =============================================================================
-
-const CREATURE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.CREATURE;
+import type { CreatureSkill, CreatureState } from './creature-creator-types';
+import {
+  LEVEL_OPTIONS,
+  CREATURE_TYPE_OPTIONS,
+  DAMAGE_TYPES,
+  SENSES,
+  MOVEMENT_TYPES,
+  SENSE_TO_FEAT_ID,
+  MOVEMENT_TO_FEAT_ID,
+  initialState,
+  CREATURE_CREATOR_CACHE_KEY,
+} from './creature-creator-constants';
+import {
+  ChipList,
+  ExpandableChipList,
+  AddItemDropdown,
+  DefenseBlock,
+  displayItemToSelectableItem,
+} from './CreatureCreatorHelpers';
+import { LoadCreatureModal } from './LoadCreatureModal';
 
 // =============================================================================
 // Main Component

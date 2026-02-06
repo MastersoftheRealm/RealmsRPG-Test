@@ -2166,8 +2166,14 @@ Agents should **create new tasks** during their work when they discover addition
   status: done
   related_files:
     - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
     - src/app/(main)/power-creator/page.tsx
     - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/creature-creator-types.ts
+    - src/app/(main)/creature-creator/creature-creator-constants.ts
+    - src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx
+    - src/app/(main)/creature-creator/LoadCreatureModal.tsx
     - src/app/(main)/codex/page.tsx
     - src/app/(main)/encounter-tracker/page.tsx
     - src/app/(main)/library/page.tsx
