@@ -24,6 +24,9 @@ service cloud.firestore {
     match /users/{uid}/creatureLibrary/{docId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
+    match /users/{uid}/encounters/{docId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
 
     // Shared global library (if needed)
     match /library/{docId} {

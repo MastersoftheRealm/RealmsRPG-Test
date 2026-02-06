@@ -39,8 +39,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Session creation error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to create session';
+    // In development, surface the real error to help debug credential/config issues
+    const isDev = process.env.NODE_ENV !== 'production';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: isDev ? errorMessage : 'Internal Server Error' },
       { status: 500 }
     );
   }

@@ -760,9 +760,8 @@ function EncounterTrackerContent() {
 }
 
 export default function EncounterTrackerPage() {
-  return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <EncounterTrackerContent />
-    </div>
-  );
+  // Redirect to new Encounters system with optional localStorage import
+  return <EncounterTrackerRedirect />;
 }
+
+import { EncounterTrackerRedirect } from './redirect-page';

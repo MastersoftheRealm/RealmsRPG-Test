@@ -37,7 +37,7 @@ const navLinks = [
   {
     label: 'RM Tools',
     dropdown: [
-      { href: '/encounter-tracker', label: 'Encounter Tracker' },
+      { href: '/encounters', label: 'Encounters' },
       { href: '/creature-creator', label: 'Creature Creator' },
     ],
   },

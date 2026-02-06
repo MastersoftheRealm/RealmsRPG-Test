@@ -111,6 +111,21 @@ Notes:
 - Level dropdown is too wide; Level/Type/Size dropdowns not aligned horizontally with Name input.
 - Fix alignment and constrain dropdown widths.
 
+### 16) Character Sheet Archetype Section — Proficiency Slider
+- Archetype prof slider: Hide unless in edit mode for archetype proficiency editing. Only show when pencil is clicked.
+- In non-edit mode, display Power and/or Martial proficiency as simple values (e.g., "Power: 2, Martial: 1") instead of the slider.
+- The slider is for editing only.
+
+### 17) Encounters System (Major Redesign)
+- **Rename:** "Encounter Tracker" → "Encounters" (hub page).
+- **Encounters hub:** List view of saved encounters; filter, search, sort; create new (combat, skill, or mixed); click to open.
+- **Persist:** Save encounters to Firestore by ID; replace local storage. Save/return to sessions (turns, AP, HP tracked).
+- **Combat Tracker:** Designate current encounter tracker as combat-specific; tied to encounter ID.
+- **Skill Encounter page:** Add characters; track skill rolls; successes vs failures; required successes/failures; DS-based resolution; reference GAME_RULES.md (DS = 10 + ½ Party Level, Required Successes = # Characters + 1).
+- **Mixed Encounter page:** Combine combat + skill functionality; reuse components from both.
+- **Add from library:** Encounter tracker — add creatures from user's creature library; auto-populate max HP/EN; quantity selector; use existing add combatant/creature modal components.
+- **Campaign integration:** Add characters from campaigns user is in; pull evasion, acuity, HP, EN for quick reference; easy add without manual entry.
+
 ---
 
 ## High-Level Action Items
@@ -140,6 +155,12 @@ Notes:
 - [x] Power/Martial slider: min 1 at each end, not 0. (TASK-069)
 - [x] Restructure Creature Summary with resource boxes and line items. (TASK-070)
 - [x] Unify stepper styles across site (less stark colors). (TASK-071)
+- [ ] Archetype prof slider: hide unless pencil clicked; show simple Power/Martial values otherwise. (TASK-101)
+- [ ] Add creatures from library to encounter tracker (auto HP/EN, quantity). (TASK-102)
+- [ ] Encounters hub: rename to Encounters, list/create/filter/search/sort. (TASK-103)
+- [ ] Persist encounters to Firestore; save/return to sessions. (TASK-104)
+- [ ] Designate combat tracker; create skill encounter page; create mixed encounter page. (TASK-105, TASK-106, TASK-107)
+- [ ] Campaign integration: add characters from campaigns to encounters. (TASK-108)
 
 ---
 
@@ -446,3 +467,21 @@ Notes
 - Priority: Medium
 - "Stepper buttons across the site have slightly different styles, sizes, colors. Defenses allocation steppers are smaller, - is grey as opposed to red. Go with less stark colors and unify styles across the site."
 - Expected: Consistent sizes, less stark colors, unified btn-stepper styles (TASK-071)
+
+2/6/2026 — Character Sheet Archetype Section / Proficiency Slider
+- Context: Character Sheet → Archetype & Attacks
+- Priority: High
+- "Character Sheet Archetype Section - the archetype prof slider: We don't want this slider visible unless you're in edit mode for archetype proficiency editing, and we only want it visible if you hit the pencil, otherwise we can simply display Power and/or Martial proficiency as a simple value instead of a slider, the slider is designed for editing. (in non edit mode editable)"
+- Expected: Slider hidden unless pencil clicked; show "Power: X, Martial: Y" (or similar) when not editing. Extracted to TASK-101.
+
+2/6/2026 — Encounter Tracker / Add Creatures from Library
+- Context: Encounter Tracker, Add Combatant
+- Priority: High
+- "Encounter Tracker: Allow adding creatures from your library (which gets the creatures max health/energy automatically instead of inputting them manually, also allows choosing how many of those creature's you'd like to add, etc. can use the stuff we already have in the add combatant tab, as well as add creature modal using our many components for modals if we want."
+- Expected: Add from creature library; auto HP/EN; quantity selector; reuse add combatant/creature modal. Extracted to TASK-102.
+
+2/6/2026 — Encounters System Redesign (Major)
+- Context: Encounter Tracker → Encounters
+- Priority: Critical
+- Raw feedback (abbreviated): Rename to "Encounters"; hub page to create (combat/skill/mixed) or choose saved; click encounter → redirect to that encounter page; save/return to sessions (turns, AP, HP tracked); separate encounters list page (filter, search, sort); designate current as combat tracker; new skill encounter page; new mixed encounter page; skill encounter: add characters, track rolls, successes/failures, required successes/failures, DS-based; mixed = both combined; campaign integration: add characters from campaigns (evasion, acuity, hp, en). Reference core rules. Best practice, shared components, security.
+- Extracted to: TASK-103, TASK-104, TASK-105, TASK-106, TASK-107, TASK-108.

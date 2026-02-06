@@ -41,7 +41,12 @@ For server-side session management and Admin SDK features, use **one** of these 
 
 **Note:** Cannot use `FIREBASE_` prefix as it's reserved by Firebase.
 
-These are automatically injected as environment variables when deployed to Firebase Hosting. Add the secret name(s) to `firebase.json` → `hosting.frameworksBackend.secrets`.
+These are injected as environment variables when deployed. **Both** of these must be configured:
+
+1. `firebase.json` → `hosting.frameworksBackend.secrets` — list the secret names
+2. `functions/server.js` → `onRequest({ secrets: [...] })` — the SSR function must declare secrets to receive them
+
+Without (2), the Cloud Function receives no credentials and `/api/session` returns 500. See `src/docs/DEPLOYMENT_SECRETS.md` for full details.
 
 #### Creating/Updating Service Account Secrets
 

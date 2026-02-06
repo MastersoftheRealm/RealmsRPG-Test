@@ -2,6 +2,19 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: Encounters System Redesign (TASK-101 through TASK-108) | files: types/encounter.ts, services/encounter-service.ts, hooks/use-encounters.ts, hooks/index.ts, firestore.rules, app/(main)/encounters/page.tsx, app/(main)/encounters/[id]/page.tsx, app/(main)/encounters/[id]/combat/page.tsx, app/(main)/encounters/[id]/skill/page.tsx, app/(main)/encounters/[id]/mixed/page.tsx, app/(main)/encounter-tracker/page.tsx, app/(main)/encounter-tracker/redirect-page.tsx, components/shared/add-combatant-modal.tsx, components/layout/header.tsx, lib/game/encounter-utils.ts, AI_TASK_QUEUE.md | Summary:
+  - TASK-101: Archetype slider hidden in non-edit mode; shows simple Power/Martial proficiency badges
+  - TASK-102: AddCombatantModal with "From Library" tab; creature HP/EN auto-calculated; quantity selector with A-Z suffixes
+  - TASK-103: Encounters hub page at /encounters with list, filter by type/status, search, sort, create modal (combat/skill/mixed)
+  - TASK-104: Firestore persistence via encounter-service.ts (CRUD under users/{uid}/encounters); use-encounters.ts React Query hooks; Firestore rules
+  - TASK-105: Combat tracker ported to /encounters/[id]/combat with Firestore auto-save via useAutoSave; loads by encounter ID
+  - TASK-106: Skill encounter page at /encounters/[id]/skill with DS config, participant roll tracking, success/failure progress bars, game rules reference
+  - TASK-107: Mixed encounter page at /encounters/[id]/mixed with tab-based combat/skill views, shared combatant/participant management
+  - TASK-108: "From Campaign" tab in AddCombatantModal; fetches character data via API; auto-populates HP/EN/evasion/acuity
+  - Nav updated: "Encounter Tracker" → "Encounters"; old /encounter-tracker redirects with optional localStorage import
+  - encounter-utils.ts: calculateCreatureMaxHealth, calculateCreatureMaxEnergy helpers
+  - Build passes
+
 - 2026-02-06 | agent:cursor | Session: Campaign roll log follow-up | files: campaign-roll.ts, campaign-roll-service.ts, use-campaign-rolls.ts, roll-context.tsx, roll-log.tsx, campaigns/[id]/page.tsx, campaigns/[id]/view/.../page.tsx, characters/[id]/page.tsx, campaign-service.ts, use-campaigns.ts, firestore.rules, hooks/index.ts | Summary:
   - Campaign view page: pass campaignContext to RollProvider, add RollLog with Personal/Campaign toggle
   - Campaign detail page: Campaign Roll Log section for RM (and all members) using useCampaignRolls, RollEntryCard

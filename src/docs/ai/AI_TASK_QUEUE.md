@@ -2311,3 +2311,151 @@ Agents should **create new tasks** during their work when they discover addition
     - Unsubscribe on unmount; no memory leaks
     - npm run build passes
   notes: "Created during campaigns feature completion. Firebase best practice for collaborative data."
+
+- id: TASK-101
+  title: Archetype prof slider — hide unless pencil clicked; show simple values otherwise
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/archetype-section.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    In the Character Sheet Archetype Section, the archetype proficiency slider should only be visible when the user has clicked the pencil to enter archetype proficiency editing mode. In non-edit mode, display Power and/or Martial proficiency as simple text values (e.g., "Power: 2, Martial: 1") instead of the slider. The slider is designed for editing only.
+  acceptance_criteria:
+    - Slider hidden when showEditControls is false
+    - Simple value display (Power/Martial) shown when not editing
+    - Slider appears only when pencil clicked (archetype edit mode)
+    - npm run build passes
+  notes: "Done 2026-02-06. Slider hidden in non-edit mode; simple Power/Martial badges shown instead."
+
+- id: TASK-102
+  title: Encounter Tracker — add creatures from library (auto HP/EN, quantity)
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/encounter-tracker/page.tsx
+    - src/app/(main)/encounter-tracker/CombatantCard.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Allow adding creatures from the user's creature library to the encounter tracker. When adding from library, auto-populate max health and energy from the creature data instead of manual input. Support choosing how many of a creature to add. Reuse existing add combatant tab and add creature modal components.
+  acceptance_criteria:
+    - Add combatant flow supports "From Library" option
+    - Creature library modal lists user's creatures; selection populates HP/EN
+    - Quantity selector when adding (e.g., add 3 Goblins)
+    - Uses shared modal/list components
+    - npm run build passes
+  notes: "Done 2026-02-06. AddCombatantModal with Library tab; creature HP/EN auto-calculated; quantity selector A-Z suffixes."
+
+- id: TASK-103
+  title: Encounters hub — rename to Encounters; list/create/filter/search/sort
+  priority: critical
+  status: done
+  related_files:
+    - src/app/(main)/encounter-tracker/page.tsx
+    - src/app/(main)/encounters/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Rename "Encounter Tracker" to "Encounters" in nav and routing. Create an Encounters hub page that shows all saved encounters in list view with filter, search, and sort. Provide options to create new encounters of type: combat, skill, or mixed. Clicking an encounter redirects to that encounter's dedicated page.
+  acceptance_criteria:
+    - Nav/routes use "Encounters" terminology
+    - Encounters hub page: list view, filter, search, sort
+    - Create new: combat, skill, or mixed
+    - Click encounter → navigate to /encounters/[id] (combat/skill/mixed)
+    - npm run build passes
+  notes: "Done 2026-02-06. Encounters hub page with list/filter/sort/create, nav updated, TabNavigation + type filters."
+
+- id: TASK-104
+  title: Persist encounters to Firestore; save/return to sessions
+  priority: critical
+  status: done
+  related_files:
+    - src/services/encounter-service.ts
+    - src/hooks/use-encounters.ts
+    - firestore.rules
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Replace local storage with Firestore persistence for encounters. Encounters stored by ID. Users can save an encounter and return to it later; turns, AP, HP, etc. are tracked across sessions. Use best security practices (user-owned documents).
+  acceptance_criteria:
+    - Encounters stored in Firestore (users/{uid}/encounters/{encounterId})
+    - Save/load by encounter ID
+    - State (combatants, HP, EN, turns, AP) persists across sessions
+    - Firestore rules: read/write only for owner
+    - npm run build passes
+  notes: "Done 2026-02-06. encounter-service.ts with Firestore CRUD, use-encounters.ts hooks, Firestore rules, auto-save via useAutoSave."
+
+- id: TASK-105
+  title: Designate combat tracker; tie to encounter ID
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/encounter-tracker/page.tsx
+    - src/app/(main)/encounters/[id]/combat/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Designate the current encounter tracker page as the Combat Tracker specifically. Route to /encounters/[id]/combat (or equivalent). Load encounter by ID from Firestore instead of local storage. Combat tracker is tied to saved encounter documents.
+  acceptance_criteria:
+    - Combat tracker loads encounter by ID
+    - Replaces local storage with Firestore-backed state
+    - Combat-specific UI preserved
+    - npm run build passes
+  notes: "Done 2026-02-06. Combat tracker at /encounters/[id]/combat, loads by ID from Firestore, auto-save, reuses CombatantCard."
+
+- id: TASK-106
+  title: Create Skill Encounter page
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/encounters/[id]/skill/page.tsx
+    - src/docs/GAME_RULES.md
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create a Skill Encounter page. Add characters; track if each has made their skill roll; track successes vs failures; set required successes and failures; input rolled skill values to compute successes/failures based on Difficulty Score (DS). Reference GAME_RULES.md: Average DS = 10 + ½ Party Level; Required Successes = # Characters + 1. Include useful RM features per core rules.
+  acceptance_criteria:
+    - Add characters to skill encounter
+    - Per-character: rolled? success/fail based on DS
+    - Set DS (default 10 + ½ party level)
+    - Set required successes and failures
+    - Success = roll ≥ DS
+    - npm run build passes
+  notes: "Done 2026-02-06. Skill encounter at /encounters/[id]/skill, DS config, participant rolls, success/failure tracking, progress bars."
+
+- id: TASK-107
+  title: Create Mixed Encounter page (combat + skill combined)
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/encounters/[id]/mixed/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create a Mixed Encounter page that combines combat and skill encounter functionality. Reuse components from both combat tracker and skill encounter page. Unify/simplify where possible.
+  acceptance_criteria:
+    - Mixed page has combat and skill sections/functionality
+    - Reuses CombatantCard, skill tracking components
+    - Unified layout; no unnecessary duplication
+    - npm run build passes
+  notes: "Done 2026-02-06. Mixed encounter at /encounters/[id]/mixed, tab-based combat+skill view, shared participants."
+
+- id: TASK-108
+  title: Campaign integration — add characters from campaigns to encounters
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/encounters
+    - src/services/campaign-service.ts
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Allow adding characters from campaigns the user is in to encounters. Pull evasion, acuity, HP, EN, etc. from character/campaign data for quick reference. Easy add without manual entry. Use campaign character API and enrichment.
+  acceptance_criteria:
+    - Add combatant/skill participant: "From Campaign" option
+    - Select campaign → select character; auto-populate evasion, acuity, HP, EN
+    - Works for combat and skill encounters
+    - npm run build passes
+  notes: "Done 2026-02-06. AddCombatantModal 'From Campaign' tab; fetches character data via API; auto-populates HP/EN/evasion/acuity."

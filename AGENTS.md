@@ -29,3 +29,11 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 ## Creating New Tasks
 
 Use `src/docs/ai/AI_REQUEST_TEMPLATE.md` format. Add to `AI_TASK_QUEUE.md` with next TASK-### ID. Create tasks when audits or implementation reveal additional work.
+
+## Deployment & Admin SDK Secrets (Do Not Break)
+
+Session cookies, campaign creation, portraits, and server actions require Firebase Admin SDK credentials. **Before modifying:**
+
+1. Read `src/docs/DEPLOYMENT_SECRETS.md` — full config and troubleshooting.
+2. **Never remove** `secrets: ADMIN_SDK_SECRETS` from `functions/server.js` — without it, `/api/session` returns 500 and campaigns fail.
+3. If changing credential env vars: update `firebase.json` frameworksBackend.secrets, `functions/server.js`, and Secret Manager together.

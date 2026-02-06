@@ -18,6 +18,17 @@ export {
 } from './use-campaigns';
 export { useCampaignRolls } from './use-campaign-rolls';
 
+// Encounters
+export {
+  encounterKeys,
+  useEncounters,
+  useEncounter,
+  useCreateEncounter,
+  useSaveEncounter,
+  useDeleteEncounter,
+  useInvalidateEncounters,
+} from './use-encounters';
+
 // Characters
 export {
   characterKeys,

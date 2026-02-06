@@ -521,32 +521,45 @@ export function ArchetypeSection({
         )}
       </div>
 
-      {/* Proficiencies - always use slider to represent allocation between power and martial */}
-      {(martialProf > 0 || powerProf > 0 || showEditControls) && (
-        <div className="mb-4">
-          <PoweredMartialSlider
-            powerValue={powerProf}
-            martialValue={martialProf}
-            maxPoints={totalProfPoints}
-            onChange={(power, martial) => {
-              onPowerProfChange?.(power);
-              onMartialProfChange?.(martial);
-            }}
-            compact
-            disabled={!showEditControls}
-            allowZeroEnds
-          />
+      {/* Proficiencies - show slider only when editing; simple values otherwise */}
+      {showEditControls ? (
+        <>
+          <div className="mb-4">
+            <PoweredMartialSlider
+              powerValue={powerProf}
+              martialValue={martialProf}
+              maxPoints={totalProfPoints}
+              onChange={(power, martial) => {
+                onPowerProfChange?.(power);
+                onMartialProfChange?.(martial);
+              }}
+              compact
+              allowZeroEnds
+            />
+          </div>
+          {/* Proficiency Points Display - three-state coloring */}
+          <div className="mb-4 flex justify-center">
+            <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getProfPointsColorClass())}>
+              {remainingProfPoints} / {totalProfPoints} prof. points
+            </span>
+          </div>
+        </>
+      ) : (martialProf > 0 || powerProf > 0) ? (
+        <div className="flex gap-3 mb-4">
+          {powerProf > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-900/20">
+              <span className="text-xs font-semibold text-violet-600 dark:text-violet-300">Power Prof.</span>
+              <span className="text-sm font-bold text-violet-700 dark:text-violet-200">{powerProf}</span>
+            </div>
+          )}
+          {martialProf > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20">
+              <span className="text-xs font-semibold text-red-600 dark:text-red-300">Martial Prof.</span>
+              <span className="text-sm font-bold text-red-700 dark:text-red-200">{martialProf}</span>
+            </div>
+          )}
         </div>
-      )}
-      
-      {/* Proficiency Points Display - three-state coloring */}
-      {showEditControls && (
-        <div className="mb-4 flex justify-center">
-          <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getProfPointsColorClass())}>
-            {remainingProfPoints} / {totalProfPoints} prof. points
-          </span>
-        </div>
-      )}
+      ) : null}
       
       {/* Mixed Archetype Milestone Choices */}
       {archetypeType === 'mixed' && milestoneLevels.length > 0 && (
