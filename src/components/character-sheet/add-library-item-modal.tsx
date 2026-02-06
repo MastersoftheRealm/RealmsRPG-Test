@@ -12,7 +12,7 @@ import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Modal, SearchInput, Button, Spinner } from '@/components/ui';
 import { GridListRow, QuantitySelector, ListHeader } from '@/components/shared';
-import type { SortState } from '@/components/shared';
+import { useSort } from '@/hooks/use-sort';
 import { formatDamageDisplay } from '@/lib/utils';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
@@ -39,8 +39,8 @@ export function AddLibraryItemModal({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   // Track quantities for equipment items (id -> quantity)
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  // Sort state for list
-  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
+  // Sort state for list (custom sort logic for level/damage/armor columns)
+  const { sortState, handleSort } = useSort('name');
   
   // Fetch user library based on item type
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
@@ -274,12 +274,7 @@ export function AddLibraryItemModal({
               <ListHeader
                 columns={getListHeaderColumns(itemType)}
                 sortState={sortState}
-                onSort={(col) => {
-                  setSortState(prev => ({
-                    col,
-                    dir: (prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1) as 1 | -1
-                  }));
-                }}
+                onSort={handleSort}
                 hasSelectionColumn
               />
               

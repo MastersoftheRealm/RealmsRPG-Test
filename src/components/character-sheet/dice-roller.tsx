@@ -12,6 +12,7 @@ import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { History, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 
 interface DieRoll {
@@ -184,12 +185,14 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           </div>
 
           {/* Roll Button - solid style matching btn-solid */}
-          <button
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full rounded-xl"
             onClick={() => performRoll()}
-            className="w-full py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2"
           >
             Roll {formatRollFormula()}
-          </button>
+          </Button>
 
           {/* Last Roll Result */}
           {lastRoll && (

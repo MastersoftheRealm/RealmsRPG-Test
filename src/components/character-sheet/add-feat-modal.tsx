@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, IconButton, Alert, Checkbox, Modal } from '@/components/ui';
 import { SearchInput, ListHeader, GridListRow, type ChipData } from '@/components/shared';
+import { useSort } from '@/hooks/use-sort';
 import type { Character } from '@/types';
 
 interface Feat {
@@ -86,7 +87,7 @@ export function AddFeatModal({
   const [showStateFeats, setShowStateFeats] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
   const [selectedFeats, setSelectedFeats] = useState<Feat[]>([]);
-  const [sortState, setSortState] = useState<{ col: string; dir: 1 | -1 }>({ col: 'name', dir: 1 });
+  const { sortState, handleSort, sortItems } = useSort('name');
 
   // Load feats from RTDB
   useEffect(() => {
@@ -191,7 +192,7 @@ export function AddFeatModal({
 
   // Filter feats
   const filteredFeats = useMemo(() => {
-    return feats.filter(feat => {
+    const filtered = feats.filter(feat => {
       // Filter by feat type (archetype vs character)
       if (featType === 'character' && !feat.char_feat) return false;
       if (featType === 'archetype' && feat.char_feat) return false;
@@ -223,31 +224,9 @@ export function AddFeatModal({
       if (selectedAbility && feat.ability !== selectedAbility) return false;
       
       return true;
-    }).sort((a, b) => {
-      const col = sortState.col;
-      let aVal: any = a[col as keyof Feat];
-      let bVal: any = b[col as keyof Feat];
-      
-      // Handle undefined values
-      if (aVal === undefined) aVal = '';
-      if (bVal === undefined) bVal = '';
-      
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortState.dir * aVal.localeCompare(bVal);
-      }
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortState.dir * (aVal - bVal);
-      }
-      return 0;
     });
-  }, [feats, featType, existingFeatIds, searchQuery, selectedCategory, selectedAbility, showStateFeats, showBlocked, checkRequirements, sortState]);
-
-  const handleSort = useCallback((col: string) => {
-    setSortState(prev => ({
-      col,
-      dir: prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1,
-    }));
-  }, []);
+    return sortItems(filtered.map(f => ({ ...f, category: f.category ?? '', ability: f.ability ?? '' })));
+  }, [feats, featType, existingFeatIds, searchQuery, selectedCategory, selectedAbility, showStateFeats, showBlocked, checkRequirements, sortItems]);
 
   const toggleFeat = useCallback((feat: Feat) => {
     setSelectedFeats(prev => {

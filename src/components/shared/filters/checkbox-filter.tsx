@@ -7,6 +7,7 @@
 
 'use client';
 
+import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui';
 
 interface CheckboxOption {
@@ -29,7 +30,7 @@ export function CheckboxFilter({
   className = '',
 }: CheckboxFilterProps) {
   return (
-    <div className={`filter-group ${className}`}>
+    <div className={cn('filter-group', className)}>
       <label className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>

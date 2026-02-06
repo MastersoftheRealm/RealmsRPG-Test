@@ -36,6 +36,7 @@ import {
   type SortState,
   InnateToggle,
 } from '@/components/shared';
+import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
@@ -476,49 +477,29 @@ export function LibrarySection({
   const [armorSort, setArmorSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
   
-  // Helper to toggle sort
-  const toggleSort = useCallback((current: SortState, col: string): SortState => {
-    if (current.col === col) {
-      return { col, dir: current.dir === 1 ? -1 : 1 };
-    }
-    return { col, dir: 1 };
-  }, []);
-
-  // Generic sort helper for list items
-  const sortByCol = useCallback(<T extends object>(arr: T[], sortState: SortState): T[] => {
-    return [...arr].sort((a, b) => {
-      const aVal = (a as Record<string, unknown>)[sortState.col];
-      const bVal = (b as Record<string, unknown>)[sortState.col];
-      const aStr = aVal != null ? String(aVal) : '';
-      const bStr = bVal != null ? String(bVal) : '';
-      const cmp = aStr.localeCompare(bStr, undefined, { numeric: true });
-      return sortState.dir === 1 ? cmp : -cmp;
-    });
-  }, []);
-
   const sortedInnatePowers = useMemo(
-    () => sortByCol(powers.filter(p => p.innate === true), powerSort),
-    [powers, powerSort, sortByCol]
+    () => sortByColumn(powers.filter(p => p.innate === true), powerSort),
+    [powers, powerSort]
   );
   const sortedRegularPowers = useMemo(
-    () => sortByCol(powers.filter(p => p.innate !== true), powerSort),
-    [powers, powerSort, sortByCol]
+    () => sortByColumn(powers.filter(p => p.innate !== true), powerSort),
+    [powers, powerSort]
   );
   const sortedTechniques = useMemo(
-    () => sortByCol(techniques, techniqueSort),
-    [techniques, techniqueSort, sortByCol]
+    () => sortByColumn(techniques, techniqueSort),
+    [techniques, techniqueSort]
   );
   const sortedWeapons = useMemo(
-    () => sortByCol(weapons, weaponSort),
-    [weapons, weaponSort, sortByCol]
+    () => sortByColumn(weapons, weaponSort),
+    [weapons, weaponSort]
   );
   const sortedArmor = useMemo(
-    () => sortByCol(armor, armorSort),
-    [armor, armorSort, sortByCol]
+    () => sortByColumn(armor, armorSort),
+    [armor, armorSort]
   );
   const sortedEquipment = useMemo(
-    () => sortByCol(equipment, equipmentSort),
-    [equipment, equipmentSort, sortByCol]
+    () => sortByColumn(equipment, equipmentSort),
+    [equipment, equipmentSort]
   );
 
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here

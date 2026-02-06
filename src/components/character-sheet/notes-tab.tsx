@@ -15,7 +15,7 @@
 import { useState, useCallback } from 'react';
 import { Plus, X, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { IconButton, Textarea } from '@/components/ui';
+import { Button, IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
 import type { Abilities } from '@/types';
@@ -258,14 +258,15 @@ export function NotesTab({
           {/* Fall Damage */}
           <div className="flex items-center gap-2 text-xs">
             <span className="text-text-secondary">Fall Damage:</span>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleRollFallDamage}
               disabled={!rollContext}
-              className="px-2 py-0.5 text-sm font-bold bg-primary-600 text-white rounded hover:bg-primary-700 transition-all disabled:opacity-50"
               title={rollContext ? 'Click to roll' : 'Roll log not available'}
             >
               {fallDice}
-            </button>
+            </Button>
             <span className="text-text-muted">
               bludgeoning per 2 spaces fallen ({weightCategory}kg category)
             </span>

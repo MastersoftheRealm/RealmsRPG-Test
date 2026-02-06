@@ -2,6 +2,19 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: TASK-096 — Split codex and library pages | files: codex/page.tsx, CodexFeatsTab.tsx, CodexSkillsTab.tsx, CodexSpeciesTab.tsx, CodexEquipmentTab.tsx, CodexPropertiesTab.tsx, CodexPartsTab.tsx, library/page.tsx, LibraryPowersTab.tsx, LibraryTechniquesTab.tsx, LibraryItemsTab.tsx, LibraryCreaturesTab.tsx, AI_TASK_QUEUE.md | TASK: TASK-096 | Summary:
+  - Codex: Extracted 6 tab components (Feats, Skills, Species, Equipment, Properties, Parts); main page ~65 lines
+  - Library: Extracted 4 tab components (Powers, Techniques, Items, Creatures); main page ~165 lines
+  - All extracted components <400 lines; build passes
+  - Remaining large files (power-creator, characters/[id], creature-creator, encounter-tracker) can be split incrementally in future
+
+- 2026-02-06 | agent:cursor | Session: TASK-093, TASK-094, TASK-095, TASK-097 — UI unification | files: item-list.tsx, tag-filter.tsx, select-filter.tsx, chip-select.tsx, checkbox-filter.tsx, ability-requirement-filter.tsx, codex/page.tsx, item-card.tsx, about/page.tsx, notes-tab.tsx, dice-roller.tsx, encounter-tracker/page.tsx, item-creator/page.tsx, power-creator/page.tsx, globals.css, AI_TASK_QUEUE.md | TASKs: TASK-093, TASK-094, TASK-095, TASK-097 | Summary:
+  - TASK-093: Template literal → cn() in item-list, 5 filter components, codex chip, item-card req.met, about carousel
+  - TASK-094: Replaced 5 inline buttons with Button: notes-tab fall damage, dice-roller roll, encounter-tracker Add/Add Custom, item-creator Add Property, power-creator Add Part
+  - TASK-095: item-list search → SearchInput; ability-requirement-filter max value → Input
+  - TASK-097: Added .filter-group to globals.css (flex layout); all 5 filters already use cn('filter-group', className)
+  - Build passes
+
 - 2026-02-06 | agent:cursor | Session: Reconciliation tasks TASK-078 through TASK-089 | files: dice-roller.tsx, library-section.tsx, unified-selection-modal.tsx, add-skill-modal.tsx, add-sub-skill-modal.tsx, LoadFromLibraryModal.tsx, resources/page.tsx, notes-tab.tsx, button.tsx, globals.css, recovery-modal.tsx, skill-row.tsx, grid-list-row.tsx, archetype-section.tsx, tab-summary-section.tsx, innate-toggle.tsx, ability-score-editor.tsx, ancestry-step.tsx, feats-step.tsx, equipment-step.tsx, codex/page.tsx, power-creator/page.tsx, technique-creator/page.tsx, item-creator/page.tsx, characters/[id]/page.tsx, proficiencies-tab.tsx, filter-section.tsx, creature-stat-block.tsx, list-components.tsx, AI_TASK_QUEUE.md | TASKs: TASK-078, TASK-079, TASK-080, TASK-081, TASK-082, TASK-083, TASK-084, TASK-085, TASK-086, TASK-087, TASK-088, TASK-089 | Summary:
   - TASK-078: Dice roller uses custom PNGs; die type selection with images + labels; DieResultDisplay for roll results
   - TASK-079: Weapon columns include Attack bonus (+N Abbr)
@@ -194,7 +207,8 @@ Append-only log. Agents must add an entry for each PR/merge.
     TASK-096: Split large page components >1000 lines (6 files)
     TASK-097: Unify filter component className patterns (5 files)
 
-Entry format (required fields on task completion):
+- 2026-02-06 | agent:claude-opus | TASK-091: Extract useSort hook | files: src/hooks/use-sort.ts, src/hooks/index.ts, LoadFromLibraryModal.tsx, add-skill-modal.tsx, add-sub-skill-modal.tsx, add-feat-modal.tsx, add-library-item-modal.tsx, unified-selection-modal.tsx, library-section.tsx, feats-tab.tsx, library/page.tsx, codex/page.tsx | TASK: TASK-091 | Summary:
+  Created shared useSort hook with toggleSort and sortByColumn utilities. Replaced 20+ duplicate implementations across 12 files. Single source of truth for list sorting logic. (required fields on task completion):
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 
 Policy: `pr_link` and `merged_at` must be present in the changelog entry and the corresponding `AI_TASK_QUEUE.md` task before marking a task `done`.

@@ -7,6 +7,7 @@
 
 'use client';
 
+import { cn } from '@/lib/utils';
 import { Chip } from '@/components/ui';
 
 interface TagFilterProps {
@@ -43,7 +44,7 @@ export function TagFilter({
   };
 
   return (
-    <div className={`filter-group ${className}`}>
+    <div className={cn('filter-group', className)}>
       <label className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>

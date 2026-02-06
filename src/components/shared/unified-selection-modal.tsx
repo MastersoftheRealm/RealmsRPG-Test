@@ -25,10 +25,10 @@ import {
   SortHeader, 
   FilterSection,
   QuantitySelector,
-  type SortState,
   type ColumnValue,
   type ChipData,
 } from '@/components/shared';
+import { useSort } from '@/hooks/use-sort';
 
 // =============================================================================
 // Types
@@ -143,7 +143,7 @@ export function UnifiedSelectionModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
+  const { sortState, handleSort, sortItems } = useSort('name');
   
   // Reset on open
   useEffect(() => {
@@ -178,21 +178,8 @@ export function UnifiedSelectionModal({
     }
     
     // Sort
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortState.col as keyof SelectableItem];
-      const bVal = b[sortState.col as keyof SelectableItem];
-      
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortState.dir * aVal.localeCompare(bVal);
-      }
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortState.dir * (aVal - bVal);
-      }
-      return 0;
-    });
-    
-    return result;
-  }, [items, searchQuery, searchFields, sortState, hideDisabled]);
+    return sortItems(result);
+  }, [items, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
   
   // Toggle selection
   const toggleSelection = useCallback((id: string) => {
@@ -234,13 +221,6 @@ export function UnifiedSelectionModal({
     onClose();
   };
   
-  // Handle sort
-  const handleSort = useCallback((col: string) => {
-    setSortState(prev => ({
-      col,
-      dir: prev.col === col ? (prev.dir === 1 ? -1 : 1) : 1,
-    }));
-  }, []);
   
   const sizeClasses = {
     md: 'max-w-xl',

@@ -255,7 +255,7 @@ export function ItemCard({
                 {item.requirements.map((req, i) => (
                   <span 
                     key={i}
-                    className={req.met ? 'text-success-600' : 'text-danger-600'}
+                    className={cn(req.met ? 'text-success-600' : 'text-danger-600')}
                   >
                     {req.name} {req.value}
                     {i < item.requirements!.length - 1 ? ', ' : ''}

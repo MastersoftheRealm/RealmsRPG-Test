@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap } from 'lucide-react';
 
@@ -220,9 +221,10 @@ export default function AboutPage() {
             </span>
           </h2>
           <div
-            className={`text-text-secondary transition-all duration-300 ${
+            className={cn(
+              'text-text-secondary transition-all duration-300',
               isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
-            }`}
+            )}
           >
             {CAROUSEL_SLIDES[currentSlide].content}
           </div>

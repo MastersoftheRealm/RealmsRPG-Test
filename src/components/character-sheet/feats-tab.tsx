@@ -18,6 +18,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { SectionHeader, ListHeader, GridListRow } from '@/components/shared';
 import type { SortState, ListColumn } from '@/components/shared';
+import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 
 // =============================================================================
 // Types
@@ -174,14 +175,6 @@ export function FeatsTab({
   const [characterFeatSort, setCharacterFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [stateFeatSort, setStateFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
 
-  // Helper to toggle sort
-  const toggleSort = useCallback((current: SortState, col: string): SortState => {
-    if (current.col === col) {
-      return { col, dir: current.dir === 1 ? -1 : 1 };
-    }
-    return { col, dir: 1 };
-  }, []);
-
   // Enrich trait with RTDB data
   const enrichTrait = useCallback((traitNameOrId: string) => {
     let dbTrait = traitsDb.find(t => t.name.toLowerCase() === traitNameOrId.toLowerCase());
@@ -286,35 +279,19 @@ export function FeatsTab({
       });
     });
     
-    // Sort
-    return [...enriched].sort((a, b) => {
-      const aVal = a[traitSort.col as keyof typeof a] ?? '';
-      const bVal = b[traitSort.col as keyof typeof b] ?? '';
-      const cmp = String(aVal).localeCompare(String(bVal));
-      return traitSort.dir === 1 ? cmp : -cmp;
-    });
+    return sortByColumn(enriched, traitSort);
   }, [allTraitsWithCategories, traits, enrichTrait, traitSort]);
 
   // Process and sort archetype feats
   const processedArchetypeFeats = useMemo(() => {
     const enriched = archetypeFeats.map(enrichFeat);
-    return [...enriched].sort((a, b) => {
-      const aVal = a[archetypeFeatSort.col as keyof typeof a] ?? '';
-      const bVal = b[archetypeFeatSort.col as keyof typeof b] ?? '';
-      const cmp = String(aVal).localeCompare(String(bVal));
-      return archetypeFeatSort.dir === 1 ? cmp : -cmp;
-    });
+    return sortByColumn(enriched, archetypeFeatSort);
   }, [archetypeFeats, enrichFeat, archetypeFeatSort]);
 
   // Process and sort character feats
   const processedCharacterFeats = useMemo(() => {
     const enriched = characterFeats.map(enrichFeat);
-    return [...enriched].sort((a, b) => {
-      const aVal = a[characterFeatSort.col as keyof typeof a] ?? '';
-      const bVal = b[characterFeatSort.col as keyof typeof b] ?? '';
-      const cmp = String(aVal).localeCompare(String(bVal));
-      return characterFeatSort.dir === 1 ? cmp : -cmp;
-    });
+    return sortByColumn(enriched, characterFeatSort);
   }, [characterFeats, enrichFeat, characterFeatSort]);
 
   // Process and sort state feats
@@ -323,12 +300,7 @@ export function FeatsTab({
       ...enrichFeat(f),
       stateType: f.type || 'character',
     }));
-    return [...enriched].sort((a, b) => {
-      const aVal = a[stateFeatSort.col as keyof typeof a] ?? '';
-      const bVal = b[stateFeatSort.col as keyof typeof b] ?? '';
-      const cmp = String(aVal).localeCompare(String(bVal));
-      return stateFeatSort.dir === 1 ? cmp : -cmp;
-    });
+    return sortByColumn(enriched, stateFeatSort);
   }, [stateFeats, enrichFeat, stateFeatSort]);
 
   const hasTraits = processedTraits.length > 0;

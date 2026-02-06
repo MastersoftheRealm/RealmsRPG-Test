@@ -1537,14 +1537,15 @@ function PowerCreatorContent() {
               <h3 className="text-lg font-bold text-text-primary">
                 Power Parts ({selectedParts.length})
               </h3>
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                className="flex items-center gap-1"
                 onClick={addPart}
-                className="flex items-center gap-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Part
-              </button>
+              </Button>
             </div>
 
             {selectedParts.length === 0 ? (

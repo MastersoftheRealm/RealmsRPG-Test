@@ -16,7 +16,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Modal } from '@/components/ui';
-import { GridListRow, ListHeader, type SortState } from '@/components/shared';
+import { GridListRow, ListHeader } from '@/components/shared';
+import { useSort } from '@/hooks/use-sort';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
@@ -46,7 +47,7 @@ export function AddSkillModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [abilityFilter, setAbilityFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
-  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
+  const { sortState, handleSort, sortItems } = useSort('name');
 
   // Filter to base skills only (no base_skill_id = not a sub-skill)
   const skills = useMemo(() => {
@@ -93,25 +94,10 @@ export function AddSkillModal({
     });
   }, [skills, existingSkillNames, searchQuery, abilityFilter]);
 
-  const toggleSort = useCallback((current: SortState, col: string): SortState => {
-    if (current.col === col) return { col, dir: current.dir === 1 ? -1 : 1 };
-    return { col, dir: 1 };
-  }, []);
-
-  const sortedSkills = useMemo(() => {
-    const sorted = [...filteredSkills];
-    const mult = sortState.dir;
-    if (sortState.col === 'name') {
-      sorted.sort((a, b) => mult * a.name.localeCompare(b.name));
-    } else if (sortState.col === 'ability') {
-      sorted.sort((a, b) => {
-        const aa = a.ability || '';
-        const bb = b.ability || '';
-        return mult * aa.localeCompare(bb);
-      });
-    }
-    return sorted;
-  }, [filteredSkills, sortState]);
+  const sortedSkills = useMemo(
+    () => sortItems(filteredSkills.map(s => ({ ...s, ability: s.ability || '' }))),
+    [filteredSkills, sortItems]
+  );
 
   const toggleSkill = useCallback((skill: RTDBSkill) => {
     setSelectedSkills(prev => {
@@ -217,7 +203,7 @@ export function AddSkillModal({
             ]}
             gridColumns="1fr auto"
             sortState={sortState}
-            onSort={(col) => setSortState(prev => toggleSort(prev, col))}
+            onSort={handleSort}
             hasSelectionColumn
             className="mx-0"
           />

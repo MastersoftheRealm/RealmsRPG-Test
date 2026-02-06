@@ -17,7 +17,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { X, AlertCircle } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Select, Modal } from '@/components/ui';
-import { SelectionToggle, ListHeader, type SortState } from '@/components/shared';
+import { SelectionToggle, ListHeader } from '@/components/shared';
+import { useSort } from '@/hooks/use-sort';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
@@ -151,7 +152,7 @@ export function AddSubSkillModal({
   const [abilityFilter, setAbilityFilter] = useState('');
   const [baseSkillFilter, setBaseSkillFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
-  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
+  const { sortState, handleSort, sortItems } = useSort('name');
   // Track which base skill is selected for "any base skill" sub-skills
   const [anyBaseSkillSelections, setAnyBaseSkillSelections] = useState<Record<string, string>>({});
 
@@ -253,25 +254,10 @@ export function AddSubSkillModal({
     });
   }, [allSubSkills, existingSkillNamesLower, searchQuery, abilityFilter, baseSkillFilter, skillById]);
 
-  const toggleSort = useCallback((current: SortState, col: string): SortState => {
-    if (current.col === col) return { col, dir: current.dir === 1 ? -1 : 1 };
-    return { col, dir: 1 };
-  }, []);
-
-  const sortedSubSkills = useMemo(() => {
-    const sorted = [...filteredSkills];
-    const mult = sortState.dir;
-    if (sortState.col === 'name') {
-      sorted.sort((a, b) => mult * a.name.localeCompare(b.name));
-    } else if (sortState.col === 'ability') {
-      sorted.sort((a, b) => {
-        const aa = a.ability || '';
-        const bb = b.ability || '';
-        return mult * aa.localeCompare(bb);
-      });
-    }
-    return sorted;
-  }, [filteredSkills, sortState]);
+  const sortedSubSkills = useMemo(
+    () => sortItems(filteredSkills.map(s => ({ ...s, ability: s.ability || '' }))),
+    [filteredSkills, sortItems]
+  );
 
   const toggleSkill = useCallback((skill: RTDBSkill) => {
     setSelectedSkills(prev => {
@@ -425,7 +411,7 @@ export function AddSubSkillModal({
             ]}
             gridColumns="1fr auto"
             sortState={sortState}
-            onSort={(col) => setSortState(prev => toggleSort(prev, col))}
+            onSort={handleSort}
             hasSelectionColumn
             className="mx-0"
           />

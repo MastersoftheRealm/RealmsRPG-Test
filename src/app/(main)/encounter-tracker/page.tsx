@@ -1285,13 +1285,15 @@ function CombatantCard({
                     </option>
                   ))}
                 </select>
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="bg-amber-600 hover:bg-amber-700"
                   onClick={handleAddCondition}
                   disabled={!selectedCondition}
-                  className="px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50"
                 >
                   Add
-                </button>
+                </Button>
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <input
@@ -1303,13 +1305,15 @@ function CombatantCard({
                   onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
                   maxLength={30}
                 />
-                <button
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="bg-companion hover:bg-companion-dark"
                   onClick={handleAddCustomCondition}
                   disabled={!customCondition.trim()}
-                  className="px-3 py-1 text-sm bg-companion text-white rounded hover:bg-companion-dark disabled:opacity-50"
                 >
                   Add Custom
-                </button>
+                </Button>
               </div>
               <p className="text-xs text-text-muted">
                 Left-click to increase level, right-click or × to decrease/remove. Custom conditions are leveled.

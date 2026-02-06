@@ -7,11 +7,12 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { X, FileText, Zap, Sword, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchInput, IconButton, Alert, Modal, Spinner } from '@/components/ui';
-import { GridListRow, ListHeader, type SortState } from '@/components/shared';
+import { GridListRow, ListHeader } from '@/components/shared';
+import { useSort } from '@/hooks/use-sort';
 
 export type LibraryItemType = 'power' | 'technique' | 'item' | 'creature';
 
@@ -67,7 +68,7 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
   title,
 }: LoadFromLibraryModalProps<T>) {
   const [search, setSearch] = useState('');
-  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
+  const { sortState, handleSort, sortItems } = useSort('name');
   
   const config = TYPE_CONFIG[itemType];
   const displayTitle = title || `Load ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`;
@@ -84,17 +85,10 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
     );
   }, [items, search]);
 
-  const toggleSort = useCallback((current: SortState, col: string): SortState => {
-    if (current.col === col) return { col, dir: current.dir === 1 ? -1 : 1 };
-    return { col, dir: 1 };
-  }, []);
-
-  const sortedItems = useMemo(() => {
-    const sorted = [...filteredItems];
-    const mult = sortState.dir;
-    sorted.sort((a, b) => mult * a.name.localeCompare(b.name));
-    return sorted;
-  }, [filteredItems, sortState]);
+  const sortedItems = useMemo(
+    () => sortItems(filteredItems),
+    [filteredItems, sortItems]
+  );
 
   const handleSelect = (item: T) => {
     onSelect(item);
@@ -162,7 +156,7 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
               columns={[{ key: 'name', label: 'Name', width: '1fr' }]}
               gridColumns="1fr"
               sortState={sortState}
-              onSort={(col) => setSortState(prev => toggleSort(prev, col))}
+              onSort={handleSort}
               hasSelectionColumn
               className="mx-0 mb-2"
             />

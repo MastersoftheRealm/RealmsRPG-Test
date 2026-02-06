@@ -8,8 +8,9 @@
  */
 
 import { useState, useMemo, useCallback } from 'react';
-import { Search, SortAsc, SortDesc, Filter, Grid, List, X } from 'lucide-react';
-import { Spinner, Button, IconButton } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { SortAsc, SortDesc, Filter, Grid, List, X } from 'lucide-react';
+import { Spinner, Button, IconButton, SearchInput } from '@/components/ui';
 import { ItemCard } from './item-card';
 import type { DisplayItem, ListMode, ItemActions, FilterOption, SortOption, FilterState, ItemSortState } from '@/types/items';
 
@@ -228,7 +229,7 @@ export function ItemList({
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn('space-y-4', className)}>
       {/* Header with search, filters, sort */}
       {showHeader && (
         <div className="space-y-3">
@@ -236,26 +237,14 @@ export function ItemList({
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             {searchable && (
-              <div className="relative flex-1 min-w-[200px] max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
+              <div className="flex-1 min-w-[200px] max-w-md">
+                <SearchInput
                   value={filterState.search}
-                  onChange={(e) => setFilterState(prev => ({ ...prev, search: e.target.value }))}
+                  onChange={(v) => setFilterState(prev => ({ ...prev, search: v }))}
                   placeholder={searchPlaceholder}
-                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  size="sm"
+                  showClear
                 />
-                {filterState.search && (
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFilterState(prev => ({ ...prev, search: '' }))}
-                    label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="w-4 h-4" />
-                  </IconButton>
-                )}
               </div>
             )}
             

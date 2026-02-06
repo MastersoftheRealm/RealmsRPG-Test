@@ -1972,7 +1972,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-091
   title: "Extract shared useSort hook — eliminate 20+ duplicate toggleSort/handleSort implementations"
   priority: high
-  status: not-started
+  status: done
   related_files:
     - src/components/shared/list-header.tsx
     - src/components/character-sheet/library-section.tsx
@@ -2031,6 +2031,7 @@ Agents should **create new tasks** during their work when they discover addition
     - All inline sortByCol logic replaced
     - npm run build passes
     - Sorting behavior unchanged across all pages
+  notes: "DONE 2026-02-06: Created useSort hook, toggleSort, sortByColumn in src/hooks/use-sort.ts. Replaced 20+ instances across LoadFromLibraryModal, add-skill-modal, add-sub-skill-modal, add-feat-modal, add-library-item-modal, unified-selection-modal, library-section, feats-tab, library/page (4 tabs), codex/page (6 tabs)."
 
 - id: TASK-092
   title: "Import SortState type from shared instead of inline definitions"
@@ -2063,7 +2064,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-093
   title: "Remaining template literal → cn() conversions"
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/shared/item-list.tsx
     - src/components/shared/filters/tag-filter.tsx
@@ -2099,7 +2100,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-094
   title: "Replace inline button styling with Button component"
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/notes-tab.tsx
     - src/components/character-sheet/dice-roller.tsx
@@ -2139,7 +2140,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-095
   title: "Replace remaining raw inputs with Input/SearchInput components"
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/components/shared/item-list.tsx
     - src/components/shared/filters/ability-requirement-filter.tsx
@@ -2162,7 +2163,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-096
   title: "Split large page components (>1000 lines) into focused sub-components"
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/characters/[id]/page.tsx
     - src/app/(main)/power-creator/page.tsx
@@ -2209,7 +2210,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-097
   title: "Unify filter component className patterns — extract filter-group class"
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/components/shared/filters/tag-filter.tsx
     - src/components/shared/filters/select-filter.tsx

@@ -1100,4 +1100,9 @@
   .modal-filters {
     @apply px-5 py-4 border-b border-border-light bg-surface-alt;
   }
+
+  /* Filter group - layout for filter controls (label + inputs) */
+  .filter-group {
+    @apply flex min-w-[140px] flex-col gap-1 flex-[1_1_180px];
+  }
 }

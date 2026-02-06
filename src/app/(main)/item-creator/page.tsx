@@ -1393,14 +1393,15 @@ function ItemCreatorContent() {
               <h3 className="text-lg font-bold text-text-primary">
                 Properties ({selectedProperties.length})
               </h3>
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700"
                 onClick={addProperty}
-                className="flex items-center gap-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Property
-              </button>
+              </Button>
             </div>
 
             {selectedProperties.length === 0 ? (

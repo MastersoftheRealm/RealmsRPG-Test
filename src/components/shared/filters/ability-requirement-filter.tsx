@@ -8,8 +8,9 @@
 'use client';
 
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import { Chip, IconButton } from '@/components/ui';
+import { Chip, IconButton, Input } from '@/components/ui';
 
 export interface AbilityRequirement {
   ability: string;
@@ -55,7 +56,7 @@ export function AbilityRequirementFilter({
   };
 
   return (
-    <div className={`filter-group ${className}`}>
+    <div className={cn('filter-group', className)}>
       <label className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
@@ -72,15 +73,17 @@ export function AbilityRequirementFilter({
             </option>
           ))}
         </select>
-        <input
-          type="number"
-          value={maxValue}
-          onChange={(e) => setMaxValue(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Max"
-          min="0"
-          className="w-20 px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        />
+        <div className="w-20 shrink-0">
+          <Input
+            type="number"
+            value={maxValue}
+            onChange={(e) => setMaxValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Max"
+            min={0}
+            className="w-full"
+          />
+        </div>
         <IconButton
           variant="primary"
           label="Add requirement"
