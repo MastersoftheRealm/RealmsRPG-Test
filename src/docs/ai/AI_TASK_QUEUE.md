@@ -1325,3 +1325,140 @@ Agents should **create new tasks** during their work when they discover addition
     - Creature creator: Defense label "Reflex" → "Reflexes".
     - Encounter-tracker: Faint condition "Reflex" → "Reflexes".
     - npm run build passes.
+
+- id: TASK-065
+  title: Enable hold-to-repeat for Health/Energy allocation in creature creator
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+    - src/components/creator/health-energy-allocator.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Health/Energy allocation should have faster/continuous allotment on button hold.
+    Creature creator's HealthEnergyAllocator does not pass enableHoldRepeat; it defaults to false.
+    Verify character creator and character sheet also have hold-to-repeat enabled for HP/EN.
+  acceptance_criteria:
+    - Creature creator HealthEnergyAllocator passes enableHoldRepeat={true}
+    - Character creator and character sheet already have hold-to-repeat (verify)
+    - Hold-to-repeat works for both HP and EN steppers in creature creator
+  notes: "DONE 2026-02-05: Added enableHoldRepeat to creature creator HealthEnergyAllocator."
+
+- id: TASK-066
+  title: Remove hold-to-repeat from defense steppers in creature creator
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Defense/ability allocation should NOT have hold-to-increase function, as they have little variance.
+    Creature creator's DefenseBlock currently uses enableHoldRepeat on DecrementButton/IncrementButton.
+  acceptance_criteria:
+    - DefenseBlock DecrementButton and IncrementButton have enableHoldRepeat removed
+    - Ability allocation (AbilityScoreEditor) already has no hold-repeat (verify)
+  notes: "DONE 2026-02-05: Removed enableHoldRepeat from creature creator DefenseBlock."
+
+- id: TASK-067
+  title: Fix inconsistent vertical margins on senses/movement item cards (ExpandableChipList)
+  priority: medium
+  status: done
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+    - src/components/shared/grid-list-row.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Senses and movement item cards have inconsistent vertical margins above/below the description box.
+    Should have equal padding. Likely true globally for like item cards (GridListRow with compact + description).
+  acceptance_criteria:
+    - Senses and movement ExpandableChipList rows have equal padding above/below description
+    - Audit GridListRow compact+description layout for consistent margins
+    - Apply fix globally if pattern is shared
+  notes: "DONE 2026-02-05: GridListRow expanded content now uses py-3/py-4 (equal), description mb-3."
+
+- id: TASK-068
+  title: Unify creature creator add modals with character sheet/codex list styles
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+    - src/components/shared/item-selection-modal.tsx
+    - src/components/shared/item-list.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/character-sheet/add-skill-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Add feat/power/technique/armament modals in creature creator use old modal styles (ItemSelectionModal with ItemList).
+    Should match character sheet modals (add-feat, add-skill) which use GridListRow and codex/library list view styles.
+    All add X modals with list views should be uniform. Audit: replace with unified components or rewrite creature
+    creator modals to use GridListRow/UnifiedSelectionModal patterns aligned with unification goals.
+  acceptance_criteria:
+    - Creature creator add modals (powers, techniques, feats, armaments) use GridListRow or equivalent unified list pattern
+    - Modal styling matches add-feat-modal, add-skill-modal (rounded headers, sortable columns, codex-style list)
+    - Consider UnifiedSelectionModal or shared modal wrapper for consistency
+  notes: "DONE 2026-02-05: Replaced ItemSelectionModal with UnifiedSelectionModal; DisplayItem->SelectableItem conversion; GridListRow list with columns."
+
+- id: TASK-069
+  title: Power/Martial slider should not allow 0 at either end (min 1 each)
+  priority: high
+  status: done
+  related_files:
+    - src/components/shared/powered-martial-slider.tsx
+    - src/components/creator/archetype-selector.tsx
+    - src/components/character-sheet/archetype-section.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Powered-martial has a division of power/martial proficiencies between both. The furthest end of the slider
+    should be 1 for that end, not 0. Both power and martial must have at least 1 point when powered-martial.
+  acceptance_criteria:
+    - PoweredMartialSlider min power = 1, max power = maxPoints - 1 (so martial is always >= 1)
+    - Slider range constrained so neither side can go to 0
+    - Works in creature creator and character sheet archetype section
+  notes: "DONE 2026-02-05: Slider min=1, max=maxPoints-1 when maxPoints>1; clamps on init and change."
+
+- id: TASK-070
+  title: Restructure Creature Summary to match other creators with resource boxes
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+    - src/components/creator/creator-summary-panel.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Creature Summary should match other creators: (1) At top, boxes with spendable resources (ability points,
+    skill points, feat points, training points, currency) - can be smaller since more boxes. (2) Below: summary
+    points (Abilities, Archetype, level, type, size). (3) Below: line items as sentences, e.g. "Skills: Stealth +3,
+    Athletics -1, ..." and similar for resistances, immunities, weaknesses. Reference D&D creature stat block format.
+  acceptance_criteria:
+    - Resource boxes at top (ability, skill, feat, training, currency) matching power/technique creator costStats style
+    - Summary points: Abilities, Archetype, level, type, size
+    - Line items: Skills as "Skills: Stealth +3, Athletics -1, ...", resistances/immunities/weaknesses similarly
+    - CreatorSummaryPanel may need new props or creature creator uses custom layout
+  notes: "DONE 2026-02-05: Added resourceBoxes and lineItems to CreatorSummaryPanel; creature summary now has resource boxes at top, stat rows, line items (Skills: X +3, Resistances: Y, etc.)."
+
+- id: TASK-071
+  title: Unify stepper button styles across the site
+  priority: medium
+  status: done
+  related_files:
+    - src/components/shared/value-stepper.tsx
+    - src/app/globals.css
+    - src/app/(main)/creature-creator/page.tsx
+    - src/components/character-sheet/abilities-section.tsx
+  created_at: 2026-02-05
+  created_by: owner
+  description: |
+    Stepper buttons across the site have inconsistent styles, sizes, colors. Defenses allocation steppers are
+    smaller (size="xs"), decrement is grey vs red. Use less stark colors and unify styles across the site.
+  acceptance_criteria:
+    - All steppers use consistent size (or size prop used consistently by context)
+    - Decrement/increment colors less stark - unify btn-stepper-danger and btn-stepper-success
+    - DefenseBlock, abilities-section, health-energy-allocator, etc. use same visual language
+  notes: "DONE 2026-02-05: Defense steppers xs->sm; btn-stepper colors softened (red-50/green-50, 600 text)."

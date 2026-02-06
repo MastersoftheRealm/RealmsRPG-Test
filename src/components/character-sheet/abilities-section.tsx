@@ -340,7 +340,7 @@ export function AbilitiesSection({
                     <DecrementButton
                       onClick={() => onDefenseChange?.(defenseKey, Math.max(0, defenseValue - 1))}
                       disabled={!canDecreaseDefense}
-                      size="xs"
+                      size="sm"
                     />
                     <span className="text-sm font-bold min-w-[36px] text-center text-blue-600">
                       {formatBonus(defenseBonus)}
@@ -348,7 +348,7 @@ export function AbilitiesSection({
                     <IncrementButton
                       onClick={() => onDefenseChange?.(defenseKey, defenseValue + 1)}
                       disabled={!canIncreaseDefense}
-                      size="xs"
+                      size="sm"
                       title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max at level ${level}`}
                     />
                   </div>

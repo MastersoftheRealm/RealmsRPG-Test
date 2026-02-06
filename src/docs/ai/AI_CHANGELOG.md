@@ -2,6 +2,18 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-05 | agent:cursor | Session: TASK-068, TASK-070 — Creature creator modals + summary | files: creature-creator/page.tsx, creator-summary-panel.tsx, AI_TASK_QUEUE.md | TASKs: TASK-068, TASK-070 | Summary:
+  - TASK-068: Replaced ItemSelectionModal with UnifiedSelectionModal for powers/techniques/feats/armaments; GridListRow list with sortable columns
+  - TASK-070: CreatorSummaryPanel resourceBoxes + lineItems; creature summary: resource boxes at top, stat rows, line items (Skills: X +3, Resistances: Y)
+
+- 2026-02-05 | agent:cursor | Session: Creature creator + stepper tasks (TASK-065–071) | files: creature-creator/page.tsx, powered-martial-slider.tsx, grid-list-row.tsx, globals.css, abilities-section.tsx, AI_TASK_QUEUE.md | TASKs: TASK-065, TASK-066, TASK-067, TASK-069, TASK-071 | Summary:
+  - TASK-065: Added enableHoldRepeat to creature creator HealthEnergyAllocator
+  - TASK-066: Removed enableHoldRepeat from creature creator DefenseBlock
+  - TASK-067: GridListRow expanded content — py-3/py-4 equal padding, description mb-3
+  - TASK-069: PoweredMartialSlider min=1, max=maxPoints-1 when maxPoints>1; clamps on init
+  - TASK-071: Defense steppers xs→sm; btn-stepper colors softened (red-50/green-50)
+  - Build passes
+
 - 2026-02-06 | agent:cursor | Session: TASK-064 — Game rules audit fixes | files: creature-stat-block.tsx, item-creator/page.tsx, creature-creator/page.tsx, encounter-tracker/page.tsx, GAME_RULES_AUDIT.md, AI_TASK_QUEUE.md | TASK: TASK-064 | Summary:
   - CreatureStatBlock: Realms ability order (STR, VIT, AGI, ACU, INT, CHA); legacy map for intellect/perception/willpower; grid-cols-6
   - Item creator: "ability score" → "Ability"

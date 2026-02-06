@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Archetype Section
  * =================
  * Displays character archetype, proficiencies, attack bonuses, power potency, weapons, and armor
@@ -23,72 +23,6 @@ interface ArchetypeSectionProps {
   unarmedProwess?: number; // 0 = not selected, 1-5 = prowess level
   onUnarmedProwessChange?: (level: number) => void;
   className?: string;
-}
-
-function ProficiencyMeter({ 
-  label, 
-  value, 
-  maxValue = 6,
-  color = 'blue',
-  isEditMode = false,
-  onIncrease,
-  onDecrease,
-}: { 
-  label: string; 
-  value: number; 
-  maxValue?: number;
-  color?: 'blue' | 'purple' | 'red';
-  isEditMode?: boolean;
-  onIncrease?: () => void;
-  onDecrease?: () => void;
-}) {
-  const colorClasses = {
-    blue: 'bg-blue-500',
-    purple: 'bg-violet-500',
-    red: 'bg-red-500',
-  };
-
-  return (
-    <div className="flex flex-col gap-1">
-      <div className="flex justify-between text-sm">
-        <span className="text-text-secondary">{label}</span>
-        <div className="flex items-center gap-1">
-          {isEditMode && (
-            <button
-              onClick={onDecrease}
-              disabled={value <= 0}
-              className="w-5 h-5 rounded bg-surface hover:bg-surface-alt disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
-              title="Decrease proficiency"
-            >
-              −
-            </button>
-          )}
-          <span className="font-bold w-4 text-center">{value}</span>
-          {isEditMode && (
-            <button
-              onClick={onIncrease}
-              disabled={value >= maxValue}
-              className="w-5 h-5 rounded bg-surface hover:bg-surface-alt disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-xs font-bold"
-              title="Increase proficiency"
-            >
-              +
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="flex gap-1">
-        {Array.from({ length: maxValue }).map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              'h-2 flex-1 rounded-full',
-              i < value ? colorClasses[color] : 'bg-surface'
-            )}
-          />
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // Attack Bonuses Table - displays Prof/Unprof bonuses for each ability
@@ -587,54 +521,22 @@ export function ArchetypeSection({
         )}
       </div>
 
-      {/* Proficiencies - only show non-zero values (unless editing) */}
+      {/* Proficiencies - always use slider to represent allocation between power and martial */}
       {(martialProf > 0 || powerProf > 0 || showEditControls) && (
-        <>
-          {/* Powered-Martial Slider - show compact slider when both proficiencies exist and in edit mode */}
-          {showEditControls && martialProf > 0 && powerProf > 0 && (
-            <div className="mb-4">
-              <PoweredMartialSlider
-                powerValue={powerProf}
-                martialValue={martialProf}
-                maxPoints={totalProfPoints}
-                onChange={(power, martial) => {
-                  onPowerProfChange?.(power);
-                  onMartialProfChange?.(martial);
-                }}
-                compact
-              />
-            </div>
-          )}
-          
-          {/* Standard Proficiency Meters - show when not powered-martial or not in edit mode */}
-          {(!showEditControls || !(martialProf > 0 && powerProf > 0)) && (
-            <div className={cn(
-              'grid gap-4 mb-4',
-              (martialProf > 0 || showEditControls) && (powerProf > 0 || showEditControls) ? 'grid-cols-2' : 'grid-cols-1'
-            )}>
-              {(martialProf > 0 || showEditControls) && (
-                <ProficiencyMeter 
-                  label="Martial" 
-                  value={martialProf}
-                  color="red"
-                  isEditMode={showEditControls}
-                  onIncrease={() => onMartialProfChange?.(martialProf + 1)}
-                  onDecrease={() => onMartialProfChange?.(martialProf - 1)}
-                />
-              )}
-              {(powerProf > 0 || showEditControls) && (
-                <ProficiencyMeter 
-                  label="Power" 
-                  value={powerProf}
-                  color="purple"
-                  isEditMode={showEditControls}
-                  onIncrease={() => onPowerProfChange?.(powerProf + 1)}
-                  onDecrease={() => onPowerProfChange?.(powerProf - 1)}
-                />
-              )}
-            </div>
-          )}
-        </>
+        <div className="mb-4">
+          <PoweredMartialSlider
+            powerValue={powerProf}
+            martialValue={martialProf}
+            maxPoints={totalProfPoints}
+            onChange={(power, martial) => {
+              onPowerProfChange?.(power);
+              onMartialProfChange?.(martial);
+            }}
+            compact
+            disabled={!showEditControls}
+            allowZeroEnds
+          />
+        </div>
       )}
       
       {/* Proficiency Points Display - three-state coloring */}

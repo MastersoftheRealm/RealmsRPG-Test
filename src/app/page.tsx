@@ -1,15 +1,16 @@
-﻿/**
+/**
  * Home Page
  * ==========
- * Landing page with hero banner
- * Matches the vanilla site design exactly
+ * Landing page with hero banner, feature cards, reviews, and CTAs
  */
 
 'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Header, Footer } from '@/components/layout';
+import { Sparkles, BookOpen, Sword, Wand2 } from 'lucide-react';
 
 // Reviews data - can be expanded
 const reviews = [
@@ -43,7 +44,7 @@ export default function HomePage() {
       <Header />
       
       <main className="flex-1">
-        {/* Hero Banner - matches vanilla site exactly */}
+        {/* Hero Banner */}
         <section className="relative w-full h-[400px] overflow-hidden">
           <Image
             src="/images/Banner.png"
@@ -64,27 +65,33 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Features Section - matches vanilla site exactly */}
+        {/* Features Section - linked cards */}
         <section className="bg-neutral-300 py-14 px-24 shadow-md">
           <div className="max-w-[1440px] mx-auto flex justify-between items-start gap-[116px]">
             <FeatureCard
+              href="/characters/new"
               title="CREATE CHARACTERS"
               description="Design your unique characters with detailed attributes and backgrounds."
+              icon={<Sparkles className="w-6 h-6" />}
             />
             <div className="w-px h-[106px] bg-neutral-400 flex-shrink-0" />
             <FeatureCard
+              href="/power-creator"
               title="DEFINE POWERS"
               description="Customize and create powerful abilities for your characters."
+              icon={<Wand2 className="w-6 h-6" />}
             />
             <div className="w-px h-[106px] bg-neutral-400 flex-shrink-0" />
             <FeatureCard
+              href="/library"
               title="JOIN ADVENTURES"
-              description="Participate in epic adventures and quests with other players."
+              description="Browse your library of armaments, powers, and creatures."
+              icon={<Sword className="w-6 h-6" />}
             />
           </div>
         </section>
 
-        {/* Content Section: Reviews + Creator Message - matches vanilla site exactly */}
+        {/* Content Section: Reviews + Creator Message + CTAs */}
         <section className="flex bg-surface-alt min-h-[272px]">
           {/* Reviews Section */}
           <div className="flex-1 py-2 pl-24 flex items-center justify-center">
@@ -136,7 +143,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Creator Message Section */}
+          {/* Creator Message + CTAs */}
           <div className="w-[499px] py-2 pr-24 flex items-center gap-6 flex-shrink-0">
             <div className="w-px h-[225px] bg-divider flex-shrink-0" />
             <div className="flex-1 max-w-[328px]">
@@ -146,10 +153,47 @@ export default function HomePage() {
               <p className="font-nunito text-lg text-text-muted text-center italic mb-4">
                 Thank you for playing my game! I designed it with the hope that others would have as much fun with it as I do, and it means a lot to see people enjoying it. I appreciate your time and enthusiasm.
               </p>
-              <p className="font-nunito text-lg text-text-muted text-center italic">
+              <p className="font-nunito text-lg text-text-muted text-center italic mb-6">
                 Sincerely, Realms creator<br />Kadin Brooksby
               </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Link
+                  href="/about"
+                  className="btn-outline-clean inline-flex items-center gap-2"
+                >
+                  <BookOpen className="w-5 h-5" />
+                  About Realms
+                </Link>
+                <Link
+                  href="/characters/new"
+                  className="btn-solid inline-flex items-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Create a Character
+                </Link>
+              </div>
             </div>
+          </div>
+        </section>
+
+        {/* Bottom CTA strip */}
+        <section className="bg-primary-700 py-6 px-8">
+          <div className="max-w-[1440px] mx-auto flex flex-wrap justify-center items-center gap-6">
+            <Link href="/about" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
+              About Realms
+            </Link>
+            <span className="text-primary-300">•</span>
+            <Link href="/rules" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
+              Core Rulebook
+            </Link>
+            <span className="text-primary-300">•</span>
+            <Link href="/codex" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
+              Codex
+            </Link>
+            <span className="text-primary-300">•</span>
+            <Link href="/library" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
+              Library
+            </Link>
           </div>
         </section>
       </main>
@@ -159,15 +203,31 @@ export default function HomePage() {
   );
 }
 
-function FeatureCard({ title, description }: { title: string; description: string }) {
+function FeatureCard({
+  href,
+  title,
+  description,
+  icon,
+}: {
+  href: string;
+  title: string;
+  description: string;
+  icon?: React.ReactNode;
+}) {
   return (
-    <div className="flex-1 max-w-[286px]">
-      <h3 className="font-display font-normal text-xl text-text-muted uppercase mb-3">
-        {title}
-      </h3>
+    <Link
+      href={href}
+      className="flex-1 max-w-[286px] group block transition-transform hover:-translate-y-1"
+    >
+      <div className="flex items-center gap-2 mb-3">
+        {icon && <span className="text-primary-600 group-hover:text-primary-500 transition-colors">{icon}</span>}
+        <h3 className="font-display font-normal text-xl text-text-muted uppercase group-hover:text-primary-700 transition-colors">
+          {title}
+        </h3>
+      </div>
       <p className="font-nunito font-normal text-xl text-primary-800 leading-relaxed">
         {description}
       </p>
-    </div>
+    </Link>
   );
 }

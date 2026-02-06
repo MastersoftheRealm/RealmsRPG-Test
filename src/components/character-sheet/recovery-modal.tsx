@@ -231,7 +231,7 @@ export function RecoveryModal({
             <div className="grid grid-cols-2 gap-4">
               {/* HP Recovery */}
               <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-                <Heart className="w-6 h-6 text-red-500" />
+                <Heart className="w-6 h-6 text-green-600" />
                 <div>
                   <div className="text-xs text-text-muted">Health</div>
                   <div className="font-bold">
@@ -289,8 +289,9 @@ export function RecoveryModal({
                 ))}
               </div>
               <p className="mt-2 text-xs text-text-muted">
-                {totalQuarters} quarter{totalQuarters > 1 ? 's' : ''} of resources to allocate 
-                ({hpPerQuarter} HP or {enPerQuarter} EN per quarter)
+                Each 2 hours = ¼ max to allocate between HP and EN (or ½ to one). 
+                {hours}h = {totalQuarters} quarter{totalQuarters > 1 ? 's' : ''} ({hpPerQuarter} HP or {enPerQuarter} EN per quarter). 
+                Full recovery (8h) restores all.
               </p>
             </div>
             
@@ -331,7 +332,7 @@ export function RecoveryModal({
             {allocationMode === 'manual' && (
               <div className="space-y-3 p-4 bg-surface-alt rounded-lg">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1 text-red-600 font-medium">
+                  <span className="flex items-center gap-1 text-green-600 font-medium">
                     <Heart className="w-4 h-4" />
                     HP: {hpQuarters}/{totalQuarters}
                   </span>
@@ -350,8 +351,8 @@ export function RecoveryModal({
                   className="w-full h-3 rounded-lg appearance-none cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, 
-                      #ef4444 0%, 
-                      #ef4444 ${(hpQuarters / totalQuarters) * 100}%, 
+                      #16a34a 0%, 
+                      #16a34a ${(hpQuarters / totalQuarters) * 100}%, 
                       #3b82f6 ${(hpQuarters / totalQuarters) * 100}%, 
                       #3b82f6 100%)`
                   }}
@@ -371,14 +372,14 @@ export function RecoveryModal({
               <div className="grid grid-cols-2 gap-4">
                 {/* HP Recovery */}
                 <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
-                  <Heart className="w-6 h-6 text-red-500" />
+                  <Heart className="w-6 h-6 text-green-600" />
                   <div>
                     <div className="text-xs text-text-muted">Health</div>
                     <div className="font-bold">
                       {currentHealth} → <span className={hpRestored > 0 ? 'text-green-600' : 'text-text-muted'}>{newHealth}</span>
                     </div>
                     <div className="text-xs text-green-600">
-                      +{hpRestored} HP ({currentAllocation.hp}/4)
+                      +{hpRestored} HP ({currentAllocation.hp}/{totalQuarters} quarters)
                     </div>
                   </div>
                 </div>
@@ -392,7 +393,7 @@ export function RecoveryModal({
                       {currentEnergy} → <span className={enRestored > 0 ? 'text-green-600' : 'text-text-muted'}>{newEnergy}</span>
                     </div>
                     <div className="text-xs text-green-600">
-                      +{enRestored} EN ({currentAllocation.en}/4)
+                      +{enRestored} EN ({currentAllocation.en}/{totalQuarters} quarters)
                     </div>
                   </div>
                 </div>

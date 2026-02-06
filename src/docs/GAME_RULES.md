@@ -477,10 +477,12 @@ When healed, regain HP up to maximum. **Healing from a Power** adds the healer's
 
 | Type | Duration | Effect |
 |------|----------|--------|
-| **Partial** | 2, 4, or 6 hours | Each 2 hours = ¼ max to allocate between HP and EN (or ½ of one) |
+| **Partial** | 2, 4, or 6 hours | Each 2 hours = ¼ max to allocate between HP and EN (or ½ to one). Allocate in ¼ increments only. |
 | **Full** | 8–10 hours | HP→max, EN→max, most temporary effects removed; Feat uses (Full) restored |
 
-**Rounding:** Round up for fractions (e.g., 9 max HP ÷ 2 = 5 HP recovered).
+**Partial recovery quarters:** 2h = 1 quarter (½ total resources), 4h = 2 quarters (1 whole), 6h = 3 quarters (1½ total). 8h is full recovery, not partial.
+
+**Rounding:** Round up for fractions (e.g., 9 max HP ÷ 4 = 3 HP per quarter).
 
 **Feat uses:** Partial recovery resets "Partial" only; "Full" requires full recovery.
 

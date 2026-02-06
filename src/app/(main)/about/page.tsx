@@ -2,21 +2,24 @@
  * About Us Page
  * =============
  * Authentic to the Core Rulebook tone. Uses dice images for carousel selection.
+ * 6-dice carousel (d4–d20) with centered selected dice, fluid animations, and CTAs.
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PageContainer, PageHeader } from '@/components/ui';
-import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull } from 'lucide-react';
+import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap } from 'lucide-react';
 
 const DICE_IMAGES = [
   { src: '/images/D4.png', alt: 'D4', label: 'Our Philosophy' },
   { src: '/images/D6.png', alt: 'D6', label: 'What We Offer' },
   { src: '/images/D8.png', alt: 'D8', label: 'What Makes Realms Unique' },
-  { src: '/images/D12.png', alt: 'D12', label: 'Join the Adventure' },
+  { src: '/images/D10.png', alt: 'D10', label: 'Choose Who You Play' },
+  { src: '/images/D12.png', alt: 'D12', label: 'How You Adventure' },
+  { src: '/images/D20_1.png', alt: 'D20', label: 'Join the Adventure' },
 ];
 
 const CAROUSEL_SLIDES = [
@@ -85,6 +88,60 @@ const CAROUSEL_SLIDES = [
     ),
   },
   {
+    title: 'Choose Who You Play',
+    content: (
+      <>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          <strong className="text-text-primary">Your Character is yours to define.</strong> From Species and Ancestry to Powers, Techniques, Skills, and Feats—every choice shapes who they are. Create custom Powers that fit your vision, design Techniques that feel uniquely yours, and build a Character that reflects your imagination.
+        </p>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          Whether you&apos;re a spellcaster weaving magic or a martial warrior mastering the blade, Realms gives you the tools to bring your ideal adventurer to life.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <Link href="/power-creator" className="btn-solid">
+            <Wand2 className="w-5 h-5" />
+            Create a Power
+          </Link>
+          <Link href="/technique-creator" className="btn-outline-clean">
+            <Zap className="w-5 h-5" />
+            Create a Technique
+          </Link>
+          <Link href="/characters/new" className="btn-outline-clean">
+            <Sparkles className="w-5 h-5" />
+            Create a Character
+          </Link>
+        </div>
+      </>
+    ),
+  },
+  {
+    title: 'How You Adventure',
+    content: (
+      <>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom Armaments and weapons, build Creatures and companions, and manage Encounters with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
+        </p>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          Design the perfect sword, summon a custom creature, or track your party&apos;s progress through Skill and Combat Encounters—all in one place.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <Link href="/item-creator" className="btn-solid">
+            <Sword className="w-5 h-5" />
+            Create an Armament
+          </Link>
+          <Link href="/creature-creator" className="btn-outline-clean">
+            <Skull className="w-5 h-5" />
+            Creature Creator
+          </Link>
+          <Link href="/encounter-tracker" className="btn-outline-clean">
+            <Users className="w-5 h-5" />
+            Encounter Tracker
+          </Link>
+        </div>
+      </>
+    ),
+  },
+  {
     title: 'Join the Adventure',
     content: (
       <>
@@ -98,11 +155,11 @@ const CAROUSEL_SLIDES = [
           Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the Codex, build in the Creators, and adventure in a way only the imagination can picture.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
-          <Link href="/characters/new" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors">
+          <Link href="/characters/new" className="btn-solid">
             <Sparkles className="w-5 h-5" />
             Create a Character
           </Link>
-          <Link href="/rules" className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-primary-600 text-primary-700 font-semibold rounded-lg hover:bg-primary-50 transition-colors">
+          <Link href="/rules" className="btn-outline-clean">
             <BookOpen className="w-5 h-5" />
             Read the Core Rulebook
           </Link>
@@ -114,18 +171,29 @@ const CAROUSEL_SLIDES = [
 
 export default function AboutPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const goToSlide = (index: number) => {
+    if (index === currentSlide) return;
+    setIsTransitioning(true);
     setCurrentSlide(index);
   };
 
   const goPrev = () => {
+    setIsTransitioning(true);
     setCurrentSlide((prev) => (prev === 0 ? CAROUSEL_SLIDES.length - 1 : prev - 1));
   };
 
   const goNext = () => {
+    setIsTransitioning(true);
     setCurrentSlide((prev) => (prev === CAROUSEL_SLIDES.length - 1 ? 0 : prev + 1));
   };
+
+  useEffect(() => {
+    if (!isTransitioning) return;
+    const t = setTimeout(() => setIsTransitioning(false), 300);
+    return () => clearTimeout(t);
+  }, [isTransitioning, currentSlide]);
 
   return (
     <PageContainer size="xl" padded>
@@ -135,67 +203,86 @@ export default function AboutPage() {
         size="lg"
       />
 
-      {/* Carousel */}
-      <section className="bg-surface rounded-xl shadow-lg border border-border-light overflow-hidden mb-12">
-        <div className="p-8 md:p-12 min-h-[320px]">
-          <h2 className="text-xl font-bold text-primary-700 mb-6 flex items-center gap-2">
+      {/* Carousel - fluid, engaging design */}
+      <section className="relative bg-surface rounded-2xl shadow-xl border border-border-light overflow-hidden mb-12 transition-all duration-500 hover:shadow-2xl">
+        {/* Decorative flourishes */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary-100/30 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent-200/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-50/20 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative p-8 md:p-12 min-h-[360px]">
+          <h2 className="text-xl font-bold text-primary-700 mb-6 flex items-center gap-2 transition-all duration-300">
             <Swords className="w-6 h-6" />
-            {CAROUSEL_SLIDES[currentSlide].title}
+            <span className={isTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}>
+              {CAROUSEL_SLIDES[currentSlide].title}
+            </span>
           </h2>
-          <div className="text-text-secondary">
+          <div
+            className={`text-text-secondary transition-all duration-300 ${
+              isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+            }`}
+          >
             {CAROUSEL_SLIDES[currentSlide].content}
           </div>
         </div>
 
-        {/* Carousel controls - arrows */}
-        <div className="flex items-center justify-between px-6 py-4 bg-surface-alt border-t border-border-light">
+        {/* Dice carousel - centered selected, no borders, scale/opacity effects */}
+        <div className="relative flex items-center justify-center min-h-[120px] px-14 py-8 bg-gradient-to-t from-surface-alt/80 to-surface border-t border-border-light">
           <button
             onClick={goPrev}
-            className="p-2 rounded-lg hover:bg-surface transition-colors"
+            className="absolute left-2 md:left-4 p-2 rounded-lg hover:bg-primary-50 transition-all hover:scale-110 z-10"
             aria-label="Previous slide"
           >
-            <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-70" />
+            <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-70 hover:opacity-100 transition-opacity" />
           </button>
 
-          {/* Dice carousel selection bubbles */}
-          <div className="flex items-center gap-3">
-            {DICE_IMAGES.map((dice, index) => (
-              <button
-                key={dice.alt}
-                onClick={() => goToSlide(index)}
-                className={`
-                  w-10 h-10 rounded-lg overflow-hidden border-2 transition-all
-                  ${currentSlide === index
-                    ? 'border-primary-600 shadow-md scale-110'
-                    : 'border-border-light hover:border-primary-400 opacity-70 hover:opacity-100'
-                  }
-                `}
-                aria-label={`Go to ${dice.label}`}
-                title={dice.label}
-              >
-                <Image
-                  src={dice.src}
-                  alt={dice.alt}
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-contain"
-                />
-              </button>
-            ))}
+          <div className="flex items-end justify-center gap-0 min-w-[280px] md:min-w-[360px]">
+            {DICE_IMAGES.map((dice, index) => {
+              const distance = Math.abs(index - currentSlide);
+              const isSelected = currentSlide === index;
+              const scale = isSelected ? 1 : Math.max(0.45, 1 - distance * 0.22);
+              const opacity = isSelected ? 1 : Math.max(0.3, 1 - distance * 0.28);
+              const zIndex = isSelected ? 10 : 5 - distance;
+
+              return (
+                <button
+                  key={dice.alt}
+                  onClick={() => goToSlide(index)}
+                  className="flex-shrink-0 transition-all duration-300 ease-out rounded-lg overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 p-1"
+                  style={{
+                    transform: `scale(${scale})`,
+                    opacity,
+                    zIndex,
+                  }}
+                  aria-label={`Go to ${dice.label}`}
+                  title={dice.label}
+                >
+                  <Image
+                    src={dice.src}
+                    alt={dice.alt}
+                    width={48}
+                    height={48}
+                    className="w-10 h-10 md:w-12 md:h-12 object-contain transition-transform duration-300 hover:scale-110"
+                  />
+                </button>
+              );
+            })}
           </div>
 
           <button
             onClick={goNext}
-            className="p-2 rounded-lg hover:bg-surface transition-colors"
+            className="absolute right-2 md:right-4 p-2 rounded-lg hover:bg-primary-50 transition-all hover:scale-110 z-10"
             aria-label="Next slide"
           >
-            <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-70" />
+            <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-70 hover:opacity-100 transition-opacity" />
           </button>
         </div>
       </section>
 
       {/* Creator message - matches home page tone */}
-      <section className="bg-surface-alt rounded-xl p-8 border border-border-light">
+      <section className="bg-surface-alt rounded-2xl p-8 border border-border-light transition-all duration-300 hover:shadow-lg">
         <h2 className="text-xl font-bold text-text-primary mb-4">A Note from the Creator</h2>
         <p className="text-lg text-text-muted italic mb-4">
           Dear Realms Players,

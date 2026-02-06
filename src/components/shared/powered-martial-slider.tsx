@@ -31,6 +31,8 @@ export interface PoweredMartialSliderProps {
   compact?: boolean;
   /** Hide the labels above the slider */
   hideLabels?: boolean;
+  /** Allow 0 at either end (for character sheet pure martial/power). When false, powered-martial requires min 1 each. */
+  allowZeroEnds?: boolean;
   /** Additional className */
   className?: string;
 }
@@ -43,19 +45,25 @@ export function PoweredMartialSlider({
   disabled = false,
   compact = false,
   hideLabels = false,
+  allowZeroEnds = false,
   className,
 }: PoweredMartialSliderProps) {
   // Internal state to handle slider value
   const [sliderValue, setSliderValue] = useState(powerValue);
   
-  // Sync internal state when props change
-  useEffect(() => {
-    setSliderValue(powerValue);
-  }, [powerValue]);
+  // allowZeroEnds: character sheet (pure martial/power). !allowZeroEnds: creature creator (powered-martial min 1 each)
+  const minPower = allowZeroEnds ? 0 : (maxPoints > 1 ? 1 : 0);
+  const maxPower = allowZeroEnds ? maxPoints : (maxPoints > 1 ? maxPoints - 1 : maxPoints);
   
+  // Sync internal state when props change (clamp if out of bounds)
+  useEffect(() => {
+    setSliderValue(Math.max(minPower, Math.min(maxPower, powerValue)));
+  }, [powerValue, minPower, maxPower]);
+
   const handleSliderChange = (newPowerValue: number) => {
-    setSliderValue(newPowerValue);
-    onChange(newPowerValue, maxPoints - newPowerValue);
+    const clamped = Math.max(minPower, Math.min(maxPower, newPowerValue));
+    setSliderValue(clamped);
+    onChange(clamped, maxPoints - clamped);
   };
   
   return (
@@ -111,8 +119,8 @@ export function PoweredMartialSlider({
         )} />
         <input
           type="range"
-          min={0}
-          max={maxPoints}
+          min={minPower}
+          max={maxPower}
           value={sliderValue}
           onChange={(e) => handleSliderChange(parseInt(e.target.value))}
           disabled={disabled}
@@ -129,17 +137,20 @@ export function PoweredMartialSlider({
       </div>
 
       {/* Tick marks */}
-      {!compact && maxPoints <= 20 && (
+      {!compact && (maxPower - minPower + 1) <= 20 && (
         <div className="flex justify-between px-1 mt-1">
-          {Array.from({ length: maxPoints + 1 }).map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                'w-1 h-1 rounded-full',
-                i === sliderValue ? 'bg-primary-600' : 'bg-border-light'
-              )}
-            />
-          ))}
+          {Array.from({ length: maxPower - minPower + 1 }).map((_, i) => {
+            const tickValue = minPower + i;
+            return (
+              <div
+                key={i}
+                className={cn(
+                  'w-1 h-1 rounded-full',
+                  tickValue === sliderValue ? 'bg-primary-600' : 'bg-border-light'
+                )}
+              />
+            );
+          })}
         </div>
       )}
     </div>

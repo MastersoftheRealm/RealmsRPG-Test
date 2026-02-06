@@ -76,6 +76,10 @@ export interface CreatorSummaryPanelProps {
   statRows?: StatRow[];
   /** Breakdown lists (TP sources, properties, etc.) */
   breakdowns?: BreakdownList[];
+  /** Compact resource boxes at top (e.g. ability pts, skill pts - for creature creator) */
+  resourceBoxes?: Array<{ label: string; value: number; variant?: SummaryItem['variant'] }>;
+  /** Line items as sentences: "Skills: Stealth +3, Athletics -1" (D&D stat block style) */
+  lineItems?: Array<{ label: string; items: string[] }>;
   /** Additional content at the bottom */
   children?: ReactNode;
   /** Additional class names */
@@ -119,6 +123,8 @@ export function CreatorSummaryPanel({
   quickStats,
   statRows,
   breakdowns,
+  resourceBoxes,
+  lineItems,
   children,
   className,
 }: CreatorSummaryPanelProps) {
@@ -128,6 +134,24 @@ export function CreatorSummaryPanel({
       className
     )}>
       <h3 className="text-lg font-bold text-text-primary mb-4">{title}</h3>
+
+      {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}
+      {resourceBoxes && resourceBoxes.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
+          {resourceBoxes.map((box, i) => (
+            <div
+              key={i}
+              className={cn(
+                'rounded-lg p-2 text-center text-sm',
+                getVariantClasses(box.variant, box.value)
+              )}
+            >
+              <div className="font-bold text-base">{box.value}</div>
+              <div className="text-[10px] uppercase tracking-wide opacity-90">{box.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Badge (Rarity, etc.) */}
       {badge && (
@@ -218,6 +242,18 @@ export function CreatorSummaryPanel({
                   <span className="text-xs opacity-70 ml-1">/ {item.total}</span>
                 )}
               </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Line items (D&D stat block style: "Skills: X, Y, Z") */}
+      {lineItems && lineItems.length > 0 && (
+        <div className="space-y-2 text-sm border-t border-border-subtle pt-4 mt-4">
+          {lineItems.filter(li => li.items.length > 0).map((li, i) => (
+            <div key={i}>
+              <span className="font-medium text-text-secondary">{li.label}: </span>
+              <span className="text-text-primary">{li.items.join(', ')}</span>
             </div>
           ))}
         </div>

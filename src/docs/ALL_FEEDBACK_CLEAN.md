@@ -124,6 +124,13 @@ Notes:
 - [x] Auto-capitalize archetype ability display. (TASK-056 — already implemented via CSS)
 - [ ] Match character library section heights to archetype section height. (TASK-062)
 - [ ] Fix creature creator basic info dropdown alignment and sizing. (TASK-063)
+- [x] Enable hold-to-repeat for creature creator Health/Energy allocation. (TASK-065)
+- [x] Remove hold-to-repeat from creature creator defense steppers. (TASK-066)
+- [x] Fix senses/movement item card vertical margins (equal padding). (TASK-067)
+- [x] Unify creature creator add modals with character sheet/codex list styles. (TASK-068)
+- [x] Power/Martial slider: min 1 at each end, not 0. (TASK-069)
+- [x] Restructure Creature Summary with resource boxes and line items. (TASK-070)
+- [x] Unify stepper styles across site (less stark colors). (TASK-071)
 
 ---
 
@@ -184,6 +191,12 @@ Notes:
 - Context: Ability allocation, defense allocation, steppers
 - Priority: High
 - "Ability allocation, defense allocation, components: There's seemingly differences between the character sheet, creature creator, and character creator when it comes to some of these components that are meant to be unified, such as the ability allocation and defenses allocation. Why do the styles seem different slightly? What about the buttons? Aren't all/most steppers supposed to have the same/analogous styles?"
+
+2/5/2026 — Creature Creator Batch (Health/Energy, Defenses, Modals, Summary, Steppers)
+- Context: Creature Creator, Steppers, Modals
+- Priority: High (multiple items)
+- Raw feedback: "Health/Energy allocation should have faster/continuous allotment on button hold, it seems this functionality didn't work in the creature creator? maybe everywhere? Defense/ability allocation should NOT have a hold to increase function, as they have little variance. Noticed on creature creator: the senses and movement item cards have inconsistent vertical margins above/below the description box, they should be equal padding. this is likely true globally for like item cards. add feat/power/technique/armament modals in creature creator: uses old modal styles, not updated to work like character sheet modals have been for instance, all add X modals with list views/list items should be uniform and work/be styled to match codex/library like list view styles, like our feat/skill modals do in the character sheet, etc. These should be unified global components that override inline styling wherever possible such as here on the creature creator (which modal might need to be entirely removed, re-written, replaced with our components, etc.) audit/look into best option aligned with our unification goals. Power/Martial scroller in creature creator: shouldn't allow you to scroll fully to one side/the other, since the powered-martial has a division of power/martial proficiencies between both, the furthest end of the slider should be 1 for that end, not 0. Creature Summary: At the top of the summary, to match other creators, should be boxes with spendable resources (ability points, Skill points, feat points, training points, currency) this is more boxes than other creators, so they can be smaller, but should match with the style of the other creators. Below these resources can be the obvious summary points: Abilities, Archetype, level, type, size, etc. then below this can be the more specific stuff, written as basically line items, like how other creators show smaller details that change, for instance with a skill added you would say 'Skills: Stealth +3, Athletics -1, ...' as a sentence of skills, and do similar things with resistances, immunities, weaknesses, etc (if any.) Here's an example of a DND creature stat block for an idea of how simple it can be while still satisfying a TTRPG player: [D&D stat block example]. The stepper buttons across the site seem to all have slightly different styles, sizes, colors, etc. for instance, defenses allocation steppers are smaller, and the - is grey as opposed to red, compared to other steppers. we should go with less stark colors for the stppers, and unify their styles across the site as much as possible."
+- Extracted to: TASK-065, TASK-066, TASK-067, TASK-068, TASK-069, TASK-070, TASK-071
 
 ---
 
@@ -352,3 +365,45 @@ Notes
 - Priority: High
 - "Why is the styles for health pool allocation different than character creator/creature creator? They should all be the same stylistic design, colors, etc."
 - Expected: Unify HealthEnergyAllocator styles across character sheet, character creator, creature creator
+
+2/5/2026 — Creature Creator / Health-Energy Hold-to-Repeat
+- Context: Health/Energy allocation
+- Priority: High
+- "Health/Energy allocation should have faster/continuous allotment on button hold, it seems this functionality didn't work in the creature creator? maybe everywhere?"
+- Expected: Enable enableHoldRepeat for creature creator HealthEnergyAllocator; verify character creator/sheet (TASK-065)
+
+2/5/2026 — Creature Creator / Defense-Ability No Hold-to-Repeat
+- Context: Defense and ability allocation steppers
+- Priority: High
+- "Defense/ability allocation should NOT have a hold to increase function, as they have little variance."
+- Expected: Remove enableHoldRepeat from creature creator DefenseBlock (TASK-066)
+
+2/5/2026 — Creature Creator / Senses & Movement Card Margins
+- Context: ExpandableChipList, GridListRow
+- Priority: Medium
+- "Senses and movement item cards have inconsistent vertical margins above/below the description box, they should be equal padding. This is likely true globally for like item cards."
+- Expected: Equal padding above/below description; audit globally (TASK-067)
+
+2/5/2026 — Creature Creator / Add Modals Unification
+- Context: Add feat/power/technique/armament modals
+- Priority: High
+- "Uses old modal styles, not updated to work like character sheet modals. All add X modals with list views should be uniform and match codex/library list view styles. These should be unified global components. Audit best option aligned with unification goals."
+- Expected: Replace with GridListRow/UnifiedSelectionModal patterns (TASK-068)
+
+2/5/2026 — Creature Creator / Power-Martial Slider Bounds
+- Context: PoweredMartialSlider
+- Priority: High
+- "Shouldn't allow you to scroll fully to one side/the other. The furthest end of the slider should be 1 for that end, not 0."
+- Expected: min power = 1, max power = maxPoints - 1 (TASK-069)
+
+2/5/2026 — Creature Creator / Summary Layout Restructure
+- Context: Creature Summary sidebar
+- Priority: High
+- "At top: boxes with spendable resources (ability, skill, feat, training, currency). Below: summary points (Abilities, Archetype, level, type, size). Below: line items like 'Skills: Stealth +3, Athletics -1, ...' and similar for resistances, immunities, weaknesses. Reference D&D creature stat block."
+- Expected: Match other creators' resource box style; D&D stat block format for details (TASK-070)
+
+2/5/2026 — Steppers / Unify Styles Sitewide
+- Context: ValueStepper, DecrementButton, IncrementButton
+- Priority: Medium
+- "Stepper buttons across the site have slightly different styles, sizes, colors. Defenses allocation steppers are smaller, - is grey as opposed to red. Go with less stark colors and unify styles across the site."
+- Expected: Consistent sizes, less stark colors, unified btn-stepper styles (TASK-071)

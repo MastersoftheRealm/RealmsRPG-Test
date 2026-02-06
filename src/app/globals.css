@@ -496,8 +496,28 @@
   }
 
   /* ---------------------------------------------------------------------------
-     BUTTON COMPONENTS - Unified styling with gradients
+     BUTTON COMPONENTS - Unified styling
+     Clean solid/outline variants preferred over gradients for modern feel
      --------------------------------------------------------------------------- */
+  /* Clean solid primary - flat bg, no gradient */
+  .btn-solid {
+    @apply inline-flex items-center gap-2 rounded-lg font-semibold
+           bg-primary-600 text-white px-5 py-2.5 transition-all
+           hover:bg-primary-700
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  /* Clean outline - border only, no fill */
+  .btn-outline-clean {
+    @apply inline-flex items-center gap-2 rounded-lg font-semibold
+           border-2 border-primary-600 text-primary-700 px-5 py-2.5 transition-all
+           hover:bg-primary-50
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  /* Legacy gradient primary (deprecated - use btn-solid) */
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-lg font-semibold 
            bg-gradient-to-b from-primary-500 to-primary-700 text-primary-foreground 
@@ -793,25 +813,22 @@
     @apply bg-surface text-text-primary shadow-sm;
   }
 
-  /* Stepper buttons for +/- controls across all creators */
+  /* Stepper buttons for +/- controls - unified, less stark colors */
   .btn-stepper {
-    @apply flex items-center justify-center w-10 h-10 rounded-full 
-           bg-primary-100 text-primary-700 font-bold text-xl
-           border-2 border-primary-200
-           hover:bg-primary-200 hover:border-primary-300 active:bg-primary-300
-           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed
-           transition-colors duration-150;
+    @apply flex items-center justify-center rounded-full font-bold border-2
+           transition-colors duration-150
+           disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200 disabled:cursor-not-allowed;
   }
 
   .btn-stepper-danger {
-    @apply bg-danger-light text-danger-700 border-danger-200
-           hover:bg-danger-200 hover:border-danger-300 active:bg-danger-300
+    @apply bg-red-50 text-red-600 border-red-200
+           hover:bg-red-100 hover:border-red-300 active:bg-red-200
            disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200;
   }
 
   .btn-stepper-success {
-    @apply bg-success-light text-success-700 border-success-200
-           hover:bg-success-200 hover:border-success-300 active:bg-success-300
+    @apply bg-green-50 text-green-600 border-green-200
+           hover:bg-green-100 hover:border-green-300 active:bg-green-200
            disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-200;
   }
 

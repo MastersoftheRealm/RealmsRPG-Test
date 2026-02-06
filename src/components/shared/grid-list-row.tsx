@@ -425,7 +425,7 @@ export function GridListRow({
       {isExpanded && hasDetails && (
         <div className={cn(
           'border-t border-border-light bg-surface-alt',
-          compact ? 'px-3 pb-3 pt-2' : 'px-4 pb-4 pt-2',
+          compact ? 'px-3 py-3' : 'px-4 py-4',
           selectable && 'mr-10' // Indent on right when selection button present
         )}>
           {/* Custom expanded content takes precedence */}
@@ -433,9 +433,9 @@ export function GridListRow({
             expandedContent
           ) : (
             <>
-              {/* Description */}
+              {/* Description - equal margin above/below for consistent item card spacing */}
               {description && (
-                <p className="text-text-secondary text-sm mb-4 p-3 bg-surface rounded-lg">
+                <p className="text-text-secondary text-sm mb-3 p-3 bg-surface rounded-lg">
                   {description}
                 </p>
               )}

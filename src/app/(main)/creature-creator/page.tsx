@@ -11,7 +11,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper, ItemSelectionModal, ItemCard, SkillRow } from '@/components/shared';
+import { LoginPromptModal, GridListRow, DecrementButton, IncrementButton, ValueStepper, UnifiedSelectionModal, ItemCard, SkillRow, type SelectableItem, type ColumnValue } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
 import {
@@ -60,6 +60,7 @@ import {
   type ArchetypeType,
 } from '@/components/creator';
 import type { AbilityName } from '@/types';
+import type { DisplayItem } from '@/types/items';
 
 // =============================================================================
 // Creature-specific Constants
@@ -390,14 +391,12 @@ function DefenseBlock({
         <DecrementButton
           onClick={() => onChange(Math.max(0, bonusValue - 1))}
           disabled={bonusValue <= 0}
-          size="xs"
-          enableHoldRepeat
+          size="sm"
         />
         <span className="text-xs text-text-muted w-8">+{bonusValue}</span>
         <IncrementButton
           onClick={() => onChange(bonusValue + 1)}
-          size="xs"
-          enableHoldRepeat
+          size="sm"
         />
       </div>
     </div>
@@ -405,8 +404,35 @@ function DefenseBlock({
 }
 
 // =============================================================================
-// Modal Components (LoadCreatureModal - others use shared ItemSelectionModal)
+// Modal Components (LoadCreatureModal, UnifiedSelectionModal for add modals)
 // =============================================================================
+
+/** Convert DisplayItem to SelectableItem for UnifiedSelectionModal; stores DisplayItem in data for conversion back */
+function displayItemToSelectableItem(item: DisplayItem, columns?: string[]): SelectableItem {
+  const cols: ColumnValue[] = [];
+  if (columns && columns.length > 0) {
+    columns.forEach(key => {
+      const stat = item.stats?.find((s: { label: string }) => s.label.toLowerCase() === key.toLowerCase());
+      const val = stat?.value ?? (key === 'Cost' && item.cost != null ? `${item.cost}${item.costLabel || ''}` : undefined) ?? item[key as keyof DisplayItem];
+      cols.push({ key, value: val != null ? String(val) : '-' });
+    });
+  } else if (item.stats && item.stats.length > 0) {
+    item.stats.slice(0, 4).forEach((s: { label: string; value: string | number }) => {
+      cols.push({ key: s.label, value: s.value ?? '-' });
+    });
+  } else if (item.cost != null) {
+    cols.push({ key: 'Points', value: `${item.cost}${item.costLabel || ''}` });
+  }
+  const badges = item.badges?.map(b => ({ label: b.label, color: 'gray' as const })) ?? [];
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    columns: cols.length > 0 ? cols : undefined,
+    badges: badges.length > 0 ? badges : undefined,
+    data: item,
+  };
+}
 
 function LoadCreatureModal({
   isOpen,
@@ -550,6 +576,24 @@ function CreatureCreatorContent() {
       .filter(item => !selectedIds.has(item.docId))
       .map(item => transformUserItemToDisplayItem(item, itemPropertiesDb));
   }, [userItems, creature.armaments, itemPropertiesDb]);
+
+  // Convert to SelectableItem for UnifiedSelectionModal (GridListRow list style)
+  const powerSelectableItems = useMemo(() => 
+    powerDisplayItems.map(p => displayItemToSelectableItem(p, ['EN', 'Action', 'Range'])),
+    [powerDisplayItems]
+  );
+  const techniqueSelectableItems = useMemo(() => 
+    techniqueDisplayItems.map(t => displayItemToSelectableItem(t, ['EN', 'TP', 'Action'])),
+    [techniqueDisplayItems]
+  );
+  const featSelectableItems = useMemo(() => 
+    featDisplayItems.map(f => displayItemToSelectableItem(f)),
+    [featDisplayItems]
+  );
+  const armamentSelectableItems = useMemo(() => 
+    armamentDisplayItems.map(a => displayItemToSelectableItem(a, ['Type', 'TP', 'Cost'])),
+    [armamentDisplayItems]
+  );
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -1001,6 +1045,7 @@ function CreatureCreatorContent() {
               maxEnergy={stats.maxEnergy}
               onHpChange={(val) => updateCreature({ hitPoints: val })}
               onEnergyChange={(val) => updateCreature({ energyPoints: val })}
+              enableHoldRepeat
             />
           </div>
 
@@ -1397,11 +1442,18 @@ function CreatureCreatorContent() {
           </CollapsibleSection>
         </div>
 
-        {/* Creature Summary Sidebar - matches power/technique/item creator layout */}
+        {/* Creature Summary Sidebar - resource boxes at top, summary points, line items (D&D stat block style) */}
         <div className="self-start sticky top-24 space-y-6">
           <CreatorSummaryPanel
             title="Creature Summary"
             badge={creature.name ? { label: creature.name, className: 'bg-primary-100 text-primary-700' } : undefined}
+            resourceBoxes={[
+              { label: 'Ability Pts', value: stats.abilityRemaining, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
+              { label: 'Skill Pts', value: stats.skillRemaining, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
+              { label: 'Feat Pts', value: stats.featRemaining, variant: stats.featRemaining < 0 ? 'danger' : stats.featRemaining === 0 ? 'success' : 'warning' },
+              { label: 'Training Pts', value: stats.trainingPoints, variant: stats.trainingPoints < 0 ? 'danger' : 'warning' },
+              { label: 'Currency', value: stats.currency, variant: stats.currency < 0 ? 'danger' : 'warning' },
+            ]}
             quickStats={[
               { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health' },
               { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy' },
@@ -1410,94 +1462,101 @@ function CreatureCreatorContent() {
               { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt' },
             ]}
             statRows={[
+              { label: 'Abilities', value: (['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
+                const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
+                const v = creature.abilities[k];
+                return `${abbr} ${v >= 0 ? '+' : ''}${v}`;
+              }).join(', ') },
+              { label: 'Archetype', value: creature.archetypeType.charAt(0).toUpperCase() + creature.archetypeType.slice(1) },
               { label: 'Level', value: creature.level },
               { label: 'Type', value: creature.type },
               { label: 'Size', value: creature.size.charAt(0).toUpperCase() + creature.size.slice(1) },
-              { label: 'Archetype', value: creature.archetypeType.charAt(0).toUpperCase() + creature.archetypeType.slice(1) },
             ]}
-            items={[
-              { label: 'Ability Points', remaining: stats.abilityRemaining },
-              { label: 'Skill Points', remaining: stats.skillRemaining },
-              { label: 'Feat Points', remaining: stats.featRemaining, variant: 'warning' },
-              { label: 'Training Points', remaining: stats.trainingPoints, variant: 'warning' },
-              { label: 'Currency', remaining: stats.currency, variant: 'warning' },
-            ]}
-            breakdowns={[
-              ...(creature.resistances.length > 0 ? [{ title: 'Resistances', items: creature.resistances }] : []),
-              ...(creature.weaknesses.length > 0 ? [{ title: 'Weaknesses', items: creature.weaknesses }] : []),
-              ...(creature.immunities.length > 0 ? [{ title: 'Immunities', items: creature.immunities }] : []),
-              ...(creature.senses.length > 0 ? [{ title: 'Senses', items: creature.senses }] : []),
-              ...(creature.movementTypes.length > 0 ? [{ title: 'Movement', items: creature.movementTypes }] : []),
-              ...(creature.languages.length > 0 ? [{ title: 'Languages', items: creature.languages }] : []),
+            lineItems={[
+              { label: 'Skills', items: creature.skills.map(s => `${s.name} ${getSkillBonus(s.name, s.value, s.proficient) >= 0 ? '+' : ''}${getSkillBonus(s.name, s.value, s.proficient)}`) },
+              { label: 'Resistances', items: creature.resistances },
+              { label: 'Immunities', items: creature.immunities },
+              { label: 'Weaknesses', items: creature.weaknesses },
+              { label: 'Senses', items: creature.senses },
+              { label: 'Movement', items: creature.movementTypes },
+              { label: 'Languages', items: creature.languages },
             ]}
           />
         </div>
       </div>
 
-      {/* Modals - using shared ItemSelectionModal */}
-      <ItemSelectionModal
+      {/* Modals - UnifiedSelectionModal with GridListRow (matches character sheet/codex list style) */}
+      <UnifiedSelectionModal
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
-        onConfirm={(items) => {
+        onConfirm={(selected) => {
+          const items = selected.map(s => s.data as DisplayItem);
           const powers = items.map(displayItemToCreaturePower);
-          setCreature(prev => ({
-            ...prev,
-            powers: [...prev.powers, ...powers]
-          }));
+          setCreature(prev => ({ ...prev, powers: [...prev.powers, ...powers] }));
         }}
-        items={powerDisplayItems}
+        items={powerSelectableItems}
         title="Select Powers"
         description="Choose powers from your library to add to this creature"
         maxSelections={10}
+        itemLabel="power"
         searchPlaceholder="Search powers..."
+        columns={[{ key: 'EN', label: 'EN', sortable: true }, { key: 'Action', label: 'Action', sortable: true }, { key: 'Range', label: 'Range', sortable: true }]}
+        gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"
+        size="xl"
       />
-      <ItemSelectionModal
+      <UnifiedSelectionModal
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
-        onConfirm={(items) => {
+        onConfirm={(selected) => {
+          const items = selected.map(s => s.data as DisplayItem);
           const techniques = items.map(displayItemToCreatureTechnique);
-          setCreature(prev => ({
-            ...prev,
-            techniques: [...prev.techniques, ...techniques]
-          }));
+          setCreature(prev => ({ ...prev, techniques: [...prev.techniques, ...techniques] }));
         }}
-        items={techniqueDisplayItems}
+        items={techniqueSelectableItems}
         title="Select Techniques"
         description="Choose techniques from your library to add to this creature"
         maxSelections={10}
+        itemLabel="technique"
         searchPlaceholder="Search techniques..."
+        columns={[{ key: 'EN', label: 'EN', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Action', label: 'Action', sortable: true }]}
+        gridColumns="1.5fr 0.5fr 0.5fr 0.8fr"
+        size="xl"
       />
-      <ItemSelectionModal
+      <UnifiedSelectionModal
         isOpen={showFeatModal}
         onClose={() => setShowFeatModal(false)}
-        onConfirm={(items) => {
+        onConfirm={(selected) => {
+          const items = selected.map(s => s.data as DisplayItem);
           const feats = items.map(displayItemToCreatureFeat);
-          setCreature(prev => ({
-            ...prev,
-            feats: [...prev.feats, ...feats]
-          }));
+          setCreature(prev => ({ ...prev, feats: [...prev.feats, ...feats] }));
         }}
-        items={featDisplayItems}
+        items={featSelectableItems}
         title="Select Feats"
         description="Choose creature feats to add"
         maxSelections={10}
+        itemLabel="feat"
         searchPlaceholder="Search feats..."
+        columns={[{ key: 'Points', label: 'Pts', sortable: true }]}
+        gridColumns="1.5fr 0.6fr"
+        size="xl"
       />
-      <ItemSelectionModal
+      <UnifiedSelectionModal
         isOpen={showArmamentModal}
         onClose={() => setShowArmamentModal(false)}
-        onConfirm={(items) => {
+        onConfirm={(selected) => {
+          const items = selected.map(s => s.data as DisplayItem);
           const armaments = items.map(displayItemToCreatureArmament);
-          setCreature(prev => ({
-            ...prev,
-            armaments: [...prev.armaments, ...armaments]
-          }));
+          setCreature(prev => ({ ...prev, armaments: [...prev.armaments, ...armaments] }));
         }}
-        items={armamentDisplayItems}
+        items={armamentSelectableItems}
         title="Select Armaments"
         description="Choose items from your library to equip on this creature"
         maxSelections={10}
+        itemLabel="armament"
         searchPlaceholder="Search items..."
+        columns={[{ key: 'Type', label: 'Type', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Cost', label: 'Cost', sortable: true }]}
+        gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
+        size="xl"
       />
       <LoadCreatureModal
         isOpen={showLoadModal}
