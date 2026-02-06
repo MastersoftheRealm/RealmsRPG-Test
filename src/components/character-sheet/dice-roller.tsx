@@ -2,14 +2,16 @@
  * Dice Roller Component
  * =====================
  * A component for rolling dice with modifiers.
+ * Uses custom dice images from vanilla site (matching roll-log).
  * Displays roll history and supports various die types.
  */
 
 'use client';
 
 import { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, X, History, Trash2 } from 'lucide-react';
+import { History, Trash2 } from 'lucide-react';
 import { ValueStepper } from '@/components/shared';
 
 interface DieRoll {
@@ -33,14 +35,32 @@ function rollDie(sides: number): number {
   return Math.floor(Math.random() * sides) + 1;
 }
 
-// Die type buttons
+// Die type config with custom images (matching roll-log.tsx)
 const DIE_TYPES = [4, 6, 8, 10, 12, 20] as const;
+const DIE_IMAGES: Record<number, string> = {
+  4: '/images/D4.png',
+  6: '/images/D6.png',
+  8: '/images/D8.png',
+  10: '/images/D10.png',
+  12: '/images/D12.png',
+  20: '/images/D20_1.png',
+};
 
-// Get appropriate icon for display
-function DieIcon({ value, className }: { value: number; className?: string }) {
-  const icons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
-  const Icon = icons[Math.min(value - 1, 5)] || Dice6;
-  return <Icon className={className} />;
+// Die result display: image + value below (matching roll-log style)
+function DieResultDisplay({ value, dieType, className }: { value: number; dieType: number; className?: string }) {
+  const src = DIE_IMAGES[dieType] ?? '/images/D6.png';
+  return (
+    <div className={cn('flex flex-col items-center gap-0.5', className)}>
+      <Image
+        src={src}
+        alt={`d${dieType} = ${value}`}
+        width={28}
+        height={28}
+        className="object-contain"
+      />
+      <span className="text-xs font-bold text-text-primary">{value}</span>
+    </div>
+  );
 }
 
 export function DiceRoller({ className, onRoll }: DiceRollerProps) {
@@ -110,20 +130,28 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
 
       {!showHistory ? (
         <>
-          {/* Die Type Selection */}
-          <div className="grid grid-cols-6 gap-1 mb-4">
+          {/* Die Type Selection — clickable dice images with labels (matching vanilla site) */}
+          <div className="grid grid-cols-6 gap-2 mb-4">
             {DIE_TYPES.map((die) => (
               <button
                 key={die}
                 onClick={() => setDieType(die)}
                 className={cn(
-                  'py-2 px-1 rounded-lg text-sm font-bold transition-colors',
+                  'flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-colors',
                   dieType === die
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary-600 text-white ring-2 ring-primary-400'
                     : 'bg-surface-alt text-text-secondary hover:bg-surface'
                 )}
+                title={`Select d${die}`}
               >
-                d{die}
+                <Image
+                  src={DIE_IMAGES[die]}
+                  alt={`d${die}`}
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
+                <span className="text-xs font-medium">1d{die}</span>
               </button>
             ))}
           </div>
@@ -172,15 +200,18 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
               <div className="text-4xl font-bold text-primary-600 mb-2">
                 {lastRoll.total}
               </div>
-              <div className="flex items-center justify-center gap-1 text-sm text-text-muted">
+              <div className="flex items-center justify-center gap-2 flex-wrap">
                 {lastRoll.results.map((r, i) => (
-                  <span key={i} className={cn(
-                    'px-2 py-0.5 rounded',
-                    r === lastRoll.dieType ? 'bg-green-200 text-green-800' :
-                    r === 1 ? 'bg-red-200 text-red-800' : 'bg-surface'
-                  )}>
-                    {r}
-                  </span>
+                  <div
+                    key={i}
+                    className={cn(
+                      'flex flex-col items-center rounded p-1',
+                      r === lastRoll.dieType ? 'bg-green-200 dark:bg-green-900/40' :
+                      r === 1 ? 'bg-red-200 dark:bg-red-900/40' : 'bg-surface-alt'
+                    )}
+                  >
+                    <DieResultDisplay value={r} dieType={lastRoll.dieType} />
+                  </div>
                 ))}
                 {lastRoll.modifier !== 0 && (
                   <span className={cn(

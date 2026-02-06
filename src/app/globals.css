@@ -528,7 +528,8 @@
            disabled:pointer-events-none disabled:opacity-50;
   }
 
-  /* Legacy gradient primary (deprecated - use btn-solid) */
+  /* DEPRECATED: Legacy gradient classes - use btn-solid or Button component variants instead */
+  /* .btn-primary, .btn-danger, .btn-success use gradients; prefer solid colors */
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-lg font-semibold 
            bg-gradient-to-b from-primary-500 to-primary-700 text-primary-foreground 

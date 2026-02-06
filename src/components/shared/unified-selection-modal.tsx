@@ -299,7 +299,7 @@ export function UnifiedSelectionModal({
                 <span key={col.key}>{col.label}</span>
               )
             ))}
-            <span className="text-center">Add</span>
+            <span className="text-center" aria-hidden="true">{'\u00A0'}</span>
           </div>
         )}
         

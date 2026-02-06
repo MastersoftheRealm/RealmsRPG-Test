@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, ReactNode } from 'react';
-import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { ChevronDown, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 
@@ -34,17 +34,8 @@ export function FilterSection({
         className="mb-4"
       >
         <Filter className="w-4 h-4" />
-        {isExpanded ? (
-          <>
-            <span>Hide Filters</span>
-            <ChevronUp className="w-4 h-4" />
-          </>
-        ) : (
-          <>
-            <span>Show Filters</span>
-            <ChevronDown className="w-4 h-4" />
-          </>
-        )}
+        {isExpanded ? <span>Hide Filters</span> : <span>Show Filters</span>}
+        <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />
       </Button>
 
       {isExpanded && (

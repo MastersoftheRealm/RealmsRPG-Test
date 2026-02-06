@@ -10,7 +10,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
-import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab, type CharacterNote } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
@@ -373,10 +373,11 @@ const TECHNIQUE_GRID = '1.4fr 1fr 1fr';
 
 const WEAPON_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'attack', label: 'Attack', width: '0.7fr', align: 'center' },
   { key: 'damage', label: 'Damage', width: '0.8fr', align: 'center' },
   { key: 'range', label: 'Range', width: '0.6fr', align: 'center' },
 ];
-const WEAPON_GRID = '1fr 0.8fr 0.6fr';
+const WEAPON_GRID = '1fr 0.7fr 0.8fr 0.6fr';
 
 const ARMOR_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
@@ -874,7 +875,7 @@ export function LibrarySection({
                         onCurrencyChange?.(newValue);
                       }
                     }}
-                    className="w-20 px-2 py-1 text-sm font-bold text-amber-600 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500 bg-white"
+                    className="w-20 px-2 py-1 text-sm font-bold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-600/50 rounded focus:ring-2 focus:ring-amber-500 bg-white dark:bg-surface"
                     title="Use +5, -10, or a number"
                   />
                   <span className="text-sm font-medium text-text-muted">Currency</span>
@@ -916,8 +917,11 @@ export function LibrarySection({
                   {sortedWeapons.map((item, i) => {
                     // Calculate attack bonus based on weapon properties (finesse/range/default)
                     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities);
+                    const abilityAbbr = abilityName === 'Strength' ? 'Str' : abilityName === 'Agility' ? 'Agi' : abilityName === 'Acuity' ? 'Acu' : abilityName.slice(0, 3);
+                    const attackDisplay = `+${attackBonus} (${abilityAbbr})`;
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                     const columns: ColumnValue[] = [
+                      { key: 'attack', value: attackDisplay, className: 'font-medium', align: 'center' },
                       { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium', align: 'center' },
                       { key: 'range', value: (item as Item & { range?: string }).range || 'Melee', align: 'center' },
                     ];

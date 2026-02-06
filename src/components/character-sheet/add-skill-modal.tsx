@@ -16,7 +16,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Modal } from '@/components/ui';
-import { GridListRow } from '@/components/shared';
+import { GridListRow, ListHeader, type SortState } from '@/components/shared';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
@@ -46,6 +46,7 @@ export function AddSkillModal({
   const [searchQuery, setSearchQuery] = useState('');
   const [abilityFilter, setAbilityFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
+  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
 
   // Filter to base skills only (no base_skill_id = not a sub-skill)
   const skills = useMemo(() => {
@@ -89,8 +90,28 @@ export function AddSkillModal({
       }
       
       return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    });
   }, [skills, existingSkillNames, searchQuery, abilityFilter]);
+
+  const toggleSort = useCallback((current: SortState, col: string): SortState => {
+    if (current.col === col) return { col, dir: current.dir === 1 ? -1 : 1 };
+    return { col, dir: 1 };
+  }, []);
+
+  const sortedSkills = useMemo(() => {
+    const sorted = [...filteredSkills];
+    const mult = sortState.dir;
+    if (sortState.col === 'name') {
+      sorted.sort((a, b) => mult * a.name.localeCompare(b.name));
+    } else if (sortState.col === 'ability') {
+      sorted.sort((a, b) => {
+        const aa = a.ability || '';
+        const bb = b.ability || '';
+        return mult * aa.localeCompare(bb);
+      });
+    }
+    return sorted;
+  }, [filteredSkills, sortState]);
 
   const toggleSkill = useCallback((skill: RTDBSkill) => {
     setSelectedSkills(prev => {
@@ -187,12 +208,19 @@ export function AddSkillModal({
           </div>
         </div>
 
-        {/* Column Headers - no Add column title, rounded and inset */}
+        {/* Column Headers — ListHeader with sort */}
         <div className="px-5">
-          <div className="grid grid-cols-[1fr_auto_2.5rem] gap-4 px-4 py-2 bg-primary-50 rounded-lg text-xs font-semibold text-primary-700 uppercase tracking-wider">
-            <span className="pl-7">Skill Name</span>
-            <span>Abilities</span>
-          </div>
+          <ListHeader
+            columns={[
+              { key: 'name', label: 'Name', width: '1fr' },
+              { key: 'ability', label: 'Abilities', width: 'auto', align: 'center' },
+            ]}
+            gridColumns="1fr auto"
+            sortState={sortState}
+            onSort={(col) => setSortState(prev => toggleSort(prev, col))}
+            hasSelectionColumn
+            className="mx-0"
+          />
         </div>
 
         {/* Content */}
@@ -216,9 +244,9 @@ export function AddSkillModal({
             </p>
           )}
 
-          {!loading && !error && filteredSkills.length > 0 && (
+          {!loading && !error && sortedSkills.length > 0 && (
             <div className="space-y-2 mt-2">
-              {filteredSkills.map(skill => (
+              {sortedSkills.map(skill => (
                 <GridListRow
                   key={skill.id}
                   id={skill.id}

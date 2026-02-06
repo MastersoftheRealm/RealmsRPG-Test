@@ -917,8 +917,8 @@ function TechniqueCreatorContent() {
           </div>
         </div>
 
-        {/* Sidebar - Cost Summary */}
-        <div className="space-y-6">
+        {/* Sidebar - Cost Summary (sticky to match creature creator) */}
+        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
           <CreatorSummaryPanel
             title="Technique Summary"
             costStats={[

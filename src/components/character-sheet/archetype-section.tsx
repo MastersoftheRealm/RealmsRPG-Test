@@ -612,16 +612,16 @@ export function ArchetypeSection({
       {(powerProf > 0 || martialProf > 0) && (
         <div className="flex gap-3 mb-4">
           {martialProf > 0 && (
-            <div className="flex-1 bg-red-50 rounded-lg px-3 py-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-red-700">Martial Potency</span>
+            <div className="flex-1 bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-red-700 dark:text-red-300">Martial Potency</span>
               <span className="text-lg font-bold text-red-800" title="10 + Martial Prof + Martial Ability">
                 {martialPotency}
               </span>
             </div>
           )}
           {powerProf > 0 && (
-            <div className="flex-1 bg-violet-50 rounded-lg px-3 py-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-violet-600">Power Potency</span>
+            <div className="flex-1 bg-violet-50 dark:bg-violet-900/30 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-violet-600 dark:text-violet-300">Power Potency</span>
               <span className="text-lg font-bold text-violet-700" title="10 + Power Prof + Power Ability">
                 {powerPotency}
               </span>

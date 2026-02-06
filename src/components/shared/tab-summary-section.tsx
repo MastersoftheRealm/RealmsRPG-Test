@@ -26,11 +26,11 @@ export interface TabSummarySectionProps {
 }
 
 const variantStyles = {
-  default: 'bg-gradient-to-r from-surface-alt to-surface border-border-light',
-  power: 'bg-gradient-to-r from-violet-50 to-indigo-50 border-violet-200',
-  martial: 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200',
-  currency: 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200',
-  physical: 'bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200',
+  default: 'bg-gradient-to-r from-surface-alt to-surface border-border-light dark:from-surface dark:to-surface-alt',
+  power: 'bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/30 dark:to-indigo-900/30 border-violet-200 dark:border-violet-700/50',
+  martial: 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-green-200 dark:border-green-700/50',
+  currency: 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-200 dark:border-amber-700/50',
+  physical: 'bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-200 dark:border-blue-700/50',
 };
 
 export function TabSummarySection({

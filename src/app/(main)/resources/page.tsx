@@ -32,7 +32,7 @@ export default function ResourcesPage() {
               <Link 
                 href="/Realms Character Sheet Alpha.pdf"
                 download
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-md"
+                className="btn-solid inline-flex items-center gap-2"
               >
                 <Download className="w-5 h-5" />
                 Click here to download

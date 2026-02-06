@@ -150,7 +150,7 @@ export function SkillRow({
         className={cn(
           'border-b border-border-subtle transition-colors',
           isSubSkill ? 'bg-surface-alt' : 'bg-surface',
-          !isEditing && !isLocked && 'hover:bg-blue-50',
+          !isEditing && !isLocked && 'hover:bg-blue-50 dark:hover:bg-primary-900/30',
           !isUnlocked && 'opacity-50',
           className
         )}
@@ -289,7 +289,7 @@ export function SkillRow({
     return (
       <div className={cn(
         'p-3 rounded-lg border transition-colors',
-        isSpeciesSkill ? 'bg-blue-50 border-blue-200' : 
+        isSpeciesSkill ? 'bg-blue-50 dark:bg-primary-900/30 border-blue-200 dark:border-primary-600/50' : 
           value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-surface-alt border-border-light',
         !isUnlocked && 'opacity-50',
         className
@@ -370,7 +370,7 @@ export function SkillRow({
     return (
       <div className={cn(
         'p-2 rounded-lg border transition-colors text-sm',
-        isSpeciesSkill ? 'bg-blue-50 border-blue-200' :
+        isSpeciesSkill ? 'bg-blue-50 dark:bg-primary-900/30 border-blue-200 dark:border-primary-600/50' :
           !isUnlocked && 'opacity-50 bg-surface border-border-light',
         isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
         isUnlocked && value === 0 && 'bg-surface-alt border-border-light',

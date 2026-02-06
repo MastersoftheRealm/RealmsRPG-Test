@@ -1578,3 +1578,321 @@ Agents should **create new tasks** during their work when they discover addition
     - No "Invalid regular expression" or "Invalid character in character class" errors
     - POST my-account for username change succeeds (no 500)
   notes: "DONE 2026-02-05: Changed pattern to [-a-zA-Z0-9_]+ (hyphen at start avoids character class issue)."
+
+# ────────────────────────────────────────────────────────────────
+# RECONCILIATION TASKS — Created 2026-02-06 from full codebase audit
+# Cross-referenced all raw feedback, completed tasks, and actual code.
+# ────────────────────────────────────────────────────────────────
+
+- id: TASK-078
+  title: "Dice roller — replace Lucide icons with custom dice PNGs"
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/dice-roller.tsx
+    - public/images/
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    TASK-032 (dice roller overhaul) was marked done, but the dice roller component itself
+    still uses Lucide Dice1-Dice6 icons (DieIcon function at line 40). The roll-log correctly
+    uses custom PNGs (/images/D4.png, D6.png, etc.), but the dice-roller.tsx does not.
+    Replace DieIcon with custom dice images matching the vanilla site. Show clickable dice
+    images with labels below (e.g. "1d10" below the d10 image).
+  acceptance_criteria:
+    - dice-roller.tsx uses custom images from /images/ instead of Lucide Dice icons
+    - Each die type shows as a clickable image with label below (1d4, 1d6, 1d8, 1d10, 1d12, 1d20)
+    - Dice images match those used in roll-log.tsx
+    - npm run build passes
+  notes: "DONE 2026-02-06: Replaced Lucide Dice icons with custom PNGs; die type selection uses clickable images with labels; last roll shows DieResultDisplay with images."
+
+- id: TASK-079
+  title: "Weapon columns — add attack bonus column"
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Display computed weapon attack bonus, damage, crit range, armor DR/requirements consistently."
+    WEAPON_COLUMNS currently shows Name, Damage, Range. Attack bonus is calculated
+    (getWeaponAttackBonus) but only used for the roll button, never shown in columns.
+    Add an Attack Bonus column (e.g. "+5 (Str)") to WEAPON_COLUMNS so users can see the
+    bonus at a glance without expanding the row or hovering the roll button.
+  acceptance_criteria:
+    - WEAPON_COLUMNS includes an attack bonus column
+    - Column displays calculated bonus with ability abbreviation (e.g. "+5 (Str)")
+    - Column aligned center, consistent with other column widths
+    - WEAPON_GRID updated to accommodate new column
+    - npm run build passes
+  notes: "DONE 2026-02-06: Added Attack column with +N (Abbr) format; WEAPON_GRID updated."
+
+- id: TASK-080
+  title: "Unified Selection Modal — remove 'Add' column header text"
+  priority: medium
+  status: done
+  related_files:
+    - src/components/shared/unified-selection-modal.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Remove 'Add' column header; ListHeader with hasSelectionColumn provides empty slot."
+    unified-selection-modal.tsx line 302 still renders `<span className="text-center">Add</span>`.
+    Replace with empty slot (just the column space, no text) to match feedback requirements
+    and add-feat-modal pattern.
+  acceptance_criteria:
+    - "Add" text removed from selection column header in unified-selection-modal
+    - Empty column slot still present for alignment
+    - npm run build passes
+  notes: "DONE 2026-02-06: Replaced 'Add' with empty slot (nbsp for alignment)."
+
+- id: TASK-081
+  title: "Add Skill / Add Sub-Skill modals — adopt ListHeader + sort"
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/add-skill-modal.tsx
+    - src/components/character-sheet/add-sub-skill-modal.tsx
+    - src/components/shared/list-header.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    TASK-002 audit concluded "all list pages and selection modals already use unified patterns"
+    but these two modals still use custom header divs:
+    1. add-skill-modal: custom header, no sort
+    2. add-sub-skill-modal: custom header, shows "X sub-skills available" count, no sort
+    
+    Replace custom headers with ListHeader component. Add sort functionality (at least by name).
+    Remove item count from add-sub-skill-modal per "Remove # items counts" feedback.
+  acceptance_criteria:
+    - add-skill-modal uses ListHeader with sortable columns
+    - add-sub-skill-modal uses ListHeader with sortable columns
+    - Item count "X sub-skills available" removed from add-sub-skill-modal
+    - Sort state managed with toggleSort pattern matching other modals
+    - npm run build passes
+  notes: "DONE 2026-02-06: Both modals use ListHeader with sort; item count removed from add-sub-skill."
+
+- id: TASK-082
+  title: "LoadFromLibraryModal — remove item count from footer"
+  priority: low
+  status: done
+  related_files:
+    - src/components/creator/LoadFromLibraryModal.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Remove # items counts." LoadFromLibraryModal (used by power/technique/item creators)
+    displays "X items in your library" in its footer. Remove this count.
+  acceptance_criteria:
+    - Item count text removed from LoadFromLibraryModal footer
+    - Footer still shows relevant controls (if any) without the count
+    - npm run build passes
+  notes: "DONE 2026-02-06: Footer removed (no item count)."
+
+- id: TASK-083
+  title: "Remove remaining button gradients site-wide"
+  priority: medium
+  status: done
+  related_files:
+    - src/app/(main)/resources/page.tsx
+    - src/components/character-sheet/notes-tab.tsx
+    - src/components/ui/button.tsx
+    - src/app/globals.css
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Buttons: Use solid colors with clear white font — no gradients."
+    Remaining gradient usage in buttons:
+    1. resources/page.tsx line 35: download link styled as gradient button (from-amber-500 to-orange-600)
+    2. notes-tab.tsx line 264: fall damage button with gradient (from-neutral-50 to-indigo-50)
+    3. button.tsx line 41: deprecated 'gradient' variant still defined
+    4. globals.css lines 532-563: legacy .btn-primary, .btn-danger, .btn-success gradient classes (unused in src/)
+    
+    Replace buttons with solid styling. Remove deprecated gradient variant. Remove or mark legacy CSS classes.
+  acceptance_criteria:
+    - resources/page.tsx download button uses solid color (no gradient)
+    - notes-tab.tsx fall damage button uses solid color (no gradient)
+    - Deprecated gradient variant removed from button.tsx
+    - Legacy gradient CSS classes removed or clearly marked deprecated
+    - npm run build passes
+  notes: "DONE 2026-02-06: resources/notes-tab use solid; gradient variant removed; globals.css deprecated."
+
+- id: TASK-084
+  title: "Dark mode — comprehensive pass on remaining hardcoded light colors"
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/recovery-modal.tsx
+    - src/components/character-sheet/archetype-section.tsx
+    - src/components/character-sheet/notes-tab.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/tab-summary-section.tsx
+    - src/components/shared/innate-toggle.tsx
+    - src/components/creator/ability-score-editor.tsx
+    - src/components/character-creator/steps/ancestry-step.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/app/(main)/codex/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    TASK-074 addressed CSS variables and core shared components but left many components with
+    hardcoded light-mode colors. This is a comprehensive pass to add dark: variants everywhere.
+    
+    Priority components (user-facing, frequently used):
+    - recovery-modal: bg-white → bg-surface, bg-blue-50/bg-amber-50/bg-violet-50 → with dark: variants
+    - archetype-section: bg-red-50, bg-violet-50 → with dark: variants
+    - skill-row: hover:bg-blue-50, bg-blue-50 species highlight → with dark: variants
+    - grid-list-row: bg-green-50 (equipped), bg-violet-50 (innate) → with dark: variants
+    - tab-summary-section: gradient backgrounds → with dark: variants
+    - notes-tab, library-section: bg-white inputs → dark:bg-surface
+    - innate-toggle: hover:bg-violet-50 → with dark: variant
+    
+    Secondary components:
+    - ancestry-step, feats-step, equipment-step: colored backgrounds
+    - ability-score-editor: bg-amber-50/50
+    - codex/page.tsx: bg-info-50, bg-success-50, bg-danger-50 species cards
+    
+    Also fix hover states that "white out" text in dark mode.
+  acceptance_criteria:
+    - All bg-white instances in interactive components have dark:bg-surface
+    - All bg-*-50 backgrounds have appropriate dark: variants (dark:bg-*-900/20 or similar)
+    - Hover states don't cause invisible text in dark mode
+    - Visual spot-check in dark mode shows no jarring bright elements
+    - npm run build passes
+  notes: "DONE 2026-02-06: Added dark: variants to recovery-modal, skill-row, grid-list-row, archetype-section, tab-summary-section, notes-tab, library-section, innate-toggle, ability-score-editor, ancestry/feats/equipment steps, codex."
+
+- id: TASK-085
+  title: "Creator summaries — add sticky positioning to power/technique/item creators"
+  priority: medium
+  status: done
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Consistent layout: fixed compact summary + scrolling inputs/values."
+    Creature creator correctly has `sticky top-24` on its summary sidebar. Power, technique,
+    and item creators do NOT — their summaries scroll away. Add `self-start sticky top-24`
+    and `max-h-[calc(100vh-7rem)] overflow-y-auto` to summary sidebar wrappers to match
+    creature creator behavior.
+  acceptance_criteria:
+    - Power creator summary sidebar is sticky
+    - Technique creator summary sidebar is sticky
+    - Item creator summary sidebar is sticky
+    - Summary scrolls independently if content overflows
+    - Matches creature creator's sticky behavior
+    - npm run build passes
+  notes: "DONE 2026-02-06: Added sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto to power/technique/item creators."
+
+- id: TASK-086
+  title: "Full recovery — filter feat resets by recovery type"
+  priority: high
+  status: done
+  related_files:
+    - src/app/(main)/characters/[id]/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    handleFullRecovery (line 560) resets ALL feat currentUses to maxUses without checking
+    the feat's recovery type. Per game rules and TASK-017 spec: "Full Recovery restores all
+    feat/trait uses with recovery type 'Full' or 'Partial' to their max values." Feats with
+    NO recovery period (one-time-use feats) should NOT be reset by recovery.
+    
+    The trait handling correctly checks `uses_per_rec` before resetting, but feat handling does not.
+    Add a filter: only reset currentUses when feat.recovery includes 'Full' or 'Partial'
+    (or when feat has a recovery period at all).
+  acceptance_criteria:
+    - handleFullRecovery only resets feat uses where feat.recovery is "Full" or "Partial"
+    - Feats with no recovery period are NOT reset
+    - handlePartialRecovery remains correct (already filters for "Partial")
+    - Trait handling remains correct (already filters by uses_per_rec + rec_period)
+    - npm run build passes
+  notes: "DONE 2026-02-06: handleFullRecovery only resets feats with recovery Full or Partial; one-time-use feats preserved."
+
+- id: TASK-087
+  title: "Remove dead code — unused imports and deprecated definitions"
+  priority: low
+  status: done
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/components/ui/button.tsx
+    - src/app/globals.css
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Find and remove true dead code." Audit found:
+    1. library-section.tsx: imports ChevronDown, ChevronUp from lucide-react — never used
+    2. proficiencies-tab.tsx: imports ChevronUp, ChevronDown from lucide-react — never used
+    3. button.tsx: deprecated 'gradient' variant (overlaps with TASK-083)
+    4. globals.css: unused legacy .btn-primary, .btn-danger, .btn-success classes (overlaps with TASK-083)
+    
+    Remove unused imports. The globals.css/button.tsx items are handled by TASK-083.
+  acceptance_criteria:
+    - Unused ChevronDown/ChevronUp imports removed from library-section.tsx
+    - Unused ChevronUp/ChevronDown imports removed from proficiencies-tab.tsx
+    - No unused lucide-react imports remain in character-sheet components
+    - npm run build passes
+  notes: "DONE 2026-02-06: Removed unused ChevronDown/ChevronUp from library-section, proficiencies-tab."
+
+- id: TASK-088
+  title: "Fix chevron layout shift — use single icon with rotation"
+  priority: low
+  status: done
+  related_files:
+    - src/components/shared/filters/filter-section.tsx
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/shared/list-components.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Remove extraneous expand/collapse chevrons when they cause layout issues."
+    Was marked as done in ALL_FEEDBACK_CLEAN.md but some components still conditionally
+    render ChevronUp vs ChevronDown instead of rotating a single chevron:
+    1. filter-section.tsx: lines 96-106 — conditional ChevronUp/ChevronDown
+    2. creature-stat-block.tsx: line 275 — conditional ChevronUp/ChevronDown
+    3. list-components.tsx: line 66 — conditional chevrons (lower priority)
+    
+    Correct pattern already used by expandable-chip.tsx, part-chip.tsx, codex/page.tsx:
+    single ChevronDown with `rotate-180 transition-transform` when expanded.
+  acceptance_criteria:
+    - filter-section.tsx uses single ChevronDown with rotation transform
+    - creature-stat-block.tsx uses single ChevronDown with rotation transform
+    - list-components.tsx uses single chevron with rotation (or document if intentional)
+    - No layout shift on expand/collapse
+    - npm run build passes
+  notes: "DONE 2026-02-06: filter-section, creature-stat-block, list-components use single ChevronDown with rotate-180."
+
+- id: TASK-089
+  title: "Power/Technique/Item creator modals — unify LoadFromLibraryModal with shared patterns"
+  priority: medium
+  status: done
+  related_files:
+    - src/components/creator/LoadFromLibraryModal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    TASK-068 unified creature creator modals to UnifiedSelectionModal with GridListRow.
+    However, power/technique/item creators still use LoadFromLibraryModal which doesn't
+    follow the unified list patterns (no ListHeader, no GridListRow, no sortable columns).
+    
+    Either replace LoadFromLibraryModal internals to use GridListRow/ListHeader patterns,
+    or migrate these creators to use UnifiedSelectionModal. Remove item count from footer
+    (overlaps TASK-082). Ensure consistent styling with creature creator modals.
+  acceptance_criteria:
+    - LoadFromLibraryModal uses GridListRow or equivalent unified list pattern
+    - Sortable column headers via ListHeader
+    - No item count in footer
+    - Visual consistency with creature creator add modals
+    - npm run build passes
+  notes: "DONE 2026-02-06: LoadFromLibraryModal now uses GridListRow, ListHeader with sort, hasSelectionColumn; selectable rows."

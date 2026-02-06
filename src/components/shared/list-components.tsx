@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { ChevronUp, ChevronDown, Filter } from 'lucide-react';
+import { ChevronDown, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -63,7 +63,7 @@ export function SortHeader({
     >
       {label}
       {isActive && (
-        sortState.dir === 1 ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
+        <ChevronDown className={cn('w-3 h-3 transition-transform', sortState.dir === 1 && 'rotate-180')} />
       )}
     </button>
   );
@@ -93,17 +93,8 @@ export function FilterSection({
         className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary mb-4 transition-colors"
       >
         <Filter className="w-4 h-4" />
-        {isExpanded ? (
-          <>
-            <span>Hide Filters</span>
-            <ChevronUp className="w-4 h-4" />
-          </>
-        ) : (
-          <>
-            <span>Show Filters</span>
-            <ChevronDown className="w-4 h-4" />
-          </>
-        )}
+        {isExpanded ? <span>Hide Filters</span> : <span>Show Filters</span>}
+        <ChevronDown className={cn('w-4 h-4 transition-transform', isExpanded && 'rotate-180')} />
       </button>
 
       {isExpanded && (

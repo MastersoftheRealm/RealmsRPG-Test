@@ -17,7 +17,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { X, AlertCircle } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Select, Modal } from '@/components/ui';
-import { SelectionToggle } from '@/components/shared';
+import { SelectionToggle, ListHeader, type SortState } from '@/components/shared';
 import { useRTDBSkills, type RTDBSkill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
@@ -151,6 +151,7 @@ export function AddSubSkillModal({
   const [abilityFilter, setAbilityFilter] = useState('');
   const [baseSkillFilter, setBaseSkillFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
+  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
   // Track which base skill is selected for "any base skill" sub-skills
   const [anyBaseSkillSelections, setAnyBaseSkillSelections] = useState<Record<string, string>>({});
 
@@ -249,8 +250,28 @@ export function AddSubSkillModal({
       }
       
       return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    });
   }, [allSubSkills, existingSkillNamesLower, searchQuery, abilityFilter, baseSkillFilter, skillById]);
+
+  const toggleSort = useCallback((current: SortState, col: string): SortState => {
+    if (current.col === col) return { col, dir: current.dir === 1 ? -1 : 1 };
+    return { col, dir: 1 };
+  }, []);
+
+  const sortedSubSkills = useMemo(() => {
+    const sorted = [...filteredSkills];
+    const mult = sortState.dir;
+    if (sortState.col === 'name') {
+      sorted.sort((a, b) => mult * a.name.localeCompare(b.name));
+    } else if (sortState.col === 'ability') {
+      sorted.sort((a, b) => {
+        const aa = a.ability || '';
+        const bb = b.ability || '';
+        return mult * aa.localeCompare(bb);
+      });
+    }
+    return sorted;
+  }, [filteredSkills, sortState]);
 
   const toggleSkill = useCallback((skill: RTDBSkill) => {
     setSelectedSkills(prev => {
@@ -392,19 +413,22 @@ export function AddSubSkillModal({
                 ))}
               </select>
             </div>
-            
-            {/* Results count */}
-            <span className="text-sm text-text-muted ml-auto">
-              {filteredSkills.length} sub-skill{filteredSkills.length !== 1 ? 's' : ''} available
-            </span>
           </div>
         </div>
 
-        {/* Column Headers */}
-        <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-5 py-3 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wider">
-          <span className="pl-7">Sub-Skill Name</span>
-          <span>Abilities</span>
-          <span className="w-6"></span>
+        {/* Column Headers — ListHeader with sort */}
+        <div className="px-5">
+          <ListHeader
+            columns={[
+              { key: 'name', label: 'Name', width: '1fr' },
+              { key: 'ability', label: 'Abilities', width: 'auto', align: 'center' },
+            ]}
+            gridColumns="1fr auto"
+            sortState={sortState}
+            onSort={(col) => setSortState(prev => toggleSort(prev, col))}
+            hasSelectionColumn
+            className="mx-0"
+          />
         </div>
 
         {/* Content */}
@@ -428,9 +452,9 @@ export function AddSubSkillModal({
             </p>
           )}
 
-          {!loading && !error && filteredSkills.length > 0 && (
+          {!loading && !error && sortedSubSkills.length > 0 && (
             <div className="space-y-2">
-              {filteredSkills.map(skill => {
+              {sortedSubSkills.map(skill => {
                 const isAnyBaseSkill = skill.base_skill_id === 0;
                 const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
                 const baseSkillName = isAnyBaseSkill ? 'Any' : (baseSkill?.name || 'Unknown');

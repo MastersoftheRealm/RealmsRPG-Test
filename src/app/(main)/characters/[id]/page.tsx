@@ -556,22 +556,32 @@ export default function CharacterSheetPage({ params }: PageParams) {
     });
   }, [character]);
   
-  // Full recovery handler - restores all HP, EN, and all feat/trait uses
+  // Full recovery handler - restores HP, EN, and feat/trait uses with "Full" or "Partial" recovery
+  // Per game rules: one-time-use feats (no recovery period) are NOT reset
   const handleFullRecovery = useCallback(() => {
     if (!character || !calculatedStats) return;
     
-    // Reset all feat uses to max
+    const hasFullOrPartialRecovery = (r?: string) => {
+      const lower = (r || '').toLowerCase();
+      return lower.includes('full') || lower.includes('partial');
+    };
+    
+    // Reset feat uses only when recovery type is Full or Partial (not one-time-use)
     const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => ({
       ...feat,
-      currentUses: feat.maxUses || feat.currentUses,
+      currentUses: hasFullOrPartialRecovery(feat.recovery) && feat.maxUses != null
+        ? feat.maxUses
+        : feat.currentUses,
     }));
     
     const resetCharacterFeats = (character.feats || []).map(feat => ({
       ...feat,
-      currentUses: feat.maxUses || feat.currentUses,
+      currentUses: hasFullOrPartialRecovery(feat.recovery) && feat.maxUses != null
+        ? feat.maxUses
+        : feat.currentUses,
     }));
     
-    // Reset all trait uses to max
+    // Reset trait uses to max (traits with uses_per_rec have a recovery period)
     const resetTraitUses: Record<string, number> = {};
     if (character.traitUses) {
       Object.keys(character.traitUses).forEach(traitName => {

@@ -37,8 +37,6 @@ const buttonVariants = cva(
         outline: 'border-2 border-primary-600 text-primary-700 bg-transparent hover:bg-primary-50 focus-visible:ring-primary-accent',
         
         // DEPRECATED VARIANTS (kept for backwards compatibility, prefer alternatives above)
-        /** @deprecated Use 'primary' instead */
-        gradient: 'bg-gradient-to-r from-primary-light to-primary text-primary-foreground hover:from-primary-500 hover:to-primary-600 focus-visible:ring-primary-accent shadow-md',
         /** @deprecated Use 'primary' instead - context provides meaning */
         success: 'bg-success-600 text-white hover:bg-success-700 focus-visible:ring-success',
         /** @deprecated Use 'secondary' or 'ghost' instead */

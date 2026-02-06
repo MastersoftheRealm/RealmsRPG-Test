@@ -329,8 +329,8 @@ export function FeatsStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedArchetypeFeats.length === maxArchetypeFeats
-            ? 'bg-green-50 border-green-300'
-            : 'bg-amber-50 border-amber-300'
+            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
+            : 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-600/50'
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Archetype Feats</h3>
@@ -451,7 +451,7 @@ export function FeatsStep() {
               className={cn(
                 'w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left',
                 filters.hideUnqualified
-                  ? 'bg-green-50 border-green-300 text-green-700'
+                  ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50 text-green-700 dark:text-green-300'
                   : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
               )}
             >

@@ -11,7 +11,7 @@
 
 import { useMemo } from 'react';
 import { Chip } from '@/components/ui';
-import { Check, Swords, ChevronUp, ChevronDown } from 'lucide-react';
+import { Check, Swords } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';

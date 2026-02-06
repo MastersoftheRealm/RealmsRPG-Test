@@ -2,6 +2,21 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: Reconciliation tasks TASK-078 through TASK-089 | files: dice-roller.tsx, library-section.tsx, unified-selection-modal.tsx, add-skill-modal.tsx, add-sub-skill-modal.tsx, LoadFromLibraryModal.tsx, resources/page.tsx, notes-tab.tsx, button.tsx, globals.css, recovery-modal.tsx, skill-row.tsx, grid-list-row.tsx, archetype-section.tsx, tab-summary-section.tsx, innate-toggle.tsx, ability-score-editor.tsx, ancestry-step.tsx, feats-step.tsx, equipment-step.tsx, codex/page.tsx, power-creator/page.tsx, technique-creator/page.tsx, item-creator/page.tsx, characters/[id]/page.tsx, proficiencies-tab.tsx, filter-section.tsx, creature-stat-block.tsx, list-components.tsx, AI_TASK_QUEUE.md | TASKs: TASK-078, TASK-079, TASK-080, TASK-081, TASK-082, TASK-083, TASK-084, TASK-085, TASK-086, TASK-087, TASK-088, TASK-089 | Summary:
+  - TASK-078: Dice roller uses custom PNGs; die type selection with images + labels; DieResultDisplay for roll results
+  - TASK-079: Weapon columns include Attack bonus (+N Abbr)
+  - TASK-080: Unified Selection Modal "Add" header replaced with empty slot
+  - TASK-081: Add Skill/Sub-Skill modals use ListHeader + sort; item count removed from sub-skill
+  - TASK-082: LoadFromLibraryModal footer (item count) removed
+  - TASK-083: Button gradients removed (resources, notes-tab); deprecated gradient variant removed
+  - TASK-084: Dark mode pass — recovery-modal, skill-row, grid-list-row, archetype-section, tab-summary-section, notes-tab, library-section, innate-toggle, ability-score-editor, ancestry/feats/equipment steps, codex
+  - TASK-085: Power/technique/item creator summaries sticky (top-24, max-h)
+  - TASK-086: Full recovery only resets feats with Full/Partial recovery; one-time-use preserved
+  - TASK-087: Unused Chevron imports removed from library-section, proficiencies-tab
+  - TASK-088: Chevron layout shift fixed — filter-section, creature-stat-block, list-components use single icon + rotation
+  - TASK-089: LoadFromLibraryModal uses GridListRow, ListHeader, sortable columns
+  - Build passes
+
 - 2026-02-05 | agent:cursor | Session: TASK-074, TASK-075 — Dark mode + session API | files: globals.css, list-header.tsx, grid-list-row.tsx, value-stepper.tsx, sheet-header.tsx, server.ts, SECRETS_SETUP.md, AI_TASK_QUEUE.md | TASKs: TASK-074, TASK-075 | Summary:
   - TASK-074: Dark mode — softer chip, stepper, ListHeader, GridListRow, health/energy, power/martial colors; CSS vars for status colors
   - TASK-075: Added GOOGLE_APPLICATION_CREDENTIALS_JSON support for full service account JSON from Secret Manager

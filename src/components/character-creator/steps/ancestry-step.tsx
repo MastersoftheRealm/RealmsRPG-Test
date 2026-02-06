@@ -253,8 +253,8 @@ export function AncestryStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedTraitIds.length === maxAncestryTraits
-            ? 'bg-green-50 border-green-300'
-            : 'bg-amber-50 border-amber-300'
+            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
+            : 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-600/50'
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Ancestry Traits</span>
@@ -275,8 +275,8 @@ export function AncestryStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedCharacteristic
-            ? 'bg-green-50 border-green-300'
-            : 'bg-blue-50 border-blue-300'
+            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
+            : 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600/50'
         )}>
           <div className="flex items-center justify-between mb-1">
             <span className="font-bold text-text-primary text-sm">Characteristic</span>
@@ -295,7 +295,7 @@ export function AncestryStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedFlaw
-            ? 'bg-red-50 border-red-300'
+            ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-600/50'
             : 'bg-surface-alt border-border-light'
         )}>
           <div className="flex items-center justify-between mb-1">
@@ -421,22 +421,22 @@ function TraitSection({
     default: {
       border: 'border-border-light',
       header: 'bg-surface-alt',
-      selected: 'border-primary-400 bg-primary-50',
+      selected: 'border-primary-400 dark:border-primary-500 bg-primary-50 dark:bg-primary-900/30',
     },
     ancestry: {
-      border: 'border-amber-200',
-      header: 'bg-amber-50',
-      selected: 'border-amber-400 bg-amber-50',
+      border: 'border-amber-200 dark:border-amber-700/50',
+      header: 'bg-amber-50 dark:bg-amber-900/30',
+      selected: 'border-amber-400 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30',
     },
     characteristic: {
       border: 'border-blue-200',
-      header: 'bg-blue-50',
-      selected: 'border-blue-400 bg-blue-50',
+      header: 'bg-blue-50 dark:bg-blue-900/30',
+      selected: 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30',
     },
     flaw: {
-      border: 'border-red-200',
-      header: 'bg-red-50',
-      selected: 'border-red-400 bg-red-50',
+      border: 'border-red-200 dark:border-red-700/50',
+      header: 'bg-red-50 dark:bg-red-900/30',
+      selected: 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/30',
     },
   };
 

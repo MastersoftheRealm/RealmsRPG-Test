@@ -893,7 +893,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <h4 className="font-medium text-text-primary mb-2">Species Traits</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {speciesTraits.map(trait => (
-                  <div key={trait.id} className="p-2 bg-info-50 border border-info-200 rounded">
+                  <div key={trait.id} className="p-2 bg-info-50 dark:bg-info-900/30 border border-info-200 dark:border-info-700/50 rounded">
                     <span className="font-medium text-info-800">{trait.name}</span>
                     {trait.description && (
                       <p className="text-sm text-info-700 mt-1">{trait.description}</p>
@@ -909,7 +909,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <h4 className="font-medium text-text-primary mb-2">Ancestry Traits</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {ancestryTraits.map(trait => (
-                  <div key={trait.id} className="p-2 bg-success-50 border border-success-200 rounded">
+                  <div key={trait.id} className="p-2 bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-700/50 rounded">
                     <span className="font-medium text-success-800">{trait.name}</span>
                     {trait.description && (
                       <p className="text-sm text-success-700 mt-1">{trait.description}</p>
@@ -925,7 +925,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <h4 className="font-medium text-text-primary mb-2">Flaws</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {flaws.map(trait => (
-                  <div key={trait.id} className="p-2 bg-danger-50 border border-danger-200 rounded">
+                  <div key={trait.id} className="p-2 bg-danger-50 dark:bg-danger-900/30 border border-danger-200 dark:border-danger-700/50 rounded">
                     <span className="font-medium text-danger-800">{trait.name}</span>
                     {trait.description && (
                       <p className="text-sm text-danger-700 mt-1">{trait.description}</p>

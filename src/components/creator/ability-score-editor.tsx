@@ -182,7 +182,7 @@ export function AbilityScoreEditor({
             bgClass = 'bg-martial-light/50';
           } else if (isLegacyHighlight) {
             borderClass = 'border-amber-400';
-            bgClass = 'bg-amber-50/50';
+            bgClass = 'bg-amber-50/50 dark:bg-amber-900/20';
           }
 
           return (

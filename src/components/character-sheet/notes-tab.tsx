@@ -218,7 +218,7 @@ export function NotesTab({
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     onBlur={handleWeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white"
+                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
                   />
                   <span className="text-sm text-text-muted">kg</span>
                 </div>
@@ -238,7 +238,7 @@ export function NotesTab({
                     value={heightInput}
                     onChange={(e) => setHeightInput(e.target.value)}
                     onBlur={handleHeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white"
+                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
                   />
                   <span className="text-sm text-text-muted">cm</span>
                 </div>
@@ -261,7 +261,7 @@ export function NotesTab({
             <button
               onClick={handleRollFallDamage}
               disabled={!rollContext}
-              className="px-2 py-0.5 text-sm font-bold bg-gradient-to-b from-neutral-50 to-indigo-50 border border-indigo-200 rounded hover:shadow-sm transition-all disabled:opacity-50"
+              className="px-2 py-0.5 text-sm font-bold bg-primary-600 text-white rounded hover:bg-primary-700 transition-all disabled:opacity-50"
               title={rollContext ? 'Click to roll' : 'Roll log not available'}
             >
               {fallDice}

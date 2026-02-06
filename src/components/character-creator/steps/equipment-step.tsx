@@ -475,7 +475,7 @@ export function EquipmentStep() {
                   {/* TP Cost */}
                   <div className={cn(
                     'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
-                    isSelected ? 'bg-primary-100 text-primary-700' : 'bg-amber-50 text-amber-700'
+                    isSelected ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
                   )}>
                     {tpCost} TP
                   </div>
@@ -525,8 +525,8 @@ export function EquipmentStep() {
                 <div className={cn(
                   'px-3 py-2 rounded-lg border text-sm',
                   remainingCurrency >= 0 
-                    ? 'bg-green-50 border-green-200 text-green-700'
-                    : 'bg-red-50 border-red-200 text-red-700'
+                    ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-600/50 text-green-700 dark:text-green-300'
+                    : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-600/50 text-red-700 dark:text-red-300'
                 )}>
                   {remainingCurrency}c remaining of {startingCurrency}c
                 </div>

@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Edit, Trash2, Copy, Heart, Zap, Shield, Swords } from 'lucide-react';
+import { ChevronDown, Edit, Trash2, Copy, Heart, Zap, Shield, Swords } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { Button } from '@/components/ui';
 
@@ -272,11 +272,7 @@ export function CreatureStatBlock({
                 </span>
               )}
             </div>
-            {expanded ? (
-              <ChevronUp className="w-5 h-5 text-white/70" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-white/70" />
-            )}
+            <ChevronDown className={cn('w-5 h-5 text-white/70 transition-transform', expanded && 'rotate-180')} />
           </div>
         </div>
       </div>

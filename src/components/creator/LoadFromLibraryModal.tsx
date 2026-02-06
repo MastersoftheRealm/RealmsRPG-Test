@@ -7,10 +7,11 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { X, FileText, Zap, Sword, Shield, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchInput, IconButton, Alert, Modal } from '@/components/ui';
+import { GridListRow, ListHeader, type SortState } from '@/components/shared';
 
 export type LibraryItemType = 'power' | 'technique' | 'item' | 'creature';
 
@@ -66,6 +67,7 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
   title,
 }: LoadFromLibraryModalProps<T>) {
   const [search, setSearch] = useState('');
+  const [sortState, setSortState] = useState<SortState>({ col: 'name', dir: 1 });
   
   const config = TYPE_CONFIG[itemType];
   const displayTitle = title || `Load ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`;
@@ -81,6 +83,18 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
         item.description?.toLowerCase().includes(searchLower)
     );
   }, [items, search]);
+
+  const toggleSort = useCallback((current: SortState, col: string): SortState => {
+    if (current.col === col) return { col, dir: current.dir === 1 ? -1 : 1 };
+    return { col, dir: 1 };
+  }, []);
+
+  const sortedItems = useMemo(() => {
+    const sorted = [...filteredItems];
+    const mult = sortState.dir;
+    sorted.sort((a, b) => mult * a.name.localeCompare(b.name));
+    return sorted;
+  }, [filteredItems, sortState]);
 
   const handleSelect = (item: T) => {
     onSelect(item);
@@ -105,22 +119,12 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
     </div>
   );
 
-  // Custom footer for Modal
-  const modalFooter = (
-    <div className="px-6 py-4 border-t border-border-light bg-surface-secondary">
-      <p className="text-sm text-text-muted text-center">
-        {items?.length || 0} {itemType}(s) in your library
-      </p>
-    </div>
-  );
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       size="lg"
       header={modalHeader}
-      footer={modalFooter}
       showCloseButton={false}
       flexLayout
       contentClassName=""
@@ -146,36 +150,37 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
           <Alert variant="danger" className="mx-4">
             Error loading library: {error.message}
           </Alert>
-        ) : filteredItems.length === 0 ? (
+        ) : sortedItems.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-text-muted">
               {items?.length === 0 ? config.emptyText : 'No matching items found.'}
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {filteredItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleSelect(item)}
-                className={cn(
-                  'w-full text-left p-4 rounded-lg border border-border-light',
-                  'hover:border-primary-300 hover:bg-primary-50 transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-primary-500'
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <span className={cn('opacity-60', config.color)}>{config.icon}</span>
-                  <span className="font-semibold text-text-primary">{item.name}</span>
-                </div>
-                {item.description && (
-                  <p className="mt-1 text-sm text-text-secondary line-clamp-2">
-                    {item.description}
-                  </p>
-                )}
-              </button>
-            ))}
-          </div>
+          <>
+            <ListHeader
+              columns={[{ key: 'name', label: 'Name', width: '1fr' }]}
+              gridColumns="1fr"
+              sortState={sortState}
+              onSort={(col) => setSortState(prev => toggleSort(prev, col))}
+              hasSelectionColumn
+              className="mx-0 mb-2"
+            />
+            <div className="space-y-2">
+              {sortedItems.map((item) => (
+                <GridListRow
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  description={item.description}
+                  compact
+                  selectable
+                  isSelected={false}
+                  onSelect={() => handleSelect(item)}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </Modal>

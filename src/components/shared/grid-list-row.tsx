@@ -239,9 +239,9 @@ export function GridListRow({
     // Selection state
     isSelected && 'bg-primary-50 border-l-4 border-l-primary-500',
     // Equipped state (green styling)
-    equipped && !isSelected && 'border-green-300 bg-green-50',
+    equipped && !isSelected && 'border-green-300 dark:border-green-600/50 bg-green-50 dark:bg-green-900/30',
     // Innate state (purple styling)
-    innate && !isSelected && !equipped && 'border-violet-300 bg-violet-50',
+    innate && !isSelected && !equipped && 'border-violet-300 dark:border-violet-600/50 bg-violet-50 dark:bg-violet-900/30',
     // Default border
     !isSelected && !equipped && !innate && 'border-border-light',
     // Disabled state
