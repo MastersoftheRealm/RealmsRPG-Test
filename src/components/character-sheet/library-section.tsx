@@ -268,6 +268,8 @@ interface LibrarySectionProps {
   onEquipmentQuantityChange?: (id: string | number, delta: number) => void;
   onCurrencyChange?: (value: number) => void;
   // Notes tab props
+  visibility?: 'private' | 'campaign' | 'public';
+  onVisibilityChange?: (value: 'private' | 'campaign' | 'public') => void;
   weight?: number;
   height?: number;
   appearance?: string;
@@ -425,6 +427,8 @@ export function LibrarySection({
   onEquipmentQuantityChange,
   onCurrencyChange,
   // Notes props
+  visibility = 'private',
+  onVisibilityChange,
   weight = 70,
   height = 170,
   appearance = '',
@@ -1139,6 +1143,8 @@ export function LibrarySection({
 
         {activeTab === 'notes' && abilities && (
           <NotesTab
+            visibility={visibility}
+            onVisibilityChange={onVisibilityChange}
             weight={weight}
             height={height}
             appearance={appearance}

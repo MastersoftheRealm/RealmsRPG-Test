@@ -465,6 +465,8 @@ const SAVEABLE_FIELDS = [
   'equipment', 'currency',
   // Notes and misc user data
   'notes', 'backstory', 'appearance', 'archetypeDesc', 'allies', 'organizations',
+  // Character visibility (who can view sheet)
+  'visibility',
   // Ancestry data
   'ancestry', 'ancestryId', 'ancestryTraits',
   // Conditions

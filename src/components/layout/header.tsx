@@ -16,6 +16,7 @@ import { ThemeToggle } from '@/components/shared';
 
 const navLinks = [
   { href: '/characters', label: 'Characters' },
+  { href: '/campaigns', label: 'Campaigns' },
   { href: '/library', label: 'Library' },
   { href: '/codex', label: 'Codex' },
   {

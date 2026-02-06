@@ -2,6 +2,35 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: Campaign roll log follow-up | files: campaign-roll.ts, campaign-roll-service.ts, use-campaign-rolls.ts, roll-context.tsx, roll-log.tsx, campaigns/[id]/page.tsx, campaigns/[id]/view/.../page.tsx, characters/[id]/page.tsx, campaign-service.ts, use-campaigns.ts, firestore.rules, hooks/index.ts | Summary:
+  - Campaign view page: pass campaignContext to RollProvider, add RollLog with Personal/Campaign toggle
+  - Campaign detail page: Campaign Roll Log section for RM (and all members) using useCampaignRolls, RollEntryCard
+  - Character sheet: pass campaignContext when character is in a campaign (useCampaignsFull), rolls sync to campaign
+  - Firestore rules for campaigns/{id}/rolls: read/create/delete for owner or members
+  - useCampaignRolls exported from hooks; RollEntryCard exported for reuse; getMyCampaignsFull + useCampaignsFull for character-in-campaign lookup
+  - Build passes
+
+- 2026-02-06 | agent:cursor | Session: Campaigns — 10-char cap, constants, DeleteConfirmModal, tasks | files: campaigns/constants.ts, campaigns/actions.ts, campaigns/[id]/page.tsx, campaigns/page.tsx, AI_TASK_QUEUE.md | Summary:
+  - Added MAX_CAMPAIGN_CHARACTERS (10) and OWNER_MAX_CHARACTERS (5) to campaigns/constants.ts
+  - joinCampaignAction and addCharacterToCampaignAction enforce 10-char cap
+  - Campaign detail: isCampaignFull alert, invite code note when full, canAddOwnCharacters respects cap
+  - Replaced delete campaign Modal with DeleteConfirmModal
+  - Join tab: router.push for Create Character (in-app nav)
+  - TASK-099: return to Join tab after creating character
+  - TASK-100: Firestore onSnapshot for real-time campaign updates
+  - Build passes
+
+- 2026-02-06 | agent:cursor | Session: Campaigns feature | files: campaigns/page.tsx, campaigns/[id]/page.tsx, campaigns/[id]/view/[userId]/[characterId]/page.tsx, campaigns/actions.ts, campaign-service.ts, use-campaigns.ts, campaign.ts (types), header.tsx, character.ts, notes-tab.tsx, library-section.tsx, data-enrichment.ts, firestore.rules, firestore.indexes.json, api/campaigns/.../route.ts | Summary:
+  - Campaigns page in nav: Create Campaign, Join Campaign, My Campaigns tabs
+  - Create campaign with name/description; unique 8-char invite code
+  - Join via invite code; select character or create new
+  - Campaign detail: character roster (portrait, name, level, species, archetype), invite code copy, add/remove characters
+  - Owner (Realm Master) can add up to 5 own characters; others add 1 when joining
+  - Character visibility: private, campaign, or public (Notes tab)
+  - API route for RM to view player character sheets (read-only) when visibility allows
+  - Firestore rules for campaigns (read: owner or member; create: auth; update/delete: owner only)
+  - Build passes
+
 - 2026-02-06 | agent:cursor | Session: TASK-098 — Dark mode contrast fixes | files: recovery-modal.tsx, innate-toggle.tsx, skill-row.tsx, dice-roller.tsx, CombatantCard.tsx, theme-toggle.tsx, proficiencies-tab.tsx, tab-summary-section.tsx, grid-list-row.tsx, add-sub-skill-modal.tsx, encounter-tracker/page.tsx, AI_TASK_QUEUE.md | TASK: TASK-098 | Summary:
   - Recovery modal: allocation buttons (violet), hours selection hover, manual allocation labels, preview text, automatic caption
   - Innate toggle: active state dark variant, hover text contrast

@@ -32,9 +32,17 @@ export interface RollEntry {
   timestamp: Date;
 }
 
+export interface CampaignRollContext {
+  campaignId: string;
+  characterId: string;
+  characterName: string;
+}
+
 interface RollContextValue {
   // Roll history
   rolls: RollEntry[];
+  /** When set, roll log can switch to campaign mode */
+  campaignContext?: CampaignRollContext | null;
   
   // Roll functions
   rollAbility: (abilityName: string, bonus: number) => void;
@@ -81,10 +89,13 @@ const MAX_PERSISTED_ROLLS = 20;
 
 export function RollProvider({ 
   children, 
-  maxHistory = 50 
+  maxHistory = 50,
+  campaignContext,
 }: { 
   children: React.ReactNode;
   maxHistory?: number;
+  /** When set, rolls are also written to campaign roll log */
+  campaignContext?: CampaignRollContext;
 }) {
   const [rolls, setRolls] = useState<RollEntry[]>(() => {
     // Hydrate from localStorage on mount
@@ -116,7 +127,18 @@ export function RollProvider({
     setRolls(prev => [roll, ...prev].slice(0, maxHistory));
     // Notify all subscribers
     subscribersRef.current.forEach(callback => callback(roll));
-  }, [maxHistory]);
+    // If in campaign context, also write to campaign roll log
+    if (campaignContext) {
+      import('@/services/campaign-roll-service').then(({ addCampaignRoll }) => {
+        addCampaignRoll({
+          campaignId: campaignContext.campaignId,
+          characterId: campaignContext.characterId,
+          characterName: campaignContext.characterName,
+          roll,
+        }).catch((err) => console.error('Failed to add campaign roll:', err));
+      });
+    }
+  }, [maxHistory, campaignContext]);
 
   const clearHistory = useCallback(() => {
     setRolls([]);
@@ -280,6 +302,7 @@ export function RollProvider({
 
   const value: RollContextValue = {
     rolls,
+    campaignContext: campaignContext ?? null,
     rollAbility,
     rollDefense,
     rollSkill,

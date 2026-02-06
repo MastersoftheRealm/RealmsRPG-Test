@@ -12,7 +12,7 @@ export { LibrarySection } from './library-section';
 export { NotesTab } from './notes-tab';
 export { ProficienciesTab } from './proficiencies-tab';
 export { DiceRoller, type DieRoll } from './dice-roller';
-export { RollLog, type RollEntry, type RollType, type DieType, type DieResult } from './roll-log';
+export { RollLog, RollEntryCard, type RollEntry, type RollType, type DieType, type DieResult } from './roll-log';
 export { RollProvider, useRolls, useRollsOptional } from './roll-context';
 export { AddLibraryItemModal } from './add-library-item-modal';
 export { AddFeatModal } from './add-feat-modal';

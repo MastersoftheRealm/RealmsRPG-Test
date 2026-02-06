@@ -12,8 +12,10 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils/cn';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Users, User } from 'lucide-react';
 import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-context';
+import { useCampaignRolls } from '@/hooks/use-campaign-rolls';
+import type { CampaignRollEntry } from '@/types/campaign-roll';
 
 // Re-export types for convenience
 export type { RollEntry, RollType, DieResult };
@@ -66,25 +68,34 @@ interface RollLogProps {
   className?: string;
 }
 
+type RollLogMode = 'personal' | 'campaign';
+
 export function RollLog({ className }: RollLogProps) {
-  const { rolls, addRoll, clearHistory, subscribeToRolls } = useRolls();
+  const { rolls, addRoll, clearHistory, subscribeToRolls, campaignContext } = useRolls();
+  const campaignId = campaignContext?.campaignId;
+  const { rolls: campaignRolls } = useCampaignRolls(campaignId);
+  const [mode, setMode] = React.useState<RollLogMode>('personal');
   const [isOpen, setIsOpen] = React.useState(false);
   const listRef = React.useRef<HTMLDivElement>(null);
+
+  const displayRolls = mode === 'campaign' && campaignId ? campaignRolls : rolls;
+  const isCampaignMode = mode === 'campaign' && campaignId;
   
-  // Subscribe to roll events to auto-open the log
+  // Subscribe to roll events to auto-open the log (personal mode only)
   React.useEffect(() => {
     const unsubscribe = subscribeToRolls(() => {
       setIsOpen(true);
+      if (!campaignId) setMode('personal');
     });
     return unsubscribe;
-  }, [subscribeToRolls]);
+  }, [subscribeToRolls, campaignId]);
   
   // Scroll to top when new roll added (newest first)
   React.useEffect(() => {
     if (isOpen && listRef.current) {
       listRef.current.scrollTop = 0;
     }
-  }, [rolls.length, isOpen]);
+  }, [displayRolls.length, isOpen]);
   
   // Dice pool state (local to the manual dice builder)
   const [dicePool, setDicePool] = React.useState<Record<DieType, number>>({
@@ -187,28 +198,63 @@ export function RollLog({ className }: RollLogProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-primary-700 text-white">
-          <h3 className="font-bold text-base tracking-wide">🎲 Roll Log</h3>
-          <button
-            onClick={clearHistory}
-            className="px-3 py-1.5 rounded-lg bg-white/15 border-2 border-white/30 text-white text-xs font-semibold hover:bg-white/25 transition-colors flex items-center gap-1"
-          >
-            <Trash2 className="w-3 h-3" />
-            Clear
-          </button>
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-base tracking-wide">🎲 Roll Log</h3>
+            {campaignId && (
+              <div className="flex rounded-lg overflow-hidden border border-white/30">
+                <button
+                  onClick={() => setMode('personal')}
+                  className={cn(
+                    'px-2.5 py-1 text-xs font-medium transition-colors',
+                    mode === 'personal' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15'
+                  )}
+                  title="Your personal rolls"
+                >
+                  <User className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setMode('campaign')}
+                  className={cn(
+                    'px-2.5 py-1 text-xs font-medium transition-colors',
+                    mode === 'campaign' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15'
+                  )}
+                  title="Campaign rolls (all players)"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+          {!isCampaignMode && (
+            <button
+              onClick={clearHistory}
+              className="px-3 py-1.5 rounded-lg bg-white/15 border-2 border-white/30 text-white text-xs font-semibold hover:bg-white/25 transition-colors flex items-center gap-1"
+            >
+              <Trash2 className="w-3 h-3" />
+              Clear
+            </button>
+          )}
         </div>
 
         {/* Roll History */}
         <div ref={listRef} className="flex-1 overflow-y-auto p-2 bg-surface-alt">
-          {rolls.length === 0 ? (
-            <p className="text-center text-text-muted italic py-10">No rolls yet. Build your dice pool below!</p>
+          {displayRolls.length === 0 ? (
+            <p className="text-center text-text-muted italic py-10">
+              {isCampaignMode ? 'No campaign rolls yet. Rolls from any character sheet will appear here.' : 'No rolls yet. Build your dice pool below!'}
+            </p>
           ) : (
-            rolls.map((roll) => (
-              <RollEntryCard key={roll.id} roll={roll} />
+            displayRolls.map((roll) => (
+              <RollEntryCard
+                key={roll.id}
+                roll={roll}
+                characterName={'characterName' in roll ? roll.characterName : undefined}
+              />
             ))
           )}
         </div>
 
-        {/* Dice Builder */}
+        {/* Dice Builder - hide when viewing campaign log */}
+        {!isCampaignMode && (
         <div className="p-3 bg-primary-700 border-t-2 border-border-light">
           {/* Dice Grid - clickable images with labels and counts */}
           <div className="grid grid-cols-6 gap-1.5 mb-3">
@@ -284,6 +330,7 @@ export function RollLog({ className }: RollLogProps) {
             {totalDice > 0 ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}` : 'Select dice to roll'}
           </button>
         </div>
+        )}
       </div>
 
       {/* Toggle Button - custom d20 image matching vanilla site */}
@@ -322,11 +369,13 @@ function groupDiceByType(dice: DieResult[]): { type: DieType; results: DieResult
   return Array.from(groups.entries()).map(([type, results]) => ({ type, results }));
 }
 
-function RollEntryCard({ roll }: { roll: RollEntry }) {
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+export function RollEntryCard({ roll, characterName }: { roll: RollEntry | CampaignRollEntry; characterName?: string }) {
+  const formatTime = (date: Date | { seconds: number }) => {
+    const d = date instanceof Date ? date : new Date((date as { seconds: number }).seconds * 1000);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const rollDate = roll.timestamp instanceof Date ? roll.timestamp : new Date((roll.timestamp as { seconds: number }).seconds * 1000);
   const diceGroups = groupDiceByType(roll.dice);
   const diceSubtotal = roll.dice.reduce((sum, d) => sum + d.value, 0);
   const showModifier = roll.modifier !== 0;
@@ -341,13 +390,20 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         roll.isCritFail && 'ring-2 ring-red-400'
       )}
     >
-      {/* Header: icon + title + smaller timestamp */}
+      {/* Header: icon + title + character name (campaign) + timestamp */}
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm">{ROLL_TYPE_ICONS[roll.type]}</span>
-          <span className="font-semibold text-sm text-primary-dark">{roll.title}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm flex-shrink-0">{ROLL_TYPE_ICONS[roll.type as RollType]}</span>
+          <div className="min-w-0">
+            {characterName && (
+              <span className="block text-xs font-medium text-primary-600 truncate" title={characterName}>
+                {characterName}
+              </span>
+            )}
+            <span className="font-semibold text-sm text-primary-dark truncate block">{roll.title}</span>
+          </div>
         </div>
-        <span className="text-[10px] text-text-muted">{formatTime(roll.timestamp)}</span>
+        <span className="text-[10px] text-text-muted flex-shrink-0 ml-1">{formatTime(roll.timestamp)}</span>
       </div>
 
       {/* Single-row: dice notation + roll value + bonus + total in boxes */}

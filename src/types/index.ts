@@ -57,9 +57,13 @@ export type {
   CharacterEquipment,
 } from './equipment';
 
+// Campaign
+export type { Campaign, CampaignCharacter, CampaignSummary, ArchetypeDisplayName } from './campaign';
+
 // Character
 export type {
   CharacterStatus,
+  CharacterVisibility,
   EntityType,
   CharacterPower,
   CharacterTechnique,

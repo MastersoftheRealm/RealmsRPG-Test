@@ -2272,3 +2272,42 @@ Agents should **create new tasks** during their work when they discover addition
     - Hover/active states have dark: variants where needed
     - npm run build passes
   notes: "Done 2026-02-06: Fixed recovery-modal (allocation buttons, labels, preview text), innate-toggle (active state), skill-row (bonus colors), dice-roller, CombatantCard (badges, inputs, pills), theme-toggle, proficiencies-tab, tab-summary-section highlightColors, grid-list-row innate badge, add-sub-skill-modal info box, encounter-tracker page."
+
+- id: TASK-099
+  title: Campaigns — return to Join tab after creating character
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/campaigns/page.tsx
+    - src/app/(main)/characters/new/page.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    When user clicks "Create Character" from Join Campaign empty state, they go to /characters/new.
+    After creating, they land on the new character sheet. Add returnTo param so they can be redirected
+    back to /campaigns?tab=join to complete the join flow.
+  acceptance_criteria:
+    - Join tab empty state passes ?returnTo=/campaigns?tab=join when navigating to character creation
+    - After character creation, redirect to returnTo if present
+    - npm run build passes
+  notes: "Created during campaigns feature completion. Improves UX for users with no characters who want to join."
+
+- id: TASK-100
+  title: Campaigns — real-time updates via Firestore onSnapshot
+  priority: low
+  status: not-started
+  related_files:
+    - src/hooks/use-campaigns.ts
+    - src/services/campaign-service.ts
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Campaign list and detail currently use React Query with manual invalidate. Consider Firestore
+    onSnapshot for real-time updates when campaign roster changes (e.g., another player joins).
+  acceptance_criteria:
+    - Campaign detail page updates in real time when characters are added/removed
+    - My Campaigns list updates when campaign data changes
+    - Unsubscribe on unmount; no memory leaks
+    - npm run build passes
+  notes: "Created during campaigns feature completion. Firebase best practice for collaborative data."

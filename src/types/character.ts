@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Character Types
  * ================
  * Main character data structure
@@ -13,6 +13,9 @@ import type { CharacterEquipment, Item } from './equipment';
 
 /** Character creation status */
 export type CharacterStatus = 'draft' | 'complete' | 'playing';
+
+/** Character visibility for sharing */
+export type CharacterVisibility = 'private' | 'campaign' | 'public';
 
 /** Entity type for calculations */
 export type EntityType = 'PLAYER' | 'CREATURE';
@@ -191,6 +194,9 @@ export interface Character {
   createdAt?: Date | string;
   updatedAt?: Date | string;
   lastPlayedAt?: Date | string;
+
+  /** Who can view this character: private (owner only), campaign (owner + campaign members), public */
+  visibility?: CharacterVisibility;
   
   // Legacy fields for compatibility (vanilla site format)
   allTraits?: unknown[];

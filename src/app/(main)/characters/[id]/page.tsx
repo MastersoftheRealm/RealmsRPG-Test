@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase/client';
-import { useAuth, useAutoSave, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
+import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPoints } from '@/lib/game/formulas';
@@ -75,6 +75,21 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   // Fetch all RTDB skills to get ability options for each skill
   const { data: rtdbSkills = [] } = useRTDBSkills();
+
+  // Campaigns (for roll log context when character is in a campaign)
+  const { data: campaignsFull = [] } = useCampaignsFull();
+  const campaignContext = useMemo(() => {
+    if (!user?.uid || !character) return undefined;
+    const campaign = campaignsFull.find((c) =>
+      c.characters?.some((cc) => cc.userId === user.uid && cc.characterId === character.id)
+    );
+    if (!campaign) return undefined;
+    return {
+      campaignId: campaign.id,
+      characterId: character.id,
+      characterName: character.name,
+    };
+  }, [campaignsFull, user?.uid, character]);
   
   // Enrich character data with full library objects
   const enrichedData = useMemo(() => {
@@ -1197,7 +1212,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }
   
   return (
-    <RollProvider>
+    <RollProvider campaignContext={campaignContext}>
       <div className="min-h-screen bg-background pb-8">
         {/* Floating Action Toolbar */}
         <SheetActionToolbar
@@ -1321,6 +1336,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   abilities={character.abilities}
                   onWeightChange={(v) => setCharacter(prev => prev ? { ...prev, weight: v } : null)}
                   onHeightChange={(v) => setCharacter(prev => prev ? { ...prev, height: v } : null)}
+                  visibility={character.visibility}
+                  onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
                   onAppearanceChange={(v) => setCharacter(prev => prev ? { ...prev, appearance: v } : null)}
                   onArchetypeDescChange={(v) => setCharacter(prev => prev ? { ...prev, archetypeDesc: v } : null)}
                   onNotesChange={(v) => setCharacter(prev => prev ? { ...prev, notes: v } : null)}
