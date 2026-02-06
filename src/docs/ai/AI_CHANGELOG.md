@@ -2,6 +2,13 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-05 | agent:cursor | Session: Roll Log, Modals, Buttons — feedback implementation | files: roll-context.tsx, roll-log.tsx, abilities-section.tsx, skills-section.tsx, add-feat-modal.tsx, add-skill-modal.tsx, modal.tsx, roll-button.tsx, dice-roller.tsx, ALL_FEEDBACK_CLEAN.md | Summary:
+  - Roll Log titles: Removed "Save"/"Check"; abilities/defenses use display name only (e.g. "Acuity", "Discernment"); skills use "Athletics (STR)" format
+  - Roll Log layout: Single-row boxes (1d20 X + Bonus = Total); roll=light grey, bonus=green, total=blue; smaller timestamp
+  - Modals: overflow-hidden for uniform rounded corners; add-feat uses ListHeader, removed Add column title; add-skill header rounded/inset
+  - Buttons: RollButton, roll-log, dice-roller use solid colors (no gradients); matching btn-solid/btn-outline-clean style
+  - Build passes
+
 - 2026-02-05 | agent:cursor | Session: TASK-068, TASK-070 — Creature creator modals + summary | files: creature-creator/page.tsx, creator-summary-panel.tsx, AI_TASK_QUEUE.md | TASKs: TASK-068, TASK-070 | Summary:
   - TASK-068: Replaced ItemSelectionModal with UnifiedSelectionModal for powers/techniques/feats/armaments; GridListRow list with sortable columns
   - TASK-070: CreatorSummaryPanel resourceBoxes + lineItems; creature summary: resource boxes at top, stat rows, line items (Skills: X +3, Resistances: Y)

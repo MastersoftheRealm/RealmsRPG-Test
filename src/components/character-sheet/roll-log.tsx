@@ -186,11 +186,11 @@ export function RollLog({ className }: RollLogProps) {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary-dark to-primary-700 text-white">
+        <div className="flex items-center justify-between px-4 py-3 bg-primary-700 text-white">
           <h3 className="font-bold text-base tracking-wide">🎲 Roll Log</h3>
           <button
             onClick={clearHistory}
-            className="px-3 py-1.5 rounded-md bg-white/15 border border-white/30 text-white text-xs font-semibold hover:bg-white/25 transition-colors flex items-center gap-1"
+            className="px-3 py-1.5 rounded-lg bg-white/15 border-2 border-white/30 text-white text-xs font-semibold hover:bg-white/25 transition-colors flex items-center gap-1"
           >
             <Trash2 className="w-3 h-3" />
             Clear
@@ -209,7 +209,7 @@ export function RollLog({ className }: RollLogProps) {
         </div>
 
         {/* Dice Builder */}
-        <div className="p-3 bg-gradient-to-r from-primary-dark to-primary-700 border-t-2 border-border-light">
+        <div className="p-3 bg-primary-700 border-t-2 border-border-light">
           {/* Dice Grid - clickable images with labels and counts */}
           <div className="grid grid-cols-6 gap-1.5 mb-3">
             {(['d4', 'd6', 'd8', 'd10', 'd12', 'd20'] as DieType[]).map((die) => (
@@ -271,14 +271,14 @@ export function RollLog({ className }: RollLogProps) {
             )}
           </div>
 
-          {/* Roll Button */}
+          {/* Roll Button - solid green matching btn-solid style */}
           <button
             onClick={executeRoll}
             disabled={totalDice === 0}
             className={cn(
               'w-full py-2.5 rounded-lg font-bold text-white transition-all text-sm',
-              'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-md',
-              'disabled:from-neutral-500 disabled:to-neutral-600 disabled:cursor-not-allowed disabled:shadow-none'
+              'bg-success-600 hover:bg-success-700 focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2',
+              'disabled:bg-neutral-500 disabled:cursor-not-allowed disabled:opacity-70'
             )}
           >
             {totalDice > 0 ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}` : 'Select dice to roll'}
@@ -292,8 +292,8 @@ export function RollLog({ className }: RollLogProps) {
         className={cn(
           'w-14 h-14 rounded-full shadow-lg transition-all duration-300',
           'flex items-center justify-center',
-          'bg-gradient-to-br from-primary-light to-primary-dark hover:scale-110 active:scale-95',
-          isOpen && 'from-primary-dark to-primary-900'
+          'bg-primary-600 text-white hover:bg-primary-700 hover:scale-110 active:scale-95',
+          isOpen && 'bg-primary-800'
         )}
         aria-label={isOpen ? 'Close roll log' : 'Open roll log'}
       >
@@ -329,6 +329,8 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
 
   const diceGroups = groupDiceByType(roll.dice);
   const diceSubtotal = roll.dice.reduce((sum, d) => sum + d.value, 0);
+  const showModifier = roll.modifier !== 0;
+  const showSubtotal = showModifier || roll.dice.length > 1;
 
   return (
     <div
@@ -339,45 +341,46 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
         roll.isCritFail && 'ring-2 ring-red-400'
       )}
     >
-      {/* Header: icon + title + time */}
+      {/* Header: icon + title + smaller timestamp */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-sm">{ROLL_TYPE_ICONS[roll.type]}</span>
           <span className="font-semibold text-sm text-primary-dark">{roll.title}</span>
         </div>
-        <span className="text-xs text-text-muted">{formatTime(roll.timestamp)}</span>
+        <span className="text-[10px] text-text-muted">{formatTime(roll.timestamp)}</span>
       </div>
 
-      {/* Dice Groups: image + notation + individual results */}
-      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+      {/* Single-row: dice notation + roll value + bonus + total in boxes */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {/* Dice notation + roll value (light grey) */}
         {diceGroups.map((group, gi) => (
-          <div key={gi} className="flex items-center gap-1.5">
-            <Image
-              src={DIE_IMAGES[group.type]}
-              alt={group.type}
-              width={22}
-              height={22}
-              className="w-[22px] h-[22px] object-contain opacity-80"
-            />
-            <span className="text-xs font-semibold text-text-muted">
-              {group.results.length}{group.type}:
+          <div key={gi} className="flex items-center gap-1">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 text-xs font-medium">
+              <Image
+                src={DIE_IMAGES[group.type]}
+                alt={group.type}
+                width={16}
+                height={16}
+                className="w-4 h-4 object-contain opacity-75"
+              />
+              <span>{group.results.length}{group.type}</span>
             </span>
             {group.results.map((die, di) => (
               <span
                 key={di}
                 className={cn(
-                  'inline-flex items-center justify-center min-w-[24px] h-6 px-1 rounded text-xs font-bold',
+                  'inline-flex items-center justify-center min-w-[22px] h-6 px-1 rounded text-xs font-bold',
                   die.type === 'd20'
                     ? cn(
-                        'w-7 h-7 text-sm border-2',
+                        'border',
                         die.isMax && 'bg-green-100 border-green-500 text-green-800',
                         die.isMin && 'bg-red-100 border-red-500 text-red-800',
-                        !die.isMax && !die.isMin && 'bg-surface-alt border-border-light text-text-primary'
+                        !die.isMax && !die.isMin && 'bg-neutral-100 text-neutral-600 border-neutral-300'
                       )
                     : cn(
                         die.isMax ? 'bg-green-100 border border-green-400 text-green-800' :
                         die.isMin ? 'bg-red-100 border border-red-400 text-red-800' :
-                        'bg-amber-50 border border-amber-300 text-amber-800'
+                        'bg-neutral-100 text-neutral-600 border border-neutral-300'
                       )
                 )}
               >
@@ -386,33 +389,31 @@ function RollEntryCard({ roll }: { roll: RollEntry }) {
             ))}
           </div>
         ))}
-      </div>
 
-      {/* Result line: subtotal + modifier = total */}
-      <div className="flex items-center gap-1.5 mt-1">
-        {roll.modifier !== 0 ? (
+        {/* + Bonus (green) when modifier present */}
+        {showModifier && (
           <>
-            <span className="text-xs text-text-muted font-medium">{diceSubtotal}</span>
-            <span className="text-xs text-text-muted">
-              {roll.modifier > 0 ? '+' : '−'}{Math.abs(roll.modifier)}
+            <span className="text-neutral-400 text-xs">+</span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-success-50 text-success-700 text-xs font-semibold border border-success-200">
+              {roll.modifier > 0 ? '+' : ''}{roll.modifier}
             </span>
-            <span className="text-xs text-text-muted">=</span>
           </>
-        ) : roll.dice.length > 1 ? (
+        )}
+
+        {/* = Total (blue) */}
+        {(showSubtotal || roll.dice.length === 1) && (
           <>
-            <span className="text-xs text-text-muted font-medium">{diceSubtotal}</span>
-            <span className="text-xs text-text-muted">=</span>
+            <span className="text-neutral-400 text-xs">=</span>
+            <span className={cn(
+              'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold',
+              roll.isCrit && 'bg-green-100 border border-green-400 text-green-800',
+              roll.isCritFail && 'bg-red-100 border border-red-400 text-red-800',
+              !roll.isCrit && !roll.isCritFail && 'bg-primary-50 border border-primary-200 text-primary-700'
+            )}>
+              {roll.total}
+            </span>
           </>
-        ) : null}
-        
-        <span className={cn(
-          'font-bold text-base px-2.5 py-0.5 rounded border',
-          roll.isCrit && 'bg-green-100 border-green-400 text-green-800',
-          roll.isCritFail && 'bg-red-100 border-red-400 text-red-800',
-          !roll.isCrit && !roll.isCritFail && 'bg-blue-50 border-blue-200 text-primary-dark'
-        )}>
-          {roll.total}
-        </span>
+        )}
       </div>
 
       {/* Crit Message */}

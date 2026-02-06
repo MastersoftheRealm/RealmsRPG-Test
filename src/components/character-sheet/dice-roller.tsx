@@ -155,10 +155,10 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
             </div>
           </div>
 
-          {/* Roll Button */}
+          {/* Roll Button - solid style matching btn-solid */}
           <button
             onClick={() => performRoll()}
-            className="w-full py-3 bg-gradient-to-b from-primary-500 to-primary-700 text-white font-bold rounded-xl hover:from-primary-600 hover:to-primary-800 transition-all shadow-md hover:shadow-lg"
+            className="w-full py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2"
           >
             Roll {formatRollFormula()}
           </button>

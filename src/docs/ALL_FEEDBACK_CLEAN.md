@@ -61,10 +61,13 @@ Notes:
 - Palette: primarily blues/grays; use green for health, blue for energy, and lighter purple for powers.
 - Remove extraneous expand/collapse chevrons when they cause layout issues.
 - Implement modern thin scrollbars sitewide.
+- **Buttons:** Use solid colors with clear white font (btn-solid, btn-outline-clean) — no gradients. Match about page styles site-wide.
+- **Roll Log:** Single-row layout (1d20 X + Bonus = Total in boxes); roll=light grey, bonus=green, total=blue; smaller timestamp.
 
 ### 6) Modals & Lists
 - Shared modal/list components should include: rounded headers, header spacing, sortable columns, and right-aligned add/select controls.
 - Remove "# items" counts and ensure list header spacing equals item spacing.
+- All modals: uniform rounded corners (overflow-hidden on modal container). Remove "Add" column header; ListHeader with hasSelectionColumn provides empty slot. Header bar: shorter than modal width, rounded edges, ascending/descending sort.
 
 ### 7) Bugs / Behavior to Prioritize
 - Login redirect: return user to the page that initiated login.
@@ -81,6 +84,7 @@ Notes:
 - Health/Energy Allocation section should be titled "Health/Energy Allocation" consistently.
 - "Next: 2 Points" label for abilities costing 2 at 4+ (not 3).
 - Auto-capitalize archetype power/martial ability display (e.g., "Charisma" not "charisma").
+- **Roll Log terminology:** Realms uses "Rolls" only — no "Saves" or "Checks". Titles: "Acuity", "Discernment", "Athletics (STR)", weapon name. Skill format: "Skill Name (ABR)".
 
 ### 10) Page Layout & Sizing
 - Page content width should be consistent across non-unique pages (codex, library, creators, character sheet).

@@ -38,8 +38,8 @@ interface RollContextValue {
   
   // Roll functions
   rollAbility: (abilityName: string, bonus: number) => void;
-  rollDefense: (defenseName: string, bonus: number) => void;
-  rollSkill: (skillName: string, bonus: number) => void;
+  rollDefense: (defenseDisplayName: string, bonus: number) => void;
+  rollSkill: (skillName: string, bonus: number, abilityAbbr?: string) => void;
   rollAttack: (weaponName: string, attackBonus: number) => void;
   rollDamage: (damageStr: string, bonus?: number) => void;
   rollCustom: (title: string, dieType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20', count: number, modifier: number) => void;
@@ -169,25 +169,26 @@ export function RollProvider({
     return newRoll;
   }, [addRoll]);
 
-  // Roll an ability check
+  // Roll an ability roll (Realms uses "Roll" not "Check" or "Save")
   const rollAbility = useCallback((abilityName: string, bonus: number) => {
-    const title = abilityName.charAt(0).toUpperCase() + abilityName.slice(1) + ' Check';
+    const title = abilityName.charAt(0).toUpperCase() + abilityName.slice(1).toLowerCase();
     makeD20Roll('ability', title, bonus);
   }, [makeD20Roll]);
 
-  // Roll a defense/saving throw
-  const rollDefense = useCallback((defenseName: string, bonus: number) => {
-    makeD20Roll('defense', `${defenseName} Save`, bonus);
+  // Roll a defense roll (caller passes display name, e.g. "Discernment")
+  const rollDefense = useCallback((defenseDisplayName: string, bonus: number) => {
+    makeD20Roll('defense', defenseDisplayName, bonus);
   }, [makeD20Roll]);
 
-  // Roll a skill check
-  const rollSkill = useCallback((skillName: string, bonus: number) => {
-    makeD20Roll('skill', skillName, bonus);
+  // Roll a skill roll: "Athletics (STR)" format when abilityAbbr provided
+  const rollSkill = useCallback((skillName: string, bonus: number, abilityAbbr?: string) => {
+    const title = abilityAbbr ? `${skillName} (${abilityAbbr})` : skillName;
+    makeD20Roll('skill', title, bonus);
   }, [makeD20Roll]);
 
-  // Roll an attack
+  // Roll an attack (just weapon/attack name)
   const rollAttack = useCallback((weaponName: string, attackBonus: number) => {
-    makeD20Roll('attack', `${weaponName} Attack`, attackBonus);
+    makeD20Roll('attack', weaponName, attackBonus);
   }, [makeD20Roll]);
 
   // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")

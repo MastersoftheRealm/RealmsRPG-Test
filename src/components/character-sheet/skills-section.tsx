@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { PointStatus, EditSectionToggle, getEditState, SkillRow } from '@/components/shared';
+import { ABILITY_ABBR } from '@/lib/constants/skills';
 import { Button } from '@/components/ui';
 import type { Abilities } from '@/types';
 
@@ -362,7 +363,7 @@ export function SkillsSection({
                     : undefined
                   }
                   showRollButton={!showEditControls}
-                  onRoll={() => rollContext?.rollSkill?.(skill.name, bonus)}
+                  onRoll={() => rollContext?.rollSkill?.(skill.name, bonus, skill.ability ? ABILITY_ABBR[skill.ability.toLowerCase()] : undefined)}
                   isSpeciesSkill={isFromSpecies}
                   variant="table"
                 />

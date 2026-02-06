@@ -187,11 +187,12 @@ export function AddSkillModal({
           </div>
         </div>
 
-        {/* Column Headers */}
-        <div className="grid grid-cols-[1fr_auto_2.5rem] gap-4 px-5 py-3 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wider">
-          <span className="pl-7">Skill Name</span>
-          <span>Abilities</span>
-          <span className="text-center">Add</span>
+        {/* Column Headers - no Add column title, rounded and inset */}
+        <div className="px-5">
+          <div className="grid grid-cols-[1fr_auto_2.5rem] gap-4 px-4 py-2 bg-primary-50 rounded-lg text-xs font-semibold text-primary-700 uppercase tracking-wider">
+            <span className="pl-7">Skill Name</span>
+            <span>Abilities</span>
+          </div>
         </div>
 
         {/* Content */}

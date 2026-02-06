@@ -291,7 +291,7 @@ export function AbilitiesSection({
                   value={value}
                   onClick={() => rollContext?.rollAbility?.(ability, value)}
                   size="lg"
-                  title={`Roll ${info.name} check`}
+                  title={`Roll ${info.name}`}
                 />
               )}
               
@@ -356,9 +356,9 @@ export function AbilitiesSection({
                   <RollButton
                     value={defenseBonus}
                     variant="primary"
-                    onClick={() => rollContext?.rollDefense?.(defenseKey, defenseBonus)}
+                    onClick={() => rollContext?.rollDefense?.(defenseInfo.name, defenseBonus)}
                     size="sm"
-                    title={`Roll ${defenseInfo.name} save`}
+                    title={`Roll ${defenseInfo.name}`}
                   />
                 )}
                 

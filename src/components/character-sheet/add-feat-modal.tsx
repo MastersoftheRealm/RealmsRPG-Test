@@ -14,7 +14,7 @@ import { rtdb } from '@/lib/firebase/client';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, IconButton, Alert, Checkbox, Modal } from '@/components/ui';
-import { SearchInput, SortHeader, GridListRow, type ChipData } from '@/components/shared';
+import { SearchInput, ListHeader, GridListRow, type ChipData } from '@/components/shared';
 import type { Character } from '@/types';
 
 interface Feat {
@@ -393,16 +393,21 @@ export function AddFeatModal({
           </div>
         </div>
 
-        {/* Column Headers */}
-        <div 
-          className="hidden md:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wide"
-          style={{ gridTemplateColumns: MODAL_FEAT_GRID_COLUMNS }}
-        >
-          <SortHeader label="Name" col="name" sortState={sortState} onSort={handleSort} />
-          <SortHeader label="Rec." col="rec_period" sortState={sortState} onSort={handleSort} />
-          <SortHeader label="Uses" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
-          <SortHeader label="Category" col="category" sortState={sortState} onSort={handleSort} />
-          <span className="text-center">Add</span>
+        {/* Column Headers - ListHeader with sort, no Add column title, rounded and inset */}
+        <div className="px-6">
+          <ListHeader
+            columns={[
+              { key: 'name', label: 'Name' },
+              { key: 'rec_period', label: 'Rec.' },
+              { key: 'uses_per_rec', label: 'Uses' },
+              { key: 'category', label: 'Category' },
+            ]}
+            gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"
+            sortState={sortState}
+            onSort={handleSort}
+            hasSelectionColumn
+            className="rounded-lg mx-0"
+          />
         </div>
 
         {/* Feat List - Scrollable */}

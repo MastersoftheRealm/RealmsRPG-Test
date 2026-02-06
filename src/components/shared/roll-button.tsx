@@ -5,11 +5,10 @@
  * Used in character sheet, creature stat blocks, encounter tracker, etc.
  * 
  * Visual Design:
- * - Gradient blue background (primary colors)
+ * - Solid colors (clean, no gradients) matching btn-solid/btn-outline-clean
  * - White text with +/- number format
- * - Rounded corners, subtle shadow
- * - Hover: lift effect, brighter gradient
- * - Active: press effect
+ * - Rounded corners, clear white font
+ * - Hover: darker shade, active: press effect
  * 
  * @example
  * // Ability roll in character sheet
@@ -30,51 +29,46 @@ import { cn } from '@/lib/utils/cn';
 
 const rollButtonVariants = cva(
   // Base styles - consistent across all variants
-  'inline-flex items-center justify-center font-bold rounded-lg transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
+  'inline-flex items-center justify-center font-bold rounded-lg transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100',
   {
     variants: {
       variant: {
-        // Standard roll button - blue gradient
+        // Standard roll button - solid primary
         primary: [
-          'text-white shadow-md',
-          'bg-gradient-to-br from-primary-500 to-primary-700',
-          'hover:from-primary-400 hover:to-primary-600 hover:shadow-lg hover:scale-105',
-          'active:scale-95 active:from-primary-600 active:to-primary-800',
+          'text-white',
+          'bg-primary-600 hover:bg-primary-700 focus-visible:ring-primary-accent',
+          'hover:scale-105 active:scale-95',
         ].join(' '),
         
-        // Unproficient/disadvantage - gray gradient
+        // Unproficient/disadvantage - solid gray
         unproficient: [
-          'text-white shadow-sm',
-          'bg-gradient-to-br from-neutral-400 to-neutral-600',
-          'hover:from-neutral-300 hover:to-neutral-500 hover:shadow-md hover:scale-105',
-          'active:scale-95 active:from-neutral-500 active:to-neutral-700',
+          'text-white',
+          'bg-neutral-500 hover:bg-neutral-600 focus-visible:ring-neutral-400',
+          'hover:scale-105 active:scale-95',
         ].join(' '),
         
-        // Defense roll - slightly different blue
+        // Defense roll - solid utility blue
         defense: [
-          'text-white shadow-md',
-          'bg-gradient-to-br from-utility-300 to-utility-500',
-          'hover:from-utility-200 hover:to-utility-400 hover:shadow-lg hover:scale-105',
-          'active:scale-95 active:from-utility-400 active:to-utility-600',
+          'text-white',
+          'bg-utility-500 hover:bg-utility-600 focus-visible:ring-utility-400',
+          'hover:scale-105 active:scale-95',
         ].join(' '),
         
         // Success/green variant (for healing, etc.)
         success: [
-          'text-white shadow-md',
-          'bg-gradient-to-br from-success-500 to-success-700',
-          'hover:from-success-400 hover:to-success-600 hover:shadow-lg hover:scale-105',
-          'active:scale-95 active:from-success-600 active:to-success-800',
+          'text-white',
+          'bg-success-600 hover:bg-success-700 focus-visible:ring-success',
+          'hover:scale-105 active:scale-95',
         ].join(' '),
         
         // Danger/red variant (for damage, etc.)
         danger: [
-          'text-white shadow-md',
-          'bg-gradient-to-br from-danger-500 to-danger-700',
-          'hover:from-danger-400 hover:to-danger-600 hover:shadow-lg hover:scale-105',
-          'active:scale-95 active:from-danger-600 active:to-danger-800',
+          'text-white',
+          'bg-danger-600 hover:bg-danger-700 focus-visible:ring-danger',
+          'hover:scale-105 active:scale-95',
         ].join(' '),
         
-        // Outline variant - for secondary actions
+        // Outline variant - matches btn-outline-clean
         outline: [
           'text-primary-700 border-2 border-primary-600 bg-transparent',
           'hover:bg-primary-50 hover:scale-105',
