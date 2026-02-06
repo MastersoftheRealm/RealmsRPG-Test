@@ -40,6 +40,7 @@ const navLinks = [
       { href: '/creature-creator', label: 'Creature Creator' },
     ],
   },
+  { href: '/about', label: 'About' },
 ];
 
 export function Header() {
