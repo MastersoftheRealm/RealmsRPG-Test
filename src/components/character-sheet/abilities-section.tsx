@@ -1,7 +1,7 @@
 /**
  * Abilities Section
  * =================
- * Displays the six core ability scores in a row with clickable roll buttons,
+ * Displays the six core abilities in a row with clickable roll buttons,
  * followed by a separate defenses row with defense scores and roll buttons.
  * 
  * Layout matches vanilla site:
@@ -85,8 +85,9 @@ function formatBonus(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`;
 }
 
+/** Cost to go from currentValue to currentValue+1 (abilities 4+ cost 2 points) */
 function getAbilityIncreaseCost(currentValue: number): number {
-  return currentValue >= 4 ? 2 : 1;
+  return currentValue >= 3 ? 2 : 1;
 }
 
 function canDecreaseAbility(abilities: Abilities, abilityName: AbilityName): boolean {
@@ -294,10 +295,10 @@ export function AbilitiesSection({
                 />
               )}
               
-              {/* Cost indicator in edit mode - only show if can increment */}
+              {/* Cost indicator in edit mode - only show if next point costs 2 */}
               {showEditControls && value >= 3 && canIncrease && (
                 <span className="text-[10px] text-amber-600 font-medium mt-1">
-                  Next: {cost + (value >= 3 ? 1 : 0)}pt
+                  Next: {cost}pt
                 </span>
               )}
             </div>

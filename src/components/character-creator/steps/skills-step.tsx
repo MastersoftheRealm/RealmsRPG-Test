@@ -49,11 +49,8 @@ export function SkillsStep() {
   // Choosable skill points = raw total minus species auto-allocated skills
   const totalSkillPoints = rawSkillPoints - speciesSkillIds.size;
   
-  // Initialize skill allocations from draft or create empty
-  // CharacterSkills is Record<string, number>
-  const [allocations, setAllocations] = useState<Record<string, number>>(() => {
-    return draft.skills || {};
-  });
+  // Use draft.skills as single source of truth so allocations persist on tab switch
+  const allocations = draft.skills || {};
 
   // Calculate used points - species skills get 1st point free (proficiency)
   const usedPoints = useMemo(() => {
@@ -142,27 +139,22 @@ export function SkillsStep() {
   }, [skills]);
 
   const handleAllocate = useCallback((skillId: string, delta: number) => {
-    setAllocations(prev => {
-      const current = prev[skillId] || 0;
-      const newValue = Math.max(0, current + delta);
-      
-      // Can't exceed remaining points when adding
-      if (delta > 0 && remainingPoints <= 0) return prev;
-      
-      let newAllocations: Record<string, number>;
-      if (newValue === 0) {
-        const { [skillId]: _, ...rest } = prev;
-        newAllocations = rest;
-      } else {
-        newAllocations = { ...prev, [skillId]: newValue };
-      }
-      
-      // Auto-save to draft immediately
-      updateDraft({ skills: newAllocations });
-      
-      return newAllocations;
-    });
-  }, [remainingPoints, updateDraft]);
+    const current = allocations[skillId] || 0;
+    const newValue = Math.max(0, current + delta);
+    
+    // Can't exceed remaining points when adding
+    if (delta > 0 && remainingPoints <= 0) return;
+    
+    let newAllocations: Record<string, number>;
+    if (newValue === 0) {
+      const { [skillId]: _, ...rest } = allocations;
+      newAllocations = rest;
+    } else {
+      newAllocations = { ...allocations, [skillId]: newValue };
+    }
+    
+    updateDraft({ skills: newAllocations });
+  }, [allocations, remainingPoints, updateDraft]);
 
   const handleContinue = () => {
     // Save allocations to draft - CharacterSkills is just Record<string, number>

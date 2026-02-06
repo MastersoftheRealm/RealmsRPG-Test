@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   updateEmail, 
@@ -17,22 +17,48 @@ import {
   sendPasswordResetEmail,
   deleteUser,
 } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/client';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { changeUsernameAction } from '@/app/(auth)/actions';
+import { auth, db, storage } from '@/lib/firebase/client';
 import { useAuthStore } from '@/stores';
 import { ProtectedRoute } from '@/components/layout';
 import { LoadingState, Button, Input, Alert, PageContainer } from '@/components/ui';
-import { User, Mail, Lock, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
+import { ImageUploadModal } from '@/components/shared';
+import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
+
+/** Returns whether the user signed in with email/password (can change email/password) */
+function hasPasswordProvider(firebaseUser: User | null): boolean {
+  if (!firebaseUser?.providerData?.length) return false;
+  return firebaseUser.providerData.some(
+    (p) => p.providerId === 'password'
+  );
+}
+
+/** Human-readable auth provider label */
+function getAuthProviderLabel(firebaseUser: User | null): string {
+  if (!firebaseUser?.providerData?.length) return 'Unknown';
+  const provider = firebaseUser.providerData[0]?.providerId;
+  if (provider === 'google.com') return 'Google';
+  if (provider === 'apple.com') return 'Apple';
+  if (provider === 'password') return 'Email/Password';
+  return provider?.replace('.com', '') ?? 'Unknown';
+}
 
 interface UserProfile {
   username?: string;
   email?: string;
   createdAt?: Date;
+  photoURL?: string;
 }
 
 function AccountContent() {
   const router = useRouter();
   const { user } = useAuthStore();
+  
+  const canChangeEmailPassword = useMemo(() => hasPasswordProvider(user), [user]);
+  const authProviderLabel = useMemo(() => getAuthProviderLabel(user), [user]);
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +75,16 @@ function AccountContent() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordChanging, setPasswordChanging] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Profile picture state
+  const [showPictureModal, setShowPictureModal] = useState(false);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [pictureMessage, setPictureMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Username change state
+  const [newUsername, setNewUsername] = useState('');
+  const [usernameChanging, setUsernameChanging] = useState(false);
+  const [usernameMessage, setUsernameMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   // Delete account state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -70,6 +106,7 @@ function AccountContent() {
           username: data?.username,
           email: user.email || undefined,
           createdAt: data?.createdAt?.toDate?.() || undefined,
+          photoURL: data?.photoURL || user.photoURL || undefined,
         });
       } catch (err) {
         console.error('Error loading profile:', err);
@@ -80,6 +117,46 @@ function AccountContent() {
     
     loadProfile();
   }, [user]);
+
+  // Handle profile picture upload
+  const handleProfilePictureUpload = async (blob: Blob) => {
+    if (!user || !storage) return;
+    setUploadingPicture(true);
+    setPictureMessage(null);
+    try {
+      const storageRef = ref(storage, `profile-pictures/${user.uid}.jpg`);
+      await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+      const downloadUrl = await getDownloadURL(storageRef);
+      await updateDoc(doc(db, 'users', user.uid), { photoURL: downloadUrl });
+      setProfile((prev) => (prev ? { ...prev, photoURL: downloadUrl } : null));
+      setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
+    } catch (err) {
+      console.error('Profile picture upload error:', err);
+      setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });
+    } finally {
+      setUploadingPicture(false);
+    }
+  };
+
+  // Handle username change
+  const handleUsernameChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUsername.trim()) return;
+    
+    setUsernameChanging(true);
+    setUsernameMessage(null);
+    
+    const result = await changeUsernameAction(newUsername.trim());
+    
+    if (result.success) {
+      setProfile((prev) => (prev ? { ...prev, username: newUsername.trim().toLowerCase() } : null));
+      setNewUsername('');
+      setUsernameMessage({ type: 'success', text: 'Username updated successfully!' });
+    } else {
+      setUsernameMessage({ type: 'error', text: result.error ?? 'Failed to change username' });
+    }
+    setUsernameChanging(false);
+  };
 
   // Handle email change
   const handleEmailChange = async (e: React.FormEvent) => {
@@ -233,7 +310,7 @@ function AccountContent() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
-          <User className="w-8 h-8 text-primary-600" />
+          <UserIcon className="w-8 h-8 text-primary-600" />
           My Account
         </h1>
         <p className="text-text-secondary mt-2">Manage your profile and account settings</p>
@@ -242,6 +319,41 @@ function AccountContent() {
       {/* Profile Info */}
       <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
+        
+        {/* Profile Picture */}
+        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
+          <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-alt border-2 border-border-light flex-shrink-0">
+            {profile?.photoURL ? (
+              <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-text-muted">
+                <UserIcon className="w-8 h-8" />
+              </div>
+            )}
+            {uploadingPicture && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          <div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowPictureModal(true)}
+              disabled={uploadingPicture}
+            >
+              <Camera className="w-4 h-4" />
+              {profile?.photoURL ? 'Change Picture' : 'Add Picture'}
+            </Button>
+            <p className="text-xs text-text-muted mt-1">JPG, PNG, GIF, or WebP. Max 5MB.</p>
+            {pictureMessage && (
+              <p className={`text-xs mt-1 ${pictureMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                {pictureMessage.text}
+              </p>
+            )}
+          </div>
+        </div>
         
         <div className="space-y-3">
           <div className="flex items-center justify-between py-2 border-b border-border-subtle">
@@ -252,6 +364,10 @@ function AccountContent() {
             <span className="text-text-secondary">Email</span>
             <span className="font-medium text-text-primary">{profile?.email}</span>
           </div>
+          <div className="flex items-center justify-between py-2 border-b border-border-subtle">
+            <span className="text-text-secondary">Signed in with</span>
+            <span className="font-medium text-text-primary">{authProviderLabel}</span>
+          </div>
           <div className="flex items-center justify-between py-2">
             <span className="text-text-secondary">Member Since</span>
             <span className="font-medium text-text-primary">
@@ -261,7 +377,50 @@ function AccountContent() {
         </div>
       </div>
 
-      {/* Change Email */}
+      {/* Change Username */}
+      <div className="bg-surface rounded-xl shadow-md p-6">
+        <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+          <AtSign className="w-5 h-5 text-text-secondary" />
+          Change Username
+        </h2>
+        <p className="text-sm text-text-secondary mb-4">
+          Usernames can only be changed once per week. Use 3–24 characters (letters, numbers, underscores, hyphens).
+        </p>
+        <form onSubmit={handleUsernameChange} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">
+              New Username
+            </label>
+            <Input
+              type="text"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              placeholder={profile?.username ? `Current: ${profile.username}` : 'Enter new username'}
+              minLength={3}
+              maxLength={24}
+              pattern="[a-zA-Z0-9_-]+"
+              title="Letters, numbers, underscores, and hyphens only"
+            />
+          </div>
+          
+          {usernameMessage && (
+            <Alert variant={usernameMessage.type === 'success' ? 'success' : 'danger'}>
+              {usernameMessage.text}
+            </Alert>
+          )}
+          
+          <Button
+            type="submit"
+            disabled={usernameChanging || !newUsername.trim() || newUsername.trim().length < 3}
+            isLoading={usernameChanging}
+          >
+            Update Username
+          </Button>
+        </form>
+      </div>
+
+      {/* Change Email - only for email/password users */}
+      {canChangeEmailPassword && (
       <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
           <Mail className="w-5 h-5 text-text-secondary" />
@@ -309,8 +468,10 @@ function AccountContent() {
           </Button>
         </form>
       </div>
+      )}
 
-      {/* Change Password */}
+      {/* Change Password - only for email/password users */}
+      {canChangeEmailPassword && (
       <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
           <Lock className="w-5 h-5 text-text-secondary" />
@@ -381,6 +542,17 @@ function AccountContent() {
           </div>
         </form>
       </div>
+      )}
+
+      {/* OAuth users: show info that email/password can't be changed */}
+      {!canChangeEmailPassword && (
+      <div className="bg-surface rounded-xl shadow-md p-6 border border-border-light">
+        <p className="text-text-secondary text-sm">
+          You signed in with {authProviderLabel}. Email and password cannot be changed here. 
+          To update your email, use your {authProviderLabel} account settings.
+        </p>
+      </div>
+      )}
 
       {/* Danger Zone */}
       <div className="bg-surface rounded-xl shadow-md p-6 border-2 border-red-200">
@@ -462,6 +634,16 @@ function AccountContent() {
           </div>
         )}
       </div>
+
+      {/* Profile Picture Upload Modal */}
+      <ImageUploadModal
+        isOpen={showPictureModal}
+        onClose={() => setShowPictureModal(false)}
+        onConfirm={handleProfilePictureUpload}
+        cropShape="round"
+        aspect={1}
+        title="Upload Profile Picture"
+      />
     </PageContainer>
   );
 }

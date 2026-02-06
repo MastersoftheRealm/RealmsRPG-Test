@@ -341,11 +341,11 @@ function AddItemDropdown({
   };
   
   return (
-    <div className="flex gap-2 mt-2">
+    <div className="flex items-center gap-2 mt-2">
       <select
         value={selectedValue}
         onChange={(e) => setSelectedValue(e.target.value)}
-        className="flex-1 px-3 py-1.5 border border-border-light rounded text-sm bg-surface"
+        className="flex-1 min-w-0 px-3 py-2 border border-border-light rounded-lg text-sm bg-surface"
       >
         <option value="">{placeholder}</option>
         {availableOptions.map(opt => (
@@ -356,6 +356,7 @@ function AddItemDropdown({
         size="sm"
         onClick={handleAdd}
         disabled={!selectedValue}
+        className="flex-shrink-0"
       >
         Add
       </Button>
@@ -1046,7 +1047,7 @@ function CreatureCreatorContent() {
 
           {/* Abilities - Using shared AbilityScoreEditor */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Ability Scores</h3>
+            <h3 className="text-lg font-bold text-text-primary mb-4">Abilities</h3>
             <AbilityScoreEditor
               abilities={creature.abilities}
               totalPoints={stats.abilityPoints}
@@ -1447,7 +1448,7 @@ function CreatureCreatorContent() {
         </div>
 
         {/* Creature Summary Sidebar */}
-        <div className="self-start">
+        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
           <CreatorSummaryPanel
             title="Creature Summary"
             quickStats={[

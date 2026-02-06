@@ -1,0 +1,19 @@
+---
+description: RealmsRPG project structure and tech stack
+alwaysApply: true
+---
+
+# RealmsRPG Project
+
+**Stack:** Next.js (App Router), React, Tailwind, Firebase (Hosting, Firestore, RTDB, Auth)
+
+**Key directories:**
+- `src/app/` — Routes: `(main)/` (characters, library, codex, creators), `(auth)/` (login, register)
+- `src/components/` — `ui/` (primitives), `shared/` (reusable), `character-sheet/`, `creator/`, `codex/`
+- `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`, `src/types/`
+- `vanilla-site-reference-only/` — Original HTML/CSS/JS (reference only)
+- `manmade-react-site-reference-only/` — Other reference (reference only)
+
+**Deploy:** `firebase deploy` — Firebase Hosting with frameworks backend
+
+**Before PR:** Run `npm run build`. CI runs build + `scripts/reconcile_tasks.js`.

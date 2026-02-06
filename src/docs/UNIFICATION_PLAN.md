@@ -1,5 +1,7 @@
 # RealmsRPG Component & Style Unification Plan
 
+> **Current verified state:** See `UNIFICATION_STATUS.md`. This doc is historical; Phase 10H and most unification are complete.
+>
 > **Last Updated:** January 30, 2025 - Phase 10H Complete  
 > **Goal:** Unify components, styles, and logic across the entire site while preserving vanilla site functionality
 > **Status:** ✅ Phase 10H Complete - Comprehensive Neutral Token Migration

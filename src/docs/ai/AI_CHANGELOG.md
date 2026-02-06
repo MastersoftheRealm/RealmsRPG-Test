@@ -2,6 +2,39 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-05 | agent:cursor | Session: TASK-049 — Sortable list headers in library-section | files: library-section.tsx | TASK: TASK-049 | Summary:
+  - Library-section had clickable ListHeaders but data wasn't sorted
+  - Added sortByCol helper and useMemo for all 6 lists (innate/regular powers, techniques, weapons, armor, equipment)
+  - Clicking column headers now sorts the displayed data
+
+- 2026-02-05 | agent:cursor | Session: TASK-053 — Feat deletion confirmation | files: characters/[id]/page.tsx, feats-tab.tsx, delete-confirm-modal.tsx | TASK: TASK-053 | Summary:
+  - Added DeleteConfirmModal before feat removal on character sheet
+  - FeatsTab onRemoveFeat now accepts (featId, featName) for modal display
+  - Extended DeleteConfirmModal with deleteContext prop (library/character)
+  - Clicking feat delete opens confirmation; Cancel closes, Confirm removes
+
+- 2026-02-05 | agent:cursor | Session: TASK-054 — Agent verification guidelines | files: AGENT_GUIDE.md, AI_TASK_QUEUE.md | TASK: TASK-054 | Summary:
+  - Added "Verification Before Marking Done" section to AGENT_GUIDE with 4-step checklist
+  - Covers acceptance criteria, related_files paths, build, manual check
+  - Marked TASK-054 done
+
+- 2026-02-05 | agent:cursor | Session: Docs & task compliance audit | files: DOCS_AUDIT_REPORT.md, AI_TASK_QUEUE.md, AGENTS.md, AGENT_GUIDE.md, UNIFICATION_STATUS.md | Summary:
+  - Created DOCS_AUDIT_REPORT.md with compliance findings
+  - TASK-022: Added compliance gap note (missing confirmation dialog); created TASK-053
+  - TASK-048: Marked done (already implemented)
+  - Fixed stale related_files in TASK-016, TASK-027, TASK-030, TASK-031, TASK-032
+  - Added TASK-053 (feat deletion confirmation), TASK-054 (agent verification guidelines)
+  - Updated AGENTS.md, AGENT_GUIDE.md with verification steps
+
+- 2026-02-05 | agent:cursor | Session: Cursor workflow optimization | files: .cursor/rules/*.mdc, AGENTS.md, src/docs/ai/AGENT_GUIDE.md, src/docs/UNIFICATION_STATUS.md, src/docs/README.md, equipment-step.tsx | Summary:
+  - Created .cursor/rules/ with realms-project, realms-unification, realms-tasks rules
+  - Created root AGENTS.md for Cursor agent instructions
+  - Replaced AI_AGENT_README + AGENT_SOURCES_OF_TRUTH with single AGENT_GUIDE.md (verified against codebase)
+  - Deleted AGENT_SESSION_PROMPT.md, TASK_CREATION_GUIDE.md (consolidated into AGENT_GUIDE)
+  - Created UNIFICATION_STATUS.md with verified component usage from codebase audit
+  - Fixed equipment-step.tsx: bg-gray-100 → bg-surface-alt for design token consistency
+  - Added src/docs/README.md as docs index; updated AI_TASK_QUEUE, ALL_FEEDBACK_CLEAN references
+
 - 2026-02-05 | agent:ai-copilot | Created AI docs skeleton | files: src/docs/ai/* | PR: 
 
 - 2026-02-05 | agent:claude-opus | Session: UI fixes and new components | files: header.tsx, theme-provider.tsx, theme-toggle.tsx, powered-martial-slider.tsx, innate-toggle.tsx, grid-list-row.tsx, library-section.tsx, archetype-selector.tsx, archetype-section.tsx, layout.tsx | TASKs: TASK-005, TASK-009, TASK-011, TASK-013, TASK-014, TASK-015, TASK-016 | Summary:

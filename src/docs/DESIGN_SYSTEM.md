@@ -2,6 +2,8 @@
 
 This document outlines the unified design system for RealmsRPG, based on the Figma mockup specifications and best practices for consistency across the entire application.
 
+> **Unification status:** See `UNIFICATION_STATUS.md` for verified component usage.
+
 ## Color Palette
 
 ### Primary Colors (Deep Blue)

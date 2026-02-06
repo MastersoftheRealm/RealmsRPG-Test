@@ -482,7 +482,44 @@ export function LibrarySection({
     }
     return { col, dir: 1 };
   }, []);
-  
+
+  // Generic sort helper for list items
+  const sortByCol = useCallback(<T extends object>(arr: T[], sortState: SortState): T[] => {
+    return [...arr].sort((a, b) => {
+      const aVal = (a as Record<string, unknown>)[sortState.col];
+      const bVal = (b as Record<string, unknown>)[sortState.col];
+      const aStr = aVal != null ? String(aVal) : '';
+      const bStr = bVal != null ? String(bVal) : '';
+      const cmp = aStr.localeCompare(bStr, undefined, { numeric: true });
+      return sortState.dir === 1 ? cmp : -cmp;
+    });
+  }, []);
+
+  const sortedInnatePowers = useMemo(
+    () => sortByCol(powers.filter(p => p.innate === true), powerSort),
+    [powers, powerSort, sortByCol]
+  );
+  const sortedRegularPowers = useMemo(
+    () => sortByCol(powers.filter(p => p.innate !== true), powerSort),
+    [powers, powerSort, sortByCol]
+  );
+  const sortedTechniques = useMemo(
+    () => sortByCol(techniques, techniqueSort),
+    [techniques, techniqueSort, sortByCol]
+  );
+  const sortedWeapons = useMemo(
+    () => sortByCol(weapons, weaponSort),
+    [weapons, weaponSort, sortByCol]
+  );
+  const sortedArmor = useMemo(
+    () => sortByCol(armor, armorSort),
+    [armor, armorSort, sortByCol]
+  );
+  const sortedEquipment = useMemo(
+    () => sortByCol(equipment, equipmentSort),
+    [equipment, equipmentSort, sortByCol]
+  );
+
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
   const tabs: { id: TabType; label: string; onAdd?: () => void }[] = [
@@ -562,7 +599,7 @@ export function LibrarySection({
                 onAdd={onTogglePowerInnate ? undefined : onAddPower}
                 addLabel="Add innate power"
               />
-              {powers.filter(p => p.innate === true).length > 0 && (
+              {sortedInnatePowers.length > 0 && (
                 <ListHeader
                   columns={POWER_COLUMNS}
                   gridColumns={POWER_GRID}
@@ -570,10 +607,9 @@ export function LibrarySection({
                   onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
                 />
               )}
-              {powers.filter(p => p.innate === true).length > 0 ? (
+              {sortedInnatePowers.length > 0 ? (
                 <div className="space-y-1">
-                  {powers
-                    .filter(p => p.innate === true)
+                  {sortedInnatePowers
                     .map((power, i) => {
                       const isInnate = power.innate === true;
                       const energyCost = power.cost ?? 0;
@@ -650,7 +686,7 @@ export function LibrarySection({
                 onAdd={onAddPower}
                 addLabel="Add power"
               />
-              {powers.filter(p => p.innate !== true).length > 0 && (
+              {sortedRegularPowers.length > 0 && (
                 <ListHeader
                   columns={POWER_COLUMNS}
                   gridColumns={POWER_GRID}
@@ -658,10 +694,9 @@ export function LibrarySection({
                   onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
                 />
               )}
-              {powers.filter(p => p.innate !== true).length > 0 ? (
+              {sortedRegularPowers.length > 0 ? (
                 <div className="space-y-1">
-                  {powers
-                    .filter(p => p.innate !== true)
+                  {sortedRegularPowers
                     .map((power, i) => {
                       const isInnate = power.innate === true;
                       const energyCost = power.cost ?? 0;
@@ -742,7 +777,7 @@ export function LibrarySection({
                 onAdd={onAddTechnique}
                 addLabel="Add technique"
               />
-              {techniques.length > 0 && (
+              {sortedTechniques.length > 0 && (
                 <ListHeader
                   columns={TECHNIQUE_COLUMNS}
                   gridColumns={TECHNIQUE_GRID}
@@ -750,9 +785,9 @@ export function LibrarySection({
                   onSort={(col) => setTechniqueSort(toggleSort(techniqueSort, col))}
                 />
               )}
-              {techniques.length > 0 ? (
+              {sortedTechniques.length > 0 ? (
                 <div className="space-y-1">
-                  {techniques.map((tech, i) => {
+                  {sortedTechniques.map((tech, i) => {
                     const energyCost = tech.cost ?? 0;
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                     const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
@@ -868,7 +903,7 @@ export function LibrarySection({
                 onAdd={onAddWeapon}
                 addLabel="Add weapon"
               />
-              {weapons.length > 0 && (
+              {sortedWeapons.length > 0 && (
                 <ListHeader
                   columns={WEAPON_COLUMNS}
                   gridColumns={WEAPON_GRID}
@@ -876,9 +911,9 @@ export function LibrarySection({
                   onSort={(col) => setWeaponSort(toggleSort(weaponSort, col))}
                 />
               )}
-              {weapons.length > 0 ? (
+              {sortedWeapons.length > 0 ? (
                 <div className="space-y-1">
-                  {weapons.map((item, i) => {
+                  {sortedWeapons.map((item, i) => {
                     // Calculate attack bonus based on weapon properties (finesse/range/default)
                     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities);
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
@@ -945,7 +980,7 @@ export function LibrarySection({
                 onAdd={onAddArmor}
                 addLabel="Add armor"
               />
-              {armor.length > 0 && (
+              {sortedArmor.length > 0 && (
                 <ListHeader
                   columns={ARMOR_COLUMNS}
                   gridColumns={ARMOR_GRID}
@@ -953,9 +988,9 @@ export function LibrarySection({
                   onSort={(col) => setArmorSort(toggleSort(armorSort, col))}
                 />
               )}
-              {armor.length > 0 ? (
+              {sortedArmor.length > 0 ? (
                 <div className="space-y-1">
-                  {armor.map((item, i) => {
+                  {sortedArmor.map((item, i) => {
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                     const itemWithCrit = item as Item & { critRange?: string | number };
                     // Get ability requirement from enriched data
@@ -1026,7 +1061,7 @@ export function LibrarySection({
                 onAdd={onAddEquipment}
                 addLabel="Add equipment"
               />
-              {equipment.length > 0 && (
+              {sortedEquipment.length > 0 && (
                 <ListHeader
                   columns={EQUIPMENT_COLUMNS}
                   gridColumns={EQUIPMENT_GRID}
@@ -1034,9 +1069,9 @@ export function LibrarySection({
                   onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
                 />
               )}
-              {equipment.length > 0 ? (
+              {sortedEquipment.length > 0 ? (
                 <div className="space-y-1">
-                  {equipment.map((item, i) => {
+                  {sortedEquipment.map((item, i) => {
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                     
                     // Capitalize item type for display

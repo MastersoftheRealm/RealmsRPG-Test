@@ -1,0 +1,42 @@
+---
+description: Agent task workflow - where to read tasks, how to update, feedback processing
+alwaysApply: true
+---
+
+# Task Workflow
+
+**Before implementing:**
+1. Read `src/docs/ai/AI_TASK_QUEUE.md` — pick highest-priority `not-started` task.
+2. Read `src/docs/ai/AGENT_GUIDE.md` — sources of truth, component locations.
+
+**When implementing:**
+- Update task `status` to `in-progress`, then `done` when merged.
+- Add `notes` with PR link and summary on completion.
+- Append entry to `src/docs/ai/AI_CHANGELOG.md`.
+
+**New tasks:** Use format in `src/docs/ai/AI_REQUEST_TEMPLATE.md`. Add to `AI_TASK_QUEUE.md` with next TASK-### ID.
+
+# Feedback Processing Protocol
+
+When the owner provides feedback (raw text, messages, or updates to `ALL_FEEDBACK_RAW.md`):
+
+**Step 1 — Sentence-level extraction:** Split the raw feedback into individual, atomic actionable items. One sentence may contain 2-3 separate requests. Do NOT summarize or group prematurely. Create a numbered checklist of every discrete request.
+
+**Step 2 — Cross-reference:** For EACH extracted item, check:
+- Does an existing task in `AI_TASK_QUEUE.md` already cover this? (search by keyword)
+- Is it already in a curated section of `ALL_FEEDBACK_CLEAN.md`?
+- Has it already been implemented in the codebase? (verify with code search)
+
+**Step 3 — Gap identification:** Any item NOT covered by an existing task or verified as done gets:
+- A new curated section entry in `ALL_FEEDBACK_CLEAN.md`
+- A new task in `AI_TASK_QUEUE.md` with proper ID, priority, and description
+- Added to the High-Level Action Items checklist
+
+**Step 4 — Verification summary:** Output a brief checklist showing: each extracted item, its disposition (existing task #, new task #, or already done), and confidence level.
+
+**Common pitfalls to avoid:**
+- Feedback often contains multiple requests per sentence (e.g., "rename X and also fix Y") — split these into separate items.
+- Longer feedback paragraphs about "the ideal" or "how it should work" contain specific requirements buried in prose — extract each one.
+- Repeated/rephrased feedback across sessions should be checked for NEW details in the latest version (the owner may have added specifics).
+- Section rename requests (e.g., "rename to Archetype & Attacks") are easily overlooked when adjacent to more complex requests.
+- UI label/title changes ("HP/EN Pool" → "Health/Energy Allocation") are easy to miss among functional changes.

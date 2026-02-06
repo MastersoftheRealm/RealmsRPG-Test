@@ -12,13 +12,13 @@ How to use
 - Append new raw feedback to the bottom under "Raw Feedback Log" using the provided template.
 - Keep raw entries chronological (oldest first), newest at the bottom.
 
-Agent Integration (NEW)
-- Primary coordination files for AI agents live under `src/docs/ai/`.
+Agent Integration
+- Read `src/docs/ai/AGENT_GUIDE.md` for workflow and sources of truth.
 - Workflow:
 	1. Human appends raw feedback to this file (bottom) using the Raw Entry Template.
-	2. AI agent runs the extractor and creates a task in `src/docs/ai/AI_TASK_QUEUE.md` using `AI_REQUEST_TEMPLATE.md`.
-	3. Agents implement, create PRs with `ai/` branch prefix, and append changelog entries to `src/docs/ai/AI_CHANGELOG.md`.
-	4. On merge, agents mark task `done` in `AI_TASK_QUEUE.md` and leave a short verification note.
+	2. AI agent runs `node scripts/extract_feedback.js` and creates a task in `src/docs/ai/AI_TASK_QUEUE.md` using `AI_REQUEST_TEMPLATE.md`.
+	3. Agents implement, create PRs with `ai/` branch prefix, append to `src/docs/ai/AI_CHANGELOG.md`.
+	4. On merge, agents mark task `done` in `AI_TASK_QUEUE.md` with PR link and summary.
 
 Notes:
 - Do NOT place secrets or service account keys in these docs. Use `SECRETS_SETUP.md` and cloud secret manager for deployments.
@@ -75,14 +75,54 @@ Notes:
 - Enrich saved items by resolving saved IDs against RTDB entries to obtain base_en/base_tp/op_* values.
 - Parts and properties must have their costs applied during display and item calculations.
 
+### 9) Naming & Terminology
+- Use "Abilities" not "Ability Scores" (Realms uses bonuses/values, not scores).
+- Health/Energy Allocation section should be titled "Health/Energy Allocation" consistently.
+- "Next: 2 Points" label for abilities costing 2 at 4+ (not 3).
+- Auto-capitalize archetype power/martial ability display (e.g., "Charisma" not "charisma").
+
+### 10) Page Layout & Sizing
+- Page content width should be consistent across non-unique pages (codex, library, creators, character sheet).
+- Character sheet could use a slightly wider working width to avoid cramped sections.
+- Character library section heights should match adjacent archetype section height.
+
+### 11) Health Bar Colors
+- Half-health color should be yellower/more orange (currently too red).
+- Terminal/critical red should be deepened for clearer distinction from half-health.
+
+### 12) Selection & Add Buttons
+- Unify +/check selection buttons site-wide: backgroundless "+" icon, turns to green check when selected.
+- "Add X" buttons and "select" buttons should share consistent visual style (no border, sleek, modern).
+- Ancestry step trait selection buttons should be larger and vertically centered.
+
+### 13) Vitality Box Height
+- Character creator vitality ability box renders taller than others; all ability boxes should match height.
+
+### 14) Section Height Consistency
+- Character library, skills section, and archetype section should match min-heights when adjacent.
+- Even when empty, sections should appear uniform.
+
+### 15) Creature Creator Basic Info Layout
+- Level dropdown is too wide; Level/Type/Size dropdowns not aligned horizontally with Name input.
+- Fix alignment and constrain dropdown widths.
+
 ---
 
 ## High-Level Action Items
-- [ ] Audit lists/modals to use shared `ListHeader`/`GridListRow` components.
-- [ ] Unify skills into `SkillRow` and replace inline implementations.
-- [ ] Ensure RTDB enrichment pipeline correctly computes EN/TP/C for powers/techniques/armaments.
-- [ ] Standardize SelectionToggle and equip persistence outside edit mode.
-- [ ] Replace chevrons causing layout shifts; ensure expanders do not break grid flow.
+- [x] Audit lists/modals to use shared `ListHeader`/`GridListRow` components.
+- [x] Unify skills into `SkillRow` and replace inline implementations.
+- [x] Ensure RTDB enrichment pipeline correctly computes EN/TP/C for powers/techniques/armaments.
+- [x] Standardize SelectionToggle and equip persistence outside edit mode.
+- [x] Replace chevrons causing layout shifts; ensure expanders do not break grid flow.
+- [x] Enforce consistent "Abilities" naming (not "Ability Scores") everywhere. (TASK-055)
+- [x] Unify page content width across non-unique pages. (TASK-057)
+- [x] Fix half-health bar color to yellower orange; deepen terminal red. (TASK-058)
+- [x] Unify selection/add button styles site-wide. (TASK-059 — already implemented)
+- [x] Fix vitality box height mismatch in character creator. (TASK-060)
+- [x] Rename HealthEnergyAllocator title to "Health/Energy Allocation". (TASK-055)
+- [x] Auto-capitalize archetype ability display. (TASK-056 — already implemented via CSS)
+- [ ] Match character library section heights to archetype section height. (TASK-062)
+- [ ] Fix creature creator basic info dropdown alignment and sizing. (TASK-063)
 
 ---
 

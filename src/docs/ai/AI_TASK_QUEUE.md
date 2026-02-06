@@ -2,6 +2,8 @@
 
 This file lists prioritized actionable tasks for AI agents. Agents should update `status` when progressing work and append PR/commit links to `notes`.
 
+**Cursor workflow:** Read `AGENT_GUIDE.md` first. See root `AGENTS.md` and `.cursor/rules/` for session instructions.
+
 ---
 - id: TASK-001
   title: Unify skill rows across creators
@@ -249,7 +251,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-012
   title: My Account — Security audit and feature review
   priority: medium
-  status: in-progress
+  status: done
   related_files:
     - src/app/(main)/my-account/page.tsx
     - src/stores/auth-store.ts
@@ -282,7 +284,7 @@ Agents should **create new tasks** during their work when they discover addition
     ⚠ GAP: Profile picture upload not implemented
     ⚠ GAP: No rate limiting on changes (should be backend concern)
     RECOMMENDATION: Add provider detection to show appropriate options per auth method.
-    STATUS: Audit complete, feature implementation tracked as future work.
+    RESOLVED: All gaps addressed — TASK-047 (auth provider detection), TASK-046 (username change), TASK-041 (profile picture upload).
 
 - id: TASK-013
   title: Add theme toggle (dark/light/system) in nav dropdown
@@ -352,7 +354,6 @@ Agents should **create new tasks** during their work when they discover addition
   status: done
   related_files:
     - src/components/character-sheet/abilities-section.tsx
-    - src/components/character-sheet/defenses-section.tsx
     - src/components/creator/ability-score-editor.tsx
     - src/components/shared/value-stepper.tsx
     - src/app/(main)/creature-creator/page.tsx
@@ -493,7 +494,9 @@ Agents should **create new tasks** during their work when they discover addition
     - Feats can be deleted from the library feats tab
     - Delete action is accessible without edit mode
     - Confirmation dialog before deletion
-  notes: "DONE 2026-02-05: Added onRemoveFeat to LibrarySectionProps, wired through to FeatsTab. Created handleRemoveFeat handler in page.tsx that removes from archetypeFeats or feats arrays by ID/name. Removed isEditMode guard so feats can be deleted without edit mode."
+  notes: |
+    DONE 2026-02-05: Added onRemoveFeat to LibrarySectionProps, wired through to FeatsTab. Created handleRemoveFeat handler in page.tsx that removes from archetypeFeats or feats arrays by ID/name. Removed isEditMode guard so feats can be deleted without edit mode.
+    COMPLIANCE GAP: Acceptance criteria required "Confirmation dialog before deletion" — not implemented. See TASK-053.
 
 - id: TASK-023
   title: "BUG: Custom note name edit should not collapse the note"
@@ -574,7 +577,7 @@ Agents should **create new tasks** during their work when they discover addition
   status: done
   related_files:
     - src/app/(main)/power-creator/page.tsx
-    - src/lib/constants/power-parts.ts
+    - src/lib/game/creator-constants.ts
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -627,7 +630,6 @@ Agents should **create new tasks** during their work when they discover addition
   status: done
   related_files:
     - src/app/(main)/characters/[id]/page.tsx
-    - src/components/character-sheet/header-section.tsx
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -644,7 +646,7 @@ Agents should **create new tasks** during their work when they discover addition
   status: done
   related_files:
     - src/app/(main)/characters/[id]/page.tsx
-    - src/components/character-sheet/header-section.tsx
+    - src/components/character-sheet/sheet-action-toolbar.tsx
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -662,9 +664,9 @@ Agents should **create new tasks** during their work when they discover addition
   priority: high
   status: done
   related_files:
-    - src/components/shared/dice-roller.tsx
-    - src/components/shared/dice-log.tsx
-    - public/images/dice/
+    - src/components/character-sheet/dice-roller.tsx
+    - src/components/character-sheet/roll-log.tsx
+    - public/images/
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -848,7 +850,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-041
   title: Character/profile picture upload modal with crop
   priority: high
-  status: not-started
+  status: done
   related_files:
     - src/components/shared/image-upload-modal.tsx
     - src/components/character-sheet/sheet-header.tsx
@@ -870,7 +872,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Shows accepted formats, recommended sizes
     - Clean modal UI matching site design
     - Works for both character sheet and profile picture
-  notes: "Complex feature - may need to be broken into phases"
+  notes: "DONE 2026-02-06: Created ImageUploadModal (react-easy-crop) with drag-and-drop, zoom slider, canvas crop. Rect crop (3:4) for character portrait in sheet-header.tsx. Round crop (1:1) for profile picture in my-account page. Uploads to Firebase Storage. Exported from shared/index.ts."
 
 - id: TASK-042
   title: Separate species name from level line in character sheet header
@@ -946,11 +948,10 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-046
   title: Username change with validation (uniqueness, filtering, rate limit)
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/my-account/page.tsx
-    - src/stores/auth-store.ts
-    - src/lib/firebase/auth.ts
+    - src/app/(auth)/actions.ts
   created_at: 2026-02-05
   created_by: agent
   description: |
@@ -964,15 +965,14 @@ Agents should **create new tasks** during their work when they discover addition
     - Uniqueness validation before save
     - Basic inappropriate name filter
     - Rate limiting (once per week)
-  notes: "Created during TASK-012 audit. Requires backend Firestore rules."
+  notes: "DONE 2026-02-05: Added changeUsernameAction (server action) with uniqueness (users collection), blocklist, rate limit (7 days), 3-24 char alphanumeric validation. My Account page has Change Username form. Updates users + usernames collections."
 
 - id: TASK-047
   title: Auth provider detection for My Account settings
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/my-account/page.tsx
-    - src/lib/firebase/auth.ts
   created_at: 2026-02-05
   created_by: agent
   description: |
@@ -982,12 +982,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Detect auth provider from Firebase user object
     - Hide email/password change for OAuth users
     - Show relevant options per provider
-  notes: "Created during TASK-012 audit."
+  notes: "DONE 2026-02-05: Added hasPasswordProvider() and getAuthProviderLabel() using user.providerData. Profile shows 'Signed in with' (Google/Apple/Email). Change Email and Change Password sections hidden for OAuth users. Info message shown for OAuth users explaining they must use provider settings."
 
 - id: TASK-048
   title: Library tab ordering - default to Feats
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/components/character-sheet/library-section.tsx
   created_at: 2026-02-05
@@ -998,15 +998,15 @@ Agents should **create new tasks** during their work when they discover addition
   acceptance_criteria:
     - Tabs render in specified order
     - Default active tab is Feats
-  notes: "From curated feedback §3."
+  notes: "DONE (pre-existing): library-section.tsx tabs array order is Feats→Powers→Techniques→Inventory→Proficiencies→Notes; useState('feats') sets default. Verified 2026-02-05 audit."
 
 - id: TASK-049
   title: Sortable list headers (column sorting)
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/components/shared/list-header.tsx
-    - src/components/shared/sort-header.tsx
+    - src/components/shared/list-components.tsx
     - src/components/character-sheet/library-section.tsx
   created_at: 2026-02-05
   created_by: agent
@@ -1017,12 +1017,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Clickable column headers with sort direction indicator
     - Sort state persists within session
     - Works across all list views
-  notes: "From curated feedback §3/§6."
+  notes: "DONE 2026-02-05: Library-section had ListHeader + sortState but data wasn't sorted. Added sortByCol helper and useMemo for sortedInnatePowers, sortedRegularPowers, sortedTechniques, sortedWeapons, sortedArmor, sortedEquipment. Library, Codex, modals already had sort applied; library-section was the gap."
 
 - id: TASK-050
   title: Creature creator fixes (prowess, dropdowns, summary scroll)
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/creature-creator/page.tsx
   created_at: 2026-02-05
@@ -1036,12 +1036,16 @@ Agents should **create new tasks** during their work when they discover addition
     - Prowess options filtered by level
     - Dropdowns properly aligned
     - Summary scrolls consistently
-  notes: "From curated feedback §7 bugs."
+  notes: |
+    DONE 2026-02-05:
+    - Prowess: Character creator equipment-step already filters unarmed prowess by charLevel <= draft.level; level 1 chars only see Unarmed Prowess I.
+    - Dropdowns: AddItemDropdown now uses items-center, py-2, rounded-lg, min-w-0, flex-shrink-0 for consistent alignment.
+    - Summary: Creature sidebar wrapper now has sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto for consistent scroll.
 
 - id: TASK-051
   title: Implement modern thin scrollbars sitewide
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/app/globals.css
   created_at: 2026-02-05
@@ -1053,12 +1057,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Thin scrollbars on all scrollable containers
     - Works in Chrome, Firefox, Safari
     - Subtle, non-intrusive appearance
-  notes: "From curated feedback §5 UI."
+  notes: "DONE (pre-existing): globals.css @layer base already has scrollbar-width: thin (Firefox), ::-webkit-scrollbar 6px (Chrome/Safari/Edge), transparent track, rounded thumb. Verified 2026-02-05."
 
 - id: TASK-052
   title: Character creator - persist skill allocations on tab switch
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/character-creator/page.tsx
     - src/stores/character-creator-store.ts
@@ -1070,4 +1074,226 @@ Agents should **create new tasks** during their work when they discover addition
   acceptance_criteria:
     - Skill allocations persist when switching to another step and back
     - Values restored correctly on return to skills step
-  notes: "From curated feedback §7 bugs."
+  notes: "DONE 2026-02-05: Switched skills-step to use draft.skills as single source of truth instead of local useState. Allocations now persist when switching tabs and returning."
+
+- id: TASK-053
+  title: Add confirmation dialog before feat deletion (TASK-022 compliance)
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/shared/delete-confirm-modal.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    TASK-022 acceptance criteria required "Confirmation dialog before deletion" for feat deletion.
+    Feat deletion currently calls handleRemoveFeat directly with no confirmation. Add DeleteConfirmModal
+    or similar before removing feats from archetype/character/state feat lists.
+  acceptance_criteria:
+    - Clicking feat delete/remove triggers confirmation modal
+    - User must confirm before feat is removed
+    - Canceling closes modal without removing feat
+    - Uses existing DeleteConfirmModal or consistent modal pattern
+  notes: "DONE 2026-02-05: Added featToRemove state and DeleteConfirmModal. FeatsTab now passes featName to onRemoveFeat; page shows confirmation before calling handleRemoveFeat. DeleteConfirmModal extended with deleteContext prop for 'character' vs 'library'."
+
+- id: TASK-054
+  title: Documentation — add agent verification guidelines
+  priority: low
+  status: done
+  related_files:
+    - AGENTS.md
+    - src/docs/ai/AGENT_GUIDE.md
+  created_at: 2026-02-05
+  created_by: agent
+  description: |
+    Improve docs for AI agents: add verification steps before marking tasks done, note that
+    related_files in task queue may be stale and should be verified against codebase.
+  acceptance_criteria:
+    - AGENTS.md or AGENT_GUIDE includes "verify acceptance criteria fully met before marking done"
+    - AGENT_GUIDE includes note about verifying related_files paths
+  notes: "DONE 2026-02-05: Added 'Verification Before Marking Done' section to AGENT_GUIDE with acceptance-criteria check, related_files verification, build check, and manual spot-check. AGENTS.md already had verification steps from prior audit."
+
+- id: TASK-055
+  title: Rename "Ability Scores" to "Abilities" everywhere + fix cost hint
+  priority: medium
+  status: done
+  related_files:
+    - src/components/creator/ability-score-editor.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-creator/steps/abilities-step.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    In Realms RPG, ability values are called "bonuses" or "values", not "scores". The term "Ability Scores"
+    appears in component names and headings. Rename to just "Abilities" throughout.
+    Also fix "Next: 2 Points" label — abilities 4+ cost 2 points, not the generic "3" shown.
+  acceptance_criteria:
+    - Component name AbilityScoreEditor renamed or aliased to AbilityEditor
+    - All headings say "Abilities" or "Assign Abilities", not "Ability Scores"
+    - High-ability cost hint shows "Next: 2 Points" for values 4+
+    - npm run build passes
+  notes: |
+    DONE 2026-02-06:
+    - Renamed heading "Ability Scores" → "Abilities" in creature-creator/page.tsx.
+    - Updated comments in ability-score-editor.tsx, abilities-section.tsx, creator/index.ts.
+    - Fixed cost hint bug in abilities-section.tsx: getAbilityIncreaseCost now returns 2 at value>=3 (next increase to 4+ costs 2). Removed redundant `cost + (value >= 3 ? 1 : 0)` workaround, replaced with clean `cost`.
+    - Also renamed HealthEnergyAllocator label from "HP/EN Pool" to "Health/Energy Allocation" (from same feedback batch).
+
+- id: TASK-056
+  title: Auto-capitalize archetype ability display
+  priority: low
+  status: done
+  related_files:
+    - src/components/character-sheet/archetype-section.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    The character's power/martial ability is sometimes displayed lowercase ("charisma" instead of "Charisma").
+    Ensure it's always title-cased in the character sheet header and archetype section.
+  acceptance_criteria:
+    - Power ability and martial ability displayed with first letter capitalized
+    - Applies in archetype section and header
+  notes: |
+    DONE 2026-02-06: Verified — already handled. sheet-header.tsx uses CSS `capitalize` class on pow_abil/mart_abil spans. archetype-section.tsx uses JS charAt(0).toUpperCase() + slice(1). finalize-step.tsx uses CSS `capitalize`. All single-word ability names are properly capitalized.
+
+- id: TASK-057
+  title: Unify page content width across non-unique pages
+  priority: medium
+  status: done
+  related_files:
+    - src/components/ui/page-container.tsx
+    - src/app/(main)/rules/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Page content width varies between pages (codex, library, creators, character sheet).
+    Non-unique pages (not home, login, register) should share a consistent max-width.
+    Audit PageContainer sizes across the site and standardize.
+  acceptance_criteria:
+    - All creator, library, codex, character pages use same content width
+    - Character sheet may be slightly wider if needed (xl vs content)
+    - Auth and landing pages exempt
+  notes: |
+    DONE 2026-02-06: Audited all PageContainer usage:
+    - Most pages already use size="xl" (max-w-[1440px]): library, codex, creators, characters.
+    - Changed rules/page.tsx from size="content" (max-w-6xl) to size="xl" for consistency.
+    - Correct exceptions: my-account (xs, narrow form), terms/privacy/resources (prose, text-heavy), encounter-tracker (full, max space), character sheet (custom 1600px for wider layout).
+
+- id: TASK-058
+  title: Fix health bar half-HP color (yellower orange) and deepen terminal red
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Half-health bar color is too red and hard to distinguish from terminal. Change to a
+    yellower/more orange shade. Deepen the terminal red for clearer visual distinction.
+  acceptance_criteria:
+    - Half-health color is clearly orange/amber (not red-orange)
+    - Terminal health is a deeper/darker red
+    - Both are visually distinct from each other
+  notes: |
+    DONE 2026-02-06: Unified HealthBar component colors with ResourceInput bar:
+    - Half-health: changed bg-orange-500 → bg-amber-500 (yellower orange).
+    - Terminal: changed bg-red-500 → bg-red-700 (deeper red).
+    - ResourceInput already used bg-amber-500/bg-red-700. Portrait border already used border-amber-400/border-red-600. Now fully consistent.
+
+- id: TASK-059
+  title: Unify selection/add button styles site-wide
+  priority: medium
+  status: done
+  related_files:
+    - src/components/shared/selection-toggle.tsx
+    - src/components/character-creator/steps/ancestry-step.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Selection buttons (+/check) and "Add X" buttons should have a unified style:
+    backgroundless "+" icon that turns to a green check when selected, with animation.
+    Ancestry step trait selection buttons should be larger and vertically centered.
+  acceptance_criteria:
+    - Selection toggle uses clean + → ✓ animation without circular border
+    - Add buttons consistent across all modals and sections
+    - Ancestry step selection buttons centered and larger
+  notes: |
+    DONE 2026-02-06: Verified — already fully implemented.
+    - SelectionToggle component: backgroundless +/check icons, scale animation, no circular border.
+    - Used consistently in: ancestry-step (size="lg", self-center), grid-list-row, add-sub-skill-modal, item-card, species-trait-card.
+    - Equipment step quantity steppers are correctly different (quantity controls, not selection toggles).
+    - No non-unified add/selection buttons found in modals or sections.
+
+- id: TASK-060
+  title: Fix vitality box height mismatch in ability editor
+  priority: low
+  status: done
+  related_files:
+    - src/components/creator/ability-score-editor.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    In the character creator, the Vitality ability box sometimes renders taller than other ability boxes.
+    All six ability boxes should have identical height.
+  acceptance_criteria:
+    - All ability boxes in character creator are the same height
+    - Verified in creature creator as well
+  notes: |
+    DONE 2026-02-06: Root cause was the conditional cost hint indicator (only visible for abilities at 3+ with room to increase). Changed to always render the indicator line in edit mode with useHighAbilityCost, using `invisible` class when not applicable. This reserves consistent vertical space across all boxes.
+
+- id: TASK-061
+  title: TASK-012 completion — close security audit with sub-task references
+  priority: low
+  status: done
+  related_files:
+    - src/app/(main)/my-account/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    TASK-012 (My Account security audit) has been in-progress since the audit was done. The
+    identified gaps (OAuth provider detection, username change, profile picture) are now
+    addressed by TASK-041, TASK-046, TASK-047. Mark TASK-012 as done with references.
+  acceptance_criteria:
+    - TASK-012 status updated to done
+    - Notes reference TASK-041, TASK-046, TASK-047 as resolutions
+  notes: "DONE 2026-02-06: TASK-012 was already marked done with resolution references in prior session."
+
+- id: TASK-062
+  title: Match character library section heights to archetype section
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/archetype-section.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    The character library, skills section, and archetype section should all have matching min-heights
+    so they appear uniform when adjacent, even when empty.
+  acceptance_criteria:
+    - Library section min-height matches archetype section
+    - Skills section min-height matches archetype section
+    - Consistent appearance when sections have minimal content
+  notes: "Created during second feedback audit 2026-02-06. From raw feedback: 'The height of the user library can match the height of the adjacent archetype section, same with the skills'."
+
+- id: TASK-063
+  title: Creature creator basic info dropdown alignment and sizing
+  priority: low
+  status: not-started
+  related_files:
+    - src/app/(main)/creature-creator/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    In the creature creator basic information section, the Level dropdown is too wide and the
+    Level/Type/Size dropdowns are not vertically aligned with the Name input box.
+  acceptance_criteria:
+    - Level dropdown has a reasonable max-width
+    - Level/Type/Size dropdowns are horizontally aligned with the Name input
+    - Consistent spacing and visual alignment
+  notes: "Created during second feedback audit 2026-02-06. From raw feedback: 'Level dropdown width is too wide, dropdown boxes aren't aligned with the name input box horizontally'."

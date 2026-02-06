@@ -85,7 +85,7 @@ export function HealthEnergyAllocator({
           'border-border-light'
         )}>
           <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
-            HP/EN Pool
+            Health/Energy Allocation
           </span>
           <span className={cn(
             'text-xs font-bold',
@@ -159,7 +159,7 @@ export function HealthEnergyAllocator({
         isComplete ? 'border-success-300' : 
         'border-border-light'
       )}>
-        <span className="text-sm font-medium text-secondary">HP/EN Pool</span>
+        <span className="text-sm font-medium text-secondary">Health/Energy Allocation</span>
         <span className={cn(
           'text-sm font-bold',
           isOverspent ? 'text-danger-600' : 

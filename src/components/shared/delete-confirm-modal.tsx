@@ -14,8 +14,10 @@ import { AlertTriangle } from 'lucide-react';
 interface DeleteConfirmModalProps {
   /** Name of the item being deleted */
   itemName: string;
-  /** Type label for display (e.g., "power", "technique", "item") */
+  /** Type label for display (e.g., "power", "technique", "item", "feat") */
   itemType: string;
+  /** Context for delete message (e.g., "library", "character"). Default: "library" */
+  deleteContext?: string;
   /** Whether deletion is in progress */
   isDeleting?: boolean;
   /** Called when delete is confirmed */
@@ -27,6 +29,7 @@ interface DeleteConfirmModalProps {
 export function DeleteConfirmModal({
   itemName,
   itemType,
+  deleteContext = 'library',
   isDeleting = false,
   onConfirm,
   onClose,
@@ -46,7 +49,7 @@ export function DeleteConfirmModal({
           Delete {itemName}?
         </h3>
         <p className="text-text-muted mb-6">
-          This action cannot be undone. This will permanently delete the {itemType} from your library.
+          This action cannot be undone. This will permanently remove the {itemType} from your {deleteContext}.
         </p>
         <div className="flex items-center justify-center gap-3 w-full">
           <Button

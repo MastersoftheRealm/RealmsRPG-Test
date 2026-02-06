@@ -138,6 +138,97 @@ export async function checkUsernameAvailableAction(username: string) {
   }
 }
 
+/** Basic blocklist of inappropriate username substrings (case-insensitive) */
+const USERNAME_BLOCKLIST = [
+  'admin', 'moderator', 'support', 'realmsrpg', 'realms', 'official',
+  'null', 'undefined', 'delete', 'remove', 'system', 'root',
+];
+
+const USERNAME_MIN_LEN = 3;
+const USERNAME_MAX_LEN = 24;
+const RATE_LIMIT_DAYS = 7;
+
+/**
+ * Change the current user's username.
+ * Enforces: uniqueness, blocklist, rate limit (once per week).
+ */
+export async function changeUsernameAction(newUsername: string) {
+  try {
+    const user = await requireAuth();
+    const db = getAdminFirestore();
+    
+    const trimmed = newUsername.trim();
+    const normalized = trimmed.toLowerCase();
+    
+    if (trimmed.length < USERNAME_MIN_LEN) {
+      return { success: false, error: `Username must be at least ${USERNAME_MIN_LEN} characters` };
+    }
+    if (trimmed.length > USERNAME_MAX_LEN) {
+      return { success: false, error: `Username must be at most ${USERNAME_MAX_LEN} characters` };
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+      return { success: false, error: 'Username can only contain letters, numbers, underscores, and hyphens' };
+    }
+    
+    const blocked = USERNAME_BLOCKLIST.some((w) => normalized.includes(w));
+    if (blocked) {
+      return { success: false, error: 'This username is not allowed' };
+    }
+    
+    const userRef = db.collection('users').doc(user.uid);
+    const userDoc = await userRef.get();
+    const userData = userDoc.data();
+    const currentUsername = (userData?.username as string) || '';
+    const currentNormalized = currentUsername.toLowerCase();
+    
+    if (normalized === currentNormalized) {
+      return { success: false, error: 'New username is the same as your current username' };
+    }
+    
+    const lastChange = userData?.lastUsernameChange?.toDate?.();
+    if (lastChange) {
+      const daysSince = (Date.now() - lastChange.getTime()) / (24 * 60 * 60 * 1000);
+      if (daysSince < RATE_LIMIT_DAYS) {
+        const remaining = Math.ceil(RATE_LIMIT_DAYS - daysSince);
+        return { success: false, error: `You can change your username again in ${remaining} day(s)` };
+      }
+    }
+    
+    const usersRef = db.collection('users');
+    const existingUser = await usersRef.where('username', '==', normalized).get();
+    const takenByOther = existingUser.docs.some((d) => d.id !== user.uid);
+    if (takenByOther) {
+      return { success: false, error: 'This username is already taken' };
+    }
+    
+    const usernamesRef = db.collection('usernames');
+    
+    const batch = db.batch();
+    
+    if (currentNormalized) {
+      batch.delete(usernamesRef.doc(currentNormalized));
+      if (currentUsername !== currentNormalized) {
+        batch.delete(usernamesRef.doc(currentUsername));
+      }
+    }
+    
+    batch.set(usernamesRef.doc(normalized), { uid: user.uid });
+    batch.update(userRef, {
+      username: normalized,
+      lastUsernameChange: new Date(),
+      updatedAt: new Date(),
+    });
+    
+    await batch.commit();
+    revalidatePath('/my-account');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error changing username:', error);
+    return { success: false, error: 'Failed to change username' };
+  }
+}
+
 /**
  * Delete the current user's account.
  * This removes:

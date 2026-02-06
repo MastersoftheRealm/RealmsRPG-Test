@@ -1,5 +1,7 @@
 # UI Unification Plan
 
+> **Current verified state:** See `UNIFICATION_STATUS.md`. This doc is the historical plan; many items are complete.
+>
 > **Goal:** "Learn it once, learn it forever" — Create a consistent, predictable UI system where every component behaves the same across the entire site. Reduce variants, props, and stylistic differences to the minimum necessary.
 
 ---

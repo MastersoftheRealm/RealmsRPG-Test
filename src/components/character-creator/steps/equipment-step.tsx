@@ -464,7 +464,7 @@ export function EquipmentStep() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-text-primary">{prowessLevel.name}</span>
                       {!isAvailable && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-surface-alt text-text-secondary">
                           Requires Level {prowessLevel.charLevel}
                         </span>
                       )}

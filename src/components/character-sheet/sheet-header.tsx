@@ -18,7 +18,7 @@ import { Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper, ImageUploadModal } from '@/components/shared';
 import type { Character } from '@/types';
 
 interface CalculatedStats {
@@ -373,8 +373,8 @@ function HealthBar({
   
   const barColorClass = 
     healthColor === 'green' ? 'bg-green-500' :
-    healthColor === 'orange' ? 'bg-orange-500' :
-    'bg-red-500';
+    healthColor === 'orange' ? 'bg-amber-500' :
+    'bg-red-700';
   
   return (
     <div className="relative h-3 bg-surface rounded-full overflow-hidden">
@@ -435,19 +435,20 @@ export function SheetHeader({
   const healthPoints = character.healthPoints ?? 0;
   const energyPoints = character.energyPoints ?? 0;
 
-  // Handle portrait file selection
+  // Image upload modal state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  
+  // Handle portrait click - open the upload modal
   const handlePortraitClick = () => {
     if (!isEditMode || !onPortraitChange) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        onPortraitChange(file);
-      }
-    };
-    input.click();
+    setShowUploadModal(true);
+  };
+  
+  // Handle cropped image from the modal
+  const handleCroppedImage = (blob: Blob) => {
+    if (!onPortraitChange) return;
+    const file = new File([blob], 'portrait.jpg', { type: 'image/jpeg' });
+    onPortraitChange(file);
   };
 
   // Get health color for styling
@@ -673,6 +674,16 @@ export function SheetHeader({
           )}
         </div>
       </div>
+      
+      {/* Portrait Upload Modal */}
+      <ImageUploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onConfirm={handleCroppedImage}
+        cropShape="rect"
+        aspect={3 / 4}
+        title="Upload Character Portrait"
+      />
     </div>
   );
 }

@@ -32,6 +32,7 @@ import {
   RecoveryModal,
   SheetActionToolbar,
 } from '@/components/character-sheet';
+import { DeleteConfirmModal } from '@/components/shared';
 import { useToast } from '@/components/ui';
 import type { Character, Abilities, AbilityName, Item, DefenseSkills, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
@@ -133,6 +134,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [addModalType, setAddModalType] = useState<AddModalType>(null);
   const [featModalType, setFeatModalType] = useState<FeatModalType>(null);
   const [skillModalType, setSkillModalType] = useState<SkillModalType>(null);
+  const [featToRemove, setFeatToRemove] = useState<{ id: string; name: string } | null>(null);
   const [uploadingPortrait, setUploadingPortrait] = useState(false);
   
   // Fetch user's library for data enrichment
@@ -902,7 +904,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setFeatModalType(null);
   }, [character]);
 
-  // Remove feat handler
+  // Remove feat handler (called after confirmation)
   const handleRemoveFeat = useCallback((featId: string) => {
     if (!character) return;
     setCharacter(prev => {
@@ -928,6 +930,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
       return prev;
     });
   }, [character]);
+
+  // Request feat removal (opens confirmation modal)
+  const handleRequestRemoveFeat = useCallback((featId: string, featName?: string) => {
+    setFeatToRemove({ id: featId, name: featName || featId });
+  }, []);
+
+  // Confirm feat removal (called from modal)
+  const handleConfirmRemoveFeat = useCallback(() => {
+    if (featToRemove) {
+      handleRemoveFeat(featToRemove.id);
+      setFeatToRemove(null);
+    }
+  }, [featToRemove, handleRemoveFeat]);
   
   // Add skills handler - accepts skills from add-skill or add-sub-skill modals
   const handleAddSkills = useCallback((newSkills: Array<{ 
@@ -1394,7 +1409,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onFeatUsesChange={handleFeatUsesChange}
                   onAddArchetypeFeat={() => setFeatModalType('archetype')}
                   onAddCharacterFeat={() => setFeatModalType('character')}
-                  onRemoveFeat={handleRemoveFeat}
+                  onRemoveFeat={handleRequestRemoveFeat}
                   // Traits enrichment props
                   traitsDb={traitsDb}
                   featsDb={featsDb}
@@ -1418,6 +1433,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
           itemType={addModalType}
           existingIds={existingIds}
           onAdd={handleModalAdd}
+        />
+      )}
+      
+      {/* Feat Delete Confirmation Modal */}
+      {featToRemove && (
+        <DeleteConfirmModal
+          itemName={featToRemove.name}
+          itemType="feat"
+          deleteContext="character"
+          onConfirm={handleConfirmRemoveFeat}
+          onClose={() => setFeatToRemove(null)}
         />
       )}
       

@@ -155,3 +155,7 @@ export type { PoweredMartialSliderProps } from './powered-martial-slider';
 // InnateToggle - Toggle for marking powers/techniques as innate
 export { InnateToggle } from './innate-toggle';
 export type { InnateToggleProps } from './innate-toggle';
+
+// ImageUploadModal - Upload and crop images for portraits/profile pictures
+export { ImageUploadModal } from './image-upload-modal';
+export type { ImageUploadModalProps, CropShape } from './image-upload-modal';

@@ -1,7 +1,7 @@
 /**
- * Ability Score Editor
- * ====================
- * Shared component for viewing and editing ability scores.
+ * Ability Editor (AbilityScoreEditor)
+ * ====================================
+ * Shared component for viewing and editing abilities.
  * Used in character creator, character sheet (edit mode), and creature creator.
  * 
  * Point Costs:
@@ -23,7 +23,7 @@ import { PointStatus, DecrementButton, IncrementButton } from '@/components/shar
 import type { AbilityName, Abilities } from '@/types';
 
 export interface AbilityScoreEditorProps {
-  /** Current ability scores */
+  /** Current ability values */
   abilities: Abilities;
   /** Total points available for allocation */
   totalPoints: number;
@@ -235,9 +235,12 @@ export function AbilityScoreEditor({
                   )}
                 </div>
 
-                {/* Show cost indicator for high values only if more can be added */}
-                {isEditMode && useHighAbilityCost && value >= 3 && canInc && (
-                  <p className="text-[10px] text-amber-600 font-medium text-center mt-1">
+                {/* Cost indicator - reserve space to keep all boxes same height */}
+                {isEditMode && useHighAbilityCost && (
+                  <p className={cn(
+                    "text-[10px] font-medium text-center mt-1",
+                    value >= 3 && canInc ? "text-amber-600" : "invisible"
+                  )}>
                     Next: {increaseCost}pt
                   </p>
                 )}

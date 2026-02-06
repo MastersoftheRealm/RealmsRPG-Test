@@ -1,0 +1,31 @@
+---
+description: UI unification - shared components, design tokens, "learn once use forever"
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# UI Unification — Learn Once, Use Forever
+
+**Principle:** If users understand filters, sorting, allocation, or creation in one place, they know it everywhere. Reuse components and patterns.
+
+## Shared components (use these; do not duplicate)
+
+| Need | Import from |
+|------|-------------|
+| List rows (expandable) | `@/components/shared` → GridListRow |
+| Section headers with + | `@/components/shared` → SectionHeader |
+| Roll buttons | `@/components/shared` → RollButton |
+| +/- steppers | `@/components/shared` → ValueStepper, DecrementButton, IncrementButton |
+| Point display (spent/total) | `@/components/shared` → PointStatus |
+| Skill rows | `@/components/shared` → SkillRow |
+| Search | `@/components/ui` → SearchInput |
+| Page layout | `@/components/ui` → PageContainer, PageHeader |
+| Modals, Buttons, Chips | `@/components/ui` |
+
+## Design tokens (globals.css)
+
+Use semantic tokens, not raw colors: `bg-surface`, `bg-background`, `bg-surface-alt`, `text-text-primary`, `text-text-secondary`, `text-text-muted`, `border-border-light`, `border-border`. Exception: auth pages use `gray-*` for dark theme intentionally.
+
+## Before adding a new component
+
+Search for existing patterns. Prefer extending shared components with props/variants over creating new ones.

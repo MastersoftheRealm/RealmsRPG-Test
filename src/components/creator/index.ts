@@ -7,7 +7,7 @@
  * - Number stepping controls
  * - Load from library modal
  * - Health/Energy allocation
- * - Ability score editing
+ * - Ability editing
  * - Archetype selection
  * - Collapsible sections
  */

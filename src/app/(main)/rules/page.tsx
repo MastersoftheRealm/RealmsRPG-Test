@@ -8,7 +8,7 @@ import { PageContainer, PageHeader } from '@/components/ui';
 
 export default function RulesPage() {
   return (
-    <PageContainer size="content">
+    <PageContainer size="xl">
       <PageHeader 
         title="Core Rulebook Alpha"
         description="Scroll through or use Ctrl+F to find the desired rule or reference you're looking for! Enjoy playing!"

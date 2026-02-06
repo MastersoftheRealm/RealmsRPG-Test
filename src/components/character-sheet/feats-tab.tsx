@@ -88,7 +88,7 @@ interface FeatsTabProps {
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
   onAddStateFeat?: () => void;
-  onRemoveFeat?: (featId: string) => void;
+  onRemoveFeat?: (featId: string, featName?: string) => void;
 }
 
 // =============================================================================
@@ -425,7 +425,7 @@ export function FeatsTab({
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
                   onDelete={onRemoveFeat 
-                    ? () => onRemoveFeat(String(feat.id || index)) 
+                    ? () => onRemoveFeat(String(feat.id || index), feat.name) 
                     : undefined}
                   compact
                 />
@@ -478,7 +478,7 @@ export function FeatsTab({
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
                   onDelete={onRemoveFeat 
-                    ? () => onRemoveFeat(String(feat.id || index)) 
+                    ? () => onRemoveFeat(String(feat.id || index), feat.name) 
                     : undefined}
                   compact
                 />
@@ -531,7 +531,7 @@ export function FeatsTab({
                     ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
                     : undefined}
                   onDelete={onRemoveFeat 
-                    ? () => onRemoveFeat(String(feat.id || index)) 
+                    ? () => onRemoveFeat(String(feat.id || index), feat.name) 
                     : undefined}
                   compact
                 />
