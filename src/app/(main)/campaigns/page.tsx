@@ -273,7 +273,7 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. The Lost Mines of Phandelver"
+          placeholder="e.g. The Metal Heart"
           required
           minLength={2}
           maxLength={100}
