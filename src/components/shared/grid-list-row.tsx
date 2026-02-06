@@ -19,9 +19,9 @@
  */
 
 import { useState, ReactNode } from 'react';
-import { Edit, Trash2, Copy, Zap, Check, Plus, AlertCircle } from 'lucide-react';
+import { Edit, Copy, Zap, Check, Plus, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui';
+import { Button, IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
 
@@ -131,6 +131,8 @@ export interface GridListRowProps {
   compact?: boolean;
   /** Additional className */
   className?: string;
+  /** Override hover class for colored rows (e.g. senses/movement) - use hover:bg-* to match row color */
+  rowHoverClass?: string;
 }
 
 // =============================================================================
@@ -195,6 +197,7 @@ export function GridListRow({
   onExpandChange,
   compact = false,
   className,
+  rowHoverClass,
 }: GridListRowProps) {
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const [expandedChipIndex, setExpandedChipIndex] = useState<number | null>(null);
@@ -210,8 +213,8 @@ export function GridListRow({
   };
   
   const hasDetails = description || chips.length > 0 || badges.length > 0 || requirements || expandedContent;
-  const showActions = onEdit || onDelete || onDuplicate;
-  const showExpander = hasDetails || showActions;
+  const showActions = onEdit || onDuplicate; // Delete is now inline X, not in expanded actions
+  const showExpander = hasDetails || showActions || onDelete;
   
   const handleChipClick = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -265,7 +268,7 @@ export function GridListRow({
           disabled={disabled && !showExpander}
           className={cn(
             'flex-1 text-left transition-colors',
-            showExpander && 'hover:bg-surface-alt',
+            showExpander && (rowHoverClass ?? 'hover:bg-surface-alt'),
             compact ? 'px-3 py-2' : 'px-4 py-3',
             disabled && 'cursor-default'
           )}
@@ -362,6 +365,21 @@ export function GridListRow({
           
 
         </button>
+        
+        {/* Delete X - simple red X matching add button style, visible in collapsed state */}
+        {onDelete && (
+          <div className="flex items-center flex-shrink-0 pr-1" onClick={(e) => e.stopPropagation()}>
+            <IconButton
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              label="Remove"
+              className="text-danger hover:text-danger-600 hover:bg-transparent"
+            >
+              <X className="w-4 h-4" />
+            </IconButton>
+          </div>
+        )}
         
         {/* Right Slot - renders after clickable content (e.g., roll buttons, use button) */}
         {rightSlot && (
@@ -533,7 +551,7 @@ export function GridListRow({
                 </div>
               )}
 
-              {/* Action Buttons */}
+              {/* Action Buttons (Edit, Duplicate - Delete is inline X in row) */}
               {showActions && (
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-light">
                   {onEdit && (
@@ -554,16 +572,6 @@ export function GridListRow({
                     >
                       <Copy className="w-4 h-4" />
                       Duplicate
-                    </Button>
-                  )}
-                  {onDelete && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
                     </Button>
                   )}
                 </div>

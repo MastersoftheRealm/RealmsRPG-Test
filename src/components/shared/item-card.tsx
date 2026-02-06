@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import { Check, Edit, Trash2, Copy, Eye, AlertCircle } from 'lucide-react';
+import { Check, Edit, Copy, Eye, AlertCircle, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import type { DisplayItem, ListMode, ItemActions } from '@/types/items';
@@ -175,12 +175,13 @@ export function ItemCard({
               )}
               {actions?.onDelete && (
                 <IconButton
-                  variant="danger"
+                  variant="ghost"
                   size="sm"
                   onClick={() => actions.onDelete?.(item)}
-                  label="Delete"
+                  label="Remove"
+                  className="text-danger hover:text-danger-600 hover:bg-transparent"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </IconButton>
               )}
             </div>

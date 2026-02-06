@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 /* =============================================================================
    RealmsRPG Design System - Unified Color Palette
@@ -285,11 +285,64 @@
     --muted-foreground: #707070;
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
+    /* Light theme surface/background tokens */
+    --surface: #ffffff;
+    --surface-alt: #f9f9f9;
+    --surface-secondary: #f6f6f6;
+    --background: #f6f6f6;
+    --text-primary: #091d2d;
+    --text-secondary: #41464a;
+    --text-muted: #707070;
+    --border-color: #707070;
+    --border-light-color: #dad9d9;
+  }
+
+  .dark {
+    --background: #0d1117;
+    --foreground: #e6edf3;
+    --card-bg: #161b22;
+    --border: #30363d;
+    --border-light: #21262d;
+    --primary-foreground: #f9f9f9;
+    --muted: #21262d;
+    --muted-foreground: #8b949e;
+    --destructive: #f85149;
+    --destructive-foreground: #ffffff;
+    /* Dark theme surface/background tokens */
+    --surface: #161b22;
+    --surface-alt: #21262d;
+    --surface-secondary: #0d1117;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    /* Tailwind theme color overrides for dark mode */
+    --color-surface: #161b22;
+    --color-surface-alt: #21262d;
+    --color-surface-secondary: #0d1117;
+    --color-background: #0d1117;
+    --color-text-primary: #e6edf3;
+    --color-text-secondary: #8b949e;
+    --color-text-muted: #6e7681;
+    --color-border: #30363d;
+    --color-border-light: #21262d;
+    --color-neutral-50: #21262d;
+    --color-neutral-100: #161b22;
+    --color-neutral-200: #21262d;
+    --color-neutral-300: #30363d;
+    --color-neutral-400: #8b949e;
+    --color-neutral-500: #8b949e;
+    --color-neutral-600: #6e7681;
+    --color-primary-50: #0d419d;
+    --color-primary-100: #0a4a7a;
+    --color-primary-600: #4f94cd;
+    --color-primary-700: #77abd8;
   }
   
   body {
-    @apply bg-surface-secondary text-text-primary antialiased;
+    background-color: var(--surface-secondary);
+    color: var(--text-primary);
     font-family: var(--font-sans);
+    @apply antialiased;
   }
   
   /* Consistent heading styles */

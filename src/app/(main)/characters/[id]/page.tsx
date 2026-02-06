@@ -1285,7 +1285,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
               />
             
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] gap-4 items-stretch">
-              <div className="flex flex-col">
+              <div className="flex flex-col min-h-[400px]">
                 <SkillsSection
                   skills={skills}
                   abilities={character.abilities}
@@ -1300,7 +1300,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 />
               </div>
               
-              <div className="flex flex-col">
+              <div className="flex flex-col min-h-[400px]">
                 <ArchetypeSection
                   character={character}
                   isEditMode={isEditMode}
@@ -1313,7 +1313,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 />
               </div>
               
-              <div className="flex flex-col">
+              <div className="flex flex-col min-h-[400px]">
                 <LibrarySection
                   className="flex-1"
                   powers={enrichedData?.powers || character.powers || []}

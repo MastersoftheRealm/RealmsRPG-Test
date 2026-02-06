@@ -1265,10 +1265,8 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-062
   title: Match character library section heights to archetype section
   priority: low
-  status: not-started
+  status: done
   related_files:
-    - src/components/character-sheet/library-section.tsx
-    - src/components/character-sheet/archetype-section.tsx
     - src/app/(main)/characters/[id]/page.tsx
   created_at: 2026-02-06
   created_by: agent
@@ -1279,12 +1277,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Library section min-height matches archetype section
     - Skills section min-height matches archetype section
     - Consistent appearance when sections have minimal content
-  notes: "Created during second feedback audit 2026-02-06. From raw feedback: 'The height of the user library can match the height of the adjacent archetype section, same with the skills'."
+  notes: "DONE 2026-02-05: Added min-h-[400px] to all three column wrappers (Skills, Archetype, Library) in characters/[id]/page.tsx so sections have uniform minimum height when adjacent."
 
 - id: TASK-063
   title: Creature creator basic info dropdown alignment and sizing
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/creature-creator/page.tsx
   created_at: 2026-02-06
@@ -1296,4 +1294,34 @@ Agents should **create new tasks** during their work when they discover addition
     - Level dropdown has a reasonable max-width
     - Level/Type/Size dropdowns are horizontally aligned with the Name input
     - Consistent spacing and visual alignment
-  notes: "Created during second feedback audit 2026-02-06. From raw feedback: 'Level dropdown width is too wide, dropdown boxes aren't aligned with the name input box horizontally'."
+  notes: "DONE 2026-02-05: Replaced space-y-4 layout with single-row grid (Name | Level | Type | Size). Level w-20, Type w-36, Size w-28. All aligned horizontally with items-end for baseline alignment."
+
+- id: TASK-064
+  title: Game rules audit — fix terminology and CreatureStatBlock ability schema
+  priority: high
+  status: done
+  related_files:
+    - src/docs/GAME_RULES_AUDIT.md
+    - src/components/shared/creature-stat-block.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/encounter-tracker/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Audit of codebase vs Core Rulebook (GAME_RULES.md) found mismatches. Fix high-priority items:
+    1. CreatureStatBlock uses D&D ability names (intellect, perception, willpower) — Realms uses acuity, intelligence, charisma. Acuity and Intelligence do not display for creator creatures.
+    2. Replace "ability score" with "Ability" in user-facing copy (item-creator, etc.).
+    3. Consider "Reflexes" for defense label (rulebook uses Reflexes, not Reflex).
+  acceptance_criteria:
+    - CreatureStatBlock displays all 6 Realms abilities (STR, VIT, AGI, ACU, INT, CHA) for creator creatures
+    - Item creator: "Require a minimum Ability to use..." (not "ability score")
+    - Creature creator: Defense "Reflex" → "Reflexes" (or document as acceptable abbreviation)
+    - npm run build passes
+  notes: |
+    DONE 2026-02-06:
+    - CreatureStatBlock: Updated to Realms ability order (STR, VIT, AGI, ACU, INT, CHA); added legacy map for intellect/perception/willpower; grid-cols-6.
+    - Item creator: "ability score" → "Ability".
+    - Creature creator: Defense label "Reflex" → "Reflexes".
+    - Encounter-tracker: Faint condition "Reflex" → "Reflexes".
+    - npm run build passes.

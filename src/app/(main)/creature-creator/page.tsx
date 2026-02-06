@@ -282,11 +282,13 @@ function ExpandableChipList({
   items, 
   onRemove, 
   color = 'bg-surface-alt text-text-secondary',
+  rowHoverClass,
   descriptions
 }: { 
   items: string[]; 
   onRemove: (item: string) => void;
   color?: string;
+  rowHoverClass?: string;
   descriptions: Record<string, string>;
 }) {
   if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
@@ -305,6 +307,7 @@ function ExpandableChipList({
             onDelete={() => onRemove(item)}
             compact
             className={color}
+            rowHoverClass={rowHoverClass}
           />
         );
       })}
@@ -924,64 +927,12 @@ function CreatureCreatorContent() {
         className="mb-6"
       />
 
-      {/* Creature Summary Card (Top) */}
-      <div className="bg-surface rounded-xl shadow-md p-4 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div>
-              <div className="text-xl font-bold text-text-primary">{creature.name || 'Unnamed Creature'}</div>
-              <div className="text-sm text-text-muted">
-                Level {creature.level} {creature.size.charAt(0).toUpperCase() + creature.size.slice(1)} {creature.type}
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-health-light rounded-lg">
-              <span className="text-text-secondary">HP</span>
-              <span className="font-bold text-health">{stats.maxHealth}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-energy-light rounded-lg">
-              <span className="text-text-secondary">EN</span>
-              <span className="font-bold text-energy">{stats.maxEnergy}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-alt rounded-lg">
-              <span className="text-text-secondary">SPD</span>
-              <span className="font-bold">{stats.speed}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-alt rounded-lg">
-              <span className="text-text-secondary">EVA</span>
-              <span className="font-bold">{stats.evasion}</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-alt rounded-lg">
-              <span className="text-text-secondary">PROF</span>
-              <span className="font-bold">+{stats.proficiency}</span>
-            </div>
-          </div>
-        </div>
-        {/* Quick feature tags */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {creature.resistances.map(r => (
-            <span key={r} className="px-2 py-0.5 text-xs bg-success-light text-success-700 rounded">{r} Res.</span>
-          ))}
-          {creature.weaknesses.map(w => (
-            <span key={w} className="px-2 py-0.5 text-xs bg-danger-light text-danger-700 rounded">{w} Weak</span>
-          ))}
-          {creature.immunities.map(i => (
-            <span key={i} className="px-2 py-0.5 text-xs bg-power-light text-power-text rounded">{i} Imm.</span>
-          ))}
-          {creature.senses.map(s => (
-            <span key={s} className="px-2 py-0.5 text-xs bg-info-light text-info-700 rounded">{s}</span>
-          ))}
-        </div>
-      </div>
-
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Basic Info */}
+          {/* Basic Info - name, description, level, type, size (matches other creators) */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Basic Information</h3>
             <div className="space-y-4">
-              {/* Name row */}
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
                 <Input
@@ -991,25 +942,33 @@ function CreatureCreatorContent() {
                   placeholder="Creature name..."
                 />
               </div>
-              {/* Level, Type, Size row - all same width */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+                <Textarea
+                  value={creature.description}
+                  onChange={(e) => updateCreature({ description: e.target.value })}
+                  placeholder="Describe this creature's appearance, behavior, and special abilities..."
+                  rows={3}
+                />
+              </div>
               <div className="grid grid-cols-3 gap-4">
                 <Select
                   label="Level"
-                  value={String(creature.level)}
-                  onChange={(e) => updateCreature({ level: parseFloat(e.target.value) })}
-                  options={LEVEL_OPTIONS}
+                    value={String(creature.level)}
+                    onChange={(e) => updateCreature({ level: parseFloat(e.target.value) })}
+                    options={LEVEL_OPTIONS}
                 />
                 <Select
                   label="Type"
-                  value={creature.type}
-                  onChange={(e) => updateCreature({ type: e.target.value })}
-                  options={CREATURE_TYPE_OPTIONS}
+                    value={creature.type}
+                    onChange={(e) => updateCreature({ type: e.target.value })}
+                    options={CREATURE_TYPE_OPTIONS}
                 />
                 <Select
                   label="Size"
-                  value={creature.size}
-                  onChange={(e) => updateCreature({ size: e.target.value })}
-                  options={CREATURE_SIZES.map(s => ({ value: s.value, label: s.label }))}
+                    value={creature.size}
+                    onChange={(e) => updateCreature({ size: e.target.value })}
+                    options={CREATURE_SIZES.map(s => ({ value: s.value, label: s.label }))}
                 />
               </div>
             </div>
@@ -1078,7 +1037,7 @@ function CreatureCreatorContent() {
                 onChange={(val) => updateDefense('fortitude', val)}
               />
               <DefenseBlock
-                name="Reflex"
+                name="Reflexes"
                 baseValue={creature.abilities.agility}
                 bonusValue={creature.defenses.reflex}
                 onChange={(val) => updateDefense('reflex', val)}
@@ -1163,6 +1122,7 @@ function CreatureCreatorContent() {
                   items={creature.senses} 
                   onRemove={(item) => removeFromArray('senses', item)}
                   color="bg-info-light text-info-700"
+                  rowHoverClass="hover:bg-info-200"
                   descriptions={senseDescriptions}
                 />
                 <AddItemDropdown
@@ -1178,6 +1138,7 @@ function CreatureCreatorContent() {
                   items={creature.movementTypes} 
                   onRemove={(item) => removeFromArray('movementTypes', item)}
                   color="bg-amber-100 text-amber-800"
+                  rowHoverClass="hover:bg-amber-200"
                   descriptions={movementDescriptions}
                 />
                 <AddItemDropdown
@@ -1285,6 +1246,42 @@ function CreatureCreatorContent() {
             </div>
           </div>
 
+          {/* Feats - Always visible, below languages (matches other creator ordering) */}
+          <CollapsibleSection
+            title="Feats"
+            subtitle="Special abilities and traits"
+            icon="⭐"
+            itemCount={creature.feats.length}
+            points={{ spent: stats.featSpent, total: stats.featPoints }}
+            defaultExpanded={true}
+          >
+            {creature.feats.length === 0 ? (
+              <p className="text-sm text-text-muted italic mb-4">No feats added</p>
+            ) : (
+              <div className="space-y-2 mb-4">
+                {creature.feats.map(feat => (
+                  <ItemCard
+                    key={feat.id}
+                    item={creatureFeatToDisplayItem(feat)}
+                    mode="manage"
+                    actions={{
+                      onDelete: () => setCreature(prev => ({
+                        ...prev,
+                        feats: prev.feats.filter(f => f.id !== feat.id)
+                      }))
+                    }}
+                    compact
+                  />
+                ))}
+              </div>
+            )}
+            <Button
+              onClick={() => setShowFeatModal(true)}
+            >
+              Add Feat
+            </Button>
+          </CollapsibleSection>
+
           {/* Powers - Optional */}
           <CollapsibleSection
             title="Powers"
@@ -1361,42 +1358,6 @@ function CreatureCreatorContent() {
             </Button>
           </CollapsibleSection>
 
-          {/* Feats - Always visible, collapsible */}
-          <CollapsibleSection
-            title="Feats"
-            subtitle="Special abilities and traits"
-            icon="⭐"
-            itemCount={creature.feats.length}
-            points={{ spent: stats.featSpent, total: stats.featPoints }}
-            defaultExpanded={true}
-          >
-            {creature.feats.length === 0 ? (
-              <p className="text-sm text-text-muted italic mb-4">No feats added</p>
-            ) : (
-              <div className="space-y-2 mb-4">
-                {creature.feats.map(feat => (
-                  <ItemCard
-                    key={feat.id}
-                    item={creatureFeatToDisplayItem(feat)}
-                    mode="manage"
-                    actions={{
-                      onDelete: () => setCreature(prev => ({
-                        ...prev,
-                        feats: prev.feats.filter(f => f.id !== feat.id)
-                      }))
-                    }}
-                    compact
-                  />
-                ))}
-              </div>
-            )}
-            <Button
-              onClick={() => setShowFeatModal(true)}
-            >
-              Add Feat
-            </Button>
-          </CollapsibleSection>
-
           {/* Armaments - Optional */}
           <CollapsibleSection
             title="Armaments"
@@ -1434,28 +1395,25 @@ function CreatureCreatorContent() {
               Add Armament
             </Button>
           </CollapsibleSection>
-
-          {/* Description */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Description</h3>
-            <Textarea
-              value={creature.description}
-              onChange={(e) => updateCreature({ description: e.target.value })}
-              placeholder="Describe this creature's appearance, behavior, and special abilities..."
-              rows={6}
-            />
-          </div>
         </div>
 
-        {/* Creature Summary Sidebar */}
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
+        {/* Creature Summary Sidebar - matches power/technique/item creator layout */}
+        <div className="self-start sticky top-24 space-y-6">
           <CreatorSummaryPanel
             title="Creature Summary"
+            badge={creature.name ? { label: creature.name, className: 'bg-primary-100 text-primary-700' } : undefined}
             quickStats={[
-              { label: 'HP', value: stats.maxHealth, color: 'bg-red-50 text-red-600' },
-              { label: 'EN', value: stats.maxEnergy, color: 'bg-blue-50 text-blue-600' },
+              { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health' },
+              { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy' },
               { label: 'SPD', value: stats.speed, color: 'bg-surface-alt' },
               { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt' },
+              { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt' },
+            ]}
+            statRows={[
+              { label: 'Level', value: creature.level },
+              { label: 'Type', value: creature.type },
+              { label: 'Size', value: creature.size.charAt(0).toUpperCase() + creature.size.slice(1) },
+              { label: 'Archetype', value: creature.archetypeType.charAt(0).toUpperCase() + creature.archetypeType.slice(1) },
             ]}
             items={[
               { label: 'Ability Points', remaining: stats.abilityRemaining },
@@ -1463,6 +1421,14 @@ function CreatureCreatorContent() {
               { label: 'Feat Points', remaining: stats.featRemaining, variant: 'warning' },
               { label: 'Training Points', remaining: stats.trainingPoints, variant: 'warning' },
               { label: 'Currency', remaining: stats.currency, variant: 'warning' },
+            ]}
+            breakdowns={[
+              ...(creature.resistances.length > 0 ? [{ title: 'Resistances', items: creature.resistances }] : []),
+              ...(creature.weaknesses.length > 0 ? [{ title: 'Weaknesses', items: creature.weaknesses }] : []),
+              ...(creature.immunities.length > 0 ? [{ title: 'Immunities', items: creature.immunities }] : []),
+              ...(creature.senses.length > 0 ? [{ title: 'Senses', items: creature.senses }] : []),
+              ...(creature.movementTypes.length > 0 ? [{ title: 'Movement', items: creature.movementTypes }] : []),
+              ...(creature.languages.length > 0 ? [{ title: 'Languages', items: creature.languages }] : []),
             ]}
           />
         </div>

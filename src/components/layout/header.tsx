@@ -12,7 +12,6 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks';
-import { Button } from '@/components/ui';
 import { ThemeToggle } from '@/components/shared';
 
 const navLinks = [
@@ -125,14 +124,12 @@ export function Header() {
                 </div>
               </div>
             ) : (
-              <Button
-                variant="primary"
-                size="sm"
+              <button
                 onClick={handleLoginClick}
-                className="font-semibold"
+                className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors whitespace-nowrap"
               >
                 Login
-              </Button>
+              </button>
             )}
 
             {/* Mobile menu button */}

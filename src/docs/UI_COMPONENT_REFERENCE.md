@@ -6,6 +6,22 @@ This file gathers the main UI components, shared utilities, and style convention
 
 ---
 
+## Component Decision Tree (Quick Reference)
+
+| Use Case | Component | Notes |
+|----------|-----------|-------|
+| Powers, techniques, feats, equipment in character sheet | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
+| Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection with search |
+| Codex browse (feats, skills, equipment, parts) | **GridListRow** | Tab + filters + GridListRow list |
+| Library browse (user's items) | **ItemCard** / **ItemList** | Card layout, view/edit/duplicate/delete |
+| Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
+| Species detail, level-up wizard | Custom layouts | Justified exceptions |
+| Quantity controls | **QuantitySelector** or **ValueStepper** | Not SelectionToggle |
+
+**Rule:** Prefer `GridListRow` for list rows with columns. Use `ItemCard`/`ItemList` for card-style layouts. Use `SelectionToggle` for add/select actions only.
+
+---
+
 ## Table of Contents
 - [Core Primitives](#core-primitives-exports)
 - [Layout Components](#layout-components)

@@ -1,0 +1,450 @@
+[debug] [2026-02-06T03:09:41.785Z] ----------------------------------------------------------------------
+[debug] [2026-02-06T03:09:41.786Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Kadin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-02-06T03:09:41.787Z] CLI Version:   15.5.1
+[debug] [2026-02-06T03:09:41.787Z] Platform:      win32
+[debug] [2026-02-06T03:09:41.787Z] Node Version:  v22.12.0
+[debug] [2026-02-06T03:09:41.787Z] Time:          Thu Feb 05 2026 22:09:41 GMT-0500 (Eastern Standard Time)
+[debug] [2026-02-06T03:09:41.787Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-02-06T03:09:42.842Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-06T03:09:42.843Z] > authorizing via signed-in user (realmsroleplaygame@gmail.com)
+[debug] [2026-02-06T03:09:42.843Z] [iam] checking project realmsrpg-test for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-02-06T03:09:42.844Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:42.844Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:42.844Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions [none]
+[debug] [2026-02-06T03:09:42.844Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions  x-goog-user-project=realmsrpg-test
+[debug] [2026-02-06T03:09:42.844Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-02-06T03:09:43.236Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions 200
+[debug] [2026-02-06T03:09:43.236Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]}
+[debug] [2026-02-06T03:09:43.236Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:43.236Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:43.236Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test [none]
+[debug] [2026-02-06T03:09:43.622Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test 200
+[debug] [2026-02-06T03:09:43.622Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test {"projectId":"realmsrpg-test","projectNumber":"829555734488","displayName":"RealmsRPG-Test","name":"projects/realmsrpg-test","resources":{"hostingSite":"realmsrpg-test","realtimeDatabaseInstance":"realmsrpg-test-default-rtdb"},"state":"ACTIVE","etag":"1_77b5be64-a29f-4747-b8ce-fc37b084dce0"}
+[debug] [2026-02-06T03:09:43.623Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:43.623Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:43.623Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test [none]
+[debug] [2026-02-06T03:09:43.796Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test 200
+[debug] [2026-02-06T03:09:43.796Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test {"projectId":"realmsrpg-test","projectNumber":"829555734488","displayName":"RealmsRPG-Test","name":"projects/realmsrpg-test","resources":{"hostingSite":"realmsrpg-test","realtimeDatabaseInstance":"realmsrpg-test-default-rtdb"},"state":"ACTIVE","etag":"1_77b5be64-a29f-4747-b8ce-fc37b084dce0"}
+[debug] [2026-02-06T03:09:45.349Z] defaultcredentials: writing to file C:\Users\Kadin\AppData\Roaming\firebase\realmsroleplaygame_gmail_com_application_default_credentials.json
+[debug] [2026-02-06T03:09:45.350Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:45.351Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:45.351Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites pageToken=&pageSize=10
+[debug] [2026-02-06T03:09:45.899Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites 200
+[debug] [2026-02-06T03:09:45.899Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites {"sites":[{"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}]}
+[debug] [2026-02-06T03:09:45.900Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:45.900Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:45.900Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config [none]
+[debug] [2026-02-06T03:09:46.302Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config 200
+[debug] [2026-02-06T03:09:46.302Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/-/webApps/1:829555734488:web:ace6f8713d3a56e61064ad/config {"projectId":"realmsrpg-test","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","databaseURL":"https://realmsrpg-test-default-rtdb.firebaseio.com","storageBucket":"realmsrpg-test.firebasestorage.app","apiKey":"AIzaSyDNcNXHuO8dfcg15ZOkoa4dY3wZ2kYSWtQ","authDomain":"realmsrpg-test.firebaseapp.com","messagingSenderId":"829555734488","measurementId":"G-V3154LLM4E","projectNumber":"829555734488","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2026-02-06T03:09:49.685Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:49.685Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:09:49.685Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test [none]
+[debug] [2026-02-06T03:09:49.829Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test 200
+[debug] [2026-02-06T03:09:49.829Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test {"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}
+[info] ▲ Next.js 16.1.6 (Turbopack)
+
+[info] 
+
+[info]   Creating an optimized production build ...
+
+[info] ✓ Compiled successfully in 3.4s
+
+[info]   Running TypeScript ...
+
+[info]   Collecting page data using 15 workers ...
+
+[info] (node:26464) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[info]   Generating static pages using 15 workers (0/23) ...
+
+[info]   Generating static pages using 15 workers (5/23) 
+
+[info]   Generating static pages using 15 workers (11/23) 
+
+[info]   Generating static pages using 15 workers (17/23) 
+
+[info] (node:33300) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+[info] ✓ Generating static pages using 15 workers (23/23) in 926.9ms
+
+[info]   Finalizing page optimization ...
+
+[info] 
+
+[info] Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/session
+├ ○ /characters
+├ ƒ /characters/[id]
+├ ○ /characters/new
+├ ○ /codex
+├ ○ /creature-creator
+├ ○ /encounter-tracker
+├ ○ /forgot-password
+├ ○ /forgot-username
+├ ○ /item-creator
+├ ○ /library
+├ ○ /login
+├ ○ /my-account
+├ ○ /power-creator
+├ ○ /privacy
+├ ○ /register
+├ ○ /resources
+├ ○ /rules
+├ ○ /technique-creator
+└ ○ /terms
+
+
+[info] 
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+[info] Building a Cloud Function to run this application. This is needed due to:
+[info]  • non-static component /(main)/characters/[id]/page
+[info]  • non-static component /api/session/route
+[info]  • route with server action /my-account
+[info] 
+[debug] [2026-02-06T03:10:02.319Z] skipping /my-account due to server action
+[debug] [2026-02-06T03:10:02.430Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:02.430Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:02.430Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test [none]
+[debug] [2026-02-06T03:10:02.891Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test 200
+[debug] [2026-02-06T03:10:02.891Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/realmsrpg-test/sites/realmsrpg-test {"name":"projects/realmsrpg-test/sites/realmsrpg-test","defaultUrl":"https://realmsrpg-test.web.app","appId":"1:829555734488:web:ace6f8713d3a56e61064ad","type":"DEFAULT_SITE"}
+[debug] [2026-02-06T03:10:06.837Z] [web frameworks] effective firebase.json:  {
+  "hosting": [
+    {
+      "source": ".",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "frameworksBackend": {
+        "region": "us-central1",
+        "secrets": [
+          "SERVICE_ACCOUNT_EMAIL",
+          "SERVICE_ACCOUNT_PRIVATE_KEY"
+        ]
+      },
+      "site": "realmsrpg-test",
+      "rewrites": [
+        {
+          "source": "/**",
+          "function": {
+            "functionId": "ssrrealmsrpgtest",
+            "region": "us-central1",
+            "pinTag": true
+          }
+        }
+      ],
+      "redirects": [],
+      "headers": [
+        {
+          "source": "/characters",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/(main)/layout,_N_T_/(main)/characters/layout,_N_T_/(main)/characters/page,_N_T_/characters"
+            }
+          ]
+        },
+        {
+          "source": "/_global-error",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/_global-error/layout,_N_T_/_global-error/page,_N_T_/_global-error"
+            }
+          ]
+        },
+        {
+          "source": "/_not-found",
+          "headers": [
+            {
+              "key": "x-nextjs-stale-time",
+              "value": "300"
+            },
+            {
+              "key": "x-nextjs-prerender",
+              "value": "1"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/_not-found/layout,_N_T_/_not-found/page,_N_T_/_not-found"
+            }
+          ]
+        },
+        {
+          "source": "/favicon.ico",
+          "headers": [
+            {
+              "key": "cache-control",
+              "value": "public, max-age=0, must-revalidate"
+            },
+            {
+              "key": "content-type",
+              "value": "image/x-icon"
+            },
+            {
+              "key": "x-next-cache-tags",
+              "value": "_N_T_/layout,_N_T_/favicon.ico/layout,_N_T_/favicon.ico/route,_N_T_/favicon.ico"
+            }
+          ]
+        },
+        {
+          "source": "/**/*.[jt]s",
+          "headers": [
+            {
+              "key": "Set-Cookie",
+              "value": "__FIREBASE_DEFAULTS__=eyJjb25maWciOnsicHJvamVjdElkIjoicmVhbG1zcnBnLXRlc3QiLCJhcHBJZCI6IjE6ODI5NTU1NzM0NDg4OndlYjphY2U2Zjg3MTNkM2E1NmU2MTA2NGFkIiwiZGF0YWJhc2VVUkwiOiJodHRwczovL3JlYWxtc3JwZy10ZXN0LWRlZmF1bHQtcnRkYi5maXJlYmFzZWlvLmNvbSIsInN0b3JhZ2VCdWNrZXQiOiJyZWFsbXNycGctdGVzdC5maXJlYmFzZXN0b3JhZ2UuYXBwIiwiYXBpS2V5IjoiQUl6YVN5RE5jTlhIdU84ZGZjZzE1Wk9rb2E0ZFkzd1oya1lTV3RRIiwiYXV0aERvbWFpbiI6InJlYWxtc3JwZy10ZXN0LmZpcmViYXNlYXBwLmNvbSIsIm1lc3NhZ2luZ1NlbmRlcklkIjoiODI5NTU1NzM0NDg4IiwibWVhc3VyZW1lbnRJZCI6IkctVjMxNTRMTE00RSIsInByb2plY3ROdW1iZXIiOiI4Mjk1NTU3MzQ0ODgiLCJ2ZXJzaW9uIjoiMiJ9LCJfYXV0aFRva2VuU3luY1VSTCI6Ii9fX3Nlc3Npb24ifQ; SameSite=Strict; Expires=2028-01-01T13:50:06.837Z; Path=/;"
+            }
+          ]
+        }
+      ],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "public": ".firebase\\realmsrpg-test\\hosting",
+      "webFramework": "next_ssr"
+    }
+  ],
+  "functions": [
+    {
+      "source": ".firebase\\realmsrpg-test\\functions",
+      "codebase": "firebase-frameworks-realmsrpg-test"
+    }
+  ]
+}
+[debug] [2026-02-06T03:10:06.837Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-06T03:10:06.837Z] > authorizing via signed-in user (realmsroleplaygame@gmail.com)
+[debug] [2026-02-06T03:10:06.837Z] [iam] checking project realmsrpg-test for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-02-06T03:10:06.838Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:06.838Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:06.838Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions [none]
+[debug] [2026-02-06T03:10:06.838Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions  x-goog-user-project=realmsrpg-test
+[debug] [2026-02-06T03:10:06.838Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2026-02-06T03:10:07.143Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions 200
+[debug] [2026-02-06T03:10:07.143Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'realmsrpg-test'...
+[info] 
+[info] i  deploying functions, database, storage, firestore, hosting 
+[debug] [2026-02-06T03:10:07.145Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:07.145Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:07.145Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test [none]
+[debug] [2026-02-06T03:10:07.298Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test 200
+[debug] [2026-02-06T03:10:07.298Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test {"projectNumber":"829555734488","projectId":"realmsrpg-test","lifecycleState":"ACTIVE","name":"RealmsRPG-Test","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-12-30T23:07:45.657722Z"}
+[info] i  functions: preparing codebase firebase-frameworks-realmsrpg-test for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2026-02-06T03:10:07.299Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:07.299Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:07.299Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test/adminSdkConfig [none]
+[debug] [2026-02-06T03:10:07.747Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test/adminSdkConfig 200
+[debug] [2026-02-06T03:10:07.747Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/realmsrpg-test/adminSdkConfig {"projectId":"realmsrpg-test","databaseURL":"https://realmsrpg-test-default-rtdb.firebaseio.com","storageBucket":"realmsrpg-test.firebasestorage.app"}
+[debug] [2026-02-06T03:10:07.747Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:07.747Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:07.747Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/realmsrpg-test/configs [none]
+[debug] [2026-02-06T03:10:08.173Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/realmsrpg-test/configs 200
+[debug] [2026-02-06T03:10:08.173Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/realmsrpg-test/configs {}
+[debug] [2026-02-06T03:10:08.174Z] Validating nodejs source
+[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2026-02-06T03:10:08.851Z] > [functions] package.json contents: {
+  "name": "realms-rpg-next",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-query": "^5.90.16",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "firebase": "^12.7.0",
+    "firebase-admin": "^12.7.0",
+    "firebase-tools": "^15.3.1",
+    "lucide-react": "^0.562.0",
+    "next": "^16.1.6",
+    "next-themes": "^0.4.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-easy-crop": "^5.5.6",
+    "react-hook-form": "^7.70.0",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.5",
+    "zustand": "^5.0.9",
+    "firebase-frameworks": "^0.11.0",
+    "firebase-functions": "^6.0.1"
+  },
+  "main": "server.js",
+  "engines": {
+    "node": "22"
+  }
+}
+[debug] [2026-02-06T03:10:08.851Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase firebase-frameworks-realmsrpg-test to determine what to deploy 
+[debug] [2026-02-06T03:10:08.852Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-06T03:10:08.860Z] Found firebase-functions binary at 'C:\Users\Kadin\Desktop\Code\RealmsRPG-Test\.firebase\realmsrpg-test\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8352
+
+[debug] [2026-02-06T03:10:09.144Z] Got response from /__/functions.yaml {"endpoints":{"ssrrealmsrpgtest":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"secretEnvironmentVariables":[{"key":"SERVICE_ACCOUNT_EMAIL"},{"key":"SERVICE_ACCOUNT_PRIVATE_KEY"}],"labels":{},"httpsTrigger":{},"entryPoint":"ssrrealmsrpgtest"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled... 
+[debug] [2026-02-06T03:10:13.180Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-06T03:10:13.180Z] > authorizing via signed-in user (realmsroleplaygame@gmail.com)
+[debug] [2026-02-06T03:10:13.180Z] [iam] checking project realmsrpg-test for permissions ["firebase.projects.get","firebaseextensions.instances.list"]
+[debug] [2026-02-06T03:10:13.180Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:13.180Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:13.180Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions [none]
+[debug] [2026-02-06T03:10:13.180Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions  x-goog-user-project=realmsrpg-test
+[debug] [2026-02-06T03:10:13.180Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-02-06T03:10:13.474Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions 200
+[debug] [2026-02-06T03:10:13.474Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test:testIamPermissions {"permissions":["firebase.projects.get","firebaseextensions.instances.list"]}
+[debug] [2026-02-06T03:10:13.475Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:13.475Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:13.475Z] >>> [apiv2][query] GET https://firebaseextensions.googleapis.com/v1beta/projects/realmsrpg-test/instances pageSize=100&pageToken=
+[debug] [2026-02-06T03:10:14.015Z] <<< [apiv2][status] GET https://firebaseextensions.googleapis.com/v1beta/projects/realmsrpg-test/instances 200
+[debug] [2026-02-06T03:10:14.015Z] <<< [apiv2][body] GET https://firebaseextensions.googleapis.com/v1beta/projects/realmsrpg-test/instances {}
+[info] i  functions: Loaded environment variables from .env. 
+[info] i  functions: preparing .firebase\realmsrpg-test\functions directory for uploading... 
+[info] i  functions: packaged C:\Users\Kadin\Desktop\Code\RealmsRPG-Test\.firebase\realmsrpg-test\functions (158.92 MB) for uploading 
+[debug] [2026-02-06T03:10:28.208Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:28.208Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:28.208Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v1/projects/realmsrpg-test/locations/-/functions [none]
+[debug] [2026-02-06T03:10:29.044Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v1/projects/realmsrpg-test/locations/-/functions 200
+[debug] [2026-02-06T03:10:29.044Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v1/projects/realmsrpg-test/locations/-/functions {}
+[debug] [2026-02-06T03:10:29.044Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:29.044Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:29.044Z] >>> [apiv2][query] GET https://cloudfunctions.googleapis.com/v2/projects/realmsrpg-test/locations/-/functions filter=environment%3D%22GEN_2%22
+[debug] [2026-02-06T03:10:29.595Z] <<< [apiv2][status] GET https://cloudfunctions.googleapis.com/v2/projects/realmsrpg-test/locations/-/functions 200
+[debug] [2026-02-06T03:10:29.595Z] <<< [apiv2][body] GET https://cloudfunctions.googleapis.com/v2/projects/realmsrpg-test/locations/-/functions {"functions":[{"name":"projects/realmsrpg-test/locations/us-central1/functions/deletePowerFromLibrary","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/e2074b9b-fdbb-42b6-b307-9d81b985f712","runtime":"nodejs20","entryPoint":"deletePowerFromLibrary","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"deletePowerFromLibrary/function-source.zip","generation":"1767970476172641"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"deletePowerFromLibrary/function-source.zip","generation":"1767970476172641"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/deletepowerfromlibrary","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/deletePowerFromLibrary","FUNCTION_TARGET":"deletePowerFromLibrary","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://deletepowerfromlibrary-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"deletepowerfromlibrary-00002-jar","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:36.578537847Z","labels":{"deployment-callable":"true","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05","deployment-tool":"cli-firebase"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/deletePowerFromLibrary","createTime":"2025-12-31T18:22:53.273437282Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/saveItemToLibrary","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/4ef0a0d7-69c4-46bb-80f6-994d41639da0","runtime":"nodejs20","entryPoint":"saveItemToLibrary","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveItemToLibrary/function-source.zip","generation":"1767970476152091"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveItemToLibrary/function-source.zip","generation":"1767970476152091"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/saveitemtolibrary","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/saveItemToLibrary","FUNCTION_TARGET":"saveItemToLibrary","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://saveitemtolibrary-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"saveitemtolibrary-00002-cil","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:45.032654499Z","labels":{"deployment-tool":"cli-firebase","deployment-callable":"true","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/saveItemToLibrary","createTime":"2025-12-31T18:22:53.262850173Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/deleteTechniqueFromLibrary","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/028520f1-1211-4292-a378-7be2c8259b04","runtime":"nodejs20","entryPoint":"deleteTechniqueFromLibrary","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"deleteTechniqueFromLibrary/function-source.zip","generation":"1767970476162214"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"deleteTechniqueFromLibrary/function-source.zip","generation":"1767970476162214"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/deletetechniquefromlibrary","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/deleteTechniqueFromLibrary","FUNCTION_TARGET":"deleteTechniqueFromLibrary","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://deletetechniquefromlibrary-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"deletetechniquefromlibrary-00002-qim","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:36.242562995Z","labels":{"deployment-tool":"cli-firebase","deployment-callable":"true","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/deleteTechniqueFromLibrary","createTime":"2025-12-31T18:22:53.451820291Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/savePowerToLibrary","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/5d3fd2a2-8152-4d63-8f78-ddedcccd7cda","runtime":"nodejs20","entryPoint":"savePowerToLibrary","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"savePowerToLibrary/function-source.zip","generation":"1767970476148408"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"savePowerToLibrary/function-source.zip","generation":"1767970476148408"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/savepowertolibrary","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/savePowerToLibrary","FUNCTION_TARGET":"savePowerToLibrary","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://savepowertolibrary-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"savepowertolibrary-00002-zuj","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:39.674201336Z","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/savePowerToLibrary","createTime":"2025-12-31T18:22:53.356974320Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/saveCharacterToLibraryHttp","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/3d4c7a0f-b079-4425-a3c5-eb7e265ee85b","runtime":"nodejs20","entryPoint":"saveCharacterToLibraryHttp","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveCharacterToLibraryHttp/function-source.zip","generation":"1767970476162620"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveCharacterToLibraryHttp/function-source.zip","generation":"1767970476162620"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/savecharactertolibraryhttp","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/saveCharacterToLibraryHttp","FUNCTION_TARGET":"saveCharacterToLibraryHttp","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://savecharactertolibraryhttp-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"savecharactertolibraryhttp-00002-yip","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:35.386841594Z","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/saveCharacterToLibraryHttp","createTime":"2025-12-31T18:22:53.373018341Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/ssrrealmsrpgtest","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/15995286-2901-4f8b-849e-6b8141d6c68f","runtime":"nodejs22","entryPoint":"ssrrealmsrpgtest","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"ssrrealmsrpgtest/function-source.zip","generation":"1770346712710553"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"ssrrealmsrpgtest/function-source.zip","generation":"1770346712710553"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/ssrrealmsrpgtest","timeoutSeconds":60,"environmentVariables":{"VERCEL_URL":"realmsrpg-test.web.app","__FIREBASE_FRAMEWORKS_ENTRY__":"next.js","__FIREBASE_DEFAULTS__":"{\"config\":{\"projectId\":\"realmsrpg-test\",\"appId\":\"1:829555734488:web:ace6f8713d3a56e61064ad\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\",\"apiKey\":\"AIzaSyDNcNXHuO8dfcg15ZOkoa4dY3wZ2kYSWtQ\",\"authDomain\":\"realmsrpg-test.firebaseapp.com\",\"messagingSenderId\":\"829555734488\",\"measurementId\":\"G-V3154LLM4E\",\"projectNumber\":\"829555734488\",\"version\":\"2\"},\"_authTokenSyncURL\":\"/__session\"}","FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/ssrrealmsrpgtest","FUNCTION_TARGET":"ssrrealmsrpgtest","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://ssrrealmsrpgtest-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"secretEnvironmentVariables":[{"key":"SERVICE_ACCOUNT_EMAIL","projectId":"realmsrpg-test","secret":"SERVICE_ACCOUNT_EMAIL","version":"2"},{"key":"SERVICE_ACCOUNT_PRIVATE_KEY","projectId":"realmsrpg-test","secret":"SERVICE_ACCOUNT_PRIVATE_KEY","version":"1"}],"revision":"ssrrealmsrpgtest-00164-mof","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-02-06T03:04:06.724196013Z","labels":{"firebase-functions-hash":"9a666f22f15a8f895bfd487f9afbb6d9b99b1297","deployment-tool":"cli-firebase","firebase-functions-codebase":"firebase-frameworks-realmsrpg-test"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/ssrrealmsrpgtest","createTime":"2026-01-09T14:54:35.931286969Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/saveTechniqueToLibrary","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/101efd53-bdb9-409a-9a18-3a26ad2ea884","runtime":"nodejs20","entryPoint":"saveTechniqueToLibrary","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveTechniqueToLibrary/function-source.zip","generation":"1767970476138826"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveTechniqueToLibrary/function-source.zip","generation":"1767970476138826"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/savetechniquetolibrary","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/saveTechniqueToLibrary","FUNCTION_TARGET":"saveTechniqueToLibrary","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://savetechniquetolibrary-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"savetechniquetolibrary-00002-kod","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:45.849915563Z","labels":{"deployment-tool":"cli-firebase","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/saveTechniqueToLibrary","createTime":"2025-12-31T18:22:53.355708115Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/saveCreatureToLibrary","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/e51f597a-f7fe-476c-8531-4796a61794a7","runtime":"nodejs20","entryPoint":"saveCreatureToLibrary","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveCreatureToLibrary/function-source.zip","generation":"1767970476131938"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"saveCreatureToLibrary/function-source.zip","generation":"1767970476131938"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/savecreaturetolibrary","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/saveCreatureToLibrary","FUNCTION_TARGET":"saveCreatureToLibrary","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://savecreaturetolibrary-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"savecreaturetolibrary-00002-fax","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:56:38.050789064Z","labels":{"deployment-callable":"true","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05","deployment-tool":"cli-firebase"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/saveCreatureToLibrary","createTime":"2025-12-31T18:22:53.356048865Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/registerUser","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/3db5287e-ae16-4bbf-9e46-10a090a75127","runtime":"nodejs20","entryPoint":"registerUser","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"registerUser/function-source.zip","generation":"1767970476137167"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"registerUser/function-source.zip","generation":"1767970476137167"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/registeruser","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/registerUser","FUNCTION_TARGET":"registerUser","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://registeruser-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"secretEnvironmentVariables":[{"key":"API_KEY","projectId":"realmsrpg-test","secret":"API_KEY","version":"1"},{"key":"APP_ID","projectId":"realmsrpg-test","secret":"APP_ID","version":"1"},{"key":"AUTH_DOMAIN","projectId":"realmsrpg-test","secret":"AUTH_DOMAIN","version":"1"},{"key":"DATABASE_URL","projectId":"realmsrpg-test","secret":"DATABASE_URL","version":"1"},{"key":"MEASUREMENT_ID","projectId":"realmsrpg-test","secret":"MEASUREMENT_ID","version":"1"},{"key":"MESSAGING_SENDER_ID","projectId":"realmsrpg-test","secret":"MESSAGING_SENDER_ID","version":"1"},{"key":"PROJECT_ID","projectId":"realmsrpg-test","secret":"PROJECT_ID","version":"1"},{"key":"STORAGE_BUCKET","projectId":"realmsrpg-test","secret":"STORAGE_BUCKET","version":"1"},{"key":"RECAPTCHA_SECRET_KEY","projectId":"realmsrpg-test","secret":"RECAPTCHA_SECRET_KEY","version":"2"},{"key":"RECAPTCHA_SITE_KEY","projectId":"realmsrpg-test","secret":"RECAPTCHA_SITE_KEY","version":"1"}],"revision":"registeruser-00003-qox","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:44.222612280Z","labels":{"deployment-tool":"cli-firebase","deployment-callable":"true","firebase-functions-hash":"516539e478d526c3c877d4086ccc2624fce5ac0b"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/registerUser","createTime":"2025-12-31T18:22:53.352751302Z","satisfiesPzi":true},{"name":"projects/realmsrpg-test/locations/us-central1/functions/updateUserEmail","buildConfig":{"build":"projects/829555734488/locations/us-central1/builds/3ea3bb96-c09b-44d2-b398-8acd92765f27","runtime":"nodejs20","entryPoint":"updateUserEmail","source":{"storageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"updateUserEmail/function-source.zip","generation":"1767970476152578"}},"environmentVariables":{"GOOGLE_NODE_RUN_SCRIPTS":""},"dockerRepository":"projects/realmsrpg-test/locations/us-central1/repositories/gcf-artifacts","sourceProvenance":{"resolvedStorageSource":{"bucket":"gcf-v2-sources-829555734488-us-central1","object":"updateUserEmail/function-source.zip","generation":"1767970476152578"}},"dockerRegistry":"ARTIFACT_REGISTRY","serviceAccount":"projects/realmsrpg-test/serviceAccounts/829555734488-compute@developer.gserviceaccount.com","automaticUpdatePolicy":{}},"serviceConfig":{"service":"projects/realmsrpg-test/locations/us-central1/services/updateuseremail","timeoutSeconds":60,"environmentVariables":{"FIREBASE_CONFIG":"{\"projectId\":\"realmsrpg-test\",\"databaseURL\":\"https://realmsrpg-test-default-rtdb.firebaseio.com\",\"storageBucket\":\"realmsrpg-test.firebasestorage.app\"}","GCLOUD_PROJECT":"realmsrpg-test","EVENTARC_CLOUD_EVENT_SOURCE":"projects/realmsrpg-test/locations/us-central1/services/updateUserEmail","FUNCTION_TARGET":"updateUserEmail","LOG_EXECUTION_ID":"true"},"maxInstanceCount":20,"ingressSettings":"ALLOW_ALL","uri":"https://updateuseremail-u7cxrbpzqa-uc.a.run.app","serviceAccountEmail":"829555734488-compute@developer.gserviceaccount.com","availableMemory":"256Mi","allTrafficOnLatestRevision":true,"revision":"updateuseremail-00003-rat","maxInstanceRequestConcurrency":80,"availableCpu":"1"},"state":"ACTIVE","updateTime":"2026-01-09T14:55:36.569103258Z","labels":{"deployment-tool":"cli-firebase","deployment-callable":"true","firebase-functions-hash":"af275805b308c488fad037b0e0527a7e1d943e05"},"environment":"GEN_2","url":"https://us-central1-realmsrpg-test.cloudfunctions.net/updateUserEmail","createTime":"2025-12-31T18:22:53.183979431Z","satisfiesPzi":true}]}
+[info] i  functions: ensuring required API run.googleapis.com is enabled... 
+[info] i  functions: ensuring required API eventarc.googleapis.com is enabled... 
+[info] i  functions: ensuring required API pubsub.googleapis.com is enabled... 
+[info] i  functions: ensuring required API storage.googleapis.com is enabled... 
+[info] i  functions: generating the service identity for pubsub.googleapis.com... 
+[debug] [2026-02-06T03:10:29.598Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:29.598Z] Checked if tokens are valid: true, expires at: 1770349863853
+[info] i  functions: generating the service identity for eventarc.googleapis.com... 
+[debug] [2026-02-06T03:10:29.598Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:29.598Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:29.598Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/pubsub.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-02-06T03:10:29.598Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/pubsub.googleapis.com:generateServiceIdentity  x-goog-user-project=829555734488
+[debug] [2026-02-06T03:10:29.598Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/pubsub.googleapis.com:generateServiceIdentity {}
+[debug] [2026-02-06T03:10:29.599Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/eventarc.googleapis.com:generateServiceIdentity [none]
+[debug] [2026-02-06T03:10:29.599Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/eventarc.googleapis.com:generateServiceIdentity  x-goog-user-project=829555734488
+[debug] [2026-02-06T03:10:29.599Z] >>> [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/eventarc.googleapis.com:generateServiceIdentity {}
+[debug] [2026-02-06T03:10:30.211Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/pubsub.googleapis.com:generateServiceIdentity 200
+[debug] [2026-02-06T03:10:30.211Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/pubsub.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-829555734488@gcp-sa-pubsub.iam.gserviceaccount.com","uniqueId":"109688097426417020776"}}
+[debug] [2026-02-06T03:10:30.211Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/eventarc.googleapis.com:generateServiceIdentity 200
+[debug] [2026-02-06T03:10:30.211Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1beta1/projects/829555734488/services/eventarc.googleapis.com:generateServiceIdentity {"name":"operations/finished.DONE_OPERATION","done":true,"response":{"@type":"type.googleapis.com/google.api.serviceusage.v1beta1.ServiceIdentity","email":"service-829555734488@gcp-sa-eventarc.iam.gserviceaccount.com","uniqueId":"109241343766091221680"}}
+[info] i  functions: ensuring required API secretmanager.googleapis.com is enabled... 
+[debug] [2026-02-06T03:10:30.212Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.212Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.212Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.212Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.213Z] >>> [apiv2][query] GET https://secretmanager.googleapis.com/v1/projects/realmsrpg-test/secrets/SERVICE_ACCOUNT_EMAIL/versions/latest [none]
+[debug] [2026-02-06T03:10:30.213Z] >>> [apiv2][query] GET https://secretmanager.googleapis.com/v1/projects/realmsrpg-test/secrets/SERVICE_ACCOUNT_PRIVATE_KEY/versions/latest [none]
+[debug] [2026-02-06T03:10:30.693Z] <<< [apiv2][status] GET https://secretmanager.googleapis.com/v1/projects/realmsrpg-test/secrets/SERVICE_ACCOUNT_EMAIL/versions/latest 200
+[debug] [2026-02-06T03:10:30.693Z] <<< [apiv2][body] GET https://secretmanager.googleapis.com/v1/projects/realmsrpg-test/secrets/SERVICE_ACCOUNT_EMAIL/versions/latest {"name":"projects/829555734488/secrets/SERVICE_ACCOUNT_EMAIL/versions/2","createTime":"2026-01-31T18:01:44.395139Z","state":"ENABLED","replicationStatus":{"automatic":{}},"etag":"\"1649b2e1f7f983\""}
+[debug] [2026-02-06T03:10:30.694Z] Resolved secret version of SERVICE_ACCOUNT_EMAIL to 2.
+[debug] [2026-02-06T03:10:30.700Z] <<< [apiv2][status] GET https://secretmanager.googleapis.com/v1/projects/realmsrpg-test/secrets/SERVICE_ACCOUNT_PRIVATE_KEY/versions/latest 200
+[debug] [2026-02-06T03:10:30.700Z] <<< [apiv2][body] GET https://secretmanager.googleapis.com/v1/projects/realmsrpg-test/secrets/SERVICE_ACCOUNT_PRIVATE_KEY/versions/latest {"name":"projects/829555734488/secrets/SERVICE_ACCOUNT_PRIVATE_KEY/versions/1","createTime":"2026-01-31T18:11:31.148541Z","state":"ENABLED","replicationStatus":{"automatic":{}},"etag":"\"1649b304f11efd\""}
+[debug] [2026-02-06T03:10:30.700Z] Resolved secret version of SERVICE_ACCOUNT_PRIVATE_KEY to 1.
+[debug] [2026-02-06T03:10:30.701Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.701Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.701Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test [none]
+[debug] [2026-02-06T03:10:30.985Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test 200
+[debug] [2026-02-06T03:10:30.985Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/realmsrpg-test {"projectNumber":"829555734488","projectId":"realmsrpg-test","lifecycleState":"ACTIVE","name":"RealmsRPG-Test","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-12-30T23:07:45.657722Z"}
+[debug] [2026-02-06T03:10:30.985Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.985Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:30.985Z] >>> [apiv2][query] GET https://compute.googleapis.com/compute/v1/projects/829555734488 [none]
+[debug] [2026-02-06T03:10:31.402Z] <<< [apiv2][status] GET https://compute.googleapis.com/compute/v1/projects/829555734488 403
+[debug] [2026-02-06T03:10:31.402Z] <<< [apiv2][body] GET https://compute.googleapis.com/compute/v1/projects/829555734488 {"error":{"code":403,"message":"Compute Engine API has not been used in project 829555734488 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 829555734488 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488","serviceTitle":"Compute Engine API","containerInfo":"829555734488","service":"compute.googleapis.com","consumer":"projects/829555734488"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 829555734488 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488"}]}]}}
+[debug] [2026-02-06T03:10:31.403Z] unable to look up default compute service account. Falling back to 829555734488-compute@developer.gserviceaccount.com. Error: {"name":"FirebaseError","children":[],"context":{"body":{"error":{"code":403,"message":"Compute Engine API has not been used in project 829555734488 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","errors":[{"message":"Compute Engine API has not been used in project 829555734488 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","domain":"usageLimits","reason":"accessNotConfigured","extendedHelp":"https://console.developers.google.com"}],"status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"SERVICE_DISABLED","domain":"googleapis.com","metadata":{"activationUrl":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488","serviceTitle":"Compute Engine API","containerInfo":"829555734488","service":"compute.googleapis.com","consumer":"projects/829555734488"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Compute Engine API has not been used in project 829555734488 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developers console API activation","url":"https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488"}]}]}},"response":{"statusCode":403}},"exit":1,"message":"Request to https://compute.googleapis.com/compute/v1/projects/829555734488 had HTTP Error: 403, Compute Engine API has not been used in project 829555734488 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/compute.googleapis.com/overview?project=829555734488 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.","status":403}
+[info] i  database: checking rules syntax... 
+[debug] [2026-02-06T03:10:31.404Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:31.404Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:31.404Z] >>> [apiv2][query] GET https://firebasedatabase.googleapis.com/v1beta/projects/realmsrpg-test/locations/-/instances/realmsrpg-test-default-rtdb [none]
+[debug] [2026-02-06T03:10:31.972Z] <<< [apiv2][status] GET https://firebasedatabase.googleapis.com/v1beta/projects/realmsrpg-test/locations/-/instances/realmsrpg-test-default-rtdb 200
+[debug] [2026-02-06T03:10:31.972Z] <<< [apiv2][body] GET https://firebasedatabase.googleapis.com/v1beta/projects/realmsrpg-test/locations/-/instances/realmsrpg-test-default-rtdb {"name":"projects/829555734488/locations/us-central1/instances/realmsrpg-test-default-rtdb","project":"projects/829555734488","databaseUrl":"https://realmsrpg-test-default-rtdb.firebaseio.com","type":"DEFAULT_DATABASE","state":"ACTIVE"}
+[debug] [2026-02-06T03:10:31.973Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:31.973Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:31.973Z] >>> [apiv2][query] PUT https://realmsrpg-test-default-rtdb.firebaseio.com/.settings/rules.json dryRun=true
+[debug] [2026-02-06T03:10:31.973Z] >>> [apiv2][body] PUT https://realmsrpg-test-default-rtdb.firebaseio.com/.settings/rules.json "{\r\n  \"rules\": {\r\n      \".read\": true,\r\n      \".write\": false\r\n    }\r\n}"
+[debug] [2026-02-06T03:10:32.331Z] <<< [apiv2][status] PUT https://realmsrpg-test-default-rtdb.firebaseio.com/.settings/rules.json 200
+[debug] [2026-02-06T03:10:32.331Z] <<< [apiv2][body] PUT https://realmsrpg-test-default-rtdb.firebaseio.com/.settings/rules.json {"status":"ok"}
+[info] +  database: rules syntax for database realmsrpg-test-default-rtdb is valid 
+[info] i  firebase.storage: checking storage.rules for compilation errors... 
+[debug] [2026-02-06T03:10:32.332Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:32.333Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:32.333Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test [none]
+[debug] [2026-02-06T03:10:32.333Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test [omitted]
+[debug] [2026-02-06T03:10:32.749Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test 200
+[debug] [2026-02-06T03:10:32.749Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test {}
+[info] +  firebase.storage: rules file storage.rules compiled successfully 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-02-06T03:10:32.751Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:32.751Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:32.751Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/realmsrpg-test/databases/(default) [none]
+[debug] [2026-02-06T03:10:33.233Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/realmsrpg-test/databases/(default) 200
+[debug] [2026-02-06T03:10:33.233Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/realmsrpg-test/databases/(default) {"name":"projects/realmsrpg-test/databases/(default)","uid":"659d3a50-7c98-4e1c-88a7-6856c99300d4","createTime":"2025-12-31T15:47:41.577836Z","updateTime":"2025-12-31T15:47:41.577836Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-02-06T02:10:31.088936Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"s","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"INGhiY7yw5IDMO2h+pSw6JED"}
+[info] i  firestore: reading indexes from firestore.indexes.json... 
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-02-06T03:10:33.234Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:33.234Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:33.234Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test [none]
+[debug] [2026-02-06T03:10:33.234Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test [omitted]
+[debug] [2026-02-06T03:10:33.445Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test 200
+[debug] [2026-02-06T03:10:33.445Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/realmsrpg-test:test {}
+[info] +  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-02-06T03:10:33.446Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:33.446Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:33.446Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/realmsrpg-test/versions [none]
+[debug] [2026-02-06T03:10:33.446Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/realmsrpg-test/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase","firebase-web-framework":"next_ssr"}}
+[debug] [2026-02-06T03:10:34.116Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/realmsrpg-test/versions 200
+[debug] [2026-02-06T03:10:34.116Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/realmsrpg-test/versions {"name":"projects/829555734488/sites/realmsrpg-test/versions/7f65b377e5ff6bb6","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase","firebase-web-framework":"next_ssr"}}
+[debug] [2026-02-06T03:10:34.116Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:34.116Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:34.116Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/realmsrpg-test/billingInfo [none]
+[debug] [2026-02-06T03:10:34.539Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/realmsrpg-test/billingInfo 200
+[debug] [2026-02-06T03:10:34.539Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/realmsrpg-test/billingInfo {"name":"projects/realmsrpg-test/billingInfo","projectId":"realmsrpg-test","billingAccountName":"billingAccounts/014BAB-5A07BD-BD7A4F","billingEnabled":true}
+[debug] [2026-02-06T03:10:34.540Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:34.540Z] Checked if tokens are valid: true, expires at: 1770349863853
+[debug] [2026-02-06T03:10:34.540Z] >>> [apiv2][query] POST https://cloudfunctions.googleapis.com/v2/projects/realmsrpg-test/locations/us-central1/functions:generateUploadUrl [none]
+[debug] [2026-02-06T03:10:34.736Z] <<< [apiv2][status] POST https://cloudfunctions.googleapis.com/v2/projects/realmsrpg-test/locations/us-central1/functions:generateUploadUrl 200
+[debug] [2026-02-06T03:10:34.736Z] <<< [apiv2][body] POST https://cloudfunctions.googleapis.com/v2/projects/realmsrpg-test/locations/us-central1/functions:generateUploadUrl {"uploadUrl":"https://storage.googleapis.com/gcf-v2-uploads-829555734488.us-central1.cloudfunctions.appspot.com/e0ae1037-2333-49fa-a2da-6b20b5a5266b.zip?GoogleAccessId=service-829555734488@gcf-admin-robot.iam.gserviceaccount.com&Expires=1770349232&Signature=WajDsMO%2BhF%2Fx62KFEOz1VG9%2B5aHZySBfLTCBhU4OB24F38UshqVsOakzEt7n7xK3Q2qckq5aMielMhpg3r%2B32llLgI6gIDRhmFVph%2BcKUPj54hWxHYR6HlNRguNESHQEeK%2B0ybQIgnQIeKv4N6S05LGFFGws%2BZs2eEJlHPBU6RnskDkBuSupTy2IWA70iRNhLzz%2F9Jkcqp5lRaqQiWlWVH5Vj4RsRPUfw7a4f%2B7x2GMIC6d6d27gHwAS7a1OiRyyfjd3cfWu9wOVbk9HRIscYWyWOKiOGhwWaXfaYvYaujDCqyhJqrDq7aRWSvtt4sE3Df2njbiT%2Fx%2BreBZjHs0fgQ%3D%3D","storageSource":{"bucket":"gcf-v2-uploads-829555734488.us-central1.cloudfunctions.appspot.com","object":"e0ae1037-2333-49fa-a2da-6b20b5a5266b.zip"}}
+[debug] [2026-02-06T03:10:34.737Z] >>> [apiv2][query] PUT https://storage.googleapis.com/gcf-v2-uploads-829555734488.us-central1.cloudfunctions.appspot.com/e0ae1037-2333-49fa-a2da-6b20b5a5266b.zip GoogleAccessId=service-829555734488%40gcf-admin-robot.iam.gserviceaccount.com&Expires=1770349232&Signature=WajDsMO%2BhF%2Fx62KFEOz1VG9%2B5aHZySBfLTCBhU4OB24F38UshqVsOakzEt7n7xK3Q2qckq5aMielMhpg3r%2B32llLgI6gIDRhmFVph%2BcKUPj54hWxHYR6HlNRguNESHQEeK%2B0ybQIgnQIeKv4N6S05LGFFGws%2BZs2eEJlHPBU6RnskDkBuSupTy2IWA70iRNhLzz%2F9Jkcqp5lRaqQiWlWVH5Vj4RsRPUfw7a4f%2B7x2GMIC6d6d27gHwAS7a1OiRyyfjd3cfWu9wOVbk9HRIscYWyWOKiOGhwWaXfaYvYaujDCqyhJqrDq7aRWSvtt4sE3Df2njbiT%2Fx%2BreBZjHs0fgQ%3D%3D
+[debug] [2026-02-06T03:10:34.737Z] >>> [apiv2][body] PUT https://storage.googleapis.com/gcf-v2-uploads-829555734488.us-central1.cloudfunctions.appspot.com/e0ae1037-2333-49fa-a2da-6b20b5a5266b.zip [stream]

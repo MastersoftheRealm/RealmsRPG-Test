@@ -266,14 +266,15 @@ export function SkillRow({
           </td>
         )}
         
-        {/* Remove button (edit mode) */}
+        {/* Remove button (edit mode) - simple red X matching add button style */}
         {isEditing && onRemove && (
           <td className="py-2 text-center">
             <IconButton
-              variant="danger"
+              variant="ghost"
               size="sm"
               onClick={() => onRemove()}
               label="Remove skill"
+              className="text-danger hover:text-danger-600 hover:bg-transparent"
             >
               <X className="w-4 h-4" />
             </IconButton>
@@ -295,15 +296,17 @@ export function SkillRow({
       )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* Remove button for creatures */}
+            {/* Remove button for creatures - simple red X matching add button style */}
             {onRemove && (
-              <button
+              <IconButton
+                variant="ghost"
+                size="sm"
                 onClick={() => onRemove()}
-                className="w-5 h-5 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center text-sm font-medium transition-colors"
-                title="Remove skill"
+                label="Remove skill"
+                className="text-danger hover:text-danger-600 hover:bg-transparent"
               >
-                ×
-              </button>
+                <X className="w-4 h-4" />
+              </IconButton>
             )}
             
             {/* Proficiency dot */}

@@ -15,6 +15,17 @@ Before marking a task `done`, verify:
 
 If a task was marked done but a criterion was missed, create a follow-up task (e.g., TASK-053 for TASK-022's missing confirmation dialog).
 
+## Common File Path Corrections
+
+Task queue `related_files` may reference outdated paths. When implementing, prefer these verified paths:
+
+| Stale / Wrong | Correct |
+|--------------|---------|
+| `header-section.tsx` | `sheet-action-toolbar.tsx` (character sheet actions) |
+| `defenses-section.tsx` | Defenses are in `abilities-section.tsx` |
+| `src/lib/constants/power-parts.ts` | `src/lib/game/creator-constants.ts` |
+| `public/images/dice/` | Dice images in `public/images/` (D4.png, D6.png, etc.) |
+
 ## Components
 
 | Category | Location | Notes |
@@ -26,6 +37,18 @@ If a task was marked done but a criterion was missed, create a follow-up task (e
 | Creators | `src/components/creator/` | ability-score-editor, health-energy-allocator, creator-summary-panel |
 | Filters | `src/components/shared/filters/` | TagFilter, CheckboxFilter, SelectFilter, AbilityRequirementFilter |
 
+## Component Decision Tree (List/Selection UI)
+
+| Use Case | Component | Notes |
+|----------|-----------|-------|
+| Powers, techniques, feats, equipment in lists | **GridListRow** | Sortable columns, leftSlot/rightSlot, expandable rows |
+| Codex/Library browse, item cards | **ItemCard** / **ItemList** | Card layout, view/edit/duplicate/delete actions |
+| Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
+| Species detail view, level-up wizard | Custom layouts | Justified exceptions |
+| Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
+
+See `UI_COMPONENT_REFERENCE.md` for full component details.
+
 ## Key Files
 
 | Purpose | File |
@@ -35,6 +58,26 @@ If a task was marked done but a criterion was missed, create a follow-up task (e
 | Character logic | `src/services/character-service.ts`, `src/hooks/use-characters.ts` |
 | Creator state | `src/stores/character-creator-store.ts` |
 | Firebase | `src/lib/firebase/` |
+| **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |
+| Architecture | `src/docs/ARCHITECTURE.md` |
+
+## Hooks & Services
+
+| Need | Hook / Service |
+|------|----------------|
+| Auth state | `useAuth` |
+| User's characters | `useCharacters` |
+| User's library (powers, techniques, items, creatures) | `useUserLibrary` |
+| RTDB reference data (parts, skills, feats, species) | `useRTDB` |
+| Character CRUD | `character-service.ts` (via useCharacters) |
+
+**Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useRTDB()` for correct EN/TP costs. See `ARCHITECTURE.md`.
+
+## Character Creator Step Order
+
+1. Species → 2. Powers → 3. Skills → 4. Feats → 5. Archetype → 6. Ancestry → 7. Abilities → 8. Equipment → 9. Finalize
+
+Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx`, `abilities-step.tsx`).
 
 ## Pages / Routes
 
@@ -60,6 +103,7 @@ If a task was marked done but a criterion was missed, create a follow-up task (e
 | Tasks | `src/docs/ai/AI_TASK_QUEUE.md` |
 | Changelog | `src/docs/ai/AI_CHANGELOG.md` |
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
+| Game rules audit | `src/docs/GAME_RULES_AUDIT.md` — code vs. rulebook mismatches |
 
 ## Creating New Tasks
 

@@ -7,6 +7,9 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 1. **Read** `src/docs/ai/AI_TASK_QUEUE.md` — current tasks and priorities.
 2. **Read** `src/docs/ai/AGENT_GUIDE.md` — component locations, patterns, sources of truth.
 3. **Check** `src/docs/ALL_FEEDBACK_CLEAN.md` — raw owner feedback (convert new entries to tasks if needed).
+4. **Reference when needed:**
+   - `src/docs/GAME_RULES.md` — terminology, formulas, display conventions (validation, caps, tooltips, calculations).
+   - `src/docs/ARCHITECTURE.md` — data flow, Firebase structure, enrichment pipeline.
 
 ## Core Principles
 

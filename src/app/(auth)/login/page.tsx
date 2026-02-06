@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Login Page
  * ===========
  * User authentication page
@@ -28,11 +28,16 @@ function LoginContent() {
   const [auth, setAuth] = useState<Auth | null>(null);
   const [db, setDb] = useState<Firestore | null>(null);
   
-  // Get redirect path from URL params or sessionStorage
+  // Get redirect path from URL params or sessionStorage (default to home when in doubt)
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
-    return urlRedirect || sessionRedirect || '/characters';
+    const raw = urlRedirect || sessionRedirect || '/';
+    // Never redirect back to auth pages
+    if (raw === '/login' || raw === '/register' || raw === '/forgot-password' || raw === '/forgot-username') {
+      return '/';
+    }
+    return raw;
   };
 
   // Wait for Firebase to initialize

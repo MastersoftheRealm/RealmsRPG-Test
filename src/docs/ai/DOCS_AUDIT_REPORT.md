@@ -1,80 +1,71 @@
 # Documentation & Task Compliance Audit
 
-**Date:** 2026-02-05  
+**Date:** 2026-02-05 (initial), 2026-02-06 (updated)  
 **Purpose:** Verify documentation accuracy and task completion compliance for AI agents.
 
 ---
 
-## 1. Task Compliance — Incomplete or Non-Compliant
+## 1. Task Compliance — Status
 
-### TASK-022: Feat deletion — confirmation dialog missing
+### Previously Incomplete (Now Resolved)
 
-**Acceptance criteria:** "Confirmation dialog before deletion"  
-**Current state:** Feat deletion calls `handleRemoveFeat` directly via GridListRow's onDelete. No confirmation dialog.  
-**Status:** ❌ INCOMPLETE — Add DeleteConfirmModal or similar before feat removal.
+| Task | Issue | Resolution |
+|------|-------|------------|
+| TASK-022 | Feat deletion lacked confirmation dialog | TASK-053 created and completed — DeleteConfirmModal added |
+| TASK-048 | Library tab order already implemented | Marked done |
 
-### TASK-048: Library tab ordering — already implemented
+### Current Open Tasks
 
-**Acceptance criteria:** Tab order Feats → Powers → Techniques → Inventory → Proficiencies → Notes; default Feats.  
-**Current state:** `library-section.tsx` tabs array order matches; `useState<TabType>('feats')` sets default.  
-**Status:** ✅ ALREADY DONE — Task can be marked done (was not-started).
+- TASK-062: Match character library section heights to archetype section
+- TASK-063: Creature creator basic info dropdown alignment and sizing
 
 ---
 
-## 2. Documentation Inaccuracies
+## 2. Documentation Inaccuracies — Resolved
 
 ### Task Queue (AI_TASK_QUEUE.md)
 
-| Task | Issue |
-|------|-------|
-| TASK-016 | `related_files` lists `defenses-section.tsx` — file does not exist. Defenses are in `abilities-section.tsx`. |
-| TASK-027 | `related_files` lists `src/lib/constants/power-parts.ts` — file does not exist. Actual file: `src/lib/game/creator-constants.ts`. |
-| TASK-030, TASK-031 | `related_files` lists `header-section.tsx` — file does not exist. Replaced by SheetActionToolbar. |
-| TASK-032 | `related_files` lists `public/images/dice/` — subfolder does not exist. Dice images are in `public/images/` (D4.png, D6.png, etc.). |
+Stale `related_files` were corrected. AGENT_GUIDE now includes a **Common File Path Corrections** section for future reference:
 
-### ALL_FEEDBACK_CLEAN.md
-
-- Extract script looks for `## Raw Entries` or `### Raw Entries` — doc uses "### Raw Entries (chronological)". Regex `#{2,} Raw Entries` matches. ✅ OK.
+| Stale Path | Correct Path |
+|------------|--------------|
+| `header-section.tsx` | `sheet-action-toolbar.tsx` |
+| `defenses-section.tsx` | Defenses in `abilities-section.tsx` |
+| `src/lib/constants/power-parts.ts` | `src/lib/game/creator-constants.ts` |
+| `public/images/dice/` | `public/images/` (D4.png, etc.) |
 
 ---
 
-## 3. Doc Improvements for AI Agents
+## 3. Doc Improvements — Completed
 
-### AGENT_GUIDE.md
-
-- Add note: "Verify related_files when implementing — some task queue entries have stale paths."
-- Consider adding "Common file path corrections" section.
-
-### AGENTS.md
-
-- Add: "When implementing a task, verify acceptance criteria are fully met before marking done."
-- Add: "Check that related_files in task queue match actual codebase paths."
-
-### UNIFICATION_STATUS.md
-
-- Add: "TASK-048 (Library tab order) is already implemented — default Feats, correct order."
-
-### extract_feedback.js
-
-- Script uses "Raw Entries" — doc section is "### Raw Entries (chronological)". Ensure consistency. Human instructions say "Raw Feedback Log" but script parses "Raw Entries". Document this in ALL_FEEDBACK_CLEAN or script header.
+| Item | Status |
+|------|--------|
+| AGENT_GUIDE: Verify related_files when implementing | ✅ Added in Verification section |
+| AGENT_GUIDE: Common file path corrections | ✅ Added |
+| AGENTS.md: Verify acceptance criteria before marking done | ✅ Already present |
+| UNIFICATION_STATUS: TASK-048 note | ✅ TASK-048 marked done |
+| TASK-054: Agent verification guidelines | ✅ Completed |
 
 ---
 
-## 4. Actions Taken (Post-Audit)
+## 4. New Documentation (Feb 2026)
 
-- **TASK-022** — Added compliance gap note; created TASK-053 for confirmation dialog.
-- **TASK-048** — Marked done (was already implemented).
-- **TASK-016, TASK-027, TASK-030, TASK-031, TASK-032** — Fixed stale related_files in AI_TASK_QUEUE.
-- **TASK-053** — Created: Add confirmation dialog before feat deletion.
-- **TASK-054** — Created: Documentation — add agent verification guidelines.
+| Doc | Purpose |
+|-----|---------|
+| `ARCHITECTURE.md` | Data flow, Firebase structure, enrichment pipeline, hooks/services |
+| `GAME_RULES.md` | Skill caps, defense caps, progression, ability costs |
+| AGENT_GUIDE: Component decision tree | When to use GridListRow vs ItemCard vs ItemList |
+| AGENT_GUIDE: Hooks & Services | useAuth, useCharacters, useUserLibrary, useRTDB |
+| AGENT_GUIDE: Character creator step order | Species → Powers → Skills → … → Finalize |
+| UI_COMPONENT_REFERENCE: Component decision tree | Quick reference for list/selection UI |
 
 ---
 
 ## 5. Summary
 
-| Category | Count |
-|----------|-------|
-| Tasks with incomplete acceptance criteria | 1 (TASK-022) |
-| Tasks already done but not marked | 1 (TASK-048) |
-| Task queue related_files inaccuracies | 5 tasks |
-| Doc improvement items | 4 |
+| Category | Status |
+|----------|--------|
+| Task compliance gaps | Resolved (TASK-053) |
+| Stale related_files | Corrected; AGENT_GUIDE has correction reference |
+| Doc improvements | Completed |
+| New architecture/game-rules docs | Added |

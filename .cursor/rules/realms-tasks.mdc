@@ -8,6 +8,7 @@ alwaysApply: true
 **Before implementing:**
 1. Read `src/docs/ai/AI_TASK_QUEUE.md` — pick highest-priority `not-started` task.
 2. Read `src/docs/ai/AGENT_GUIDE.md` — sources of truth, component locations.
+3. For validation, caps, tooltips, or calculations: reference `src/docs/GAME_RULES.md` (terminology, formulas, display conventions).
 
 **When implementing:**
 - Update task `status` to `in-progress`, then `done` when merged.
@@ -26,6 +27,7 @@ When the owner provides feedback (raw text, messages, or updates to `ALL_FEEDBAC
 - Does an existing task in `AI_TASK_QUEUE.md` already cover this? (search by keyword)
 - Is it already in a curated section of `ALL_FEEDBACK_CLEAN.md`?
 - Has it already been implemented in the codebase? (verify with code search)
+- If it concerns terminology, formulas, or display: does `GAME_RULES.md` define the correct usage?
 
 **Step 3 — Gap identification:** Any item NOT covered by an existing task or verified as done gets:
 - A new curated section entry in `ALL_FEEDBACK_CLEAN.md`

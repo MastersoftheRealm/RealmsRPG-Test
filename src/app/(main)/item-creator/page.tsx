@@ -1346,7 +1346,7 @@ function ItemCreatorContent() {
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Ability Requirement</h3>
             <p className="text-sm text-text-secondary mb-4">
-              Require a minimum ability score to use this {armamentType.toLowerCase()} effectively.
+              Require a minimum Ability to use this {armamentType.toLowerCase()} effectively.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex-1 min-w-[200px]">

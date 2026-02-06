@@ -2,6 +2,29 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: TASK-064 — Game rules audit fixes | files: creature-stat-block.tsx, item-creator/page.tsx, creature-creator/page.tsx, encounter-tracker/page.tsx, GAME_RULES_AUDIT.md, AI_TASK_QUEUE.md | TASK: TASK-064 | Summary:
+  - CreatureStatBlock: Realms ability order (STR, VIT, AGI, ACU, INT, CHA); legacy map for intellect/perception/willpower; grid-cols-6
+  - Item creator: "ability score" → "Ability"
+  - Creature creator + encounter-tracker: "Reflex" → "Reflexes"
+  - Build passes
+
+- 2026-02-06 | agent:cursor | Session: GAME_RULES workflow + audit | files: AGENTS.md, realms-tasks.mdc, AGENT_GUIDE.md, GAME_RULES_AUDIT.md, AI_TASK_QUEUE.md, README.md | Summary:
+  - Added GAME_RULES.md to agent workflows: AGENTS.md (reference when needed), realms-tasks.mdc (before implementing + feedback cross-reference), AGENT_GUIDE.md (when to use)
+  - Created GAME_RULES_AUDIT.md: audit of code vs Core Rulebook — terminology, descriptions, schema mismatches
+  - Created TASK-064: Fix CreatureStatBlock ability schema (intellect/perception/willpower → acuity/intelligence/charisma), "ability score" → "Ability" in copy, Reflex → Reflexes
+
+- 2026-02-05 | agent:cursor | Session: TASK-062, TASK-063 — Section heights and creature creator alignment | files: characters/[id]/page.tsx, creature-creator/page.tsx | TASKs: TASK-062, TASK-063 | Summary:
+  - TASK-062: Added min-h-[400px] to Skills, Archetype, and Library section wrappers for uniform height when adjacent
+  - TASK-063: Basic Info layout — Name/Level/Type/Size in single responsive row; Level w-20, Type w-36, Size w-28; items-end for alignment
+
+- 2026-02-06 | agent:cursor | Session: Documentation overhaul — architecture, game rules, agent guide | files: ARCHITECTURE.md, GAME_RULES.md, AGENT_GUIDE.md, UI_COMPONENT_REFERENCE.md, DOCS_AUDIT_REPORT.md, README.md, UNIFICATION_STATUS.md, AGENTS.md, ALL_FEEDBACK_CLEAN.md | Summary:
+  - Created ARCHITECTURE.md: Firebase structure, data flow, enrichment pipeline, hooks/services
+  - Created GAME_RULES.md: Skill caps (3), defense caps, progression, ability costs, recovery rules
+  - Updated AGENT_GUIDE: Common file path corrections, component decision tree, hooks table, character creator step order
+  - Updated UI_COMPONENT_REFERENCE: Component decision tree (GridListRow vs ItemCard vs ItemList)
+  - Updated DOCS_AUDIT_REPORT: Reflected resolved items, added new docs section
+  - Updated README, UNIFICATION_STATUS, AGENTS.md, ALL_FEEDBACK_CLEAN with new doc references
+
 - 2026-02-05 | agent:cursor | Session: TASK-049 — Sortable list headers in library-section | files: library-section.tsx | TASK: TASK-049 | Summary:
   - Library-section had clickable ListHeaders but data wasn't sorted
   - Added sortByCol helper and useMemo for all 6 lists (innate/regular powers, techniques, weapons, armor, equipment)

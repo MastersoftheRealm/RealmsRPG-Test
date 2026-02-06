@@ -66,7 +66,7 @@ const CONDITION_OPTIONS: ConditionDef[] = [
   { name: "Dying", leveled: false, description: "When your Hit Point total is reduced to zero or a negative value, you enter the dying condition. Each turn, at the beginning of your turn, you take 1d4 irreducible damage, doubling each turn." },
   { name: "Exhausted", leveled: true, description: "Exhaustion reduces all bonuses and Evasion by an amount equal to its level. At level 10, the character dies." },
   { name: "Exposed", leveled: true, description: "Exposed creatures decrease their Evasion by 1 for each level of Exposed." },
-  { name: "Faint", leveled: false, description: "You have -1 to Evasion, Might, Reflex, and on all D20 rolls requiring balance or poise." },
+  { name: "Faint", leveled: false, description: "You have -1 to Evasion, Might, Reflexes, and on all D20 rolls requiring balance or poise." },
   { name: "Frightened", leveled: false, description: "Frightened creatures have -2 on all scores and D20 rolls against the source of their fear." },
   { name: "Grappled", leveled: false, description: "Grappled targets have -2 to attack rolls, are +2 to hit, and cannot take movement Actions." },
   { name: "Hidden", leveled: false, description: "While hidden, you have a +2 bonus on attack rolls made against creatures unaware of your location." },

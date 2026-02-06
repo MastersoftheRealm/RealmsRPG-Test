@@ -1,6 +1,6 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-02-05
+Last updated: 2026-02-06
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -14,6 +14,7 @@ How to use
 
 Agent Integration
 - Read `src/docs/ai/AGENT_GUIDE.md` for workflow and sources of truth.
+- For data flow and game rules: `ARCHITECTURE.md`, `GAME_RULES.md`.
 - Workflow:
 	1. Human appends raw feedback to this file (bottom) using the Raw Entry Template.
 	2. AI agent runs `node scripts/extract_feedback.js` and creates a task in `src/docs/ai/AI_TASK_QUEUE.md` using `AI_REQUEST_TEMPLATE.md`.

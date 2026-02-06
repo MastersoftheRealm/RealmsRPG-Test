@@ -1,10 +1,11 @@
 'use client';
 
 /**
- * CreatureStatBlock - D&D-style Creature Display
- * ===============================================
+ * CreatureStatBlock - Realms Creature Display
+ * ===========================================
  * Compact, scannable stat block format for creatures.
  * Used in Library, Encounter Tracker, and Creature Creator preview.
+ * Uses Realms ability names: Strength, Vitality, Agility, Acuity, Intelligence, Charisma.
  */
 
 import { useState } from 'react';
@@ -18,11 +19,16 @@ import { Button } from '@/components/ui';
 
 export interface CreatureAbilities {
   strength?: number;
-  agility?: number;
   vitality?: number;
-  intellect?: number;
+  agility?: number;
+  acuity?: number;
+  intelligence?: number;
   charisma?: number;
+  /** @deprecated Use intelligence - legacy D&D-style */
+  intellect?: number;
+  /** @deprecated Use acuity - legacy D&D-style */
   perception?: number;
+  /** @deprecated Use charisma - legacy D&D-style */
   willpower?: number;
   [key: string]: number | undefined;
 }
@@ -87,12 +93,14 @@ function formatModifier(value: number): string {
 function getAbilityAbbrev(ability: string): string {
   const abbrevs: Record<string, string> = {
     strength: 'STR',
-    agility: 'AGI',
     vitality: 'VIT',
-    intellect: 'INT',
+    agility: 'AGI',
+    acuity: 'ACU',
+    intelligence: 'INT',
     charisma: 'CHA',
-    perception: 'PER',
-    willpower: 'WIL',
+    intellect: 'INT',    // legacy
+    perception: 'PER',   // legacy
+    willpower: 'WIL',    // legacy
   };
   return abbrevs[ability.toLowerCase()] || ability.slice(0, 3).toUpperCase();
 }
@@ -113,17 +121,35 @@ function getDefenseAbbrev(defense: string): string {
 // Sub-components
 // =============================================================================
 
+/** Realms ability order: STR, VIT, AGI, ACU, INT, CHA */
+const REALMS_ABILITY_ORDER = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
+
+/** Legacy D&D-style keys for backward compatibility */
+const LEGACY_ABILITY_MAP: Record<string, string> = {
+  intellect: 'intelligence',
+  perception: 'acuity',
+  willpower: 'charisma',
+};
+
 function AbilityRow({ abilities }: { abilities: CreatureAbilities }) {
-  const order = ['strength', 'agility', 'vitality', 'intellect', 'charisma', 'perception', 'willpower'];
-  const entries = order.filter(key => abilities[key] !== undefined);
+  const entries = REALMS_ABILITY_ORDER.filter(key => {
+    const val = abilities[key];
+    if (val !== undefined) return true;
+    const legacyKey = Object.entries(LEGACY_ABILITY_MAP).find(([, v]) => v === key)?.[0];
+    return legacyKey && abilities[legacyKey] !== undefined;
+  }).map(key => {
+    const val = abilities[key];
+    if (val !== undefined) return { key, value: val };
+    const legacyKey = Object.entries(LEGACY_ABILITY_MAP).find(([, v]) => v === key)?.[0];
+    const legacyVal = legacyKey ? abilities[legacyKey] : undefined;
+    return legacyVal !== undefined ? { key, value: legacyVal } : null;
+  }).filter((e): e is { key: (typeof REALMS_ABILITY_ORDER)[number]; value: number } => e !== null);
   
   return (
-    <div className="grid grid-cols-7 gap-1 text-center text-xs">
-      {entries.map((ability) => {
-        const value = abilities[ability] ?? 0;
-        return (
-          <div key={ability} className="flex flex-col">
-            <span className="font-bold text-text-muted">{getAbilityAbbrev(ability)}</span>
+    <div className="grid grid-cols-6 gap-1 text-center text-xs">
+      {entries.map(({ key, value }) => (
+          <div key={key} className="flex flex-col">
+            <span className="font-bold text-text-muted">{getAbilityAbbrev(key)}</span>
             <span className={cn(
               'font-medium',
               value > 0 ? 'text-success-600' : value < 0 ? 'text-danger-600' : 'text-text-muted'
@@ -131,8 +157,7 @@ function AbilityRow({ abilities }: { abilities: CreatureAbilities }) {
               {formatModifier(value)}
             </span>
           </div>
-        );
-      })}
+        ))}
     </div>
   );
 }
