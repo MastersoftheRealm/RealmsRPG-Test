@@ -9,7 +9,7 @@
 
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ThemeToggleProps {
@@ -22,6 +22,7 @@ interface ThemeToggleProps {
 const THEME_OPTIONS = [
   { value: 'light', label: 'Light', icon: Sun },
   { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Monitor },
 ] as const;
 
 export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProps) {

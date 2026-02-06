@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Root Layout
  * ============
  * Main application layout with fonts, metadata, and providers
@@ -62,7 +62,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Nova+Flat&display=swap" rel="stylesheet" />
       </head>
-      <body className="min-h-screen bg-surface text-on-surface font-sans antialiased">
+      <body className="min-h-screen bg-surface text-text-primary font-sans antialiased">
         <ThemeProvider>
           <QueryProvider>
             <AuthProvider>
