@@ -8,7 +8,9 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
-    "inject-env-vanilla": "node scripts/inject-env-vanilla.js"
+    "inject-env-vanilla": "node scripts/inject-env-vanilla.js",
+    "db:seed": "node scripts/seed-to-supabase.js",
+    "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -21,7 +21,8 @@ function toNumArray(val: unknown): number[] {
 }
 
 export async function GET() {
-  const [feats, skills, species, traits, parts, properties, equipment, archetypes, creatureFeats] = await Promise.all([
+  try {
+    const [feats, skills, species, traits, parts, properties, equipment, archetypes, creatureFeats] = await Promise.all([
     prisma.codexFeat.findMany(),
     prisma.codexSkill.findMany(),
     prisma.codexSpecies.findMany(),
@@ -211,4 +212,12 @@ export async function GET() {
     archetypes: codexArchetypes,
     creatureFeats: codexCreatureFeats,
   });
+  } catch (err) {
+    console.error('[Codex API] Database error:', err);
+    const message = err instanceof Error ? err.message : 'Unknown database error';
+    return NextResponse.json(
+      { error: 'Failed to load codex', details: process.env.NODE_ENV === 'development' ? message : undefined },
+      { status: 500 }
+    );
+  }
 }
