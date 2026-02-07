@@ -1,10 +1,10 @@
 /**
  * Equipment Step - Codex-Style
  * =============================
- * Select starting equipment with real data from Firebase.
+ * Select starting equipment with real data from Codex.
  * Uses Codex-style filtering and list presentation.
- * - Weapons and Armor come from user's Firestore item library
- * - General equipment comes from RTDB items
+ * - Weapons and Armor come from user's item library (Prisma)
+ * - General equipment comes from Codex items
  * Supports quantity selection for equipment items
  */
 
@@ -67,7 +67,7 @@ interface SelectedItem {
 
 export function EquipmentStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
-  // Fetch user's item library (weapons/armor) from Firestore
+  // Fetch user's item library (weapons/armor) from API
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
   // Fetch general equipment from Codex
   const { data: codexEquipment, isLoading: codexLoading, error: codexError } = useEquipment();

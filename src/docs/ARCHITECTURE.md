@@ -10,7 +10,7 @@
 
 RealmsRPG uses Next.js (App Router), React, Tailwind, Supabase (PostgreSQL, Auth, Storage), and Prisma. Data flows through:
 
-1. **Supabase/Prisma** — Codex reference data (parts, skills, feats, species) via `/api/codex`; Firestore still used for characters/library during migration
+1. **Supabase/Prisma** — All data: Codex reference data via `/api/codex`; characters, library, campaigns, encounters via Prisma
 2. **Hooks** — React Query + custom hooks for fetching and caching (`useCodexFeats`, `useCodexPowerParts`, etc.)
 3. **Enrichment** — `data-enrichment.ts` resolves saved IDs against Codex parts and user library to compute display values
 4. **Services** — Character CRUD, Codex API
@@ -115,4 +115,4 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 
 1. **List views with costs:** Load library + Codex parts, then enrich before rendering. Do not block render on `!partsDb.length` — show data as soon as library loads; costs update when parts are available.
 2. **Character sheet:** Uses `useCharacters`, `useUserLibrary`, Codex hooks. Enrichment happens in `library-section.tsx` and similar components.
-3. **Creators:** Use Codex hooks for part/property options. Save to Firestore via `useUserLibrary` mutations (during migration).
+3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUserLibrary` mutations (Prisma).

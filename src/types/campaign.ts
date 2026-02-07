@@ -33,7 +33,7 @@ export interface Campaign {
   inviteCode: string;
   /** Characters in the campaign (owner can add up to 5 of their own; others add 1 when joining) */
   characters: CampaignCharacter[];
-  /** User IDs with characters in the campaign (for Firestore security rules) */
+  /** User IDs with characters in the campaign (for access control) */
   memberIds: string[];
   createdAt?: Date | string;
   updatedAt?: Date | string;

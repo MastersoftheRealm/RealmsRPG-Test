@@ -7,7 +7,7 @@
  * - Select power parts from RTDB database
  * - Configure option levels for each part
  * - Calculate energy and training point costs
- * - Save to user's Firestore library
+ * - Save to user's library (Prisma)
  */
 
 'use client';
@@ -474,7 +474,7 @@ function PowerCreatorContent() {
     setName(power.name || '');
     setDescription(power.description || '');
     
-    // Load parts - the data structure from Firestore may vary
+    // Load parts - the data structure from Prisma may vary
     const savedParts = (power.parts || power.powerParts || []) as Array<{
       id?: number | string;
       name?: string;

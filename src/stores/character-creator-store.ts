@@ -210,7 +210,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         const allocatedHealth = draft.healthPoints || 0;
         const allocatedEnergy = draft.energyPoints || 0;
         
-        // Build archetype without undefined fields (Firebase doesn't allow undefined)
+        // Build archetype without undefined fields (JSONB compatibility)
         const archetype = draft.archetype ? {
           id: draft.archetype.id,
           name: draft.archetype.name,

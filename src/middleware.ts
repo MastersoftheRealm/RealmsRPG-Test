@@ -1,8 +1,7 @@
 /**
  * Next.js Middleware
  * ==================
- * Runs on every request. Currently refreshes Supabase session when migrated.
- * Firebase auth still active until Phase 4 migration.
+ * Runs on every request. Refreshes Supabase session via @supabase/ssr.
  */
 
 import { updateSession } from '@/lib/supabase/middleware';

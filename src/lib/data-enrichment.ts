@@ -441,7 +441,7 @@ export function enrichCharacterData(
 // =============================================================================
 
 /**
- * Fields that should be saved to Firestore (minimal data).
+ * Fields that should be saved to Prisma (minimal data).
  * Mirrors vanilla site's SAVEABLE_FIELDS in main.js cleanForSave().
  */
 const SAVEABLE_FIELDS = [
@@ -477,7 +477,7 @@ const SAVEABLE_FIELDS = [
 
 /**
  * Helper function to recursively remove undefined values from an object.
- * Firebase doesn't accept undefined values in documents.
+ * PostgreSQL JSONB doesn't accept undefined values.
  */
 function removeUndefinedValues<T>(obj: T): T {
   if (obj === null || obj === undefined) return obj;
@@ -656,6 +656,6 @@ export function cleanForSave(data: Character): Partial<Character> {
     cleaned.equipment = equip;
   }
 
-  // Final pass: remove any remaining undefined values to prevent Firebase errors
+  // Final pass: remove any remaining undefined values for JSONB compatibility
   return removeUndefinedValues(cleaned) as Partial<Character>;
 }

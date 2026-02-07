@@ -2,6 +2,53 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-07 | agent:cursor | Session: Migration task audit — TASK-150, TASK-151, stale refs | files: auth/confirm/route.ts, auth/callback/route.ts, AI_TASK_QUEUE.md, DEPLOYMENT_AND_SECRETS_SUPABASE.md | TASKs: TASK-150, TASK-151 | Summary:
+  - TASK-150: Created auth/confirm route for Supabase email magic links/OTP (verifyOtp, createUserProfileAction)
+  - TASK-151: Added x-forwarded-host handling to auth callback and confirm for Vercel/proxy
+  - Updated deployment doc: auth redirect URLs (auth/callback, auth/confirm)
+  - Fixed stale related_files in task queue (firebase→supabase, firestore.rules→prisma)
+
+- 2026-02-07 | agent:cursor | Session: Migration completion — Phase 5, audit, comment cleanup | files: functions/ (removed), .env.example, middleware, migration plan, creators, equipment-step, finalize-step, data-enrichment, encounter pages, types, lib/utils/object | Summary:
+  - Phase 5: Removed `functions/` directory, cleaned `.env.example` (Firebase/App Check refs)
+  - Fixed ~25 stale Firebase/Firestore comments across src (→ Prisma/Codex/Supabase)
+  - Updated migration plan: Phase Completion Audit (all phases ✅), Security Checklist (all ✅), Final Phase-by-Phase Audit table
+  - Migration marked complete; npm run build passes
+
+- 2026-02-07 | agent:cursor | Session: Phase 7 + 7b — Vercel deployment docs, Admin/Public Library workflow | files: DEPLOYMENT_AND_SECRETS_SUPABASE.md, ADMIN_SETUP.md, AI_TASK_QUEUE.md, MIGRATION_PLAN | TASKs: TASK-143 | Summary:
+  - Added copy-paste ready SQL block for Storage RLS (Supabase SQL Editor)
+  - Phase 7: Step-by-step Vercel deployment (connect repo, env vars, deploy, auth redirect)
+  - Phase 7b: ADMIN_SETUP.md — migration/deploy steps, public library (planned) note
+  - TASK-143 done; Phase 7 and 7b marked complete in migration plan
+
+- 2026-02-07 | agent:cursor | Session: Migration follow-up — Prisma migration, patch-package cleanup, Storage docs | files: package.json, DEPLOYMENT_AND_SECRETS_SUPABASE.md, MIGRATION_PLAN | Summary:
+  - Ran `npx prisma migrate dev` — add_encounters migration applied (encounters table)
+  - Removed patch-package and postinstall; deleted empty patches directory (Firebase cleanup)
+  - Added Supabase Storage bucket setup to DEPLOYMENT_AND_SECRETS_SUPABASE.md: profile-pictures, portraits with RLS policies
+  - Phase 3 (Storage) marked done in migration plan
+  - npm run build passes
+
+- 2026-02-07 | agent:cursor | Session: Docs audit — Supabase stack alignment, archive redundant docs | files: ARCHITECTURE.md, ADMIN_SETUP.md, .cursor/rules/realms-project.mdc, realms-tasks.mdc, DEPLOYMENT_AND_SECRETS_SUPABASE.md, UNIFICATION_STATUS.md, src/docs/README.md, archived_docs/ | Summary:
+  - ARCHITECTURE: removed Firestore references; full Supabase/Prisma
+  - ADMIN_SETUP: env vars only (ADMIN_UIDS); removed Firestore config/admins
+  - realms-project.mdc: Vercel only (removed Firebase deploy note)
+  - realms-tasks.mdc: feedback protocol references ALL_FEEDBACK_CLEAN (not RAW)
+  - DEPLOYMENT_AND_SECRETS: removed Firebase App Check optional line
+  - UNIFICATION_STATUS: ARCHITECTURE ref → Supabase/Prisma
+  - Archived: MIGRATION_PLAN, DOCUMENTATION_MIGRATION_AUDIT, UNIFICATION_PLAN, UI_UNIFICATION_PLAN, COMPREHENSIVE_AUDIT, DOCS_AUDIT_REPORT → archived_docs/
+  - Updated src/docs/README.md index
+
+- 2026-02-07 | agent:cursor | Session: Complete Firebase removal — Supabase/Prisma/Vercel only | files: admin/codex/actions, campaigns/actions, characters/actions, library/actions, api/session, api/campaigns/.../characters/..., api/upload/profile-picture, api/encounters, api/campaigns/[id]/rolls, my-account, forgot-username, encounter-service, campaign-roll-service, use-campaign-rolls, prisma/schema (Encounter model), package.json, AGENTS.md | Summary:
+  - Switched admin codex, campaigns, characters, library actions to Prisma + Supabase session
+  - Replaced /api/session with compatibility stub (Supabase handles sessions)
+  - Migrated campaign character view API to Prisma
+  - Added profile-picture upload API (Supabase Storage), my-account page fully Supabase
+  - Forgot-username: server action + Prisma UserProfile lookup
+  - Added Encounter model, /api/encounters, migrated encounter-service to API
+  - Added /api/campaigns/[id]/rolls, migrated campaign-roll-service to API; useCampaignRolls polls instead of Firestore
+  - Deleted src/lib/firebase/, use-firestore-codex.ts, use-session-sync.ts
+  - Removed firebase, firebase-admin, firebase-tools from package.json
+  - npm run build passes
+
 - 2026-02-07 | agent:cursor | Session: TASK-148 — Phase 4 migration (character, library, campaign → Prisma) | files: character-service, use-user-library, campaign-service, library-service, api/characters, api/user/library, api/campaigns, characters/[id]/page, finalize-step, power/technique/item/creature creators | TASKs: TASK-148 | Summary:
   - Created /api/characters, /api/user/library/[type], /api/campaigns routes (Prisma, Supabase session)
   - Migrated character-service, use-user-library, campaign-service to fetch from API

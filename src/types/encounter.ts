@@ -63,7 +63,7 @@ export interface SkillEncounterState {
   requiredFailures?: number;
 }
 
-/** Full encounter document stored in Firestore */
+/** Full encounter document stored in Prisma */
 export interface Encounter {
   id: string;
   name: string;

@@ -1,36 +1,24 @@
 /**
  * useCampaignRolls Hook
  * =====================
- * Real-time subscription to campaign roll log via Firestore onSnapshot.
+ * Polls campaign roll log via API. Refetches every 5 seconds when campaign is active.
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { subscribeToCampaignRolls } from '@/services/campaign-roll-service';
+import { useQuery } from '@tanstack/react-query';
+import { getCampaignRolls } from '@/services/campaign-roll-service';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
+const POLL_INTERVAL_MS = 5000;
+
 export function useCampaignRolls(campaignId: string | undefined) {
-  const [rolls, setRolls] = useState<CampaignRollEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: rolls = [], isLoading } = useQuery<CampaignRollEntry[]>({
+    queryKey: ['campaign-rolls', campaignId],
+    queryFn: () => getCampaignRolls(campaignId!),
+    enabled: !!campaignId,
+    refetchInterval: campaignId ? POLL_INTERVAL_MS : false,
+  });
 
-  useEffect(() => {
-    if (!campaignId) {
-      setRolls([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const unsubscribe = subscribeToCampaignRolls(campaignId, (newRolls) => {
-      setRolls(newRolls);
-      setLoading(false);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [campaignId]);
-
-  return { rolls, loading };
+  return { rolls, loading: isLoading };
 }

@@ -248,7 +248,7 @@ function PortraitUpload() {
       // Compress and resize the image
       const compressedBase64 = await compressImage(file, 400, 400, 0.7);
       
-      // Check compressed size (Firebase limit is ~1MB for a field)
+      // Check compressed size (reasonable limit for base64 in JSON)
       // Base64 adds ~33% overhead, so limit to ~700KB compressed
       if (compressedBase64.length > 700 * 1024) {
         setError('Image is still too large after compression. Please use a smaller image.');
@@ -585,7 +585,7 @@ export function FinalizeStep() {
         characterData.skills = skillsArray as any;
       }
       
-      // Remove any undefined values (Firestore rejects undefined in documents)
+      // Remove any undefined values (PostgreSQL JSONB rejects undefined)
       const sanitize = (val: any): any => {
         if (val === undefined) return undefined;
         if (val === null) return null;

@@ -1,7 +1,7 @@
 /**
  * Combat Encounter Page
  * ======================
- * Firestore-backed combat tracker for a specific encounter.
+ * Prisma-backed combat tracker for a specific encounter.
  * Ported from encounter-tracker with persistence via encounter-service.
  */
 
@@ -44,14 +44,14 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
 
-  // Local encounter state (synced from Firestore on load)
+  // Local encounter state (synced from API on load)
   const [encounter, setEncounter] = useState<Encounter | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
 
-  // Initialize local state from Firestore
+  // Initialize local state from API
   useEffect(() => {
     if (encounterData && !isInitialized) {
       setEncounter(encounterData);
@@ -64,7 +64,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     if (encounter?.name && !isEditingName) setNameInput(encounter.name);
   }, [encounter?.name, isEditingName]);
 
-  // Auto-save to Firestore
+  // Auto-save to API
   const { isSaving, hasUnsavedChanges } = useAutoSave({
     data: encounter,
     onSave: async (data) => {

@@ -30,7 +30,7 @@ Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consiste
 
 ## Reference Docs
 
-- `ARCHITECTURE.md` — Data flow, Firebase, enrichment, hooks/services.
+- `ARCHITECTURE.md` — Data flow, Supabase/Prisma, enrichment, hooks/services.
 - `GAME_RULES.md` — Skill caps, defense caps, progression rules.
 - `DESIGN_SYSTEM.md` — Color tokens, component API, migration patterns.
 - `UI_COMPONENT_REFERENCE.md` — Detailed component usage; includes component decision tree.

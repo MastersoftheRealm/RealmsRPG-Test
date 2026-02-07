@@ -145,6 +145,22 @@ model CampaignRoll {
 }
 
 // =============================================================================
+// Encounters (user-owned encounter tracker data)
+// =============================================================================
+
+model Encounter {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  data      Json     // Encounter: name, type, status, combatants, round, skillEncounter, etc.
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, updatedAt])
+  @@map("encounters")
+}
+
+// =============================================================================
 // Codex / Game Reference Data (from Firestore codex_*)
 // =============================================================================
 

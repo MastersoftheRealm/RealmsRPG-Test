@@ -19,7 +19,7 @@ alwaysApply: true
 
 # Feedback Processing Protocol
 
-When the owner provides feedback (raw text, messages, or updates to `ALL_FEEDBACK_RAW.md`):
+When the owner provides feedback (raw text, messages, or updates to `ALL_FEEDBACK_CLEAN.md`):
 
 **Step 1 — Sentence-level extraction:** Split the raw feedback into individual, atomic actionable items. One sentence may contain 2-3 separate requests. Do NOT summarize or group prematurely. Create a numbered checklist of every discrete request.
 

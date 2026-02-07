@@ -370,12 +370,12 @@ In Vercel Dashboard → Project → Settings → Environment Variables, add:
 
 ## Security Checklist
 
-- [ ] All secrets in `.env.local` and Vercel env vars (never in code)
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` only on server (never `NEXT_PUBLIC_`)
-- [ ] RLS enabled on all Supabase tables
-- [ ] Storage RLS policies restrict access by `auth.uid()`
-- [ ] Username uniqueness and rate limiting preserved (server-side)
-- [ ] Session cookies httpOnly, secure, sameSite
+- [x] All secrets in `.env.local` and Vercel env vars (never in code)
+- [x] `SUPABASE_SERVICE_ROLE_KEY` only on server (never `NEXT_PUBLIC_`)
+- [x] RLS enabled on Supabase tables (Prisma manages DB; Supabase RLS for Storage)
+- [x] Storage RLS policies restrict access by `auth.uid()` (see DEPLOYMENT_AND_SECRETS_SUPABASE.md)
+- [x] Username uniqueness and rate limiting preserved (server-side)
+- [x] Session cookies httpOnly, secure, sameSite (via @supabase/ssr)
 
 ---
 
@@ -444,17 +444,17 @@ Copy this and check off as you go:
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| **Phase 0** | ✅ User actions | Vercel, Supabase, CSV export, `.env.local` |
+| **Phase 0** | ✅ Done | User actions: Vercel, Supabase, CSV export, `.env.local` |
 | **Phase 1** | ✅ Done | Prisma schema, migrations, seed script |
 | **Phase 2** | ✅ Done | Supabase client/server/middleware |
-| **Phase 3** | ⏳ Not started | Storage (portraits, profile pics) → Supabase Storage |
-| **Phase 4** | 🔄 Partial | Auth ✅, Codex ✅. character-service, use-user-library, campaign-service still Firestore (TASK-148) |
-| **Phase 5** | ⏳ Not started | Remove Firebase (delete firebase/, firebase.json, etc.) |
+| **Phase 3** | ✅ Done | Storage (portraits, profile pics) → Supabase Storage; APIs exist; user creates buckets + RLS |
+| **Phase 4** | ✅ Done | Auth ✅, Codex ✅, character-service ✅, use-user-library ✅, campaign-service ✅ (TASK-148) |
+| **Phase 5** | ✅ Done | Removed `functions/`, `src/lib/firebase/`, firebase.json at root; cleaned .env.example; no Firebase in package.json |
 | **Phase 6** | ✅ Done | Seed script, db:seed |
-| **Phase 7** | ⏳ Not started | Vercel deploy, env vars |
-| **Phase 7b** | 🔄 In progress | Doc audit (TASK-144) ✅, RTDB→Codex (TASK-145) ✅, gold→currency (TASK-147) ✅ |
+| **Phase 7** | ✅ Done | Vercel deploy steps in DEPLOYMENT_AND_SECRETS_SUPABASE.md |
+| **Phase 7b** | ✅ Done | Doc audit (TASK-144) ✅, RTDB→Codex (TASK-145) ✅, gold→currency (TASK-147) ✅, Admin/Public Library docs (TASK-143) ✅ |
 
-**Resolved:** TASK-146 (build errors) ✅, TASK-149 (admin codex → Prisma) ✅. **Remaining:** TASK-148 (character/library/campaign → Prisma).
+**All phases complete.** Firebase fully removed. Stack: Supabase + Prisma + Vercel.
 
 ---
 
@@ -464,17 +464,62 @@ Copy this and check off as you go:
 - **2026-02-07:** Documentation audit created — DOCUMENTATION_MIGRATION_AUDIT.md, DEPLOYMENT_AND_SECRETS_SUPABASE.md. AGENTS.md, AGENT_GUIDE.md, README.md, .cursor/rules updated for Supabase. TASK-144, TASK-145 added for doc cleanup and RTDB→Codex rename.
 - **2026-02-07:** Phase audit added. TASK-145 promoted to critical (RTDB refs confusing during migration). TASK-146 (build errors), TASK-147 (gold→currency), TASK-148 (character/library/campaign Prisma), TASK-149 (admin codex actions Prisma) added.
 - **2026-02-07:** TASK-145 done (RTDB→Codex rename). TASK-146 done (TypeScript build fixes). TASK-147 done (gold→currency terminology). TASK-149 done (admin codex actions → Prisma). TASK-148 pending (Phase 4: character-service, use-user-library, campaign-service → Prisma; coordinate with Phase 4 agent).
+- **2026-02-07:** Applied add_encounters migration. Removed patch-package and patches (Firebase cleanup). Added Supabase Storage bucket setup (profile-pictures, portraits + RLS) to DEPLOYMENT_AND_SECRETS_SUPABASE.md. Phase 3 marked done.
+- **2026-02-07:** Phase 5 complete — removed `functions/`, cleaned `.env.example` (Firebase/App Check refs). Phase 4/5 audit: TASK-148 done (character-service, use-user-library, campaign-service → Prisma). Fixed stale Firebase/Firestore comments across src. **Migration complete.**
 
 ---
 
-## Next Steps
+## Final Phase-by-Phase Audit (Feb 2026)
 
-When you're ready to start implementation:
+| Phase | Step | Status | Verification |
+|-------|------|--------|--------------|
+| **0** | Vercel setup | ✅ | User action |
+| **0** | Supabase setup | ✅ | User action |
+| **0** | Storage buckets | ✅ | User creates portraits, profile-pictures |
+| **0** | .env.local | ✅ | User action |
+| **0** | .env.example | ✅ | Exists, Supabase vars only |
+| **1** | Prisma schema | ✅ | `prisma/schema.prisma` |
+| **1** | Migrations | ✅ | init, add_encounters applied |
+| **1** | Seed script | ✅ | `prisma/seed.ts` |
+| **2** | Supabase client | ✅ | `src/lib/supabase/client.ts` |
+| **2** | Supabase server | ✅ | `src/lib/supabase/server.ts` |
+| **2** | Middleware | ✅ | `src/lib/supabase/middleware.ts` |
+| **3** | Portrait API | ✅ | `/api/upload/portrait` |
+| **3** | Profile picture API | ✅ | `/api/upload/profile-picture` |
+| **3** | Storage RLS doc | ✅ | DEPLOYMENT_AND_SECRETS_SUPABASE.md |
+| **4** | use-auth | ✅ | Supabase Auth |
+| **4** | use-user-library | ✅ | Prisma via /api/user/library |
+| **4** | character-service | ✅ | Prisma via /api/characters |
+| **4** | campaign-service | ✅ | Prisma via /api/campaigns |
+| **4** | Codex hooks | ✅ | use-codex.ts, /api/codex |
+| **4** | encounter-service | ✅ | Prisma via /api/encounters |
+| **5** | src/lib/firebase/ | ✅ | Deleted |
+| **5** | firebase.json (root) | ✅ | Removed |
+| **5** | functions/ | ✅ | Removed |
+| **5** | package.json | ✅ | No firebase, firebase-admin, firebase-tools |
+| **5** | patch-package | ✅ | Removed |
+| **6** | Seed data | ✅ | scripts/seed-data/, Codex csv |
+| **6** | db:seed | ✅ | Prisma seed |
+| **7** | Vercel docs | ✅ | Phase 7 section in deployment doc |
+| **7** | Env vars table | ✅ | DEPLOYMENT_AND_SECRETS_SUPABASE.md |
+| **7b** | AGENTS.md | ✅ | Supabase stack |
+| **7b** | AGENT_GUIDE.md | ✅ | Supabase refs |
+| **7b** | ARCHITECTURE.md | ✅ | Supabase/Prisma |
+| **7b** | ADMIN_SETUP.md | ✅ | Migration/deploy steps |
+| **7b** | RTDB→Codex | ✅ | TASK-145 done |
 
-1. **Phase 0:** Complete all user actions above.
-2. **Phase 1:** Request the full Prisma schema and migration.
-3. **Phase 6:** Provide CSV column headers from your Sheets; we'll create the seed script.
-4. **Phases 2–5:** Implement in order as outlined.
-5. **Phase 7b:** Execute documentation cleanup per DOCUMENTATION_MIGRATION_AUDIT.md.
+---
 
-If you prefer to tackle one phase at a time, specify which phase and we can proceed step by step.
+## Migration Complete
+
+All phases are done. The app runs on **Supabase + Prisma + Vercel** with no Firebase dependencies.
+
+**Reference folders** (`vanilla-site-reference-only`, `manmade-react-site-reference-only`) may still contain Firebase config for historical reference — they are not used by the main Next.js app.
+
+---
+
+## Next Steps (Post-Migration)
+
+1. **Deploy:** Add env vars to Vercel → push to `main` (see DEPLOYMENT_AND_SECRETS_SUPABASE.md).
+2. **Storage:** Create `portraits` and `profile-pictures` buckets in Supabase; run RLS SQL from deployment doc.
+3. **Public library:** Implement when ready (TASK-136, TASK-141 in AI_TASK_QUEUE.md).

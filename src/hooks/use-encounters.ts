@@ -1,7 +1,7 @@
 /**
  * useEncounters Hook
  * ===================
- * React Query hooks for encounter data (Firestore persistence).
+ * React Query hooks for encounter data (Prisma persistence).
  */
 
 'use client';

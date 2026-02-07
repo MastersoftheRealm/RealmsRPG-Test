@@ -1,52 +1,11 @@
 /**
  * Campaign Roll Service
  * ======================
- * Firestore operations for campaign roll logs.
- * Uses subcollection campaigns/{campaignId}/rolls for real-time sync.
+ * Client-side API calls for campaign roll logs. Uses /api/campaigns/[id]/rolls (Prisma).
  */
 
-import {
-  collection,
-  doc,
-  addDoc,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  Timestamp,
-  writeBatch,
-  getCountFromServer,
-} from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase/client';
-import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import type { RollEntry } from '@/components/character-sheet/roll-context';
-
-function requireUserId(): string {
-  const userId = auth.currentUser?.uid;
-  if (!userId) throw new Error('User not authenticated');
-  return userId;
-}
-
-function docToCampaignRoll(id: string, data: Record<string, unknown>): CampaignRollEntry {
-  const ts = data.timestamp;
-  return {
-    id,
-    characterId: data.characterId as string,
-    characterName: data.characterName as string,
-    userId: data.userId as string,
-    type: data.type as CampaignRollEntry['type'],
-    title: data.title as string,
-    dice: (data.dice as CampaignRollEntry['dice']) || [],
-    modifier: (data.modifier as number) ?? 0,
-    total: (data.total as number) ?? 0,
-    isCrit: data.isCrit as boolean | undefined,
-    isCritFail: data.isCritFail as boolean | undefined,
-    critMessage: data.critMessage as string | undefined,
-    timestamp: ts instanceof Timestamp ? ts.toDate() : (ts as Date),
-  };
-}
 
 export interface AddCampaignRollParams {
   campaignId: string;
@@ -56,7 +15,7 @@ export interface AddCampaignRollParams {
 }
 
 /**
- * Add a roll to the campaign log. Trims to MAX_CAMPAIGN_ROLLS after add.
+ * Add a roll to the campaign log.
  */
 export async function addCampaignRoll({
   campaignId,
@@ -64,65 +23,30 @@ export async function addCampaignRoll({
   characterName,
   roll,
 }: AddCampaignRollParams): Promise<void> {
-  const userId = requireUserId();
-  const rollsRef = collection(db, 'campaigns', campaignId, 'rolls');
+  const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      characterId,
+      characterName,
+      roll,
+    }),
+  });
 
-  const docData = {
-    characterId,
-    characterName,
-    userId,
-    type: roll.type,
-    title: roll.title,
-    dice: roll.dice,
-    modifier: roll.modifier,
-    total: roll.total,
-    isCrit: roll.isCrit ?? false,
-    isCritFail: roll.isCritFail ?? false,
-    critMessage: roll.critMessage ?? null,
-    timestamp: Timestamp.now(),
-  };
-
-  await addDoc(rollsRef, docData);
-
-  // Trim to MAX_CAMPAIGN_ROLLS: count and delete oldest if over
-  const countSnap = await getCountFromServer(rollsRef);
-  const count = countSnap.data().count;
-  if (count > MAX_CAMPAIGN_ROLLS) {
-    const oldestQuery = query(
-      rollsRef,
-      orderBy('timestamp', 'asc'),
-      limit(count - MAX_CAMPAIGN_ROLLS)
-    );
-    const oldestSnap = await getDocs(oldestQuery);
-    if (!oldestSnap.empty) {
-      const batch = writeBatch(db);
-      oldestSnap.docs.forEach((d) => batch.delete(d.ref));
-      await batch.commit();
-    }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error((err as { error?: string }).error ?? 'Failed to add roll');
   }
 }
 
 /**
- * Subscribe to campaign rolls in real time (Firestore onSnapshot).
+ * Get campaign rolls (for polling).
  */
-export function subscribeToCampaignRolls(
-  campaignId: string,
-  callback: (rolls: CampaignRollEntry[]) => void
-): () => void {
-  const rollsRef = collection(db, 'campaigns', campaignId, 'rolls');
-  const q = query(rollsRef, orderBy('timestamp', 'desc'), limit(MAX_CAMPAIGN_ROLLS));
-
-  return onSnapshot(
-    q,
-    (snapshot) => {
-      const rolls = snapshot.docs.map((d) =>
-        docToCampaignRoll(d.id, d.data() as Record<string, unknown>)
-      );
-      callback(rolls);
-    },
-    (err) => {
-      console.error('Campaign rolls subscription error:', err);
-      callback([]);
-    }
-  );
+export async function getCampaignRolls(campaignId: string): Promise<CampaignRollEntry[]> {
+  const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error((err as { error?: string }).error ?? 'Failed to fetch rolls');
+  }
+  return res.json();
 }

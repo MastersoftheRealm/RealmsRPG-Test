@@ -2,25 +2,24 @@
 
 How to configure admin access for the RealmsRPG admin tools (Codex Editor, etc.).
 
-## Option A: Firestore `config/admins` (recommended)
+**Stack:** Supabase Auth + env vars (no Firestore).
 
-1. Open [Firebase Console](https://console.firebase.google.com) → Firestore Database.
-2. Create a document at path `config/admins`.
-3. Add a field `uids` (array) with your Firebase Auth UID(s):
-   ```json
-   { "uids": ["your-uid-here"] }
-   ```
-4. To find your UID: sign in on the app, open browser DevTools → Application → Cookies, or inspect the session; or use Firebase Console → Authentication → Users and copy the UID.
+---
 
-## Option B: Environment variable
+## Configuration
 
-Set `NEXT_PUBLIC_ADMIN_UIDS` or `ADMIN_UIDS` (comma-separated UIDs):
+Set `ADMIN_UIDS` or `NEXT_PUBLIC_ADMIN_UIDS` (comma-separated Supabase Auth UIDs):
 
 ```
-NEXT_PUBLIC_ADMIN_UIDS=uid1,uid2,uid3
+ADMIN_UIDS=uid1,uid2,uid3
 ```
 
-For local dev: add to `.env.local`. For production: add to Secret Manager / deployment config.
+- **Local:** Add to `.env.local`
+- **Production:** Add to Vercel Dashboard → Project → Settings → Environment Variables
+
+**To find your UID:** Supabase Dashboard → Authentication → Users → click your user → copy the UUID.
+
+---
 
 ## Verifying
 
@@ -29,7 +28,27 @@ For local dev: add to `.env.local`. For production: add to Secret Manager / depl
 3. Visit `/admin` — you should see the Admin dashboard.
 4. Non-admins are redirected to `/` when visiting `/admin`.
 
-## Security
+---
 
-- `config/admins` has Firestore rules that block client reads/writes; only the server (Admin SDK) can read it.
-- Admin routes are protected server-side in the layout.
+## Migration & Deploy
+
+| Step | Command / Action |
+|------|-------------------|
+| Run migrations | `npx prisma migrate deploy` (production) or `npx prisma migrate dev` (local) |
+| Seed Codex data | `npx prisma db seed` (if seed script exists) |
+| Deploy to Vercel | Push to `main` (auto-deploy) or `vercel --prod` from CLI |
+
+See `DEPLOYMENT_AND_SECRETS_SUPABASE.md` for full deployment steps and env vars.
+
+---
+
+## Public Library (planned)
+
+The app has a **Codex** (reference data) and **user Library** (private items). A **public library** feature (admin-curated items users can "Add to my library") is planned but not yet implemented. When available, admins will save items to the public library from the creators; users will browse and copy them. See `AI_TASK_QUEUE.md` (TASK-136, TASK-141) for implementation status.
+
+---
+
+## Implementation
+
+- `src/lib/admin.ts` — `isAdmin(uid)` reads from env
+- `src/app/api/admin/check/route.ts` — Client-side admin check via API

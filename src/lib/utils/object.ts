@@ -6,7 +6,7 @@
 
 /**
  * Remove undefined values from an object recursively.
- * Useful for preparing data for Firestore which doesn't accept undefined values.
+ * Useful for preparing data for PostgreSQL JSONB which doesn't accept undefined values.
  * 
  * @param obj - The object to clean
  * @returns A new object with all undefined values removed

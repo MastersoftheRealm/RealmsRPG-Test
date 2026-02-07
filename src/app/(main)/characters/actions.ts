@@ -2,81 +2,54 @@
  * Character Server Actions
  * =========================
  * Server actions for character CRUD operations.
- * These provide a type-safe, server-side API for character management.
- * 
- * Benefits over client-side service:
- * - Automatic revalidation of cached data
- * - Server-side validation
- * - Reduced client bundle size
- * - Better error handling
+ * Uses Prisma + Supabase session.
  */
 
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/firebase/session';
-import { getAdminFirestore } from '@/lib/firebase/server';
-import { FieldValue } from 'firebase-admin/firestore';
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils';
 import type { Character } from '@/types';
 
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Prepare character data for saving.
- */
 function prepareForSave(data: Partial<Character>): Record<string, unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, createdAt, updatedAt, ...dataToSave } = data;
 
-  // Remove display-only properties
   const cleaned = { ...dataToSave } as Record<string, unknown>;
   delete cleaned._displayFeats;
   delete cleaned.allTraits;
   delete cleaned.defenses;
   delete cleaned.defenseBonuses;
 
-  // Add server timestamp
-  cleaned.updatedAt = FieldValue.serverTimestamp();
-
+  cleaned.updatedAt = new Date().toISOString();
   return removeUndefined(cleaned);
 }
 
-// =============================================================================
-// Character Actions
-// =============================================================================
-
-/**
- * Get all characters for the current user.
- */
 export async function getCharactersAction() {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const charactersRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('character');
-    
-    const snapshot = await charactersRef.orderBy('updatedAt', 'desc').get();
-    
-    const characters = snapshot.docs.map(doc => {
-      const data = doc.data();
+
+    const rows = await prisma.character.findMany({
+      where: { userId: user.uid },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    const characters = rows.map((r) => {
+      const d = r.data as Record<string, unknown>;
       return {
-        id: doc.id,
-        name: data.name || 'Unnamed',
-        level: data.level || 1,
-        portrait: data.portrait,
-        archetypeName: data.archetype?.name,
-        ancestryName: data.ancestry?.name,
-        status: data.status,
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
+        id: r.id,
+        name: (d.name as string) || 'Unnamed',
+        level: (d.level as number) || 1,
+        portrait: d.portrait as string | undefined,
+        archetypeName: (d.archetype as { name?: string })?.name,
+        ancestryName: (d.ancestry as { name?: string })?.name,
+        status: d.status as string | undefined,
+        updatedAt: r.updatedAt?.toISOString() ?? null,
       };
     });
-    
+
     return { characters, error: null };
   } catch (error) {
     console.error('Error fetching characters:', error);
@@ -84,34 +57,26 @@ export async function getCharactersAction() {
   }
 }
 
-/**
- * Get a single character by ID.
- */
 export async function getCharacterAction(characterId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const docRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('character')
-      .doc(characterId);
-    
-    const doc = await docRef.get();
-    
-    if (!doc.exists) {
+
+    const row = await prisma.character.findFirst({
+      where: { id: characterId, userId: user.uid },
+    });
+
+    if (!row) {
       return { character: null, error: 'Character not found' };
     }
-    
-    const data = doc.data()!;
+
+    const d = row.data as Record<string, unknown>;
     const character = {
-      id: doc.id,
-      ...data,
-      createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
-      updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
+      id: row.id,
+      ...d,
+      createdAt: (d.createdAt as string) ?? row.createdAt?.toISOString() ?? null,
+      updatedAt: (d.updatedAt as string) ?? row.updatedAt?.toISOString() ?? null,
     };
-    
+
     return { character, error: null };
   } catch (error) {
     console.error('Error fetching character:', error);
@@ -119,54 +84,60 @@ export async function getCharacterAction(characterId: string) {
   }
 }
 
-/**
- * Create a new character.
- */
 export async function createCharacterAction(data: Partial<Character>) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const charactersRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('character');
-    
+
     const cleanedData = prepareForSave(data);
-    cleanedData.createdAt = FieldValue.serverTimestamp();
-    
-    const docRef = await charactersRef.add(cleanedData);
-    
+    cleanedData.createdAt = new Date().toISOString();
+
+    await prisma.userProfile.upsert({
+      where: { id: user.uid },
+      create: { id: user.uid },
+      update: {},
+    });
+
+    const created = await prisma.character.create({
+      data: {
+        userId: user.uid,
+        data: cleanedData as object,
+      },
+    });
+
     revalidatePath('/characters');
-    
-    return { id: docRef.id, error: null };
+
+    return { id: created.id, error: null };
   } catch (error) {
     console.error('Error creating character:', error);
     return { id: null, error: 'Failed to create character' };
   }
 }
 
-/**
- * Update an existing character.
- */
 export async function updateCharacterAction(characterId: string, data: Partial<Character>) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const docRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('character')
-      .doc(characterId);
-    
+
     const cleanedData = prepareForSave(data);
-    
-    await docRef.set(cleanedData, { merge: true });
-    
+
+    const existing = await prisma.character.findFirst({
+      where: { id: characterId, userId: user.uid },
+    });
+
+    if (!existing) {
+      return { success: false, error: 'Character not found' };
+    }
+
+    const currentData = (existing.data as Record<string, unknown>) ?? {};
+    const merged = { ...currentData, ...cleanedData };
+
+    await prisma.character.update({
+      where: { id: characterId },
+      data: { data: merged as object },
+    });
+
     revalidatePath('/characters');
     revalidatePath(`/characters/${characterId}`);
-    
+
     return { success: true, error: null };
   } catch (error) {
     console.error('Error updating character:', error);
@@ -174,24 +145,24 @@ export async function updateCharacterAction(characterId: string, data: Partial<C
   }
 }
 
-/**
- * Delete a character.
- */
 export async function deleteCharacterAction(characterId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const docRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('character')
-      .doc(characterId);
-    
-    await docRef.delete();
-    
+
+    const existing = await prisma.character.findFirst({
+      where: { id: characterId, userId: user.uid },
+    });
+
+    if (!existing) {
+      return { success: false, error: 'Character not found' };
+    }
+
+    await prisma.character.delete({
+      where: { id: characterId },
+    });
+
     revalidatePath('/characters');
-    
+
     return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting character:', error);
@@ -199,47 +170,39 @@ export async function deleteCharacterAction(characterId: string) {
   }
 }
 
-/**
- * Duplicate a character.
- */
 export async function duplicateCharacterAction(characterId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    // Get the original character
-    const docRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('character')
-      .doc(characterId);
-    
-    const doc = await docRef.get();
-    
-    if (!doc.exists) {
+
+    const existing = await prisma.character.findFirst({
+      where: { id: characterId, userId: user.uid },
+    });
+
+    if (!existing) {
       return { id: null, error: 'Character not found' };
     }
-    
-    const data = doc.data()!;
-    
-    // Create a copy
-    const charactersRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('character');
-    
-    const copyData = {
-      ...data,
-      name: `${data.name || 'Unnamed'} (Copy)`,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+
+    const d = existing.data as Record<string, unknown>;
+    const baseData = { ...d };
+    delete baseData.createdAt;
+    delete baseData.updatedAt;
+    const newData = {
+      ...baseData,
+      name: `${(baseData.name as string) || 'Unnamed'} (Copy)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    
-    const newDocRef = await charactersRef.add(copyData);
-    
+
+    const created = await prisma.character.create({
+      data: {
+        userId: user.uid,
+        data: newData as object,
+      },
+    });
+
     revalidatePath('/characters');
-    
-    return { id: newDocRef.id, error: null };
+
+    return { id: created.id, error: null };
   } catch (error) {
     console.error('Error duplicating character:', error);
     return { id: null, error: 'Failed to duplicate character' };

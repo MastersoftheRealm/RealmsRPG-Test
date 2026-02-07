@@ -66,7 +66,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
 
-  // Initialize local state from Firestore (strip legacy requiredSuccesses/requiredFailures)
+  // Initialize local state from Prisma (strip legacy requiredSuccesses/requiredFailures)
   useEffect(() => {
     if (encounterData && !isInitialized) {
       const enc = { ...encounterData };

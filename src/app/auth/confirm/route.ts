@@ -1,11 +1,11 @@
 /**
- * Supabase Auth Callback
- * ======================
- * Handles OAuth redirect (e.g. Google sign-in).
- * Creates user profile for first-time OAuth users.
- * Uses x-forwarded-host on Vercel/proxy for correct redirect origin.
+ * Supabase Auth Confirm
+ * =====================
+ * Handles email magic links and OTP verification.
+ * Supabase redirects here with token_hash and type.
  */
 
+import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { createUserProfileAction } from '@/app/(auth)/actions';
@@ -23,12 +23,20 @@ function getRedirectUrl(request: Request, path: string): string {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
+  const token_hash = searchParams.get('token_hash');
+  const type = searchParams.get('type') as EmailOtpType | null;
   const next = searchParams.get('next') ?? '/';
 
-  if (code) {
+  const redirectTo = next.startsWith('/') ? next : `/${next}`;
+
+  if (token_hash && type) {
     const supabase = await createClient();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      type,
+      token_hash,
+    });
+
     if (!error && data.user) {
       const u = data.user;
       const email = u.email ?? '';
@@ -40,11 +48,10 @@ export async function GET(request: Request) {
         username,
         displayName,
       });
-      const redirectTo = next.startsWith('/') ? next : `/${next}`;
       return NextResponse.redirect(getRedirectUrl(request, redirectTo));
     }
-    console.error('Auth callback error:', error);
+    console.error('Auth confirm error:', error);
   }
 
-  return NextResponse.redirect(getRedirectUrl(request, '/login?error=auth_callback'));
+  return NextResponse.redirect(getRedirectUrl(request, `/login?error=confirm`));
 }

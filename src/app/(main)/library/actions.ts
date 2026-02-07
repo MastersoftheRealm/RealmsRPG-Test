@@ -2,42 +2,38 @@
  * Library Server Actions
  * =======================
  * Server actions for user's library items (powers, techniques, items, creatures).
- * These handle CRUD operations for user-created content.
+ * Uses Prisma + Supabase session.
  */
 
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/firebase/session';
-import { getAdminFirestore } from '@/lib/firebase/server';
-import { FieldValue } from 'firebase-admin/firestore';
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/supabase/session';
 
 // =============================================================================
 // Powers
 // =============================================================================
 
-/**
- * Get all powers for the current user.
- */
 export async function getUserPowersAction() {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const powersRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('powers');
-    
-    const snapshot = await powersRef.orderBy('createdAt', 'desc').get();
-    
-    const powers = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || null,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || null,
-    }));
-    
+
+    const rows = await prisma.userPower.findMany({
+      where: { userId: user.uid },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const powers = rows.map((r) => {
+      const d = r.data as Record<string, unknown>;
+      return {
+        id: r.id,
+        ...d,
+        createdAt: r.createdAt?.toISOString() ?? null,
+        updatedAt: r.updatedAt?.toISOString() ?? null,
+      };
+    });
+
     return { powers, error: null };
   } catch (error) {
     console.error('Error fetching powers:', error);
@@ -45,9 +41,6 @@ export async function getUserPowersAction() {
   }
 }
 
-/**
- * Save a power to the library.
- */
 export async function savePowerAction(data: {
   name: string;
   description?: string;
@@ -62,47 +55,47 @@ export async function savePowerAction(data: {
 }) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const powersRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('powers');
-    
+
     const powerData = {
       ...data,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    
-    const docRef = await powersRef.add(powerData);
-    
+
+    const created = await prisma.userPower.create({
+      data: {
+        userId: user.uid,
+        data: powerData as object,
+      },
+    });
+
     revalidatePath('/library');
-    
-    return { id: docRef.id, error: null };
+
+    return { id: created.id, error: null };
   } catch (error) {
     console.error('Error saving power:', error);
     return { id: null, error: 'Failed to save power' };
   }
 }
 
-/**
- * Delete a power from the library.
- */
 export async function deletePowerAction(powerId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    await db
-      .collection('users')
-      .doc(user.uid)
-      .collection('powers')
-      .doc(powerId)
-      .delete();
-    
+
+    const existing = await prisma.userPower.findFirst({
+      where: { id: powerId, userId: user.uid },
+    });
+
+    if (!existing) {
+      return { success: false, error: 'Power not found' };
+    }
+
+    await prisma.userPower.delete({
+      where: { id: powerId },
+    });
+
     revalidatePath('/library');
-    
+
     return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting power:', error);
@@ -114,28 +107,25 @@ export async function deletePowerAction(powerId: string) {
 // Techniques
 // =============================================================================
 
-/**
- * Get all techniques for the current user.
- */
 export async function getUserTechniquesAction() {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const techniquesRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('techniques');
-    
-    const snapshot = await techniquesRef.orderBy('createdAt', 'desc').get();
-    
-    const techniques = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || null,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || null,
-    }));
-    
+
+    const rows = await prisma.userTechnique.findMany({
+      where: { userId: user.uid },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const techniques = rows.map((r) => {
+      const d = r.data as Record<string, unknown>;
+      return {
+        id: r.id,
+        ...d,
+        createdAt: r.createdAt?.toISOString() ?? null,
+        updatedAt: r.updatedAt?.toISOString() ?? null,
+      };
+    });
+
     return { techniques, error: null };
   } catch (error) {
     console.error('Error fetching techniques:', error);
@@ -143,9 +133,6 @@ export async function getUserTechniquesAction() {
   }
 }
 
-/**
- * Save a technique to the library.
- */
 export async function saveTechniqueAction(data: {
   name: string;
   description?: string;
@@ -158,47 +145,47 @@ export async function saveTechniqueAction(data: {
 }) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const techniquesRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('techniques');
-    
+
     const techniqueData = {
       ...data,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    
-    const docRef = await techniquesRef.add(techniqueData);
-    
+
+    const created = await prisma.userTechnique.create({
+      data: {
+        userId: user.uid,
+        data: techniqueData as object,
+      },
+    });
+
     revalidatePath('/library');
-    
-    return { id: docRef.id, error: null };
+
+    return { id: created.id, error: null };
   } catch (error) {
     console.error('Error saving technique:', error);
     return { id: null, error: 'Failed to save technique' };
   }
 }
 
-/**
- * Delete a technique from the library.
- */
 export async function deleteTechniqueAction(techniqueId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    await db
-      .collection('users')
-      .doc(user.uid)
-      .collection('techniques')
-      .doc(techniqueId)
-      .delete();
-    
+
+    const existing = await prisma.userTechnique.findFirst({
+      where: { id: techniqueId, userId: user.uid },
+    });
+
+    if (!existing) {
+      return { success: false, error: 'Technique not found' };
+    }
+
+    await prisma.userTechnique.delete({
+      where: { id: techniqueId },
+    });
+
     revalidatePath('/library');
-    
+
     return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting technique:', error);
@@ -210,28 +197,25 @@ export async function deleteTechniqueAction(techniqueId: string) {
 // Items
 // =============================================================================
 
-/**
- * Get all items for the current user.
- */
 export async function getUserItemsAction() {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const itemsRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('items');
-    
-    const snapshot = await itemsRef.orderBy('createdAt', 'desc').get();
-    
-    const items = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || null,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || null,
-    }));
-    
+
+    const rows = await prisma.userItem.findMany({
+      where: { userId: user.uid },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const items = rows.map((r) => {
+      const d = r.data as Record<string, unknown>;
+      return {
+        id: r.id,
+        ...d,
+        createdAt: r.createdAt?.toISOString() ?? null,
+        updatedAt: r.updatedAt?.toISOString() ?? null,
+      };
+    });
+
     return { items, error: null };
   } catch (error) {
     console.error('Error fetching items:', error);
@@ -239,9 +223,6 @@ export async function getUserItemsAction() {
   }
 }
 
-/**
- * Save an item to the library.
- */
 export async function saveItemAction(data: {
   name: string;
   description?: string;
@@ -253,47 +234,47 @@ export async function saveItemAction(data: {
 }) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const itemsRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('items');
-    
+
     const itemData = {
       ...data,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    
-    const docRef = await itemsRef.add(itemData);
-    
+
+    const created = await prisma.userItem.create({
+      data: {
+        userId: user.uid,
+        data: itemData as object,
+      },
+    });
+
     revalidatePath('/library');
-    
-    return { id: docRef.id, error: null };
+
+    return { id: created.id, error: null };
   } catch (error) {
     console.error('Error saving item:', error);
     return { id: null, error: 'Failed to save item' };
   }
 }
 
-/**
- * Delete an item from the library.
- */
 export async function deleteItemAction(itemId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    await db
-      .collection('users')
-      .doc(user.uid)
-      .collection('items')
-      .doc(itemId)
-      .delete();
-    
+
+    const existing = await prisma.userItem.findFirst({
+      where: { id: itemId, userId: user.uid },
+    });
+
+    if (!existing) {
+      return { success: false, error: 'Item not found' };
+    }
+
+    await prisma.userItem.delete({
+      where: { id: itemId },
+    });
+
     revalidatePath('/library');
-    
+
     return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting item:', error);
@@ -305,28 +286,25 @@ export async function deleteItemAction(itemId: string) {
 // Creatures
 // =============================================================================
 
-/**
- * Get all creatures for the current user.
- */
 export async function getUserCreaturesAction() {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const creaturesRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('creatures');
-    
-    const snapshot = await creaturesRef.orderBy('createdAt', 'desc').get();
-    
-    const creatures = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || null,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || null,
-    }));
-    
+
+    const rows = await prisma.userCreature.findMany({
+      where: { userId: user.uid },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const creatures = rows.map((r) => {
+      const d = r.data as Record<string, unknown>;
+      return {
+        id: r.id,
+        ...d,
+        createdAt: r.createdAt?.toISOString() ?? null,
+        updatedAt: r.updatedAt?.toISOString() ?? null,
+      };
+    });
+
     return { creatures, error: null };
   } catch (error) {
     console.error('Error fetching creatures:', error);
@@ -334,53 +312,50 @@ export async function getUserCreaturesAction() {
   }
 }
 
-/**
- * Save a creature to the library.
- */
 export async function saveCreatureAction(data: Record<string, unknown>) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    const creaturesRef = db
-      .collection('users')
-      .doc(user.uid)
-      .collection('creatures');
-    
+
     const creatureData = {
       ...data,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    
-    const docRef = await creaturesRef.add(creatureData);
-    
+
+    const created = await prisma.userCreature.create({
+      data: {
+        userId: user.uid,
+        data: creatureData as object,
+      },
+    });
+
     revalidatePath('/library');
-    
-    return { id: docRef.id, error: null };
+
+    return { id: created.id, error: null };
   } catch (error) {
     console.error('Error saving creature:', error);
     return { id: null, error: 'Failed to save creature' };
   }
 }
 
-/**
- * Delete a creature from the library.
- */
 export async function deleteCreatureAction(creatureId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
-    
-    await db
-      .collection('users')
-      .doc(user.uid)
-      .collection('creatures')
-      .doc(creatureId)
-      .delete();
-    
+
+    const existing = await prisma.userCreature.findFirst({
+      where: { id: creatureId, userId: user.uid },
+    });
+
+    if (!existing) {
+      return { success: false, error: 'Creature not found' };
+    }
+
+    await prisma.userCreature.delete({
+      where: { id: creatureId },
+    });
+
     revalidatePath('/library');
-    
+
     return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting creature:', error);

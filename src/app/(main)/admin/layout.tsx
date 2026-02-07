@@ -5,7 +5,7 @@
  */
 
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/firebase/session';
+import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 
 export default async function AdminLayout({

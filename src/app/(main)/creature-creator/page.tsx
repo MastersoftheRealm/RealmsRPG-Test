@@ -391,7 +391,7 @@ function CreatureCreatorContent() {
     };
   }, [creature, featPointsMap]);
 
-  // Save creature to Firestore
+  // Save creature to user library (Prisma)
   const handleSave = async () => {
     if (!creature.name.trim()) {
       alert('Please enter a creature name');

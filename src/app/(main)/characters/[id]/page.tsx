@@ -9,8 +9,6 @@
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/lib/firebase/client';
 import { getCharacter, saveCharacter } from '@/services/character-service';
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
@@ -354,45 +352,42 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setCharacter(prev => prev ? { ...prev, name } : null);
   }, [character]);
   
-  // Portrait upload handler
+  // Portrait upload handler (Supabase Storage via API)
   const handlePortraitChange = useCallback(async (file: File) => {
-    if (!character || !user || !storage) return;
-    
-    // Validate file type
+    if (!character || !user) return;
+
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file');
       return;
     }
-    
-    // Validate file size (max 5MB)
+
     if (file.size > 5 * 1024 * 1024) {
       setError('Image must be less than 5MB');
       return;
     }
-    
+
     try {
       setUploadingPortrait(true);
       setError(null);
-      
-      // Create a unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `portraits/${user.uid}/${character.id}.${fileExt}`;
-      const storageRef = ref(storage, fileName);
-      
-      // Upload the file
-      await uploadBytes(storageRef, file, {
-        contentType: file.type,
-      });
-      
-      // Get the download URL
-      const downloadUrl = await getDownloadURL(storageRef);
-      
-      // Update the character with the new portrait URL
-      setCharacter(prev => prev ? { ...prev, portrait: downloadUrl } : null);
 
-      // Persist portrait URL via API
-      await saveCharacter(character.id, { portrait: downloadUrl });
-      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('characterId', character.id);
+
+      const res = await fetch('/api/upload/portrait', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error((err as { error?: string }).error ?? 'Upload failed');
+      }
+
+      const { url } = (await res.json()) as { url: string };
+
+      setCharacter(prev => prev ? { ...prev, portrait: url } : null);
+      await saveCharacter(character.id, { portrait: url });
     } catch (err) {
       console.error('Portrait upload error:', err);
       setError('Failed to upload portrait');

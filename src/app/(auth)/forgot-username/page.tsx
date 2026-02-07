@@ -2,17 +2,16 @@
  * Forgot Username Page
  * ====================
  * Allows users to recover their username by entering their email address.
- * Sends an email with their username if an account exists.
+ * Uses Prisma for lookup. Always shows success for security (don't reveal if email exists).
  */
 
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { submitForgotUsernameAction } from './action';
 import { Button, Alert } from '@/components/ui';
-import { Mail, ArrowLeft, Check, Loader2 } from 'lucide-react';
+import { Mail, ArrowLeft, Check } from 'lucide-react';
 
 export default function ForgotUsernamePage() {
   const [email, setEmail] = useState('');
@@ -26,26 +25,10 @@ export default function ForgotUsernamePage() {
     setError(null);
 
     try {
-      // Look up user by email in Firestore
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', email.toLowerCase().trim()));
-      const snapshot = await getDocs(q);
-      
-      // For security, we show the same success message whether or not
-      // the email exists. In a production app, you'd call a Cloud Function
-      // to actually send an email with the username.
-      
-      if (!snapshot.empty) {
-        // In production: Call Cloud Function to send email with username
-        // const userDoc = snapshot.docs[0];
-        // const username = userDoc.data().username;
-        // await sendUsernameRecoveryEmail(email, username);
-      }
-
-      // Always show success for security (don't reveal if email exists)
+      await submitForgotUsernameAction(email.toLowerCase().trim());
       setSubmitted(true);
     } catch (err) {
-      console.error('Error looking up username:', err);
+      console.error('Error submitting forgot username:', err);
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -55,7 +38,6 @@ export default function ForgotUsernamePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Logo/Title */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Recover Username</h1>
           <p className="text-gray-600 mt-2">
@@ -63,14 +45,12 @@ export default function ForgotUsernamePage() {
           </p>
         </div>
 
-        {/* Card */}
         <div className="bg-surface rounded-xl shadow-lg p-8">
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Input */}
               <div>
-                <label 
-                  htmlFor="email" 
+                <label
+                  htmlFor="email"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Email Address
@@ -89,14 +69,10 @@ export default function ForgotUsernamePage() {
                 </div>
               </div>
 
-              {/* Error Message */}
               {error && (
-                <Alert variant="danger">
-                  {error}
-                </Alert>
+                <Alert variant="danger">{error}</Alert>
               )}
 
-              {/* Submit Button */}
               <Button
                 type="submit"
                 disabled={loading || !email}
@@ -107,7 +83,6 @@ export default function ForgotUsernamePage() {
               </Button>
             </form>
           ) : (
-            /* Success State */
             <div className="text-center py-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="w-8 h-8 text-green-600" />
@@ -122,13 +97,12 @@ export default function ForgotUsernamePage() {
             </div>
           )}
 
-          {/* Links */}
           <div className="mt-6 pt-6 border-t border-gray-200 space-y-3 text-center text-sm">
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="flex items-center justify-center gap-1 text-primary-600 hover:text-primary-700 font-medium"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-5 h-5" />
               Back to Login
             </Link>
             <div className="text-gray-500">
@@ -146,7 +120,6 @@ export default function ForgotUsernamePage() {
           </div>
         </div>
 
-        {/* Footer Info */}
         <p className="text-center text-sm text-gray-500 mt-6">
           Remember your credentials?{' '}
           <Link href="/login" className="text-primary-600 hover:text-primary-700">

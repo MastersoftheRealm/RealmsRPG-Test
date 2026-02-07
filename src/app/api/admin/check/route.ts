@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/firebase/session';
+import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 
 export async function GET() {

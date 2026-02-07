@@ -1,6 +1,6 @@
 'use server';
 
-import { getSession } from '@/lib/firebase/session';
+import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';

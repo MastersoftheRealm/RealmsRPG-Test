@@ -2,18 +2,18 @@
  * Campaign Server Actions
  * ========================
  * Server actions for campaign CRUD, join, and character management.
- * Uses Firebase Admin SDK for secure operations and username lookups.
+ * Uses Prisma + Supabase session.
  */
 
 'use server';
 
-import { getAdminFirestore } from '@/lib/firebase/server';
-import { requireAuth } from '@/lib/firebase/session';
+import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/supabase/session';
 import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
 const INVITE_CODE_LENGTH = 8;
-const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluded confusing chars: 0,O,1,I
+const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function generateInviteCode(): string {
   let code = '';
@@ -24,16 +24,20 @@ function generateInviteCode(): string {
 }
 
 async function getUsernameByUid(uid: string): Promise<string | undefined> {
-  const db = getAdminFirestore();
-  const userDoc = await db.collection('users').doc(uid).get();
-  return userDoc.data()?.username as string | undefined;
+  const profile = await prisma.userProfile.findUnique({
+    where: { id: uid },
+    select: { username: true },
+  });
+  return profile?.username ?? undefined;
 }
 
-async function ensureUniqueInviteCode(db: Awaited<ReturnType<typeof getAdminFirestore>>): Promise<string> {
+async function ensureUniqueInviteCode(): Promise<string> {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateInviteCode();
-    const existing = await db.collection('campaigns').where('inviteCode', '==', code).limit(1).get();
-    if (existing.empty) return code;
+    const existing = await prisma.campaign.findFirst({
+      where: { inviteCode: code },
+    });
+    if (!existing) return code;
   }
   throw new Error('Failed to generate unique invite code');
 }
@@ -50,7 +54,6 @@ function getArchetypeDisplayName(archetypeType?: string): ArchetypeDisplayName |
 export async function createCampaignAction(data: { name: string; description?: string }) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
 
     const name = data.name?.trim();
     if (!name || name.length < 2) {
@@ -58,22 +61,27 @@ export async function createCampaignAction(data: { name: string; description?: s
     }
 
     const ownerUsername = await getUsernameByUid(user.uid);
-    const inviteCode = await ensureUniqueInviteCode(db);
+    const inviteCode = await ensureUniqueInviteCode();
 
-    const campaign: Omit<Campaign, 'id'> = {
-      name,
-      description: data.description?.trim() || '',
-      ownerId: user.uid,
-      ownerUsername: ownerUsername || (user as { name?: string }).name || 'Realm Master',
-      inviteCode,
-      characters: [],
-      memberIds: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    await prisma.userProfile.upsert({
+      where: { id: user.uid },
+      create: { id: user.uid },
+      update: {},
+    });
 
-    const docRef = await db.collection('campaigns').add(campaign);
-    return { success: true, campaignId: docRef.id, inviteCode };
+    const campaign = await prisma.campaign.create({
+      data: {
+        name,
+        description: data.description?.trim() || '',
+        ownerId: user.uid,
+        ownerUsername: ownerUsername || user.name || 'Realm Master',
+        inviteCode,
+        characters: [],
+        memberIds: [],
+      },
+    });
+
+    return { success: true, campaignId: campaign.id, inviteCode };
   } catch (error) {
     console.error('Create campaign error:', error);
     return { success: false, error: 'Failed to create campaign' };
@@ -91,45 +99,46 @@ export async function joinCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
 
     const code = data.inviteCode?.trim().toUpperCase();
     if (!code) {
       return { success: false, error: 'Please enter an invite code' };
     }
 
-    const campaignsSnap = await db.collection('campaigns').where('inviteCode', '==', code).limit(1).get();
-    if (campaignsSnap.empty) {
+    const campaignRow = await prisma.campaign.findFirst({
+      where: { inviteCode: code },
+    });
+
+    if (!campaignRow) {
       return { success: false, error: 'Invalid invite code. No campaign found.' };
     }
 
-    const campaignDoc = campaignsSnap.docs[0];
-    const campaignData = campaignDoc.data() as Campaign;
-    const campaignId = campaignDoc.id;
+    const campaignData = (campaignRow.characters as unknown) as CampaignCharacter[];
+    const campaignId = campaignRow.id;
+    const memberIds = ((campaignRow.memberIds as unknown) as string[]) || [];
 
-    // Verify character belongs to user
-    const charDoc = await db.collection('users').doc(user.uid).collection('character').doc(data.characterId).get();
-    if (!charDoc.exists) {
+    // Verify character belongs to user (Prisma)
+    const charRow = await prisma.character.findFirst({
+      where: { id: data.characterId, userId: user.uid },
+    });
+    if (!charRow) {
       return { success: false, error: 'Character not found. You can only add your own characters.' };
     }
 
-    // Check if character already in campaign
-    const alreadyIn = campaignData.characters?.some(
+    const alreadyIn = campaignData?.some(
       (c) => c.userId === user.uid && c.characterId === data.characterId
     );
     if (alreadyIn) {
       return { success: false, error: 'This character is already in the campaign.' };
     }
 
-    // Check total campaign character cap
-    const currentCount = campaignData.characters?.length ?? 0;
+    const currentCount = campaignData?.length ?? 0;
     if (currentCount >= MAX_CAMPAIGN_CHARACTERS) {
       return { success: false, error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.` };
     }
 
-    // Check if user already has a character in campaign (limit 1 per non-owner)
-    if (campaignData.ownerId !== user.uid) {
-      const userChars = campaignData.characters?.filter((c) => c.userId === user.uid) ?? [];
+    if (campaignRow.ownerId !== user.uid) {
+      const userChars = campaignData?.filter((c) => c.userId === user.uid) ?? [];
       if (userChars.length >= 1) {
         return { success: false, error: 'You can only have one character per campaign.' };
       }
@@ -144,16 +153,15 @@ export async function joinCampaignAction(data: {
       level: data.level,
       species: data.species,
       archetype: getArchetypeDisplayName(data.archetypeType),
-      ownerUsername: ownerUsername || (user as { name?: string }).name || undefined,
+      ownerUsername: ownerUsername || user.name || undefined,
     };
 
-    const characters = [...(campaignData.characters || []), newChar];
-    const memberIds = [...new Set([...(campaignData.memberIds || []), user.uid])];
+    const characters = [...(campaignData || []), newChar];
+    const newMemberIds = [...new Set([...memberIds, user.uid])];
 
-    await campaignDoc.ref.update({
-      characters,
-      memberIds,
-      updatedAt: new Date(),
+    await prisma.campaign.update({
+      where: { id: campaignId },
+      data: { characters: characters as object, memberIds: newMemberIds as object },
     });
 
     return { success: true, campaignId };
@@ -174,36 +182,38 @@ export async function addCharacterToCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
 
-    const campaignDoc = await db.collection('campaigns').doc(data.campaignId).get();
-    if (!campaignDoc.exists) {
+    const campaignRow = await prisma.campaign.findUnique({
+      where: { id: data.campaignId },
+    });
+
+    if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
 
-    const campaignData = campaignDoc.data() as Campaign;
-    if (campaignData.ownerId !== user.uid) {
+    if (campaignRow.ownerId !== user.uid) {
       return { success: false, error: 'Only the Realm Master can add characters to their campaign' };
     }
 
-    // Verify character belongs to owner
-    const charDoc = await db.collection('users').doc(user.uid).collection('character').doc(data.characterId).get();
-    if (!charDoc.exists) {
+    const charRow = await prisma.character.findFirst({
+      where: { id: data.characterId, userId: user.uid },
+    });
+    if (!charRow) {
       return { success: false, error: 'Character not found' };
     }
 
-    // Check total campaign character cap
-    const currentCount = campaignData.characters?.length ?? 0;
+    const campaignData = ((campaignRow.characters as unknown) as CampaignCharacter[]) || [];
+    const currentCount = campaignData.length;
     if (currentCount >= MAX_CAMPAIGN_CHARACTERS) {
       return { success: false, error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.` };
     }
 
-    const ownerChars = campaignData.characters?.filter((c) => c.userId === user.uid) ?? [];
+    const ownerChars = campaignData.filter((c) => c.userId === user.uid);
     if (ownerChars.length >= OWNER_MAX_CHARACTERS) {
       return { success: false, error: `You can add up to ${OWNER_MAX_CHARACTERS} of your own characters.` };
     }
 
-    const alreadyIn = campaignData.characters?.some(
+    const alreadyIn = campaignData.some(
       (c) => c.userId === user.uid && c.characterId === data.characterId
     );
     if (alreadyIn) {
@@ -222,15 +232,12 @@ export async function addCharacterToCampaignAction(data: {
       ownerUsername: ownerUsername || undefined,
     };
 
-    const characters = [...(campaignData.characters || []), newChar];
-    const memberIds = campaignData.memberIds?.includes(user.uid)
-      ? campaignData.memberIds
-      : [...(campaignData.memberIds || []), user.uid];
+    const characters = [...campaignData, newChar];
+    const memberIds = [...new Set([...((campaignRow.memberIds as unknown) as string[] || []), user.uid])];
 
-    await campaignDoc.ref.update({
-      characters,
-      memberIds,
-      updatedAt: new Date(),
+    await prisma.campaign.update({
+      where: { id: data.campaignId },
+      data: { characters: characters as object, memberIds: memberIds as object },
     });
 
     return { success: true };
@@ -247,32 +254,31 @@ export async function removeCharacterFromCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
 
-    const campaignDoc = await db.collection('campaigns').doc(data.campaignId).get();
-    if (!campaignDoc.exists) {
+    const campaignRow = await prisma.campaign.findUnique({
+      where: { id: data.campaignId },
+    });
+
+    if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
 
-    const campaignData = campaignDoc.data() as Campaign;
-    const isOwner = campaignData.ownerId === user.uid;
+    const campaignData = (campaignRow.characters as unknown) as CampaignCharacter[];
+    const isOwner = campaignRow.ownerId === user.uid;
     const isRemovingOwn = data.userId === user.uid;
 
     if (!isOwner && !isRemovingOwn) {
       return { success: false, error: 'You can only remove your own character, or the Realm Master can remove any character.' };
     }
 
-    const characters = (campaignData.characters || []).filter(
+    const characters = (campaignData || []).filter(
       (c) => !(c.userId === data.userId && c.characterId === data.characterId)
     );
-
-    // Recompute memberIds - users who still have characters
     const memberIds = [...new Set(characters.map((c) => c.userId))];
 
-    await campaignDoc.ref.update({
-      characters,
-      memberIds,
-      updatedAt: new Date(),
+    await prisma.campaign.update({
+      where: { id: data.campaignId },
+      data: { characters: characters as object, memberIds: memberIds as object },
     });
 
     return { success: true };
@@ -285,19 +291,23 @@ export async function removeCharacterFromCampaignAction(data: {
 export async function deleteCampaignAction(campaignId: string) {
   try {
     const user = await requireAuth();
-    const db = getAdminFirestore();
 
-    const campaignDoc = await db.collection('campaigns').doc(campaignId).get();
-    if (!campaignDoc.exists) {
+    const campaignRow = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+    });
+
+    if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
 
-    const campaignData = campaignDoc.data() as Campaign;
-    if (campaignData.ownerId !== user.uid) {
+    if (campaignRow.ownerId !== user.uid) {
       return { success: false, error: 'Only the Realm Master can delete the campaign' };
     }
 
-    await campaignDoc.ref.delete();
+    await prisma.campaign.delete({
+      where: { id: campaignId },
+    });
+
     return { success: true };
   } catch (error) {
     console.error('Delete campaign error:', error);

@@ -7,7 +7,7 @@
  * - Select technique parts from RTDB database
  * - Configure option levels for each part
  * - Calculate energy and training point costs
- * - Save to user's Firestore library
+ * - Save to user's library (Prisma)
  */
 
 'use client';

@@ -1,14 +1,14 @@
 /**
  * Campaign Roll Log Types
  * =======================
- * Shared roll log entries stored in Firestore for campaign members.
+ * Shared roll log entries stored in Prisma for campaign members.
  */
 
 import type { DieResult } from '@/components/character-sheet/roll-context';
 
 export type CampaignRollType = 'attack' | 'damage' | 'skill' | 'ability' | 'defense' | 'custom';
 
-/** Campaign roll entry stored in Firestore (RollEntry + character attribution) */
+/** Campaign roll entry stored in Prisma (RollEntry + character attribution) */
 export interface CampaignRollEntry {
   id: string;
   characterId: string;

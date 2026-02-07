@@ -2,27 +2,16 @@
  * My Account Page
  * ===============
  * User profile and account settings page.
- * Allows viewing/editing user info, changing email/password, and account management.
+ * Uses Supabase Auth, Prisma, and Supabase Storage.
  */
 
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  updateEmail, 
-  updatePassword,
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  sendPasswordResetEmail,
-  deleteUser,
-} from 'firebase/auth';
 import type { AuthUser } from '@/types/auth';
-import type { User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { changeUsernameAction } from '@/app/(auth)/actions';
-import { auth, db, storage } from '@/lib/firebase/client';
+import { createClient } from '@/lib/supabase/client';
+import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
@@ -30,14 +19,11 @@ import { LoadingState, Button, Input, Alert, PageContainer, Spinner } from '@/co
 import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
-/** Returns whether the user signed in with email/password (can change email/password) */
 function hasPasswordProvider(authUser: AuthUser | null): boolean {
   if (!authUser) return false;
-  // Supabase: 'email' = email/password; Firebase compat: 'password'
   return authUser.provider === 'email' || authUser.provider === 'password';
 }
 
-/** Human-readable auth provider label */
 function getAuthProviderLabel(authUser: AuthUser | null): string {
   if (!authUser) return 'Unknown';
   const p = authUser.provider;
@@ -57,79 +43,88 @@ interface UserProfile {
 function AccountContent() {
   const router = useRouter();
   const { user } = useAuthStore();
-  
+
   const canChangeEmailPassword = useMemo(() => hasPasswordProvider(user), [user]);
   const authProviderLabel = useMemo(() => getAuthProviderLabel(user), [user]);
-  
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Email change state
+
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
   const [emailChanging, setEmailChanging] = useState(false);
   const [emailMessage, setEmailMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
-  // Password change state
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordChanging, setPasswordChanging] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
-  // Profile picture state
+
   const [showPictureModal, setShowPictureModal] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [pictureMessage, setPictureMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
-  // Username change state
+
   const [newUsername, setNewUsername] = useState('');
   const [usernameChanging, setUsernameChanging] = useState(false);
   const [usernameMessage, setUsernameMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
-  // Delete account state
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Load user profile
   useEffect(() => {
     async function loadProfile() {
       if (!user) return;
-      
+
       try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const data = userDoc.data();
-        
-        setProfile({
-          username: data?.username,
-          email: user.email || undefined,
-          createdAt: data?.createdAt?.toDate?.() || undefined,
-          photoURL: data?.photoURL || user.photoURL || undefined,
-        });
+        const { profile: p } = await getUserProfileAction();
+        if (p) {
+          setProfile({
+            username: p.username ?? undefined,
+            email: p.email ?? user.email ?? undefined,
+            createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt) : undefined,
+            photoURL: (p.photoUrl as string) ?? user.photoURL ?? undefined,
+          });
+        } else {
+          setProfile({
+            email: user.email ?? undefined,
+            photoURL: user.photoURL ?? undefined,
+          });
+        }
       } catch (err) {
         console.error('Error loading profile:', err);
       } finally {
         setLoading(false);
       }
     }
-    
+
     loadProfile();
   }, [user]);
 
-  // Handle profile picture upload
   const handleProfilePictureUpload = async (blob: Blob) => {
-    if (!user || !storage) return;
+    if (!user) return;
     setUploadingPicture(true);
     setPictureMessage(null);
     try {
-      const storageRef = ref(storage, `profile-pictures/${user.uid}.jpg`);
-      await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
-      const downloadUrl = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, 'users', user.uid), { photoURL: downloadUrl });
-      setProfile((prev) => (prev ? { ...prev, photoURL: downloadUrl } : null));
+      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload/profile-picture', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error((err as { error?: string }).error ?? 'Upload failed');
+      }
+
+      const { url } = (await res.json()) as { url: string };
+      setProfile((prev) => (prev ? { ...prev, photoURL: url } : null));
       setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
     } catch (err) {
       console.error('Profile picture upload error:', err);
@@ -139,16 +134,15 @@ function AccountContent() {
     }
   };
 
-  // Handle username change
   const handleUsernameChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUsername.trim()) return;
-    
+
     setUsernameChanging(true);
     setUsernameMessage(null);
-    
+
     const result = await changeUsernameAction(newUsername.trim());
-    
+
     if (result.success) {
       setProfile((prev) => (prev ? { ...prev, username: newUsername.trim().toLowerCase() } : null));
       setNewUsername('');
@@ -159,39 +153,32 @@ function AccountContent() {
     setUsernameChanging(false);
   };
 
-  // Handle email change
   const handleEmailChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !user.email) return;
-    
+    if (!user?.email) return;
+
     setEmailChanging(true);
     setEmailMessage(null);
-    
+
     try {
-      // Re-authenticate first (Firebase API - TODO: migrate to Supabase updateUser)
-      const credential = EmailAuthProvider.credential(user.email!, emailPassword);
-      const firebaseUser = user as unknown as FirebaseUser;
-      await reauthenticateWithCredential(firebaseUser, credential);
-      
-      // Update email
-      await updateEmail(firebaseUser, newEmail);
-      
-      // Update Firestore
-      await updateDoc(doc(db, 'users', user.uid), { email: newEmail });
-      
-      setProfile(prev => prev ? { ...prev, email: newEmail } : null);
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      setProfile((prev) => (prev ? { ...prev, email: newEmail } : null));
       setNewEmail('');
       setEmailPassword('');
       setEmailMessage({ type: 'success', text: 'Email updated successfully!' });
     } catch (err: unknown) {
-      const error = err as { code?: string; message?: string };
+      const error = err as { message?: string };
       let message = 'Failed to update email';
-      if (error.code === 'auth/wrong-password') {
+      if (error.message?.includes('wrong') || error.message?.includes('password')) {
         message = 'Incorrect password';
-      } else if (error.code === 'auth/email-already-in-use') {
+      } else if (error.message?.includes('already in use')) {
         message = 'Email already in use';
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (error.message?.includes('invalid')) {
         message = 'Invalid email address';
+      } else if (error.message) {
+        message = error.message;
       }
       setEmailMessage({ type: 'error', text: message });
     } finally {
@@ -199,44 +186,40 @@ function AccountContent() {
     }
   };
 
-  // Handle password change
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !user.email) return;
-    
+    if (!user?.email) return;
+
     if (newPassword !== confirmPassword) {
       setPasswordMessage({ type: 'error', text: 'Passwords do not match' });
       return;
     }
-    
+
     if (newPassword.length < 6) {
       setPasswordMessage({ type: 'error', text: 'Password must be at least 6 characters' });
       return;
     }
-    
+
     setPasswordChanging(true);
     setPasswordMessage(null);
-    
+
     try {
-      // Re-authenticate first
-      const credential = EmailAuthProvider.credential(user.email!, currentPassword);
-      const firebaseUser = user as unknown as FirebaseUser;
-      await reauthenticateWithCredential(firebaseUser, credential);
-      
-      // Update password
-      await updatePassword(firebaseUser, newPassword);
-      
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
     } catch (err: unknown) {
-      const error = err as { code?: string; message?: string };
+      const error = err as { message?: string };
       let message = 'Failed to update password';
-      if (error.code === 'auth/wrong-password') {
+      if (error.message?.includes('wrong') || error.message?.includes('incorrect')) {
         message = 'Current password is incorrect';
-      } else if (error.code === 'auth/weak-password') {
+      } else if (error.message?.includes('weak')) {
         message = 'Password is too weak';
+      } else if (error.message) {
+        message = error.message;
       }
       setPasswordMessage({ type: 'error', text: message });
     } finally {
@@ -244,57 +227,45 @@ function AccountContent() {
     }
   };
 
-  // Handle password reset email
   const handleSendResetEmail = async () => {
     if (!user?.email) return;
-    
+
     try {
-      await sendPasswordResetEmail(auth, user.email);
+      const supabase = createClient();
+      await supabase.auth.resetPasswordForEmail(user.email);
       setPasswordMessage({ type: 'success', text: 'Password reset email sent!' });
     } catch {
       setPasswordMessage({ type: 'error', text: 'Failed to send reset email' });
     }
   };
 
-  // Handle account deletion
   const handleDeleteAccount = async () => {
     if (!user || !user.email) return;
     if (deleteConfirmText !== 'DELETE') return;
-    
+
     setDeleting(true);
     setDeleteError(null);
-    
+
     try {
-      // Re-authenticate
-      const credential = EmailAuthProvider.credential(user.email, deletePassword);
-      const firebaseUser = user as unknown as FirebaseUser;
-      await reauthenticateWithCredential(firebaseUser, credential);
-      
-      // Delete user data from Firestore
-      // Delete character subcollection
-      const charsRef = collection(db, 'users', user.uid, 'character');
-      const charsSnapshot = await getDocs(charsRef);
-      for (const charDoc of charsSnapshot.docs) {
-        await deleteDoc(charDoc.ref);
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: deletePassword,
+      });
+      if (error) throw error;
+
+      const result = await deleteAccountAction();
+      if (!result.success) {
+        throw new Error(result.error ?? 'Failed to delete account');
       }
-      
-      // Delete user document
-      await deleteDoc(doc(db, 'users', user.uid));
-      
-      // Delete username mapping if exists
-      if (profile?.username) {
-        await deleteDoc(doc(db, 'usernames', profile.username));
-      }
-      
-      // Delete Firebase Auth user
-      await deleteUser(firebaseUser);
-      
       router.push('/');
     } catch (err: unknown) {
-      const error = err as { code?: string; message?: string };
+      const error = err as { message?: string };
       let message = 'Failed to delete account';
-      if (error.code === 'auth/wrong-password') {
+      if (error.message?.includes('wrong') || error.message?.includes('Invalid')) {
         message = 'Incorrect password';
+      } else if (error.message) {
+        message = error.message;
       }
       setDeleteError(message);
       setDeleting(false);
@@ -311,7 +282,6 @@ function AccountContent() {
 
   return (
     <PageContainer size="xs" padded={false} className="space-y-6">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
           <UserIcon className="w-8 h-8 text-primary-600" />
@@ -320,11 +290,9 @@ function AccountContent() {
         <p className="text-text-secondary mt-2">Manage your profile and account settings</p>
       </div>
 
-      {/* Profile Info */}
       <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4">Profile Information</h2>
-        
-        {/* Profile Picture */}
+
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-border-subtle">
           <div className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-alt border-2 border-border-light flex-shrink-0">
             {profile?.photoURL ? (
@@ -358,7 +326,7 @@ function AccountContent() {
             )}
           </div>
         </div>
-        
+
         <div className="space-y-3">
           <div className="flex items-center justify-between py-2 border-b border-border-subtle">
             <span className="text-text-secondary">Username</span>
@@ -375,13 +343,16 @@ function AccountContent() {
           <div className="flex items-center justify-between py-2">
             <span className="text-text-secondary">Member Since</span>
             <span className="font-medium text-text-primary">
-              {profile?.createdAt?.toLocaleDateString() || 'Unknown'}
+              {profile?.createdAt instanceof Date
+                ? profile.createdAt.toLocaleDateString()
+                : profile?.createdAt
+                  ? new Date(profile.createdAt).toLocaleDateString()
+                  : 'Unknown'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Change Username */}
       <div className="bg-surface rounded-xl shadow-md p-6">
         <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
           <AtSign className="w-5 h-5 text-text-secondary" />
@@ -392,9 +363,7 @@ function AccountContent() {
         </p>
         <form onSubmit={handleUsernameChange} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              New Username
-            </label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">New Username</label>
             <Input
               type="text"
               value={newUsername}
@@ -406,13 +375,13 @@ function AccountContent() {
               title="Letters, numbers, underscores, and hyphens only"
             />
           </div>
-          
+
           {usernameMessage && (
             <Alert variant={usernameMessage.type === 'success' ? 'success' : 'danger'}>
               {usernameMessage.text}
             </Alert>
           )}
-          
+
           <Button
             type="submit"
             disabled={usernameChanging || !newUsername.trim() || newUsername.trim().length < 3}
@@ -423,158 +392,137 @@ function AccountContent() {
         </form>
       </div>
 
-      {/* Change Email - only for email/password users */}
       {canChangeEmailPassword && (
-      <div className="bg-surface rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-          <Mail className="w-5 h-5 text-text-secondary" />
-          Change Email
-        </h2>
-        
-        <form onSubmit={handleEmailChange} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              New Email Address
-            </label>
-            <Input
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              required
-              placeholder="Enter new email"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Current Password
-            </label>
-            <Input
-              type="password"
-              value={emailPassword}
-              onChange={(e) => setEmailPassword(e.target.value)}
-              required
-              placeholder="Enter current password"
-            />
-          </div>
-          
-          {emailMessage && (
-            <Alert variant={emailMessage.type === 'success' ? 'success' : 'danger'}>
-              {emailMessage.text}
-            </Alert>
-          )}
-          
-          <Button
-            type="submit"
-            disabled={emailChanging || !newEmail || !emailPassword}
-            isLoading={emailChanging}
-          >
-            Update Email
-          </Button>
-        </form>
-      </div>
-      )}
+        <div className="bg-surface rounded-xl shadow-md p-6">
+          <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+            <Mail className="w-5 h-5 text-text-secondary" />
+            Change Email
+          </h2>
 
-      {/* Change Password - only for email/password users */}
-      {canChangeEmailPassword && (
-      <div className="bg-surface rounded-xl shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-          <Lock className="w-5 h-5 text-text-secondary" />
-          Change Password
-        </h2>
-        
-        <form onSubmit={handlePasswordChange} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Current Password
-            </label>
-            <Input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              required
-              placeholder="Enter current password"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              New Password
-            </label>
-            <Input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-              minLength={6}
-              placeholder="Enter new password"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Confirm New Password
-            </label>
-            <Input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              minLength={6}
-              placeholder="Confirm new password"
-            />
-          </div>
-          
-          {passwordMessage && (
-            <Alert variant={passwordMessage.type === 'success' ? 'success' : 'danger'}>
-              {passwordMessage.text}
-            </Alert>
-          )}
-          
-          <div className="flex items-center gap-4">
+          <form onSubmit={handleEmailChange} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">New Email Address</label>
+              <Input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                required
+                placeholder="Enter new email"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Current Password</label>
+              <Input
+                type="password"
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                required
+                placeholder="Enter current password"
+              />
+            </div>
+
+            {emailMessage && (
+              <Alert variant={emailMessage.type === 'success' ? 'success' : 'danger'}>
+                {emailMessage.text}
+              </Alert>
+            )}
+
             <Button
               type="submit"
-              disabled={passwordChanging || !currentPassword || !newPassword || !confirmPassword}
-              isLoading={passwordChanging}
+              disabled={emailChanging || !newEmail || !emailPassword}
+              isLoading={emailChanging}
             >
-              Update Password
+              Update Email
             </Button>
-            <Button
-              type="button"
-              variant="link"
-              onClick={handleSendResetEmail}
-            >
-              Send password reset email instead
-            </Button>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
       )}
 
-      {/* OAuth users: show info that email/password can't be changed */}
+      {canChangeEmailPassword && (
+        <div className="bg-surface rounded-xl shadow-md p-6">
+          <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+            <Lock className="w-5 h-5 text-text-secondary" />
+            Change Password
+          </h2>
+
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Current Password</label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+                placeholder="Enter current password"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">New Password</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Confirm New Password</label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                placeholder="Confirm new password"
+              />
+            </div>
+
+            {passwordMessage && (
+              <Alert variant={passwordMessage.type === 'success' ? 'success' : 'danger'}>
+                {passwordMessage.text}
+              </Alert>
+            )}
+
+            <div className="flex items-center gap-4">
+              <Button
+                type="submit"
+                disabled={passwordChanging || !currentPassword || !newPassword || !confirmPassword}
+                isLoading={passwordChanging}
+              >
+                Update Password
+              </Button>
+              <Button type="button" variant="link" onClick={handleSendResetEmail}>
+                Send password reset email instead
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {!canChangeEmailPassword && (
-      <div className="bg-surface rounded-xl shadow-md p-6 border border-border-light">
-        <p className="text-text-secondary text-sm">
-          You signed in with {authProviderLabel}. Email and password cannot be changed here. 
-          To update your email, use your {authProviderLabel} account settings.
-        </p>
-      </div>
+        <div className="bg-surface rounded-xl shadow-md p-6 border border-border-light">
+          <p className="text-text-secondary text-sm">
+            You signed in with {authProviderLabel}. Email and password cannot be changed here. To update your
+            email, use your {authProviderLabel} account settings.
+          </p>
+        </div>
       )}
 
-      {/* Danger Zone */}
       <div className="bg-surface rounded-xl shadow-md p-6 border-2 border-red-200">
         <h2 className="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5" />
           Danger Zone
         </h2>
-        
+
         <p className="text-text-secondary mb-4">
-          Deleting your account is permanent and cannot be undone. All your characters, 
-          creations, and data will be permanently deleted.
+          Deleting your account is permanent and cannot be undone. All your characters, creations, and data will be
+          permanently deleted.
         </p>
-        
+
         {!showDeleteConfirm ? (
-          <Button
-            variant="danger"
-            onClick={() => setShowDeleteConfirm(true)}
-          >
+          <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>
             <Trash2 className="w-4 h-4" />
             Delete My Account
           </Button>
@@ -584,9 +532,7 @@ function AccountContent() {
               To confirm deletion, enter your password and type DELETE below:
             </p>
             <div>
-              <label className="block text-sm font-medium text-red-700 mb-1">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-red-700 mb-1">Password</label>
               <Input
                 type="password"
                 value={deletePassword}
@@ -596,9 +542,7 @@ function AccountContent() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-red-700 mb-1">
-                Type DELETE to confirm
-              </label>
+              <label className="block text-sm font-medium text-red-700 mb-1">Type DELETE to confirm</label>
               <Input
                 type="text"
                 value={deleteConfirmText}
@@ -607,13 +551,11 @@ function AccountContent() {
                 placeholder="DELETE"
               />
             </div>
-            
+
             {deleteError && (
-              <div className="p-3 rounded-lg bg-red-100 text-red-700 text-sm">
-                {deleteError}
-              </div>
+              <div className="p-3 rounded-lg bg-red-100 text-red-700 text-sm">{deleteError}</div>
             )}
-            
+
             <div className="flex gap-3">
               <Button
                 variant="danger"
@@ -639,7 +581,6 @@ function AccountContent() {
         )}
       </div>
 
-      {/* Profile Picture Upload Modal */}
       <ImageUploadModal
         isOpen={showPictureModal}
         onClose={() => setShowPictureModal(false)}

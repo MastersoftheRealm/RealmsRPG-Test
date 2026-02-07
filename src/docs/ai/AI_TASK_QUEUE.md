@@ -256,7 +256,7 @@ Agents should **create new tasks** during their work when they discover addition
     - src/app/(main)/my-account/page.tsx
     - src/stores/auth-store.ts
     - src/hooks/use-auth.ts
-    - src/lib/firebase/auth.ts
+    - src/lib/supabase/session.ts
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -872,7 +872,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Shows accepted formats, recommended sizes
     - Clean modal UI matching site design
     - Works for both character sheet and profile picture
-  notes: "DONE 2026-02-06: Created ImageUploadModal (react-easy-crop) with drag-and-drop, zoom slider, canvas crop. Rect crop (3:4) for character portrait in sheet-header.tsx. Round crop (1:1) for profile picture in my-account page. Uploads to Firebase Storage. Exported from shared/index.ts."
+  notes: "DONE 2026-02-06: Created ImageUploadModal (react-easy-crop) with drag-and-drop, zoom slider, canvas crop. Rect crop (3:4) for character portrait in sheet-header.tsx. Round crop (1:1) for profile picture in my-account page. Uploads to Supabase Storage. Exported from shared/index.ts."
 
 - id: TASK-042
   title: Separate species name from level line in character sheet header
@@ -1528,8 +1528,7 @@ Agents should **create new tasks** during their work when they discover addition
   status: done
   related_files:
     - src/app/api/session/route.ts
-    - src/lib/firebase/session.ts
-    - src/lib/firebase/server.ts
+    - src/lib/supabase/session.ts
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -1547,7 +1546,7 @@ Agents should **create new tasks** during their work when they discover addition
   priority: high
   status: done
   related_files:
-    - storage.rules
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md (Supabase Storage RLS)
   created_at: 2026-02-05
   created_by: owner
   description: |
@@ -2374,7 +2373,7 @@ Agents should **create new tasks** during their work when they discover addition
   related_files:
     - src/services/encounter-service.ts
     - src/hooks/use-encounters.ts
-    - firestore.rules
+    - prisma/schema.prisma (Encounter model)
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -2608,9 +2607,9 @@ Agents should **create new tasks** during their work when they discover addition
   description: |
     Add Firestore security rules for codex collections (codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats). Public read, no client write (writes via Admin SDK in server actions only).
   related_files:
-    - firestore.rules
+    - prisma/schema.prisma (codex_* tables)
   acceptance_criteria:
-    - Each codex collection allows read: if true; write: if false
+    - Codex tables in Prisma; public read via /api/codex
     - Rules deploy without errors
     - Manual verify: unauthenticated client can read codex data
   notes: "Done 2026-02-06: Added rules for all 9 codex_* collections (feats, skills, species, traits, parts, properties, equipment, archetypes, creature_feats). Public read, no client write."
@@ -2766,10 +2765,10 @@ Agents should **create new tasks** during their work when they discover addition
     Create server actions for admin codex CRUD: createCodexFeat, updateCodexFeat, deleteCodexFeat; same for skills, species, traits, parts, properties, equipment, archetypes, creature_feats. Each action: validate isAdmin, use Admin SDK to write Firestore. Return success/error.
   related_files:
     - src/app/(main)/admin/codex/actions.ts
-    - src/lib/firebase/server.ts
+    - src/lib/admin.ts
   acceptance_criteria:
     - All CRUD actions verify isAdmin
-    - Use Admin SDK (bypasses Firestore rules)
+    - Use Prisma (Supabase/PostgreSQL)
     - Actions handle validation errors
 
 - id: TASK-126
@@ -2924,9 +2923,9 @@ Agents should **create new tasks** during their work when they discover addition
   created_at: 2026-02-06
   created_by: agent
   description: |
-    Add Firestore collections: public_powers, public_techniques, public_items, public_creatures. Rules: public read, write only via Admin SDK (server actions). Structure mirrors user library (powers, techniques, etc.) but at root level.
+    Add Prisma tables or Supabase collections: public_powers, public_techniques, public_items, public_creatures. Public read, write only via server actions (isAdmin). Structure mirrors user library.
   related_files:
-    - firestore.rules
+    - prisma/schema.prisma
     - src/types/
   acceptance_criteria:
     - Collections defined; rules allow read, disallow client write
@@ -3039,7 +3038,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-143
   title: Add Admin / Public Library workflow docs
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -3051,6 +3050,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Clear steps for adding admin (Supabase)
     - Migration and deploy steps
     - Public library usage
+  notes: "Done 2026-02-07: ADMIN_SETUP.md — added migration/deploy steps, public library (planned) note. DEPLOYMENT_AND_SECRETS_SUPABASE.md — Phase 7 Vercel step-by-step, copy-paste SQL for Storage RLS."
 
 - id: TASK-144
   title: Documentation migration audit — update all docs for Supabase stack
@@ -3185,12 +3185,12 @@ Agents should **create new tasks** during their work when they discover addition
     - No Firestore in admin codex actions
     - npm run build passes
   notes: |
-    Completed 2026-02-07. Replaced getAdminFirestore with prisma; createCodexDoc/updateCodexDoc/deleteCodexDoc now use Prisma delegates (codexFeat, codexSkill, etc.). getSession and isAdmin still use Firebase (auth/config).
+    Completed 2026-02-07. Replaced getAdminFirestore with prisma; createCodexDoc/updateCodexDoc/deleteCodexDoc now use Prisma delegates (codexFeat, codexSkill, etc.). getSession and isAdmin use Supabase Auth and env vars.
 
 - id: TASK-150
   title: Add auth confirm route for Supabase email OTP / magic links
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-07
   created_by: agent
   description: |
@@ -3204,12 +3204,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Redirects to /login?error=confirm on failure
     - npm run build passes
   notes: |
-    Adopted from manmade-react-site-reference-only. Improves security and longevity for Supabase Auth email flows.
+    Done 2026-02-07: Created auth/confirm/route.ts with verifyOtp, createUserProfileAction, x-forwarded-host for redirects. Add {{ .SiteURL }}/auth/confirm to Supabase Auth URL config for magic links.
 
 - id: TASK-151
   title: Add x-forwarded-host handling in auth callback for Vercel/proxy
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-07
   created_by: agent
   description: |
@@ -3222,4 +3222,4 @@ Agents should **create new tasks** during their work when they discover addition
     - Existing createUserProfileAction flow preserved
     - npm run build passes
   notes: |
-    Adopted from manmade-react-site-reference-only. Improves production reliability when deployed behind Vercel or other proxies.
+    Done 2026-02-07: Added getRedirectUrl() to auth/callback and auth/confirm using x-forwarded-host in production.

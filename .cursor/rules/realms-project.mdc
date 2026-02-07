@@ -14,6 +14,6 @@ alwaysApply: true
 - `vanilla-site-reference-only/` — Original HTML/CSS/JS (reference only)
 - `manmade-react-site-reference-only/` — Other reference (reference only)
 
-**Deploy:** `vercel deploy` or push to connected repo — Vercel (primary). Firebase deploy used only during migration.
+**Deploy:** `vercel deploy` or push to connected repo — Vercel only.
 
 **Before PR:** Run `npm run build`. CI runs build + `scripts/reconcile_tasks.js`.

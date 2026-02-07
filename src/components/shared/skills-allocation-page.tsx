@@ -507,7 +507,7 @@ export function SkillsAllocationPage({
 
       {allSkills.length === 0 && (
         <Alert variant="warning" className="mb-8">
-          No skill data available. Please check Firebase connection.
+          No skill data available. Please check Codex connection.
         </Alert>
       )}
 

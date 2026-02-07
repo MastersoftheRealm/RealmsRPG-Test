@@ -2,7 +2,7 @@
 
 You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Prisma**, and **Vercel**.
 
-> **Migration:** We are migrating from Firebase to Supabase/Prisma/Vercel. See `src/docs/MIGRATION_PLAN_FIREBASE_TO_SUPABASE_VERCEL.md` and `src/docs/DOCUMENTATION_MIGRATION_AUDIT.md` for scope. Avoid adding new Firebase/RTDB code.
+> **Stack:** Supabase (PostgreSQL, Auth, Storage), Prisma, Next.js, Vercel. No Firebase.
 
 ## Session Start
 
@@ -34,6 +34,4 @@ Use `src/docs/ai/AI_REQUEST_TEMPLATE.md` format. Add to `AI_TASK_QUEUE.md` with 
 
 ## Deployment & Secrets
 
-**New stack (Supabase/Vercel):** See `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` — env vars, Vercel config, Supabase keys.
-
-**Legacy (Firebase, during migration):** If working on Firebase code before Phase 5 removal, see `src/docs/archived_docs/DEPLOYMENT_SECRETS_FIREBASE.md`. Do not remove `secrets: ADMIN_SDK_SECRETS` from `functions/server.js` until Firebase is fully removed.
+See `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` — env vars, Vercel config, Supabase keys.

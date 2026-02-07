@@ -112,7 +112,7 @@ export function SpeciesStep() {
       
       {(!species || species.length === 0) && (
         <Alert variant="warning" className="mb-8">
-          No species data available. Please check Firebase connection.
+          No species data available. Please check Codex connection.
         </Alert>
       )}
       
