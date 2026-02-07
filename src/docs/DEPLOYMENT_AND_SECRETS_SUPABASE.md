@@ -22,9 +22,9 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=<anon/public_key>
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 
 # Database (from Supabase → Settings → Database)
-# Session Pooler (port 6543) for serverless — recommended for Vercel
-DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres"
-# Direct (port 5432) for migrations
+# Session Pooler (port 6543) for serverless — append ?pgbouncer=true (required for Prisma + PgBouncer)
+DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
+# Direct (port 5432) for migrations — no pgbouncer param
 DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
 ```
 
@@ -37,7 +37,8 @@ In Vercel → Project → Settings → Environment Variables, add:
 | `NEXT_PUBLIC_SUPABASE_URL` | All | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | All | Anon/public key (safe for client) |
 | `SUPABASE_SERVICE_ROLE_KEY` | All | **Server-only** — never expose to client |
-| `DATABASE_URL` | All | Use Session Pooler string for serverless |
+| `DATABASE_URL` | All | Session Pooler (port 6543), **must end with `?pgbouncer=true`** |
+| `DIRECT_URL` | All | Direct connection (port 5432) for Prisma migrations |
 
 **Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY` or `DATABASE_URL`.
 
@@ -163,7 +164,8 @@ See `ADMIN_SETUP.md` for current implementation.
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | Supabase → Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | `eyJ...` (anon key) | Supabase → Settings → API → anon public |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJ...` (service_role key) | Supabase → Settings → API → service_role |
-| `DATABASE_URL` | `postgresql://...` | Supabase → Settings → Database → Connection string (Session Pooler, port 6543) |
+| `DATABASE_URL` | `postgresql://...` **+ `?pgbouncer=true`** | Supabase → Database → Session Pooler (port 6543); append `?pgbouncer=true` |
+| `DIRECT_URL` | `postgresql://...` | Supabase → Database → Direct connection (port 5432) |
 | `ADMIN_UIDS` | `uid1,uid2` | Your Supabase Auth user IDs (optional, for admin) |
 
 **Never** use `NEXT_PUBLIC_` for `SUPABASE_SERVICE_ROLE_KEY` or `DATABASE_URL`.

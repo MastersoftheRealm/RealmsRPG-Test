@@ -12,6 +12,7 @@ export async function middleware(request: Request) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Exclude auth callback/confirm — middleware can interfere with PKCE code exchange (causes auth_callback on first OAuth attempt)
+    '/((?!_next/static|_next/image|favicon.ico|auth/callback|auth/confirm|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
