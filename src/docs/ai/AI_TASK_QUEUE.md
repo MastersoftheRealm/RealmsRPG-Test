@@ -2459,3 +2459,134 @@ Agents should **create new tasks** during their work when they discover addition
     - Works for combat and skill encounters
     - npm run build passes
   notes: "Done 2026-02-06. AddCombatantModal 'From Campaign' tab; fetches character data via API; auto-populates HP/EN/evasion/acuity."
+
+- id: TASK-109
+  title: Verify equip toggle ID matching and persistence
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Equip toggle handlers match by item.id || item.name || String(i). If items lack IDs or have inconsistent shapes (enriched vs raw), toggle may not persist. Verify in character sheet; fix ID matching if needed.
+  acceptance_criteria:
+    - Equip/unequip armor and weapons persists correctly on save
+    - Works with items that have id, name, or index-only
+    - npm run build passes
+  notes: "Done 2026-02-06: Added index-based fallback matching; pass item.id ?? item.name ?? i; handlers now support numeric index when id/name missing."
+
+- id: TASK-110
+  title: Verify weapon/armor delete in character sheet
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/feats-tab.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Ensure delete (X) button for weapons and armor works in character sheet. Feedback indicated pencil icon useless for feat deletion—verify feat delete works; weapons/armor use onDelete (X) not pencil.
+  acceptance_criteria:
+    - Remove weapon/armor works; item is removed from list and persisted
+    - Delete button visible when onRemoveWeapon/onRemoveArmor provided
+    - npm run build passes
+  notes: "Done 2026-02-06: Feat delete gated on isEditMode (pencil enables it); weapon/armor delete gated on isEditMode for consistency with powers/techniques; equipment delete remains available outside edit mode (like quantity change). Build passes."
+
+- id: TASK-111
+  title: Fix inventory remove bug (Library → Equipment)
+  priority: high
+  status: done
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Feedback: "Unable to remove items from inventory." Verify onRemoveEquipment flow and GridListRow onDelete for equipment items. Ensure delete button appears and handler correctly filters items.
+  acceptance_criteria:
+    - Users can remove equipment items from Library → Equipment tab
+    - Delete persists on save
+    - npm run build passes
+  notes: "Done 2026-02-06: Equipment delete uses index-based fallback (TASK-109 fix); no isEditMode gate so delete always visible; onDelete + handleRemoveEquipment flow verified. Build passes."
+
+- id: TASK-112
+  title: Audit all list/section headers for full caps
+  priority: medium
+  status: done
+  related_files:
+    - src/components/shared/section-header.tsx
+    - src/components/shared/list-header.tsx
+    - src/components/shared/skills-allocation-page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Ensure all list item headers and section headers use full caps (NAME not Name). ListHeader and SectionHeader already use uppercase. Audit for any custom headers that bypass these components.
+  acceptance_criteria:
+    - All list/section headers display in UPPERCASE
+    - No Title Case headers in list or section contexts
+    - npm run build passes
+  notes: "Done 2026-02-06: Verified ListHeader, SectionHeader, SortHeader use uppercase; ColumnHeaders uses label.toUpperCase(); added uppercase to skills-allocation-page section headers (Species Skills, Defense Bonuses). Build passes."
+
+- id: TASK-113
+  title: Full dark mode implementation pass
+  priority: high
+  status: done
+  related_files:
+    - src/app/globals.css
+    - src/components/ui/modal.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/character-sheet/sheet-action-toolbar.tsx
+    - src/components/character-sheet/roll-log.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    TASK-074/084 softened some components. User wants full dark mode: all modals, cards, inputs, buttons, chips, hover states. Audit for raw colors (gray-*, blue-*) without dark: variants; fix hover states that bleach text.
+  acceptance_criteria:
+    - No harsh contrast in dark mode
+    - Hover states preserve readable text in dark mode
+    - Design tokens used consistently
+    - npm run build passes
+  notes: "Done 2026-02-06: Added dark: variants to feats-step, finalize-step, equipment-step, skill-row, creature-stat-block, sheet-action-toolbar, roll-log, modal, unified-selection-modal. Auth components use gray intentionally per AGENTS.md. Build passes."
+
+- id: TASK-114
+  title: Style consistency audit (ability/defense/health-energy)
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/creator/ability-score-editor.tsx
+    - src/components/creator/health-energy-allocator.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Unify ability allocation, defense allocation, and health/energy allocator styles across character sheet, character creator, and creature creator. Single source of truth for each pattern.
+  acceptance_criteria:
+    - Same visual design for ability/defense/health-energy across all three contexts
+    - Shared components or identical styling
+    - npm run build passes
+  notes: "Done 2026-02-06: Verified shared components (DecrementButton, IncrementButton, PointStatus, ValueStepper, HealthEnergyAllocator, AbilityScoreEditor). Added dark mode to HealthEnergyAllocator (HP/EN labels, status colors). Fixed text-secondary to text-text-secondary. Build passes."
+
+- id: TASK-115
+  title: Component reuse audit (add-X modals)
+  priority: medium
+  status: done
+  related_files:
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Ensure all add-X modals (add feat, power, technique, armament) use shared Modal + ListHeader + GridListRow. No inline custom list UIs. TASK-068 unified creature creator modals—verify consistency.
+  acceptance_criteria:
+    - All add modals use unified patterns
+    - Consistent rounded corners, header spacing, sortable columns
+    - npm run build passes
+  notes: "Done 2026-02-06: Verified add-feat-modal, add-library-item-modal, add-skill-modal use Modal + ListHeader + GridListRow. Creature creator uses UnifiedSelectionModal (GridListRow + sortable columns). add-sub-skill-modal uses SelectionToggle (justified unique UX). All modals follow unified patterns. Build passes."

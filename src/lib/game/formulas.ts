@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Game Formulas
  * ==============
  * Centralized game calculation formulas for RealmsRPG
@@ -39,7 +39,8 @@ export function calculateAbilityPoints(level: number, allowSubLevel = false): nu
 
 /**
  * Calculate skill points based on level.
- * Formula: 2 + level * 3
+ * Legacy formula: 2 + level * 3 (for backward compatibility in some displays).
+ * Use calculateSkillPointsForEntity for character/creature allocation.
  */
 export function calculateSkillPoints(level: number, allowSubLevel = false): number {
   const parsedLevel = parseFloat(String(level)) || 1;
@@ -50,6 +51,19 @@ export function calculateSkillPoints(level: number, allowSubLevel = false): numb
   
   return SHARED_CONSTANTS.BASE_SKILL_POINTS + 
          (SHARED_CONSTANTS.SKILL_POINTS_PER_LEVEL * Math.floor(parsedLevel));
+}
+
+/**
+ * Skill points per level: characters 3, creatures 5.
+ * Used for skill allocation in character creator and creature creator.
+ */
+export function calculateSkillPointsForEntity(
+  level: number,
+  entityType: 'character' | 'creature'
+): number {
+  const parsedLevel = Math.max(1, Math.floor(parseFloat(String(level)) || 1));
+  const perLevel = entityType === 'character' ? 3 : 5;
+  return perLevel * parsedLevel;
 }
 
 /**
@@ -507,13 +521,13 @@ export function calculateSkillBonus(
 
 /**
  * Calculate total skill bonus including proficiency.
- * Used in character sheet where proficiency adds +1.
+ * Per core rulebook: Proficient = Ability + Skill Value; Unproficient = ½ Ability (or ×2 if negative).
  * 
  * @param linkedAbilities - The ability/abilities linked to this skill
  * @param skillValue - The points allocated to this skill  
  * @param abilities - The character/creature's ability scores
  * @param isProficient - Whether the character is proficient in this skill
- * @returns The total skill bonus including proficiency
+ * @returns The total skill bonus
  */
 export function calculateSkillBonusWithProficiency(
   linkedAbilities: string | string[] | undefined,
@@ -524,11 +538,37 @@ export function calculateSkillBonusWithProficiency(
   const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
   
   if (isProficient) {
-    // Proficient: ability + skill value + 1
-    return abilityMod + skillValue + 1;
+    // Proficient: ability + skill value
+    return abilityMod + skillValue;
   } else {
     // Unproficient: half ability (rounded up) or double negative
     const unprofAbilityBonus = abilityMod < 0 ? abilityMod * 2 : Math.ceil(abilityMod / 2);
     return unprofAbilityBonus;
   }
+}
+
+/**
+ * Calculate sub-skill bonus.
+ * Proficient: Ability + Base Skill Value + Sub-Skill Value.
+ * Unproficient (base proficient): Ability + Base Skill Value.
+ * Unproficient (base not proficient): unprofBonus(Ability) + Base Skill Value.
+ */
+export function calculateSubSkillBonusWithProficiency(
+  linkedAbilities: string | string[] | undefined,
+  subSkillValue: number,
+  baseSkillValue: number,
+  baseSkillProficient: boolean,
+  abilities: Abilities,
+  isProficient: boolean
+): number {
+  const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
+  const unprofBonus = (a: number) => (a < 0 ? a * 2 : Math.ceil(a / 2));
+
+  if (!baseSkillProficient) {
+    return unprofBonus(abilityMod) + baseSkillValue;
+  }
+  if (isProficient) {
+    return abilityMod + baseSkillValue + subSkillValue;
+  }
+  return abilityMod + baseSkillValue;
 }

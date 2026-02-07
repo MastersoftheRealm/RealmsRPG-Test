@@ -284,7 +284,7 @@ export function AncestryStep() {
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedCharacteristic
                 ? 'bg-green-200 text-green-800'
-                : 'bg-blue-200 text-blue-800'
+                : 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
             )}>
               {selectedCharacteristic ? '1' : '0'} / 1
             </span>
@@ -345,7 +345,7 @@ export function AncestryStep() {
         <TraitSection
           title="Characteristics"
           subtitle="Select 1 characteristic (optional)"
-          icon={<Sparkles className="w-5 h-5 text-blue-600" />}
+          icon={<Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}

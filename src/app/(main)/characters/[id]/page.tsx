@@ -15,7 +15,7 @@ import { db, storage } from '@/lib/firebase/client';
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
-import { calculateArchetypeProgression, calculateSkillPoints } from '@/lib/game/formulas';
+import { calculateArchetypeProgression, calculateSkillPointsForEntity } from '@/lib/game/formulas';
 import {
   SheetHeader,
   AbilitiesSection,
@@ -704,7 +704,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Remove weapon handler
-  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
+  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
   const handleRemoveWeapon = useCallback((itemId: string | number) => {
     if (!character) return;
     const idStr = String(itemId);
@@ -712,11 +712,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
       ...prev,
       equipment: {
         ...prev.equipment,
-        weapons: ((prev.equipment?.weapons as Item[]) || []).filter(w => {
+        weapons: ((prev.equipment?.weapons as Item[]) || []).filter((w, idx) => {
           const matches = w.id === itemId || 
                          String(w.id) === idStr || 
                          w.name === idStr || 
-                         w.name?.toLowerCase() === idStr.toLowerCase();
+                         w.name?.toLowerCase() === idStr.toLowerCase() ||
+                         (typeof itemId === 'number' && idx === itemId);
           return !matches;
         })
       }
@@ -724,7 +725,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Toggle equip weapon handler
-  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
+  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
   const handleToggleEquipWeapon = useCallback((itemId: string | number) => {
     if (!character) return;
     const idStr = String(itemId);
@@ -732,11 +733,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
       ...prev,
       equipment: {
         ...prev.equipment,
-        weapons: ((prev.equipment?.weapons as Item[]) || []).map(w => {
+        weapons: ((prev.equipment?.weapons as Item[]) || []).map((w, idx) => {
           const matches = w.id === itemId || 
                          String(w.id) === idStr || 
                          w.name === idStr || 
-                         w.name?.toLowerCase() === idStr.toLowerCase();
+                         w.name?.toLowerCase() === idStr.toLowerCase() ||
+                         (typeof itemId === 'number' && idx === itemId);
           return matches ? { ...w, equipped: !w.equipped } : w;
         })
       }
@@ -756,7 +758,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Remove armor handler
-  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
+  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
   const handleRemoveArmor = useCallback((itemId: string | number) => {
     if (!character) return;
     const idStr = String(itemId);
@@ -764,11 +766,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
       ...prev,
       equipment: {
         ...prev.equipment,
-        armor: ((prev.equipment?.armor as Item[]) || []).filter(a => {
+        armor: ((prev.equipment?.armor as Item[]) || []).filter((a, idx) => {
           const matches = a.id === itemId || 
                          String(a.id) === idStr || 
                          a.name === idStr || 
-                         a.name?.toLowerCase() === idStr.toLowerCase();
+                         a.name?.toLowerCase() === idStr.toLowerCase() ||
+                         (typeof itemId === 'number' && idx === itemId);
           return !matches;
         })
       }
@@ -776,7 +779,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Toggle equip armor handler
-  // Note: Match by ID, name, or string comparison since equipment may be stored as {name, equipped} without ID
+  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
   const handleToggleEquipArmor = useCallback((itemId: string | number) => {
     if (!character) return;
     const idStr = String(itemId);
@@ -784,11 +787,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
       ...prev,
       equipment: {
         ...prev.equipment,
-        armor: ((prev.equipment?.armor as Item[]) || []).map(a => {
+        armor: ((prev.equipment?.armor as Item[]) || []).map((a, idx) => {
           const matches = a.id === itemId || 
                          String(a.id) === idStr || 
                          a.name === idStr || 
-                         a.name?.toLowerCase() === idStr.toLowerCase();
+                         a.name?.toLowerCase() === idStr.toLowerCase() ||
+                         (typeof itemId === 'number' && idx === itemId);
           return matches ? { ...a, equipped: !a.equipped } : a;
         })
       }
@@ -808,7 +812,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Remove equipment handler
-  // Note: Match by ID, name, or string comparison since equipment may be stored as {name} without ID
+  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name} without ID
   const handleRemoveEquipment = useCallback((itemId: string | number) => {
     if (!character) return;
     const idStr = String(itemId);
@@ -816,11 +820,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
       ...prev,
       equipment: {
         ...prev.equipment,
-        items: ((prev.equipment?.items as Item[]) || []).filter(e => {
+        items: ((prev.equipment?.items as Item[]) || []).filter((e, idx) => {
           const matches = e.id === itemId || 
                          String(e.id) === idStr || 
                          e.name === idStr || 
-                         e.name?.toLowerCase() === idStr.toLowerCase();
+                         e.name?.toLowerCase() === idStr.toLowerCase() ||
+                         (typeof itemId === 'number' && idx === itemId);
           return !matches;
         })
       }
@@ -828,17 +833,18 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Equipment quantity change handler (+/-)
-  // Note: Match by ID, name, or string comparison since equipment may be stored as {name} without ID
+  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name} without ID
   const handleEquipmentQuantityChange = useCallback((itemId: string | number, delta: number) => {
     if (!character) return;
     const idStr = String(itemId);
     setCharacter(prev => {
       if (!prev) return null;
-      const items = ((prev.equipment?.items as Item[]) || []).map(item => {
+      const items = ((prev.equipment?.items as Item[]) || []).map((item, idx) => {
         const matches = item.id === itemId || 
                        String(item.id) === idStr || 
                        item.name === idStr || 
-                       item.name?.toLowerCase() === idStr.toLowerCase();
+                       item.name?.toLowerCase() === idStr.toLowerCase() ||
+                       (typeof itemId === 'number' && idx === itemId);
         if (matches) {
           const newQty = Math.max(1, (item.quantity || 1) + delta);
           return { ...item, quantity: newQty };
@@ -1272,7 +1278,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   skills={skills}
                   abilities={character.abilities}
                   isEditMode={isEditMode}
-                  totalSkillPoints={calculateSkillPoints(character.level || 1) - characterSpeciesSkills.length}
+                  totalSkillPoints={calculateSkillPointsForEntity(character.level || 1, 'character')}
                   speciesSkills={characterSpeciesSkills}
                   onSkillChange={handleSkillChange}
                   onRemoveSkill={handleRemoveSkill}

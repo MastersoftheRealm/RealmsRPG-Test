@@ -71,6 +71,8 @@ After deploy:
 | Symptom | Likely Cause | Fix |
 |---------|--------------|-----|
 | `/api/session` 500 | Secrets not injected into function | Add `secrets: [...]` to `onRequest` in `functions/server.js`, redeploy |
+| `/api/session` 500 or "Memory limit exceeded" | SSR function using &gt;256 MiB (default) | Add `memory: 512` to `onRequest` in `functions/server.js`, redeploy |
+| "Failed to create campaign" / `firebase-admin-a14c8a5423a75469` ERR_MODULE_NOT_FOUND | Firebase CLI runs `next build` (Turbopack) directly, ignoring package.json | A patch in `patches/firebase-tools+*.patch` makes Firebase run `next build --webpack`. Run `npm install patch-package` and `npm install` so postinstall applies it. |
 | "Failed to create campaign" | No session cookie (session API failed) | Fix session 500 first |
 | "Invalid token" / auth errors | Private key format wrong | Re-store key with `\n` as literal, redeploy |
 | Works locally, fails in prod | Local uses `.env.local`; prod uses Secret Manager | Ensure secrets exist and function declares them |

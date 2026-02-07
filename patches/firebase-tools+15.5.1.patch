@@ -1,0 +1,13 @@
+diff --git a/node_modules/firebase-tools/lib/frameworks/next/index.js b/node_modules/firebase-tools/lib/frameworks/next/index.js
+index 21a8343..85c1bff 100644
+--- a/node_modules/firebase-tools/lib/frameworks/next/index.js
++++ b/node_modules/firebase-tools/lib/frameworks/next/index.js
+@@ -70,7 +70,7 @@ async function build(dir, target, context) {
+     }
+     const cli = (0, utils_1.getNodeModuleBin)("next", dir);
+     const nextBuild = new Promise((resolve, reject) => {
+-        const buildProcess = (0, cross_spawn_1.spawn)(cli, ["build"], { cwd: dir, env });
++        const buildProcess = (0, cross_spawn_1.spawn)(cli, ["build", "--webpack"], { cwd: dir, env });
+         buildProcess.stdout?.on("data", (data) => logger_1.logger.info(data.toString()));
+         buildProcess.stderr?.on("data", (data) => logger_1.logger.info(data.toString()));
+         buildProcess.on("error", (err) => {

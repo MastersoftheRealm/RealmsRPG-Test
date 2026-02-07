@@ -438,7 +438,7 @@ export function EquipmentStep() {
                   key={prowessLevel.level}
                   className={cn(
                     'flex items-center gap-4 p-4 rounded-lg border transition-all',
-                    isSelected ? 'bg-primary-50 border-primary-300' : 'bg-surface border-border-light',
+                    isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600/50' : 'bg-surface border-border-light',
                     !isAvailable && 'opacity-50',
                     canSelect && !isSelected && 'hover:border-primary-300 cursor-pointer'
                   )}

@@ -2,6 +2,33 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: TASK-110 through TASK-115 — All remaining tasks complete | files: feats-tab.tsx, library-section.tsx, skills-allocation-page.tsx, feats-step.tsx, finalize-step.tsx, equipment-step.tsx, skill-row.tsx, creature-stat-block.tsx, sheet-action-toolbar.tsx, roll-log.tsx, modal.tsx, unified-selection-modal.tsx, health-energy-allocator.tsx, AI_TASK_QUEUE.md | TASKs: TASK-110, TASK-111, TASK-112, TASK-113, TASK-114, TASK-115 | Summary:
+  - TASK-110: Feat delete gated on isEditMode (pencil enables); weapon/armor delete gated on isEditMode; equipment delete always visible
+  - TASK-111: Equipment remove uses index-based fallback; verified flow
+  - TASK-112: Added uppercase to skills-allocation-page section headers; verified ListHeader/SectionHeader/SortHeader
+  - TASK-113: Full dark mode pass — feats-step, finalize-step, equipment-step, skill-row, creature-stat-block, sheet-action-toolbar, roll-log, modal, unified-selection-modal
+  - TASK-114: HealthEnergyAllocator dark mode (HP/EN labels, status colors); text-text-secondary fix
+  - TASK-115: Verified add-X modals use Modal + ListHeader + GridListRow; creature creator uses UnifiedSelectionModal
+  - Build passes
+
+- 2026-02-06 | agent:cursor | Session: Comprehensive audit, equip/delete fixes, dark mode pass | files: COMPREHENSIVE_AUDIT_2026-02-06.md, AI_TASK_QUEUE.md, characters/[id]/page.tsx, library-section.tsx, health-energy-allocator.tsx, finalize-step.tsx, feats-step.tsx, ancestry-step.tsx, abilities-section.tsx, creature-stat-block.tsx, archetype-section.tsx | Summary:
+  - Audit: Created COMPREHENSIVE_AUDIT_2026-02-06.md with feedback consolidation, equip/delete gaps, header caps, dark mode, style consistency
+  - Added TASK-109 through TASK-115 (equip verify, weapon/armor delete, inventory remove, header caps, full dark mode, style consistency, component reuse)
+  - Equip/delete: Robust ID matching — pass item.id ?? item.name ?? i; handlers now support index-based fallback when id/name missing
+  - Dark mode: Added dark: variants to health-energy-allocator, library-section DR, finalize-step, feats-step, ancestry-step, abilities-section, creature-stat-block, archetype-section
+  - Build passes
+
+- 2026-02-06 | agent:cursor | Session: Skill calculation fixes & character creator skills page overhaul | files: lib/game/skill-allocation.ts, lib/game/formulas.ts, skills-allocation-page.tsx, skills-step.tsx, skill-row.tsx, add-skill-modal.tsx, add-sub-skill-modal.tsx, finalize-step.tsx, characters/[id]/page.tsx, campaigns/.../page.tsx, GAME_RULES.md | Summary:
+  - Skill points: 3/level for characters, 5/level for creatures
+  - Species skills: 2 permanent, always proficient, can't remove; (species) tag; greyed X remove button
+  - Skill point costs: 1 pt proficiency (base); 1 pt proficiency + 1 value (sub-skill); 1:1 value increase; 3 pts past cap (base), 2 pts past cap (sub-skill); 2 pts per defense +1
+  - Defense: cannot increase if total bonus >= level
+  - Shared SkillsAllocationPage: Add Skill/Sub-Skill modals, species skills section, defense allocation, point counter
+  - Character creator skills-step: full rewrite using SkillsAllocationPage
+  - Skill bonus formula: proficient = ability + skill value; added calculateSubSkillBonusWithProficiency for sub-skills
+  - Finalize step: uses calculateSimpleSkillPointsSpent for validation; correct skill→array conversion with baseSkill/ability
+  - Build passes
+
 - 2026-02-06 | agent:cursor | Session: Character creator & sheet feedback batch | files: feats-step.tsx, equipment-step.tsx, finalize-step.tsx, sheet-header.tsx, character-sheet-utils.ts, character-creator-store.ts, library-section.tsx, roll-log.tsx | Summary:
   - Feats tab (character creator): Uses header same font size as other headers (text-xs); single unified list (archetype + character feats); feat type filter no duplicate "All Feats"; removed results count
   - Equipment tab: Source filter wired (library/rtdb); QuantitySelector for quantity steppers (shared component); removed duplicate "All Sources"

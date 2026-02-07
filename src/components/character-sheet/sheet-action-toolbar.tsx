@@ -75,7 +75,7 @@ export function SheetActionToolbar({
           'w-11 h-11 rounded-full shadow-lg transition-all duration-200',
           'flex items-center justify-center',
           'bg-surface border border-border-light text-blue-600',
-          'hover:scale-110 hover:bg-blue-50 hover:border-blue-200 active:scale-95'
+          'hover:scale-110 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-200 dark:hover:border-blue-700/50 active:scale-95'
         )}
         title="Recovery"
         aria-label="Recovery"

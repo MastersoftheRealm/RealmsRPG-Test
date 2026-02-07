@@ -16,7 +16,7 @@ const server = import('firebase-frameworks');
 const ADMIN_SDK_SECRETS = ['SERVICE_ACCOUNT_EMAIL', 'SERVICE_ACCOUNT_PRIVATE_KEY'];
 
 exports.ssrrealmsrpgtest = onRequest(
-  { region: 'us-central1', secrets: ADMIN_SDK_SECRETS },
+  { region: 'us-central1', secrets: ADMIN_SDK_SECRETS, memory: 512 },
   (req, res) => server.then((it) => it.handle(req, res))
 );
 

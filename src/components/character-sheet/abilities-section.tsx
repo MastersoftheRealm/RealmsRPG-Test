@@ -338,7 +338,7 @@ export function AbilitiesSection({
                       disabled={!canDecreaseDefense}
                       size="sm"
                     />
-                    <span className="text-sm font-bold min-w-[36px] text-center text-blue-600">
+                    <span className="text-sm font-bold min-w-[36px] text-center text-blue-600 dark:text-blue-400">
                       {formatBonus(defenseBonus)}
                     </span>
                     <IncrementButton
@@ -360,7 +360,7 @@ export function AbilitiesSection({
                 
                 {/* Defense skill allocation indicator */}
                 {showEditControls && defenseValue > 0 && (
-                  <span className="text-[9px] text-blue-600 font-medium mt-0.5">
+                  <span className="text-[9px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
                     +{defenseValue} ({defenseValue * 2}sp)
                   </span>
                 )}

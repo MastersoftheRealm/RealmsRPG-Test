@@ -29,7 +29,7 @@ import {
   useRTDBFeats,
   useRTDBSkills,
 } from '@/hooks';
-import { calculateArchetypeProgression, calculateSkillPoints } from '@/lib/game/formulas';
+import { calculateArchetypeProgression, calculateSkillPointsForEntity } from '@/lib/game/formulas';
 import type { Character, Item } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
@@ -201,7 +201,7 @@ function CampaignCharacterViewContent() {
                   skills={skills}
                   abilities={character.abilities}
                   isEditMode={false}
-                  totalSkillPoints={calculateSkillPoints(character.level || 1) - characterSpeciesSkills.length}
+                  totalSkillPoints={calculateSkillPointsForEntity(character.level || 1, 'character')}
                   speciesSkills={characterSpeciesSkills}
                   onSkillChange={() => {}}
                   onRemoveSkill={() => {}}

@@ -263,7 +263,7 @@ export function UnifiedSelectionModal({
         {/* Column Headers (if columns defined) */}
         {columns.length > 0 && (
           <div 
-            className="hidden lg:grid gap-2 px-4 py-2 bg-primary-50 border-b border-border-light text-xs font-semibold text-primary-700 uppercase tracking-wider rounded-t-lg"
+            className="hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wider rounded-t-lg"
             style={gridColumns ? { gridTemplateColumns: `${gridColumns} 2.5rem` } : undefined}
           >
             {columns.map(col => (

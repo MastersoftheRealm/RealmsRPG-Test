@@ -189,7 +189,7 @@ export function SkillRow({
           {isSubSkill && <span className="text-text-muted mr-1">└</span>}
           {name}
           {isSpeciesSkill && (
-            <span className="ml-1 text-xs text-text-muted">(Species)</span>
+            <span className="ml-1 text-xs text-text-muted">(species)</span>
           )}
         </td>
         
@@ -291,20 +291,25 @@ export function SkillRow({
       <div className={cn(
         'p-3 rounded-lg border transition-colors',
         isSpeciesSkill ? 'bg-blue-50 dark:bg-primary-900/30 border-blue-200 dark:border-primary-600/50' : 
-          value > 0 ? 'bg-primary-50 border-primary-200' : 'bg-surface-alt border-border-light',
+          value > 0 ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700/50' : 'bg-surface-alt border-border-light',
         !isUnlocked && 'opacity-50',
         className
       )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* Remove button for creatures - simple red X matching add button style */}
-            {onRemove && (
+            {/* Remove button - greyed out for species skills (can't remove) */}
+            {(onRemove || isSpeciesSkill) && (
               <IconButton
                 variant="ghost"
                 size="sm"
-                onClick={() => onRemove()}
-                label="Remove skill"
-                className="text-danger hover:text-danger-600 hover:bg-transparent"
+                onClick={() => !isSpeciesSkill && onRemove?.()}
+                label={isSpeciesSkill ? 'Species skill (cannot remove)' : 'Remove skill'}
+                disabled={isSpeciesSkill}
+                className={cn(
+                  isSpeciesSkill
+                    ? 'text-text-muted opacity-50 cursor-not-allowed'
+                    : 'text-danger hover:text-danger-600 hover:bg-transparent'
+                )}
               >
                 <X className="w-4 h-4" />
               </IconButton>
@@ -330,7 +335,7 @@ export function SkillRow({
             </div>
             
             {isSpeciesSkill && (
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(Species +1 Free)</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(species)</span>
             )}
           </div>
           
@@ -373,7 +378,7 @@ export function SkillRow({
         'p-2 rounded-lg border transition-colors text-sm',
         isSpeciesSkill ? 'bg-blue-50 dark:bg-primary-900/30 border-blue-200 dark:border-primary-600/50' :
           !isUnlocked && 'opacity-50 bg-surface border-border-light',
-        isUnlocked && value > 0 && 'bg-primary-50 border-primary-200',
+        isUnlocked && value > 0 && 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700/50',
         isUnlocked && value === 0 && 'bg-surface-alt border-border-light',
         className
       )}>
@@ -388,7 +393,7 @@ export function SkillRow({
               {name}
             </span>
             {isSpeciesSkill && (
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(+1 Free)</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(species)</span>
             )}
           </div>
           

@@ -67,6 +67,10 @@ export type { PartData } from './part-chip';
 export { SkillRow } from './skill-row';
 export type { SkillRowProps } from './skill-row';
 
+// SkillsAllocationPage - Shared skill allocation for character/creature creator
+export { SkillsAllocationPage } from './skills-allocation-page';
+export type { SkillsAllocationPageProps } from './skills-allocation-page';
+
 // List components (shared between Codex and Library)
 export {
   SearchInput,

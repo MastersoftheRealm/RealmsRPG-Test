@@ -923,7 +923,7 @@ export function LibrarySection({
                         leftSlot={onToggleEquipWeapon && (
                           <EquipToggle
                             isEquipped={item.equipped || false}
-                            onToggle={() => onToggleEquipWeapon(item.id || item.name || String(i))}
+                            onToggle={() => onToggleEquipWeapon(item.id ?? item.name ?? i)}
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
@@ -947,7 +947,7 @@ export function LibrarySection({
                             )}
                           </div>
                         )}
-                        onDelete={onRemoveWeapon ? () => onRemoveWeapon(item.id || item.name || String(i)) : undefined}
+                        onDelete={isEditMode && onRemoveWeapon ? () => onRemoveWeapon(item.id ?? item.name ?? i) : undefined}
                         expandedContent={item.description ? (
                           <p className="text-sm text-text-muted italic whitespace-pre-wrap">
                             {item.description}
@@ -987,7 +987,7 @@ export function LibrarySection({
                     const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
                     
                     const columns: ColumnValue[] = [
-                      { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 font-medium', align: 'center' },
+                      { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 dark:text-blue-400 font-medium', align: 'center' },
                       { key: 'crit', value: itemWithCrit.critRange ?? '-', align: 'center' },
                     ];
                     
@@ -1015,11 +1015,11 @@ export function LibrarySection({
                         leftSlot={onToggleEquipArmor && (
                           <EquipToggle
                             isEquipped={item.equipped || false}
-                            onToggle={() => onToggleEquipArmor(item.id || item.name || String(i))}
+                            onToggle={() => onToggleEquipArmor(item.id ?? item.name ?? i)}
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
-                        onDelete={onRemoveArmor ? () => onRemoveArmor(item.id || item.name || String(i)) : undefined}
+                        onDelete={isEditMode && onRemoveArmor ? () => onRemoveArmor(item.id ?? item.name ?? i) : undefined}
                         expandedContent={expandedDetails.length > 0 ? (
                           <div className="space-y-1">
                             {expandedDetails.map((detail, idx) => (
@@ -1092,8 +1092,8 @@ export function LibrarySection({
                         chips={propertyChips}
                         badges={badges}
                         quantity={item.quantity}
-                        onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id || item.name || String(i), delta) : undefined}
-                        onDelete={onRemoveEquipment ? () => onRemoveEquipment(item.id || item.name || String(i)) : undefined}
+                        onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id ?? item.name ?? i, delta) : undefined}
+                        onDelete={onRemoveEquipment ? () => onRemoveEquipment(item.id ?? item.name ?? i) : undefined}
                         compact
                       />
                     );

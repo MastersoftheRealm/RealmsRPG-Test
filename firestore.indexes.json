@@ -4,9 +4,39 @@
       "collectionGroup": "campaigns",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "memberIds", "arrayConfig": "CONTAINS" },
-        { "fieldPath": "updatedAt", "order": "DESCENDING" }
-      ]
+        {
+          "fieldPath": "memberIds",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "campaigns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "memberIds",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ],
+      "density": "SPARSE_ALL"
     }
   ],
   "fieldOverrides": []

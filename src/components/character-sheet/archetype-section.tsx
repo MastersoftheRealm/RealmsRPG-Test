@@ -440,7 +440,7 @@ export function ArchetypeSection({
   const getProfPointsColorClass = () => {
     if (remainingProfPoints > 0) return 'bg-green-100 text-green-700'; // Has points
     if (remainingProfPoints < 0) return 'bg-red-100 text-red-700'; // Over budget
-    return 'bg-blue-100 text-blue-700'; // Perfect
+    return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'; // Perfect
   };
   
   // Calculate Power Potency: 10 + pow_prof + pow_abil value

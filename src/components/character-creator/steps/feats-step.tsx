@@ -369,8 +369,8 @@ export function FeatsStep() {
         <div className={cn(
           'p-4 rounded-xl border-2',
           selectedCharacterFeats.length === maxCharacterFeats
-            ? 'bg-green-50 border-green-300'
-            : 'bg-blue-50 border-blue-300'
+            ? 'bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-600/50'
+            : 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600/50'
         )}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-text-primary">Character Feats</h3>
@@ -378,7 +378,7 @@ export function FeatsStep() {
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedCharacterFeats.length === maxCharacterFeats
                 ? 'bg-green-200 text-green-800'
-                : 'bg-blue-200 text-blue-800'
+                : 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
             )}>
               {selectedCharacterFeats.length} / {maxCharacterFeats}
             </span>
@@ -390,7 +390,7 @@ export function FeatsStep() {
               selectedCharacterFeats.map(feat => (
                 <span
                   key={feat.id}
-                  className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm flex items-center gap-2 border border-blue-200"
+                  className="px-3 py-1 bg-white dark:bg-surface-alt text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-2 border border-blue-200 dark:border-blue-800"
                 >
                   {feat.name}
                   <button
@@ -464,7 +464,7 @@ export function FeatsStep() {
       </FilterSection>
 
       {/* Column Headers - Uses same text-xs font-semibold as SortHeader for consistency */}
-      <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg text-xs font-semibold uppercase tracking-wide text-primary-700"
+      <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light rounded-t-lg text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300"
            style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}>
         <SortHeader label="NAME" col="name" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <SortHeader label="LEVEL" col="lvl_req" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />

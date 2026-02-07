@@ -282,12 +282,15 @@ D20 + Skill Bonus = Total
 | Rule | Value | Notes |
 |------|-------|------|
 | Max skill value per skill | 3 | Skill Value Cap |
-| Skill points at level 1 (player) | 5 total, 3 choosable | Species forces 2 into proficiency; display 3/3 |
-| Skill points per level | +3 | |
-| Creature skill points at level 1 | 5 choosable | No species; display 5/5 |
-| Increase Skill Value Cap (Base) | 2 Skill Points | +1 to cap |
-| Increase Skill Value Cap (Sub-Skill) | 1 Skill Point | +1 to cap |
-| Increase Defense Bonus | 2 Skill Points | +1 to a Defense, max increase from Skill Points = Level |
+| Skill points per level (characters) | 3 | e.g. 3 at level 1, 6 at level 2 |
+| Skill points per level (creatures) | 5 | No species; e.g. 5 at level 1 |
+| Species skills | 2 permanent | Always proficient, cannot remove; proficiency free |
+| Gain proficiency (base skill) | 1 Skill Point | |
+| Gain proficiency (sub-skill) | 1 Skill Point | Also grants +1 skill value |
+| Increase skill value | 1:1 | 1 pt per +1 up to cap of 3 |
+| Increase past cap (base skill) | 3 Skill Points | Per +1 above 3 |
+| Increase past cap (sub-skill) | 2 Skill Points | Per +1 above 3 |
+| Increase Defense Bonus | 2 Skill Points | +1 to a Defense; total defense bonus cannot exceed level |
 
 **Defense bonus cap:** Defense bonuses from **skill point allocation** cannot exceed character level. Ability-derived defense bonus is unrestricted.
 
@@ -369,7 +372,7 @@ Any Bonus can be converted to a Score by adding 10.
 | Resource | Level 1 | Per Level |
 |----------|---------|-----------|
 | Ability points | 7 | +1 every 3 levels (3, 6, 9...) |
-| Skill points | 5 (3 choosable) | +3 |
+| Skill points | 3 | +3 |
 | HP/EN pool | 18 | +12 |
 | Proficiency | 2 | +1 every 5 levels |
 | Training points | 22 + ability + (2 + ability) × (level − 1) | `calculateTrainingPoints` |
@@ -390,7 +393,7 @@ Any Bonus can be converted to a Score by adding 10.
 | Resource | Level 1 | Per Level |
 |----------|---------|-----------|
 | Ability points | 7 | +1 every 3 levels |
-| Skill points | 5 | +3 |
+| Skill points | 5 | +5 |
 | HP/EN pool | 26 | +12 |
 | Proficiency | 2 | +1 every 5 levels |
 | Training points | 9 + ability + (1 + ability) × (level − 1) | `calculateCreatureTrainingPoints` |

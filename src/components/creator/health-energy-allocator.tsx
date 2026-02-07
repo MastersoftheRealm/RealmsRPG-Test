@@ -89,9 +89,9 @@ export function HealthEnergyAllocator({
           </span>
           <span className={cn(
             'text-xs font-bold',
-            isOverspent ? 'text-danger-600' : 
-            isComplete ? 'text-success-600' : 
-            'text-info-600'
+            isOverspent ? 'text-danger-600 dark:text-danger-400' : 
+            isComplete ? 'text-success-600 dark:text-success-400' : 
+            'text-info-600 dark:text-info-400'
           )}>
             {spent} / {poolTotal}
             {isOverspent && <span className="ml-1">({remaining})</span>}
@@ -101,7 +101,7 @@ export function HealthEnergyAllocator({
         <div className="flex items-center gap-4 px-4 py-3">
           {/* Health Points - Green colors, show total prominently */}
           <div className="flex-1 flex items-center gap-2">
-            <span className="text-lg font-bold text-green-600 min-w-[60px]">{maxHp} HP</span>
+            <span className="text-lg font-bold text-green-600 dark:text-green-400 min-w-[60px]">{maxHp} HP</span>
             <ValueStepper
               value={hpBonus}
               onChange={onHpChange}
@@ -123,7 +123,7 @@ export function HealthEnergyAllocator({
           
           {/* Energy Points - Blue colors, show total prominently */}
           <div className="flex-1 flex items-center gap-2">
-            <span className="text-lg font-bold text-blue-600 min-w-[60px]">{maxEnergy} EN</span>
+            <span className="text-lg font-bold text-blue-600 dark:text-blue-400 min-w-[60px]">{maxEnergy} EN</span>
             <ValueStepper
               value={energyBonus}
               onChange={onEnergyChange}
@@ -159,12 +159,12 @@ export function HealthEnergyAllocator({
         isComplete ? 'border-success-300' : 
         'border-border-light'
       )}>
-        <span className="text-sm font-medium text-secondary">Health/Energy Allocation</span>
+        <span className="text-sm font-medium text-text-secondary">Health/Energy Allocation</span>
         <span className={cn(
           'text-sm font-bold',
-          isOverspent ? 'text-danger-600' : 
-          isComplete ? 'text-success-600' : 
-          'text-info-600'
+          isOverspent ? 'text-danger-600 dark:text-danger-400' : 
+          isComplete ? 'text-success-600 dark:text-success-400' : 
+          'text-info-600 dark:text-info-400'
         )}>
           {spent} / {poolTotal}
           {isOverspent && <span className="ml-1">({remaining})</span>}
@@ -174,7 +174,7 @@ export function HealthEnergyAllocator({
       <div className="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2">
         {/* HP Allocator - Show total prominently, points secondary */}
         <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-green-600 min-w-[70px]">{maxHp} HP</span>
+          <span className="text-xl font-bold text-green-600 dark:text-green-400 min-w-[70px]">{maxHp} HP</span>
           <ValueStepper
             value={hpBonus}
             onChange={onHpChange}
@@ -192,7 +192,7 @@ export function HealthEnergyAllocator({
 
         {/* Energy Allocator - Show total prominently, points secondary */}
         <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-blue-600 min-w-[70px]">{maxEnergy} EN</span>
+          <span className="text-xl font-bold text-blue-600 dark:text-blue-400 min-w-[70px]">{maxEnergy} EN</span>
           <ValueStepper
             value={energyBonus}
             onChange={onEnergyChange}

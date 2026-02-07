@@ -469,7 +469,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
               'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold',
               roll.isCrit && 'bg-green-100 border border-green-400 text-green-800',
               roll.isCritFail && 'bg-red-100 border border-red-400 text-red-800',
-              !roll.isCrit && !roll.isCritFail && 'bg-primary-50 border border-primary-200 text-primary-700'
+              !roll.isCrit && !roll.isCritFail && 'bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-700/50 text-primary-700 dark:text-primary-300'
             )}>
               {roll.total}
             </span>

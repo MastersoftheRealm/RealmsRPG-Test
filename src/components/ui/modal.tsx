@@ -125,7 +125,7 @@ export function Modal({
       >
         {/* Simple Header (title/description mode) */}
         {hasSimpleHeader && (
-          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-50 rounded-xl border-b border-border-light">
+          <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 rounded-xl border-b border-border-light">
             {title && (
               <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
                 {title}

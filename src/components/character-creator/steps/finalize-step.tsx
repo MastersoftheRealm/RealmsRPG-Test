@@ -10,11 +10,12 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { useAuth, useRTDBSkills } from '@/hooks';
+import { useAuth, useRTDBSkills, useSpecies } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { calculateAbilityPoints, calculateSkillPoints, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
+import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
+import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
 import { LoginPromptModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
 
@@ -49,7 +50,7 @@ function ValidationModal({
   const modalHeader = (
     <div className={cn(
       'p-4 border-b flex items-center gap-3',
-      isValid ? 'bg-green-50' : hasErrors ? 'bg-red-50' : 'bg-amber-50'
+      isValid ? 'bg-green-50 dark:bg-green-900/30' : hasErrors ? 'bg-red-50 dark:bg-red-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
     )}>
       <span className="text-2xl">{isValid ? '✅' : hasErrors ? '⚠️' : '📋'}</span>
       <h2 className="text-xl font-bold">
@@ -112,7 +113,7 @@ function ValidationModal({
               key={idx} 
               className={cn(
                 'p-3 rounded-lg flex gap-3',
-                issue.severity === 'error' ? 'bg-red-50' : 'bg-amber-50'
+                issue.severity === 'error' ? 'bg-red-50 dark:bg-red-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
               )}
             >
               <span className="text-xl flex-shrink-0">{issue.emoji}</span>
@@ -317,7 +318,7 @@ function PortraitUpload() {
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
               isUploading
                 ? 'bg-surface-alt text-text-muted cursor-not-allowed'
-                : 'border-primary-300 text-primary-600 hover:bg-primary-50'
+                : 'border-primary-300 dark:border-primary-600/50 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30'
             )}
           >
             {isUploading ? (
@@ -348,6 +349,7 @@ export function FinalizeStep() {
   const { user } = useAuth();
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
   const { data: rtdbSkills } = useRTDBSkills();
+  const { data: allSpecies = [] } = useSpecies();
   
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -407,15 +409,22 @@ export function FinalizeStep() {
       });
     }
     
-    // 5. Skill points
-    const maxSkillPoints = calculateSkillPoints(level);
-    const usedSkillPoints = draft.skills
-      ? Object.values(draft.skills).reduce((sum, val) => sum + (val || 0), 0)
-      : 0;
-    const defenseSkillPoints = draft.defenseSkills
-      ? Object.values(draft.defenseSkills).reduce((sum, val) => sum + ((val || 0) * 2), 0)
-      : 0;
-    const totalUsedSkillPoints = usedSkillPoints + defenseSkillPoints;
+    // 5. Skill points (characters: 3/level; proper cost model for proficiency + values + defenses)
+    const maxSkillPoints = calculateSkillPointsForEntity(level, 'character');
+    const species = draft.ancestry?.id
+      ? allSpecies.find((s) => s.id === draft.ancestry?.id)
+      : allSpecies.find((s) => s.name.toLowerCase() === draft.ancestry?.name?.toLowerCase());
+    const speciesSkillIds = new Set((species?.skills || []).map((id) => String(id)));
+    const skillMeta = new Map<string, { isSubSkill: boolean }>();
+    (rtdbSkills || []).forEach((s: { id: string; base_skill_id?: number }) => {
+      skillMeta.set(s.id, { isSubSkill: s.base_skill_id !== undefined });
+    });
+    const totalUsedSkillPoints = calculateSimpleSkillPointsSpent(
+      draft.skills || {},
+      speciesSkillIds,
+      skillMeta,
+      draft.defenseSkills
+    );
     const remainingSkillPoints = maxSkillPoints - totalUsedSkillPoints;
     
     if (remainingSkillPoints > 0) {
@@ -506,7 +515,7 @@ export function FinalizeStep() {
     }
     
     return issues;
-  }, [draft]);
+  }, [draft, rtdbSkills, allSpecies]);
   
   const handleValidateAndSave = () => {
     setShowValidation(true);
@@ -541,23 +550,28 @@ export function FinalizeStep() {
           category?: string;
           skill_val: number;
           prof: boolean;
+          baseSkill?: string;
+          ability?: string;
         }> = [];
         
         // Convert each skill allocation to array format
         Object.entries(skillsRecord).forEach(([skillId, points]) => {
           if (points > 0) {
-            // Find skill details from RTDB
-            const skillData = rtdbSkills?.find(s => s.id === skillId || s.name === skillId);
+            const skillData = rtdbSkills?.find((s: { id: string; name: string }) => s.id === skillId || s.name === skillId);
+            const baseSkill = skillData?.base_skill_id !== undefined
+              ? (rtdbSkills?.find((s: { id: string }) => s.id === String(skillData?.base_skill_id)) as { name?: string })?.name
+              : undefined;
             if (skillData) {
               skillsArray.push({
                 id: skillData.id,
                 name: skillData.name,
-                category: skillData.category || 'other',
+                category: (skillData as { category?: string }).category || skillData.ability?.split(',')[0]?.trim() || 'other',
                 skill_val: points,
-                prof: true, // All selected skills are proficient
+                prof: true,
+                ...(baseSkill && { baseSkill }),
+                ability: skillData.ability?.split(',')[0]?.trim().toLowerCase(),
               });
             } else {
-              // Fallback if skill not found in RTDB
               skillsArray.push({
                 id: skillId,
                 name: skillId,
@@ -714,7 +728,7 @@ export function FinalizeStep() {
                   key={feat.id}
                   className={cn(
                     'px-2 py-1 rounded text-sm font-medium',
-                    feat.type === 'archetype' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                    feat.type === 'archetype' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                   )}
                 >
                   {feat.name}
@@ -798,7 +812,7 @@ export function FinalizeStep() {
         <div className={cn(
           'mb-6 p-4 rounded-xl',
           validationIssues.some(i => i.severity === 'error') 
-            ? 'bg-red-50 border border-red-200' 
+            ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50' 
             : 'bg-amber-50 border border-amber-200'
         )}>
           <div className="flex items-center gap-2 mb-2">
