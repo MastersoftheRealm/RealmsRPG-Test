@@ -171,13 +171,13 @@ export function findTraitByIdOrName(traits: Trait[], lookup: string | number): T
   const byNumericId = traits.find((t) => String(t.id) === lookupStr);
   if (byNumericId) return byNumericId;
   const lowerLookup = lookupStr.toLowerCase();
-  const byName = traits.find((t) => t.name.toLowerCase() === lowerLookup);
+  const byName = traits.find((t) => String(t.name ?? '').toLowerCase() === lowerLookup);
   if (byName) return byName;
   const sanitizedLookup = lookupStr.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
   const bySanitizedId = traits.find((t) => t.id === sanitizedLookup || t.id === sanitizedLookup.replace(/_/g, '-'));
   if (bySanitizedId) return bySanitizedId;
   const bySanitizedName = traits.find((t) => {
-    const sanitizedName = t.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
+    const sanitizedName = String(t.name ?? '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '');
     return sanitizedName === sanitizedLookup || sanitizedName === lowerLookup;
   });
   return bySanitizedName;

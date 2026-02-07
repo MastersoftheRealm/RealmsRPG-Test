@@ -79,6 +79,15 @@ export async function GET() {
     };
   });
 
+  // Helper: prefer primary key, fallback to alternate names (supports both id arrays and name arrays)
+  const speciesArr = (primary: unknown, ...fallbacks: unknown[]): string[] => {
+    for (const v of [primary, ...fallbacks]) {
+      const arr = toStrArray(v);
+      if (arr.length > 0) return arr;
+    }
+    return [];
+  };
+
   const codexSpecies = species.map((r) => {
     const d = r.data as Record<string, unknown>;
     let sizes: string[] = [];
@@ -92,12 +101,12 @@ export async function GET() {
       size: sizes[0] || 'Medium',
       sizes,
       speed: parseInt(d.speed as string) || 6,
-      traits: toStrArray(d.traits),
-      species_traits: toStrArray(d.species_traits),
-      ancestry_traits: toStrArray(d.ancestry_traits),
-      flaws: toStrArray(d.flaws),
-      characteristics: toStrArray(d.characteristics),
-      skills: toStrArray(d.skills),
+      traits: speciesArr(d.traits, d.trait_ids, d.traitIds),
+      species_traits: speciesArr(d.species_traits, d.species_trait_ids, d.speciesTraitIds),
+      ancestry_traits: speciesArr(d.ancestry_traits, d.ancestry_trait_ids, d.ancestryTraitIds),
+      flaws: speciesArr(d.flaws, d.flaw_ids, d.flawIds),
+      characteristics: speciesArr(d.characteristics, d.characteristic_ids, d.characteristicIds),
+      skills: speciesArr(d.skills, d.skill_ids, d.skillIds),
       languages: toStrArray(d.languages),
       ability_bonuses: d.ability_bonuses as Record<string, number> | undefined,
       ave_height: d.ave_height as number | undefined,

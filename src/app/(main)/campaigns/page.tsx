@@ -68,7 +68,7 @@ function CampaignsContent() {
     }
   }, [searchParams]);
 
-  const { data: campaigns = [], isLoading: campaignsLoading, error: campaignsError } = useCampaigns();
+  const { data: campaigns = [], isLoading: campaignsLoading, error: campaignsError, refetch: refetchCampaigns } = useCampaigns();
   const { data: characters = [], isLoading: charactersLoading } = useCharacters();
   const invalidateCampaigns = useInvalidateCampaigns();
 
@@ -94,6 +94,7 @@ function CampaignsContent() {
             campaigns={campaigns}
             isLoading={campaignsLoading}
             error={campaignsError}
+            onRetry={refetchCampaigns}
             onSwitchToCreate={() => setActiveTab('create')}
             onSwitchToJoin={() => setActiveTab('join')}
           />
@@ -126,12 +127,14 @@ function MyCampaignsTab({
   campaigns,
   isLoading,
   error,
+  onRetry,
   onSwitchToCreate,
   onSwitchToJoin,
 }: {
   campaigns: CampaignSummary[];
   isLoading: boolean;
   error: Error | null;
+  onRetry: () => void;
   onSwitchToCreate: () => void;
   onSwitchToJoin: () => void;
 }) {
@@ -146,7 +149,10 @@ function MyCampaignsTab({
   if (error) {
     return (
       <Alert variant="danger" title="Error loading campaigns">
-        {error.message}
+        <p className="mb-4">{error.message}</p>
+        <Button variant="outline" size="sm" onClick={() => onRetry()}>
+          Try again
+        </Button>
       </Alert>
     );
   }

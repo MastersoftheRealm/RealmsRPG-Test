@@ -195,27 +195,6 @@ function HomeContent() {
             </div>
           </div>
         </section>
-
-        {/* Bottom CTA strip */}
-        <section className="bg-primary-700 py-6 px-8">
-          <div className="max-w-[1440px] mx-auto flex flex-wrap justify-center items-center gap-6">
-            <Link href="/about" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
-              About Realms
-            </Link>
-            <span className="text-primary-300">•</span>
-            <Link href="/rules" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
-              Core Rulebook
-            </Link>
-            <span className="text-primary-300">•</span>
-            <Link href="/codex" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
-              Codex
-            </Link>
-            <span className="text-primary-300">•</span>
-            <Link href="/library" className="font-semibold text-lg text-white hover:text-primary-200 transition-colors">
-              Library
-            </Link>
-          </div>
-        </section>
       </main>
 
       <Footer />

@@ -15,6 +15,7 @@ import { GridListRow, QuantitySelector, ListHeader } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { formatDamageDisplay } from '@/lib/utils';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
+import { useEquipment } from '@/hooks';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
@@ -42,10 +43,11 @@ export function AddLibraryItemModal({
   // Sort state for list (custom sort logic for level/damage/armor columns)
   const { sortState, handleSort } = useSort('name');
   
-  // Fetch user library based on item type
+  // Fetch user library and codex equipment
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
+  const { data: codexEquipment = [], isLoading: equipmentLoading } = useEquipment();
   
   // Reset selection when modal opens/closes
   useEffect(() => {
@@ -73,15 +75,35 @@ export function AddLibraryItemModal({
           items: userItems.filter(i => i.type === 'armor'), 
           isLoading: itemsLoading 
         };
-      case 'equipment':
-        return { 
-          items: userItems.filter(i => i.type === 'equipment'), 
-          isLoading: itemsLoading 
-        };
+      case 'equipment': {
+        // Pull equipment from codex + user items (item creator supports weapons/armor/shields; equipment comes from codex)
+        const codexEquip = codexEquipment.filter((e: { type?: string }) => (e.type || 'equipment') === 'equipment');
+        const userEquip = userItems.filter(i => (i.type || '').toLowerCase() === 'equipment');
+        type EqItem = { id: string; name: string; description: string; damage?: unknown; armorValue?: number; properties?: string[] };
+        const merged: EqItem[] = [
+          ...codexEquip.map((e: { id: string; name?: string; description?: string; damage?: unknown; armor_value?: number; properties?: string[] }) => ({
+            id: e.id,
+            name: String(e.name ?? ''),
+            description: String(e.description ?? ''),
+            damage: e.damage,
+            armorValue: e.armor_value,
+            properties: e.properties ?? [],
+          })),
+          ...userEquip.map((i: UserItem) => ({
+            id: i.id,
+            name: String(i.name ?? ''),
+            description: String(i.description ?? ''),
+            damage: i.damage,
+            armorValue: i.armorValue,
+            properties: (i.properties || []).map((p: { name?: string } | string) => typeof p === 'string' ? p : p.name).filter(Boolean) as string[],
+          })),
+        ];
+        return { items: merged, isLoading: itemsLoading || equipmentLoading };
+      }
       default:
         return { items: [], isLoading: false };
     }
-  }, [itemType, userPowers, userTechniques, userItems, powersLoading, techniquesLoading, itemsLoading]);
+  }, [itemType, userPowers, userTechniques, userItems, codexEquipment, powersLoading, techniquesLoading, itemsLoading, equipmentLoading]);
   
   // Filter by search query and exclude already added items, then sort
   const filteredItems = useMemo(() => {
@@ -89,20 +111,21 @@ export function AddLibraryItemModal({
       // Exclude already added
       if (existingIds.has(item.id)) return false;
       
-      // Search filter
+      // Search filter (null-safe for name/description)
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        return item.name.toLowerCase().includes(query) ||
-               (item.description?.toLowerCase().includes(query));
+        const name = String(item.name ?? '');
+        const desc = String(item.description ?? '');
+        return name.toLowerCase().includes(query) || desc.toLowerCase().includes(query);
       }
       return true;
     });
     
-    // Sort by current sort state
+    // Sort by current sort state (null-safe for name)
     result.sort((a, b) => {
       let cmp = 0;
       if (sortState.col === 'name') {
-        cmp = a.name.localeCompare(b.name);
+        cmp = String(a.name ?? '').localeCompare(String(b.name ?? ''));
       } else if (sortState.col === 'level') {
         // For powers/techniques - parts count
         const aVal = (a as UserPower | UserTechnique).parts?.length || 0;
@@ -190,31 +213,30 @@ export function AddLibraryItemModal({
       }));
       onAdd(techniques);
     } else {
-      const equipmentItems: Item[] = (selectedItems as UserItem[]).map(i => {
+      const equipmentItems: Item[] = (selectedItems as Array<{ id: string; name?: string; description?: string; damage?: unknown; armorValue?: number; properties?: string[] }>).map(i => {
         // Convert SavedDamage[] to string format for Item type
         let damageStr = '';
         if (Array.isArray(i.damage) && i.damage.length > 0) {
-          const dmg = i.damage[0];
+          const dmg = i.damage[0] as { amount?: number; size?: number; type?: string };
           if (dmg.amount && dmg.size && dmg.type && dmg.type !== 'none') {
             damageStr = `${dmg.amount}d${dmg.size} ${dmg.type}`;
           }
         } else if (typeof i.damage === 'string') {
           damageStr = i.damage;
         }
-        
+
+        const props = (i.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name).filter((n): n is string => typeof n === 'string');
+
         return {
           id: i.id,
-          name: i.name,
-          description: i.description || '',
-          // Convert properties to string names for Item type compatibility
-          properties: (i.properties || [])
-            .map(p => typeof p === 'string' ? p : p.name)
-            .filter((name): name is string => typeof name === 'string'),
+          name: String(i.name ?? ''),
+          description: String(i.description ?? ''),
+          properties: props,
           damage: damageStr,
-          armor: i.armorValue || 0,
+          armor: i.armorValue ?? 0,
           equipped: false,
-          // Use selected quantity for equipment, default to 1 for weapons/armor
           quantity: itemType === 'equipment' ? (quantities[i.id] || 1) : 1,
+          cost: 0,
         };
       });
       onAdd(equipmentItems);
@@ -258,8 +280,12 @@ export function AddLibraryItemModal({
             <div className="flex flex-col items-center justify-center py-8 text-text-muted">
               {items.length === 0 ? (
                 <>
-                  <p className="text-lg font-medium">No {itemType}s in your library</p>
-                  <p className="text-sm mt-1">Create some in the {itemType === 'power' ? 'Power' : itemType === 'technique' ? 'Technique' : 'Item'} Creator first!</p>
+                  <p className="text-lg font-medium">No {itemType}s available</p>
+                  <p className="text-sm mt-1">
+                    {itemType === 'equipment'
+                      ? 'Equipment is loaded from the Codex. Add equipment via the Admin Codex if needed.'
+                      : `Create some in the ${itemType === 'power' ? 'Power' : itemType === 'technique' ? 'Technique' : 'Item'} Creator first!`}
+                  </p>
                 </>
               ) : (
                 <>
@@ -341,7 +367,7 @@ export function AddLibraryItemModal({
 }
 
 // Helper to get item-specific columns for GridListRow
-function getItemColumns(item: UserPower | UserTechnique | UserItem, itemType: ItemType) {
+function getItemColumns(item: UserPower | UserTechnique | UserItem | { id: string; name?: string; description?: string; damage?: unknown; armorValue?: number }, itemType: ItemType) {
   if (itemType === 'power') {
     const power = item as UserPower;
     return [

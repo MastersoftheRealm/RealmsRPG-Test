@@ -97,8 +97,8 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(p =>
-        p.name.toLowerCase().includes(searchLower) ||
-        p.description.toLowerCase().includes(searchLower)
+        String(p.name ?? '').toLowerCase().includes(searchLower) ||
+        String(p.description ?? '').toLowerCase().includes(searchLower)
       );
     }
 

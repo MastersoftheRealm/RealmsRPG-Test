@@ -58,10 +58,10 @@ export async function GET(
     };
   });
 
-  // Sort by name (Prisma doesn't support orderBy on JSON)
+  // Sort by name (Prisma doesn't support orderBy on JSON) - null-safe
   items.sort((a, b) => {
-    const na = ((a as Record<string, unknown>).name as string) || '';
-    const nb = ((b as Record<string, unknown>).name as string) || '';
+    const na = String((a as Record<string, unknown>).name ?? '');
+    const nb = String((b as Record<string, unknown>).name ?? '');
     return na.localeCompare(nb);
   });
 

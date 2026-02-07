@@ -19,7 +19,7 @@
  */
 
 import { useState, ReactNode } from 'react';
-import { Edit, Copy, Zap, Check, Plus, AlertCircle, X } from 'lucide-react';
+import { Edit, Copy, Zap, Check, Plus, AlertCircle, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
@@ -367,8 +367,17 @@ export function GridListRow({
               <AlertCircle className="w-4 h-4" />
             </div>
           )}
-          
 
+          {/* Expand/collapse indicator - visible when expandable */}
+          {showExpander && (
+            <div className="flex items-center justify-center w-10 flex-shrink-0 ml-auto text-text-muted">
+              {isExpanded ? (
+                <ChevronUp className="w-5 h-5" aria-hidden />
+              ) : (
+                <ChevronDown className="w-5 h-5" aria-hidden />
+              )}
+            </div>
+          )}
         </button>
         
         {/* Delete X - simple red X matching add button style, visible in collapsed state */}

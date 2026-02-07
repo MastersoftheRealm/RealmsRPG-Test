@@ -90,9 +90,9 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(t =>
-        t.name.toLowerCase().includes(searchLower) ||
-        t.description.toLowerCase().includes(searchLower) ||
-        t.weapon.toLowerCase().includes(searchLower)
+        String(t.name ?? '').toLowerCase().includes(searchLower) ||
+        String(t.description ?? '').toLowerCase().includes(searchLower) ||
+        String(t.weapon ?? '').toLowerCase().includes(searchLower)
       );
     }
 

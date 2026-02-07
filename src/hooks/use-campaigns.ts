@@ -8,6 +8,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMyCampaigns, getMyCampaignsFull, getCampaign, getCampaignByInviteCode } from '@/services/campaign-service';
+import { useAuthStore } from '@/stores/auth-store';
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 
 export const campaignKeys = {
@@ -20,9 +21,11 @@ export const campaignKeys = {
 };
 
 export function useCampaigns() {
+  const { user } = useAuthStore();
   return useQuery({
     queryKey: campaignKeys.list(),
     queryFn: getMyCampaigns,
+    enabled: !!user,
   });
 }
 

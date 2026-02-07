@@ -1,8 +1,8 @@
 /**
  * About Us Page
  * =============
- * Authentic to the Core Rulebook tone. Uses dice images for carousel selection.
- * 6-dice carousel (d4–d20) with centered selected dice, fluid animations, and CTAs.
+ * Sleek, modern design. Fixed-height carousel with floating text.
+ * Dice selector: active slide's die centered, borderless hover style.
  */
 
 'use client';
@@ -170,6 +170,9 @@ const CAROUSEL_SLIDES = [
   },
 ];
 
+// Fixed height so carousel doesn't jump when switching slides
+const CAROUSEL_CONTENT_MIN_H = 'min-h-[420px]';
+
 export default function AboutPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -204,16 +207,16 @@ export default function AboutPage() {
         size="lg"
       />
 
-      {/* Carousel - fluid, engaging design */}
-      <section className="relative bg-surface rounded-2xl shadow-xl border border-border-light overflow-hidden mb-12 transition-all duration-500 hover:shadow-2xl">
-        {/* Decorative flourishes */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary-100/30 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-accent-200/20 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-50/20 rounded-full blur-3xl" />
+      {/* Carousel - floating, borderless, fixed height */}
+      <section className="relative mb-12">
+        {/* Subtle ambient background */}
+        <div className="absolute inset-0 pointer-events-none -z-10">
+          <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary-100/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-accent-200/15 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative p-8 md:p-12 min-h-[360px]">
+        {/* Content - fixed min-height, no box */}
+        <div className={cn('relative p-8 md:p-12', CAROUSEL_CONTENT_MIN_H)}>
           <h2 className="text-xl font-bold text-primary-700 mb-6 flex items-center gap-2 transition-all duration-300">
             <Swords className="w-6 h-6" />
             <span className={isTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}>
@@ -230,61 +233,73 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Dice carousel - centered selected, no borders, scale/opacity effects */}
-        <div className="relative flex items-center justify-center min-h-[120px] px-14 py-8 bg-gradient-to-t from-surface-alt/80 to-surface border-t border-border-light">
+        {/* Dice selector - active die cycles to center, sleek borderless hover */}
+        <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden">
           <button
             onClick={goPrev}
-            className="absolute left-2 md:left-4 p-2 rounded-lg hover:bg-primary-50 transition-all hover:scale-110 z-10"
+            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 transition-all hover:scale-110 z-10"
             aria-label="Previous slide"
           >
-            <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-70 hover:opacity-100 transition-opacity" />
+            <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
           </button>
 
-          <div className="flex items-end justify-center gap-0 min-w-[280px] md:min-w-[360px]">
-            {DICE_IMAGES.map((dice, index) => {
-              const distance = Math.abs(index - currentSlide);
-              const isSelected = currentSlide === index;
-              const scale = isSelected ? 1 : Math.max(0.45, 1 - distance * 0.22);
-              const opacity = isSelected ? 1 : Math.max(0.3, 1 - distance * 0.28);
-              const zIndex = isSelected ? 10 : 5 - distance;
+          <div className="flex items-center justify-center w-full overflow-hidden">
+            <div
+              className="flex items-center justify-center gap-2 transition-transform duration-500 ease-out"
+              style={{
+                transform: `translateX(calc(${currentSlide * -56}px - 50% + 28px))`,
+              }}
+            >
+              {DICE_IMAGES.map((dice, index) => {
+                const distance = Math.abs(index - currentSlide);
+                const isSelected = currentSlide === index;
+                const scale = isSelected ? 1.2 : Math.max(0.55, 1 - distance * 0.18);
+                const opacity = isSelected ? 1 : Math.max(0.4, 1 - distance * 0.22);
+                const zIndex = isSelected ? 20 : 10 - distance;
 
-              return (
-                <button
-                  key={dice.alt}
-                  onClick={() => goToSlide(index)}
-                  className="flex-shrink-0 transition-all duration-300 ease-out rounded-lg overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 p-1"
-                  style={{
-                    transform: `scale(${scale})`,
-                    opacity,
-                    zIndex,
-                  }}
-                  aria-label={`Go to ${dice.label}`}
-                  title={dice.label}
-                >
-                  <Image
-                    src={dice.src}
-                    alt={dice.alt}
-                    width={48}
-                    height={48}
-                    className="w-10 h-10 md:w-12 md:h-12 object-contain transition-transform duration-300 hover:scale-110"
-                  />
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={dice.alt}
+                    onClick={() => goToSlide(index)}
+                    className={cn(
+                      'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                      isSelected ? 'ring-2 ring-primary-400/40' : 'hover:ring-2 hover:ring-primary-300/30'
+                    )}
+                    style={{
+                      transform: `scale(${scale})`,
+                      opacity,
+                      zIndex,
+                    }}
+                    aria-label={`Go to ${dice.label}`}
+                    aria-current={isSelected ? 'true' : undefined}
+                    title={dice.label}
+                  >
+                    <Image
+                      src={dice.src}
+                      alt={dice.alt}
+                      width={48}
+                      height={48}
+                      className="w-10 h-10 md:w-12 md:h-12 object-contain"
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <button
             onClick={goNext}
-            className="absolute right-2 md:right-4 p-2 rounded-lg hover:bg-primary-50 transition-all hover:scale-110 z-10"
+            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 transition-all hover:scale-110 z-10"
             aria-label="Next slide"
           >
-            <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-70 hover:opacity-100 transition-opacity" />
+            <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
           </button>
         </div>
       </section>
 
-      {/* Creator message - matches home page tone */}
-      <section className="bg-surface-alt rounded-2xl p-8 border border-border-light transition-all duration-300 hover:shadow-lg">
+      {/* Creator message - floating style, minimal border */}
+      <section className="rounded-2xl p-8 transition-all duration-300 hover:shadow-lg bg-surface-alt/60">
         <h2 className="text-xl font-bold text-text-primary mb-4">A Note from the Creator</h2>
         <p className="text-lg text-text-muted italic mb-4">
           Dear Realms Players,

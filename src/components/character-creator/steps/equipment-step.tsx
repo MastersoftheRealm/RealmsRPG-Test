@@ -234,13 +234,14 @@ export function EquipmentStep() {
       if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
-        if (!item.name.toLowerCase().includes(term) &&
-            !item.description?.toLowerCase().includes(term)) {
+        const name = String(item.name ?? '');
+        const desc = String(item.description ?? '');
+        if (!name.toLowerCase().includes(term) && !desc.toLowerCase().includes(term)) {
           return false;
         }
       }
       return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    }).sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
   }, [allEquipment, activeTab, searchTerm, sourceFilter]);
 
   // Add item to inventory
