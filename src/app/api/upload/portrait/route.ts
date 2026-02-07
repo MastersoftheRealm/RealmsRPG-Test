@@ -34,11 +34,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Image must be less than 5MB' }, { status: 400 });
   }
 
-  const ext = file.name.split('.').pop() || 'jpg';
-  const path = `${user.uid}/${characterId.trim()}.${ext}`;
+  // Always use .jpg for consistency (cropped images are JPEG); removes old portrait if different extension
+  const path = `${user.uid}/${characterId.trim()}.jpg`;
 
   try {
     const supabase = await createClient();
+
+    // Delete any existing portrait for this character (different extensions)
+    const { data: existing } = await supabase.storage.from(BUCKET).list(user.uid);
+    if (existing?.length) {
+      const toRemove = existing
+        .filter((f) => f.name?.startsWith(`${characterId.trim()}.`))
+        .map((f) => `${user.uid}/${f.name}`);
+      if (toRemove.length) {
+        await supabase.storage.from(BUCKET).remove(toRemove);
+      }
+    }
+
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
       .upload(path, file, { upsert: true, contentType: file.type });

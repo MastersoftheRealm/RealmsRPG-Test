@@ -104,7 +104,7 @@ export function ListHeader({
                 column.className
               )}
             >
-              {column.label}
+              {column.label.toUpperCase()}
             </span>
           );
         }
@@ -120,7 +120,7 @@ export function ListHeader({
               column.className
             )}
           >
-            {column.label}
+            {column.label.toUpperCase()}
             {isActive && (
               sortState.dir === 1 
                 ? <ChevronUp className="w-3 h-3" /> 

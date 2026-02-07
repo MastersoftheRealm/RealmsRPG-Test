@@ -509,16 +509,11 @@ export function ArchetypeSection({
         </div>
       )}
       
-      {/* Archetype Header */}
+      {/* Archetype Header - no subtext (Power/Martial implied) */}
       <div className="mb-4">
         <h2 className="text-lg font-bold text-text-primary">
           Archetype & Attacks
         </h2>
-        {character.archetype?.name && (
-          <p className="text-sm text-text-muted mt-0.5">
-            {character.archetype.name}
-          </p>
-        )}
       </div>
 
       {/* Proficiencies - show slider only when editing; simple values otherwise */}
@@ -545,17 +540,35 @@ export function ArchetypeSection({
           </div>
         </>
       ) : (martialProf > 0 || powerProf > 0) ? (
-        <div className="flex gap-3 mb-4">
+        <div className={cn('flex gap-3 mb-4', (martialProf > 0) !== (powerProf > 0) && 'flex-1')}>
           {powerProf > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-900/20">
-              <span className="text-xs font-semibold text-violet-600 dark:text-violet-300">Power Prof.</span>
-              <span className="text-sm font-bold text-violet-700 dark:text-violet-200">{powerProf}</span>
+            <div className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 dark:bg-violet-900/20',
+              martialProf === 0 && 'flex-1'
+            )}>
+              <span className={cn(
+                'font-semibold text-violet-600 dark:text-violet-300',
+                martialProf === 0 ? 'text-base' : 'text-xs'
+              )}>Power Prof.</span>
+              <span className={cn(
+                'font-bold text-violet-700 dark:text-violet-200',
+                martialProf === 0 ? 'text-lg' : 'text-sm'
+              )}>{powerProf}</span>
             </div>
           )}
           {martialProf > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/20">
-              <span className="text-xs font-semibold text-red-600 dark:text-red-300">Martial Prof.</span>
-              <span className="text-sm font-bold text-red-700 dark:text-red-200">{martialProf}</span>
+            <div className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20',
+              powerProf === 0 && 'flex-1'
+            )}>
+              <span className={cn(
+                'font-semibold text-red-600 dark:text-red-300',
+                powerProf === 0 ? 'text-base' : 'text-xs'
+              )}>Martial Prof.</span>
+              <span className={cn(
+                'font-bold text-red-700 dark:text-red-200',
+                powerProf === 0 ? 'text-lg' : 'text-sm'
+              )}>{martialProf}</span>
             </div>
           )}
         </div>

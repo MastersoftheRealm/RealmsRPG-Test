@@ -105,7 +105,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     
     let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
-      species = allSpecies.find((s: Species) => s.name.toLowerCase() === speciesName?.toLowerCase());
+      species = allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
     }
     
     // Return the species_traits array (IDs/names of traits automatically granted)
@@ -121,7 +121,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     
     let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
-      species = allSpecies.find((s: Species) => s.name.toLowerCase() === speciesName?.toLowerCase());
+      species = allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
     }
     
     return (species?.skills || []) as string[];

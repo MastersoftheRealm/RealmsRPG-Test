@@ -15,7 +15,7 @@ import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
 import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
-import { LoginPromptModal } from '@/components/shared';
+import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
 
 // Health-Energy pool for new characters (18 at level 1, +2 per level)
@@ -178,104 +178,85 @@ function HealthEnergyAllocationSection() {
 }
 
 // =============================================================================
-// Portrait Upload Component
+// Portrait Upload Component - uses ImageUploadModal for cropping
 // =============================================================================
 
-// Helper to compress and resize image for base64 storage
-async function compressImage(file: File, maxWidth = 400, maxHeight = 400, quality = 0.7): Promise<string> {
+async function blobToCompressedBase64(blob: Blob, maxSize = 700 * 1024): Promise<string> {
   return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
     const img = new Image();
-    
+    const url = URL.createObjectURL(blob);
     img.onload = () => {
-      // Calculate new dimensions maintaining aspect ratio
-      let width = img.width;
-      let height = img.height;
-      
-      if (width > height) {
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxHeight) {
-          width = Math.round((width * maxHeight) / height);
-          height = maxHeight;
-        }
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let { width, height } = img;
+      const maxDim = 400;
+      if (width > height && width > maxDim) {
+        height = Math.round((height * maxDim) / width);
+        width = maxDim;
+      } else if (height > maxDim) {
+        width = Math.round((width * maxDim) / height);
+        height = maxDim;
       }
-      
       canvas.width = width;
       canvas.height = height;
       ctx?.drawImage(img, 0, 0, width, height);
-      
-      // Convert to JPEG for smaller size
-      const dataUrl = canvas.toDataURL('image/jpeg', quality);
-      resolve(dataUrl);
+      let quality = 0.7;
+      const tryEncode = () => {
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        if (dataUrl.length > maxSize && quality > 0.3) {
+          quality -= 0.1;
+          tryEncode();
+        } else {
+          resolve(dataUrl);
+        }
+      };
+      tryEncode();
     };
-    
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = url;
   });
 }
 
 function PortraitUpload() {
   const { draft, updateDraft } = useCharacterCreatorStore();
-  const [isUploading, setIsUploading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
+
+  const handleCropped = async (blob: Blob) => {
     setError(null);
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
-      return;
-    }
-    
-    // Validate file size (max 5MB before compression)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be smaller than 5MB');
-      return;
-    }
-    
-    setIsUploading(true);
-    
+    setIsProcessing(true);
     try {
-      // Compress and resize the image
-      const compressedBase64 = await compressImage(file, 400, 400, 0.7);
-      
-      // Check compressed size (reasonable limit for base64 in JSON)
-      // Base64 adds ~33% overhead, so limit to ~700KB compressed
-      if (compressedBase64.length > 700 * 1024) {
-        setError('Image is still too large after compression. Please use a smaller image.');
-        setIsUploading(false);
+      const base64 = await blobToCompressedBase64(blob);
+      if (base64.length > 700 * 1024) {
+        setError('Image is still too large. Please use a smaller image.');
         return;
       }
-      
-      updateDraft({ portrait: compressedBase64 });
-      setIsUploading(false);
+      updateDraft({ portrait: base64 });
+      setShowModal(false);
     } catch {
       setError('Failed to process image');
-      setIsUploading(false);
+    } finally {
+      setIsProcessing(false);
     }
   };
-  
+
   const handleRemove = () => {
     updateDraft({ portrait: undefined });
+    setError(null);
   };
-  
+
   return (
     <div className="mb-6">
       <label className="block text-sm font-medium text-text-secondary mb-2">
         Character Portrait (Optional)
       </label>
-      
+
       <div className="flex items-start gap-4">
-        {/* Portrait Preview */}
         <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-surface-alt border-2 border-dashed border-border-light flex items-center justify-center">
           {draft.portrait ? (
             <>
@@ -300,45 +281,45 @@ function PortraitUpload() {
             </div>
           )}
         </div>
-        
-        {/* Upload Controls */}
+
         <div className="flex-1">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            id="portrait-upload"
-            disabled={isUploading}
-          />
-          <label
-            htmlFor="portrait-upload"
+          <button
+            type="button"
+            onClick={() => setShowModal(true)}
+            disabled={isProcessing}
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
-              isUploading
+              isProcessing
                 ? 'bg-surface-alt text-text-muted cursor-not-allowed'
                 : 'border-primary-300 dark:border-primary-600/50 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30'
             )}
           >
-            {isUploading ? (
+            {isProcessing ? (
               <>
                 <Spinner size="sm" />
-                Uploading...
+                Processing...
               </>
             ) : (
-              <>
-                📤 {draft.portrait ? 'Change Image' : 'Upload Image'}
-              </>
+              <>📤 {draft.portrait ? 'Change Image' : 'Upload Image'}</>
             )}
-          </label>
+          </button>
           <p className="text-xs text-text-muted mt-2">
-            JPG, PNG, or GIF. Max 5MB. Images will be compressed automatically.
+            Click to upload and crop. JPG, PNG, or GIF. Max 5MB.
           </p>
           {error && (
             <p className="text-xs text-red-600 mt-1 font-medium">{error}</p>
           )}
         </div>
       </div>
+
+      <ImageUploadModal
+        isOpen={showModal}
+        onClose={() => { setShowModal(false); setError(null); }}
+        onConfirm={handleCropped}
+        cropShape="rect"
+        aspect={3 / 4}
+        title="Character Portrait"
+      />
     </div>
   );
 }

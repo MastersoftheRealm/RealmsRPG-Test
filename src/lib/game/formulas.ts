@@ -21,7 +21,7 @@ import {
 
 /**
  * Calculate ability points based on level.
- * Formula: 7 at level 1, +1 every 3 levels starting at level 3
+ * Formula: 7 at level 1, +1 at level 3 and each 3 levels (3, 6, 9, 12...)
  */
 export function calculateAbilityPoints(level: number, allowSubLevel = false): number {
   const parsedLevel = parseFloat(String(level)) || 1;
@@ -33,7 +33,8 @@ export function calculateAbilityPoints(level: number, allowSubLevel = false): nu
   if (parsedLevel < 1) return 0;
   if (parsedLevel < 3) return SHARED_CONSTANTS.BASE_ABILITY_POINTS;
   
-  const bonusPoints = Math.floor((parsedLevel - 1) / 3) * SHARED_CONSTANTS.ABILITY_POINTS_PER_3_LEVELS;
+  // +1 at level 3, 6, 9, 12... (floor(level/3) gives count of bonus levels)
+  const bonusPoints = Math.floor(parsedLevel / 3) * SHARED_CONSTANTS.ABILITY_POINTS_PER_3_LEVELS;
   return SHARED_CONSTANTS.BASE_ABILITY_POINTS + bonusPoints;
 }
 

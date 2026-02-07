@@ -182,7 +182,7 @@ export function AddFeatModal({
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (!feat.name.toLowerCase().includes(query) && 
+        if (!String(feat.name ?? '').toLowerCase().includes(query) && 
             !feat.description?.toLowerCase().includes(query) &&
             !feat.tags?.some(t => t.toLowerCase().includes(query))) {
           return false;

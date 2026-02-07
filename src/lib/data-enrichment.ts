@@ -106,7 +106,7 @@ function findInLibrary<T extends { id: string; name: string }>(
   if (typeof reference === 'string') {
     const searchName = reference.toLowerCase();
     return library.find(item => 
-      item.name.toLowerCase() === searchName ||
+      String(item.name ?? '').toLowerCase() === searchName ||
       item.id === reference
     );
   }
@@ -118,8 +118,8 @@ function findInLibrary<T extends { id: string; name: string }>(
   }
   
   if (reference.name) {
-    const searchName = reference.name.toLowerCase();
-    return library.find(item => item.name.toLowerCase() === searchName);
+    const searchName = String(reference.name ?? '').toLowerCase();
+    return library.find(item => String(item.name ?? '').toLowerCase() === searchName);
   }
   
   return undefined;
@@ -334,7 +334,7 @@ export function enrichItems(
     if (codexEquipment && codexEquipment.length > 0) {
       const searchName = name.toLowerCase();
       const codexItem = codexEquipment.find(item => 
-        item.name.toLowerCase() === searchName ||
+        String(item.name ?? '').toLowerCase() === searchName ||
         item.id === name
       );
       

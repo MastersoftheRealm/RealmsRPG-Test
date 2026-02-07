@@ -59,7 +59,7 @@ export function SortHeader({
         className
       )}
     >
-      {label}
+      {label.toUpperCase()}
       {isActive && (
         <ChevronDown className={cn('w-3 h-3 transition-transform', sortState.dir === 1 && 'rotate-180')} />
       )}

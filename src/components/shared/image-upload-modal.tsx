@@ -29,8 +29,8 @@ export type CropShape = 'rect' | 'round';
 export interface ImageUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Called with the cropped image blob when user confirms */
-  onConfirm: (blob: Blob) => void;
+  /** Called with the cropped image blob when user confirms. Can return a Promise; modal stays open until resolved. */
+  onConfirm: (blob: Blob) => void | Promise<void>;
   /** Shape of the crop frame */
   cropShape?: CropShape;
   /** Aspect ratio of the crop (width/height). Default: 3/4 for portrait, 1 for round */
@@ -200,10 +200,10 @@ export function ImageUploadModal({
     setError(null);
     try {
       const blob = await getCroppedImage(imageSrc, croppedAreaPixels);
-      onConfirm(blob);
+      await onConfirm(blob);
       handleClose();
-    } catch {
-      setError('Failed to process image. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process image. Please try again.');
     } finally {
       setIsProcessing(false);
     }

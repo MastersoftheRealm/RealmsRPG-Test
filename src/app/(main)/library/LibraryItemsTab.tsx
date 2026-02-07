@@ -159,9 +159,9 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(item =>
-        item.name.toLowerCase().includes(searchLower) ||
-        item.description.toLowerCase().includes(searchLower) ||
-        item.parts.some(p => p.name.toLowerCase().includes(searchLower))
+        String(item.name ?? '').toLowerCase().includes(searchLower) ||
+        String(item.description ?? '').toLowerCase().includes(searchLower) ||
+        item.parts.some(p => String(p.name ?? '').toLowerCase().includes(searchLower))
       );
     }
 

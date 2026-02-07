@@ -222,10 +222,21 @@ export async function GET() {
     creatureFeats: codexCreatureFeats,
   });
   } catch (err) {
-    console.error('[Codex API] Database error:', err);
     const message = err instanceof Error ? err.message : 'Unknown database error';
+    const stack = err instanceof Error ? err.stack : undefined;
+    // Always log full error server-side (visible in Vercel logs)
+    console.error('[Codex API] Database error:', message, stack);
+    // In production, expose minimal hint for debugging (connection vs schema, etc.)
+    const safeHint =
+      process.env.NODE_ENV === 'development'
+        ? message
+        : message.includes('connect') || message.includes('connection')
+          ? 'Database connection failed. Check DATABASE_URL and ?pgbouncer=true in Vercel env vars.'
+          : message.includes('exist') || message.includes('relation')
+            ? 'Codex tables may be missing. Run: npx prisma migrate deploy'
+            : undefined;
     return NextResponse.json(
-      { error: 'Failed to load codex', details: process.env.NODE_ENV === 'development' ? message : undefined },
+      { error: 'Failed to load codex', ...(safeHint && { hint: safeHint }) },
       { status: 500 }
     );
   }

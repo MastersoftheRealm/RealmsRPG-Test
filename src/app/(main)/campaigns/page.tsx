@@ -334,7 +334,7 @@ function JoinCampaignTab({
     }
     setSubmitting(true);
     try {
-      const archetypeType = selectedCharacter.archetypeName?.toLowerCase().replace(/\s+/g, '-');
+      const archetypeType = String(selectedCharacter.archetypeName ?? '').toLowerCase().replace(/\s+/g, '-');
       const result = await joinCampaignAction({
         inviteCode: inviteCode.trim(),
         characterId: selectedCharacter.id,

@@ -179,7 +179,7 @@ export function FeatsTab({
 
   // Enrich trait with RTDB data
   const enrichTrait = useCallback((traitNameOrId: string) => {
-    let dbTrait = traitsDb.find(t => t.name.toLowerCase() === traitNameOrId.toLowerCase());
+    let dbTrait = traitsDb.find(t => String(t.name ?? '').toLowerCase() === String(traitNameOrId ?? '').toLowerCase());
     if (!dbTrait) {
       dbTrait = traitsDb.find(t => t.id === traitNameOrId);
     }
@@ -195,7 +195,7 @@ export function FeatsTab({
   const enrichFeat = useCallback((feat: FeatData) => {
     let dbFeat = featsDb.find(f => f.id === String(feat.id));
     if (!dbFeat) {
-      dbFeat = featsDb.find(f => f.name.toLowerCase() === feat.name.toLowerCase());
+      dbFeat = featsDb.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
     }
     return {
       ...feat,

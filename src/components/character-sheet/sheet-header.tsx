@@ -40,7 +40,7 @@ interface SheetHeaderProps {
   onEnergyChange?: (value: number) => void;
   onHealthPointsChange?: (value: number) => void;
   onEnergyPointsChange?: (value: number) => void;
-  onPortraitChange?: (file: File) => void;
+  onPortraitChange?: (file: File) => void | Promise<void>;
   isUploadingPortrait?: boolean;
   // Character name editing
   onNameChange?: (name: string) => void;
@@ -471,11 +471,11 @@ export function SheetHeader({
     setShowUploadModal(true);
   };
   
-  // Handle cropped image from the modal
-  const handleCroppedImage = (blob: Blob) => {
+  // Handle cropped image from the modal - await upload so modal stays open until done
+  const handleCroppedImage = async (blob: Blob) => {
     if (!onPortraitChange) return;
     const file = new File([blob], 'portrait.jpg', { type: 'image/jpeg' });
-    onPortraitChange(file);
+    await onPortraitChange(file);
   };
 
   // Get health color for styling

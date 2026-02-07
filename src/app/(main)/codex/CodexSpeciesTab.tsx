@@ -198,7 +198,7 @@ export function CodexSpeciesTab() {
     const filtered = species.filter((s: Species) => {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
-        if (!s.name.toLowerCase().includes(searchLower) &&
+        if (!String(s.name ?? '').toLowerCase().includes(searchLower) &&
           !s.description?.toLowerCase().includes(searchLower)) {
           return false;
         }

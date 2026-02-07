@@ -66,9 +66,9 @@ export function RecoveryModal({
   const [hours, setHours] = useState<PartialHours>(4);
   const [allocationMode, setAllocationMode] = useState<AllocationMode>('automatic');
   
-  // Manual allocation: how many quarters go to HP (rest go to EN)
-  const totalQuarters = hours / 2;
-  const [hpQuarters, setHpQuarters] = useState<number>(Math.ceil(totalQuarters / 2));
+  // Each 2h = 2 quarters (1 for HP, 1 for EN). 2h=2, 4h=4, 6h=6 quarters total to allocate.
+  const totalQuarters = hours;
+  const [hpQuarters, setHpQuarters] = useState<number>(Math.floor(totalQuarters / 2));
   
   // Calculate deficits
   const hpDeficit = maxHealth - currentHealth;
@@ -181,8 +181,8 @@ export function RecoveryModal({
   // Update hpQuarters when hours change
   const handleHoursChange = (newHours: PartialHours) => {
     setHours(newHours);
-    const newTotalQuarters = newHours / 2;
-    setHpQuarters(Math.ceil(newTotalQuarters / 2));
+    const newTotalQuarters = newHours;
+    setHpQuarters(Math.floor(newTotalQuarters / 2));
   };
   
   return (
@@ -289,7 +289,7 @@ export function RecoveryModal({
                 ))}
               </div>
               <p className="mt-2 text-xs text-text-muted">
-                Each 2 hours = ¼ max to allocate between HP and EN (or ½ to one). 
+                Each 2 hours = 2 quarters (¼ HP + ¼ EN, or allocate freely). 
                 {hours}h = {totalQuarters} quarter{totalQuarters > 1 ? 's' : ''} ({hpPerQuarter} HP or {enPerQuarter} EN per quarter). 
                 Full recovery (8h) restores all.
               </p>
