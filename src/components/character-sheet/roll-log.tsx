@@ -446,12 +446,17 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
           </div>
         ))}
 
-        {/* + Bonus (green) when modifier present */}
+        {/* Bonus when modifier present - avoid duplicate +/- (e.g. d20 + +5 → d20 + 5); red for negative */}
         {showModifier && (
           <>
-            <span className="text-text-muted text-xs">+</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-success-50 text-success-700 text-xs font-semibold border border-success-200">
-              {roll.modifier > 0 ? '+' : ''}{roll.modifier}
+            <span className="text-text-muted text-xs">{roll.modifier >= 0 ? '+' : '−'}</span>
+            <span className={cn(
+              'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border',
+              roll.modifier >= 0
+                ? 'bg-success-50 text-success-700 border-success-200'
+                : 'bg-danger-50 text-danger-700 border-danger-200'
+            )}>
+              {roll.modifier >= 0 ? roll.modifier : -roll.modifier}
             </span>
           </>
         )}

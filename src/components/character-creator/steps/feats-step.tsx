@@ -428,16 +428,15 @@ export function FeatsStep() {
             onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
           />
 
-          {/* Feat Type Filter */}
+          {/* Feat Type Filter - placeholder is "All Feats", options exclude it to avoid duplicate */}
           <SelectFilter
             label="Feat Type"
-            value={filters.featType}
+            value={filters.featType === 'all' ? '' : filters.featType}
             options={[
-              { value: 'all', label: 'All Feats' },
               { value: 'archetype', label: 'Archetype Only' },
               { value: 'character', label: 'Character Only' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, featType: v as 'all' | 'archetype' | 'character' }))}
+            onChange={(v) => setFilters(f => ({ ...f, featType: (v || 'all') as 'all' | 'archetype' | 'character' }))}
             placeholder="All Feats"
           />
 
@@ -464,81 +463,34 @@ export function FeatsStep() {
         </div>
       </FilterSection>
 
-      {/* Results Count */}
-      <div className="text-sm text-text-muted mb-4">
-        {filteredFeats.length} feats found
-        {filters.hideUnqualified && ' (qualified only)'}
-      </div>
-
-      {/* Column Headers */}
-      <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+      {/* Column Headers - Uses same text-xs font-semibold as SortHeader for consistency */}
+      <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg text-xs font-semibold uppercase tracking-wide text-primary-700"
            style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}>
         <SortHeader label="NAME" col="name" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <SortHeader label="LEVEL" col="lvl_req" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
-        <span>USES</span>
+        <span className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">USES</span>
         <span></span>
       </div>
 
-      {/* Feats Lists - Two Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 mt-4">
-        {/* Archetype Feats Column */}
-        {(filters.featType === 'all' || filters.featType === 'archetype') && (
-          <div>
-            <h3 className="font-bold text-lg text-text-primary mb-3 flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-amber-500"></span>
-              Archetype Feats
-              <span className="text-sm font-normal text-text-muted">
-                ({selectedArchetypeFeats.length}/{maxArchetypeFeats})
-              </span>
-            </h3>
-            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
-              {archetypeFeats.map(feat => renderFeatRow(feat, false))}
-              {archetypeFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
-                  No archetype feats match your filters.
-                  {filters.hideUnqualified && (
-                    <button 
-                      onClick={() => setFilters(f => ({ ...f, hideUnqualified: false }))}
-                      className="block mx-auto mt-2 text-primary-600 hover:underline"
-                    >
-                      Show unqualified feats
-                    </button>
-                  )}
-                </div>
+      {/* Single unified feats list - both archetype and character feats combined */}
+      <div className="mb-8 mt-4">
+        <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+          {filteredFeats.map(feat => renderFeatRow(feat, !!feat.char_feat))}
+          {filteredFeats.length === 0 && (
+            <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
+              No feats match your filters.
+              {filters.hideUnqualified && (
+                <button 
+                  onClick={() => setFilters(f => ({ ...f, hideUnqualified: false }))}
+                  className="block mx-auto mt-2 text-primary-600 hover:underline"
+                >
+                  Show unqualified feats
+                </button>
               )}
             </div>
-          </div>
-        )}
-
-        {/* Character Feats Column */}
-        {(filters.featType === 'all' || filters.featType === 'character') && (
-          <div>
-            <h3 className="font-bold text-lg text-text-primary mb-3 flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-              Character Feats
-              <span className="text-sm font-normal text-text-muted">
-                ({selectedCharacterFeats.length}/{maxCharacterFeats})
-              </span>
-            </h3>
-            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
-              {characterFeats.map(feat => renderFeatRow(feat, true))}
-              {characterFeats.length === 0 && (
-                <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
-                  No character feats match your filters.
-                  {filters.hideUnqualified && (
-                    <button 
-                      onClick={() => setFilters(f => ({ ...f, hideUnqualified: false }))}
-                      className="block mx-auto mt-2 text-primary-600 hover:underline"
-                    >
-                      Show unqualified feats
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       
       <div className="flex justify-between">

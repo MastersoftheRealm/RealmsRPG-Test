@@ -272,6 +272,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           powers: draft.powers || [],
           techniques: draft.techniques || [],
           equipment: equipment,
+          unarmedProwess: draft.unarmedProwess ?? 0,
           // Health/Energy tracking
           health_energy_points: {
             health: allocatedHealth,

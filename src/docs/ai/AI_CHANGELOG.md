@@ -2,6 +2,15 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: Character creator & sheet feedback batch | files: feats-step.tsx, equipment-step.tsx, finalize-step.tsx, sheet-header.tsx, character-sheet-utils.ts, character-creator-store.ts, library-section.tsx, roll-log.tsx | Summary:
+  - Feats tab (character creator): Uses header same font size as other headers (text-xs); single unified list (archetype + character feats); feat type filter no duplicate "All Feats"; removed results count
+  - Equipment tab: Source filter wired (library/rtdb); QuantitySelector for quantity steppers (shared component); removed duplicate "All Sources"
+  - HP/Energy: enableHoldRepeat added to character creator finalize-step, character sheet sheet-header (creature creator already had it)
+  - Energy max: character-sheet-utils now uses getArchetypeAbility (power + martial) instead of pow_abil only; fixes martial chars with 0 energy
+  - Unarmed prowess: getCharacter now includes unarmedProwess in saved character
+  - Roll log: fixed duplicate +/- (d20 + +5 → d20 + 5); negative modifiers show with − and red styling
+  - Build passes
+
 - 2026-02-06 | agent:cursor | Session: Encounters System Redesign (TASK-101 through TASK-108) | files: types/encounter.ts, services/encounter-service.ts, hooks/use-encounters.ts, hooks/index.ts, firestore.rules, app/(main)/encounters/page.tsx, app/(main)/encounters/[id]/page.tsx, app/(main)/encounters/[id]/combat/page.tsx, app/(main)/encounters/[id]/skill/page.tsx, app/(main)/encounters/[id]/mixed/page.tsx, app/(main)/encounter-tracker/page.tsx, app/(main)/encounter-tracker/redirect-page.tsx, components/shared/add-combatant-modal.tsx, components/layout/header.tsx, lib/game/encounter-utils.ts, AI_TASK_QUEUE.md | Summary:
   - TASK-101: Archetype slider hidden in non-edit mode; shows simple Power/Martial proficiency badges
   - TASK-102: AddCombatantModal with "From Library" tab; creature HP/EN auto-calculated; quantity selector with A-Z suffixes

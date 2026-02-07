@@ -5,6 +5,7 @@
 import type { Character, DefenseSkills, Item } from '@/types';
 import type { AbilityName } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+import { getArchetypeAbility } from '@/lib/game/formulas';
 
 export interface CharacterSheetStats {
   maxHealth: number;
@@ -67,10 +68,15 @@ export function calculateStats(character: Character): CharacterSheetStats {
       ? 8 + vitality + healthPoints
       : 8 + vitality * level + healthPoints;
 
-  const powerAbil = character.pow_abil?.toLowerCase() as AbilityName | undefined;
-  const powerAbilityValue = powerAbil ? abilities[powerAbil] || 0 : 0;
+  // Base energy uses archetype ability (power or martial), not just pow_abil
+  // Formula: archetype ability * level + energy points allocated
+  const archetype = character.archetype;
+  const archetypeAbilityValue = getArchetypeAbility(
+    { type: archetype?.type, pow_abil: character.pow_abil || archetype?.pow_abil, mart_abil: character.mart_abil || archetype?.mart_abil },
+    abilities
+  );
   const energyPoints = character.energyPoints || 0;
-  const maxEnergy = powerAbilityValue * level + energyPoints;
+  const maxEnergy = archetypeAbilityValue * level + energyPoints;
 
   const terminal = Math.ceil(maxHealth / 4);
 

@@ -15,11 +15,11 @@ import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
-import { SearchInput, GridListRow, type ChipData } from '@/components/shared';
+import { SearchInput, GridListRow, QuantitySelector, type ChipData } from '@/components/shared';
 import { FilterSection, SelectFilter } from '@/components/codex';
 import { Spinner, Button } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
-import { AlertCircle, Swords, Check, Minus, Plus } from 'lucide-react';
+import { AlertCircle, Swords, Check } from 'lucide-react';
 import type { Item } from '@/types';
 
 // Unarmed Prowess constants
@@ -76,6 +76,7 @@ export function EquipmentStep() {
   
   const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'library' | 'rtdb'>('all');
 
   const isLoading = userItemsLoading || rtdbLoading;
   const error = rtdbError;
@@ -226,10 +227,11 @@ export function EquipmentStep() {
 
   const remainingCurrency = startingCurrency - spentCurrency;
 
-  // Filter equipment by type and search
+  // Filter equipment by type, search, and source
   const filteredEquipment = useMemo(() => {
     return allEquipment.filter(item => {
       if (item.type !== activeTab) return false;
+      if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         if (!item.name.toLowerCase().includes(term) &&
@@ -239,7 +241,7 @@ export function EquipmentStep() {
       }
       return true;
     }).sort((a, b) => a.name.localeCompare(b.name));
-  }, [allEquipment, activeTab, searchTerm]);
+  }, [allEquipment, activeTab, searchTerm, sourceFilter]);
 
   // Add item to inventory
   const addItem = useCallback((item: UnifiedEquipmentItem) => {
@@ -508,13 +510,12 @@ export function EquipmentStep() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SelectFilter
                 label="Source"
-                value=""
+                value={sourceFilter === 'all' ? '' : sourceFilter}
                 options={[
-                  { value: '', label: 'All Sources' },
                   { value: 'library', label: 'My Library' },
                   { value: 'rtdb', label: 'Standard Equipment' },
                 ]}
-                onChange={() => {}}
+                onChange={(v) => setSourceFilter((v || 'all') as 'all' | 'library' | 'rtdb')}
                 placeholder="All Sources"
               />
               
@@ -572,43 +573,24 @@ export function EquipmentStep() {
                   category: 'tag' as const,
                 }));
                 
-                // Quantity controls as left slot
+                // Quantity controls using shared QuantitySelector (matches codex/library style)
+                const maxAffordable = cost > 0 ? quantity + Math.floor(remainingCurrency / cost) : 99;
                 const quantityControls = (
-                  <div className="flex items-center gap-1 px-2">
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); removeItem(item.id); }}
-                      disabled={quantity === 0}
-                      className={cn(
-                        'w-6 h-6 rounded-full flex items-center justify-center transition-colors',
-                        quantity > 0
-                          ? 'bg-surface-alt hover:bg-border-light text-text-secondary'
-                          : 'bg-surface text-text-muted cursor-not-allowed'
-                      )}
-                      title="Remove one"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className={cn(
-                      'w-6 text-center font-bold text-sm',
-                      quantity > 0 ? 'text-primary-600' : 'text-text-muted'
-                    )}>
-                      {quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); addItem(item); }}
-                      disabled={!canAfford}
-                      className={cn(
-                        'w-6 h-6 rounded-full flex items-center justify-center transition-colors',
-                        canAfford
-                          ? 'bg-primary-100 text-primary-600 hover:bg-primary-200'
-                          : 'bg-surface text-text-muted cursor-not-allowed'
-                      )}
-                      title={canAfford ? 'Add one' : 'Cannot afford'}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <QuantitySelector
+                      quantity={quantity}
+                      onChange={(newVal) => {
+                        const diff = newVal - quantity;
+                        if (diff > 0) {
+                          for (let i = 0; i < diff; i++) addItem(item);
+                        } else {
+                          for (let i = 0; i < -diff; i++) removeItem(item.id);
+                        }
+                      }}
+                      min={0}
+                      max={Math.min(99, maxAffordable)}
+                      size="sm"
+                    />
                   </div>
                 );
                 

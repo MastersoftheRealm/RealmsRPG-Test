@@ -696,6 +696,7 @@ export function SheetHeader({
                 onEnergyChange={onEnergyPointsChange}
                 variant="inline"
                 allowOverallocation
+                enableHoldRepeat
               />
             </div>
           )}

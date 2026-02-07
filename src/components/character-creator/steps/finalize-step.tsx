@@ -171,6 +171,7 @@ function HealthEnergyAllocationSection() {
         maxEnergy={maxEnergy}
         onHpChange={(val) => updateDraft({ healthPoints: val })}
         onEnergyChange={(val) => updateDraft({ energyPoints: val })}
+        enableHoldRepeat
       />
     </div>
   );
