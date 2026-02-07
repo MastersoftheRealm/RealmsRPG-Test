@@ -8,6 +8,8 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const { user } = await getSession();

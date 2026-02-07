@@ -8,6 +8,8 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminLayout({
   children,
 }: {
