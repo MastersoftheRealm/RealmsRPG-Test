@@ -2,6 +2,30 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-06 | agent:cursor | Session: TASK-135 — Admin Codex UI polish | files: list-components.tsx, Admin*Tab.tsx (all 9), AI_TASK_QUEUE.md | TASKs: TASK-135 | Summary:
+  - ColumnHeaders: dark mode (bg-primary-50 dark:bg-primary-900/30, text dark:text-primary-200)
+  - Admin tabs: EmptyState for empty lists with Add action; delete button dark mode (text-red-600 dark:text-red-400, hover variants)
+  - Build passes
+
+- 2026-02-06 | agent:cursor | Session: TASK-122 done, Admin Codex fix | files: AdminTraitsTab.tsx, AI_TASK_QUEUE.md | TASKs: TASK-122, TASK-124–134 | Summary:
+  - TASK-122: User added UID to config/admins in Firestore; marked done
+  - Fixed AdminTraitsTab TypeScript error: editing state species type (species ?? []) when openEdit
+  - Marked TASK-124 through TASK-134 done: Admin Codex page shell, CRUD actions, all editor tabs (Feats, Traits, Species, Skills, Parts, Properties, Equipment, Archetypes, Creature Feats)
+  - Build passes
+
+- 2026-02-06 | agent:cursor | Session: TASK-120 done, TASK-121, TASK-123 — Admin infrastructure | files: AI_TASK_QUEUE.md, src/lib/admin.ts, src/app/api/admin/check/route.ts, src/hooks/use-admin.ts, admin layout/page/codex, header.tsx, firestore.rules, ADMIN_SETUP.md | TASKs: TASK-120, TASK-121, TASK-123 | Summary:
+  - TASK-120: Marked done (user completed migration)
+  - TASK-121: isAdmin(uid) from Firestore config/admins or env; /api/admin/check; useAdmin hook; ADMIN_SETUP.md
+  - TASK-123: Admin layout redirects non-admins; Admin nav link in header; /admin and /admin/codex placeholder
+  - TASK-122 (USER): Add UID to config — see walkthrough below
+
+- 2026-02-06 | agent:cursor | Session: TASK-116 through TASK-119 — RTDB→Firestore codex migration | files: firestore.rules, scripts/migrate_rtdb_to_firestore.js, src/hooks/use-firestore-codex.ts, src/hooks/use-rtdb.ts, src/hooks/index.ts, src/services/game-data-service.ts, src/lib/firebase/server.ts, species-modal.tsx | TASKs: TASK-116, TASK-117, TASK-118, TASK-119 | Summary:
+  - TASK-116: Added Firestore rules for codex_* collections (feats, skills, species, traits, parts, properties, equipment, archetypes, creature_feats); public read, no client write
+  - TASK-117: Created migration script (scripts/migrate_rtdb_to_firestore.js) with --dry-run; npm run migrate:rtdb-to-firestore
+  - TASK-118: Created use-firestore-codex.ts with all codex hooks; hooks index exports from Firestore codex
+  - TASK-119: game-data-service and firebase/server.ts read from Firestore; use-rtdb utilities use Firestore data; all consumers switched
+  - Build passes. TASK-120 (USER): run migration script with credentials, then deploy rules
+
 - 2026-02-06 | agent:cursor | Session: TASK-110 through TASK-115 — All remaining tasks complete | files: feats-tab.tsx, library-section.tsx, skills-allocation-page.tsx, feats-step.tsx, finalize-step.tsx, equipment-step.tsx, skill-row.tsx, creature-stat-block.tsx, sheet-action-toolbar.tsx, roll-log.tsx, modal.tsx, unified-selection-modal.tsx, health-energy-allocator.tsx, AI_TASK_QUEUE.md | TASKs: TASK-110, TASK-111, TASK-112, TASK-113, TASK-114, TASK-115 | Summary:
   - TASK-110: Feat delete gated on isEditMode (pencil enables); weapon/armor delete gated on isEditMode; equipment delete always visible
   - TASK-111: Equipment remove uses index-based fallback; verified flow

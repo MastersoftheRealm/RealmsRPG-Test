@@ -11,7 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/hooks';
+import { useAuth, useAdmin } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
 
 const navLinks = [
@@ -48,6 +48,7 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle login click - store current path for redirect after login
@@ -77,6 +78,17 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-14 flex-1 justify-center">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className={cn(
+                  'font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors whitespace-nowrap',
+                  pathname?.startsWith('/admin') ? 'text-primary-500' : ''
+                )}
+              >
+                Admin
+              </Link>
+            )}
             {navLinks.map((item) => (
               item.dropdown ? (
                 <NavDropdown key={item.label} item={item} pathname={pathname} />
@@ -155,6 +167,15 @@ export function Header() {
       {mobileMenuOpen ? (
         <div className="lg:hidden border-t border-border-light bg-surface">
           <nav className="px-4 py-4 space-y-2">
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="block py-2 text-lg font-semibold text-primary-800"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Admin
+              </Link>
+            )}
             {navLinks.map((item) => (
               item.dropdown ? (
                 <MobileDropdown key={item.label} item={item} pathname={pathname} />

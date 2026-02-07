@@ -6,6 +6,7 @@
 
 // Auth
 export { useAuth, useAuthStore } from './use-auth';
+export { useAdmin } from './use-admin';
 
 // Campaigns
 export {
@@ -55,22 +56,25 @@ export {
   useGameDataList,
 } from './use-game-data';
 
-// RTDB Data (Codex, Parts, Properties)
+// Codex Data (Firestore — migrated from RTDB)
 export {
-  useFeats as useRTDBFeats,
-  useSkills as useRTDBSkills,
-  useSpecies,
-  useTraits,
-  usePowerParts,
-  useTechniqueParts,
-  useParts,
-  useItemProperties,
-  useEquipment,
-  useCreatureFeats,
+  useCodexFeats as useRTDBFeats,
+  useCodexSkills as useRTDBSkills,
+  useCodexSpecies as useSpecies,
+  useCodexTraits as useTraits,
+  useCodexPowerParts as usePowerParts,
+  useCodexTechniqueParts as useTechniqueParts,
+  useCodexParts as useParts,
+  useCodexItemProperties as useItemProperties,
+  useCodexEquipment as useEquipment,
+  useCodexCreatureFeats as useCreatureFeats,
+} from './use-firestore-codex';
+
+// Codex utilities (trait/skill resolution)
+export {
   useResolvedTraits,
   findTraitByIdOrName,
   resolveTraitIds,
-  // Skill ID resolution utilities
   useSkillIdToNameMap,
   useResolvedSkillNames,
   buildSkillIdToNameMap,

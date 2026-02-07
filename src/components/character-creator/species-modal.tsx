@@ -132,7 +132,7 @@ export function SpeciesModal({
         const idStr = String(skillId);
         return allSkills.find(s => s.id === idStr || s.name.toLowerCase() === idStr.toLowerCase());
       })
-      .filter((s): s is RTDBSkill => s !== undefined);
+      .filter((s): s is NonNullable<typeof s> => s != null);
   }, [species?.skills, allSkills]);
 
   if (!species || !isOpen) return null;

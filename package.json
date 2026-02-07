@@ -7,7 +7,9 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "migrate:rtdb-to-firestore": "node scripts/migrate_rtdb_to_firestore.js",
+    "migrate:rtdb-to-firestore:dry": "node scripts/migrate_rtdb_to_firestore.js --dry-run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -2,11 +2,13 @@
  * RTDB Hooks
  * ===========
  * React Query hooks for Firebase Realtime Database data fetching.
- * Provides caching, retry logic, and type-safe data access.
+ * Codex data now reads from Firestore (use-firestore-codex); RTDB paths deprecated.
+ * Utility hooks (useResolvedTraits, useSkillIdToNameMap, etc.) use Firestore codex.
  */
 
 'use client';
 
+import { useCodexTraits, useCodexSkills } from './use-firestore-codex';
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { ref, get, Database } from 'firebase/database';
 import { rtdb, waitForFirebase } from '@/lib/firebase/client';
@@ -729,7 +731,7 @@ export function useResolvedTraits(traitIds: (string | number)[]): {
   isLoading: boolean;
   error: Error | null;
 } {
-  const { data: allTraits, isLoading, error } = useTraits();
+  const { data: allTraits, isLoading, error } = useCodexTraits();
   
   const resolvedTraits = useMemo(() => {
     if (!allTraits || !traitIds) return [];
@@ -777,7 +779,7 @@ export function useSkillIdToNameMap(): {
   isLoading: boolean;
   error: Error | null;
 } {
-  const { data: skills, isLoading, error } = useSkills();
+  const { data: skills, isLoading, error } = useCodexSkills();
   
   const skillIdToName = useMemo(() => {
     if (!skills) return new Map<string, string>();
@@ -800,7 +802,7 @@ export function useResolvedSkillNames(skillIds: (string | number)[]): {
   isLoading: boolean;
   error: Error | null;
 } {
-  const { data: skills, isLoading, error } = useSkills();
+  const { data: skills, isLoading, error } = useCodexSkills();
   
   const skillNames = useMemo(() => {
     if (!skills || !skillIds?.length) return [];
@@ -815,18 +817,7 @@ export function useResolvedSkillNames(skillIds: (string | number)[]): {
 }
 
 // =============================================================================
-// Prefetch Functions (for SSR or preloading)
+// Prefetch Functions (for SSR or preloading — now from Firestore)
 // =============================================================================
 
-export const prefetchFunctions = {
-  feats: fetchFeats,
-  skills: fetchSkills,
-  species: fetchSpecies,
-  traits: fetchTraits,
-  powerParts: fetchPowerParts,
-  techniqueParts: fetchTechniqueParts,
-  parts: fetchParts,
-  itemProperties: fetchItemProperties,
-  equipment: fetchEquipment,
-  creatureFeats: fetchCreatureFeats,
-};
+export { prefetchFunctions } from './use-firestore-codex';

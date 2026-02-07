@@ -67,6 +67,17 @@ gcloud projects add-iam-policy-binding realmsrpg-test `
   --role="roles/secretmanager.secretAccessor"
 ```
 
+### 4b. Grant signBlob for session cookies (if seeing "Permission 'iam.serviceAccounts.signBlob' denied")
+
+If Cloud Logging shows this error, grant the compute SA permission to sign as the Firebase Admin SA:
+
+```powershell
+gcloud iam service-accounts add-iam-policy-binding firebase-adminsdk-fbsvc@realmsrpg-test.iam.gserviceaccount.com `
+  --member="serviceAccount:829555734488-compute@developer.gserviceaccount.com" `
+  --role="roles/iam.serviceAccountTokenCreator" `
+  --project=realmsrpg-test
+```
+
 ### 5. Verify secrets exist
 
 ```powershell
@@ -112,6 +123,7 @@ The `update-admin-secrets.ps1` script handles this conversion automatically.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Permission denied on secret | Compute SA missing Secret Accessor | Run gcloud IAM command above |
+| signBlob permission denied | Compute SA cannot sign as Firebase Admin SA | Run gcloud command in section 4b above |
 | Secret Version is DESTROYED | Old version was disabled/deleted | Add new version, redeploy |
 | /api/session 500 | Secrets not reaching function | Verify IAM, redeploy, check Cloud Logging |
 | Works locally, fails in prod | Local uses .env.local | Ensure Secret Manager + IAM correct |

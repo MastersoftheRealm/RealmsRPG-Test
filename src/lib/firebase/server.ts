@@ -109,8 +109,8 @@ export function getAdminAuth(): Auth {
  */
 export function getAdminFirestore(): Firestore {
   if (!adminDb) {
-    initializeFirebaseAdmin();
-    adminDb = getFirestore();
+    const app = initializeFirebaseAdmin();
+    adminDb = getFirestore(app);
   }
   return adminDb;
 }
@@ -206,12 +206,107 @@ export async function getCharacterById(uid: string, characterId: string) {
 }
 
 // =============================================================================
-// RTDB Data Fetching (for game data like feats, skills, species, etc.)
+// Codex Data Fetching (from Firestore — migrated from RTDB)
 // =============================================================================
 
 /**
- * Fetch data from Realtime Database.
- * This is useful for fetching game data that doesn't require authentication.
+ * Fetch all documents from a Firestore codex collection.
+ * Returns Record<id, data> for compatibility with existing consumers.
+ */
+async function fetchCodexCollection(
+  collectionName: string
+): Promise<Record<string, unknown> | null> {
+  try {
+    const db = getAdminFirestore();
+    const snapshot = await db.collection(collectionName).get();
+    const out: Record<string, unknown> = {};
+    snapshot.docs.forEach((d) => {
+      out[d.id] = d.data();
+    });
+    return out;
+  } catch (error) {
+    console.error(`Error fetching Firestore ${collectionName}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch all feats from Firestore codex_feats.
+ */
+export async function getFeats() {
+  return fetchCodexCollection('codex_feats');
+}
+
+/**
+ * Fetch all skills from Firestore codex_skills.
+ */
+export async function getSkills() {
+  return fetchCodexCollection('codex_skills');
+}
+
+/**
+ * Fetch all species from Firestore codex_species.
+ */
+export async function getSpecies() {
+  return fetchCodexCollection('codex_species');
+}
+
+/**
+ * Fetch all traits from Firestore codex_traits.
+ */
+export async function getTraits() {
+  return fetchCodexCollection('codex_traits');
+}
+
+/**
+ * Fetch all archetypes from Firestore codex_archetypes.
+ */
+export async function getArchetypes() {
+  return fetchCodexCollection('codex_archetypes');
+}
+
+/**
+ * Fetch power parts from Firestore codex_parts (filtered by type).
+ */
+export async function getPowerParts() {
+  const all = await fetchCodexCollection('codex_parts');
+  if (!all) return null;
+  return Object.fromEntries(
+    Object.entries(all).filter(
+      ([_, v]) => (v as Record<string, unknown>)?.type === 'power'
+    )
+  );
+}
+
+/**
+ * Fetch technique parts from Firestore codex_parts (filtered by type).
+ */
+export async function getTechniqueParts() {
+  const all = await fetchCodexCollection('codex_parts');
+  if (!all) return null;
+  return Object.fromEntries(
+    Object.entries(all).filter(
+      ([_, v]) => (v as Record<string, unknown>)?.type === 'technique'
+    )
+  );
+}
+
+/**
+ * Fetch item properties from Firestore codex_properties.
+ */
+export async function getItemProperties() {
+  return fetchCodexCollection('codex_properties');
+}
+
+/**
+ * Fetch equipment from Firestore codex_equipment.
+ */
+export async function getEquipment() {
+  return fetchCodexCollection('codex_equipment');
+}
+
+/**
+ * Fetch data from Realtime Database (legacy — use codex Firestore for game data).
  */
 export async function fetchFromRTDB<T = unknown>(path: string): Promise<T | null> {
   try {
@@ -222,67 +317,4 @@ export async function fetchFromRTDB<T = unknown>(path: string): Promise<T | null
     console.error(`Error fetching RTDB path ${path}:`, error);
     return null;
   }
-}
-
-/**
- * Fetch all feats from RTDB.
- */
-export async function getFeats() {
-  return fetchFromRTDB<Record<string, unknown>>('feats');
-}
-
-/**
- * Fetch all skills from RTDB.
- */
-export async function getSkills() {
-  return fetchFromRTDB<Record<string, unknown>>('skills');
-}
-
-/**
- * Fetch all species from RTDB.
- */
-export async function getSpecies() {
-  return fetchFromRTDB<Record<string, unknown>>('species');
-}
-
-/**
- * Fetch all traits from RTDB.
- */
-export async function getTraits() {
-  return fetchFromRTDB<Record<string, unknown>>('traits');
-}
-
-/**
- * Fetch all archetypes from RTDB.
- */
-export async function getArchetypes() {
-  return fetchFromRTDB<Record<string, unknown>>('archetypes');
-}
-
-/**
- * Fetch power parts from RTDB.
- */
-export async function getPowerParts() {
-  return fetchFromRTDB<Record<string, unknown>>('powerParts');
-}
-
-/**
- * Fetch technique parts from RTDB.
- */
-export async function getTechniqueParts() {
-  return fetchFromRTDB<Record<string, unknown>>('techniqueParts');
-}
-
-/**
- * Fetch item properties from RTDB.
- */
-export async function getItemProperties() {
-  return fetchFromRTDB<Record<string, unknown>>('itemProperties');
-}
-
-/**
- * Fetch equipment from RTDB.
- */
-export async function getEquipment() {
-  return fetchFromRTDB<Record<string, unknown>>('equipment');
 }

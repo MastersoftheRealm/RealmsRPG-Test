@@ -38,6 +38,49 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
+    // Codex / Game reference data — public read, write via Admin SDK only
+    match /codex_feats/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_skills/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_species/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_traits/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_parts/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_properties/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_equipment/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_archetypes/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /codex_creature_feats/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Admin config — no client access; Admin SDK used by server
+    match /config/{docId} {
+      allow read, write: if false;
+    }
+
     // Campaigns - users can read campaigns they own or are members of
     match /campaigns/{campaignId} {
       allow read: if request.auth != null

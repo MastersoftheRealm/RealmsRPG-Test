@@ -2590,3 +2590,461 @@ Agents should **create new tasks** during their work when they discover addition
     - Consistent rounded corners, header spacing, sortable columns
     - npm run build passes
   notes: "Done 2026-02-06: Verified add-feat-modal, add-library-item-modal, add-skill-modal use Modal + ListHeader + GridListRow. Creature creator uses UnifiedSelectionModal (GridListRow + sortable columns). add-sub-skill-modal uses SelectionToggle (justified unique UX). All modals follow unified patterns. Build passes."
+
+# =============================================================================
+# Codex Firestore Migration + Admin Editor + Public Library (TASK-116+)
+# Created 2026-02-06 from owner request. Phases: Migration → Admin → Public Library.
+# USER tasks require manual steps by owner; all others assignable to AI.
+# =============================================================================
+
+# --- Phase 1: Firestore Migration ---
+
+- id: TASK-116
+  title: Add Firestore rules for codex_* collections
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add Firestore security rules for codex collections (codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats). Public read, no client write (writes via Admin SDK in server actions only).
+  related_files:
+    - firestore.rules
+  acceptance_criteria:
+    - Each codex collection allows read: if true; write: if false
+    - Rules deploy without errors
+    - Manual verify: unauthenticated client can read codex data
+  notes: "Done 2026-02-06: Added rules for all 9 codex_* collections (feats, skills, species, traits, parts, properties, equipment, archetypes, creature_feats). Public read, no client write."
+
+- id: TASK-117
+  title: Create migration script RTDB → Firestore
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create Node script (scripts/migrate_rtdb_to_firestore.js) using Firebase Admin SDK to read RTDB paths (feats, skills, species, traits, parts, properties, items, archetypes, creature_feats) and write to Firestore codex_* collections. Preserve document IDs, normalize arrays. Include dry-run mode.
+  related_files:
+    - scripts/migrate_rtdb_to_firestore.js
+    - package.json
+  acceptance_criteria:
+    - Script reads all RTDB paths and writes to corresponding Firestore collections
+    - Handles comma-separated strings → arrays where needed (per use-rtdb.ts transforms)
+    - Dry-run logs what would be written without writing
+    - README or script header documents usage and env vars (GOOGLE_APPLICATION_CREDENTIALS)
+  notes: "Done 2026-02-06: Created scripts/migrate_rtdb_to_firestore.js with --dry-run. npm run migrate:rtdb-to-firestore. Requires GOOGLE_APPLICATION_CREDENTIALS or SERVICE_ACCOUNT_* env vars."
+
+- id: TASK-118
+  title: Create useFirestoreCodex hooks (read from Firestore)
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create hooks that read codex data from Firestore instead of RTDB. Mirror use-rtdb.ts API: useCodexFeats, useCodexSkills, useCodexSpecies, useCodexTraits, useCodexPowerParts, useCodexTechniqueParts, useCodexParts, useCodexProperties, useCodexEquipment, useCodexArchetypes, useCodexCreatureFeats. Use React Query. Return same shapes as current use-rtdb so consumers need minimal changes.
+  related_files:
+    - src/hooks/use-firestore-codex.ts
+    - src/hooks/index.ts
+  acceptance_criteria:
+    - Hooks return data shapes compatible with existing consumers (feats, skills, species, etc.)
+    - React Query caching and staleTime configured
+    - npm run build passes
+  notes: "Done 2026-02-06: Created use-firestore-codex.ts with all codex hooks. Hooks index exports from use-firestore-codex. use-rtdb retains utilities (findTraitByIdOrName, etc.)."
+
+- id: TASK-119
+  title: Switch all codex consumers to Firestore hooks
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Update all components and services that use useRTDB*/useFeats/useSkills/etc. to use the new useFirestoreCodex/useCodex* hooks. Include: character sheet, library, codex, creators, equipment-step, feats-step, finalize-step, add-feat-modal, data-enrichment, etc. Remove RTDB codex reads after cutover.
+  related_files:
+    - src/hooks/use-rtdb.ts
+    - src/app/(main)/codex/
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-creator/steps/
+    - src/lib/data-enrichment.ts
+  acceptance_criteria:
+    - No imports of useRTDB/useFeats/useSkills/etc. for codex data (or alias to Firestore)
+    - All codex pages and creators load data from Firestore
+    - npm run build passes
+    - Manual verify: Codex, Library, Character Sheet all display correctly
+  notes: "Done 2026-02-06: Hooks index exports from use-firestore-codex. game-data-service and firebase/server.ts read from Firestore codex collections. Build passes. App will work after TASK-120 migration."
+
+- id: TASK-120
+  title: [USER] Run migration script and verify in Firebase Console
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    OWNER: Run the migration script (node scripts/migrate_rtdb_to_firestore.js) with production credentials. Verify in Firebase Console that all codex_* collections exist and contain data. Confirm app still works after TASK-119 cutover.
+  acceptance_criteria:
+    - Migration script executed successfully
+    - Firestore collections populated
+    - App loads codex data from Firestore
+  notes: Cannot be done by AI. Requires owner to run script with Firebase project credentials.
+
+# --- Phase 2: Admin Infrastructure ---
+
+- id: TASK-121
+  title: Admin config and isAdmin helper
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add admin config: Firestore document config/admins with { uids: string[] } or env NEXT_PUBLIC_ADMIN_UIDS (comma-separated). Create server-side isAdmin(uid) helper and use in server actions. Document in DEPLOYMENT_SECRETS or new ADMIN_SETUP.md.
+  related_files:
+    - src/lib/admin.ts
+    - src/app/api/ or server actions
+    - src/docs/
+  acceptance_criteria:
+    - isAdmin(uid) returns boolean from config or env
+    - Server actions can call isAdmin before writing
+    - Docs describe how to add admin UIDs
+  notes: "Done 2026-02-06: Created src/lib/admin.ts (isAdmin), /api/admin/check, useAdmin hook, ADMIN_SETUP.md. Firestore config/admins or env NEXT_PUBLIC_ADMIN_UIDS."
+
+- id: TASK-122
+  title: [USER] Add admin UID to config
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    OWNER: After TASK-121, add your uid to Firestore config/admins (document with field uids: [uid]) or set NEXT_PUBLIC_ADMIN_UIDS env. Ensure you can access admin routes.
+  notes: Done 2026-02-06: User added UID to config/admins in Firestore Console and deployed rules.
+  acceptance_criteria:
+    - Admin UID in config
+    - Admin page accessible when logged in as admin
+  notes: Cannot be done by AI. Requires Firebase Console or one-time script.
+
+- id: TASK-123
+  title: Admin layout and route protection
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create (main)/admin route group with layout. Protect admin routes: redirect non-admin users to home or 403. Add admin nav link (visible only to admins) in main layout. Use design tokens (bg-surface, etc.) consistent with app.
+  related_files:
+    - src/app/(main)/admin/layout.tsx
+    - src/app/(main)/admin/page.tsx
+    - src/app/(main)/layout.tsx
+  acceptance_criteria:
+    - /admin redirects non-admins
+    - Admin sees nav link to /admin
+    - Layout matches app aesthetic
+    - npm run build passes
+  notes: "Done 2026-02-06: Admin layout redirects non-admins; Admin link in header (useAdmin); /admin and /admin/codex pages. Build passes."
+
+# --- Phase 3: Admin Codex Editor (Subrule Editing) ---
+
+- id: TASK-124
+  title: Admin Codex page shell with tabs
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create admin Codex page at /admin/codex with tabs mirroring public Codex (Feats, Skills, Species, Traits, Parts, Properties, Equipment) plus Archetypes and Creature Feats. Use TabNavigation, PageContainer, PageHeader. Same layout as (main)/codex but with edit/delete/create actions.
+  related_files:
+    - src/app/(main)/admin/codex/page.tsx
+    - src/components/ui/tab-navigation.tsx
+  acceptance_criteria:
+    - Admin Codex has all tabs
+    - Each tab shows list with edit/delete/add
+    - Consistent with Codex layout
+
+- id: TASK-125
+  title: Admin CRUD server actions for codex
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create server actions for admin codex CRUD: createCodexFeat, updateCodexFeat, deleteCodexFeat; same for skills, species, traits, parts, properties, equipment, archetypes, creature_feats. Each action: validate isAdmin, use Admin SDK to write Firestore. Return success/error.
+  related_files:
+    - src/app/(main)/admin/codex/actions.ts
+    - src/lib/firebase/server.ts
+  acceptance_criteria:
+    - All CRUD actions verify isAdmin
+    - Use Admin SDK (bypasses Firestore rules)
+    - Actions handle validation errors
+
+- id: TASK-126
+  title: Admin Feats editor tab
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add Admin Feats tab: list with GridListRow, inline edit or modal for edit. Add feat button. Form fields for name, description, category, ability_req, lvl_req, tags, etc. Use design tokens, SectionHeader, shared Modal. Match CodexFeatsTab layout but editable.
+  related_files:
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/components/shared/grid-list-row.tsx
+  acceptance_criteria:
+    - List, add, edit, delete feats
+    - Form validates required fields
+    - UI matches app design system
+
+- id: TASK-127
+  title: Admin Traits editor tab
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Traits tab: list, add, edit, delete. Fields: name, description, species (array). Reuse patterns from Admin Feats.
+  related_files:
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+  acceptance_criteria:
+    - Full CRUD for traits
+    - Consistent UI with Admin Feats
+
+- id: TASK-128
+  title: Admin Species editor tab
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Species tab: list, add, edit, delete. Fields: name, description, type, sizes, speed, traits, species_traits, ancestry_traits, flaws, skills, languages, ability_bonuses, etc. Reuse patterns.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+  acceptance_criteria:
+    - Full CRUD for species
+    - Array fields (sizes, traits) editable
+
+- id: TASK-129
+  title: Admin Skills editor tab
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Skills tab: list, add, edit, delete. Fields: name, description, ability, category, base_skill_id, trained_only. Reuse patterns.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+  acceptance_criteria:
+    - Full CRUD for skills
+    - base_skill_id for sub-skills
+
+- id: TASK-130
+  title: Admin Parts editor tab
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Parts tab: list power and technique parts, add, edit, delete. Fields: name, description, category, type (power/technique), base_en, base_tp, op_1/2/3 costs, etc. Filter by type. Reuse patterns.
+  related_files:
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+  acceptance_criteria:
+    - Full CRUD for parts
+    - Type filter (power vs technique)
+
+- id: TASK-131
+  title: Admin Properties editor tab
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Properties tab: list, add, edit, delete item properties. Fields: name, description, type, base_ip, base_tp, base_c, op_1_*. Reuse patterns.
+  related_files:
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+  acceptance_criteria:
+    - Full CRUD for properties
+    - Consistent UI
+
+- id: TASK-132
+  title: Admin Equipment editor tab
+  priority: high
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Equipment tab: list, add, edit, delete. Fields: name, type, subtype, description, damage, armor_value, gold_cost, properties, rarity, weight. Reuse patterns.
+  related_files:
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+  acceptance_criteria:
+    - Full CRUD for equipment
+    - Type filter (weapon/armor/equipment)
+
+- id: TASK-133
+  title: Admin Archetypes editor tab
+  priority: medium
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Archetypes tab: list, add, edit, delete. Fields per Archetype type. Reuse patterns.
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+  acceptance_criteria:
+    - Full CRUD for archetypes
+    - Consistent UI
+
+- id: TASK-134
+  title: Admin Creature Feats editor tab
+  priority: medium
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Admin Creature Feats tab: list, add, edit, delete. Fields: name, description, points, tiers, prereqs. Reuse patterns.
+  related_files:
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+  acceptance_criteria:
+    - Full CRUD for creature feats
+    - Consistent UI
+
+- id: TASK-135
+  title: Admin Codex UI polish — consistent design
+  priority: medium
+  status: done
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Polish admin Codex: ensure all tabs use design tokens (bg-surface, text-text-primary, border-border), same Modal/Button/Chip styles as Codex, dark mode support, loading/empty states. Sleek, unified admin experience.
+  related_files:
+    - src/app/(main)/admin/codex/
+  acceptance_criteria:
+    - No raw gray-* or blue-* outside design tokens
+    - Dark mode works
+    - Loading and empty states
+
+# --- Phase 4: Public Library ---
+
+- id: TASK-136
+  title: Firestore collections and rules for public library
+  priority: high
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add Firestore collections: public_powers, public_techniques, public_items, public_creatures. Rules: public read, write only via Admin SDK (server actions). Structure mirrors user library (powers, techniques, etc.) but at root level.
+  related_files:
+    - firestore.rules
+    - src/types/
+  acceptance_criteria:
+    - Collections defined; rules allow read, disallow client write
+    - Document structure compatible with user library items
+
+- id: TASK-137
+  title: Admin Save to library — public vs private toggle in creators
+  priority: high
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    In power-creator, technique-creator, item-creator, creature-creator: add "Save to library" flow with toggle "Save to my library" (private) vs "Save to public library" (admin only). Public save uses server action + Admin SDK. Private save unchanged (user library). UI: clear toggle, save button.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  acceptance_criteria:
+    - Admin sees public/private toggle
+    - Non-admin sees only private save
+    - Public save writes to public_* collections
+    - Sleek, consistent UI across creators
+
+- id: TASK-138
+  title: User Add to my library from public library
+  priority: high
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add "Add to my library" action for public library items. When user clicks, copy document from public_powers/public_techniques/et al to users/{uid}/library (or itemLibrary, etc.). User can then edit their copy. Show in Library, Codex, and add-X modals.
+  related_files:
+    - src/app/(main)/library/page.tsx
+    - src/app/(main)/codex/
+    - src/components/character-sheet/add-library-item-modal.tsx
+  acceptance_criteria:
+    - User can add public item to their library
+    - Copy creates new doc in user's library
+    - User can edit after adding
+    - Source (public vs library) distinguishable in UI
+
+- id: TASK-139
+  title: Unified source filter (public / library / all) across app
+  priority: medium
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add consistent source filter across Library, Codex, add-power/technique/item modals, equipment-step: "All sources" | "Public library" | "My library". Same filter component, same behavior. Reuse or extend existing filter patterns.
+  related_files:
+    - src/components/shared/filters/
+    - src/app/(main)/library/page.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+  acceptance_criteria:
+    - Single SourceFilter or equivalent used everywhere
+    - Options: All, Public, My library
+    - Consistent UX
+
+- id: TASK-140
+  title: Public vs private badges/chips in lists
+  priority: medium
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add visual distinction for public vs private items: badge/chip (e.g. "Public" / "Mine") on GridListRow, ItemCard, Codex lists. Use design tokens. Uniform across Library, Codex, creators, add-X modals.
+  related_files:
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/item-card.tsx
+  acceptance_criteria:
+    - Public items show "Public" badge
+    - User library items show "Mine" or no badge
+    - Consistent styling (Chip or variant)
+
+- id: TASK-141
+  title: Add public library tab to Codex
+  priority: medium
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Add Codex tab or section for public library (Powers, Techniques, Armaments, Creatures from public_*). Users browse and "Add to my library". Same layout as Codex tabs, source filter for public.
+  related_files:
+    - src/app/(main)/codex/page.tsx
+  acceptance_criteria:
+    - Public library content visible in Codex
+    - Add to my library works
+    - Consistent with Codex UI
+
+# --- Phase 5: Data & Docs ---
+
+- id: TASK-142
+  title: Update ARCHITECTURE.md for Firestore codex and public library
+  priority: low
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Update ARCHITECTURE.md: document Firestore codex_* collections, public_* collections, admin workflow, data flow. Remove or deprecate RTDB codex references.
+  related_files:
+    - src/docs/ARCHITECTURE.md
+  acceptance_criteria:
+    - Docs reflect current Firestore structure
+    - Admin and public library flow documented
+
+- id: TASK-143
+  title: Add Admin / Public Library workflow docs
+  priority: low
+  status: not-started
+  created_at: 2026-02-06
+  created_by: agent
+  description: |
+    Create ADMIN_SETUP.md or section in DEPLOYMENT_SECRETS: how to add admins, run migration, deploy admin page. Document public library workflow for admins.
+  related_files:
+    - src/docs/ADMIN_SETUP.md
+    - src/docs/DEPLOYMENT_SECRETS.md
+  acceptance_criteria:
+    - Clear steps for adding admin
+    - Migration and deploy steps
+    - Public library usage

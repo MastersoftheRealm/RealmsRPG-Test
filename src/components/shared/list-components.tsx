@@ -127,7 +127,7 @@ export function ColumnHeaders({
   return (
     <div 
       className={cn(
-        'hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-medium text-sm text-text-secondary',
+        'hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light rounded-t-lg font-medium text-sm text-text-secondary dark:text-primary-200',
         className
       )}
       style={{ 
