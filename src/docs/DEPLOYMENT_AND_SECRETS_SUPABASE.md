@@ -177,8 +177,9 @@ See `ADMIN_SETUP.md` for current implementation.
 ### Step 4: Auth redirect (if needed)
 
 1. **Supabase** → Authentication → URL Configuration:
-   - **Site URL:** your Vercel URL (e.g. `https://your-app.vercel.app`)
-   - **Redirect URLs:** Add `https://your-app.vercel.app/auth/callback`, `https://your-app.vercel.app/auth/confirm`
+   - **Site URL:** `http://localhost:3000` (local) or your Vercel URL (prod)
+   - **Redirect URLs:** Add `http://localhost:3000/auth/callback`, `http://localhost:3000/auth/confirm` (local); and `https://your-app.vercel.app/auth/callback`, `https://your-app.vercel.app/auth/confirm` (prod)
+   - If Redirect URLs are missing, Supabase may redirect to Site URL with `?code=...`; the app will redirect to `/auth/callback` as a fallback.
 2. **Google OAuth:** Add your Vercel URL to authorized redirect URIs in Google Cloud Console.
 
 ---

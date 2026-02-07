@@ -6,7 +6,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Header, Footer } from '@/components/layout';
@@ -28,8 +29,27 @@ const reviews = [
   }
 ];
 
-export default function HomePage() {
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+
+  // Redirect OAuth code to callback when Supabase redirects to / instead of /auth/callback
+  const code = searchParams.get('code');
+  useEffect(() => {
+    if (code) {
+      const next = searchParams.get('next') ?? '/';
+      router.replace(`/auth/callback?code=${encodeURIComponent(code)}${next !== '/' ? `&next=${encodeURIComponent(next)}` : ''}`);
+    }
+  }, [code, searchParams, router]);
+
+  if (code) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-text-muted">Signing you in...</p>
+      </div>
+    );
+  }
 
   const handlePrevReview = () => {
     setCurrentReviewIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
@@ -200,6 +220,18 @@ export default function HomePage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-text-muted">Loading...</p>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
 
