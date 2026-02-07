@@ -1,7 +1,7 @@
 /**
  * Add Sub-Skill Modal
  * ===================
- * Modal for adding sub-skills from RTDB
+ * Modal for adding sub-skills from Codex
  * Features:
  * - Shows ALL sub-skills (not just for proficient base skills)
  * - If base skill is not in character's list, auto-adds it unproficiently
@@ -19,7 +19,7 @@ import { X, AlertCircle } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Select, Modal } from '@/components/ui';
 import { SelectionToggle, ListHeader } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
-import { useRTDBSkills, type RTDBSkill } from '@/hooks';
+import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
 interface CharacterSkill {
@@ -33,7 +33,7 @@ interface AddSubSkillModalProps {
   onClose: () => void;
   characterSkills: CharacterSkill[];
   existingSkillNames: string[];
-  onAdd: (skills: Array<RTDBSkill & { selectedBaseSkillId?: string; autoAddBaseSkill?: RTDBSkill }>) => void;
+  onAdd: (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => void;
 }
 
 function ExpandableSubSkillRow({
@@ -47,7 +47,7 @@ function ExpandableSubSkillRow({
   onBaseSkillSelect,
   allBaseSkills,
 }: {
-  skill: RTDBSkill;
+  skill: Skill;
   isSelected: boolean;
   onToggle: () => void;
   baseSkillName: string;
@@ -147,29 +147,29 @@ export function AddSubSkillModal({
   existingSkillNames,
   onAdd,
 }: AddSubSkillModalProps) {
-  const { data: allSkills = [], isLoading: loading, error: fetchError } = useRTDBSkills();
+  const { data: allSkills = [], isLoading: loading, error: fetchError } = useCodexSkills();
   const [searchQuery, setSearchQuery] = useState('');
   const [abilityFilter, setAbilityFilter] = useState('');
   const [baseSkillFilter, setBaseSkillFilter] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
   // Track which base skill is selected for "any base skill" sub-skills
   const [anyBaseSkillSelections, setAnyBaseSkillSelections] = useState<Record<string, string>>({});
 
   // Build a map of skill ID to skill for lookups
   const skillById = useMemo(() => {
-    return allSkills.reduce((acc, skill) => {
+    return allSkills.reduce((acc: Record<string, Skill>, skill: Skill) => {
       acc[skill.id] = skill;
       return acc;
-    }, {} as Record<string, RTDBSkill>);
+    }, {} as Record<string, Skill>);
   }, [allSkills]);
 
   // Get all base skills (no base_skill_id)
   const allBaseSkills = useMemo(() => {
     return allSkills
-      .filter(s => s.base_skill_id === undefined)
-      .map(s => ({ id: s.id, name: s.name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter((s: Skill) => s.base_skill_id === undefined)
+      .map((s: Skill) => ({ id: s.id, name: s.name }))
+      .sort((a: { id: string; name: string }, b: { id: string; name: string }) => a.name.localeCompare(b.name));
   }, [allSkills]);
 
   // Get character's existing skill names (lowercase for comparison)
@@ -189,13 +189,13 @@ export function AddSubSkillModal({
 
   // Get ALL sub-skills (not just for proficient base skills)
   const allSubSkills = useMemo(() => {
-    return allSkills.filter(skill => skill.base_skill_id !== undefined);
+    return allSkills.filter((skill: Skill) => skill.base_skill_id !== undefined);
   }, [allSkills]);
 
   // Get unique base skill options for filter
   const baseSkillOptions = useMemo(() => {
     const baseSkillIds = new Set<string>();
-    allSubSkills.forEach(skill => {
+    allSubSkills.forEach((skill: Skill) => {
       if (skill.base_skill_id !== undefined && skill.base_skill_id !== 0) {
         baseSkillIds.add(String(skill.base_skill_id));
       }
@@ -220,7 +220,7 @@ export function AddSubSkillModal({
 
   // Filter sub-skills
   const filteredSkills = useMemo(() => {
-    return allSubSkills.filter(skill => {
+    return allSubSkills.filter((skill: Skill) => {
       // Exclude already owned skills
       if (existingSkillNamesLower.has(skill.name.toLowerCase())) return false;
       
@@ -255,11 +255,11 @@ export function AddSubSkillModal({
   }, [allSubSkills, existingSkillNamesLower, searchQuery, abilityFilter, baseSkillFilter, skillById]);
 
   const sortedSubSkills = useMemo(
-    () => sortItems(filteredSkills.map(s => ({ ...s, ability: s.ability || '' }))),
+    () => sortItems<Skill & { ability: string }>(filteredSkills.map((s: Skill) => ({ ...s, ability: s.ability || '' }))),
     [filteredSkills, sortItems]
   );
 
-  const toggleSkill = useCallback((skill: RTDBSkill) => {
+  const toggleSkill = useCallback((skill: Skill) => {
     setSelectedSkills(prev => {
       const exists = prev.some(s => s.id === skill.id);
       if (exists) {

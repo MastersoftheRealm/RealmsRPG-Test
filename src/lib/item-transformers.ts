@@ -17,7 +17,7 @@ export function formatCurrency(amount: number): string {
   return `${(amount).toFixed(2)}c`;
 }
 
-// Legacy alias for backward compatibility
+/** @deprecated Use formatCurrency. Realms uses Currency ("c"), not gold. */
 export const formatGold = formatCurrency;
 
 // ===========================================
@@ -336,7 +336,7 @@ export function transformEquipment(raw: RawEquipment, context?: TransformContext
 
   // Cost
   if (raw.cost !== undefined) {
-    stats.push({ label: 'Cost', value: formatGold(raw.cost) });
+    stats.push({ label: 'Cost', value: formatCurrency(raw.cost) });
   }
 
   // Type/Category badge

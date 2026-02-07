@@ -31,7 +31,8 @@ interface TraitData {
   recoveryPeriod?: string;
 }
 
-interface RTDBTrait {
+/** Codex trait shape for FeatsTab */
+interface CodexTrait {
   id: string;
   name: string;
   description?: string;
@@ -39,7 +40,8 @@ interface RTDBTrait {
   rec_period?: string;
 }
 
-interface RTDBFeat {
+/** Codex feat shape for FeatsTab */
+interface CodexFeat {
   id: string;
   name: string;
   description?: string;
@@ -75,10 +77,10 @@ interface VanillaTraitFields {
 interface FeatsTabProps {
   ancestry?: CharacterAncestry;
   vanillaTraits?: VanillaTraitFields;
-  speciesTraitsFromRTDB?: string[];
+  speciesTraitsFromCodex?: string[];
   traits?: TraitData[];
-  traitsDb?: RTDBTrait[];
-  featsDb?: RTDBFeat[];
+  traitsDb?: CodexTrait[];
+  featsDb?: CodexFeat[];
   traitUses?: Record<string, number>;
   archetypeFeats?: FeatData[];
   characterFeats?: FeatData[];
@@ -153,7 +155,7 @@ function formatUsesWithRecovery(
 export function FeatsTab({
   ancestry,
   vanillaTraits,
-  speciesTraitsFromRTDB = [],
+  speciesTraitsFromCodex = [],
   traits = [],
   traitsDb = [],
   featsDb = [],
@@ -214,8 +216,8 @@ export function FeatsTab({
     const result: { name: string; category: 'ancestry' | 'flaw' | 'characteristic' | 'species' }[] = [];
     
     // Species traits
-    if (speciesTraitsFromRTDB?.length) {
-      speciesTraitsFromRTDB.forEach(name => {
+    if (speciesTraitsFromCodex?.length) {
+      speciesTraitsFromCodex.forEach(name => {
         result.push({ name, category: 'species' });
       });
     } else if (vanillaTraits?.speciesTraits?.length) {
@@ -258,7 +260,7 @@ export function FeatsTab({
     }
     
     return result;
-  }, [ancestry, vanillaTraits, speciesTraitsFromRTDB]);
+  }, [ancestry, vanillaTraits, speciesTraitsFromCodex]);
 
   // Process and sort traits
   const processedTraits = useMemo(() => {

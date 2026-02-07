@@ -1,0 +1,201 @@
+id,name,description,uses_per_rec,rec_period,flaw,characteristic
+1,Absorbent,You can drastically change your weight by ingesting fluids.,,,FALSE,TRUE
+2,Acoustic Architecture,"Settlements made by your species are specially designed to enhance your natural abilities. When in one such settlement, the range at which you can hear, be heard, and echolocate is enhanced.",,,FALSE,TRUE
+3,Adorable,"You're very cute. In a non-hostile environment, you tend to attract people. Aggressive people dont target you.",,,FALSE,TRUE
+4,Affinity of Metal,"When you roll a 1 or 2 on damage of the same type as your Metalic Likeness, then you may reroll it.",,,FALSE,FALSE
+5,Against Nature,"The first time you kill a creature each combat, you must make a Mental Fortitude roll with potency 10. If you fail, you must spend your next turn attacking the creature closest to you; if there are two creatures at the same distance, the GM decides which one you attack.",,,TRUE,FALSE
+6,Ageless Beauty,You have an ethereal beauty that can be used to intimidate or put people at ease,,,FALSE,TRUE
+7,Aquaphobia,"When within sight a large body of water such as a lake ocean or river, you have weakened 3 until you leave line of sight or until you succeed on a DS 15 resolve roll. you can only remake this roll after every full recovery.",,,TRUE,FALSE
+8,Arcane Permeation,"Occasionally those versed in the arcane may spot an odd distortion in the air around you, or catch a glimpse of cryptic text falling from your cloak as it sways in the breeze.",,,FALSE,TRUE
+9,Oblivious,"When you fail an Acuity roll, decrease the successes by an additional 1.",,,TRUE,FALSE
+10,Climber,Your climbing speed is the same as movement speed. You may climb difficult vertical faces without an Athletics roll. A successful Athletics roll DS 15 allows you to climb on horizontal surfaces upside down for a minute.,,,FALSE,FALSE
+11,Bad Reputation,"When interacting with a city official or city guard, treat your Charisma rolls as one less success.",,,TRUE,FALSE
+12,Battle Born,"Add your Martial Proficiency to attack and damage rolls for any weapon you wield, even if you are not proficient.",,,FALSE,FALSE
+13,Battle Mastery,"Gain 2 Training Points each level, starting at first, that can only be spent on weapon or armor proficiencies.",,,FALSE,FALSE
+14,Battle Scars,"You bear many scars from previous battles, which can be used to tell stories, earn respect, or intimidate others.",,,FALSE,TRUE
+15,Berserk,"When you take damage that would bring you into terminal, halve that damage and increase one of your Archetype abilities by +1 for a round.",1,Partial,FALSE,FALSE
+16,Blindsense,You gain a blindsense of 6 spaces ,,,FALSE,FALSE
+17,Blindsense II,You gain a blindsense of 9 spaces.,,,FALSE,FALSE
+18,Blindsense Reliant,you have a -2 on perceive rolls made with sight outside of your blindsense range.,,,TRUE,FALSE
+19,Born for Oblivion,"When you add the destruction power part to a power, you may triple the damage done to objects instead, paying the same energy cost. Increasing its power option deals quadruple damage instead. Additionally, powers with the destruction part have a +1 to hit",,,FALSE,FALSE
+20,Brash Community,You can often get away with impolite or sometimes rude manners due to the differences between your culture and that of others.,,,FALSE,TRUE
+21,Bravery,When you make a Resolve roll you may choose to succeed the roll before knowing the result.,2,Partial,FALSE,FALSE
+22,Brittle Skin,"Once per combat, when you would receive Bludgeoning damage for the first time in combat, you take 2 more damage of that type.",,,TRUE,FALSE
+23,Burning Form,"When a creature enters your melee range they must make a Fortitude roll, on a failure they take fire damage equal to your Archetype Proficiency, additionally, if they take fire damage from another source while they are within your melee range they take this damage again.",,,FALSE,FALSE
+24,Burrowing,"You may spend an action point to dig down slightly into earthen material, giving yourself moderate obscurity or 2 more levels of obscurity if you're already obscured. If you have the hidden condition when you use this feature, you must spend 2 action points instead.",2,Partial,FALSE,FALSE
+25,Camouflage,"While obscured by the environment, you may take the Stealth/Hide action with only 1 Action Point and gain +2 to this roll.",,,FALSE,FALSE
+26,Cautious Creature,"When rolling initiative increase your roll by your Archetype Proficiency, additionally you cannot be surprised.",,,FALSE,FALSE
+27,Clan Ties,"Your species tends to form itself into various clans, families and/or factions. These ties can be helpful in some situations and detrimental in others. Work with your RM to make a clan or find one in-world that fits your character.",,,FALSE,TRUE
+28,Claws & Fangs,You may spend 2 additional Training Points when learning Unarmed Prowess to add Weakened 1 to the first attack you make on each of your turns with Unarmed Prowess.,,,FALSE,FALSE
+29,Impact Resistance,"When you would receive Bludgeoning damage on your turn for the first time, you may reduce the damage by 2.",,,FALSE,FALSE
+30,Fabric Form,"When you would receive slashing damage for the first time in combat, you take 2 more damage of that type.",,,TRUE,FALSE
+31,Coexistent,Prey-type beasts that are medium or smaller don't view you as a threat upon first encounter.,,,FALSE,TRUE
+32,Combustive,When you take fire damage increase the damage taken by an amount equal to your Archetype Bonus.,,,TRUE,FALSE
+33,Connoisseur,You are a skillful eater and are adept at assessing the quality of a dish or beverage. (this does not allow for the automatic detection of poison),,,FALSE,TRUE
+34,Conspicuous,You're hard to miss when not actively trying to hide.,,,FALSE,TRUE
+35,Resilient Being,"Increase your Fortitude by +3 against being poisoned; additionally, you take 2 less damage from poison. You don't need to eat, drink, or breathe.",,,FALSE,FALSE
+36,Corruptible Nature,"When a power would make you roll resolve against an effect that would inflict charm, fear, or possession you have a -2.",,,TRUE,FALSE
+37,Crafting Master,"For every 2 points you put into a the Craft skill or a sub skill of craft, add an additional point.",,,FALSE,FALSE
+38,Creature of the Night,"Double your dark vision range. Additionally, while within dim or dark lighting, you count as one level higher of obscured, even from those with Night Vision.",,,FALSE,FALSE
+39,Cross Contamination,"If your allies are within 1 space of you when you use one of your species' abilities, they must make a DC 10 Vitality roll or take 1d6 poison damage.",,,TRUE,FALSE
+40,Cursed Knowledge,"When you fail a check to recall information, you may reroll, taking the new result. After using this trait, you can use it again at the cost of your archetype bonus + half your level in Energy.",1,Partial,FALSE,FALSE
+41,Danger Sense,"You are very in tune with situations that might be dangerous before they even appear (or you're just a bit paranoid). When a situation is more dangerous than you initially thought, your stomach may turn or show other overt symptoms.",,,FALSE,TRUE
+42,Dark Presence,You carry a part of darkness with you everywhere. Flames are naturally subdued when you're near them.,,,FALSE,TRUE
+43,Darkvision,"You can see in darkness out to 12 spaces, but only in shades of gray.",,,FALSE,FALSE
+44,Darkvision II,"You can see in darkness out to 24 spaces, but only in shades of gray.",,,FALSE,FALSE
+45,Destructive Impulses,"You suffer from chaotic urges, causing you to occasionally act on destructive impulses. When you roll a 1 on any attack roll to hit, the GM may force you to make a resolve roll with a DS of 10. Failing the save will force you to take your next action to attack an ally or valuable object if within range for you to do so.",,,TRUE,FALSE
+46,Diverse Upbringing,You were raised in an area with little human population and adapted very well. When you choose this characteristic replace it with a characteristic from those listed under one of the other common species.,,,FALSE,TRUE
+47,Elemental Affinity,"You may add 1/2 your Power or Martial Ability to your attacks for two rounds as one of the following damage types that, once chosen, cannot be changed: Fire, Lightning, Cold, Acid, Poison.",1,Partial,FALSE,FALSE
+48,Elemental Affinity II,"You may add 1/2 your Power or Martial Ability to your attacks for two rounds as one of the following damage types that, once chosen, cannot be changed: Fire, Lightning, Cold, Acid, Poison. Additionally when you roll a 1 or 2 on damage dice for this element you may re-roll.",1,Partial,FALSE,FALSE
+49,Draconic Visage,"Due to your intimidating and regal appearance, people will generally respect you and put more weight behind what you say.",,,FALSE,TRUE
+50,Drawn to Blood,"Once per combat, when within one space of a terminal creature, make a DS 10 Resolve roll. On a failure, you must use an attack on your next turn to attack that creature.",,,TRUE,FALSE
+51,Drawn to Food,"Your nature is to scavenge and take as much food as possible. When in an urban location and within 30 spaces of a high concentration of food, you must make a Mental Fortitude roll with a potency of 10. On a failure, you must spend all your movement to go in the direction of the food.",,,TRUE,FALSE
+52,Driven,People of your species tend to be highly driven or ambitious. This characteristic makes people more willing to contract you for odd jobs that may not normally appear on the local quest board.,,,FALSE,TRUE
+53,Duality,"You have dissonance within you, with darkness and light each seeking a portion of your being. Whenever you are tempted to choose darkness and choose light instead, you gain insight into the potential outcomes of your darker decision, and vice versa.",,,FALSE,TRUE
+54,Inborn Strength,"When wielding weapons with a Strength requirement, you deal 1 additional damage. When using Powers while wearing armor with a Strength requirement, your powers have +1 to hit.",,,FALSE,FALSE
+55,Earthen Body,"You may choose to create or remove difficult terrain on the ground within 3 spaces of yourself. If you are in a cave or building made of earthen materials (such as stone, mud, bricks, etc.), you may also extend this difficult terrain to the walls and ceiling.",,,FALSE,FALSE
+56,Echoes of Whispers,"You sometimes hear whispers echoing through the darkness. On occasion, when someone is talking about you without you knowing, you hear muffled talking that has no discernible tones or words.",,,FALSE,TRUE
+57,Eclipsing,You may use a quick action to extinguish all flames within 30 feet of you and dampen all light to dim light within that area until the start of your next turn.,2,Partial,FALSE,FALSE
+58,Elemental Birthright,"Certain aspects of your appearance are affected by your ties to a certain element beyond the color of your scales. A red Dragonborn's scales may glow faintly in the dark, or appear to burn when reflecting the sunlight.",,,FALSE,TRUE
+59,Elemental Specialty,"An amount of times per combat equal to your archetype proficiency you may add an additional 1d2 damage to an Attack of the chosen damage types:  Fire, Lightning, Cold, Acid, Poison.",,,FALSE,FALSE
+60,Xenophobe,Reduce your Persuade by -2 when trying to relate to other species.,,,TRUE,FALSE
+61,Natural Grace,Rough terrain only has half of its original effect on you; every 2 spaces moved on rough terrain count as 3 spaces.,,,FALSE,FALSE
+62,Charm Resistance,"You have a +2 to Resolve against powers with ""Charm"" Power Parts.",,,FALSE,FALSE
+63,Elvish Ancestry,"Choose one: Sun Elf: Once per combat after hitting a target, you may add your Charisma ability as Spiritual/Holy damage to your damage rolls. Moon Elf: You may spend a quick action to become invisible while within dim or dark lighting. Wood Elf: Your base Walking speed is 7, additionally Rough terrain only has half of its original effect on you, every 2 spaces moved on rough terrain count as 3 spaces. Dark Elf: Darkvision range is 24 spaces, additionally while within dim or dark lighting you count as one level higher of obscured from creatures with Darkvision.",,,FALSE,FALSE
+64,Endurance,Increase the max Health you gain each level by 1.,,,FALSE,FALSE
+65,Euphoric Spores,"You may release imperceptible spores to make yourself more alluring or convincing. As a quick action, you can give yourself +2 to Charisma-based skill rolls for one minute.",1,Partial,FALSE,FALSE
+66,Exceptional Craftsmen,Due to your species' history of producing great craftsmen people in markets and craft guilds are more likely to buy from you or commission you for such jobs.,,,FALSE,TRUE
+67,Expansion,"You may grow by one size category for 10 rounds, doubling your height and quadrupling your weight. While grown in this way, you add 1d2 to the first damage you deal each round.",1,Partial,FALSE,FALSE
+68,Experienced,"Choose a skill from a previous level (or level 1). When rolling with that skill, treat a success as one degree higher. You choose which skill this is after each full recovery.",,,FALSE,FALSE
+69,Eye For Steel,"When purchasing weapons or armor, reduce the price of items bought by 12.5%.",,,FALSE,FALSE
+70,Family Craft,"Choose one acquired Crafting Skill. You gain +2 when rolling with that Skill. This can stack with the ""Experienced"" species trait.",,,FALSE,FALSE
+71,Fear of Predators,"When interacting with beasts larger than you, roll Resolve against the creature's Intimidate score. On a failure, you have -1 to all D20 rolls made against that creature.",,,TRUE,FALSE
+72,Fey Heritage,"When traversing a natural environment, some local insects will follow and dance around you. Additionally, some plants will subtly bow as you pass. This can vary widely based on the aspect of the fey you represent or are descended from.",,,FALSE,TRUE
+73,Fey Resistance,"You are immune to powers that put you to sleep. Additionally, once per partial recovery, when you are targeted by a power from a Fey creature, you may increase your defenses by +2.",1,Partial,FALSE,FALSE
+74,Fiery Core,"Upon taking cold damage or coming in contact with water, you must make a DS 10 Fortitude save or gain a level of the weak condition.",,,TRUE,FALSE
+75,Flawed Structure,When in terminal take 2 extra damage from each hit.,,,TRUE,FALSE
+76,Floating,"Your movement speed in water is 0 and you cannot swim, but you can float.",,,FALSE,FALSE
+77,Freezing Point,"For two rounds after taking cold damage, gain vulnerability to Bludgeoning damage.",,,TRUE,FALSE
+78,Frenzy,"As a basic action you can enter a frenzy for 1 round, gaining resistance to all damage.",1,Partial,FALSE,FALSE
+79,Friend to All,You gain +1 on all Charisma-based friendly Skill rolls targeting creatures of other species.,,,FALSE,FALSE
+80,Friendly Demeanor,You gain an extra Success on Charisma rolls when dealing with other humanoids.,,,FALSE,FALSE
+81,Frightening,Twice per partial recovery when you or an ally make a roll to intimidate a target and it fails you can use a quick reaction to make it succeed instead. Increase your intimidate Skill Value Cap by 1.,2,Partial,FALSE,FALSE
+82,Fungal Affinity,"Members of the mushroom species have a natural affinity with fungi and mushrooms. They can communicate with fungi, gaining basic information about their surroundings.",,,FALSE,TRUE
+83,Fungal Empowerment,"When you are in an environment that is damp, dim, or where there is an abundance of fungi, you may increase your Vigilance by 5.",,,FALSE,FALSE
+84,Fungal Kinesthesia,"You possess an innate sense of the interconnectedness of all living things. When you make a stat roll to perceive a living thing while in a natural environment, you can perceive through the roots of plants around you.",,,FALSE,TRUE
+85,Gaseous Body,"When moving through a creature's space, you may choose to make an archetype attack roll against their might to push them one space in a direction of your choice. Additionally, you may move through other creatures' spaces without suffering a movement penalty.",,,FALSE,FALSE
+86,Stunning Attack,"When you take the movement action for a 3rd time in a turn, you calculate your movement as if it were only your 2nd movement action.",,,FALSE,FALSE
+87,Greed,-2 on resolve rolls in social situations involving haggling.,,,TRUE,FALSE
+88,Grim Gaze,"Your dark eyes are more unsettling than most of your kin. When looking at someone intently, they feel greatly unsettled.",,,FALSE,TRUE
+89,Hallucinogenic Vision,As a basic action you may make an Archetype Attack roll against a target’s Fortitude. On Overcome the target gains the Stun 2 condition.,1,Partial,FALSE,FALSE
+90,Hard to Kill,"Once per full recovery when you would enter the dying condition you may go to 1 health instead, additionally Triage rolls on you have +1.",1,Full,FALSE,FALSE
+91,Hearth and Home,Creatures you interact with can sense the stereotypical connection to creature comfort and kind hospitality that your species has through you.,,,FALSE,TRUE
+92,Heterotrophic,"When taking a partial recovery near or in an area where you and/or other creatures rolled initiative in the past 24 hours, gain 1.5x Energy or Health from the recovery.",,,FALSE,FALSE
+93,High Energy Capacity,Increase your energy gained each level by 1.,,,FALSE,FALSE
+94,Heightened Blindsense,"In the range of your blindsense you gain a +2 bonus to perceive and search rolls, additionally you gain liquid sense equal to your blindsense.",,,FALSE,FALSE
+95,Home is Where the Heart Is,"The time required for cooking is reduced in any campsite you assist in setting up. (RM discretion) Additionally, you may get a sense of the quality of Inns, Taverns, and other such establishments.",,,FALSE,TRUE
+96,Hydration Dependence,"If you go longer than a partial rest without being partially submerged in water, you gain the weakened 1 condition until you become partially submerged.",,,TRUE,FALSE
+97,Enduring Momentum,"When you spend more than one action point to move on your turn, you may increase the extra space moved by 1/4 of your movement speed.",,,FALSE,FALSE
+98,Hypersight,"You gain darkvision of 12 spaces, additionally you have +2 to perceive and search rolls. This replaces any previous senses gained from your species.",,,FALSE,FALSE
+99,Ignorance Is Bliss?,Reduce Insight skill rolls by -2.,,,TRUE,FALSE
+100,Illusionist,Increase your rolls and Potency to affect a target with Illusion-type powers by +1.,,,FALSE,FALSE
+101,Inconspicuous,People naturally overlook you because of your common heritage.,,,FALSE,TRUE
+102,Jaws,On a Critical Hit with unarmed prowess or natural weapons you cause the target to gain the Bleed 2 condition.,,,FALSE,FALSE
+103,Keen Senses,"Increase your Perceive rolls by +1, additionally if you have any special sense increase the range of those senses by +2 spaces.",,,FALSE,FALSE
+104,Kill Frenzy,"When you kill an enemy, you may gain +2 to Attack rolls until the end of your next turn.",2,Partial,FALSE,FALSE
+105,Large Stature,"Your carrying capacity is doubled. Additionally, you have +1 to hit creatures one size greater than you.",,,FALSE,FALSE
+106,Light Adversity,"When a power would make you take light damage and requires you to make a defence roll, you have -2 on that roll.",,,TRUE,FALSE
+107,Light-footed,When a creature attempts to Perceive you relying on sound it's Perceive bonus gains a -5 penalty.,,,FALSE,FALSE
+108,Liquid Form,You may squeeze through holes smaller than yourself. You must spend 2 AP per size category below your own. These action points may be taken across turns.,,,FALSE,FALSE
+109,Lucky,When you roll a failure you may re-roll.,3,Partial,FALSE,FALSE
+110,Magical Life Form,"Increase the damage of one of your innate powers by 1d2. Additionally, once per full recovery, when you become the target of a power, you may add 2 to your Evasion or any of the scores it targets. (You cannot pick this trait if you choose Mechanical Life Form.)",1,Full,FALSE,FALSE
+111,Arrogance,"When you get a critical failure, treat it as 1 degree lower. If you get a critical failure while attacking, one of your targets may attack you as a 1 AP reaction.",,,TRUE,FALSE
+112,Manic Laughter,You may use a quick action to make an attack against all enemies' Mental Fortitude in melee range; on Overcome a creature gains Stun 2.,1,Partial,FALSE,FALSE
+113,Manufactured Being,"You have a creator. People likely know of the person who manufactured you, for good or ill.",,,FALSE,TRUE
+114,Mechanical Lifeform,"Gain proficiency in 2 weapon properties of your choice. Additionally, once per partial recovery, you may use any technique as a reaction as long as the cost of the technique is less than 25% of your energy. (You cannot pick this trait if you picked Magical Life Form.)",1,Partial,FALSE,FALSE
+115,Meditate,"You do not require sleep to gain the effects of Recoveries, and cannot becoming exhausted from not sleeping. Sleep effects don't work on you.",,,FALSE,FALSE
+116,Melodic Speech,"Your words carry a hint of darkness, either portraying the oblivion held within darkness or the power of darkness to eclipse all else.",,,FALSE,TRUE
+117,Menacing,"For every 2 points in your Intimidate Skill Value, add an additional point. Additionally, if a target of your Intimidate is a size smaller than you, they gain a -2 penalty to their Resolve.",,,FALSE,FALSE
+118,Metallic Likeness,Choose one of the following options: Silver 1) Gain resistance to to cold. Copper 2) Gain resistance to lighting. Gold 3) gain resistance to fire. Iron 4) Gain resistance to sonic.,,,FALSE,FALSE
+119,Metropolitan,You have an easier time navigating cities.,,,FALSE,TRUE
+120,Mischievous,"You excel at making small, improvised traps that are harmless but annoying.",,,FALSE,TRUE
+121,Movement Specialty,Choose one of the following options: 1. You gain a climbing speed equal to your Speed and can climb on vertical surfaces without using your hands. 2. You gain a swimming speed equal to your walking speed +1; you can also hold your breath for up to one hour. 3. You gain a flying speed equal to your Speed -2. 4. Your Speed increases by 2 While in Combat.,,,FALSE,FALSE
+122,Mutant,"You're unusual very, you gain a mutation that can take any form and tends to give you an affinity to a concept, depending on the chosen concept you gain different bonuses: 1. Flames: Once per round add 1/2 of your Archetype bonus as fire damage to an attack. 2. Vampiric: When you kill an enemy that is at least 2 levels higher than you increase your Archetype ability by 1 until end of combat. (Max of 2) 3. Nature: When you recover Health, you may choose to reroll the healing received and take the higher roll. 4. Sharpness: When you score a critical hit, reduce the target's next roll to hit by 3. 5. Defense: When you take the Brace action you can use your highest ability instead of Vitality, if Vitality is your highest ability, you may use your Fortitude bonus instead.",,,FALSE,FALSE
+123,Mycelial Architecture,"Your way of setting up camp is fungal in nature. Due to how your species constructs architecture, your camps blend into the environment; as long as you set up camp in a natural setting, you are much harder to find.",,,FALSE,TRUE
+124,Mycelial Control,"While conversing with someone for a full minute, you may make a Persuasion roll to charm them.",3,Full,FALSE,FALSE
+125,Mycorrhizal Connection,"When taking a full recovery, you may choose one basic skill to have until your next full recovery.",,,FALSE,FALSE
+126,Mycotic Fortitude,"You have enhanced physical resilience, granting you +2 on defense rolls against powers targeting your Fortitude.",,,FALSE,FALSE
+127,Mycotic Mark,"You can leave a trace of yourself somewhere by puffing your spores a small amount, making it easier to find your way back to where you were.",,,FALSE,TRUE
+128,Natural Dexterity,You have +1 movement speed. Any skills that grant movement speed give you an additional +1 movement speed.,,,FALSE,FALSE
+129,Natural Diplomat,"When you succeed on a Charisma check to Persuade, Deceive, or Charm, treat it as one degree of higher success.",,,FALSE,FALSE
+130,Nomadic Raider,"You are used to a nomadic lifestyle, giving you bonuses to travel-related checks and the ability to find safe resting places while on the move.",,,FALSE,TRUE
+131,Dense,You cannot make athletics rolls to swim.,,,TRUE,FALSE
+132,Odd Physiology,You require a form of sustenance other than the typical food and water. Work with your RM to come up with what keeps you going and ways to obtain and possibly stockpile it.,,,FALSE,TRUE
+133,Older Than This Town,You can generally tell the age of structures provided there is architecture left to observe,,,FALSE,TRUE
+134,One of Those Faces,"You just have ""one of those faces."" You are often mistaken for a local in most regions with a population of your species.",,,FALSE,TRUE
+135,Pack Bond,"Your species forms strong bonds with their pack members, allowing them to sense the emotions or general well-being of their allies.",,,FALSE,TRUE
+136,Pack Mentality,"Increase your roll to hit against a target by +1 for each ally within melee range of it, up to a maximum of +3.",,,FALSE,FALSE
+137,Patagium Flight,"You gain a flying speed equal to half your walking speed, while flying in this way you may not use any powers or techniques that affect other creatures or attack.",,,FALSE,FALSE
+138,Photosynthesis,"When taking a partial recovery in a sunny environment, gain 1.5x Energy or health from the recovery.",,,FALSE,FALSE
+139,Plain Runner,"When in a location with large open areas and minimal foliage (a plain), increase your movement speed by 2 and increase all navigation and tracking skills by 2.",,,FALSE,FALSE
+140,Playing Doll,"As a free action, you may go completely limp, giving you a +2 to Stealth or Hide checks; if in an urban location, the bonus is +5 instead.",,,FALSE,FALSE
+141,Possessed Entity,"You are immune to losing control of your player character by possessions or another creature using your AP, additionally you gain +2 to Mental Fortitude when being charmed.",,,FALSE,FALSE
+142,Power Eater,Resist 1 damage from all Power attacks.,,,FALSE,FALSE
+143,Power Resistance,"You have +2 on saving throws against power effects of one type. (Power types include Necrotic, Elemental (choose one element), Illusion, Summoning, Buffing/Debuffing, Weapon, Control, or any other type approved by the GM.)",,,FALSE,FALSE
+144,Proud Lineage,You have been trained to memorize your ancestry and the ancestry of those in your community. This can help identify others in your species and gives you a basis in the history of your people.,,,FALSE,TRUE
+145,Reckless Fighting,Once per turn when you make an attack roll with you may reduce your Evasion by 2 for one round to gain +2 to Hit.,,,FALSE,FALSE
+146,Regeneration,"Once per turn when you hit with a technique or power, you may spend 5 energy to regain 1d6 Health.",,,FALSE,FALSE
+147,Resistance,Gain resistance to 1 damage type. (Can have a total of 3 Resistance feats.) Resistance allows you to take 1/2 damage of the specified type.,,,FALSE,FALSE
+148,Resourceful Scavenger,"You are excellent at finding useful items and food, even in the most unlikely places.",,,FALSE,TRUE
+149,Robust Diet,"Due to your species' uncommon eating habits and preferences, you can find something edible to you in almost any environment.",,,FALSE,TRUE
+150,Robust Immunity,When you overcome a decaying condition you remove an additional level of the condition.,,,FALSE,FALSE
+151,Roving Hunters,While traveling you are able to find defensible areas to rest that provide ample prey.,,,FALSE,TRUE
+152,Savage Appearance,"Due to the stigma around your species, you can easily find work in the fighting rings of any major city. Additionally spectators are more likely to bet on your victory.",,,FALSE,TRUE
+153,Savage Attacks,"When you hit with a minor critical, add an additional 1/2 of your weapon or Power bonus, rounded up. When you land a critical, add an additional 1d6 to your damage. When you land a major critical, gain both bonuses plus the original major critical effect.",,,FALSE,FALSE
+154,Scholarly Aptitude,The first point allocated to each skill (Not subskill) counts as 2 points.,,,FALSE,FALSE
+155,Scurry,"As a free action, you can move an amount equal to half your proficiency. You may use this feature a number of times equal to your proficiency per partial recovery.",,,FALSE,FALSE
+156,Selective Hearing,"Due to the sensitivity of your hearing, you've developed the ability to isolate specific sounds. This ability makes you great at hearing over long distances and eavesdropping in many situations.",,,FALSE,TRUE
+157,Sentry's Rest,You only need 4 hours of a full recovery to rest each day. Sleep effects don't work on you. You remain mostly aware of your surroundings during rest but take a -2 to Vigilance and a -5 to Discernment.,,,FALSE,FALSE
+158,Shadow Stride,"When in dim or dark lighting, you may ignore difficult terrain.",,,FALSE,FALSE
+159,Shaman Bloodline,"Once per partial recovery, when you use a Power, you may reduce the cost of the Power by your Power ability to a minimum of 6 Energy.",,,FALSE,FALSE
+160,Silver Vulnerability,You have vulnerability to damage from silvered weapons.,,,TRUE,FALSE
+161,Small,(Under 4 feet) Can move through occupied spaces of larger creatures without spending extra movement. Increase EV by +1.,,,FALSE,FALSE
+162,Small but Strong,You are under 4 feet tall and can move through occupied spaces of larger creatures without spending extra movement. Increase EV by +1. You do not suffer the carrying capacity penalty of being a small creature.,,,FALSE,FALSE
+163,Sonic Vulnerability,Take an additional 2 damage from sonic attacks once per turn.,,,TRUE,FALSE
+164,Spectral Form,"Twice per partial recovery, as a free action when an attack would hit you, gain resistance to all damage except from silvered weapons.",,,FALSE,FALSE
+165,Spider Sense,"Sense any movement within 30 feet by seen or unseen creatures or objects and know their exact location. Within 60 feet, you may sense the general direction.",,,FALSE,FALSE
+166,Life-Infused Ink,"You can use ink infused with nature's vitality to write in illuminated manuscripts, imbuing your words with subtle magic and helping preserve any organic material you write on.",,,FALSE,TRUE
+167,Sprawling Relatives,You can find at least a cousin or cousin adjacent relative in any settlement with a medium to high population of your species.,,,FALSE,TRUE
+168,Squirm,Gain +2 on rolls to avoid or remove the grappled condition.,,,FALSE,FALSE
+169,Steel Mind,"Resolve rolls have +2 against intimidate, or the frightened effects.",,,FALSE,FALSE
+170,Stone Dwarf,"When you receive slashing or piercing damage for the first time in a round, you take 2 less damage of that type.",3,Partial,FALSE,FALSE
+171,Strong Appetite,"You must successfully cook a meal during each partial or full recovery. You must attempt to do so every 2 hours of recovery (or once for a full recovery); otherwise, you do not benefit from the recovery.",,,TRUE,FALSE
+172,Strong Stomach,"Gain +5 to Fortitude rolls against the effects of ingested substances. When you gain the weakened condition, reduce it's level by 1.",,,FALSE,FALSE
+173,Strong Will,You have a +3 on defense rolls against effects that force you to take actions unwillingly.,,,FALSE,FALSE
+174,Sturdy,Gain a +2 increase to your Fortitude defense against receiving conditions.,,,FALSE,FALSE
+175,Subterranean Culture,"You are just as, if not more, accustomed to living and traveling beneath the ground as above it. You can always find the cardinal directions (North, South, East, West) when underground. Additionally you can more easily recognize common subterranean hazards. (RM discretion)",,,FALSE,TRUE
+176,Super Natural,You must be 2 levels higher to meet the requirements for supernatural features.,,,TRUE,FALSE
+177,Symbiotic Companions,"Your nature affects your bonded companions. If you have a familiar or pet, they will often start showing signs of fungal influence on their biology.",,,FALSE,TRUE
+178,Team Coordination,You may make a free combination attack with an ally using 1d6 for the roll.,1,Partial,FALSE,FALSE
+179,Thick Scales,"As a quick reaction to getting hit by slashing, piercing, or the damage type of your scales, reduce the damage received by 3 for that hit.",3,Partial,FALSE,FALSE
+180,Thorns,Melee attackers take 1d4 damage upon hitting you.,,,FALSE,FALSE
+181,Timeless Craftsmanship,You can tell the age and possibly the region of any object made by your species.,,,FALSE,TRUE
+182,Timeless Grace,Due to your nigh ageless appearance most non-elf people can't discern your age and even most elves can only get within a decade.,,,FALSE,TRUE
+183,Topographical Genius,"You have +2 to any History, Nature, or Survive skill rolls in biomes that you've studied or lived in.",,,FALSE,FALSE
+184,Toxic,"Once per round, when dealing damage, you may add 1/2 your attack bonus (Power/Martial bonus + highest stat) as Poison damage.",,,FALSE,FALSE
+185,Tribal Artistry,"Your body is a tapestry, a thing of specific beauty. Whatever meaning you choose to assign this art you always know where to find someone with the skill to apply tattoos, create piercings, or dye hair/fur in any major city.",,,FALSE,TRUE
+186,Tune-up,"You aren't organic. Rather than going to a temple full of clerics or an apothecary to have long-lasting damage or effects removed, you can find a local craftsman in the vein that fits your physiology to fix you cheaper than complex magic or expensive herbs.",,,FALSE,TRUE
+187,Tunnel Dweller,You are adept at underground navigation. Gain Earthsight up to 6 spaces. Perception rolls in stony have a +2.,,,FALSE,FALSE
+188,Ugly Mug,You have a -2 on rolls to Persuade or Charm.,,,TRUE,FALSE
+189,Umbral Sight,"your detect rolls made while in darkness have +2, additionally while in darkness your skill rolls that would give you the hidden condition have +2.",,,FALSE,FALSE
+190,Umbral Tracker,"You can see misty traces of life while in darkness. If you succeed on a roll to track by 1 or more degrees of success, misty shadows start emanating from places the thing you're tracking was.",,,FALSE,TRUE
+191,Unassuming,You have a +2 on skill rolls that would give you the hidden condition while there are creatures of a larger size than you nearby.,,,FALSE,FALSE
+192,Unstable Anger,"When you become the target of a Charming or Frightening power and succeed the roll, make an additional Resolve roll with the same potency. On a failure, you immediately attack the closest creature to you.",,,TRUE,FALSE
+193,Vampiric,"When you hit with an attack, you may overheal equal to your archetype ability.",2,Partial,FALSE,FALSE
+194,Vision Reliant,"If you have blindsense you lose it, if you don't have blindsense you have a -2 on rolls reliant on hearing.",,,TRUE,FALSE
+195,Vulnerability to Fire,"When a power would make you take fire damage and requires you to make a defence roll, you have -2 to that defence roll.",,,TRUE,FALSE
+196,Waning Confidence,"Once per combat, when an ally enters terminal or gains the dying condition, make a DS 10 Resolve roll. On a failure, gain the Frightened condition.",,,TRUE,FALSE
+197,Weak Stomach,"Once per combat, when a creature takes damage from a physical attack that you can see, make a DS 10 Fortitude roll. On a failure, you lose one AP; on a success, nothing happens.",,,TRUE,FALSE
+198,Weight of Numbers,"Due to your species' need to leverage their large numbers, you have an understanding of large-scale battle and tactical formation.",,,FALSE,TRUE
+199,Within Shadow,"While in dark or dim lighting, you may use a quick action to become invisible until you move or attack.",,,FALSE,FALSE
+200,Forest Dweller,"Your Skill cap for Nature, Navigate, and Track is increased by 1 each.",,,FALSE,FALSE

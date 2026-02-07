@@ -137,7 +137,7 @@ export function CodexPartsTab() {
   const filterOptions = useMemo(() => {
     if (!parts) return { categories: [] };
     const categories = new Set<string>();
-    parts.forEach(p => {
+    parts.forEach((p: Part) => {
       if (p.category) categories.add(p.category);
     });
     return {
@@ -148,7 +148,7 @@ export function CodexPartsTab() {
   const filteredParts = useMemo(() => {
     if (!parts) return [];
 
-    const filtered = parts.filter(p => {
+    const filtered = parts.filter((p: Part) => {
       if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
         !p.description?.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
@@ -162,7 +162,8 @@ export function CodexPartsTab() {
 
       return true;
     });
-    return sortItems(filtered.map(p => ({ ...p, category: p.category || '' })));
+    type FilteredPart = Part & { category: string };
+    return sortItems<FilteredPart>(filtered.map((p: Part) => ({ ...p, category: p.category || '' })));
   }, [parts, filters, sortItems]);
 
   if (error) return <ErrorState message="Failed to load parts" />;

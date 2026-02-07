@@ -116,8 +116,8 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
         const optLevel = typeof prop === 'string' ? 1 : prop.op_1_lvl || 1;
 
         const dbProp = propId
-          ? propertiesDb.find(p => String(p.id) === String(propId))
-          : propertiesDb.find(p => p.name?.toLowerCase() === propName.toLowerCase());
+          ? propertiesDb.find((p: { id: string }) => String(p.id) === String(propId))
+          : propertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === propName.toLowerCase());
 
         const baseTp = dbProp?.base_tp ?? dbProp?.tp_cost ?? 0;
 

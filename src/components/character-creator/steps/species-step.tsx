@@ -1,7 +1,7 @@
 /**
  * Species Step
  * =============
- * Choose character species with real data from Firebase RTDB
+ * Choose character species with real data from Codex
  * Phase 1 fix: Added modal popup, removed speed display, fixed size handling
  */
 
@@ -56,7 +56,7 @@ export function SpeciesStep() {
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {species?.map((s) => {
+        {species?.map((s: Species) => {
           const isSelected = draft.ancestry?.id === s.id;
           
           return (

@@ -10,7 +10,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useSpecies } from '@/hooks';
+import { useSpecies, type Species } from '@/hooks';
 import { SkillsAllocationPage } from '@/components/shared';
 import { Button } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
@@ -25,10 +25,10 @@ export function SkillsStep() {
     if (!speciesId && !speciesName) return new Set<string>();
 
     const species = speciesId
-      ? allSpecies.find((s) => s.id === speciesId)
-      : allSpecies.find((s) => s.name.toLowerCase() === speciesName?.toLowerCase());
+      ? allSpecies.find((s: Species) => s.id === speciesId)
+      : allSpecies.find((s: Species) => s.name.toLowerCase() === speciesName?.toLowerCase());
 
-    return new Set((species?.skills || []).map((id) => String(id)));
+    return new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
   }, [draft.ancestry?.id, draft.ancestry?.name, draft.species, allSpecies]);
 
   const allocations = draft.skills || {};

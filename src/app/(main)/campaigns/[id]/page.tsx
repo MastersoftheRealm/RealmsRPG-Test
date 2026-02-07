@@ -53,6 +53,7 @@ function CampaignDetailContent() {
   const params = useParams();
   const router = useRouter();
   const campaignId = params.id as string;
+  const { user } = useAuth();
 
   const { data: campaign, isLoading, error } = useCampaign(campaignId);
   const { data: characters = [] } = useCharacters();
@@ -161,7 +162,6 @@ function CampaignDetailContent() {
     );
   }
 
-  const { user } = useAuth();
   const currentUserId = user?.uid;
   const isRealmMaster = campaign.ownerId === currentUserId;
 

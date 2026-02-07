@@ -14,8 +14,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, FolderOpen } from 'lucide-react';
-import { collection, addDoc, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
 import { useTechniqueParts, useUserTechniques, useUserItems, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -410,7 +409,7 @@ function TechniqueCreatorContent() {
           if (parsed.selectedParts && parsed.selectedParts.length > 0) {
             const restoredParts: SelectedPart[] = [];
             for (const savedPart of parsed.selectedParts) {
-              const foundPart = techniqueParts.find(p => String(p.id) === String(savedPart.partId));
+              const foundPart = techniqueParts.find((p: { id: string }) => String(p.id) === String(savedPart.partId));
               if (foundPart) {
                 restoredParts.push({
                   part: foundPart,
@@ -572,18 +571,9 @@ function TechniqueCreatorContent() {
       };
 
       // Check if technique with same name exists
-      const libraryRef = collection(db, 'users', user.uid, 'techniqueLibrary');
-      const q = query(libraryRef, where('name', '==', name.trim()));
-      const snapshot = await getDocs(q);
+      const existing = await findLibraryItemByName('techniques', name.trim());
 
-      if (!snapshot.empty) {
-        // Update existing technique
-        const docRef = doc(db, 'users', user.uid, 'techniqueLibrary', snapshot.docs[0].id);
-        await setDoc(docRef, techniqueData);
-      } else {
-        // Create new technique
-        await addDoc(libraryRef, { ...techniqueData, createdAt: new Date() });
-      }
+      await saveToLibrary('techniques', { ...techniqueData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
 
       setSaveMessage({ type: 'success', text: 'Technique saved successfully!' });
       
@@ -643,7 +633,7 @@ function TechniqueCreatorContent() {
     const loadedParts: SelectedPart[] = [];
     for (const savedPart of savedParts) {
       const matchedPart = techniqueParts.find(
-        (p) => p.id === String(savedPart.id) || p.name === savedPart.name
+        (p: { id: string; name: string }) => p.id === String(savedPart.id) || p.name === savedPart.name
       );
       
       if (matchedPart) {

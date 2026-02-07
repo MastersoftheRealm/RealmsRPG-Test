@@ -11,7 +11,7 @@ import {
   ListEmptyState as EmptyState,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useRTDBFeats, type RTDBFeat } from '@/hooks';
+import { useCodexFeats, type Feat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
@@ -21,22 +21,22 @@ import { IconButton } from '@/components/ui';
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 80px';
 
 export function AdminFeatsTab() {
-  const { data: feats, isLoading, error } = useRTDBFeats();
+  const { data: feats, isLoading, error } = useCodexFeats();
   const { sortState, handleSort, sortItems } = useSort('name');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<RTDBFeat | null>(null);
+  const [editing, setEditing] = useState<Feat | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const filtered = (feats || []).filter(
-    (f) =>
+    (f: Feat) =>
       !search ||
       f.name.toLowerCase().includes(search.toLowerCase()) ||
       f.description?.toLowerCase().includes(search.toLowerCase())
   );
-  const sorted = sortItems(filtered);
+  const sorted = sortItems<Feat>(filtered);
 
   const formDefaults = {
     name: '',
@@ -65,7 +65,7 @@ export function AdminFeatsTab() {
     setModalOpen(true);
   };
 
-  const openEdit = (feat: RTDBFeat) => {
+  const openEdit = (feat: Feat) => {
     setEditing(feat);
     setForm({
       name: feat.name,

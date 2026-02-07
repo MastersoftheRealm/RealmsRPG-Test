@@ -1,20 +1,20 @@
-﻿/**
+/**
  * Auth Store
  * ===========
  * Zustand store for authentication state
  */
 
 import { create } from 'zustand';
-import { User } from 'firebase/auth';
+import type { AuthUser } from '@/types/auth';
 
 interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   error: string | null;
   initialized: boolean;
-  
+
   // Actions
-  setUser: (user: User | null) => void;
+  setUser: (user: AuthUser | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setInitialized: (initialized: boolean) => void;
@@ -31,7 +31,7 @@ const initialState = {
 
 export const useAuthStore = create<AuthState>((set) => ({
   ...initialState,
-  
+
   setUser: (user) => set({ user, loading: false }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error, loading: false }),

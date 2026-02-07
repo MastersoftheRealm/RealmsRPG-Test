@@ -27,9 +27,8 @@ const PROD_CONFIG = {
     // Custom auth domain (your production custom domain)
     AUTH_DOMAIN: 'realmsroleplaygame.com',
     
-    // reCAPTCHA v3 Site Key for App Check (public key, safe to commit)
-    // This is tied to your production Firebase project's App Check configuration
-    RECAPTCHA_SITE_KEY: '6Ld4CaAqAAAAAMXFsM-yr1eNlQGV2itSASCC7SmA',
+    // reCAPTCHA v3 Site Key - set via inject script: npm run inject-env-vanilla
+    RECAPTCHA_SITE_KEY: '__RECAPTCHA_SITE_KEY_PROD__',
     
     // Production hostnames that should use this config
     // Add all domains/subdomains that serve your production site
@@ -52,9 +51,8 @@ const TEST_CONFIG = {
     // Auth domain for test Firebase project
     AUTH_DOMAIN: 'realmsrpg-test.firebaseapp.com',
     
-    // reCAPTCHA v3 Site Key for App Check (public key, safe to commit)
-    // This is registered with your test Firebase project's App Check
-    RECAPTCHA_SITE_KEY: '6LeYWjwsAAAAADrthFs113G-wKBopIXd07FIFfMm',
+    // reCAPTCHA v3 Site Key - set via inject script: npm run inject-env-vanilla
+    RECAPTCHA_SITE_KEY: '__RECAPTCHA_SITE_KEY_TEST__',
     
     // Test/staging hostnames that should use this config
     HOSTNAMES: [

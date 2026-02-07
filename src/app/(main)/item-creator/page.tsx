@@ -24,8 +24,7 @@ import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal'
 import { NumberStepper } from '@/components/creator/number-stepper';
 import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
-import { db } from '@/lib/firebase/client';
-import { collection, query, where, getDocs, addDoc, setDoc, doc } from 'firebase/firestore';
+import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
 import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
@@ -285,7 +284,7 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
               <tr className="border-b border-border-light">
                 <th className="text-left py-1 font-medium text-text-secondary">Rarity</th>
                 <th className="text-right py-1 font-medium text-text-secondary">IP Range</th>
-                <th className="text-right py-1 font-medium text-text-secondary">Base Gold</th>
+                <th className="text-right py-1 font-medium text-text-secondary">Base Currency</th>
               </tr>
             </thead>
             <tbody>
@@ -416,7 +415,7 @@ function ItemCreatorContent() {
           if (parsed.selectedProperties && parsed.selectedProperties.length > 0) {
             const restoredProps: SelectedProperty[] = [];
             for (const savedProp of parsed.selectedProperties) {
-              const foundProp = itemProperties.find(p => String(p.id) === String(savedProp.propertyId));
+              const foundProp = itemProperties.find((p: { id: string }) => String(p.id) === String(savedProp.propertyId));
               if (foundProp) {
                 restoredProps.push({
                   property: foundProp,
@@ -549,8 +548,8 @@ function ItemCreatorContent() {
         const propName = typeof savedProp === 'string' ? savedProp : savedProp.name;
         
         const foundProp = propId
-          ? itemProperties.find(p => String(p.id) === String(propId))
-          : itemProperties.find(p => p.name?.toLowerCase() === propName?.toLowerCase());
+          ? itemProperties.find((p: { id: string }) => String(p.id) === String(propId))
+          : itemProperties.find((p: { name?: string }) => p.name?.toLowerCase() === propName?.toLowerCase());
         
         if (foundProp) {
           restoredProps.push({
@@ -586,7 +585,7 @@ function ItemCreatorContent() {
     // === WEAPON PROPERTIES ===
     // Add Two-Handed property if weapon and selected
     if (armamentType === 'Weapon' && isTwoHanded) {
-      const twoHandedProp = itemProperties.find(p => p.name === 'Two-Handed');
+      const twoHandedProp = itemProperties.find((p: ItemProperty) => p.name === 'Two-Handed');
       if (twoHandedProp) {
         baseProps.push({ id: Number(twoHandedProp.id), name: 'Two-Handed', op_1_lvl: 0 });
       }
@@ -594,7 +593,7 @@ function ItemCreatorContent() {
     
     // Add Range property if weapon and ranged
     if (armamentType === 'Weapon' && rangeLevel > 0) {
-      const rangeProp = itemProperties.find(p => p.name === 'Range');
+      const rangeProp = itemProperties.find((p: ItemProperty) => p.name === 'Range');
       if (rangeProp) {
         baseProps.push({ id: Number(rangeProp.id), name: 'Range', op_1_lvl: rangeLevel - 1 });
       }
@@ -604,7 +603,7 @@ function ItemCreatorContent() {
     if (armamentType === 'Weapon' && damage.type !== 'none' && damage.amount >= 1) {
       const validSizes = [4, 6, 8, 10, 12];
       if (validSizes.includes(damage.size)) {
-        const weaponDamageProp = itemProperties.find(p => 
+        const weaponDamageProp = itemProperties.find((p: ItemProperty) => 
           p.name === 'Weapon Damage' || Number(p.id) === PROPERTY_IDS.WEAPON_DAMAGE
         );
         if (weaponDamageProp) {
@@ -619,7 +618,7 @@ function ItemCreatorContent() {
           const minDiceUsingD12 = Math.ceil(total / 12);
           const splits = Math.max(0, damage.amount - minDiceUsingD12);
           if (splits > 0) {
-            const splitDiceProp = itemProperties.find(p => 
+            const splitDiceProp = itemProperties.find((p: ItemProperty) => 
               p.name === 'Split Damage Dice' || Number(p.id) === PROPERTY_IDS.SPLIT_DAMAGE_DICE
             );
             if (splitDiceProp) {
@@ -633,20 +632,20 @@ function ItemCreatorContent() {
     // === ARMOR PROPERTIES ===
     if (armamentType === 'Armor') {
       // Auto-add Armor Base property (ID: 16)
-      const armorBaseProp = itemProperties.find(p => p.name === 'Armor Base' || Number(p.id) === 16);
+      const armorBaseProp = itemProperties.find((p: ItemProperty) => p.name === 'Armor Base' || Number(p.id) === 16);
       if (armorBaseProp) {
         baseProps.push({ id: Number(armorBaseProp.id), name: armorBaseProp.name, op_1_lvl: 0 });
       }
       
       // Add Damage Reduction property (ID: 1) - armor must have at least 1 DR
-      const drProp = itemProperties.find(p => p.name === 'Damage Reduction' || Number(p.id) === 1);
+      const drProp = itemProperties.find((p: ItemProperty) => p.name === 'Damage Reduction' || Number(p.id) === 1);
       if (drProp && damageReduction > 0) {
         baseProps.push({ id: Number(drProp.id), name: drProp.name, op_1_lvl: damageReduction - 1 });
       }
       
       // Add Agility Reduction property (ID: 5) if any
       if (agilityReduction > 0) {
-        const arProp = itemProperties.find(p => p.name === 'Agility Reduction' || Number(p.id) === 5);
+        const arProp = itemProperties.find((p: ItemProperty) => p.name === 'Agility Reduction' || Number(p.id) === 5);
         if (arProp) {
           baseProps.push({ id: Number(arProp.id), name: arProp.name, op_1_lvl: agilityReduction - 1 });
         }
@@ -654,7 +653,7 @@ function ItemCreatorContent() {
       
       // Add Critical Range Increase property (ID: 22) if any
       if (criticalRangeIncrease > 0) {
-        const critProp = itemProperties.find(p => p.name === 'Critical Range +1' || Number(p.id) === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1);
+        const critProp = itemProperties.find((p: ItemProperty) => p.name === 'Critical Range +1' || Number(p.id) === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1);
         if (critProp) {
           baseProps.push({ id: Number(critProp.id), name: critProp.name, op_1_lvl: criticalRangeIncrease - 1 });
         }
@@ -664,7 +663,7 @@ function ItemCreatorContent() {
     // === SHIELD PROPERTIES ===
     if (armamentType === 'Shield') {
       // Auto-add Shield Base property (ID: 15)
-      const shieldBaseProp = itemProperties.find(p => p.name === 'Shield Base' || Number(p.id) === 15);
+      const shieldBaseProp = itemProperties.find((p: ItemProperty) => p.name === 'Shield Base' || Number(p.id) === 15);
       if (shieldBaseProp) {
         baseProps.push({ id: Number(shieldBaseProp.id), name: shieldBaseProp.name, op_1_lvl: 0 });
       }
@@ -673,7 +672,7 @@ function ItemCreatorContent() {
       // Uses same formula as weapon damage: ((diceAmount * dieSize) - 4) / 2
       const validSizes = [4, 6, 8, 10, 12];
       if (validSizes.includes(shieldDR.size) && shieldDR.amount >= 1) {
-        const shieldAmountProp = itemProperties.find(p => 
+        const shieldAmountProp = itemProperties.find((p: ItemProperty) => 
           p.name === 'Shield Amount' || Number(p.id) === PROPERTY_IDS.SHIELD_AMOUNT
         );
         if (shieldAmountProp) {
@@ -684,7 +683,7 @@ function ItemCreatorContent() {
       
       // Shield Damage (optional) - Property ID 40
       if (hasShieldDamage && validSizes.includes(shieldDamage.size) && shieldDamage.amount >= 1) {
-        const shieldDamageProp = itemProperties.find(p => 
+        const shieldDamageProp = itemProperties.find((p: ItemProperty) => 
           p.name === 'Shield Damage' || Number(p.id) === PROPERTY_IDS.SHIELD_DAMAGE
         );
         if (shieldDamageProp) {
@@ -727,7 +726,7 @@ function ItemCreatorContent() {
   // Actions
   const addProperty = useCallback(() => {
     const armamentTypeLower = armamentType.toLowerCase();
-    const selectableProps = itemProperties.filter((p) => {
+    const selectableProps = itemProperties.filter((p: ItemProperty) => {
       // Exclude general properties
       if (isGeneralProperty(p)) return false;
       // Include properties that match the armament type or have no type specified
@@ -739,7 +738,7 @@ function ItemCreatorContent() {
     
     // Find a property not already selected
     const available = selectableProps.find(
-      (p) => !selectedProperties.some((sp) => sp.property.id === p.id)
+      (p: ItemProperty) => !selectedProperties.some((sp: SelectedProperty) => sp.property.id === p.id)
     ) || selectableProps[0];
     
     setSelectedProperties((prev) => [
@@ -828,19 +827,10 @@ function ItemCreatorContent() {
         }),
       };
 
-      // Save directly to Firestore - check for existing item with same name
-      const libraryRef = collection(db, 'users', user.uid, 'itemLibrary');
-      const q = query(libraryRef, where('name', '==', name.trim()));
-      const snapshot = await getDocs(q);
+      // Check for existing item with same name
+      const existing = await findLibraryItemByName('items', name.trim());
 
-      if (!snapshot.empty) {
-        // Update existing item
-        const docRef = doc(db, 'users', user.uid, 'itemLibrary', snapshot.docs[0].id);
-        await setDoc(docRef, itemData);
-      } else {
-        // Create new item
-        await addDoc(libraryRef, { ...itemData, createdAt: new Date() });
-      }
+      await saveToLibrary('items', { ...itemData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
 
       setSaveMessage({ type: 'success', text: 'Item saved successfully!' });
       
@@ -910,7 +900,7 @@ function ItemCreatorContent() {
       for (const prop of item.properties) {
         // Find matching property from database
         const matchingProp = itemProperties.find(
-          (p) => p.id === String(prop.id) || p.name === prop.name
+          (p: ItemProperty) => p.id === String(prop.id) || p.name === prop.name
         );
         
         if (matchingProp) {

@@ -16,9 +16,8 @@ import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions } from 'firebase/functions';
 import { initializeAppCheck, ReCaptchaV3Provider, AppCheck } from 'firebase/app-check';
 
-// reCAPTCHA v3 Site Key for App Check (public key, safe to commit)
-// This is the same key used by the vanilla site
-const RECAPTCHA_SITE_KEY = '6LeYWjwsAAAAADrthFs113G-wKBopIXd07FIFfMm';
+// reCAPTCHA v3 Site Key for App Check (set via env; see .env.example)
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? '';
 
 // Fallback config for local development (when not using Firebase Hosting)
 const localConfig: FirebaseOptions = {
@@ -81,14 +80,16 @@ async function initializeFirebaseClient() {
   storage = getStorage(app);
   functions = getFunctions(app);
   
-  // Initialize App Check with reCAPTCHA v3 (same as vanilla site)
-  try {
-    appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
-      isTokenAutoRefreshEnabled: true
-    });
-  } catch (appCheckError) {
-    // App Check may already be initialized — silently skip
+  // Initialize App Check with reCAPTCHA v3 (set NEXT_PUBLIC_RECAPTCHA_SITE_KEY in .env)
+  if (RECAPTCHA_SITE_KEY) {
+    try {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
+        isTokenAutoRefreshEnabled: true
+      });
+    } catch (appCheckError) {
+      // App Check may already be initialized — silently skip
+    }
   }
   
   return { app, auth, db, rtdb, storage, functions, appCheck };

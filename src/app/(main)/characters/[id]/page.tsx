@@ -9,10 +9,10 @@
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase/client';
-import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useRTDBFeats, useRTDBSkills, useEquipment } from '@/hooks';
+import { storage } from '@/lib/firebase/client';
+import { getCharacter, saveCharacter } from '@/services/character-service';
+import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPointsForEntity } from '@/lib/game/formulas';
@@ -60,21 +60,21 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { data: userTechniques = [] } = useUserTechniques();
   const { data: userItems = [] } = useUserItems();
   const { data: traitsDb = [] } = useTraits();
-  const { data: featsDb = [] } = useRTDBFeats();
+  const { data: featsDb = [] } = useCodexFeats();
   
-  // RTDB parts data for enrichment (descriptions, TP costs)
+  // Codex parts data for enrichment (descriptions, TP costs)
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   
-  // RTDB equipment for enrichment fallback (codex items)
-  const { data: rtdbEquipment = [] } = useEquipment();
+  // Codex equipment for enrichment fallback
+  const { data: codexEquipment = [] } = useEquipment();
   
   // Fetch all species data to look up species traits
   const { data: allSpecies = [] } = useSpecies();
   
-  // Fetch all RTDB skills to get ability options for each skill
-  const { data: rtdbSkills = [] } = useRTDBSkills();
+  // Fetch all Codex skills to get ability options for each skill
+  const { data: codexSkills = [] } = useCodexSkills();
 
   // Campaigns (for roll log context when character is in a campaign)
   const { data: campaignsFull = [] } = useCampaignsFull();
@@ -94,8 +94,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Enrich character data with full library objects
   const enrichedData = useMemo(() => {
     if (!character) return null;
-    return enrichCharacterData(character, userPowers, userTechniques, userItems, rtdbEquipment, powerPartsDb, techniquePartsDb);
-  }, [character, userPowers, userTechniques, userItems, rtdbEquipment, powerPartsDb, techniquePartsDb]);
+    return enrichCharacterData(character, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb);
+  }, [character, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb]);
   
   // Look up character's species and its species_traits (automatically granted to all characters of that species)
   const characterSpeciesTraits = useMemo(() => {
@@ -105,9 +105,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const speciesId = character.ancestry?.id;
     const speciesName = character.ancestry?.name || character.species;
     
-    let species = allSpecies.find(s => String(s.id) === String(speciesId));
+    let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
-      species = allSpecies.find(s => s.name.toLowerCase() === speciesName?.toLowerCase());
+      species = allSpecies.find((s: Species) => s.name.toLowerCase() === speciesName?.toLowerCase());
     }
     
     // Return the species_traits array (IDs/names of traits automatically granted)
@@ -121,9 +121,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const speciesId = character.ancestry?.id;
     const speciesName = character.ancestry?.name || character.species;
     
-    let species = allSpecies.find(s => String(s.id) === String(speciesId));
+    let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
-      species = allSpecies.find(s => s.name.toLowerCase() === speciesName?.toLowerCase());
+      species = allSpecies.find((s: Species) => s.name.toLowerCase() === speciesName?.toLowerCase());
     }
     
     return (species?.skills || []) as string[];
@@ -133,19 +133,15 @@ export default function CharacterSheetPage({ params }: PageParams) {
   useEffect(() => {
     async function loadCharacter() {
       if (!user || authLoading) return;
-      
+
       try {
         setLoading(true);
-        const docRef = doc(db, 'users', user.uid, 'character', id);
-        const snapshot = await getDoc(docRef);
-        
-        if (!snapshot.exists()) {
+        const data = await getCharacter(id);
+        if (!data) {
           setError('Character not found');
           return;
         }
-        
-        const data = snapshot.data() as Omit<Character, 'id'>;
-        setCharacter({ id: snapshot.id, ...data });
+        setCharacter(data);
       } catch (err) {
         console.error('Error loading character:', err);
         setError('Failed to load character');
@@ -153,7 +149,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
         setLoading(false);
       }
     }
-    
+
     loadCharacter();
   }, [id, user, authLoading]);
   
@@ -302,13 +298,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
       if (!user || !data) return;
       setSaving(true);
       try {
-        const docRef = doc(db, 'users', user.uid, 'character', id);
-        // Clean data before saving - removes computed/enriched fields
         const cleanedData = cleanForSave(data);
-        await updateDoc(docRef, {
-          ...cleanedData,
-          updatedAt: Timestamp.now(),
-        });
+        await saveCharacter(id, cleanedData);
       } finally {
         setSaving(false);
       }
@@ -398,10 +389,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
       
       // Update the character with the new portrait URL
       setCharacter(prev => prev ? { ...prev, portrait: downloadUrl } : null);
-      
-      // Also update in Firestore immediately
-      const charRef = doc(db, 'users', user.uid, 'characters', character.id);
-      await updateDoc(charRef, { portrait: downloadUrl, updatedAt: Timestamp.now() });
+
+      // Persist portrait URL via API
+      await saveCharacter(character.id, { portrait: downloadUrl });
       
     } catch (err) {
       console.error('Portrait upload error:', err);
@@ -518,7 +508,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const resetTraitUses: Record<string, number> = {};
     if (character.traitUses) {
       Object.keys(character.traitUses).forEach(traitName => {
-        const trait = traitsDb.find(t => t.name === traitName);
+        const trait = traitsDb.find((t: Trait) => t.name === traitName);
         if (trait?.uses_per_rec) {
           resetTraitUses[traitName] = trait.uses_per_rec;
         }
@@ -564,7 +554,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const resetTraitUses: Record<string, number> = {};
     if (character.traitUses && resetPartialFeats) {
       Object.keys(character.traitUses).forEach(traitName => {
-        const trait = traitsDb.find(t => t.name === traitName);
+        const trait = traitsDb.find((t: Trait) => t.name === traitName);
         if (trait?.uses_per_rec && trait.rec_period?.toLowerCase().includes('partial')) {
           resetTraitUses[traitName] = trait.uses_per_rec;
         }
@@ -1096,8 +1086,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
       if (!prev) return null;
       const currentUses = prev.traitUses?.[traitName] ?? 0;
       // Find the trait in traitsDb to get maxUses
-      const traitData = traitsDb.find(t => t.name?.toLowerCase() === traitName.toLowerCase());
-      // RTDB trait objects may include `uses_per_rec`; cast to any to avoid strict type mismatch
+      const traitData = traitsDb.find((t: Trait) => t.name?.toLowerCase() === traitName.toLowerCase());
+      // Codex trait objects may include `uses_per_rec`; cast to any to avoid strict type mismatch
       const maxUses = (traitData as any)?.uses_per_rec ?? 999;
       const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
       return {
@@ -1133,7 +1123,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     }
   }, [addModalType, handleAddPowers, handleAddTechniques, handleAddWeapons, handleAddArmor, handleAddEquipment]);
   
-  // Enrich skills with availableAbilities from RTDB
+  // Enrich skills with availableAbilities from Codex
   // This ensures existing skills that lack availableAbilities get them from the database
   // NOTE: This useMemo must be before any early returns to follow React's Rules of Hooks
   const skills = useMemo(() => {
@@ -1150,8 +1140,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
       availableAbilities?: string[];
     }>;
     
-    // If no RTDB skills loaded yet, return raw skills
-    if (rtdbSkills.length === 0) return rawSkills;
+    // If no Codex skills loaded yet, return raw skills
+    if (codexSkills.length === 0) return rawSkills;
     
     return rawSkills.map(skill => {
       // If skill already has availableAbilities, use those
@@ -1159,13 +1149,13 @@ export default function CharacterSheetPage({ params }: PageParams) {
         return skill;
       }
       
-      // Find matching skill in RTDB by name or id
-      const rtdbSkill = rtdbSkills.find(
-        rs => rs.id === skill.id || rs.name.toLowerCase() === skill.name.toLowerCase()
+      // Find matching skill in Codex by name or id
+      const codexSkill = codexSkills.find(
+        (rs: Skill) => rs.id === skill.id || rs.name.toLowerCase() === skill.name.toLowerCase()
       );
       
-      if (rtdbSkill && rtdbSkill.ability) {
-        const availableAbilities = rtdbSkill.ability.split(',').map(a => a.trim().toLowerCase()).filter(Boolean);
+      if (codexSkill && codexSkill.ability) {
+        const availableAbilities = codexSkill.ability.split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean);
         
         // If the skill's current ability is not in the available list, default to first available
         let ability = skill.ability;
@@ -1182,7 +1172,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       
       return skill;
     });
-  }, [character, rtdbSkills]);
+  }, [character, codexSkills]);
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -1383,7 +1373,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   techniquePartsDb={techniquePartsDb}
                   itemPropertiesDb={itemPropertiesDb}
                   // Feats tab props
-                  // Cast ancestry to any to accommodate nullable fields from RTDB (selectedFlaw may be null)
+                  // Cast ancestry to any to accommodate nullable fields from Codex (selectedFlaw may be null)
                   ancestry={character.ancestry as any}
                   // Vanilla site trait fields (stored at top level)
                   vanillaTraits={{
@@ -1392,8 +1382,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                     characteristicTrait: character.characteristicTrait,
                     speciesTraits: character.speciesTraits,
                   }}
-                  // Species traits from RTDB (automatically granted to all characters of this species)
-                  speciesTraitsFromRTDB={characterSpeciesTraits}
+                  // Species traits from Codex (automatically granted to all characters of this species)
+                  speciesTraitsFromCodex={characterSpeciesTraits}
                   archetypeFeats={character.archetypeFeats}
                   characterFeats={character.feats}
                   onFeatUsesChange={handleFeatUsesChange}

@@ -15,18 +15,17 @@ export function AdminEquipmentTab() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'weapon' | 'armor' | 'equipment'>('all');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; type: string; gold_cost: number } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string; description?: string; type?: string; gold_cost?: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const [form, setForm] = useState({ name: '', description: '', type: 'equipment' as 'weapon' | 'armor' | 'equipment', gold_cost: 0 });
 
-  const filtered = (equipment || [])
-    .filter(
-      (e) =>
-        (!search || e.name.toLowerCase().includes(search.toLowerCase()) || e.description?.toLowerCase().includes(search.toLowerCase())) &&
-        (typeFilter === 'all' || (e.type || 'equipment') === typeFilter)
-    );
+  const filtered = (equipment || []).filter(
+    (e: { id: string; name: string; description?: string; type?: string }) =>
+      (!search || e.name.toLowerCase().includes(search.toLowerCase()) || e.description?.toLowerCase().includes(search.toLowerCase())) &&
+      (typeFilter === 'all' || (e.type || 'equipment') === typeFilter)
+  );
 
   const openAdd = () => {
     setEditing(null);
@@ -34,7 +33,7 @@ export function AdminEquipmentTab() {
     setModalOpen(true);
   };
 
-  const openEdit = (e: { id: string; name: string; description: string; type: string; gold_cost: number }) => {
+  const openEdit = (e: { id: string; name: string; description?: string; type?: string; gold_cost?: number }) => {
     setEditing(e);
     setForm({
       name: e.name,
@@ -109,10 +108,10 @@ export function AdminEquipmentTab() {
         <LoadingState />
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((e) => (
+          {filtered.map((e: { id: string; name: string; description?: string; type?: string; gold_cost?: number }) => (
             <div key={e.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
-                <GridListRow id={e.id} name={e.name} description={e.description || ''} columns={[{ key: 'Type', value: (e.type || 'equipment') as string }, { key: 'Cost', value: `${e.gold_cost ?? 0} gp` }]} />
+                <GridListRow id={e.id} name={e.name} description={e.description || ''} columns={[{ key: 'Type', value: (e.type || 'equipment') as string }, { key: 'Cost', value: `${e.gold_cost ?? 0} c` }]} />
               </div>
               <div className="flex gap-1 pr-2">
                 <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit">
@@ -168,7 +167,7 @@ export function AdminEquipmentTab() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Gold Cost</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Currency Cost</label>
               <Input type="number" min={0} value={form.gold_cost} onChange={(e) => setForm((f) => ({ ...f, gold_cost: parseInt(e.target.value) || 0 }))} />
             </div>
           </div>

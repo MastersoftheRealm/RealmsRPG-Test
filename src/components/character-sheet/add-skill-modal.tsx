@@ -1,7 +1,7 @@
 /**
  * Add Skill Modal
  * ===============
- * Modal for adding base skills from RTDB
+ * Modal for adding base skills from Codex
  * Features:
  * - Matches Codex skills page design
  * - Ability filter (dropdown)
@@ -18,14 +18,14 @@ import { X } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Modal } from '@/components/ui';
 import { GridListRow, ListHeader } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
-import { useRTDBSkills, type RTDBSkill } from '@/hooks';
+import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 
 interface AddSkillModalProps {
   isOpen: boolean;
   onClose: () => void;
   existingSkillNames: string[];
-  onAdd: (skills: RTDBSkill[]) => void;
+  onAdd: (skills: Skill[]) => void;
 }
 
 // Helper to format ability badges for GridListRow
@@ -43,15 +43,15 @@ export function AddSkillModal({
   existingSkillNames,
   onAdd,
 }: AddSkillModalProps) {
-  const { data: allSkills = [], isLoading: loading, error: queryError } = useRTDBSkills();
+  const { data: allSkills = [], isLoading: loading, error: queryError } = useCodexSkills();
   const [searchQuery, setSearchQuery] = useState('');
   const [abilityFilter, setAbilityFilter] = useState('');
-  const [selectedSkills, setSelectedSkills] = useState<RTDBSkill[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   // Filter to base skills only (no base_skill_id = not a sub-skill)
   const skills = useMemo(() => {
-    return allSkills.filter(s => s.base_skill_id === undefined);
+    return allSkills.filter((s: Skill) => s.base_skill_id === undefined);
   }, [allSkills]);
 
   const error = queryError ? `Failed to load skills: ${queryError.message}` : null;
@@ -69,7 +69,7 @@ export function AddSkillModal({
   const filteredSkills = useMemo(() => {
     const existingLower = existingSkillNames.map(n => n.toLowerCase());
     
-    return skills.filter(skill => {
+    return skills.filter((skill: Skill) => {
       // Exclude already owned skills
       if (existingLower.includes(skill.name.toLowerCase())) return false;
       
@@ -95,11 +95,11 @@ export function AddSkillModal({
   }, [skills, existingSkillNames, searchQuery, abilityFilter]);
 
   const sortedSkills = useMemo(
-    () => sortItems(filteredSkills.map(s => ({ ...s, ability: s.ability || '' }))),
+    () => sortItems<Skill & { ability: string }>(filteredSkills.map((s: Skill) => ({ ...s, ability: s.ability || '' }))),
     [filteredSkills, sortItems]
   );
 
-  const toggleSkill = useCallback((skill: RTDBSkill) => {
+  const toggleSkill = useCallback((skill: Skill) => {
     setSelectedSkills(prev => {
       const exists = prev.some(s => s.id === skill.id);
       if (exists) {
@@ -232,7 +232,7 @@ export function AddSkillModal({
 
           {!loading && !error && sortedSkills.length > 0 && (
             <div className="space-y-2 mt-2">
-              {sortedSkills.map(skill => (
+              {sortedSkills.map((skill: Skill & { ability: string }) => (
                 <GridListRow
                   key={skill.id}
                   id={skill.id}

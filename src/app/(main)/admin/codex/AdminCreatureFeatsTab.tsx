@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useCreatureFeats } from '@/hooks';
+import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -21,7 +21,7 @@ export function AdminCreatureFeatsTab() {
   const [form, setForm] = useState({ name: '', description: '', points: 0 });
 
   const filtered = (creatureFeats || []).filter(
-    (f) =>
+    (f: CreatureFeat) =>
       !search ||
       f.name.toLowerCase().includes(search.toLowerCase()) ||
       f.description?.toLowerCase().includes(search.toLowerCase())
@@ -90,7 +90,7 @@ export function AdminCreatureFeatsTab() {
         <LoadingState />
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((f) => (
+          {filtered.map((f: CreatureFeat) => (
             <div key={f.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
                 <GridListRow id={f.id} name={f.name} description={f.description || ''} columns={[{ key: 'Points', value: String(f.points ?? '-') }]} />

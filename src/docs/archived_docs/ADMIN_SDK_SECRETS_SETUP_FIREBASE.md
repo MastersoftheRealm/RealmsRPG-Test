@@ -1,5 +1,7 @@
 # Admin SDK Secrets — Fresh Setup Guide
 
+**ARCHIVED:** Firebase deployment. Superseded by `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` for Supabase/Vercel stack.
+
 Complete audit and setup for Admin SDK credentials used by session cookies, campaign creation, and server actions.
 
 ## Secret Names (Use Exactly)

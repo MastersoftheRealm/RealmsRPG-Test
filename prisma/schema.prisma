@@ -1,0 +1,203 @@
+// RealmsRPG — Prisma schema for Supabase PostgreSQL
+// Maps Firestore collections to relational tables
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// User & Profile
+// =============================================================================
+
+model UserProfile {
+  id                  String    @id @default(uuid())
+  email               String?
+  displayName         String?   @map("display_name")
+  username            String?   @unique
+  photoUrl            String?   @map("photo_url")
+  lastUsernameChange  DateTime? @map("last_username_change")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  characters       Character[]
+  userPowers       UserPower[]
+  userTechniques   UserTechnique[]
+  userItems        UserItem[]
+  userCreatures    UserCreature[]
+  usernameLookups  UsernameLookup[]
+
+  @@map("user_profiles")
+}
+
+model UsernameLookup {
+  username String       @id
+  userId   String       @map("user_id")
+  user     UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("usernames")
+}
+
+// =============================================================================
+// Characters
+// =============================================================================
+
+model Character {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json     // Full character document (name, level, abilities, powers, etc.)
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, updatedAt])
+  @@map("characters")
+}
+
+// =============================================================================
+// User Library
+// =============================================================================
+
+model UserPower {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json     // name, description, parts, damage, actionType, etc.
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@index([userId])
+  @@map("user_powers")
+}
+
+model UserTechnique {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@index([userId])
+  @@map("user_techniques")
+}
+
+model UserItem {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@index([userId])
+  @@map("user_items")
+}
+
+model UserCreature {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@index([userId])
+  @@map("user_creatures")
+}
+
+// =============================================================================
+// Campaigns
+// =============================================================================
+
+model Campaign {
+  id          String   @id @default(uuid())
+  ownerId     String   @map("owner_id")
+  name        String
+  description String?
+  inviteCode  String   @map("invite_code")
+  characters  Json     // CampaignCharacter[]
+  memberIds   Json     // string[]
+  ownerUsername String? @map("owner_username")
+  createdAt   DateTime? @map("created_at")
+  updatedAt   DateTime? @map("updated_at")
+
+  rolls CampaignRoll[]
+
+  @@index([ownerId])
+  @@map("campaigns")
+}
+
+model CampaignRoll {
+  id         String   @id @default(uuid())
+  campaignId String   @map("campaign_id")
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  data       Json     // roll metadata
+  createdAt  DateTime? @map("created_at")
+
+  @@index([campaignId])
+  @@map("campaign_rolls")
+}
+
+// =============================================================================
+// Codex / Game Reference Data (from Firestore codex_*)
+// =============================================================================
+
+model CodexFeat {
+  id     String @id // Document ID from Firestore/CSV
+  data   Json
+  @@map("codex_feats")
+}
+
+model CodexSkill {
+  id     String @id
+  data   Json
+  @@map("codex_skills")
+}
+
+model CodexSpecies {
+  id     String @id
+  data   Json
+  @@map("codex_species")
+}
+
+model CodexTrait {
+  id     String @id
+  data   Json
+  @@map("codex_traits")
+}
+
+model CodexPart {
+  id     String @id
+  data   Json   // type: 'power' | 'technique'
+  @@map("codex_parts")
+}
+
+model CodexProperty {
+  id     String @id
+  data   Json
+  @@map("codex_properties")
+}
+
+model CodexEquipment {
+  id     String @id
+  data   Json
+  @@map("codex_equipment")
+}
+
+model CodexArchetype {
+  id     String @id
+  data   Json
+  @@map("codex_archetypes")
+}
+
+model CodexCreatureFeat {
+  id     String @id
+  data   Json
+  @@map("codex_creature_feats")
+}

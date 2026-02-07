@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useItemProperties } from '@/hooks';
+import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -21,7 +21,7 @@ export function AdminPropertiesTab() {
   const [form, setForm] = useState({ name: '', description: '', type: 'general' });
 
   const filtered = (properties || []).filter(
-    (p) =>
+    (p: ItemProperty) =>
       !search ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.description?.toLowerCase().includes(search.toLowerCase())
@@ -90,7 +90,7 @@ export function AdminPropertiesTab() {
         <LoadingState />
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((p) => (
+          {filtered.map((p: ItemProperty) => (
             <div key={p.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
                 <GridListRow id={p.id} name={p.name} description={p.description || ''} columns={[{ key: 'Type', value: (p.type || 'general') as string }]} />

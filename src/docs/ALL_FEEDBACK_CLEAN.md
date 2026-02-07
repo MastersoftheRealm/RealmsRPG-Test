@@ -22,7 +22,7 @@ Agent Integration
 	4. On merge, agents mark task `done` in `AI_TASK_QUEUE.md` with PR link and summary.
 
 Notes:
-- Do NOT place secrets or service account keys in these docs. Use `SECRETS_SETUP.md` and cloud secret manager for deployments.
+- Do NOT place secrets or service account keys in these docs. Use `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` for deployment env vars.
 
 ---
 

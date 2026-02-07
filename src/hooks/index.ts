@@ -56,10 +56,10 @@ export {
   useGameDataList,
 } from './use-game-data';
 
-// Codex Data (Firestore — migrated from RTDB)
+// Codex Data (Prisma via API)
 export {
-  useCodexFeats as useRTDBFeats,
-  useCodexSkills as useRTDBSkills,
+  useCodexFeats,
+  useCodexSkills,
   useCodexSpecies as useSpecies,
   useCodexTraits as useTraits,
   useCodexPowerParts as usePowerParts,
@@ -68,9 +68,11 @@ export {
   useCodexItemProperties as useItemProperties,
   useCodexEquipment as useEquipment,
   useCodexCreatureFeats as useCreatureFeats,
-} from './use-firestore-codex';
+  useCodexArchetypes,
+  prefetchFunctions,
+} from './use-codex';
 
-// Codex utilities (trait/skill resolution)
+// Codex utilities (trait/skill resolution) — use use-codex types
 export {
   useResolvedTraits,
   findTraitByIdOrName,
@@ -79,9 +81,8 @@ export {
   useResolvedSkillNames,
   buildSkillIdToNameMap,
   resolveSkillIdsToNames,
-  prefetchFunctions,
-  type Feat as RTDBFeat,
-  type Skill as RTDBSkill,
+  type Feat,
+  type Skill,
   type Species,
   type Trait,
   type PowerPart,
@@ -116,9 +117,6 @@ export {
 
 // Auto-save
 export { useAutoSave } from './use-auto-save';
-
-// Session Sync (syncs Firebase Auth with server-side session cookies)
-export { useSessionSync } from './use-session-sync';
 
 // Creator Cache (localStorage persistence for guest users)
 export { 

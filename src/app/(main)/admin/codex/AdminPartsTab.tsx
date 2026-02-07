@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useParts } from '@/hooks';
+import { useParts, type Part } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -23,7 +23,7 @@ export function AdminPartsTab() {
 
   const filtered = (parts || [])
     .filter(
-      (p) =>
+      (p: Part) =>
         (!search || p.name.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase())) &&
         (typeFilter === 'all' || (p.type || 'power').toLowerCase() === typeFilter)
     );
@@ -114,7 +114,7 @@ export function AdminPartsTab() {
         <LoadingState />
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((p) => (
+          {filtered.map((p: Part) => (
             <div key={p.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
                 <GridListRow id={p.id} name={p.name} description={p.description || ''} columns={[{ key: 'Type', value: (p.type || 'power').charAt(0).toUpperCase() + (p.type || 'power').slice(1) }, { key: 'EN', value: String(p.base_en ?? '-') }, { key: 'TP', value: String(p.base_tp ?? '-') }]} />

@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useRTDBSkills } from '@/hooks';
+import { useCodexSkills, type Skill } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 export function AdminSkillsTab() {
-  const { data: skills, isLoading, error } = useRTDBSkills();
+  const { data: skills, isLoading, error } = useCodexSkills();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,7 +21,7 @@ export function AdminSkillsTab() {
   const [form, setForm] = useState({ name: '', description: '', ability: '', category: '', base_skill_id: '', trained_only: false });
 
   const filtered = (skills || []).filter(
-    (s) =>
+    (s: Skill) =>
       !search ||
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.description?.toLowerCase().includes(search.toLowerCase())
@@ -106,7 +106,7 @@ export function AdminSkillsTab() {
         <LoadingState />
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((s) => (
+          {filtered.map((s: Skill) => (
             <div key={s.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
                 <GridListRow id={s.id} name={s.name} description={s.description || ''} columns={[{ key: 'Ability', value: s.ability || '-' }, { key: 'Category', value: s.category || '-' }]} />

@@ -24,7 +24,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { Input } from '@/components/ui';
-import { useRTDBFeats, type RTDBFeat as Feat } from '@/hooks';
+import { useCodexFeats, type Feat } from '@/hooks';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 
@@ -95,7 +95,7 @@ function FeatCard({ feat }: { feat: Feat }) {
 }
 
 export function CodexFeatsTab() {
-  const { data: feats, isLoading, error } = useRTDBFeats();
+  const { data: feats, isLoading, error } = useCodexFeats();
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const [filters, setFilters] = useState<FeatFilters>({
@@ -119,12 +119,12 @@ export function CodexFeatsTab() {
     const tags = new Set<string>();
     const abilReqAbilities = new Set<string>();
 
-    feats.forEach(f => {
+    feats.forEach((f: Feat) => {
       if (f.lvl_req > 0) levels.add(f.lvl_req);
       if (f.ability) abilities.add(f.ability);
       if (f.category) categories.add(f.category);
-      f.tags?.forEach(t => tags.add(t));
-      f.ability_req?.forEach(a => abilReqAbilities.add(a));
+      f.tags?.forEach((t: string) => tags.add(t));
+      f.ability_req?.forEach((a: string) => abilReqAbilities.add(a));
     });
 
     return {
@@ -139,7 +139,7 @@ export function CodexFeatsTab() {
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
 
-    const filtered = feats.filter(f => {
+    const filtered = feats.filter((f: Feat) => {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const matchesSearch =
@@ -185,7 +185,7 @@ export function CodexFeatsTab() {
 
       return true;
     });
-    return sortItems(filtered);
+    return sortItems<Feat>(filtered);
   }, [feats, filters, sortItems]);
 
   if (error) {

@@ -14,7 +14,7 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { ItemList, ItemSelectionModal } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { transformPower, transformTechnique } from '@/lib/item-transformers';
-import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts } from '@/hooks';
+import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, type PowerPart, type TechniquePart } from '@/hooks';
 import type { DisplayItem, SortOption } from '@/types';
 
 const POWER_SORTS: SortOption[] = [
@@ -93,22 +93,22 @@ export function PowersStep() {
     const powers = items.map(item => {
       // Find the full user power to get parts data
       const userPower = userPowers.find(p => p.docId === item.id);
-      // Merge RTDB TP data with saved option levels
+      // Merge codex TP data with saved option levels
       const partsWithTP = (userPower?.parts || []).map(savedPart => {
-        const rtdbPart = powerParts?.find(rp => 
+        const codexPart = powerParts?.find((rp: PowerPart) => 
           String(rp.id) === String(savedPart.id) || 
           rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
         );
         return {
           id: savedPart.id !== undefined ? String(savedPart.id) : undefined,
-          name: savedPart.name || rtdbPart?.name,
-          base_tp: rtdbPart?.base_tp || 0,
+          name: savedPart.name || codexPart?.name,
+          base_tp: codexPart?.base_tp || 0,
           op_1_lvl: savedPart.op_1_lvl || 0,
-          op_1_tp: rtdbPart?.op_1_tp || 0,
+          op_1_tp: codexPart?.op_1_tp || 0,
           op_2_lvl: savedPart.op_2_lvl || 0,
-          op_2_tp: rtdbPart?.op_2_tp || 0,
+          op_2_tp: codexPart?.op_2_tp || 0,
           op_3_lvl: savedPart.op_3_lvl || 0,
-          op_3_tp: rtdbPart?.op_3_tp || 0,
+          op_3_tp: codexPart?.op_3_tp || 0,
         };
       });
       return {
@@ -127,22 +127,22 @@ export function PowersStep() {
     const techniques = items.map(item => {
       // Find the full user technique to get parts data
       const userTech = userTechniques.find(t => t.docId === item.id);
-      // Merge RTDB TP data with saved option levels
+      // Merge codex TP data with saved option levels
       const partsWithTP = (userTech?.parts || []).map(savedPart => {
-        const rtdbPart = techniqueParts?.find(rp => 
+        const codexPart = techniqueParts?.find((rp: TechniquePart) => 
           String(rp.id) === String(savedPart.id) || 
           rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
         );
         return {
           id: savedPart.id !== undefined ? String(savedPart.id) : undefined,
-          name: savedPart.name || rtdbPart?.name,
-          base_tp: rtdbPart?.base_tp || 0,
+          name: savedPart.name || codexPart?.name,
+          base_tp: codexPart?.base_tp || 0,
           op_1_lvl: savedPart.op_1_lvl || 0,
-          op_1_tp: rtdbPart?.op_1_tp || 0,
+          op_1_tp: codexPart?.op_1_tp || 0,
           op_2_lvl: savedPart.op_2_lvl || 0,
-          op_2_tp: rtdbPart?.op_2_tp || 0,
+          op_2_tp: codexPart?.op_2_tp || 0,
           op_3_lvl: savedPart.op_3_lvl || 0,
-          op_3_tp: rtdbPart?.op_3_tp || 0,
+          op_3_tp: codexPart?.op_3_tp || 0,
         };
       });
       return {

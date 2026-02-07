@@ -49,8 +49,8 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
 
   const propertyChips = useMemo(() => {
     if (!item.properties || item.properties.length === 0) return [];
-    return item.properties.map(propName => {
-      const match = propertiesDb.find(p => p.name.toLowerCase() === propName.toLowerCase());
+    return item.properties.map((propName: string) => {
+      const match = propertiesDb.find((p: ItemProperty) => p.name.toLowerCase() === propName.toLowerCase());
       return {
         name: match?.name || propName,
         description: match?.description,
@@ -101,7 +101,7 @@ export function CodexEquipmentTab() {
     if (!equipment) return { categories: [], rarities: [] };
     const categories = new Set<string>();
     const rarities = new Set<string>();
-    equipment.forEach(e => {
+    equipment.forEach((e: Equipment) => {
       if (e.category) categories.add(e.category);
       if (e.rarity) rarities.add(e.rarity);
     });
@@ -114,7 +114,7 @@ export function CodexEquipmentTab() {
   const filteredEquipment = useMemo(() => {
     if (!equipment) return [];
 
-    const filtered = equipment.filter(e => {
+    const filtered = equipment.filter((e: Equipment) => {
       if (filters.search && !e.name.toLowerCase().includes(filters.search.toLowerCase()) &&
         !e.description?.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
@@ -123,7 +123,8 @@ export function CodexEquipmentTab() {
       if (filters.rarityFilter && e.rarity !== filters.rarityFilter) return false;
       return true;
     });
-    return sortItems(filtered.map(e => ({
+    type FilteredItem = Equipment & { category: string; cost: number; rarity: string };
+    return sortItems<FilteredItem>(filtered.map((e: Equipment) => ({
       ...e,
       category: e.category || '',
       cost: e.currency ?? e.gold_cost ?? 0,
@@ -174,8 +175,8 @@ export function CodexEquipmentTab() {
         ) : filteredEquipment.length === 0 ? (
           <div className="p-8 text-center text-text-muted">No equipment found.</div>
         ) : (
-          filteredEquipment.map(item => (
-            <EquipmentCard key={item.id} item={item as Equipment} propertiesDb={propertiesDb} />
+          filteredEquipment.map((item: Equipment & { category: string; cost: number; rarity: string }) => (
+            <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />
           ))
         )}
       </div>

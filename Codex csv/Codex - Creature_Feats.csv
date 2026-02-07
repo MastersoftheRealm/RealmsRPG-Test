@@ -1,0 +1,98 @@
+id,name,description,feat_points,feat_lvl,lvl_req,mechanic
+1,Uncanny Dodge,When you are hit by an attack you can use a quick reaction to reduce the attack's damage by half.,3,1,,FALSE
+2,Resistance,Resistance to a damage type. 1 type per level of this feat,1,1,,TRUE
+3,Immunity,Immune to a damage type. 1 type per level of this feat,2,1,,TRUE
+4,Weakness,Weakness to a damage type. 1 type per level of this feat,-0.5,1,,TRUE
+5,Pack Tactics,Gain +1 to hit target while you and an ally are within one space of a target creature. +1 Per level of this feat.,1,1,,FALSE
+6,Flying,This creature can fly with a speed equal to half of your regular speed.,2,1,,TRUE
+7,Flying II,This creature can fly with a speed equal to your regular speed.,3,2,,TRUE
+8,Burrow,This creature can burrow with a speed equal to half of your regular speed.,1,1,,TRUE
+9,Burrow II,This creature can burrow with a speed equal to your regular speed.,2,2,,TRUE
+10,Darkvision,This creature can see in darkness up to 6 spaces as shades of grey.,1,1,,TRUE
+11,Darkvision II,This creature can see in darkness up to 12 spaces as shades of grey.,2,2,,TRUE
+12,Darkvision III,This creature can see in darkness up to 24 spaces as shades of grey.,4,3,,TRUE
+13,Blindsense,Has Blindsense out to 3 spaces.,0.5,1,,TRUE
+14,Blindsense II,Has Blindsense out to 6 spaces.,1,2,,TRUE
+15,Blindsense III,Has Blindsense out to 12 spaces.,2,3,,TRUE
+16,Blindsense IV,Has Blindsense out to 24 spaces.,4,4,,TRUE
+17,Amphibious,This creature can breathe air and water.,1,1,,TRUE
+18,Bounding,"When an enemy comes within one space you, you may use a quick reaction to move up to half of your speed.",1.5,1,,FALSE
+19,Jump,This creature can long jump 3 spaces and high jump 2.,1,1,,TRUE
+20,Jump II,This creature can long jump 4 spaces and high jump 3.,2,2,,TRUE
+21,Jump III,This creature can long jump 5 spaces and high jump 4.,3,3,,TRUE
+22,Slow Walker,Ground Speed is 1/4 of your normal speed.,-0.5,1,,TRUE
+23,Regional Revival,If this creature dies in a specified region or realm it comes back to life somewhere within 10 kilometers of where it died in 1d10 days.,2,1,,FALSE
+24,All-Surface Climber,"This creature can climb on difficult vertical and horizontal surfaces, even upside down, without needing to make a Climb Roll.",2,1,,TRUE
+25,Sun Sickness,When in sunlight this creature has -5 to all Rolls and Scores.,-1,1,,FALSE
+26,Sun Sickness II,When in sunlight this creature has -5 to all Rolls and Scores. This creature dies if it remains in the sun for one hour.,-2,2,,FALSE
+27,Telepathy,This creature can communicate telepathically with creatures it is aware of within 12 spaces.,1,1,,TRUE
+28,Telepathy II,This creature can communicate telepathically with creatures it is aware of within 48 spaces.,2,2,,TRUE
+29,Compression,This creature can move through spaces as small as 3 centimeters. Movement through these spaces requires no extra movement.,1.5,1,,FALSE
+30,Waterbreathing,This creature can only breathe underwater.,0,1,,TRUE
+31,Unflankable,This creature cannot be flanked.,1,1,,FALSE
+32,Mimic,"This creature can mimic any sound heard exactly, including voices, using Act against target's Discernment.",1,1,,FALSE
+33,Water Movement,This creature ignores flanking when moving underwater. If this creature takes the movement action more than once in turn it can take it again as a free action.,1,1,,TRUE
+34,Condition Immunity,This creature is immune to a condition. +1 condition per level of this feat.,1.5,1,,TRUE
+35,Unrestrained Movement,"This creature ignores difficult terrain, the slowed condition, and any other effect that would slow it's movement due to environmental effects.",1.5,1,,TRUE
+36,Speedy,This creature's movement speed is increased by 2.,1,1,,TRUE
+37,Speedy II,This creature's movement speed is increased by 4.,2,2,,TRUE
+38,Speedy III,This creature's movement speed is increased by 6.,3,3,,TRUE
+39,Slow,This creature's movement speed is decreased by 2.,-0.5,1,,TRUE
+40,Slow II,This creature's movement speed is decreased by 4.,-1.5,2,,TRUE
+41,Slow III,This creature's movement speed is decreased by 6.,-3,3,,TRUE
+42,Resources,"This creature has 1.5x the normal currency for obtaining equipment or it's equivilent in natural weapons, armor, and equipment.",2,1,,FALSE
+43,Resources II,"This creature has 3x the normal currency for obtaining equipment or it's equivilent in natural weapons, armor, and equipment.",4,2,,FALSE
+44,Hover,"This creature must end it's turn within 1 space of the ground, but need not touch it. Only applicable if the creature has a flying speed. -1 per level of flying speed.",-1,1,,TRUE
+45,Telepathically Intune,This creature can perceive content of all telepathic communication within 12 spaces.,1,1,,TRUE
+46,Hard to Stand Up,"If this creature has the prone condition it must succeed on a Might roll DS 10 when it attempts to stand or remain prone. It can only attempt to stand from prone once each turn, and the movement to stand is spend whether it stands or not.",-0.5,1,,FALSE
+47,Undetectable,Powers with detection parts cannot target this creature.,1,1,,FALSE
+48,Mute,"This creature can understand known languages, but cannot speak them.",0,1,,FALSE
+49,First Strike,This creature has +5 to initiative rolls.,1,1,,FALSE
+50,Quick Hide,This creature can take the Hide action as a quick action.,1,1,,FALSE
+51,Turns to Dust,"When this creature dies it turns into dust, leaving behind all items it was wearing, carrying, or had eaten.",-0.5,1,,FALSE
+52,Beast of Burden,This creature counts as one size larger when determining carrying capacity.,0.5,1,,FALSE
+53,Claws and Fangs,Spend an additional TP when learning Unarmed Prowess to add Weakened 1 to the creature's first Unarmed Prowess attack each turn.,1,1,,FALSE
+54,Regenerative,Regain 5 Health at the start of each turn,2,1,,FALSE
+55,Regenerative II,Regain 10 Health at the start of each turn,3,2,,FALSE
+56,Regenerative III,Regain 15 Health at the start of each turn,4,3,,FALSE
+57,Regenerative IV,Regain 20 Health at the start of each turn,5,4,,FALSE
+58,Elemental Affinity,Add half of the creature's archetype proficiency to the damage of their attacks as a chosen elemental damage type.,1,1,,FALSE
+59,Elemental Affinity II,Add the creature's archetype proficiency to the damage of their attacks as a chosen elemental damage type.,2,2,,FALSE
+60,Elemental Affinity III,Add of the creature's archetype bonus to the damage of their attacks as a chosen elemental damage type.,3,3,,FALSE
+61,Instinct,Add 3 to checks using Percieve with any physical sense; this also applies to Passive Percieve. The creature may ignore the effects of negative Acuity on Percieve.,1,1,,FALSE
+62,Instinct II,Add 5 to checks using Percieve with any physical sense; this also applies to Passive Percieve. The creature may ignore the effects of negative Acuity on Percieve.,2,2,,FALSE
+63,Jaws,"On a critical strike with unarmed prowess or natural weapons, you have a 1/8 chance to break a bone.",1,1,,FALSE
+64,Lycanthrope,"Spend a quick action to transform into a special hybrid form for up to 10 rounds. While in this form, gain +1 to unarmed prowess or natural weapon damage. ",1,1,,FALSE
+65,Lycanthrope II,Same as Lycanthropy but additionally reduce 1 damage taken from all physical attacks from non-silvered weapons.,2,2,,FALSE
+66,Lycanthrope III,"Same as Lycanthropy II, but when you make an unarmed attack on your turn, you may spend a quick action to make another unarmed attack.",3,3,,FALSE
+67,Fear Response,"When this creature is bloodied, and when it enters terminal, it must make a DS 8  Resolve check or become frightened.",-1,1,,FALSE
+68,Mindless Rage,"When this creature is bloodied, and when it enters terminal, it must make a DS 8 Mental Fortitude check or become unable to distinguish friend from foe.",-1,1,,FALSE
+69,Champion,This creature gains 5 Action Points at the start of combat and at the end of each turn. The Multiple Action Penalty for this creature is 4.,3,1,,FALSE
+70,Champion II,This creature gains 6 Action Points at the start of combat and at the end of each turn. The Multiple Action Penalty for this creature is 3.,4,2,,FALSE
+71,Champion III,This creature takes two turns during combat encounters. It rolls initiative for its first turn as normal. Its second turn occurs second-to-last in the combat round order.,5,3,,FALSE
+72,Champion IV,This creature takes two turns during combat encounters. It rolls initiative for its first turn as normal. Its second turn occurs second-to-last in the combat round order. This creature gains 5 Action Points at the start of combat and at the end of each turn. The Multiple Action Penalty for the creature is 4.,6,4,,FALSE
+73,Champion V,This creature takes two turns during combat encounters. It rolls initiative for its first turn as normal. Its second turn occurs second-to-last in the combat round order. This creature gains 6 Action Points at the start of combat and at the end of each turn. The Multiple Action Penalty for the creature is 3.,7,5,,FALSE
+74,Champion VI,"This creature takes three turns during combat encounters. It rolls initiative for its first turn as normal, and for it's second turn with a -5. Its third turn occurs second-to-last in the combat round order.",8,6,,FALSE
+75,This creature can't Speak,"This creature understands languages it knows, but cannot speak.",0,1,,FALSE
+76,Returning Weapons,After using a specified thrown weapon (natural or not) the weapon returns to this creature's possesion on a hit or miss.,1,1,,FALSE
+77,Power Resistant,This creature has a +1 bonus to overcome powers.,1,1,,FALSE
+78,Power Resistant II,This creature has a +2 bonus to overcome powers.,1.5,2,,FALSE
+79,Power Resistant III,This creature has a +3 bonus to overcome powers.,2.5,3,,FALSE
+80,Grapple Attacks,When this creature hits with an attack it automatically grapples the target of the attack.,1.5,1,,FALSE
+81,No Vision,This creature has no Basic Vision.,-1.5,1,,FALSE
+82,Teleport,Once per turn as a quick action this creature can teleport to a location within 6 spaces that it can see.,1,1,,FALSE
+83,Teleport II,Once per turn as a quick action this creature can teleport to a location within 12 spaces that it can see.,2,2,,FALSE
+84,Teleport III,As a quick action this creature can teleport to a location within 18 spaces that it can see.,3,3,,FALSE
+85,Large Attacker,"When this creature deals damage to a target smaller than it, that target takes an extra 1d6 damage for each size smaller.",1.5,1,,FALSE
+86,Charger,"When this creature deals damage to a target smaller than it after moving at least 4 spaces toward it, that target is also knocked prone.",1,1,,FALSE
+87,Blood Rage,This creature gains a +2 bonus to hit while in Terminal.,1,1,,FALSE
+88,Blood Rage II,This creature gains a +3 bonus to hit while in Terminal.,2,2,,FALSE
+89,Blood Rage III,This creature gains a +4 bonus to hit while in Terminal.,3,3,,FALSE
+90,Blood Rage IV,This creature gains a +5 bonus to hit while in Terminal.,4,4,,FALSE
+91,Leaper,This creature can jump once per turn as a free action.,1,1,,FALSE
+92,Constrictor,"While grappled by this creature, targets take 1d6 Bludgeoning damage at the start of this creature's turn.",1,1,,FALSE
+93,Constrictor II,"While grappled by this creature, targets take 2d6 Bludgeoning damage at the start of this creature's turn.",2,2,,FALSE
+94,Constrictor III,"While grappled by this creature, targets take 3d8 Bludgeoning damage at the start of this creature's turn.",3,3,,FALSE
+95,Constrictor IV,"While grappled by this creature, targets take 3d12 Bludgeoning damage at the start of this creature's turn.",4,4,,FALSE
+96,Tight Grapple,This creature's grapple score is determined by 12 + Strength.,1,1,,FALSE
+97,Tight Grapple II,This creature's grapple score is determined by 14 + Strength.,2,2,,FALSE

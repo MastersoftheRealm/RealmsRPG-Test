@@ -57,7 +57,9 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Data enrichment | `src/lib/data-enrichment.ts` |
 | Character logic | `src/services/character-service.ts`, `src/hooks/use-characters.ts` |
 | Creator state | `src/stores/character-creator-store.ts` |
-| Firebase | `src/lib/firebase/` |
+| Supabase | `src/lib/supabase/` |
+| Prisma | `prisma/schema.prisma`, `src/lib/prisma.ts` |
+| Codex API | `src/app/api/codex/` |
 | **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |
 | Architecture | `src/docs/ARCHITECTURE.md` |
 
@@ -68,10 +70,10 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Auth state | `useAuth` |
 | User's characters | `useCharacters` |
 | User's library (powers, techniques, items, creatures) | `useUserLibrary` |
-| RTDB reference data (parts, skills, feats, species) | `useRTDB` |
+| Codex reference data (parts, skills, feats, species) | `useCodexFeats`, `useCodexSkills`, `usePowerParts`, etc. (from `use-codex.ts`) |
 | Character CRUD | `character-service.ts` (via useCharacters) |
 
-**Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useRTDB()` for correct EN/TP costs. See `ARCHITECTURE.md`.
+**Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useCodexPowerParts()` / `useCodexTechniqueParts()` for correct EN/TP costs. See `ARCHITECTURE.md`.
 
 ## Character Creator Step Order
 

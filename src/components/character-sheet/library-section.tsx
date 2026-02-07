@@ -42,8 +42,8 @@ import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
 
-/** RTDB part data for enrichment */
-interface RTDBPart {
+/** Codex part data for enrichment */
+interface CodexPart {
   id: string;
   name: string;
   description?: string;
@@ -53,40 +53,40 @@ interface RTDBPart {
   op_3_tp?: number;
 }
 
-// Helper to convert power/technique parts to PartData format, with RTDB enrichment
-// The saved part data only has option levels - TP costs come from RTDB
+// Helper to convert power/technique parts to PartData format, with Codex enrichment
+// The saved part data only has option levels - TP costs come from Codex
 function partsToPartData(
   parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
-  rtdbParts: RTDBPart[] = []
+  codexParts: CodexPart[] = []
 ): PartData[] {
   if (!parts || parts.length === 0) return [];
   
   return parts.map(part => {
     if (typeof part === 'string') {
-      // String-only part - look up in RTDB for description and TP
-      const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
+      // String-only part - look up in Codex for description and TP
+      const codexPart = codexParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
       return { 
         name: part,
-        description: rtdbPart?.description,
-        tpCost: rtdbPart?.base_tp,
+        description: codexPart?.description,
+        tpCost: codexPart?.base_tp,
       };
     }
     
-    // Full part data - look up TP costs from RTDB by id or name
+    // Full part data - look up TP costs from Codex by id or name
     const partName = part.name || part.id || 'Unknown Part';
     const partId = part.id;
     
-    // Try to find RTDB part by id first, then by name
-    let rtdbPart = rtdbParts.find(p => partId && String(p.id) === String(partId));
-    if (!rtdbPart) {
-      rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
+    // Try to find Codex part by id first, then by name
+    let codexPart = codexParts.find(p => partId && String(p.id) === String(partId));
+    if (!codexPart) {
+      codexPart = codexParts.find(p => p.name?.toLowerCase() === partName.toLowerCase());
     }
     
-    // Calculate TP cost using RTDB values + saved option levels
-    const base_tp = rtdbPart?.base_tp ?? 0;
-    const op_1_tp = rtdbPart?.op_1_tp ?? 0;
-    const op_2_tp = rtdbPart?.op_2_tp ?? 0;
-    const op_3_tp = rtdbPart?.op_3_tp ?? 0;
+    // Calculate TP cost using Codex values + saved option levels
+    const base_tp = codexPart?.base_tp ?? 0;
+    const op_1_tp = codexPart?.op_1_tp ?? 0;
+    const op_2_tp = codexPart?.op_2_tp ?? 0;
+    const op_3_tp = codexPart?.op_3_tp ?? 0;
     
     const tpCost = base_tp + 
                    op_1_tp * (part.op_1_lvl ?? 0) + 
@@ -94,8 +94,8 @@ function partsToPartData(
                    op_3_tp * (part.op_3_lvl ?? 0);
     
     return {
-      name: rtdbPart?.name || partName,
-      description: rtdbPart?.description,
+      name: codexPart?.name || partName,
+      description: codexPart?.description,
       tpCost: tpCost > 0 ? tpCost : undefined,
       optionLevels: {
         opt1: part.op_1_lvl,
@@ -106,8 +106,8 @@ function partsToPartData(
   });
 }
 
-/** RTDB property data for enrichment */
-interface RTDBProperty {
+/** Codex property data for enrichment */
+interface CodexProperty {
   id: string | number;
   name: string;
   description?: string;
@@ -168,38 +168,38 @@ function formatDamageType(damage: string | undefined): string {
   return capitalizeWords(damage);
 }
 
-// Helper to convert item properties to PartData format, with RTDB enrichment
+// Helper to convert item properties to PartData format, with Codex enrichment
 function propertiesToPartData(
   properties?: Item['properties'],
-  rtdbProperties: RTDBProperty[] = []
+  codexProperties: CodexProperty[] = []
 ): PartData[] {
   if (!properties || properties.length === 0) return [];
   
   return properties.map(prop => {
     if (typeof prop === 'string') {
-      // String-only property - look up in RTDB for description
-      const rtdbProp = rtdbProperties.find(p => p.name?.toLowerCase() === prop.toLowerCase());
+      // String-only property - look up in Codex for description
+      const codexProp = codexProperties.find(p => p.name?.toLowerCase() === prop.toLowerCase());
       return { 
         name: prop,
-        description: rtdbProp?.description,
-        tpCost: rtdbProp?.base_tp ?? rtdbProp?.tp_cost,
+        description: codexProp?.description,
+        tpCost: codexProp?.base_tp ?? codexProp?.tp_cost,
         category: 'property'
       };
     }
     
-    // Property object - look up in RTDB by id or name
+    // Property object - look up in Codex by id or name
     const propId = prop.id;
     const propName = prop.name || 'Unknown Property';
     
-    let rtdbProp = rtdbProperties.find(p => propId && String(p.id) === String(propId));
-    if (!rtdbProp) {
-      rtdbProp = rtdbProperties.find(p => p.name?.toLowerCase() === propName.toLowerCase());
+    let codexProp = codexProperties.find(p => propId && String(p.id) === String(propId));
+    if (!codexProp) {
+      codexProp = codexProperties.find(p => p.name?.toLowerCase() === propName.toLowerCase());
     }
     
     return { 
-      name: rtdbProp?.name || propName,
-      description: rtdbProp?.description,
-      tpCost: rtdbProp?.base_tp ?? rtdbProp?.tp_cost,
+      name: codexProp?.name || propName,
+      description: codexProp?.description,
+      tpCost: codexProp?.base_tp ?? codexProp?.tp_cost,
       category: 'property' 
     };
   });
@@ -310,7 +310,7 @@ interface LibrarySectionProps {
     speciesTraits?: string[];
   };
   // Species traits from RTDB species data (automatically granted based on species)
-  speciesTraitsFromRTDB?: string[];
+  speciesTraitsFromCodex?: string[];
   traitsDb?: Array<{
     id: string;
     name: string;
@@ -457,7 +457,7 @@ export function LibrarySection({
   // Feats props
   ancestry,
   vanillaTraits,
-  speciesTraitsFromRTDB = [],
+  speciesTraitsFromCodex = [],
   traitsDb = [],
   featsDb = [],
   traitUses = {},
@@ -1110,7 +1110,7 @@ export function LibrarySection({
           <FeatsTab
             ancestry={ancestry}
             vanillaTraits={vanillaTraits}
-            speciesTraitsFromRTDB={speciesTraitsFromRTDB}
+            speciesTraitsFromCodex={speciesTraitsFromCodex}
             traitsDb={traitsDb}
             featsDb={featsDb}
             traitUses={traitUses}

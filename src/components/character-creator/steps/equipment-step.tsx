@@ -47,7 +47,7 @@ interface UnifiedEquipmentItem {
   currency: number;
   properties: string[];
   rarity?: string;
-  source: 'library' | 'rtdb'; // Track where item came from
+  source: 'library' | 'codex'; // Track where item came from
 }
 
 // Starting currency for new characters at level 1 is 200
@@ -69,17 +69,17 @@ export function EquipmentStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   // Fetch user's item library (weapons/armor) from Firestore
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
-  // Fetch general equipment from RTDB
-  const { data: rtdbEquipment, isLoading: rtdbLoading, error: rtdbError } = useEquipment();
+  // Fetch general equipment from Codex
+  const { data: codexEquipment, isLoading: codexLoading, error: codexError } = useEquipment();
   // Fetch item properties for deriving display data from user items
   const { data: itemProperties } = useItemProperties();
   
   const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'library' | 'rtdb'>('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'library' | 'codex'>('all');
 
-  const isLoading = userItemsLoading || rtdbLoading;
-  const error = rtdbError;
+  const isLoading = userItemsLoading || codexLoading;
+  const error = codexError;
 
   // Current unarmed prowess level from draft (0 = not selected)
   const currentUnarmedProwess = draft.unarmedProwess || 0;
@@ -109,7 +109,7 @@ export function EquipmentStep() {
     updateDraft({ unarmedProwess: level });
   }, [updateDraft]);
 
-  // Combine user library items (weapons/armor) with RTDB general equipment
+  // Combine user library items (weapons/armor) with Codex general equipment
   const allEquipment = useMemo((): UnifiedEquipmentItem[] => {
     const items: UnifiedEquipmentItem[] = [];
     
@@ -174,8 +174,8 @@ export function EquipmentStep() {
     }
     
     // Add all equipment from RTDB (weapons, armor, and general equipment)
-    if (rtdbEquipment) {
-      for (const item of rtdbEquipment) {
+    if (codexEquipment) {
+      for (const item of codexEquipment) {
         // Use the actual type from RTDB (weapon, armor, or equipment)
         items.push({
           id: item.id,
@@ -188,13 +188,13 @@ export function EquipmentStep() {
           currency: item.currency || item.gold_cost || 0,
           properties: item.properties || [],
           rarity: item.rarity,
-          source: 'rtdb',
+          source: 'codex',
         });
       }
     }
     
     return items;
-  }, [userItems, rtdbEquipment, itemProperties]);
+  }, [userItems, codexEquipment, itemProperties]);
 
   // Calculate starting currency - base 200 for level 1
   // For higher levels: 200 * 1.45^(level-1)
@@ -513,9 +513,9 @@ export function EquipmentStep() {
                 value={sourceFilter === 'all' ? '' : sourceFilter}
                 options={[
                   { value: 'library', label: 'My Library' },
-                  { value: 'rtdb', label: 'Standard Equipment' },
+                  { value: 'codex', label: 'Standard Equipment' },
                 ]}
-                onChange={(v) => setSourceFilter((v || 'all') as 'all' | 'library' | 'rtdb')}
+                onChange={(v) => setSourceFilter((v || 'all') as 'all' | 'library' | 'codex')}
                 placeholder="All Sources"
               />
               

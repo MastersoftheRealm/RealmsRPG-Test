@@ -28,7 +28,7 @@ if (-not $email) {
     exit 1
 }
 
-# Private key: store with literal \n (backslash + n) per DEPLOYMENT_SECRETS.md
+# Private key: store with literal \n (backslash + n) per archived_docs/DEPLOYMENT_SECRETS_FIREBASE.md
 $privateKey = $key.private_key -replace "`r?`n", "\n"
 
 Write-Host "Updating secrets for: $email" -ForegroundColor Cyan

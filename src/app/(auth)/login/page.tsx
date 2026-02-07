@@ -1,7 +1,7 @@
 /**
  * Login Page
  * ===========
- * User authentication page
+ * User authentication page (Supabase Auth)
  */
 
 'use client';
@@ -11,10 +11,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, Auth, browserPopupRedirectResolver } from 'firebase/auth';
-import { doc, setDoc, Firestore } from 'firebase/firestore';
+import { createClient } from '@/lib/supabase/client';
 
-import { waitForFirebase, auth as firebaseAuth, db as firebaseDb } from '@/lib/firebase/client';
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
@@ -25,35 +23,17 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [firebaseReady, setFirebaseReady] = useState(false);
-  const [auth, setAuth] = useState<Auth | null>(null);
-  const [db, setDb] = useState<Firestore | null>(null);
-  
-  // Get redirect path from URL params or sessionStorage (default to home when in doubt)
+  const [ready, setReady] = useState(true);
+
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     const raw = urlRedirect || sessionRedirect || '/';
-    // Never redirect back to auth pages
     if (raw === '/login' || raw === '/register' || raw === '/forgot-password' || raw === '/forgot-username') {
       return '/';
     }
     return raw;
   };
-
-  // Wait for Firebase to initialize
-  useEffect(() => {
-    waitForFirebase()
-      .then(() => {
-        setAuth(firebaseAuth);
-        setDb(firebaseDb);
-        setFirebaseReady(true);
-      })
-      .catch((err) => {
-        console.error('Firebase initialization failed:', err);
-        setError('Failed to connect to authentication service.');
-      });
-  }, []);
 
   const {
     register,
@@ -64,17 +44,13 @@ function LoginContent() {
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    if (!auth) {
-      setError('Authentication service not ready. Please wait a moment and try again.');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      // Clear the stored redirect path
+      const supabase = createClient();
+      const { error: err } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
+      if (err) throw err;
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());
     } catch (err) {
@@ -85,48 +61,34 @@ function LoginContent() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!auth || !db) {
-      setError('Authentication service not ready. Please wait a moment and try again.');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      // Use browserPopupRedirectResolver explicitly for bundled environments (Next.js)
-      // This is required when Firebase Auth is bundled by a module bundler
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
-      
-      // Create/update user document like vanilla site does
-      const user = result.user;
-      const email = user.email || '';
-      const username = email.split('@')[0].substring(0, 5);
-      await setDoc(doc(db, 'users', user.uid), { username }, { merge: true });
-      
-      // Clear the stored redirect path
-      sessionStorage.removeItem('loginRedirect');
-      router.push(getRedirectPath());
+      const supabase = createClient();
+      const redirectPath = getRedirectPath();
+      const { data, error: err } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}` },
+      });
+      if (err) throw err;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
     } catch (err: unknown) {
-      const authError = err as { code?: string; message?: string; customData?: unknown };
       console.error('Google sign-in error:', err);
-      console.error('Error code:', authError.code);
-      console.error('Error message:', authError.message);
-      console.error('Error customData:', authError.customData);
       setError(getAuthErrorMessage(err));
       setIsLoading(false);
     }
   };
 
   const handleAppleSignIn = () => {
-    // Apple Sign-In placeholder
     setError('Apple Sign-In coming soon!');
   };
 
   return (
-    <AuthCard 
-      title="Welcome Back" 
+    <AuthCard
+      title="Welcome Back"
       subtitle="Sign in to continue your adventure"
     >
       {error ? (
@@ -162,7 +124,7 @@ function LoginContent() {
             />
             Remember me
           </label>
-          <Link 
+          <Link
             href="/forgot-password"
             className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
           >
@@ -173,9 +135,9 @@ function LoginContent() {
         <Button
           type="submit"
           className="w-full"
-          disabled={isLoading || !firebaseReady}
+          disabled={isLoading || !ready}
         >
-          {!firebaseReady ? 'Loading...' : isLoading ? 'Signing in...' : 'Sign In'}
+          {!ready ? 'Loading...' : isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
 
@@ -189,18 +151,18 @@ function LoginContent() {
         <SocialButton
           provider="google"
           onClick={handleGoogleSignIn}
-          disabled={isLoading || !firebaseReady}
+          disabled={isLoading || !ready}
         />
         <SocialButton
           provider="apple"
           onClick={handleAppleSignIn}
-          disabled={isLoading || !firebaseReady}
+          disabled={isLoading || !ready}
         />
       </div>
 
       <p className="mt-6 text-center text-gray-400">
         Don&apos;t have an account?{' '}
-        <Link 
+        <Link
           href="/register"
           className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
         >
@@ -213,38 +175,25 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <AuthCard title="Welcome Back" subtitle="Sign in to continue your adventure">
-        <div className="flex items-center justify-center py-8">
-          <Spinner size="md" />
-        </div>
-      </AuthCard>
-    }>
+    <Suspense
+      fallback={
+        <AuthCard title="Welcome Back" subtitle="Sign in to continue your adventure">
+          <div className="flex items-center justify-center py-8">
+            <Spinner size="md" />
+          </div>
+        </AuthCard>
+      }
+    >
       <LoginContent />
     </Suspense>
   );
 }
 
 function getAuthErrorMessage(error: unknown): string {
-  const firebaseError = error as { code?: string; message?: string };
-  
-  switch (firebaseError.code) {
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
-    case 'auth/invalid-credential':
-      return 'Invalid email or password';
-    case 'auth/too-many-requests':
-      return 'Too many failed attempts. Please try again later.';
-    case 'auth/network-request-failed':
-      return 'Network error. Please check your connection.';
-    case 'auth/popup-closed-by-user':
-      return 'Sign-in popup was closed. Please try again.';
-    case 'auth/popup-blocked':
-      return 'Popup was blocked. Please allow popups and try again.';
-    case 'auth/unauthorized-domain':
-      return 'This domain is not authorized. Please contact support.';
-    default:
-      console.error('Auth error:', firebaseError);
-      return firebaseError.message || 'An error occurred during sign in. Please try again.';
-  }
+  const e = error as { message?: string; code?: string };
+  const msg = (e.message ?? '').toLowerCase();
+  if (msg.includes('invalid') || msg.includes('credentials')) return 'Invalid email or password';
+  if (msg.includes('too many') || msg.includes('rate')) return 'Too many failed attempts. Please try again later.';
+  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
+  return e.message ?? 'An error occurred during sign in. Please try again.';
 }

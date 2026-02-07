@@ -270,9 +270,9 @@ export function enrichTechniques(
 }
 
 /**
- * RTDB Equipment Item interface (for codex equipment lookup)
+ * Codex Equipment Item interface (for equipment lookup)
  */
-export interface RTDBEquipmentItem {
+export interface CodexEquipmentItem {
   id: string;
   name: string;
   type: 'weapon' | 'armor' | 'equipment';
@@ -290,13 +290,13 @@ export interface RTDBEquipmentItem {
 
 /**
  * Enrich character equipment with full data from user's item library
- * Falls back to RTDB equipment data for general items if not found in user library
+ * Falls back to Codex equipment data for general items if not found in user library
  */
 export function enrichItems(
   characterItems: Array<{ name: string; equipped?: boolean; type?: string }> | undefined,
   userItemLibrary: UserItem[],
   itemType: 'weapon' | 'armor' | 'equipment',
-  rtdbEquipment?: RTDBEquipmentItem[]
+  codexEquipment?: CodexEquipmentItem[]
 ): EnrichedItem[] {
   if (!characterItems || characterItems.length === 0) return [];
   
@@ -330,29 +330,29 @@ export function enrichItems(
       };
     }
     
-    // For equipment, also check RTDB codex as fallback
-    if (rtdbEquipment && rtdbEquipment.length > 0) {
+    // For equipment, also check Codex as fallback
+    if (codexEquipment && codexEquipment.length > 0) {
       const searchName = name.toLowerCase();
-      const rtdbItem = rtdbEquipment.find(item => 
+      const codexItem = codexEquipment.find(item => 
         item.name.toLowerCase() === searchName ||
         item.id === name
       );
       
-      if (rtdbItem) {
+      if (codexItem) {
         return {
-          id: rtdbItem.id,
-          name: rtdbItem.name,
-          description: rtdbItem.description || '',
-          type: rtdbItem.type || itemType,
+          id: codexItem.id,
+          name: codexItem.name,
+          description: codexItem.description || '',
+          type: codexItem.type || itemType,
           equipped,
-          damage: rtdbItem.damage,
-          armorValue: rtdbItem.armor_value,
-          properties: rtdbItem.properties || [],
+          damage: codexItem.damage,
+          armorValue: codexItem.armor_value,
+          properties: codexItem.properties || [],
         };
       }
     }
     
-    // Not found in library or RTDB - return placeholder
+    // Not found in library or Codex - return placeholder
     return {
       id: name,
       name,
@@ -398,7 +398,7 @@ export function enrichCharacterData(
   userPowers: UserPower[],
   userTechniques: UserTechnique[],
   userItems: UserItem[],
-  rtdbEquipment?: RTDBEquipmentItem[],
+  codexEquipment?: CodexEquipmentItem[],
   powerPartsDb?: PowerPart[],
   techniquePartsDb?: TechniquePart[]
 ): EnrichedCharacterData {
@@ -407,10 +407,10 @@ export function enrichCharacterData(
   const armorItems = userItems.filter(i => i.type === 'armor');
   const equipmentItems = userItems.filter(i => i.type === 'equipment');
   
-  // Split RTDB equipment by type for fallback lookups
-  const rtdbWeapons = rtdbEquipment?.filter(i => i.type === 'weapon');
-  const rtdbArmor = rtdbEquipment?.filter(i => i.type === 'armor');
-  const rtdbItems = rtdbEquipment?.filter(i => i.type === 'equipment');
+  // Split Codex equipment by type for fallback lookups
+  const codexWeapons = codexEquipment?.filter(i => i.type === 'weapon');
+  const codexArmor = codexEquipment?.filter(i => i.type === 'armor');
+  const codexItems = codexEquipment?.filter(i => i.type === 'equipment');
   
   return {
     powers: enrichPowers(character.powers, userPowers, powerPartsDb || []),
@@ -419,19 +419,19 @@ export function enrichCharacterData(
       toEquipmentArray(character.equipment?.weapons),
       weaponItems,
       'weapon',
-      rtdbWeapons
+      codexWeapons
     ),
     armor: enrichItems(
       toEquipmentArray(character.equipment?.armor),
       armorItems,
       'armor',
-      rtdbArmor
+      codexArmor
     ),
     equipment: enrichItems(
       toEquipmentArray(character.equipment?.items),
       equipmentItems,
       'equipment',
-      rtdbItems
+      codexItems
     ),
   };
 }

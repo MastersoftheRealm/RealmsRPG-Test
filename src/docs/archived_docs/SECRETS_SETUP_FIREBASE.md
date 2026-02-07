@@ -1,5 +1,7 @@
 # Google Cloud Secrets Setup
 
+**ARCHIVED:** Firebase deployment. Superseded by `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` for Supabase/Vercel stack.
+
 This guide explains how to configure Google Cloud Secrets for Firebase configuration and service account credentials.
 
 ## How It Works
@@ -46,7 +48,7 @@ These are injected as environment variables when deployed. **Both** of these mus
 1. `firebase.json` → `hosting.frameworksBackend.secrets` — list the secret names
 2. `functions/server.js` → `onRequest({ secrets: [...] })` — the SSR function must declare secrets to receive them
 
-Without (2), the Cloud Function receives no credentials and `/api/session` returns 500. See `src/docs/DEPLOYMENT_SECRETS.md` for full details.
+Without (2), the Cloud Function receives no credentials and `/api/session` returns 500. See `archived_docs/DEPLOYMENT_SECRETS_FIREBASE.md` for full details.
 
 #### Creating/Updating Service Account Secrets
 

@@ -14,14 +14,15 @@ export function AdminArchetypesTab() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; type: string; description?: string } | null>(null);
+  type ArchetypeItem = { id: string; name?: string; type?: string; description?: string };
+  const [editing, setEditing] = useState<ArchetypeItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const [form, setForm] = useState({ name: '', type: 'power' as 'power' | 'powered-martial' | 'martial', description: '' });
 
   const filtered = (archetypes || []).filter(
-    (a) =>
+    (a: ArchetypeItem) =>
       !search ||
       (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (a.description || '').toLowerCase().includes(search.toLowerCase())
@@ -33,7 +34,7 @@ export function AdminArchetypesTab() {
     setModalOpen(true);
   };
 
-  const openEdit = (a: { id: string; name: string; type: string; description?: string }) => {
+  const openEdit = (a: ArchetypeItem) => {
     setEditing(a);
     setForm({
       name: a.name || '',
@@ -94,7 +95,7 @@ export function AdminArchetypesTab() {
         <LoadingState />
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((a) => (
+          {filtered.map((a: ArchetypeItem) => (
             <div key={a.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
                 <GridListRow id={a.id} name={a.name || ''} description={(a as { description?: string }).description || ''} columns={[{ key: 'Type', value: (a.type || '-') as string }]} />

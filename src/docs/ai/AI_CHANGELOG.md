@@ -2,6 +2,48 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-07 | agent:cursor | Session: TASK-148 — Phase 4 migration (character, library, campaign → Prisma) | files: character-service, use-user-library, campaign-service, library-service, api/characters, api/user/library, api/campaigns, characters/[id]/page, finalize-step, power/technique/item/creature creators | TASKs: TASK-148 | Summary:
+  - Created /api/characters, /api/user/library/[type], /api/campaigns routes (Prisma, Supabase session)
+  - Migrated character-service, use-user-library, campaign-service to fetch from API
+  - Updated character sheet, finalize-step, creators to use new services/library-service
+  - No Firestore imports in character-service, use-user-library, campaign-service
+  - npm run build passes
+
+- 2026-02-07 | agent:cursor | Session: Migration audit + TASK-144 — Documentation migration completion | files: archived_docs/*_FIREBASE.md, AGENTS.md, ARCHITECTURE.md, AGENT_GUIDE.md, README.md, ALL_FEEDBACK_CLEAN.md, update-admin-secrets.ps1 | TASKs: TASK-144 | Summary:
+  - Archived DEPLOYMENT_SECRETS.md, ADMIN_SDK_SECRETS_SETUP.md, SECRETS_SETUP.md to src/docs/archived_docs/*_FIREBASE.md
+  - Updated AGENTS.md: legacy Firebase path → archived_docs; AGENT_GUIDE.md: removed legacy useRTDB alias; ARCHITECTURE.md: RTDB→Codex, Firebase→Supabase/Prisma
+  - README.md: added RealmsRPG stack line; ALL_FEEDBACK_CLEAN.md: SECRETS_SETUP→DEPLOYMENT_AND_SECRETS_SUPABASE
+  - npm run build passes
+
+- 2026-02-07 | agent:cursor | Session: TASK-149 — Migrate admin codex actions to Prisma | files: admin/codex/actions.ts | TASKs: TASK-149 | Summary:
+  - Replaced getAdminFirestore with prisma; createCodexDoc, updateCodexDoc, deleteCodexDoc now use Prisma delegates
+  - Codex CRUD writes to PostgreSQL via Prisma; getSession/isAdmin still use Firebase
+  - npm run build passes
+
+- 2026-02-07 | agent:cursor | Session: TASK-147 — Gold → currency terminology | files: AdminEquipmentTab.tsx, item-creator/page.tsx, item-transformers.ts, DOCUMENTATION_MIGRATION_AUDIT.md | TASKs: TASK-147 | Summary:
+  - "gp"→"c", "Gold Cost"→"Currency Cost", "Base Gold"→"Base Currency" in UI
+  - formatGold deprecated, use formatCurrency; legacy gold_cost documented
+
+- 2026-02-07 | agent:cursor | Session: TASK-145 — RTDB → Codex rename | files: hooks/index.ts, use-rtdb.ts exports, equipment-step, finalize-step, feats-step, powers-step, add-skill-modal, add-sub-skill-modal, skills-allocation-page, species-modal, ancestry-step, characters/[id]/page.tsx, campaigns/.../page.tsx, admin/codex tabs, codex tabs, creature-creator, data-enrichment, feats-tab, library-section | TASKs: TASK-145 | Summary:
+  - Removed useRTDBFeats/useRTDBSkills aliases; export useCodexFeats, useCodexSkills, Feat, Skill
+  - Renamed rtdb*→codex*, source:'rtdb'→'codex', speciesTraitsFromRTDB→speciesTraitsFromCodex
+  - RTDBEquipmentItem→CodexEquipmentItem in data-enrichment
+  - npm run build passes
+
+- 2026-02-07 | agent:cursor | Session: TASK-146 — Fix TypeScript build errors | files: finalize-step.tsx, powers-step.tsx, skills-step.tsx, species-step.tsx, add-skill-modal.tsx, add-sub-skill-modal.tsx, skills-allocation-page.tsx, game-data-service.ts | TASKs: TASK-146 | Summary:
+  - Fixed implicit any in filter/map/forEach callbacks across character creator steps, skill modals, skills-allocation-page
+  - Added RTDBSkill, Species, PowerPart, TechniquePart types; sortItems<T> generics; Set<string> for speciesSkillIds
+  - game-data-service: cast arr for Object.fromEntries map
+  - npm run build passes
+
+- 2026-02-07 | agent:cursor | Session: Documentation migration audit — Firebase→Supabase | files: DOCUMENTATION_MIGRATION_AUDIT.md, DEPLOYMENT_AND_SECRETS_SUPABASE.md, AGENTS.md, AGENT_GUIDE.md, README.md, .cursor/rules/realms-project.mdc, MIGRATION_PLAN, AI_TASK_QUEUE.md | TASKs: TASK-144, TASK-145 (new) | Summary:
+  - Created DOCUMENTATION_MIGRATION_AUDIT.md: full audit of docs to update/archive/delete; RTDB→Codex rename plan; coordination with Phase 4/5
+  - Created DEPLOYMENT_AND_SECRETS_SUPABASE.md: new stack secrets/deploy doc (replaces DEPLOYMENT_SECRETS, SECRETS_SETUP, ADMIN_SDK_SECRETS_SETUP)
+  - Updated AGENTS.md, AGENT_GUIDE.md, README.md, realms-project.mdc for Supabase/Prisma/Vercel
+  - Added TASK-144 (documentation migration audit), TASK-145 (RTDB→Codex global rename)
+  - Updated TASK-142, TASK-143 for Supabase scope
+  - Added Phase 7b (Documentation Cleanup) to MIGRATION_PLAN
+
 - 2026-02-06 | agent:cursor | Session: TASK-135 — Admin Codex UI polish | files: list-components.tsx, Admin*Tab.tsx (all 9), AI_TASK_QUEUE.md | TASKs: TASK-135 | Summary:
   - ColumnHeaders: dark mode (bg-primary-50 dark:bg-primary-900/30, text dark:text-primary-200)
   - Admin tabs: EmptyState for empty lists with Add action; delete button dark mode (text-red-600 dark:text-red-400, hover variants)

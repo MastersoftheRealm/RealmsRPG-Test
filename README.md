@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+**RealmsRPG** — D&D Beyond–like TTRPG app. Stack: Next.js, React, Tailwind, Supabase, Prisma, Vercel. See `src/docs/` for architecture, deployment (`DEPLOYMENT_AND_SECRETS_SUPABASE.md`), and agent instructions.
+
 ## Getting Started
 
 First, run the development server:

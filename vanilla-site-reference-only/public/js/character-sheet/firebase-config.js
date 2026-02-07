@@ -19,7 +19,7 @@ export async function initializeFirebase() {
                 rtdb = firebase.database(); // Initialize Realtime Database
                 
                 // Get reCAPTCHA site key from global environment config
-                const recaptchaSiteKey = window.RealmsEnv?.RECAPTCHA_SITE_KEY || '6Ld4CaAqAAAAAMXFsM-yr1eNlQGV2itSASCC7SmA';
+                const recaptchaSiteKey = window.RealmsEnv?.RECAPTCHA_SITE_KEY || '__RECAPTCHA_SITE_KEY_PROD__';
                 
                 // NEW: Activate App Check BEFORE waiting for auth
                 let appCheckReady = Promise.resolve();

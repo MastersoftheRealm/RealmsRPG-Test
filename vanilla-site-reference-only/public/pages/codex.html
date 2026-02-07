@@ -444,7 +444,7 @@
     // Initialize App Check to suppress warning (uses global RealmsEnv from environment.js)
     if (typeof firebase !== 'undefined' && firebase.appCheck) {
       const appCheck = firebase.appCheck();
-      const siteKey = window.RealmsEnv?.RECAPTCHA_SITE_KEY || '6Ld4CaAqAAAAAMXFsM-yr1eNlQGV2itSASCC7SmA';
+      const siteKey = window.RealmsEnv?.RECAPTCHA_SITE_KEY || '__RECAPTCHA_SITE_KEY_PROD__';
       appCheck.activate(siteKey, true);
     }
   </script>

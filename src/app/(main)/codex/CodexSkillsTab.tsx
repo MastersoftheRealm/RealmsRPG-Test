@@ -20,7 +20,7 @@ import {
   GridListRow,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
-import { useRTDBSkills, type RTDBSkill as Skill } from '@/hooks';
+import { useCodexSkills, type Skill } from '@/hooks';
 
 const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
 
@@ -64,12 +64,12 @@ function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<
 }
 
 export function CodexSkillsTab() {
-  const { data: skills, isLoading, error } = useRTDBSkills();
+  const { data: skills, isLoading, error } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  const skillIdToName = useMemo(() => {
+  const skillIdToName = useMemo((): Map<string, string> => {
     if (!skills) return new Map<string, string>();
-    return new Map(skills.map(s => [s.id, s.name]));
+    return new Map(skills.map((s: Skill) => [String(s.id), s.name] as [string, string]));
   }, [skills]);
 
   const [filters, setFilters] = useState<SkillFilters>({
@@ -85,17 +85,17 @@ export function CodexSkillsTab() {
     const abilities = new Set<string>();
     const baseSkills = new Set<string>();
 
-    skills.forEach(s => {
+    skills.forEach((s: Skill) => {
       if (s.ability && typeof s.ability === 'string') {
-        s.ability.split(',').forEach(ab => {
+        s.ability.split(',').forEach((ab: string) => {
           const trimmed = ab.trim();
           if (trimmed) abilities.add(trimmed);
         });
       }
       if (s.category && typeof s.category === 'string') baseSkills.add(s.category);
       if (s.base_skill_id !== undefined) {
-        const baseSkillName = skillIdToName.get(String(s.base_skill_id));
-        if (baseSkillName) baseSkills.add(baseSkillName);
+        const baseSkillName: string | undefined = skillIdToName.get(String(s.base_skill_id));
+        if (typeof baseSkillName === 'string') baseSkills.add(baseSkillName);
       }
     });
 
@@ -108,7 +108,7 @@ export function CodexSkillsTab() {
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
 
-    const filtered = skills.filter(s => {
+    const filtered = skills.filter((s: Skill) => {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         if (!s.name.toLowerCase().includes(searchLower) &&
@@ -118,7 +118,7 @@ export function CodexSkillsTab() {
       }
 
       if (filters.abilities.length > 0) {
-        const skillAbilities = s.ability?.split(',').map(a => a.trim()) || [];
+        const skillAbilities = s.ability?.split(',').map((a: string) => a.trim()) || [];
         const hasMatchingAbility = filters.abilities.some(filterAb =>
           skillAbilities.includes(filterAb)
         );
@@ -141,7 +141,7 @@ export function CodexSkillsTab() {
     });
 
     if (filters.baseSkill) {
-      return filtered.sort((a, b) => {
+      return filtered.sort((a: Skill, b: Skill) => {
         const aIsBase = a.name === filters.baseSkill;
         const bIsBase = b.name === filters.baseSkill;
         if (aIsBase && !bIsBase) return -1;
@@ -149,7 +149,7 @@ export function CodexSkillsTab() {
         return a.name.localeCompare(b.name);
       });
     }
-    return sortItems(filtered);
+    return sortItems<Skill>(filtered);
   }, [skills, filters, sortItems, skillIdToName]);
 
   if (error) return <ErrorState message="Failed to load skills" />;
@@ -212,7 +212,7 @@ export function CodexSkillsTab() {
         ) : filteredSkills.length === 0 ? (
           <div className="p-8 text-center text-text-muted">No skills match your filters.</div>
         ) : (
-          filteredSkills.map(skill => (
+          filteredSkills.map((skill: Skill) => (
             <SkillCard key={skill.id} skill={skill} skillIdToName={skillIdToName} />
           ))
         )}

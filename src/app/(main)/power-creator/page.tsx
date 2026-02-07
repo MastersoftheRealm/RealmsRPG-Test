@@ -14,8 +14,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Wand2, Zap, Target, Info, FolderOpen } from 'lucide-react';
-import { collection, addDoc, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
 import { usePowerParts, useUserPowers, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -148,7 +147,7 @@ function PowerCreatorContent() {
           if (parsed.selectedParts && parsed.selectedParts.length > 0) {
             const restoredParts: SelectedPart[] = [];
             for (const savedPart of parsed.selectedParts) {
-              const foundPart = powerParts.find(p => String(p.id) === String(savedPart.partId));
+              const foundPart = powerParts.find((p: PowerPart) => String(p.id) === String(savedPart.partId));
               if (foundPart) {
                 restoredParts.push({
                   part: foundPart,
@@ -167,7 +166,7 @@ function PowerCreatorContent() {
           if (parsed.selectedAdvancedParts && parsed.selectedAdvancedParts.length > 0) {
             const restoredAdvanced: AdvancedPart[] = [];
             for (const savedPart of parsed.selectedAdvancedParts) {
-              const foundPart = powerParts.find(p => String(p.id) === String(savedPart.partId));
+              const foundPart = powerParts.find((p: PowerPart) => String(p.id) === String(savedPart.partId));
               if (foundPart) {
                 restoredAdvanced.push({
                   part: foundPart,
@@ -231,7 +230,7 @@ function PowerCreatorContent() {
   // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
   // or the Advanced Mechanics section
   const nonMechanicParts = useMemo(
-    () => powerParts.filter((p) => !p.mechanic),
+    () => powerParts.filter((p: PowerPart) => !p.mechanic),
     [powerParts]
   );
 
@@ -403,18 +402,9 @@ function PowerCreatorContent() {
       };
 
       // Check if power with same name exists
-      const libraryRef = collection(db, 'users', user.uid, 'library');
-      const q = query(libraryRef, where('name', '==', name.trim()));
-      const snapshot = await getDocs(q);
+      const existing = await findLibraryItemByName('powers', name.trim());
 
-      if (!snapshot.empty) {
-        // Update existing power
-        const docRef = doc(db, 'users', user.uid, 'library', snapshot.docs[0].id);
-        await setDoc(docRef, powerData);
-      } else {
-        // Create new power
-        await addDoc(libraryRef, { ...powerData, createdAt: new Date() });
-      }
+      await saveToLibrary('powers', { ...powerData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
 
       setSaveMessage({ type: 'success', text: 'Power saved successfully!' });
       
@@ -501,7 +491,7 @@ function PowerCreatorContent() {
     for (const savedPart of savedParts) {
       // Find the matching part in powerParts by id or name
       const matchedPart = powerParts.find(
-        (p) => p.id === String(savedPart.id) || p.name === savedPart.name
+        (p: PowerPart) => p.id === String(savedPart.id) || p.name === savedPart.name
       );
       
       if (matchedPart) {

@@ -1,21 +1,20 @@
 /**
  * Register Page
  * ==============
- * User registration page
+ * User registration page (Supabase Auth)
  */
 
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, Auth, browserPopupRedirectResolver } from 'firebase/auth';
-import { doc, setDoc, Firestore } from 'firebase/firestore';
+import { createClient } from '@/lib/supabase/client';
 
-import { waitForFirebase, auth as firebaseAuth, db as firebaseDb } from '@/lib/firebase/client';
 import { registerSchema, type RegisterFormData } from '@/lib/validation';
+import { createUserProfileAction } from '@/app/(auth)/actions';
 import { AuthCard, FormInput, PasswordInput, SocialButton } from '@/components/auth';
 import { Spinner } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
@@ -25,35 +24,16 @@ function RegisterContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [firebaseReady, setFirebaseReady] = useState(false);
-  const [auth, setAuth] = useState<Auth | null>(null);
-  const [db, setDb] = useState<Firestore | null>(null);
-  
-  // Get redirect path from URL params or sessionStorage (default to home when in doubt)
+
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect');
     const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     const raw = urlRedirect || sessionRedirect || '/';
-    // Never redirect back to auth pages
     if (raw === '/login' || raw === '/register' || raw === '/forgot-password' || raw === '/forgot-username') {
       return '/';
     }
     return raw;
   };
-
-  // Wait for Firebase to initialize
-  useEffect(() => {
-    waitForFirebase()
-      .then(() => {
-        setAuth(firebaseAuth);
-        setDb(firebaseDb);
-        setFirebaseReady(true);
-      })
-      .catch((err) => {
-        console.error('Firebase initialization failed:', err);
-        setError('Failed to connect to authentication service.');
-      });
-  }, []);
 
   const {
     register,
@@ -64,40 +44,25 @@ function RegisterContent() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    if (!auth || !db) {
-      setError('Authentication service not ready. Please wait a moment and try again.');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        data.email, 
-        data.password
-      );
-      
-      // Update display name
-      await updateProfile(userCredential.user, {
-        displayName: data.displayName,
-      });
-
-      // Create user document (includes username for vanilla site compatibility)
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        username: data.displayName, // For vanilla site compatibility
-        displayName: data.displayName,
+      const supabase = createClient();
+      const { data: authData, error: err } = await supabase.auth.signUp({
         email: data.email,
-        createdAt: new Date(),
+        password: data.password,
+        options: { data: { full_name: data.displayName, display_name: data.displayName } },
       });
-
-      // Create username mapping for vanilla site compatibility
-      await setDoc(doc(db, 'usernames', data.displayName), {
-        uid: userCredential.user.uid,
-      });
-
-      // Clear the stored redirect path
+      if (err) throw err;
+      if (authData.user) {
+        await createUserProfileAction({
+          uid: authData.user.id,
+          email: data.email,
+          username: data.displayName,
+          displayName: data.displayName,
+        });
+      }
       sessionStorage.removeItem('loginRedirect');
       router.push(getRedirectPath());
     } catch (err) {
@@ -108,37 +73,20 @@ function RegisterContent() {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!auth || !db) {
-      setError('Authentication service not ready. Please wait a moment and try again.');
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      // Use browserPopupRedirectResolver explicitly for bundled environments (Next.js)
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider, browserPopupRedirectResolver);
-      
-      // Create user document
-      const user = result.user;
-      await setDoc(doc(db, 'users', user.uid), {
-        username: user.displayName || user.email?.split('@')[0],
-        displayName: user.displayName,
-        email: user.email,
-        createdAt: new Date(),
-      }, { merge: true });
-      
-      if (user.displayName) {
-        await setDoc(doc(db, 'usernames', user.displayName), {
-          uid: user.uid,
-        }, { merge: true });
+      const redirectPath = getRedirectPath();
+      const supabase = createClient();
+      const { data, error: err } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}` },
+      });
+      if (err) throw err;
+      if (data?.url) {
+        window.location.href = data.url;
       }
-      
-      // Clear the stored redirect path
-      sessionStorage.removeItem('loginRedirect');
-      router.push(getRedirectPath());
     } catch (err: unknown) {
       console.error('Google sign-in error:', err);
       setError(getAuthErrorMessage(err));
@@ -151,10 +99,7 @@ function RegisterContent() {
   };
 
   return (
-    <AuthCard 
-      title="Create Account" 
-      subtitle="Join the adventure"
-    >
+    <AuthCard title="Create Account" subtitle="Join the adventure">
       {error ? (
         <Alert variant="danger" className="mb-6">
           {error}
@@ -218,12 +163,8 @@ function RegisterContent() {
           <p className="text-sm text-red-400 -mt-3">{errors.acceptTerms.message}</p>
         ) : null}
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading || !firebaseReady}
-        >
-          {!firebaseReady ? 'Loading...' : isLoading ? 'Creating account...' : 'Create Account'}
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? 'Creating account...' : 'Create Account'}
         </Button>
       </form>
 
@@ -237,21 +178,14 @@ function RegisterContent() {
         <SocialButton
           provider="google"
           onClick={handleGoogleSignIn}
-          disabled={isLoading || !firebaseReady}
+          disabled={isLoading}
         />
-        <SocialButton
-          provider="apple"
-          onClick={handleAppleSignIn}
-          disabled={isLoading || !firebaseReady}
-        />
+        <SocialButton provider="apple" onClick={handleAppleSignIn} disabled={isLoading} />
       </div>
 
       <p className="mt-6 text-center text-gray-400">
         Already have an account?{' '}
-        <Link 
-          href="/login"
-          className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
-        >
+        <Link href="/login" className="text-primary-400 hover:text-primary-300 transition-colors font-medium">
           Sign in
         </Link>
       </p>
@@ -261,38 +195,26 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={
-      <AuthCard title="Join the Adventure" subtitle="Create your account to begin">
-        <div className="flex items-center justify-center py-8">
-          <Spinner size="md" />
-        </div>
-      </AuthCard>
-    }>
+    <Suspense
+      fallback={
+        <AuthCard title="Join the Adventure" subtitle="Create your account to begin">
+          <div className="flex items-center justify-center py-8">
+            <Spinner size="md" />
+          </div>
+        </AuthCard>
+      }
+    >
       <RegisterContent />
     </Suspense>
   );
 }
 
 function getAuthErrorMessage(error: unknown): string {
-  const firebaseError = error as { code?: string; message?: string };
-  
-  switch (firebaseError.code) {
-    case 'auth/email-already-in-use':
-      return 'An account with this email already exists.';
-    case 'auth/weak-password':
-      return 'Password is too weak. Please choose a stronger password.';
-    case 'auth/invalid-email':
-      return 'Invalid email address.';
-    case 'auth/network-request-failed':
-      return 'Network error. Please check your connection.';
-    case 'auth/popup-closed-by-user':
-      return 'Sign-in popup was closed. Please try again.';
-    case 'auth/popup-blocked':
-      return 'Popup was blocked. Please allow popups and try again.';
-    case 'auth/unauthorized-domain':
-      return 'This domain is not authorized. Please contact support.';
-    default:
-      console.error('Auth error:', firebaseError);
-      return firebaseError.message || 'An error occurred during registration. Please try again.';
-  }
+  const e = error as { message?: string };
+  const msg = (e.message ?? '').toLowerCase();
+  if (msg.includes('already') || msg.includes('exists')) return 'An account with this email already exists.';
+  if (msg.includes('weak') || msg.includes('password')) return 'Password is too weak. Please choose a stronger password.';
+  if (msg.includes('invalid') || msg.includes('email')) return 'Invalid email address.';
+  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
+  return e.message ?? 'An error occurred during registration. Please try again.';
 }

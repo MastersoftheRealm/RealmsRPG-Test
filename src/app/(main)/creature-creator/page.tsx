@@ -8,12 +8,11 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { addDoc, collection, getDocs, query, where, doc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
 import { LoginPromptModal, UnifiedSelectionModal, ItemCard, SkillRow } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
-import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useRTDBSkills } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
 import {
   transformUserPowerToDisplayItem,
   transformUserTechniqueToDisplayItem,
@@ -71,6 +70,7 @@ import {
   DefenseBlock,
   displayItemToSelectableItem,
 } from './CreatureCreatorHelpers';
+import type { SelectableItem } from '@/components/shared';
 import { LoadCreatureModal } from './LoadCreatureModal';
 
 // =============================================================================
@@ -80,7 +80,7 @@ import { LoadCreatureModal } from './LoadCreatureModal';
 function CreatureCreatorContent() {
   const { user } = useAuthStore();
   const { data: creatureFeatsData = [] } = useCreatureFeats();
-  const { data: skillsData = [] } = useRTDBSkills();
+  const { data: skillsData = [] } = useCodexSkills();
   
   // Data for item selection modals
   const { data: userPowers = [] } = useUserPowers();
@@ -103,44 +103,44 @@ function CreatureCreatorContent() {
   
   // Transform user library data to DisplayItem[] for modals
   const powerDisplayItems = useMemo(() => 
-    userPowers.map(p => transformUserPowerToDisplayItem(p, powerPartsDb)),
+    userPowers.map((p: UserPower) => transformUserPowerToDisplayItem(p, powerPartsDb)),
     [userPowers, powerPartsDb]
   );
   
   const techniqueDisplayItems = useMemo(() => 
-    userTechniques.map(t => transformUserTechniqueToDisplayItem(t, techniquePartsDb)),
+    userTechniques.map((t: UserTechnique) => transformUserTechniqueToDisplayItem(t, techniquePartsDb)),
     [userTechniques, techniquePartsDb]
   );
   
   const featDisplayItems = useMemo(() => {
-    const selectedIds = new Set(creature.feats.map(f => f.id));
+    const selectedIds = new Set(creature.feats.map((f: { id: string }) => f.id));
     return creatureFeatsData
-      .map(f => transformCreatureFeatToDisplayItem(f, selectedIds, MECHANICAL_CREATURE_FEAT_IDS))
-      .filter((f): f is NonNullable<typeof f> => f !== null);
+      .map((f: CreatureFeat) => transformCreatureFeatToDisplayItem(f, selectedIds, MECHANICAL_CREATURE_FEAT_IDS))
+      .filter((f: DisplayItem | null): f is DisplayItem => f !== null);
   }, [creatureFeatsData, creature.feats]);
   
   const armamentDisplayItems = useMemo(() => {
-    const selectedIds = new Set(creature.armaments.map(a => a.id));
+    const selectedIds = new Set(creature.armaments.map((a: { id: string }) => a.id));
     return userItems
-      .filter(item => !selectedIds.has(item.docId))
-      .map(item => transformUserItemToDisplayItem(item, itemPropertiesDb));
+      .filter((item: UserItem) => !selectedIds.has(item.docId))
+      .map((item: UserItem) => transformUserItemToDisplayItem(item, itemPropertiesDb));
   }, [userItems, creature.armaments, itemPropertiesDb]);
 
   // Convert to SelectableItem for UnifiedSelectionModal (GridListRow list style)
   const powerSelectableItems = useMemo(() => 
-    powerDisplayItems.map(p => displayItemToSelectableItem(p, ['EN', 'Action', 'Range'])),
+    powerDisplayItems.map((p: DisplayItem) => displayItemToSelectableItem(p, ['EN', 'Action', 'Range'])),
     [powerDisplayItems]
   );
   const techniqueSelectableItems = useMemo(() => 
-    techniqueDisplayItems.map(t => displayItemToSelectableItem(t, ['EN', 'TP', 'Action'])),
+    techniqueDisplayItems.map((t: DisplayItem) => displayItemToSelectableItem(t, ['EN', 'TP', 'Action'])),
     [techniqueDisplayItems]
   );
   const featSelectableItems = useMemo(() => 
-    featDisplayItems.map(f => displayItemToSelectableItem(f)),
+    featDisplayItems.map((f: DisplayItem) => displayItemToSelectableItem(f)),
     [featDisplayItems]
   );
   const armamentSelectableItems = useMemo(() => 
-    armamentDisplayItems.map(a => displayItemToSelectableItem(a, ['Type', 'TP', 'Cost'])),
+    armamentDisplayItems.map((a: DisplayItem) => displayItemToSelectableItem(a, ['Type', 'TP', 'Cost'])),
     [armamentDisplayItems]
   );
 
@@ -182,7 +182,7 @@ function CreatureCreatorContent() {
   // Create lookup map for feat point costs by ID
   const featPointsMap = useMemo(() => {
     const map = new Map<string, number>();
-    creatureFeatsData.forEach(feat => {
+    creatureFeatsData.forEach((feat: CreatureFeat) => {
       map.set(feat.id, feat.points);
     });
     return map;
@@ -191,7 +191,7 @@ function CreatureCreatorContent() {
   // Create lookup map for skill abilities
   const skillAbilityMap = useMemo(() => {
     const map = new Map<string, string>();
-    skillsData.forEach(skill => {
+    skillsData.forEach((skill: Skill) => {
       if (skill.ability) {
         map.set(skill.name, skill.ability.toLowerCase());
       }
@@ -200,14 +200,14 @@ function CreatureCreatorContent() {
   }, [skillsData]);
   
   // Create lookup map for skill ID to name (for base_skill_id lookups)
-  const skillIdToName = useMemo(() => {
-    return new Map(skillsData.map(s => [s.id, s.name]));
+  const skillIdToName = useMemo((): Map<string, string> => {
+    return new Map(skillsData.map((s: Skill) => [String(s.id), s.name] as [string, string]));
   }, [skillsData]);
   
   // Create description maps for senses and movements
   const senseDescriptions = useMemo(() => {
     const map: Record<string, string> = {};
-    SENSES.forEach(sense => {
+    SENSES.forEach((sense: { value: string; description: string }) => {
       map[sense.value] = sense.description;
     });
     return map;
@@ -215,7 +215,7 @@ function CreatureCreatorContent() {
   
   const movementDescriptions = useMemo(() => {
     const map: Record<string, string> = {};
-    MOVEMENT_TYPES.forEach(movement => {
+    MOVEMENT_TYPES.forEach((movement: { value: string; description: string }) => {
       map[movement.value] = movement.description;
     });
     return map;
@@ -229,17 +229,17 @@ function CreatureCreatorContent() {
   
   // Filter available skills: exclude sub-skills unless their base skill is already added
   const availableSkills = useMemo(() => {
-    const addedSkillNames = creature.skills.map(s => s.name);
+    const addedSkillNames = creature.skills.map((s: CreatureSkill) => s.name);
     
-    return skillsData.filter(skill => {
+    return skillsData.filter((skill: Skill) => {
       // If this skill has a base_skill_id, only show it if the base skill is already added
       if (skill.base_skill_id !== undefined) {
         const baseSkillName = skillIdToName.get(String(skill.base_skill_id));
-        return baseSkillName ? addedSkillNames.includes(baseSkillName) : false;
+        return typeof baseSkillName === 'string' ? addedSkillNames.includes(baseSkillName) : false;
       }
       // Otherwise, show all base skills
       return true;
-    }).map(skill => skill.name);
+    }).map((skill: Skill) => skill.name);
   }, [skillsData, creature.skills, skillIdToName]);
 
   const updateCreature = useCallback((updates: Partial<CreatureState>) => {
@@ -271,7 +271,7 @@ function CreatureCreatorContent() {
   const removeFromArray = useCallback((field: keyof CreatureState, item: string) => {
     setCreature(prev => ({
       ...prev,
-      [field]: (prev[field] as string[]).filter(i => i !== item)
+      [field]: (prev[field] as string[]).filter((i: string) => i !== item)
     }));
   }, []);
 
@@ -405,24 +405,15 @@ function CreatureCreatorContent() {
     
     setSaving(true);
     try {
-      const creaturesRef = collection(db, 'users', user.uid, 'creatureLibrary');
-      const q = query(creaturesRef, where('name', '==', creature.name));
-      const snapshot = await getDocs(q);
-      
       const creatureData = {
         ...creature,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       };
-      
-      if (!snapshot.empty) {
-        // Update existing
-        const docRef = doc(db, 'users', user.uid, 'creatureLibrary', snapshot.docs[0].id);
-        await setDoc(docRef, creatureData);
-      } else {
-        // Create new
-        await addDoc(creaturesRef, { ...creatureData, createdAt: new Date() });
-      }
-      
+
+      const existing = await findLibraryItemByName('creatures', creature.name.trim());
+
+      await saveToLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
+
       alert('Creature saved!');
     } catch (err) {
       console.error('Error saving creature:', err);
@@ -464,7 +455,7 @@ function CreatureCreatorContent() {
   const updateSkill = (skillName: string, updates: Partial<CreatureSkill>) => {
     setCreature(prev => ({
       ...prev,
-      skills: prev.skills.map(s => {
+      skills: prev.skills.map((s: CreatureSkill) => {
         if (s.name === skillName) {
           const newSkill = { ...s, ...updates };
           // For creatures, proficiency cannot be removed once added
@@ -482,7 +473,7 @@ function CreatureCreatorContent() {
   const removeSkill = (skillName: string) => {
     setCreature(prev => ({
       ...prev,
-      skills: prev.skills.filter(s => s.name !== skillName)
+      skills: prev.skills.filter((s: CreatureSkill) => s.name !== skillName)
     }));
   };
 
@@ -561,7 +552,7 @@ function CreatureCreatorContent() {
                   label="Size"
                     value={creature.size}
                     onChange={(e) => updateCreature({ size: e.target.value })}
-                    options={CREATURE_SIZES.map(s => ({ value: s.value, label: s.label }))}
+                    options={CREATURE_SIZES.map((s: { value: string; label: string }) => ({ value: s.value, label: s.label }))}
                 />
               </div>
             </div>
@@ -807,7 +798,7 @@ function CreatureCreatorContent() {
             
             <AddItemDropdown
               options={availableSkills}
-              selectedItems={creature.skills.map(s => s.name)}
+              selectedItems={creature.skills.map((s: CreatureSkill) => s.name)}
               onAdd={addSkill}
               placeholder="Add skill..."
             />
@@ -861,7 +852,7 @@ function CreatureCreatorContent() {
                     actions={{
                       onDelete: () => setCreature(prev => ({
                         ...prev,
-                        feats: prev.feats.filter(f => f.id !== feat.id)
+                        feats: prev.feats.filter((f: { id: string }) => f.id !== feat.id)
                       }))
                     }}
                     compact
@@ -899,7 +890,7 @@ function CreatureCreatorContent() {
                     actions={{
                       onDelete: () => setCreature(prev => ({
                         ...prev,
-                        powers: prev.powers.filter(p => p.id !== power.id)
+                        powers: prev.powers.filter((p: { id: string }) => p.id !== power.id)
                       }))
                     }}
                     compact
@@ -937,7 +928,7 @@ function CreatureCreatorContent() {
                     actions={{
                       onDelete: () => setCreature(prev => ({
                         ...prev,
-                        techniques: prev.techniques.filter(t => t.id !== tech.id)
+                        techniques: prev.techniques.filter((t: { id: string }) => t.id !== tech.id)
                       }))
                     }}
                     compact
@@ -975,7 +966,7 @@ function CreatureCreatorContent() {
                     actions={{
                       onDelete: () => setCreature(prev => ({
                         ...prev,
-                        armaments: prev.armaments.filter(a => a.id !== armament.id)
+                        armaments: prev.armaments.filter((a: { id: string }) => a.id !== armament.id)
                       }))
                     }}
                     compact
@@ -1022,7 +1013,7 @@ function CreatureCreatorContent() {
               { label: 'Size', value: creature.size.charAt(0).toUpperCase() + creature.size.slice(1) },
             ]}
             lineItems={[
-              { label: 'Skills', items: creature.skills.map(s => `${s.name} ${getSkillBonus(s.name, s.value, s.proficient) >= 0 ? '+' : ''}${getSkillBonus(s.name, s.value, s.proficient)}`) },
+              { label: 'Skills', items: creature.skills.map((s: CreatureSkill) => `${s.name} ${getSkillBonus(s.name, s.value, s.proficient) >= 0 ? '+' : ''}${getSkillBonus(s.name, s.value, s.proficient)}`) },
               { label: 'Resistances', items: creature.resistances },
               { label: 'Immunities', items: creature.immunities },
               { label: 'Weaknesses', items: creature.weaknesses },
@@ -1039,7 +1030,7 @@ function CreatureCreatorContent() {
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
         onConfirm={(selected) => {
-          const items = selected.map(s => s.data as DisplayItem);
+          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
           const powers = items.map(displayItemToCreaturePower);
           setCreature(prev => ({ ...prev, powers: [...prev.powers, ...powers] }));
         }}
@@ -1057,7 +1048,7 @@ function CreatureCreatorContent() {
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
         onConfirm={(selected) => {
-          const items = selected.map(s => s.data as DisplayItem);
+          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
           const techniques = items.map(displayItemToCreatureTechnique);
           setCreature(prev => ({ ...prev, techniques: [...prev.techniques, ...techniques] }));
         }}
@@ -1075,7 +1066,7 @@ function CreatureCreatorContent() {
         isOpen={showFeatModal}
         onClose={() => setShowFeatModal(false)}
         onConfirm={(selected) => {
-          const items = selected.map(s => s.data as DisplayItem);
+          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
           const feats = items.map(displayItemToCreatureFeat);
           setCreature(prev => ({ ...prev, feats: [...prev.feats, ...feats] }));
         }}
@@ -1093,7 +1084,7 @@ function CreatureCreatorContent() {
         isOpen={showArmamentModal}
         onClose={() => setShowArmamentModal(false)}
         onConfirm={(selected) => {
-          const items = selected.map(s => s.data as DisplayItem);
+          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
           const armaments = items.map(displayItemToCreatureArmament);
           setCreature(prev => ({ ...prev, armaments: [...prev.armaments, ...armaments] }));
         }}

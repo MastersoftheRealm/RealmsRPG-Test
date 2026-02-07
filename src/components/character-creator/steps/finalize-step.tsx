@@ -8,9 +8,8 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
-import { useAuth, useRTDBSkills, useSpecies } from '@/hooks';
+import { createCharacter } from '@/services/character-service';
+import { useAuth, useCodexSkills, useSpecies, type Species } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
@@ -348,7 +347,7 @@ export function FinalizeStep() {
   const router = useRouter();
   const { user } = useAuth();
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
-  const { data: rtdbSkills } = useRTDBSkills();
+  const { data: codexSkills } = useCodexSkills();
   const { data: allSpecies = [] } = useSpecies();
   
   const [saving, setSaving] = useState(false);
@@ -412,11 +411,11 @@ export function FinalizeStep() {
     // 5. Skill points (characters: 3/level; proper cost model for proficiency + values + defenses)
     const maxSkillPoints = calculateSkillPointsForEntity(level, 'character');
     const species = draft.ancestry?.id
-      ? allSpecies.find((s) => s.id === draft.ancestry?.id)
-      : allSpecies.find((s) => s.name.toLowerCase() === draft.ancestry?.name?.toLowerCase());
-    const speciesSkillIds = new Set((species?.skills || []).map((id) => String(id)));
+      ? allSpecies.find((s: Species) => s.id === draft.ancestry?.id)
+      : allSpecies.find((s: Species) => s.name.toLowerCase() === draft.ancestry?.name?.toLowerCase());
+    const speciesSkillIds = new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
     const skillMeta = new Map<string, { isSubSkill: boolean }>();
-    (rtdbSkills || []).forEach((s: { id: string; base_skill_id?: number }) => {
+    (codexSkills || []).forEach((s: { id: string; base_skill_id?: number }) => {
       skillMeta.set(s.id, { isSubSkill: s.base_skill_id !== undefined });
     });
     const totalUsedSkillPoints = calculateSimpleSkillPointsSpent(
@@ -515,7 +514,7 @@ export function FinalizeStep() {
     }
     
     return issues;
-  }, [draft, rtdbSkills, allSpecies]);
+  }, [draft, codexSkills, allSpecies]);
   
   const handleValidateAndSave = () => {
     setShowValidation(true);
@@ -557,9 +556,9 @@ export function FinalizeStep() {
         // Convert each skill allocation to array format
         Object.entries(skillsRecord).forEach(([skillId, points]) => {
           if (points > 0) {
-            const skillData = rtdbSkills?.find((s: { id: string; name: string }) => s.id === skillId || s.name === skillId);
+            const skillData = codexSkills?.find((s: { id: string; name: string }) => s.id === skillId || s.name === skillId);
             const baseSkill = skillData?.base_skill_id !== undefined
-              ? (rtdbSkills?.find((s: { id: string }) => s.id === String(skillData?.base_skill_id)) as { name?: string })?.name
+              ? (codexSkills?.find((s: { id: string }) => s.id === String(skillData?.base_skill_id)) as { name?: string })?.name
               : undefined;
             if (skillData) {
               skillsArray.push({
@@ -603,22 +602,17 @@ export function FinalizeStep() {
       };
 
       const sanitizedCharacter = sanitize(characterData);
-      
-      const docRef = await addDoc(
-        collection(db, 'users', user.uid, 'character'),
-        {
-          ...sanitizedCharacter,
-          userId: user.uid,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        }
-      );
-      
+
+      const characterId = await createCharacter({
+        ...sanitizedCharacter,
+        userId: user.uid,
+      });
+
       // Clear the creator store
       resetCreator();
-      
+
       // Navigate to the new character
-      router.push(`/characters/${docRef.id}`);
+      router.push(`/characters/${characterId}`);
     } catch (err) {
       console.error('Error saving character:', err);
       setError('Failed to save character. Please try again.');

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Forgot Password Page
  * =====================
  * Password reset request page
@@ -10,9 +10,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { sendPasswordResetEmail } from 'firebase/auth';
-
-import { auth } from '@/lib/firebase/client';
+import { createClient } from '@/lib/supabase/client';
 import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validation';
 import { AuthCard, FormInput } from '@/components/auth';
 import { Button, Alert } from '@/components/ui';
@@ -35,7 +33,10 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
-      await sendPasswordResetEmail(auth, data.email);
+      const supabase = createClient();
+      await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback?next=/login`,
+      });
       setIsSuccess(true);
     } catch (err) {
       setError(getAuthErrorMessage(err));
@@ -138,18 +139,9 @@ function CheckIcon({ className }: { className?: string }) {
 }
 
 function getAuthErrorMessage(error: unknown): string {
-  const firebaseError = error as { code?: string };
-  
-  switch (firebaseError.code) {
-    case 'auth/user-not-found':
-      return 'No account found with this email address.';
-    case 'auth/invalid-email':
-      return 'Invalid email address.';
-    case 'auth/too-many-requests':
-      return 'Too many requests. Please try again later.';
-    case 'auth/network-request-failed':
-      return 'Network error. Please check your connection.';
-    default:
-      return 'An error occurred. Please try again.';
-  }
+  const msg = (error as { message?: string })?.message ?? '';
+  if (msg.includes('rate') || msg.includes('too many')) return 'Too many requests. Please try again later.';
+  if (msg.includes('invalid') || msg.includes('email')) return 'Invalid email address.';
+  if (msg.includes('network') || msg.includes('fetch')) return 'Network error. Please check your connection.';
+  return 'An error occurred. Please try again.';
 }

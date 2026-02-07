@@ -1,6 +1,8 @@
 # Deployment & Admin SDK Secrets
 
-**Critical for:** Session cookies, campaign creation, portraits, server actions.
+**ARCHIVED:** Firebase deployment. Superseded by `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` for Supabase/Vercel stack.
+
+**Critical for:** Session cookies, campaign creation, portraits, server actions (Firebase during migration).
 
 ## The Problem
 
@@ -74,7 +76,7 @@ After deploy:
 | `/api/session` 500 or "Memory limit exceeded" | SSR function using &gt;256 MiB (default) | Add `memory: 512` to `onRequest` in `functions/server.js`, redeploy |
 | "Failed to create campaign" / `firebase-admin-a14c8a5423a75469` ERR_MODULE_NOT_FOUND | Firebase CLI runs `next build` (Turbopack) directly, ignoring package.json | A patch in `patches/firebase-tools+*.patch` makes Firebase run `next build --webpack`. Run `npm install patch-package` and `npm install` so postinstall applies it. |
 | "Failed to create campaign" | No session cookie (session API failed) | Fix session 500 first |
-| signBlob permission denied | Compute SA cannot sign as Firebase Admin SA | See ADMIN_SDK_SECRETS_SETUP.md section 4b |
+| signBlob permission denied | Compute SA cannot sign as Firebase Admin SA | See ADMIN_SDK_SECRETS_SETUP_FIREBASE.md section 4b |
 | "Invalid token" / auth errors | Private key format wrong | Re-store key with `\n` as literal, redeploy |
 | Works locally, fails in prod | Local uses `.env.local`; prod uses Secret Manager | Ensure secrets exist and function declares them |
 
@@ -90,4 +92,4 @@ When modifying deployment or auth-related code:
 3. **If adding** a new credential (e.g. full JSON key): add to all three places above.
 4. **After any change** to server.ts credential loading: run `npm run build` and verify deploy still works.
 
-See also: `SECRETS_SETUP.md`, `AGENTS.md`.
+See also: `SECRETS_SETUP_FIREBASE.md`, `AGENTS.md`.

@@ -74,14 +74,14 @@ export function CodexPropertiesTab() {
   const typeOptions = useMemo(() => {
     if (!properties) return [];
     const types = new Set<string>();
-    properties.forEach(p => p.type && types.add(p.type));
+    properties.forEach((p: ItemProperty) => p.type && types.add(p.type));
     return Array.from(types).sort();
   }, [properties]);
 
   const filteredProperties = useMemo(() => {
     if (!properties) return [];
 
-    const filtered = properties.filter(p => {
+    const filtered = properties.filter((p: ItemProperty) => {
       if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
         !p.description?.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
@@ -89,7 +89,7 @@ export function CodexPropertiesTab() {
       if (filters.typeFilter && p.type !== filters.typeFilter) return false;
       return true;
     });
-    return filtered.sort((a, b) => {
+    return filtered.sort((a: ItemProperty, b: ItemProperty) => {
       const { col, dir } = sortState;
       if (col === 'name') return dir * a.name.localeCompare(b.name);
       if (col === 'type') return dir * (a.type || 'general').localeCompare(b.type || 'general');
@@ -137,7 +137,7 @@ export function CodexPropertiesTab() {
         ) : filteredProperties.length === 0 ? (
           <div className="p-8 text-center text-text-muted">No properties found.</div>
         ) : (
-          filteredProperties.map(prop => (
+          filteredProperties.map((prop: ItemProperty) => (
             <PropertyCard key={prop.id} property={prop} />
           ))
         )}

@@ -1,22 +1,29 @@
-﻿/**
+/**
  * useAuth Hook
  * =============
- * React hook for authentication with Firebase listener
+ * React hook for authentication with Supabase
  */
 
 'use client';
 
 import { useEffect, useCallback, useState } from 'react';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  sendPasswordResetEmail,
-  onAuthStateChanged,
-  updateProfile,
-} from 'firebase/auth';
-import { auth, waitForFirebase } from '@/lib/firebase/client';
+import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
+import type { AuthUser } from '@/types/auth';
+
+function toAuthUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: { provider?: string }; identities?: Array<{ provider?: string }> } | null): AuthUser | null {
+  if (!user) return null;
+  const provider = user.app_metadata?.provider ?? user.identities?.[0]?.provider ?? (user.email ? 'email' : undefined);
+  return {
+    id: user.id,
+    uid: user.id,
+    email: user.email ?? null,
+    displayName: (user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.user_metadata?.display_name) as string | null ?? null,
+    photoURL: (user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? user.user_metadata?.photo_url) as string | null ?? null,
+    emailVerified: !!user.user_metadata?.email_verified,
+    provider,
+  };
+}
 
 export function useAuth() {
   const {
@@ -31,99 +38,101 @@ export function useAuth() {
     clearError,
   } = useAuthStore();
 
-  const [firebaseReady, setFirebaseReady] = useState(false);
+  const [supabaseReady, setSupabaseReady] = useState(false);
 
-  // Wait for Firebase to initialize
   useEffect(() => {
-    waitForFirebase()
-      .then(() => {
-        setFirebaseReady(true);
-      })
-      .catch((err) => {
-        console.error('Firebase initialization failed:', err);
-        setError('Failed to initialize Firebase');
-        setInitialized(true);
-      });
-  }, [setError, setInitialized]);
+    setSupabaseReady(true);
+  }, []);
 
-  // Set up auth state listener once Firebase is ready
   useEffect(() => {
-    if (!firebaseReady) return;
+    if (!supabaseReady) return;
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        setUser(user);
-        setInitialized(true);
-      },
-      (error) => {
-        setError(error.message);
-        setInitialized(true);
-      }
-    );
+    const supabase = createClient();
 
-    return () => unsubscribe();
-  }, [firebaseReady, setUser, setError, setInitialized]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(toAuthUser(session?.user ?? null));
+      setInitialized(true);
+    });
 
-  // Sign in with email/password
+    // Get initial session
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(toAuthUser(u));
+      setInitialized(true);
+    }).catch((err) => {
+      console.error('Auth init error:', err);
+      setError('Failed to initialize auth');
+      setInitialized(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabaseReady, setUser, setError, setInitialized]);
+
   const signIn = useCallback(
     async (email: string, password: string) => {
       setLoading(true);
       clearError();
       try {
-        const result = await signInWithEmailAndPassword(auth, email, password);
-        return result.user;
+        const supabase = createClient();
+        const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+        if (err) throw err;
+        setUser(toAuthUser(data.user));
+        return data.user;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to sign in';
         setError(message);
         throw err;
       }
     },
-    [setLoading, setError, clearError]
+    [setLoading, setError, setUser, clearError]
   );
 
-  // Sign up with email/password
   const signUp = useCallback(
     async (email: string, password: string, displayName?: string) => {
       setLoading(true);
       clearError();
       try {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        
-        if (displayName && result.user) {
-          await updateProfile(result.user, { displayName });
-        }
-        
-        return result.user;
+        const supabase = createClient();
+        const { data, error: err } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: displayName, display_name: displayName } },
+        });
+        if (err) throw err;
+        setUser(toAuthUser(data.user));
+        return data.user;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to create account';
         setError(message);
         throw err;
       }
     },
-    [setLoading, setError, clearError]
+    [setLoading, setError, setUser, clearError]
   );
 
-  // Sign out
   const signOut = useCallback(async () => {
     setLoading(true);
     clearError();
     try {
-      await firebaseSignOut(auth);
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      setUser(null);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to sign out';
       setError(message);
       throw err;
     }
-  }, [setLoading, setError, clearError]);
+  }, [setLoading, setError, setUser, clearError]);
 
-  // Reset password
   const resetPassword = useCallback(
     async (email: string) => {
       setLoading(true);
       clearError();
       try {
-        await sendPasswordResetEmail(auth, email);
+        const supabase = createClient();
+        await supabase.auth.resetPasswordForEmail(email);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to send reset email';
         setError(message);
@@ -135,17 +144,23 @@ export function useAuth() {
     [setLoading, setError, clearError]
   );
 
-  // Update user profile
   const updateUserProfile = useCallback(
     async (updates: { displayName?: string; photoURL?: string }) => {
       if (!user) throw new Error('No user logged in');
-      
       setLoading(true);
       clearError();
       try {
-        await updateProfile(user, updates);
-        // Force refresh the user object
-        setUser(auth.currentUser);
+        const supabase = createClient();
+        const { error: err } = await supabase.auth.updateUser({
+          data: {
+            full_name: updates.displayName ?? user.displayName,
+            display_name: updates.displayName ?? user.displayName,
+            avatar_url: updates.photoURL ?? user.photoURL,
+          },
+        });
+        if (err) throw err;
+        const { data: { user: u } } = await supabase.auth.getUser();
+        setUser(toAuthUser(u));
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to update profile';
         setError(message);
@@ -172,5 +187,4 @@ export function useAuth() {
   };
 }
 
-// Re-export for convenience
 export { useAuthStore };

@@ -1,6 +1,8 @@
 # RealmsRPG — Agent Instructions
 
-You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, and Firebase.
+You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Prisma**, and **Vercel**.
+
+> **Migration:** We are migrating from Firebase to Supabase/Prisma/Vercel. See `src/docs/MIGRATION_PLAN_FIREBASE_TO_SUPABASE_VERCEL.md` and `src/docs/DOCUMENTATION_MIGRATION_AUDIT.md` for scope. Avoid adding new Firebase/RTDB code.
 
 ## Session Start
 
@@ -9,7 +11,7 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 3. **Check** `src/docs/ALL_FEEDBACK_CLEAN.md` — raw owner feedback (convert new entries to tasks if needed).
 4. **Reference when needed:**
    - `src/docs/GAME_RULES.md` — terminology, formulas, display conventions (validation, caps, tooltips, calculations).
-   - `src/docs/ARCHITECTURE.md` — data flow, Firebase structure, enrichment pipeline.
+   - `src/docs/ARCHITECTURE.md` — data flow, Supabase/Prisma structure, enrichment pipeline.
 
 ## Core Principles
 
@@ -30,10 +32,8 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 
 Use `src/docs/ai/AI_REQUEST_TEMPLATE.md` format. Add to `AI_TASK_QUEUE.md` with next TASK-### ID. Create tasks when audits or implementation reveal additional work.
 
-## Deployment & Admin SDK Secrets (Do Not Break)
+## Deployment & Secrets
 
-Session cookies, campaign creation, portraits, and server actions require Firebase Admin SDK credentials. **Before modifying:**
+**New stack (Supabase/Vercel):** See `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` — env vars, Vercel config, Supabase keys.
 
-1. Read `src/docs/DEPLOYMENT_SECRETS.md` — full config and troubleshooting.
-2. **Never remove** `secrets: ADMIN_SDK_SECRETS` from `functions/server.js` — without it, `/api/session` returns 500 and campaigns fail.
-3. If changing credential env vars: update `firebase.json` frameworksBackend.secrets, `functions/server.js`, and Secret Manager together.
+**Legacy (Firebase, during migration):** If working on Firebase code before Phase 5 removal, see `src/docs/archived_docs/DEPLOYMENT_SECRETS_FIREBASE.md`. Do not remove `secrets: ADMIN_SDK_SECRETS` from `functions/server.js` until Firebase is fully removed.

@@ -16,8 +16,8 @@ import { cn } from '@/lib/utils';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
-/** RTDB part data for enrichment */
-interface RTDBPart {
+/** Codex part data for enrichment */
+interface CodexPart {
   id: string;
   name: string;
   description?: string;
@@ -52,9 +52,9 @@ interface ProficienciesTabProps {
   // Edit mode for selecting/upgrading unarmed prowess
   isEditMode?: boolean;
   onUnarmedProwessChange?: (level: number) => void;
-  // RTDB parts data for enrichment
-  powerPartsDb?: RTDBPart[];
-  techniquePartsDb?: RTDBPart[];
+  // Codex parts data for enrichment
+  powerPartsDb?: CodexPart[];
+  techniquePartsDb?: CodexPart[];
 }
 
 // Unarmed Prowess constants (matching equipment-step.tsx)
@@ -83,8 +83,8 @@ function calculateProfTP(prof: ProficiencyData): number {
   return Math.floor(rawTP);
 }
 
-// Extract proficiencies from powers - with RTDB enrichment for string parts
-function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart[] = []): Map<string, ProficiencyData> {
+// Extract proficiencies from powers - with Codex enrichment for string parts
+function extractPowerProficiencies(powers: CharacterPower[], codexParts: CodexPart[] = []): Map<string, ProficiencyData> {
   const profs = new Map<string, ProficiencyData>();
   
   powers.forEach(power => {
@@ -93,17 +93,17 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
     power.parts.forEach((part) => {
       // Parts can be strings (just names) or objects with full data
       if (typeof part === 'string') {
-        // String parts - look up in RTDB for TP data
-        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
+        // String parts - look up in Codex for TP data
+        const codexPart = codexParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
         if (!profs.has(part)) {
           profs.set(part, {
             name: part,
-            description: rtdbPart?.description,
-            baseTP: rtdbPart?.base_tp || 0,
+            description: codexPart?.description,
+            baseTP: codexPart?.base_tp || 0,
             op1Lvl: 0,
-            op1TP: rtdbPart?.op_1_tp || 0,
-            op2TP: rtdbPart?.op_2_tp || 0,
-            op3TP: rtdbPart?.op_3_tp || 0,
+            op1TP: codexPart?.op_1_tp || 0,
+            op2TP: codexPart?.op_2_tp || 0,
+            op3TP: codexPart?.op_3_tp || 0,
           });
         }
         return;
@@ -114,8 +114,8 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
 
       const partName = partData.name;
 
-      // Look up RTDB data for TP values if not present on the part
-      const rtdbPart = rtdbParts.find(p => 
+      // Look up Codex data for TP values if not present on the part
+      const codexPart = codexParts.find(p => 
         p.id === partData.id || 
         p.name?.toLowerCase() === partName.toLowerCase()
       );
@@ -123,11 +123,11 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
       const lvl1 = partData.op_1_lvl || 0;
       const lvl2 = partData.op_2_lvl || 0;
       const lvl3 = partData.op_3_lvl || 0;
-      // Use part data if available, fall back to RTDB
-      const baseTP = partData.base_tp ?? rtdbPart?.base_tp ?? 0;
-      const op1TP = partData.op_1_tp ?? rtdbPart?.op_1_tp ?? 0;
-      const op2TP = partData.op_2_tp ?? rtdbPart?.op_2_tp ?? 0;
-      const op3TP = partData.op_3_tp ?? rtdbPart?.op_3_tp ?? 0;
+      // Use part data if available, fall back to Codex
+      const baseTP = partData.base_tp ?? codexPart?.base_tp ?? 0;
+      const op1TP = partData.op_1_tp ?? codexPart?.op_1_tp ?? 0;
+      const op2TP = partData.op_2_tp ?? codexPart?.op_2_tp ?? 0;
+      const op3TP = partData.op_3_tp ?? codexPart?.op_3_tp ?? 0;
       
       const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
       if (Math.floor(rawTP) <= 0) return;
@@ -141,7 +141,7 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
       } else {
         profs.set(key, {
           name: partName,
-          description: rtdbPart?.description,
+          description: codexPart?.description,
           baseTP,
           op1Lvl: lvl1,
           op1TP,
@@ -157,8 +157,8 @@ function extractPowerProficiencies(powers: CharacterPower[], rtdbParts: RTDBPart
   return profs;
 }
 
-// Extract proficiencies from techniques - with RTDB enrichment for string parts
-function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbParts: RTDBPart[] = []): Map<string, ProficiencyData> {
+// Extract proficiencies from techniques - with Codex enrichment for string parts
+function extractTechniqueProficiencies(techniques: CharacterTechnique[], codexParts: CodexPart[] = []): Map<string, ProficiencyData> {
   const profs = new Map<string, ProficiencyData>();
   
   techniques.forEach(tech => {
@@ -167,17 +167,17 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
     tech.parts.forEach((part) => {
       // Parts can be strings (just names) or objects with full data
       if (typeof part === 'string') {
-        // String parts - look up in RTDB for TP data
-        const rtdbPart = rtdbParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
+        // String parts - look up in Codex for TP data
+        const codexPart = codexParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
         if (!profs.has(part)) {
           profs.set(part, {
             name: part,
-            description: rtdbPart?.description,
-            baseTP: rtdbPart?.base_tp || 0,
+            description: codexPart?.description,
+            baseTP: codexPart?.base_tp || 0,
             op1Lvl: 0,
-            op1TP: rtdbPart?.op_1_tp || 0,
-            op2TP: rtdbPart?.op_2_tp || 0,
-            op3TP: rtdbPart?.op_3_tp || 0,
+            op1TP: codexPart?.op_1_tp || 0,
+            op2TP: codexPart?.op_2_tp || 0,
+            op3TP: codexPart?.op_3_tp || 0,
           });
         }
         return;
@@ -188,8 +188,8 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
 
       const partName = partData.name;
 
-      // Look up RTDB data for TP values if not present on the part
-      const rtdbPart = rtdbParts.find(p => 
+      // Look up Codex data for TP values if not present on the part
+      const codexPart = codexParts.find(p => 
         p.id === partData.id || 
         p.name?.toLowerCase() === partName.toLowerCase()
       );
@@ -197,11 +197,11 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
       const lvl1 = partData.op_1_lvl || 0;
       const lvl2 = partData.op_2_lvl || 0;
       const lvl3 = partData.op_3_lvl || 0;
-      // Use part data if available, fall back to RTDB
-      const baseTP = partData.base_tp ?? rtdbPart?.base_tp ?? 0;
-      const op1TP = partData.op_1_tp ?? rtdbPart?.op_1_tp ?? 0;
-      const op2TP = partData.op_2_tp ?? rtdbPart?.op_2_tp ?? 0;
-      const op3TP = partData.op_3_tp ?? rtdbPart?.op_3_tp ?? 0;
+      // Use part data if available, fall back to Codex
+      const baseTP = partData.base_tp ?? codexPart?.base_tp ?? 0;
+      const op1TP = partData.op_1_tp ?? codexPart?.op_1_tp ?? 0;
+      const op2TP = partData.op_2_tp ?? codexPart?.op_2_tp ?? 0;
+      const op3TP = partData.op_3_tp ?? codexPart?.op_3_tp ?? 0;
       
       const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
       if (Math.floor(rawTP) <= 0) return;
@@ -215,7 +215,7 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
       } else {
         profs.set(key, {
           name: partName,
-          description: rtdbPart?.description,
+          description: codexPart?.description,
           baseTP,
           op1Lvl: lvl1,
           op1TP,
@@ -232,8 +232,8 @@ function extractTechniqueProficiencies(techniques: CharacterTechnique[], rtdbPar
 }
 
 // Extract proficiencies from weapons/armor properties
-// Note: Full TP calculation requires loading property data from RTDB
-// For now, just list the property names
+// Note: Full TP calculation requires loading property data from Codex
+// For now, just list the property names (TP from Codex)
 function extractEquipmentProficiencies(weapons: Item[], armor: Item[]): Map<string, ProficiencyData> {
   const profs = new Map<string, ProficiencyData>();
   const items = [...weapons, ...armor];
@@ -250,7 +250,7 @@ function extractEquipmentProficiencies(weapons: Item[], armor: Item[]): Map<stri
       if (!propName) return;
       
       // For now, just list properties without TP data
-      // Full TP calculation would require loading from RTDB
+      // Full TP calculation would require loading from Codex
       if (!profs.has(propName)) {
         profs.set(propName, {
           name: propName,
@@ -332,7 +332,7 @@ export function ProficienciesTab({
   powerPartsDb = [],
   techniquePartsDb = [],
 }: ProficienciesTabProps) {
-  // Extract all proficiencies - with RTDB enrichment
+  // Extract all proficiencies - with Codex enrichment
   const powerProfs = useMemo(() => extractPowerProficiencies(powers, powerPartsDb), [powers, powerPartsDb]);
   const techniqueProfs = useMemo(() => extractTechniqueProficiencies(techniques, techniquePartsDb), [techniques, techniquePartsDb]);
   const weaponProfs = useMemo(() => extractEquipmentProficiencies(weapons, []), [weapons]);

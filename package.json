@@ -9,11 +9,14 @@
     "lint": "eslint",
     "postinstall": "patch-package",
     "migrate:rtdb-to-firestore": "node scripts/migrate_rtdb_to_firestore.js",
-    "migrate:rtdb-to-firestore:dry": "node scripts/migrate_rtdb_to_firestore.js --dry-run"
+    "migrate:rtdb-to-firestore:dry": "node scripts/migrate_rtdb_to_firestore.js --dry-run",
+    "inject-env-vanilla": "node scripts/inject-env-vanilla.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.90.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -32,18 +35,22 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.2.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "patch-package": "^8.0.0",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
 }
+

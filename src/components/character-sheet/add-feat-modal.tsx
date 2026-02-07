@@ -1,7 +1,7 @@
 /**
  * Add Feat Modal
  * ==============
- * Modal for adding archetype or character feats from RTDB
+ * Modal for adding archetype or character feats from Codex
  * Uses unified GridListRow component for Codex-style list display.
  * Simplified filters for modal context.
  */
@@ -9,8 +9,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { ref, get } from 'firebase/database';
-import { rtdb } from '@/lib/firebase/client';
+import { useCodexFeats, type Feat } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, IconButton, Alert, Checkbox, Modal } from '@/components/ui';
@@ -18,24 +17,10 @@ import { SearchInput, ListHeader, GridListRow, type ChipData } from '@/component
 import { useSort } from '@/hooks/use-sort';
 import type { Character } from '@/types';
 
-interface Feat {
-  id: string;
-  name: string;
-  description?: string;
+// Feat shape for modal (extends Codex Feat with modal-specific fields)
+interface FeatModal extends Feat {
   effect?: string;
-  category?: string;
-  ability?: string;
-  lvl_req?: number;
-  ability_req?: string[];
-  abil_req_val?: number[];
-  skill_req?: string[];
-  skill_req_val?: number[];
-  char_feat?: boolean;
-  state_feat?: boolean;
   max_uses?: number;
-  uses_per_rec?: number;
-  rec_period?: string;
-  tags?: string[];
 }
 
 interface AddFeatModalProps {
@@ -44,7 +29,7 @@ interface AddFeatModalProps {
   featType: 'archetype' | 'character';
   character: Character;
   existingFeatIds: (string | number)[];
-  onAdd: (feats: Feat[]) => void;
+  onAdd: (feats: FeatModal[]) => void;
 }
 
 // Roman numeral utilities
@@ -78,44 +63,31 @@ export function AddFeatModal({
   existingFeatIds,
   onAdd,
 }: AddFeatModalProps) {
-  const [feats, setFeats] = useState<Feat[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: codexFeats = [], isLoading: loading, error: queryError } = useCodexFeats();
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedAbility, setSelectedAbility] = useState<string>('');
   const [showStateFeats, setShowStateFeats] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
-  const [selectedFeats, setSelectedFeats] = useState<Feat[]>([]);
+  const [selectedFeats, setSelectedFeats] = useState<FeatModal[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  // Load feats from RTDB
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    const loadFeats = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const snapshot = await get(ref(rtdb, 'feats'));
-        if (snapshot.exists()) {
-          const data = snapshot.val();
-          const featList = Object.entries(data).map(([id, feat]) => ({
-            id,
-            ...(feat as Omit<Feat, 'id'>),
-          }));
-          setFeats(featList);
-        }
-      } catch (e) {
-        setError(`Failed to load feats: ${e instanceof Error ? e.message : 'Unknown error'}`);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Map Codex feats to modal shape (Codex Feat has all required fields)
+  const feats = useMemo((): FeatModal[] => {
+    if (!codexFeats || !Array.isArray(codexFeats)) return [];
+    return codexFeats.map((f) => ({
+      ...f,
+      id: String(f.id),
+      effect: f.description,
+      max_uses: f.uses_per_rec,
+    }));
+  }, [codexFeats]);
 
-    loadFeats();
-  }, [isOpen]);
+  useEffect(() => {
+    if (queryError) setError(`Failed to load feats: ${queryError.message}`);
+    else setError(null);
+  }, [queryError]);
 
   // Reset selection when modal opens
   useEffect(() => {
@@ -150,7 +122,7 @@ export function AddFeatModal({
   }, [feats, featType]);
 
   // Check if feat requirements are met
-  const checkRequirements = useCallback((feat: Feat): { meets: boolean; warning?: string } => {
+  const checkRequirements = useCallback((feat: FeatModal): { meets: boolean; warning?: string } => {
     const warnings: string[] = [];
     
     // Level requirement - auto filter based on character level
@@ -228,7 +200,7 @@ export function AddFeatModal({
     return sortItems(filtered.map(f => ({ ...f, category: f.category ?? '', ability: f.ability ?? '' })));
   }, [feats, featType, existingFeatIds, searchQuery, selectedCategory, selectedAbility, showStateFeats, showBlocked, checkRequirements, sortItems]);
 
-  const toggleFeat = useCallback((feat: Feat) => {
+  const toggleFeat = useCallback((feat: FeatModal) => {
     setSelectedFeats(prev => {
       const exists = prev.some(f => f.id === feat.id);
       if (exists) {

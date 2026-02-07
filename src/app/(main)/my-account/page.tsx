@@ -17,7 +17,8 @@ import {
   sendPasswordResetEmail,
   deleteUser,
 } from 'firebase/auth';
-import type { User } from 'firebase/auth';
+import type { AuthUser } from '@/types/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { changeUsernameAction } from '@/app/(auth)/actions';
@@ -30,21 +31,20 @@ import { ImageUploadModal } from '@/components/shared';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 
 /** Returns whether the user signed in with email/password (can change email/password) */
-function hasPasswordProvider(firebaseUser: User | null): boolean {
-  if (!firebaseUser?.providerData?.length) return false;
-  return firebaseUser.providerData.some(
-    (p) => p.providerId === 'password'
-  );
+function hasPasswordProvider(authUser: AuthUser | null): boolean {
+  if (!authUser) return false;
+  // Supabase: 'email' = email/password; Firebase compat: 'password'
+  return authUser.provider === 'email' || authUser.provider === 'password';
 }
 
 /** Human-readable auth provider label */
-function getAuthProviderLabel(firebaseUser: User | null): string {
-  if (!firebaseUser?.providerData?.length) return 'Unknown';
-  const provider = firebaseUser.providerData[0]?.providerId;
-  if (provider === 'google.com') return 'Google';
-  if (provider === 'apple.com') return 'Apple';
-  if (provider === 'password') return 'Email/Password';
-  return provider?.replace('.com', '') ?? 'Unknown';
+function getAuthProviderLabel(authUser: AuthUser | null): string {
+  if (!authUser) return 'Unknown';
+  const p = authUser.provider;
+  if (p === 'google' || p === 'google.com') return 'Google';
+  if (p === 'apple' || p === 'apple.com') return 'Apple';
+  if (p === 'email' || p === 'password') return 'Email/Password';
+  return p ? p.replace('.com', '') : 'Unknown';
 }
 
 interface UserProfile {
@@ -168,12 +168,13 @@ function AccountContent() {
     setEmailMessage(null);
     
     try {
-      // Re-authenticate first
-      const credential = EmailAuthProvider.credential(user.email, emailPassword);
-      await reauthenticateWithCredential(user, credential);
+      // Re-authenticate first (Firebase API - TODO: migrate to Supabase updateUser)
+      const credential = EmailAuthProvider.credential(user.email!, emailPassword);
+      const firebaseUser = user as unknown as FirebaseUser;
+      await reauthenticateWithCredential(firebaseUser, credential);
       
       // Update email
-      await updateEmail(user, newEmail);
+      await updateEmail(firebaseUser, newEmail);
       
       // Update Firestore
       await updateDoc(doc(db, 'users', user.uid), { email: newEmail });
@@ -218,11 +219,12 @@ function AccountContent() {
     
     try {
       // Re-authenticate first
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
-      await reauthenticateWithCredential(user, credential);
+      const credential = EmailAuthProvider.credential(user.email!, currentPassword);
+      const firebaseUser = user as unknown as FirebaseUser;
+      await reauthenticateWithCredential(firebaseUser, credential);
       
       // Update password
-      await updatePassword(user, newPassword);
+      await updatePassword(firebaseUser, newPassword);
       
       setCurrentPassword('');
       setNewPassword('');
@@ -265,7 +267,8 @@ function AccountContent() {
     try {
       // Re-authenticate
       const credential = EmailAuthProvider.credential(user.email, deletePassword);
-      await reauthenticateWithCredential(user, credential);
+      const firebaseUser = user as unknown as FirebaseUser;
+      await reauthenticateWithCredential(firebaseUser, credential);
       
       // Delete user data from Firestore
       // Delete character subcollection
@@ -284,7 +287,7 @@ function AccountContent() {
       }
       
       // Delete Firebase Auth user
-      await deleteUser(user);
+      await deleteUser(firebaseUser);
       
       router.push('/');
     } catch (err: unknown) {

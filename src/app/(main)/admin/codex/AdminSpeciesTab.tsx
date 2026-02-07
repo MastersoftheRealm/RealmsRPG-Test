@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useSpecies } from '@/hooks';
+import { useSpecies, type Species } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -21,7 +21,7 @@ export function AdminSpeciesTab() {
   const [form, setForm] = useState({ name: '', description: '', type: '', size: '', sizes: '', speed: 6 });
 
   const filtered = (species || []).filter(
-    (s) =>
+    (s: Species) =>
       !search ||
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.description?.toLowerCase().includes(search.toLowerCase())
@@ -105,7 +105,7 @@ export function AdminSpeciesTab() {
         <LoadingState />
       ) : (
         <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((s) => (
+          {filtered.map((s: Species) => (
             <div key={s.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
               <div className="flex-1 min-w-0">
                 <GridListRow id={s.id} name={s.name} description={s.description || ''} columns={[{ key: 'Type', value: s.type || '-' }, { key: 'Size', value: s.size || '-' }, { key: 'Speed', value: String(s.speed ?? '-') }]} />

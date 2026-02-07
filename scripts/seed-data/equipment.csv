@@ -1,0 +1,11 @@
+id,name,description,category,currency,rarity
+1,Rations,1 day of rations.,Consumable,3,Common
+2,Bag,"A regular carrying bag, can hold 30kgs.",Container,6,Common
+3,Bandage,A bandage used for wrapping wounds. Heals 1d4 +1 Health with successful Medicine roll DS 15.,Healing,4,Common
+4,Torch,"Creates a 4-space radius of no obscurity from light, with an additional 4 spaces of light obscurity.",Light Source,3,Common
+5,Health Potion,"Health Potions require an interaction to ingest, or a quick action to administer to a willing creature, and heal 1d6 + 3 Health upon use.",Potion,25,Common
+6,Energy Potion,"Energy Potions require an interaction to ingest, or a quick action to administer to a willing creature, and Regain 1d6 + 3 EP upon use.",Potion,25,Common
+7,Bed Roll,"Regular sleeping roll, provides comfort and warmth.",Survival,10,Common
+8,Flint & Steel Fire Starter,Flint and steel to be used to create sparks thus starting fires.,Survival,4,Common
+9,Rope,40 feet of rope.,Utility,10,Common
+10,Grapple Rope,12 metre rope with grapple attachment for use being thrown. Thrown range 8 using Strength to hit.,Utility,20,Common

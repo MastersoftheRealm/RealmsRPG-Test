@@ -4,8 +4,8 @@
 import { useMemo, useState } from 'react';
 import { Modal, Chip, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { useRTDBSkills, resolveSkillIdsToNames } from '@/hooks';
-import type { Species, Trait, RTDBSkill } from '@/hooks';
+import { useCodexSkills, resolveSkillIdsToNames } from '@/hooks';
+import type { Species, Trait, Skill } from '@/hooks';
 
 interface SpeciesModalProps {
   species: Species | null;
@@ -108,9 +108,9 @@ export function SpeciesModal({
   onClose 
 }: SpeciesModalProps) {
   // Fetch skills for ID → name resolution
-  const { data: allSkills } = useRTDBSkills();
+  const { data: allSkills } = useCodexSkills();
   // State for showing skill description
-  const [selectedSkill, setSelectedSkill] = useState<RTDBSkill | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
   // Resolve all trait categories
   const resolvedTraits = useMemo(() => {
@@ -130,9 +130,9 @@ export function SpeciesModal({
     return species.skills
       .map(skillId => {
         const idStr = String(skillId);
-        return allSkills.find(s => s.id === idStr || s.name.toLowerCase() === idStr.toLowerCase());
+        return allSkills.find((s: Skill) => s.id === idStr || s.name.toLowerCase() === idStr.toLowerCase());
       })
-      .filter((s): s is NonNullable<typeof s> => s != null);
+      .filter((s: Skill | undefined): s is Skill => s != null);
   }, [species?.skills, allSkills]);
 
   if (!species || !isOpen) return null;

@@ -17,7 +17,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import { useRTDBSkills, type RTDBSkill } from '@/hooks';
+import { useCodexSkills, type Skill } from '@/hooks';
 import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
@@ -93,7 +93,7 @@ export function SkillsAllocationPage({
   footer,
   className,
 }: SkillsAllocationPageProps) {
-  const { data: allSkills = [], isLoading } = useRTDBSkills();
+  const { data: allSkills = [], isLoading } = useCodexSkills();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Strength']));
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [addSubSkillModalOpen, setAddSubSkillModalOpen] = useState(false);
@@ -102,7 +102,7 @@ export function SkillsAllocationPage({
 
   const skillMeta = useMemo(() => {
     const map = new Map<string, { isSubSkill: boolean }>();
-    allSkills.forEach((s) => {
+    allSkills.forEach((s: Skill) => {
       map.set(s.id, { isSubSkill: s.base_skill_id !== undefined });
     });
     return map;
@@ -122,15 +122,15 @@ export function SkillsAllocationPage({
   const remainingPoints = totalPoints - spentPoints;
 
   const { groupedSkills, subSkillsByBase } = useMemo(() => {
-    if (!allSkills.length) return { groupedSkills: {} as Record<string, RTDBSkill[]>, subSkillsByBase: {} as Record<string, RTDBSkill[]> };
-    const groups: Record<string, RTDBSkill[]> = {};
-    const subsByBase: Record<string, RTDBSkill[]> = {};
+    if (!allSkills.length) return { groupedSkills: {} as Record<string, Skill[]>, subSkillsByBase: {} as Record<string, Skill[]> };
+    const groups: Record<string, Skill[]> = {};
+    const subsByBase: Record<string, Skill[]> = {};
     ABILITY_ORDER.forEach((a) => { groups[a] = []; });
 
-    const skillById: Record<string, RTDBSkill> = {};
-    allSkills.forEach((s) => { skillById[s.id] = s; });
+    const skillById: Record<string, Skill> = {};
+    allSkills.forEach((s: Skill) => { skillById[s.id] = s; });
 
-    allSkills.forEach((s) => {
+    allSkills.forEach((s: Skill) => {
       if (s.base_skill_id !== undefined) {
         const baseKey = String(s.base_skill_id);
         if (!subsByBase[baseKey]) subsByBase[baseKey] = [];
@@ -138,7 +138,7 @@ export function SkillsAllocationPage({
       }
     });
 
-    allSkills.forEach((s) => {
+    allSkills.forEach((s: Skill) => {
       if (s.base_skill_id !== undefined) return;
       const abs = typeof s.ability === 'string'
         ? s.ability.split(',').map((a) => a.trim())
@@ -164,19 +164,19 @@ export function SkillsAllocationPage({
 
   const existingSkillNames = useMemo(() => {
     return allSkills
-      .filter((s) => existingSkillIds.has(s.id))
-      .map((s) => s.name);
+      .filter((s: Skill) => existingSkillIds.has(s.id))
+      .map((s: Skill) => s.name);
   }, [allSkills, existingSkillIds]);
 
   const characterSkillsForSubModal = useMemo(() => {
     return allSkills
-      .filter((s) => s.base_skill_id === undefined && existingSkillIds.has(s.id))
-      .map((s) => ({ id: s.id, name: s.name, prof: (allocations[s.id] ?? 0) > 0 }));
+      .filter((s: Skill) => s.base_skill_id === undefined && existingSkillIds.has(s.id))
+      .map((s: Skill) => ({ id: s.id, name: s.name, prof: (allocations[s.id] ?? 0) > 0 }));
   }, [allSkills, existingSkillIds, allocations]);
 
   const handleAllocate = useCallback(
     (skillId: string, delta: number) => {
-      const skill = allSkills.find((s) => s.id === skillId);
+      const skill = allSkills.find((s: Skill) => s.id === skillId);
       if (!skill) return;
 
       const current = allocations[skillId] ?? 0;
@@ -219,9 +219,9 @@ export function SkillsAllocationPage({
   );
 
   const handleAddSkills = useCallback(
-    (skills: RTDBSkill[]) => {
+    (skills: Skill[]) => {
       const next = { ...allocations };
-      skills.forEach((s) => {
+      skills.forEach((s: Skill) => {
         if (!(s.id in next)) next[s.id] = 0;
       });
       onAllocationsChange(next);
@@ -231,9 +231,9 @@ export function SkillsAllocationPage({
   );
 
   const handleAddSubSkills = useCallback(
-    (skills: Array<RTDBSkill & { selectedBaseSkillId?: string; autoAddBaseSkill?: RTDBSkill }>) => {
+    (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
       const next = { ...allocations };
-      skills.forEach((s) => {
+      skills.forEach((s: Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }) => {
         if (s.autoAddBaseSkill && !(s.autoAddBaseSkill.id in next)) {
           next[s.autoAddBaseSkill.id] = 0;
         }
@@ -262,14 +262,14 @@ export function SkillsAllocationPage({
   );
 
   const getSkillBonus = useCallback(
-    (skill: RTDBSkill, value: number, isProficient: boolean) => {
+    (skill: Skill, value: number, isProficient: boolean) => {
       return calculateSkillBonusWithProficiency(skill.ability, value, abilities, isProficient);
     },
     [abilities]
   );
 
   const getSubSkillBonus = useCallback(
-    (skill: RTDBSkill, subValue: number, baseValue: number, baseProficient: boolean, isProficient: boolean) => {
+    (skill: Skill, subValue: number, baseValue: number, baseProficient: boolean, isProficient: boolean) => {
       return calculateSubSkillBonusWithProficiency(
         skill.ability,
         subValue,
@@ -338,8 +338,8 @@ export function SkillsAllocationPage({
           </p>
           <div className="space-y-2">
             {allSkills
-              .filter((s) => speciesSkillIds.has(s.id))
-              .map((skill) => {
+              .filter((s: Skill) => speciesSkillIds.has(s.id))
+              .map((skill: Skill) => {
                 const value = Math.max(1, allocations[skill.id] ?? 1);
                 const isProficient = true;
                 const bonus = getSkillBonus(skill, value, isProficient);

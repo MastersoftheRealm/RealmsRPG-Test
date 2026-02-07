@@ -2,7 +2,7 @@
 
 import { getSession } from '@/lib/firebase/session';
 import { isAdmin } from '@/lib/admin';
-import { getAdminFirestore } from '@/lib/firebase/server';
+import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
 type CodexCollection =
@@ -27,6 +27,24 @@ function sanitizeId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 150);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type CodexDelegate = { findUnique: (args: any) => Promise<unknown>; create: (args: any) => Promise<unknown>; update: (args: any) => Promise<unknown>; delete: (args: any) => Promise<unknown> };
+
+function getCodexDelegates(collection: CodexCollection): CodexDelegate {
+  switch (collection) {
+    case 'codex_feats': return prisma.codexFeat as CodexDelegate;
+    case 'codex_skills': return prisma.codexSkill as CodexDelegate;
+    case 'codex_species': return prisma.codexSpecies as CodexDelegate;
+    case 'codex_traits': return prisma.codexTrait as CodexDelegate;
+    case 'codex_parts': return prisma.codexPart as CodexDelegate;
+    case 'codex_properties': return prisma.codexProperty as CodexDelegate;
+    case 'codex_equipment': return prisma.codexEquipment as CodexDelegate;
+    case 'codex_archetypes': return prisma.codexArchetype as CodexDelegate;
+    case 'codex_creature_feats': return prisma.codexCreatureFeat as CodexDelegate;
+    default: throw new Error(`Unknown collection: ${collection}`);
+  }
+}
+
 export async function createCodexDoc(
   collection: CodexCollection,
   id: string,
@@ -35,13 +53,17 @@ export async function createCodexDoc(
   try {
     await requireAdmin();
     const docId = sanitizeId(id) || `doc_${Date.now()}`;
-    const db = getAdminFirestore();
-    const ref = db.collection(collection).doc(docId);
-    const exists = (await ref.get()).exists;
-    if (exists) {
+    const delegate = getCodexDelegates(collection);
+
+    const existing = await delegate.findUnique({ where: { id: docId } });
+    if (existing) {
       return { success: false, error: `Document ${docId} already exists` };
     }
-    await ref.set(data);
+
+    await delegate.create({
+      data: { id: docId, data },
+    });
+
     revalidatePath('/admin/codex');
     revalidatePath('/codex');
     return { success: true };
@@ -57,12 +79,18 @@ export async function updateCodexDoc(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireAdmin();
-    const db = getAdminFirestore();
-    const ref = db.collection(collection).doc(id);
-    if (!(await ref.get()).exists) {
+    const delegate = getCodexDelegates(collection);
+
+    const existing = await delegate.findUnique({ where: { id } });
+    if (!existing) {
       return { success: false, error: 'Document not found' };
     }
-    await ref.update(data);
+
+    await delegate.update({
+      where: { id },
+      data: { data },
+    });
+
     revalidatePath('/admin/codex');
     revalidatePath('/codex');
     return { success: true };
@@ -77,9 +105,12 @@ export async function deleteCodexDoc(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireAdmin();
-    const db = getAdminFirestore();
-    const ref = db.collection(collection).doc(id);
-    await ref.delete();
+    const delegate = getCodexDelegates(collection);
+
+    await delegate.delete({
+      where: { id },
+    });
+
     revalidatePath('/admin/codex');
     revalidatePath('/codex');
     return { success: true };

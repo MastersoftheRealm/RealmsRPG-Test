@@ -26,8 +26,10 @@ import {
   useItemProperties,
   useEquipment,
   useSpecies,
-  useRTDBFeats,
-  useRTDBSkills,
+  useCodexFeats,
+  useCodexSkills,
+  type Species,
+  type Skill,
 } from '@/hooks';
 import { calculateArchetypeProgression, calculateSkillPointsForEntity } from '@/lib/game/formulas';
 import type { Character, Item } from '@/types';
@@ -59,10 +61,10 @@ function CampaignCharacterViewContent() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: rtdbEquipment = [] } = useEquipment();
+  const { data: codexEquipment = [] } = useEquipment();
   const { data: allSpecies = [] } = useSpecies();
-  const { data: rtdbSkills = [] } = useRTDBSkills();
-  const { data: featsDb = [] } = useRTDBFeats();
+  const { data: codexSkills = [] } = useCodexSkills();
+  const { data: featsDb = [] } = useCodexFeats();
 
   useEffect(() => {
     async function fetchCharacter() {
@@ -89,13 +91,13 @@ function CampaignCharacterViewContent() {
 
   const calculatedStats = character ? calculateStats(character) : null;
   const enrichedData = character
-    ? enrichCharacterData(character, userPowers, userTechniques, userItems, rtdbEquipment, powerPartsDb, techniquePartsDb)
+    ? enrichCharacterData(character, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb)
     : null;
 
   const characterSpeciesSkills = character && allSpecies.length
     ? (() => {
         const speciesName = character.ancestry?.name || character.species;
-        const species = allSpecies.find((s) => s.name?.toLowerCase() === speciesName?.toLowerCase());
+        const species = allSpecies.find((s: Species) => s.name?.toLowerCase() === speciesName?.toLowerCase());
         return (species?.skills || []) as string[];
       })()
     : [];
@@ -120,11 +122,11 @@ function CampaignCharacterViewContent() {
         ability?: string;
         availableAbilities?: string[];
       }>).map((skill) => {
-        const rtdbSkill = rtdbSkills.find(
-          (rs) => rs.id === skill.id || rs.name?.toLowerCase() === skill.name?.toLowerCase()
+        const codexSkill = codexSkills.find(
+          (rs: Skill) => rs.id === skill.id || rs.name?.toLowerCase() === skill.name?.toLowerCase()
         );
-        const availableAbilities = rtdbSkill?.ability
-          ? rtdbSkill.ability.split(',').map((a) => a.trim().toLowerCase()).filter(Boolean)
+        const availableAbilities = codexSkill?.ability
+          ? codexSkill.ability.split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean)
           : [];
         return {
           ...skill,
@@ -266,7 +268,7 @@ function CampaignCharacterViewContent() {
                     characteristicTrait: character.characteristicTrait,
                     speciesTraits: character.speciesTraits,
                   }}
-                  speciesTraitsFromRTDB={[]}
+                  speciesTraitsFromCodex={[]}
   archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
   unarmedProwess={character.unarmedProwess ?? 0}
   onUnarmedProwessChange={() => {}}

@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { Chip, Button, Alert } from '@/components/ui';
 import { SelectionToggle } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useSpecies, useTraits, useRTDBSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait } from '@/hooks';
+import { useSpecies, useTraits, useCodexSkills, resolveTraitIds, resolveSkillIdsToNames, type Trait, type Species } from '@/hooks';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 
 interface ResolvedTrait extends Trait {
@@ -28,12 +28,12 @@ export function AncestryStep() {
   const { draft, nextStep, prevStep, setStep, updateDraft } = useCharacterCreatorStore();
   const { data: allSpecies } = useSpecies();
   const { data: allTraits } = useTraits();
-  const { data: allSkills } = useRTDBSkills();
+  const { data: allSkills } = useCodexSkills();
 
   // Find selected species
   const selectedSpecies = useMemo(() => {
     if (!allSpecies || !draft.ancestry?.id) return null;
-    return allSpecies.find(s => s.id === draft.ancestry?.id);
+    return allSpecies.find((s: Species) => s.id === draft.ancestry?.id);
   }, [allSpecies, draft.ancestry?.id]);
 
   // Resolve species skill IDs to names
@@ -237,7 +237,7 @@ export function AncestryStep() {
             <div>
               <span className="text-xs text-text-muted uppercase">Languages:</span>
               <div className="flex flex-wrap gap-1 mt-1">
-                {selectedSpecies.languages.map(lang => (
+                {selectedSpecies.languages.map((lang: string) => (
                   <Chip key={lang} variant="primary" size="sm">
                     {lang}
                   </Chip>

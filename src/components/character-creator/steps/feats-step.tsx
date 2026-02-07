@@ -27,7 +27,7 @@ import {
   SelectFilter 
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useRTDBFeats, type RTDBFeat } from '@/hooks';
+import { useCodexFeats, type Feat } from '@/hooks';
 import { getArchetypeFeatLimit } from '@/lib/game/formulas';
 import type { ArchetypeCategory } from '@/types';
 
@@ -55,7 +55,7 @@ interface FeatFilters {
 
 export function FeatsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
-  const { data: feats, isLoading } = useRTDBFeats();
+  const { data: feats, isLoading } = useCodexFeats();
   
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
@@ -94,12 +94,12 @@ export function FeatsStep() {
   const categories = useMemo(() => {
     if (!feats) return [];
     const cats = new Set<string>();
-    feats.forEach(f => f.category && cats.add(f.category));
+    feats.forEach((f: Feat) => f.category && cats.add(f.category));
     return Array.from(cats).sort();
   }, [feats]);
 
   // Check if character meets feat requirements
-  const checkRequirements = useCallback((feat: RTDBFeat): { met: boolean; reason?: string } => {
+  const checkRequirements = useCallback((feat: Feat): { met: boolean; reason?: string } => {
     const abilities = draft.abilities || {};
     const skills = draft.skills || {};
     
@@ -142,7 +142,7 @@ export function FeatsStep() {
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
     
-    return feats.filter(feat => {
+    return feats.filter((feat: Feat) => {
       // Search filter
       if (filters.search) {
         const term = filters.search.toLowerCase();
@@ -169,8 +169,8 @@ export function FeatsStep() {
       }
       
       return true;
-    }).sort((a, b) => {
-      const col = filters.sortCol as keyof RTDBFeat;
+    }).sort((a: Feat, b: Feat) => {
+      const col = filters.sortCol as keyof Feat;
       const aVal = a[col];
       const bVal = b[col];
       
@@ -186,12 +186,12 @@ export function FeatsStep() {
 
   // Separate filtered feats into archetype and character
   const { archetypeFeats, characterFeats } = useMemo(() => {
-    const arch = filteredFeats.filter(f => !f.char_feat);
-    const char = filteredFeats.filter(f => f.char_feat);
+    const arch = filteredFeats.filter((f: Feat) => !f.char_feat);
+    const char = filteredFeats.filter((f: Feat) => f.char_feat);
     return { archetypeFeats: arch, characterFeats: char };
   }, [filteredFeats]);
 
-  const toggleFeat = useCallback((feat: RTDBFeat, isCharacterFeat: boolean) => {
+  const toggleFeat = useCallback((feat: Feat, isCharacterFeat: boolean) => {
     const featType = isCharacterFeat ? 'character' : 'archetype';
     const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
     const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
@@ -231,7 +231,7 @@ export function FeatsStep() {
   }, []);
 
   // Build GridListRow for a feat
-  const renderFeatRow = useCallback((feat: RTDBFeat, isCharacterFeat: boolean) => {
+  const renderFeatRow = useCallback((feat: Feat, isCharacterFeat: boolean) => {
     const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
     const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
     
@@ -476,7 +476,7 @@ export function FeatsStep() {
       {/* Single unified feats list - both archetype and character feats combined */}
       <div className="mb-8 mt-4">
         <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-          {filteredFeats.map(feat => renderFeatRow(feat, !!feat.char_feat))}
+          {filteredFeats.map((feat: Feat) => renderFeatRow(feat, !!feat.char_feat))}
           {filteredFeats.length === 0 && (
             <div className="text-center py-4 text-text-muted bg-surface-alt rounded-lg">
               No feats match your filters.

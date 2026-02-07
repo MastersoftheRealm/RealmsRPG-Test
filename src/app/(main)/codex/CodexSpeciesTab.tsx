@@ -20,7 +20,7 @@ import {
   ErrorDisplay as ErrorState,
 } from '@/components/shared';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
-import { useSpecies, useTraits, useRTDBSkills, resolveTraitIds, type Species, type Trait } from '@/hooks';
+import { useSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
 
 interface SpeciesFilters {
   search: string;
@@ -93,7 +93,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
             <div>
               <h4 className="font-medium text-text-primary mb-2">Species Traits</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {speciesTraits.map(trait => (
+                {speciesTraits.map((trait: Trait) => (
                   <div key={trait.id} className="p-2 bg-info-50 dark:bg-info-900/30 border border-info-200 dark:border-info-700/50 rounded">
                     <span className="font-medium text-info-800">{trait.name}</span>
                     {trait.description && (
@@ -109,7 +109,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
             <div>
               <h4 className="font-medium text-text-primary mb-2">Ancestry Traits</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {ancestryTraits.map(trait => (
+                {ancestryTraits.map((trait: Trait) => (
                   <div key={trait.id} className="p-2 bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-700/50 rounded">
                     <span className="font-medium text-success-800">{trait.name}</span>
                     {trait.description && (
@@ -125,7 +125,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
             <div>
               <h4 className="font-medium text-text-primary mb-2">Flaws</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {flaws.map(trait => (
+                {flaws.map((trait: Trait) => (
                   <div key={trait.id} className="p-2 bg-danger-50 dark:bg-danger-900/30 border border-danger-200 dark:border-danger-700/50 rounded">
                     <span className="font-medium text-danger-800">{trait.name}</span>
                     {trait.description && (
@@ -141,7 +141,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
             <div>
               <h4 className="font-medium text-text-primary mb-2">Characteristics</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                {characteristics.map(trait => (
+                {characteristics.map((trait: Trait) => (
                   <div key={trait.id} className="p-2 bg-power-light border border-power-border rounded">
                     <span className="font-medium text-power-text">{trait.name}</span>
                     {trait.description && (
@@ -161,12 +161,12 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
 export function CodexSpeciesTab() {
   const { data: species, isLoading, error } = useSpecies();
   const { data: allTraits } = useTraits();
-  const { data: allSkills } = useRTDBSkills();
+  const { data: allSkills } = useCodexSkills();
   const { sortState, handleSort } = useSort('name');
 
-  const skillIdToName = useMemo(() => {
+  const skillIdToName = useMemo((): Map<string, string> => {
     if (!allSkills) return new Map<string, string>();
-    return new Map(allSkills.map(s => [s.id, s.name]));
+    return new Map(allSkills.map((s: Skill) => [String(s.id), s.name] as [string, string]));
   }, [allSkills]);
 
   const [filters, setFilters] = useState<SpeciesFilters>({
@@ -181,9 +181,9 @@ export function CodexSpeciesTab() {
     const types = new Set<string>();
     const sizes = new Set<string>();
 
-    species.forEach(s => {
+    species.forEach((s: Species) => {
       if (s.type) types.add(s.type);
-      s.sizes?.forEach(sz => sizes.add(sz));
+      s.sizes?.forEach((sz: string) => sizes.add(sz));
     });
 
     return {
@@ -195,7 +195,7 @@ export function CodexSpeciesTab() {
   const filteredSpecies = useMemo(() => {
     if (!species) return [];
 
-    const filtered = species.filter(s => {
+    const filtered = species.filter((s: Species) => {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         if (!s.name.toLowerCase().includes(searchLower) &&
@@ -208,7 +208,7 @@ export function CodexSpeciesTab() {
         return false;
       }
 
-      if (filters.sizes.length > 0 && !s.sizes?.some(sz => filters.sizes.includes(sz))) {
+      if (filters.sizes.length > 0 && !s.sizes?.some((sz: string) => filters.sizes.includes(sz))) {
         return false;
       }
 
@@ -219,12 +219,12 @@ export function CodexSpeciesTab() {
       const sizeOrder = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'];
       const getMinSizeIndex = (sizes: string[] | undefined) => {
         if (!sizes || sizes.length === 0) return 999;
-        return Math.min(...sizes.map(s => {
+        return Math.min(...sizes.map((s: string) => {
           const idx = sizeOrder.indexOf(s);
           return idx >= 0 ? idx : 999;
         }));
       };
-      return filtered.sort((a, b) => {
+      return filtered.sort((a: Species, b: Species) => {
         const aIdx = getMinSizeIndex(a.sizes);
         const bIdx = getMinSizeIndex(b.sizes);
         return sortState.dir * (aIdx - bIdx);
@@ -281,7 +281,7 @@ export function CodexSpeciesTab() {
         ) : filteredSpecies.length === 0 ? (
           <div className="p-8 text-center text-text-muted">No species match your filters.</div>
         ) : (
-          filteredSpecies.map(s => (
+          filteredSpecies.map((s: Species) => (
             <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} skillIdToName={skillIdToName} />
           ))
         )}

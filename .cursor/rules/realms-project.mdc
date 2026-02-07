@@ -5,7 +5,7 @@ alwaysApply: true
 
 # RealmsRPG Project
 
-**Stack:** Next.js (App Router), React, Tailwind, Firebase (Hosting, Firestore, RTDB, Auth)
+**Stack:** Next.js (App Router), React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Prisma**, **Vercel**
 
 **Key directories:**
 - `src/app/` — Routes: `(main)/` (characters, library, codex, creators), `(auth)/` (login, register)
@@ -14,6 +14,6 @@ alwaysApply: true
 - `vanilla-site-reference-only/` — Original HTML/CSS/JS (reference only)
 - `manmade-react-site-reference-only/` — Other reference (reference only)
 
-**Deploy:** `firebase deploy` — Firebase Hosting with frameworks backend
+**Deploy:** `vercel deploy` or push to connected repo — Vercel (primary). Firebase deploy used only during migration.
 
 **Before PR:** Run `npm run build`. CI runs build + `scripts/reconcile_tasks.js`.
