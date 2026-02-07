@@ -12,10 +12,10 @@ import type { CharacterVisibility } from '@/types';
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ campaignId: string; userId: string; characterId: string }> }
+  { params }: { params: Promise<{ id: string; userId: string; characterId: string }> }
 ) {
   try {
-    const { campaignId, userId, characterId } = await params;
+    const { id: campaignId, userId, characterId } = await params;
     const { user } = await getSession();
 
     if (!user?.uid) {
