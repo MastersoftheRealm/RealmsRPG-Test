@@ -169,7 +169,7 @@ export function AddSubSkillModal({
     return allSkills
       .filter((s: Skill) => s.base_skill_id === undefined)
       .map((s: Skill) => ({ id: s.id, name: s.name }))
-      .sort((a: { id: string; name: string }, b: { id: string; name: string }) => a.name.localeCompare(b.name));
+      .sort((a: { id: string; name: string }, b: { id: string; name: string }) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
   }, [allSkills]);
 
   // Get character's existing skill names (lowercase for comparison)
@@ -204,7 +204,7 @@ export function AddSubSkillModal({
       .map(id => skillById[id])
       .filter(Boolean)
       .map(s => ({ id: s.id, name: s.name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
   }, [allSubSkills, skillById]);
 
   // Reset selection when modal opens

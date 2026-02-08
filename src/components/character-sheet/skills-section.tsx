@@ -174,11 +174,11 @@ export function SkillsSection({
     });
     
     // Sort base skills alphabetically
-    base.sort((a, b) => a.name.localeCompare(b.name));
+    base.sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
     
     // Sort sub-skills within each parent
     Object.values(subByParent).forEach(subs => {
-      subs.sort((a, b) => a.name.localeCompare(b.name));
+      subs.sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
     });
     
     return { baseSkills: base, subSkillsByParent: subByParent };
