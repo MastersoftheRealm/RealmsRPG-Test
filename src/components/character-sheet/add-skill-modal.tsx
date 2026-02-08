@@ -70,13 +70,14 @@ export function AddSkillModal({
     const existingLower = existingSkillNames.map(n => n.toLowerCase());
     
     return skills.filter((skill: Skill) => {
+      const nameLower = String(skill.name ?? '').toLowerCase();
       // Exclude already owned skills
-      if (existingLower.includes(skill.name.toLowerCase())) return false;
+      if (existingLower.includes(nameLower)) return false;
       
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (!skill.name.toLowerCase().includes(query) && 
+        if (!nameLower.includes(query) && 
             !skill.description?.toLowerCase().includes(query)) {
           return false;
         }

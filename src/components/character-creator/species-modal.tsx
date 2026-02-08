@@ -37,7 +37,7 @@ function resolveTraits(traitIds: (string | number)[], allTraits: Trait[]): Resol
     // Try name match (case-insensitive)
     if (!trait) {
       trait = allTraits.find(t => 
-        t.name.toLowerCase() === idStr.toLowerCase()
+        String(t.name ?? '').toLowerCase() === idStr.toLowerCase()
       );
     }
     
@@ -130,7 +130,7 @@ export function SpeciesModal({
     return species.skills
       .map(skillId => {
         const idStr = String(skillId);
-        return allSkills.find((s: Skill) => s.id === idStr || s.name.toLowerCase() === idStr.toLowerCase());
+        return allSkills.find((s: Skill) => s.id === idStr || String(s.name ?? '').toLowerCase() === idStr.toLowerCase());
       })
       .filter((s: Skill | undefined): s is Skill => s != null);
   }, [species?.skills, allSkills]);

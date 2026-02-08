@@ -1146,7 +1146,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       
       // Find matching skill in Codex by name or id
       const codexSkill = codexSkills.find(
-        (rs: Skill) => rs.id === skill.id || rs.name.toLowerCase() === skill.name.toLowerCase()
+        (rs: Skill) => rs.id === skill.id || String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
       );
       
       if (codexSkill && codexSkill.ability) {

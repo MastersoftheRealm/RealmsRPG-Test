@@ -174,7 +174,7 @@ export function AddSubSkillModal({
 
   // Get character's existing skill names (lowercase for comparison)
   const existingSkillNamesLower = useMemo(() => 
-    new Set(existingSkillNames.map(n => n.toLowerCase())),
+    new Set(existingSkillNames.map(n => String(n ?? '').toLowerCase())),
     [existingSkillNames]
   );
 
@@ -183,7 +183,7 @@ export function AddSubSkillModal({
     const baseSkill = skillById[String(baseSkillId)];
     if (!baseSkill) return false;
     return characterSkills.some(
-      cs => cs.name.toLowerCase() === baseSkill.name.toLowerCase() || cs.id === baseSkill.id
+      cs => String(cs.name ?? '').toLowerCase() === String(baseSkill.name ?? '').toLowerCase() || cs.id === baseSkill.id
     );
   }, [characterSkills, skillById]);
 
@@ -221,15 +221,16 @@ export function AddSubSkillModal({
   // Filter sub-skills
   const filteredSkills = useMemo(() => {
     return allSubSkills.filter((skill: Skill) => {
+      const nameLower = String(skill.name ?? '').toLowerCase();
       // Exclude already owned skills
-      if (existingSkillNamesLower.has(skill.name.toLowerCase())) return false;
+      if (existingSkillNamesLower.has(nameLower)) return false;
       
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
         const baseSkillName = baseSkill?.name || '';
-        if (!skill.name.toLowerCase().includes(query) && 
+        if (!nameLower.includes(query) && 
             !skill.description?.toLowerCase().includes(query) &&
             !baseSkillName.toLowerCase().includes(query)) {
           return false;

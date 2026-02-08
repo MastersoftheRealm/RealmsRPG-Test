@@ -393,7 +393,7 @@ export function FinalizeStep() {
     const maxSkillPoints = calculateSkillPointsForEntity(level, 'character');
     const species = draft.ancestry?.id
       ? allSpecies.find((s: Species) => s.id === draft.ancestry?.id)
-      : allSpecies.find((s: Species) => s.name.toLowerCase() === draft.ancestry?.name?.toLowerCase());
+      : allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase());
     const speciesSkillIds = new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
     const skillMeta = new Map<string, { isSubSkill: boolean }>();
     (codexSkills || []).forEach((s: { id: string; base_skill_id?: number }) => {
