@@ -20,3 +20,4 @@ export { TagFilter } from './tag-filter';
 export { CheckboxFilter } from './checkbox-filter';
 export { SelectFilter } from './select-filter';
 export { FilterSection } from './filter-section';
+export { SourceFilter, type SourceFilterValue } from './source-filter';

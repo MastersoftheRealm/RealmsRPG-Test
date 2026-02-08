@@ -28,6 +28,7 @@ import {
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import { Button } from '@/components/ui';
 import type { DisplayItem } from '@/types';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 
@@ -90,10 +91,21 @@ function formatDamageValue(damage: unknown): string {
 }
 
 interface LibraryItemsTabProps {
+  source: SourceFilterValue;
   onDelete: (item: DisplayItem) => void;
 }
 
-export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
+export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
+  if (source !== 'my') {
+    return (
+      <div className="py-12 text-center text-text-secondary">
+        <p className="mb-4">Browse public armaments in the Codex.</p>
+        <Button asChild variant="secondary">
+          <Link href="/codex">Open Codex → Public Library</Link>
+        </Button>
+      </div>
+    );
+  }
   const router = useRouter();
   const { data: items, isLoading, error } = useUserItems();
   const { data: propertiesDb = [] } = useItemProperties();
@@ -240,6 +252,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
               chipsLabel="Properties & Proficiencies"
               totalCost={item.tp}
               costLabel="TP"
+              badges={[{ label: 'Mine', color: 'green' }]}
               onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
               onDuplicate={() => duplicateItem.mutate(item.id)}

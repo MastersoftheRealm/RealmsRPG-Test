@@ -14,9 +14,9 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Wand2, Zap, Target, Info, FolderOpen } from 'lucide-react';
-import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
+import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
-import { usePowerParts, useUserPowers, type PowerPart } from '@/hooks';
+import { usePowerParts, useUserPowers, useAdmin, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal } from '@/components/shared';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
@@ -81,6 +81,7 @@ interface PowerCreatorCache {
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
+  const { isAdmin } = useAdmin();
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -107,6 +108,7 @@ function PowerCreatorContent() {
   });
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
 
   // Fetch power parts
@@ -401,12 +403,14 @@ function PowerCreatorContent() {
         updatedAt: new Date(),
       };
 
-      // Check if power with same name exists
-      const existing = await findLibraryItemByName('powers', name.trim());
-
-      await saveToLibrary('powers', { ...powerData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-
-      setSaveMessage({ type: 'success', text: 'Power saved successfully!' });
+      if (saveTarget === 'public') {
+        await saveToPublicLibrary('powers', { ...powerData, createdAt: new Date().toISOString() });
+        setSaveMessage({ type: 'success', text: 'Power saved to public library!' });
+      } else {
+        const existing = await findLibraryItemByName('powers', name.trim());
+        await saveToLibrary('powers', { ...powerData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
+        setSaveMessage({ type: 'success', text: 'Power saved successfully!' });
+      }
       
       // Reset form after short delay
       setTimeout(() => {
@@ -623,6 +627,30 @@ function PowerCreatorContent() {
         description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
         actions={
           <>
+            {isAdmin && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('private')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  My library
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('public')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  Public library
+                </button>
+              </div>
+            )}
             <Button
               variant="secondary"
               onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}

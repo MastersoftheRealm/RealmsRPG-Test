@@ -2,6 +2,25 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-07 | agent:cursor | Session: TASK-137–141 — Public library, add-to-library, source filter, badges | files: library-service, use-public-library, CodexPublicLibraryTab, grid-list-row, SourceFilter, Library tabs, power/technique/item/creature creators | TASKs: TASK-137, TASK-138, TASK-139, TASK-140, TASK-141 | Summary:
+  - TASK-137: Admin My library / Public library toggle in all four creators (done earlier)
+  - TASK-138: fetchPublicLibrary, addPublicItemToLibrary, usePublicLibrary, useAddPublicToLibrary; Add to my library in Codex Public tab
+  - TASK-139: SourceFilter component (All | Public | My library); Library page filter; Powers tab full source support
+  - TASK-140: Public (blue) and Mine (green) badges on GridListRow
+  - TASK-141: Codex Public Library tab with Powers/Techniques/Armaments/Creatures sub-tabs
+  - build passes
+
+- 2026-02-07 | agent:cursor | Session: TASK-137 — Admin public/private save toggle | files: power-creator, technique-creator, item-creator, creature-creator | TASKs: TASK-137 | Summary:
+  - All four creators now have My library / Public library toggle (admin-only)
+  - Uses saveToPublicLibrary for public, saveToLibrary for private
+  - Consistent UI with cn() and design tokens; build passes
+
+- 2026-02-07 | agent:cursor | Session: TASK-152 — Audit skill encounter page | files: encounters/[id]/skill/page.tsx, AI_TASK_QUEUE.md | TASKs: TASK-152 | Summary:
+  - Audited skill encounter against GAME_RULES and feedback
+  - Verified campaign chars (scope=encounter) and creature library both work for adding participants
+  - Added Required Successes display (participants + 1) per GAME_RULES
+  - computeSkillRollResult confirmed correct; build passes
+
 - 2026-02-07 | agent:cursor | Session: Roll log dark mode, campaign chars, duplicate X, species skills | files: roll-log.tsx, unified-selection-modal.tsx, add-combatant-modal.tsx, api/campaigns/.../characters/.../route.ts, characters/[id]/page.tsx, AI_TASK_QUEUE.md, ALL_FEEDBACK_CLEAN.md | Summary:
   - Roll log: Added dark: variants for title, character name, dice boxes, timestamp (fix invisible text in dark mode)
   - UnifiedSelectionModal: Pass showCloseButton={false} to Modal to remove duplicate X (modal had its own + header had its own)

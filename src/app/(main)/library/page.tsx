@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
 import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
-import { DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal, SourceFilter, type SourceFilterValue } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -57,6 +57,7 @@ export default function LibraryPage() {
 
 function LibraryContent() {
   const [activeTab, setActiveTab] = useState<TabId>('powers');
+  const [source, setSource] = useState<SourceFilterValue>('my');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem } | null>(null);
 
   const { data: powers = [] } = useUserPowers();
@@ -136,10 +137,14 @@ function LibraryContent() {
         className="mb-6"
       />
 
-      {activeTab === 'powers' && <LibraryPowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
-      {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
-      {activeTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
-      {activeTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <SourceFilter value={source} onChange={setSource} />
+      </div>
+
+      {activeTab === 'powers' && <LibraryPowersTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
+      {activeTab === 'techniques' && <LibraryTechniquesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
+      {activeTab === 'items' && <LibraryItemsTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
+      {activeTab === 'creatures' && <LibraryCreaturesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
 
       {deleteConfirm && (
         <DeleteConfirmModal

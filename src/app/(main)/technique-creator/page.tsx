@@ -14,9 +14,9 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, FolderOpen } from 'lucide-react';
-import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
+import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
-import { useTechniqueParts, useUserTechniques, useUserItems, type TechniquePart } from '@/hooks';
+import { useTechniqueParts, useUserTechniques, useUserItems, useAdmin, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
@@ -343,6 +343,7 @@ interface TechniqueCreatorCache {
 
 function TechniqueCreatorContent() {
   const { user } = useAuthStore();
+  const { isAdmin } = useAdmin();
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -356,6 +357,7 @@ function TechniqueCreatorContent() {
   const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
 
   // Fetch technique parts
@@ -570,12 +572,14 @@ function TechniqueCreatorContent() {
         updatedAt: new Date(),
       };
 
-      // Check if technique with same name exists
-      const existing = await findLibraryItemByName('techniques', name.trim());
-
-      await saveToLibrary('techniques', { ...techniqueData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-
-      setSaveMessage({ type: 'success', text: 'Technique saved successfully!' });
+      if (saveTarget === 'public') {
+        await saveToPublicLibrary('techniques', { ...techniqueData, createdAt: new Date().toISOString() });
+        setSaveMessage({ type: 'success', text: 'Technique saved to public library!' });
+      } else {
+        const existing = await findLibraryItemByName('techniques', name.trim());
+        await saveToLibrary('techniques', { ...techniqueData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
+        setSaveMessage({ type: 'success', text: 'Technique saved successfully!' });
+      }
       
       // Reset form after short delay
       setTimeout(() => {
@@ -700,6 +704,30 @@ function TechniqueCreatorContent() {
         description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
         actions={
           <>
+            {isAdmin && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('private')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  My library
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('public')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  Public library
+                </button>
+              </div>
+            )}
             <Button
               variant="secondary"
               onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}

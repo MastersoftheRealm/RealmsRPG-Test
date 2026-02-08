@@ -218,3 +218,44 @@ model CodexCreatureFeat {
   data   Json
   @@map("codex_creature_feats")
 }
+
+// =============================================================================
+// Public Library (admin-curated, browsable by all users)
+// Structure mirrors user library; write via admin server actions only
+// =============================================================================
+
+model PublicPower {
+  id        String   @id @default(uuid())
+  data      Json     // Same shape as UserPower.data
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@map("public_powers")
+}
+
+model PublicTechnique {
+  id        String   @id @default(uuid())
+  data      Json
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@map("public_techniques")
+}
+
+model PublicItem {
+  id        String   @id @default(uuid())
+  data      Json
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@map("public_items")
+}
+
+model PublicCreature {
+  id        String   @id @default(uuid())
+  data      Json
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@map("public_creatures")
+}

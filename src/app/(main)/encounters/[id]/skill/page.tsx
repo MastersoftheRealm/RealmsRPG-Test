@@ -473,6 +473,10 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
             <h3 className="font-bold text-text-primary mb-3">Quick Reference</h3>
             <div className="space-y-2 text-xs text-text-muted">
               <p>
+                <strong className="text-text-secondary">Required Successes:</strong>{' '}
+                {skill.participants.length + 1} (per GAME_RULES: # participants + 1)
+              </p>
+              <p>
                 <strong className="text-text-secondary">Success:</strong> roll ≥ DS; +1 per 5 over
               </p>
               <p>

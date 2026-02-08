@@ -24,7 +24,8 @@ import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal'
 import { NumberStepper } from '@/components/creator/number-stepper';
 import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
-import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
+import { useAdmin } from '@/hooks';
+import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
@@ -344,6 +345,7 @@ interface ItemCreatorCache {
 
 function ItemCreatorContent() {
   const { user } = useAuthStore();
+  const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editItemId = searchParams.get('edit');
   
@@ -358,6 +360,7 @@ function ItemCreatorContent() {
   const [damage, setDamage] = useState<DamageConfig>({ amount: 1, size: 4, type: 'slashing' });
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [isTwoHanded, setIsTwoHanded] = useState(false);
   const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
@@ -827,12 +830,14 @@ function ItemCreatorContent() {
         }),
       };
 
-      // Check for existing item with same name
-      const existing = await findLibraryItemByName('items', name.trim());
-
-      await saveToLibrary('items', { ...itemData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-
-      setSaveMessage({ type: 'success', text: 'Item saved successfully!' });
+      if (saveTarget === 'public') {
+        await saveToPublicLibrary('items', { ...itemData, createdAt: new Date().toISOString() });
+        setSaveMessage({ type: 'success', text: 'Item saved to public library!' });
+      } else {
+        const existing = await findLibraryItemByName('items', name.trim());
+        await saveToLibrary('items', { ...itemData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
+        setSaveMessage({ type: 'success', text: 'Item saved successfully!' });
+      }
       
       // Reset form after short delay
       setTimeout(() => {
@@ -1006,6 +1011,30 @@ function ItemCreatorContent() {
         description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
         actions={
           <>
+            {isAdmin && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('private')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  My library
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('public')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  Public library
+                </button>
+              </div>
+            )}
             <Button
               variant="secondary"
               onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}

@@ -15,8 +15,9 @@ import { CodexSpeciesTab } from './CodexSpeciesTab';
 import { CodexEquipmentTab } from './CodexEquipmentTab';
 import { CodexPropertiesTab } from './CodexPropertiesTab';
 import { CodexPartsTab } from './CodexPartsTab';
+import { CodexPublicLibraryTab } from './CodexPublicLibraryTab';
 
-type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts';
+type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts' | 'public-library';
 
 const TABS: { id: TabId; label: string; labelMobile?: string }[] = [
   { id: 'feats', label: 'Feats' },
@@ -25,6 +26,7 @@ const TABS: { id: TabId; label: string; labelMobile?: string }[] = [
   { id: 'parts', label: 'Power & Technique Parts', labelMobile: 'Parts' },
   { id: 'properties', label: 'Armament Properties', labelMobile: 'Properties' },
   { id: 'equipment', label: 'Equipment' },
+  { id: 'public-library', label: 'Public Library', labelMobile: 'Public' },
 ];
 
 export default function CodexPage() {
@@ -57,6 +59,7 @@ export default function CodexPage() {
       {activeTab === 'equipment' && <CodexEquipmentTab />}
       {activeTab === 'properties' && <CodexPropertiesTab />}
       {activeTab === 'parts' && <CodexPartsTab />}
+      {activeTab === 'public-library' && <CodexPublicLibraryTab />}
     </PageContainer>
   );
 }

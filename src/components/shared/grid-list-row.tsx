@@ -105,6 +105,8 @@ export interface GridListRowProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
+  /** Add to my library (for public library items) */
+  onAddToLibrary?: () => void;
   
   // ===== Character Sheet Slots (Phase 1 Unification) =====
   /** Left slot content (e.g., innate toggle, equip checkbox) - renders before name */
@@ -186,6 +188,7 @@ export function GridListRow({
   onEdit,
   onDelete,
   onDuplicate,
+  onAddToLibrary,
   // Character sheet slots (Phase 1 Unification)
   leftSlot,
   rightSlot,
@@ -218,7 +221,7 @@ export function GridListRow({
   const hasDetailSections = (detailSections?.length ?? 0) > 0;
   const hasChips = chips.length > 0 && !hasDetailSections;
   const hasDetails = description || hasChips || hasDetailSections || badges.length > 0 || requirements || expandedContent;
-  const showActions = onEdit || onDuplicate; // Delete is now inline X, not in expanded actions
+  const showActions = onEdit || onDuplicate || onAddToLibrary; // Delete is now inline X, not in expanded actions
   const showExpander = hasDetails || showActions || onDelete;
   
   const handleChipClick = (index: number, e: React.MouseEvent) => {
@@ -603,9 +606,19 @@ export function GridListRow({
                 </div>
               )}
 
-              {/* Action Buttons (Edit, Duplicate - Delete is inline X in row) */}
+              {/* Action Buttons (Edit, Duplicate, Add to library - Delete is inline X in row) */}
               {showActions && (
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-light">
+                  {onAddToLibrary && (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={(e) => { e.stopPropagation(); onAddToLibrary(); }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add to my library
+                    </Button>
+                  )}
                   {onEdit && (
                     <Button
                       variant="secondary"

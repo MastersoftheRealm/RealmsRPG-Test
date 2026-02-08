@@ -372,7 +372,7 @@ function JoinCampaignTab({
         description="Create a character first, then you can join a campaign with them."
         action={{
           label: 'Create Character',
-          onClick: () => router.push('/characters/new'),
+          onClick: () => router.push('/characters/new?returnTo=' + encodeURIComponent('/campaigns?tab=join')),
         }}
       />
     );

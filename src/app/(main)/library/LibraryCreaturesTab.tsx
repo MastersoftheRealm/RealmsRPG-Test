@@ -22,11 +22,24 @@ import { useUserCreatures, useDuplicateCreature } from '@/hooks';
 import { Button } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
+
 interface LibraryCreaturesTabProps {
+  source: SourceFilterValue;
   onDelete: (item: DisplayItem) => void;
 }
 
-export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
+export function LibraryCreaturesTab({ source, onDelete }: LibraryCreaturesTabProps) {
+  if (source !== 'my') {
+    return (
+      <div className="py-12 text-center text-text-secondary">
+        <p className="mb-4">Browse public creatures in the Codex.</p>
+        <Button asChild variant="secondary">
+          <Link href="/codex">Open Codex → Public Library</Link>
+        </Button>
+      </div>
+    );
+  }
   const { data: creatures, isLoading, error } = useUserCreatures();
   const duplicateCreature = useDuplicateCreature();
   const [search, setSearch] = useState('');

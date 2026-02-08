@@ -8,11 +8,11 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { saveToLibrary, findLibraryItemByName } from '@/services/library-service';
+import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
 import { LoginPromptModal, UnifiedSelectionModal, ItemCard, SkillRow } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
-import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
 import {
   transformUserPowerToDisplayItem,
   transformUserTechniqueToDisplayItem,
@@ -79,6 +79,7 @@ import { LoadCreatureModal } from './LoadCreatureModal';
 
 function CreatureCreatorContent() {
   const { user } = useAuthStore();
+  const { isAdmin } = useAdmin();
   const { data: creatureFeatsData = [] } = useCreatureFeats();
   const { data: skillsData = [] } = useCodexSkills();
   
@@ -94,6 +95,7 @@ function CreatureCreatorContent() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
   const [saving, setSaving] = useState(false);
+  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [showFeatModal, setShowFeatModal] = useState(false);
@@ -410,11 +412,14 @@ function CreatureCreatorContent() {
         updatedAt: new Date().toISOString(),
       };
 
-      const existing = await findLibraryItemByName('creatures', creature.name.trim());
-
-      await saveToLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-
-      alert('Creature saved!');
+      if (saveTarget === 'public') {
+        await saveToPublicLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() });
+        alert('Creature saved to public library!');
+      } else {
+        const existing = await findLibraryItemByName('creatures', creature.name.trim());
+        await saveToLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
+        alert('Creature saved!');
+      }
     } catch (err) {
       console.error('Error saving creature:', err);
       alert('Failed to save creature');
@@ -485,6 +490,30 @@ function CreatureCreatorContent() {
         description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
         actions={
           <>
+            {isAdmin && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('private')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  My library
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaveTarget('public')}
+                  className={cn(
+                    'px-2 py-1 rounded text-sm font-medium transition-colors',
+                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  )}
+                >
+                  Public library
+                </button>
+              </div>
+            )}
             <Button
               variant="secondary"
               onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}

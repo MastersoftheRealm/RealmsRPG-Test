@@ -20,9 +20,11 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
-import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
+import { useUserPowers, usePowerParts, useDuplicatePower, usePublicLibrary, useAddPublicToLibrary } from '@/hooks';
 import { Button } from '@/components/ui';
 import type { DisplayItem } from '@/types';
+import type { PowerDocument } from '@/lib/calculators/power-calc';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 
@@ -37,46 +39,58 @@ const POWER_COLUMNS = [
 ];
 
 interface LibraryPowersTabProps {
+  source: SourceFilterValue;
   onDelete: (item: DisplayItem) => void;
 }
 
-export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
-  const { data: powers, isLoading, error } = useUserPowers();
+export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
+  const { data: powers = [], isLoading: loadingUser, error } = useUserPowers();
+  const { data: publicItems = [], isLoading: loadingPublic } = usePublicLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
   const duplicatePower = useDuplicatePower();
+  const addPublic = useAddPublicToLibrary('powers');
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
-    if (!powers) return [];
+    const rows: Array<{
+      id: string;
+      name: string;
+      description: string;
+      energy: string | number;
+      action: string;
+      duration: string;
+      range: string;
+      area: string;
+      damage: string;
+      tp: number;
+      parts: ChipData[];
+      itemSource: 'my' | 'public';
+      raw: Record<string, unknown>;
+    }> = [];
 
-    return powers.map(power => {
-      const display = derivePowerDisplay(
-        {
-          name: power.name,
-          description: power.description,
-          parts: power.parts || [],
-          damage: power.damage,
-          actionType: power.actionType,
-          isReaction: power.isReaction,
-          range: power.range,
-          area: power.area,
-          duration: power.duration,
-        },
-        partsDb
-      );
-
-      const damageStr = formatPowerDamage(power.damage);
-
+    const toRow = (p: { docId?: string; id?: string; name?: string; description?: string; parts?: unknown[]; damage?: unknown; actionType?: string; isReaction?: boolean; range?: unknown; area?: unknown; duration?: unknown }, itemSource: 'my' | 'public', raw: Record<string, unknown>) => {
+      const doc: PowerDocument = {
+        name: String(p.name ?? ''),
+        description: String(p.description ?? ''),
+        parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
+        damage: p.damage as PowerDocument['damage'],
+        actionType: p.actionType,
+        isReaction: p.isReaction,
+        range: p.range as PowerDocument['range'],
+        area: p.area as PowerDocument['area'],
+        duration: p.duration as PowerDocument['duration'],
+      };
+      const display = derivePowerDisplay(doc, partsDb);
+      const damageStr = formatPowerDamage(doc.damage);
       const parts: ChipData[] = display.partChips.map(chip => ({
         name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
         description: chip.description,
         cost: chip.finalTP,
         costLabel: 'TP',
       }));
-
       return {
-        id: power.docId,
+        id: String(p.docId ?? p.id ?? ''),
         name: display.name,
         description: display.description,
         energy: display.energy,
@@ -87,9 +101,23 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         damage: damageStr,
         tp: display.tp,
         parts,
+        itemSource,
+        raw,
       };
-    });
-  }, [powers, partsDb]);
+    };
+
+    if (source === 'my' || source === 'all') {
+      powers.forEach(p => rows.push(toRow(p, 'my', p as unknown as Record<string, unknown>)));
+    }
+    if (source === 'public' || source === 'all') {
+      publicItems.forEach((p: Record<string, unknown>) => {
+        rows.push(toRow(p as Parameters<typeof toRow>[0], 'public', p));
+      });
+    }
+    return rows;
+  }, [powers, publicItems, partsDb, source]);
+
+  const isLoading = ((source === 'my' || source === 'all') && loadingUser) || ((source === 'public' || source === 'all') && loadingPublic);
 
   const filteredData = useMemo(() => {
     let result = cardData;
@@ -110,19 +138,20 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   }
 
   if (!isLoading && cardData.length === 0) {
+    const isPublicOnly = source === 'public';
     return (
       <ListEmptyState
         icon={<Wand2 className="w-8 h-8" />}
-        title="No powers yet"
-        message="Create your first power to see it here in your library."
-        action={
+        title={isPublicOnly ? 'No public powers' : 'No powers yet'}
+        message={isPublicOnly ? 'Public powers will appear here when admins add them.' : 'Create your first power to see it here in your library.'}
+        action={!isPublicOnly ? (
           <Button asChild>
             <Link href="/power-creator">
               <Plus className="w-4 h-4" />
               Create Power
             </Link>
           </Button>
-        }
+        ) : undefined}
       />
     );
   }
@@ -160,7 +189,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         ) : (
           filteredData.map(power => (
             <GridListRow
-              key={power.id}
+              key={`${power.itemSource}-${power.id}`}
               id={power.id}
               name={power.name}
               description={power.description}
@@ -177,9 +206,11 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={power.tp}
               costLabel="TP"
-              onEdit={() => window.open(`/power-creator?edit=${power.id}`, '_blank')}
-              onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-              onDuplicate={() => duplicatePower.mutate(power.id)}
+              badges={power.itemSource === 'public' ? [{ label: 'Public', color: 'blue' }] : [{ label: 'Mine', color: 'green' }]}
+              onEdit={power.itemSource === 'my' ? () => window.open(`/power-creator?edit=${power.id}`, '_blank') : undefined}
+              onDelete={power.itemSource === 'my' ? () => onDelete({ id: power.id, name: power.name } as DisplayItem) : undefined}
+              onDuplicate={power.itemSource === 'my' ? () => duplicatePower.mutate(power.id) : undefined}
+              onAddToLibrary={power.itemSource === 'public' ? () => addPublic.mutate(power.raw) : undefined}
             />
           ))
         )}

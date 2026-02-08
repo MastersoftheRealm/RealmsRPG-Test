@@ -20,9 +20,10 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
-import { useUserTechniques, useTechniqueParts, useDuplicateTechnique } from '@/hooks';
+import { useUserTechniques, useTechniqueParts, useDuplicateTechnique, usePublicLibrary, useAddPublicToLibrary } from '@/hooks';
 import { Button } from '@/components/ui';
 import type { DisplayItem } from '@/types';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
 
@@ -36,10 +37,21 @@ const TECHNIQUE_COLUMNS = [
 ];
 
 interface LibraryTechniquesTabProps {
+  source: SourceFilterValue;
   onDelete: (item: DisplayItem) => void;
 }
 
-export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
+export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabProps) {
+  if (source !== 'my') {
+    return (
+      <div className="py-12 text-center text-text-secondary">
+        <p className="mb-4">Browse public techniques in the Codex.</p>
+        <Button asChild variant="secondary">
+          <Link href="/codex">Open Codex → Public Library</Link>
+        </Button>
+      </div>
+    );
+  }
   const { data: techniques, isLoading, error } = useUserTechniques();
   const { data: partsDb = [] } = useTechniqueParts();
   const duplicateTechnique = useDuplicateTechnique();
@@ -170,6 +182,7 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={tech.tp}
               costLabel="TP"
+              badges={[{ label: 'Mine', color: 'green' }]}
               onEdit={() => window.open(`/technique-creator?edit=${tech.id}`, '_blank')}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
               onDuplicate={() => duplicateTechnique.mutate(tech.id)}

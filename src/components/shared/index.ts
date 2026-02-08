@@ -145,6 +145,8 @@ export {
   CheckboxFilter,
   SelectFilter,
   FilterSection as SharedFilterSection,
+  SourceFilter,
+  type SourceFilterValue,
 } from './filters';
 
 // ThemeToggle - Dark/Light/System theme switcher

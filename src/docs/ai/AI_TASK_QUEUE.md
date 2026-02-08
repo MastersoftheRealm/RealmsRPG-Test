@@ -2035,7 +2035,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-092
   title: "Import SortState type from shared instead of inline definitions"
   priority: medium
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/library/page.tsx
     - src/app/(main)/codex/page.tsx
@@ -2059,6 +2059,7 @@ Agents should **create new tasks** during their work when they discover addition
     - No inline `{ col: string; dir: 1 | -1 }` type annotations remain
     - All use imported SortState type
     - npm run build passes
+  notes: "Done 2026-02-08: useSort hook (TASK-091) returns SortState; Codex/library use useSort. No inline SortState definitions remain in targeted files."
 
 - id: TASK-093
   title: "Remaining template literal → cn() conversions"
@@ -2275,7 +2276,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-099
   title: Campaigns — return to Join tab after creating character
   priority: low
-  status: not-started
+  status: done
   related_files:
     - src/app/(main)/campaigns/page.tsx
     - src/app/(main)/characters/new/page.tsx
@@ -2290,15 +2291,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Join tab empty state passes ?returnTo=/campaigns?tab=join when navigating to character creation
     - After character creation, redirect to returnTo if present
     - npm run build passes
-  notes: "Created during campaigns feature completion. Improves UX for users with no characters who want to join."
+  notes: "Done 2026-02-08: Join tab empty state passes returnTo=/campaigns?tab=join when navigating to /characters/new. FinalizeStep reads returnTo from searchParams and redirects there after create."
 
 - id: TASK-100
   title: Campaigns — real-time updates via Firestore onSnapshot
   priority: low
-  status: not-started
-  related_files:
-    - src/hooks/use-campaigns.ts
-    - src/services/campaign-service.ts
+  status: cancelled
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -2309,7 +2307,7 @@ Agents should **create new tasks** during their work when they discover addition
     - My Campaigns list updates when campaign data changes
     - Unsubscribe on unmount; no memory leaks
     - npm run build passes
-  notes: "Created during campaigns feature completion. Firebase best practice for collaborative data."
+  notes: "CANCELLED 2026-02-07: Firebase/Firestore removed; stack is Supabase/Prisma. Real-time would require Supabase Realtime if needed later."
 
 - id: TASK-101
   title: Archetype prof slider — hide unless pencil clicked; show simple values otherwise
@@ -2917,24 +2915,26 @@ Agents should **create new tasks** during their work when they discover addition
 # --- Phase 4: Public Library ---
 
 - id: TASK-136
-  title: Firestore collections and rules for public library
+  title: Prisma tables for public library
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-06
   created_by: agent
   description: |
-    Add Prisma tables or Supabase collections: public_powers, public_techniques, public_items, public_creatures. Public read, write only via server actions (isAdmin). Structure mirrors user library.
+    Add Prisma tables: public_powers, public_techniques, public_items, public_creatures. Structure mirrors UserPower/UserTechnique/UserItem/UserCreature but admin-owned (no userId or adminId). Public read via API, write only via server actions (isAdmin). Stack: Supabase/Prisma only (no Firestore/Firebase).
   related_files:
     - prisma/schema.prisma
     - src/types/
   acceptance_criteria:
-    - Collections defined; rules allow read, disallow client write
+    - Tables defined in Prisma; migration created
+    - API routes for public read
     - Document structure compatible with user library items
+  notes: "Done 2026-02-08: Added PublicPower, PublicTechnique, PublicItem, PublicCreature to Prisma; migration add_public_library. Created GET /api/public/[type] for public read."
 
 - id: TASK-137
   title: Admin Save to library — public vs private toggle in creators
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -2949,11 +2949,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Non-admin sees only private save
     - Public save writes to public_* collections
     - Sleek, consistent UI across creators
+  notes: "Done 2026-02-07: All four creators (power, technique, item, creature) have My library / Public library toggle (admin-only). Uses saveToPublicLibrary for public, saveToLibrary for private."
 
 - id: TASK-138
   title: User Add to my library from public library
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -2967,11 +2968,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Copy creates new doc in user's library
     - User can edit after adding
     - Source (public vs library) distinguishable in UI
+  notes: "Done 2026-02-07: fetchPublicLibrary, addPublicItemToLibrary in library-service. usePublicLibrary, useAddPublicToLibrary hooks. Codex Public Library tab with Add to my library on GridListRow. LoginPromptModal when not logged in."
 
 - id: TASK-139
   title: Unified source filter (public / library / all) across app
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -2984,11 +2986,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Single SourceFilter or equivalent used everywhere
     - Options: All, Public, My library
     - Consistent UX
+  notes: "Done 2026-02-07: SourceFilter component (All | Public | My library). Library page has filter; Powers tab supports all three with merge. Techniques/Items/Creatures tabs show Codex link when Public/All."
 
 - id: TASK-140
   title: Public vs private badges/chips in lists
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -3000,11 +3003,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Public items show "Public" badge
     - User library items show "Mine" or no badge
     - Consistent styling (Chip or variant)
+  notes: "Done 2026-02-07: GridListRow badges. Public items: 'Public' (blue). Library items: 'Mine' (green). CodexPublicLibraryTab, LibraryPowersTab, LibraryTechniquesTab, LibraryItemsTab."
 
 - id: TASK-141
   title: Add public library tab to Codex
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-06
   created_by: agent
   description: |
@@ -3015,6 +3019,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Public library content visible in Codex
     - Add to my library works
     - Consistent with Codex UI
+  notes: "Done 2026-02-07: CodexPublicLibraryTab with sub-tabs Powers/Techniques/Armaments/Creatures. Browse public items, Add to my library. Implemented with TASK-138."
 
 # --- Phase 5: Data & Docs ---
 
@@ -3227,7 +3232,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-152
   title: Audit skill encounter page — verify completeness vs feedback
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-07
   created_by: agent
   description: |
@@ -3243,3 +3248,5 @@ Agents should **create new tasks** during their work when they discover addition
     - DS, successes, failures behave per GAME_RULES
     - No known bugs from feedback remain
     - npm run build passes
+  notes: |
+    Done 2026-02-07: Audited skill encounter page. Campaign chars (RM + non-RM) fixed in prior session via API ?scope=encounter. CreatureLibraryTab and CampaignCharactersTab both support mode=skill and onAddParticipants. computeSkillRollResult matches GAME_RULES (roll >= DS: 1 + floor((roll-DS)/5) successes; roll < DS: 1 + floor((DS-roll)/5) failures). Added Required Successes display (participants + 1) per GAME_RULES. Build passes.

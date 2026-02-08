@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter } from '@/services/character-service';
 import { useAuth, useCodexSkills, useSpecies, type Species } from '@/hooks';
 import { cn } from '@/lib/utils';
@@ -325,6 +325,7 @@ function PortraitUpload() {
 }
 
 export function FinalizeStep() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
@@ -592,8 +593,13 @@ export function FinalizeStep() {
       // Clear the creator store
       resetCreator();
 
-      // Navigate to the new character
-      router.push(`/characters/${characterId}`);
+      // Navigate: returnTo param (e.g. from campaigns Join tab) or new character sheet
+      const returnTo = searchParams.get('returnTo');
+      if (returnTo && returnTo.startsWith('/')) {
+        router.push(returnTo);
+      } else {
+        router.push(`/characters/${characterId}`);
+      }
     } catch (err) {
       console.error('Error saving character:', err);
       setError('Failed to save character. Please try again.');
