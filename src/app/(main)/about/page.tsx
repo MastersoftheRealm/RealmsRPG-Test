@@ -14,16 +14,71 @@ import { cn } from '@/lib/utils';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap } from 'lucide-react';
 
+// Order: left to right = d12, d20, d4(center), d6, d8, d10 — cycling left/right rolls around
 const DICE_IMAGES = [
+  { src: '/images/D12.png', alt: 'D12', label: 'How You Adventure' },
+  { src: '/images/D20_1.png', alt: 'D20', label: 'Join the Adventure' },
   { src: '/images/D4.png', alt: 'D4', label: 'Our Philosophy' },
   { src: '/images/D6.png', alt: 'D6', label: 'What We Offer' },
   { src: '/images/D8.png', alt: 'D8', label: 'What Makes Realms Unique' },
   { src: '/images/D10.png', alt: 'D10', label: 'Choose Who You Play' },
-  { src: '/images/D12.png', alt: 'D12', label: 'How You Adventure' },
-  { src: '/images/D20_1.png', alt: 'D20', label: 'Join the Adventure' },
 ];
 
+// Ordered to match DICE_IMAGES: d12, d20, d4, d6, d8, d10 — d4 at index 2 (center)
 const CAROUSEL_SLIDES = [
+  {
+    title: 'How You Adventure',
+    content: (
+      <>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom Armaments and weapons, build Creatures and companions, and manage Encounters with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
+        </p>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          Design the perfect sword, summon a custom creature, or track your party&apos;s progress through Skill and Combat Encounters—all in one place.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <Link href="/item-creator" className="btn-solid">
+            <Sword className="w-5 h-5" />
+            Create an Armament
+          </Link>
+          <Link href="/creature-creator" className="btn-outline-clean">
+            <Skull className="w-5 h-5" />
+            Creature Creator
+          </Link>
+          <Link href="/encounter-tracker" className="btn-outline-clean">
+            <Users className="w-5 h-5" />
+            Encounter Tracker
+          </Link>
+        </div>
+      </>
+    ),
+  },
+  {
+    title: 'Join the Adventure',
+    content: (
+      <>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          <strong className="text-text-primary">Dice are the lifeblood of the story.</strong> They introduce random chance and represent a hint of chaos in every Encounter, making each roll an exciting part of the game.
+        </p>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          Character creation is the most exciting part of the game—a comprehensive guide for everything you need to create a unique Character. Whether you&apos;re a Realm Master crafting adventures for your party or a player bringing your dream Character to life, we&apos;re here to support your journey.
+        </p>
+        <p className="text-lg text-text-secondary leading-relaxed">
+          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the Codex, build in the Creators, and adventure in a way only the imagination can picture.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <Link href="/characters/new" className="btn-solid">
+            <Sparkles className="w-5 h-5" />
+            Create a Character
+          </Link>
+          <Link href="/rules" className="btn-outline-clean">
+            <BookOpen className="w-5 h-5" />
+            Read the Core Rulebook
+          </Link>
+        </div>
+      </>
+    ),
+  },
   {
     title: 'Our Philosophy',
     content: (
@@ -115,89 +170,56 @@ const CAROUSEL_SLIDES = [
       </>
     ),
   },
-  {
-    title: 'How You Adventure',
-    content: (
-      <>
-        <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom Armaments and weapons, build Creatures and companions, and manage Encounters with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
-        </p>
-        <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          Design the perfect sword, summon a custom creature, or track your party&apos;s progress through Skill and Combat Encounters—all in one place.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-4">
-          <Link href="/item-creator" className="btn-solid">
-            <Sword className="w-5 h-5" />
-            Create an Armament
-          </Link>
-          <Link href="/creature-creator" className="btn-outline-clean">
-            <Skull className="w-5 h-5" />
-            Creature Creator
-          </Link>
-          <Link href="/encounter-tracker" className="btn-outline-clean">
-            <Users className="w-5 h-5" />
-            Encounter Tracker
-          </Link>
-        </div>
-      </>
-    ),
-  },
-  {
-    title: 'Join the Adventure',
-    content: (
-      <>
-        <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <strong className="text-text-primary">Dice are the lifeblood of the story.</strong> They introduce random chance and represent a hint of chaos in every Encounter, making each roll an exciting part of the game.
-        </p>
-        <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          Character creation is the most exciting part of the game—a comprehensive guide for everything you need to create a unique Character. Whether you&apos;re a Realm Master crafting adventures for your party or a player bringing your dream Character to life, we&apos;re here to support your journey.
-        </p>
-        <p className="text-lg text-text-secondary leading-relaxed">
-          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the Codex, build in the Creators, and adventure in a way only the imagination can picture.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-4">
-          <Link href="/characters/new" className="btn-solid">
-            <Sparkles className="w-5 h-5" />
-            Create a Character
-          </Link>
-          <Link href="/rules" className="btn-outline-clean">
-            <BookOpen className="w-5 h-5" />
-            Read the Core Rulebook
-          </Link>
-        </div>
-      </>
-    ),
-  },
 ];
 
 // Fixed height so carousel doesn't jump when switching slides
 const CAROUSEL_CONTENT_MIN_H = 'min-h-[420px]';
 
+const FADE_DURATION_MS = 180;
+
 export default function AboutPage() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(2); // Start on d4 (center)
+  const [pendingSlide, setPendingSlide] = useState<number | null>(null);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   const goToSlide = (index: number) => {
-    if (index === currentSlide) return;
-    setIsTransitioning(true);
-    setCurrentSlide(index);
+    if (index === currentSlide && !pendingSlide) return;
+    if (pendingSlide !== null) return; // Ignore rapid clicks during transition
+    setPendingSlide(index);
+    setIsFadingOut(true);
   };
 
   const goPrev = () => {
-    setIsTransitioning(true);
-    setCurrentSlide((prev) => (prev === 0 ? CAROUSEL_SLIDES.length - 1 : prev - 1));
+    const next = currentSlide === 0 ? CAROUSEL_SLIDES.length - 1 : currentSlide - 1;
+    goToSlide(next);
   };
 
   const goNext = () => {
-    setIsTransitioning(true);
-    setCurrentSlide((prev) => (prev === CAROUSEL_SLIDES.length - 1 ? 0 : prev + 1));
+    const next = currentSlide === CAROUSEL_SLIDES.length - 1 ? 0 : currentSlide + 1;
+    goToSlide(next);
   };
 
+  // Phase 1: fade out current content. Phase 2: swap slide, then fade in new content.
+  const [isFadingIn, setIsFadingIn] = useState(false);
   useEffect(() => {
-    if (!isTransitioning) return;
-    const t = setTimeout(() => setIsTransitioning(false), 300);
+    if (!isFadingOut || pendingSlide === null) return;
+    const t = setTimeout(() => {
+      setCurrentSlide(pendingSlide);
+      setPendingSlide(null);
+      setIsFadingOut(false);
+      setIsFadingIn(true);
+    }, FADE_DURATION_MS);
     return () => clearTimeout(t);
-  }, [isTransitioning, currentSlide]);
+  }, [isFadingOut, pendingSlide]);
+
+  // Trigger fade-in: start new content at opacity-0, then animate to 1.
+  useEffect(() => {
+    if (!isFadingIn) return;
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setIsFadingIn(false));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [isFadingIn]);
 
   return (
     <PageContainer size="xl" padded>
@@ -215,18 +237,21 @@ export default function AboutPage() {
           <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-accent-200/15 rounded-full blur-3xl" />
         </div>
 
-        {/* Content - fixed min-height, no box */}
+        {/* Content - fixed min-height, no box. Fade out old, swap, then fade in new. */}
         <div className={cn('relative p-8 md:p-12', CAROUSEL_CONTENT_MIN_H)}>
-          <h2 className="text-xl font-bold text-primary-700 mb-6 flex items-center gap-2 transition-all duration-300">
+          <h2
+            className={cn(
+              'text-xl font-bold text-primary-700 mb-6 flex items-center gap-2 transition-all duration-300',
+              (isFadingOut || isFadingIn) ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
+            )}
+          >
             <Swords className="w-6 h-6" />
-            <span className={isTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}>
-              {CAROUSEL_SLIDES[currentSlide].title}
-            </span>
+            <span>{CAROUSEL_SLIDES[currentSlide].title}</span>
           </h2>
           <div
             className={cn(
               'text-text-secondary transition-all duration-300',
-              isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+              (isFadingOut || isFadingIn) ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
             )}
           >
             {CAROUSEL_SLIDES[currentSlide].content}

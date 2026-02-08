@@ -3223,3 +3223,23 @@ Agents should **create new tasks** during their work when they discover addition
     - npm run build passes
   notes: |
     Done 2026-02-07: Added getRedirectUrl() to auth/callback and auth/confirm using x-forwarded-host in production.
+
+- id: TASK-152
+  title: Audit skill encounter page — verify completeness vs feedback
+  priority: high
+  status: not-started
+  created_at: 2026-02-07
+  created_by: agent
+  description: |
+    Skill encounter page may have incomplete behavior. Check ALL_FEEDBACK_CLEAN.md raw feedback and GAME_RULES.md. Verify: add participants (campaign + library), DS config, roll tracking, success/failure logic, required successes/failures, RM-specific features per core rules.
+  related_files:
+    - src/app/(main)/encounters/[id]/skill/page.tsx
+    - src/components/shared/add-combatant-modal.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  acceptance_criteria:
+    - Campaign characters (RM and non-RM) can be added to skill encounters
+    - Creature library can be used to add participants
+    - DS, successes, failures behave per GAME_RULES
+    - No known bugs from feedback remain
+    - npm run build passes

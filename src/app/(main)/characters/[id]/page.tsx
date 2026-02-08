@@ -1118,8 +1118,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
     }
   }, [addModalType, handleAddPowers, handleAddTechniques, handleAddWeapons, handleAddArmor, handleAddEquipment]);
   
-  // Enrich skills with availableAbilities from Codex
-  // This ensures existing skills that lack availableAbilities get them from the database
+  // Enrich skills with availableAbilities from Codex; merge in species skills if missing
+  // Species skills are auto-granted proficiencies—ensure they appear even if not in character.skills
   // NOTE: This useMemo must be before any early returns to follow React's Rules of Hooks
   const skills = useMemo(() => {
     if (!character) return [];
@@ -1135,10 +1135,34 @@ export default function CharacterSheetPage({ params }: PageParams) {
       availableAbilities?: string[];
     }>;
     
-    // If no Codex skills loaded yet, return raw skills
-    if (codexSkills.length === 0) return rawSkills;
+    // Merge species skills that aren't already in rawSkills (match by id or name)
+    const rawSkillIds = new Set(rawSkills.map(s => String(s.id).toLowerCase()));
+    const rawSkillNames = new Set(rawSkills.map(s => String(s.name ?? '').toLowerCase()));
+    const merged: typeof rawSkills = [...rawSkills];
+    for (const ss of characterSpeciesSkills) {
+      const ssId = String(ss);
+      const ssLower = ssId.toLowerCase();
+      if (rawSkillIds.has(ssLower) || rawSkillNames.has(ssLower)) continue;
+      const codexSkill = codexSkills.find(
+        (s: Skill) => String(s.id).toLowerCase() === ssLower || String(s.name ?? '').toLowerCase() === ssLower
+      );
+      if (codexSkill) {
+        const abilities = (codexSkill.ability ?? 'strength').split(',').map((a: string) => a.trim().toLowerCase()).filter(Boolean);
+        merged.push({
+          id: codexSkill.id,
+          name: codexSkill.name ?? ssId,
+          skill_val: 1,
+          prof: true,
+          ability: abilities[0] ?? 'strength',
+          availableAbilities: abilities.length ? abilities : ['strength'],
+        });
+      }
+    }
     
-    return rawSkills.map(skill => {
+    // If no Codex skills loaded yet, return merged (species skills may not resolve)
+    if (codexSkills.length === 0) return merged;
+    
+    return merged.map(skill => {
       // If skill already has availableAbilities, use those
       if (skill.availableAbilities && skill.availableAbilities.length > 0) {
         return skill;
@@ -1167,7 +1191,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       
       return skill;
     });
-  }, [character, codexSkills]);
+  }, [character, codexSkills, characterSpeciesSkills]);
   
   // Redirect if not authenticated
   useEffect(() => {

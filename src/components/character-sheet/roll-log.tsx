@@ -396,14 +396,14 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
           <span className="text-sm flex-shrink-0">{ROLL_TYPE_ICONS[roll.type as RollType]}</span>
           <div className="min-w-0">
             {characterName && (
-              <span className="block text-xs font-medium text-primary-600 truncate" title={characterName}>
+              <span className="block text-xs font-medium text-primary-600 dark:text-primary-400 truncate" title={characterName}>
                 {characterName}
               </span>
             )}
-            <span className="font-semibold text-sm text-primary-dark truncate block">{roll.title}</span>
+            <span className="font-semibold text-sm text-primary-dark dark:text-primary-200 truncate block">{roll.title}</span>
           </div>
         </div>
-        <span className="text-[10px] text-text-muted flex-shrink-0 ml-1">{formatTime(roll.timestamp)}</span>
+        <span className="text-[10px] text-text-muted dark:text-neutral-400 flex-shrink-0 ml-1">{formatTime(roll.timestamp)}</span>
       </div>
 
       {/* Single-row: dice notation + roll value + bonus + total in boxes */}
@@ -411,7 +411,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
         {/* Dice notation + roll value (light grey) */}
         {diceGroups.map((group, gi) => (
           <div key={gi} className="flex items-center gap-1">
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt text-text-secondary text-xs font-medium">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt dark:bg-neutral-800 text-text-secondary text-xs font-medium">
               <Image
                 src={DIE_IMAGES[group.type]}
                 alt={group.type}
@@ -431,12 +431,12 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
                         'border',
                         die.isMax && 'bg-green-100 border-green-500 text-green-800',
                         die.isMin && 'bg-red-100 border-red-500 text-red-800',
-                        !die.isMax && !die.isMin && 'bg-surface-alt text-text-secondary border-border-light'
+                        !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-neutral-800 text-text-secondary border-border-light'
                       )
                     : cn(
                         die.isMax ? 'bg-green-100 border border-green-400 text-green-800' :
                         die.isMin ? 'bg-red-100 border border-red-400 text-red-800' :
-                        'bg-surface-alt text-text-secondary border border-border-light'
+                        'bg-surface-alt dark:bg-neutral-800 text-text-secondary border border-border-light'
                       )
                 )}
               >

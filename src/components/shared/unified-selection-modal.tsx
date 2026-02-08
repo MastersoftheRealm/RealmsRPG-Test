@@ -229,7 +229,7 @@ export function UnifiedSelectionModal({
   };
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={size}>
+    <Modal isOpen={isOpen} onClose={onClose} size={size} showCloseButton={false}>
       <div className={cn('flex flex-col h-[70vh]', className)}>
         {/* Header */}
         <div className="flex items-start justify-between mb-4">

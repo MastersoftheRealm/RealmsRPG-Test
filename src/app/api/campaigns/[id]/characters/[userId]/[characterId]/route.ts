@@ -1,22 +1,23 @@
 /**
  * Campaign Character View API
  * ===========================
- * Allows Realm Masters to fetch a campaign member's character for read-only viewing.
- * Uses Prisma. Validates: requester is RM, character is in campaign, character visibility allows.
+ * - Full view: RM only, returns full character for read-only sheet viewing.
+ * - ?scope=encounter: Any campaign member can fetch minimal data for adding to encounters.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/supabase/session';
 import type { CharacterVisibility } from '@/types';
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; userId: string; characterId: string }> }
 ) {
   try {
     const { id: campaignId, userId, characterId } = await params;
     const { user } = await getSession();
+    const scope = request.nextUrl.searchParams.get('scope');
 
     if (!user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -30,14 +31,23 @@ export async function GET(
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    if (campaignRow.ownerId !== user.uid) {
-      return NextResponse.json({ error: 'Only the Realm Master can view player character sheets' }, { status: 403 });
-    }
+    const memberIds = (campaignRow.memberIds as string[]) || [];
+    const isRM = campaignRow.ownerId === user.uid;
+    const isMember = isRM || memberIds.includes(user.uid);
 
     const characters = (campaignRow.characters as Array<{ userId: string; characterId: string }>) || [];
     const isInCampaign = characters.some((c) => c.userId === userId && c.characterId === characterId);
     if (!isInCampaign) {
       return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
+    }
+
+    if (!isMember) {
+      return NextResponse.json({ error: 'You are not in this campaign' }, { status: 403 });
+    }
+
+    const forEncounter = scope === 'encounter';
+    if (!forEncounter && !isRM) {
+      return NextResponse.json({ error: 'Only the Realm Master can view player character sheets' }, { status: 403 });
     }
 
     const charRow = await prisma.character.findFirst({
@@ -49,10 +59,31 @@ export async function GET(
     }
 
     const charData = charRow.data as Record<string, unknown>;
-    const visibility = (charData?.visibility as CharacterVisibility) || 'private';
 
-    if (visibility === 'private') {
-      return NextResponse.json({ error: 'This character is set to private and cannot be viewed' }, { status: 403 });
+    if (!forEncounter) {
+      const visibility = (charData?.visibility as CharacterVisibility) || 'private';
+      if (visibility === 'private') {
+        return NextResponse.json({ error: 'This character is set to private and cannot be viewed' }, { status: 403 });
+      }
+    }
+
+    if (forEncounter) {
+      const rawAbilities = (charData?.abilities || {}) as Record<string, number>;
+      const abilities = {
+        ...rawAbilities,
+        acuity: rawAbilities?.acuity ?? rawAbilities?.acu ?? 0,
+        agility: rawAbilities?.agility ?? rawAbilities?.agi ?? 0,
+      };
+      const health = charData?.health as { max?: number; current?: number } | undefined;
+      const energy = charData?.energy as { max?: number; current?: number } | undefined;
+      const character = {
+        name: charData?.name ?? 'Unknown',
+        abilities,
+        health: { max: health?.max ?? 20, current: health?.current ?? health?.max ?? 20 },
+        energy: { max: energy?.max ?? 10, current: energy?.current ?? energy?.max ?? 10 },
+        evasion: (charData?.evasion as number) ?? 10 + abilities.agility,
+      };
+      return NextResponse.json(character);
     }
 
     const character = {

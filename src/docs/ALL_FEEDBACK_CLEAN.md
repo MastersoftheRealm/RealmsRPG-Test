@@ -485,3 +485,9 @@ Notes
 - Priority: Critical
 - Raw feedback (abbreviated): Rename to "Encounters"; hub page to create (combat/skill/mixed) or choose saved; click encounter → redirect to that encounter page; save/return to sessions (turns, AP, HP tracked); separate encounters list page (filter, search, sort); designate current as combat tracker; new skill encounter page; new mixed encounter page; skill encounter: add characters, track rolls, successes/failures, required successes/failures, DS-based; mixed = both combined; campaign integration: add characters from campaigns (evasion, acuity, hp, en). Reference core rules. Best practice, shared components, security.
 - Extracted to: TASK-103, TASK-104, TASK-105, TASK-106, TASK-107, TASK-108.
+
+2/7/2026 — Batch feedback (roll log, encounters, modals, species skills)
+- Context: Multiple areas
+- Priority: High
+- Raw feedback: "Some roll log fonts are dark in darkmode, thus invisible. non-rm characters aren't being added to combatants in combat or skill encounters from the campaign tab. Neither are simply RM characters in the skill encounters being added. audit skill encounter tasks, it isn't working completely right, check raw/clean feedback to see if theres any issues with skill encounters. duplicate / two X buttons at top right of add feat modal in creature creator, may be an issue elsewhere too (like other add modals in creature creator, these should be using logic/code from other modals but seem to still be different) wont let me hit + to add powers. (may have same issues with techniques and armaments. Species skills aren't automatically loaded/added to the character sheet skill list."
+- Extracted/disposition: Roll log dark mode — fixed (dark: variants). Campaign chars — fixed (API ?scope=encounter allows any campaign member). Duplicate X — fixed (UnifiedSelectionModal showCloseButton=false). Species skills — fixed (merge species skills into character sheet skills). Skill encounter audit — TASK-152.

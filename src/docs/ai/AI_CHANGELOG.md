@@ -2,6 +2,13 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-07 | agent:cursor | Session: Roll log dark mode, campaign chars, duplicate X, species skills | files: roll-log.tsx, unified-selection-modal.tsx, add-combatant-modal.tsx, api/campaigns/.../characters/.../route.ts, characters/[id]/page.tsx, AI_TASK_QUEUE.md, ALL_FEEDBACK_CLEAN.md | Summary:
+  - Roll log: Added dark: variants for title, character name, dice boxes, timestamp (fix invisible text in dark mode)
+  - UnifiedSelectionModal: Pass showCloseButton={false} to Modal to remove duplicate X (modal had its own + header had its own)
+  - Campaign chars: API now supports ?scope=encounter — any campaign member can fetch minimal char data for encounter add; add-combatant-modal uses scope=encounter
+  - Species skills: Character sheet skills useMemo now merges species skills into display list when missing from character.skills
+  - Added TASK-152: Audit skill encounter page; appended raw feedback to ALL_FEEDBACK_CLEAN
+
 - 2026-02-07 | agent:cursor | Session: Migration task audit — TASK-150, TASK-151, stale refs | files: auth/confirm/route.ts, auth/callback/route.ts, AI_TASK_QUEUE.md, DEPLOYMENT_AND_SECRETS_SUPABASE.md | TASKs: TASK-150, TASK-151 | Summary:
   - TASK-150: Created auth/confirm route for Supabase email magic links/OTP (verifyOtp, createUserProfileAction)
   - TASK-151: Added x-forwarded-host handling to auth callback and confirm for Vercel/proxy

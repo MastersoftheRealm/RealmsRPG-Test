@@ -279,12 +279,12 @@ function CampaignCharactersTab({
         (c) => selectedChars.has(`${c.userId}-${c.characterId}`)
       );
 
-      // Fetch each character's data via the API
+      // Fetch each character's data via the API (scope=encounter allows any campaign member)
       const results = await Promise.all(
         chars.map(async (c) => {
           try {
             const res = await fetch(
-              `/api/campaigns/${selectedCampaign.id}/characters/${c.userId}/${c.characterId}`
+              `/api/campaigns/${selectedCampaign.id}/characters/${c.userId}/${c.characterId}?scope=encounter`
             );
             if (!res.ok) return null;
             return { charMeta: c, data: await res.json() };
