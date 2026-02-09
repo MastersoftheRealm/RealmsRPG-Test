@@ -56,7 +56,7 @@ export function AdminCreatureFeatsTab() {
 
     setSaving(false);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'creature-feats'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -70,7 +70,7 @@ export function AdminCreatureFeatsTab() {
     }
     const result = await deleteCodexDoc('codex_creature_feats', id);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'creature-feats'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);

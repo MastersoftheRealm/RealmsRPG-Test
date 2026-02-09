@@ -9,6 +9,10 @@
  *
  * Run: npm run db:seed
  * Or:  node scripts/seed-to-supabase.js
+ *
+ * To fix corrupted data (e.g. descriptions split into arrays): clear tables and re-seed:
+ *   npm run db:seed:reset
+ * Or:  node scripts/seed-to-supabase.js --reset
  */
 
 const fs = require('fs');
@@ -18,6 +22,24 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const SEED_DIR = path.join(__dirname, 'seed-data');
+const CODEX_CSV_DIR = path.join(__dirname, '..', 'Codex csv');
+
+// Columns that are intentionally comma-separated arrays in CSV.
+// All other columns (including descriptions with grammatical commas) stay as strings.
+const ARRAY_COLUMNS = new Set([
+  'tags',
+  'sizes',
+  'skills',
+  'species_traits',
+  'ancestry_traits',
+  'flaws',
+  'characteristics',
+  'languages',
+  'adulthood_lifespan',
+  'type',
+  'mechanic',
+  'base_skill',
+]);
 
 // Map CSV filename (without .csv) to Prisma model / table
 const FILE_TO_TABLE = {
@@ -30,7 +52,18 @@ const FILE_TO_TABLE = {
   archetypes: 'codex_archetypes',
   creature_feats: 'codex_creature_feats',
   equipment: 'codex_equipment',
+  items: 'codex_equipment', // Codex - Items.csv
+  creature_feat: 'codex_creature_feats', // Codex - Creature_Feats.csv (singular)
 };
+
+// Map "Codex - Feats" -> "feats", "Codex - Items" -> "items"
+function fileNameToTableKey(fileBase) {
+  const normalized = fileBase.replace(/^Codex\s*-\s*/i, '').toLowerCase().replace(/\s+/g, '_');
+  if (normalized === 'creature_feats') return 'creature_feats';
+  if (normalized === 'creature_feat') return 'creature_feats';
+  if (normalized === 'items') return 'equipment';
+  return normalized;
+}
 
 function parseCSV(content) {
   const lines = content.split(/\r?\n/).filter((line) => line.trim());
@@ -82,7 +115,7 @@ function toJsonObject(row) {
     else if (lower === 'false') data[k] = false;
     else if (/^-?\d+$/.test(v)) data[k] = parseInt(v, 10);
     else if (/^-?\d*\.\d+$/.test(v)) data[k] = parseFloat(v);
-    else if (v.includes(',') && !v.includes('"')) data[k] = v.split(',').map((s) => s.trim());
+    else if (ARRAY_COLUMNS.has(k) && v.includes(',')) data[k] = v.split(',').map((s) => s.trim()).filter(Boolean);
     else data[k] = v;
   }
   return data;
@@ -136,7 +169,29 @@ async function seedTable(tableName, rows, idColumn = 'id') {
   return count;
 }
 
+async function clearCodexTables() {
+  console.log('Clearing codex tables...');
+  const tables = Object.keys(TABLE_TO_MODEL);
+  for (const tableName of tables) {
+    const model = TABLE_TO_MODEL[tableName];
+    if (model) {
+      try {
+        await model.deleteMany({});
+        console.log(`  Cleared ${tableName}`);
+      } catch (err) {
+        console.error(`  Failed to clear ${tableName}:`, err.message);
+      }
+    }
+  }
+  console.log('');
+}
+
 async function main() {
+  const reset = process.argv.includes('--reset');
+  if (reset) {
+    await clearCodexTables();
+  }
+
   console.log('Seeding codex data from CSV...\n');
 
   if (!fs.existsSync(SEED_DIR)) {
@@ -146,21 +201,34 @@ async function main() {
     return;
   }
 
-  const files = fs.readdirSync(SEED_DIR).filter((f) => f.endsWith('.csv'));
+  let seedDir = SEED_DIR;
+  const seedCsvCount = fs.existsSync(SEED_DIR) ? fs.readdirSync(SEED_DIR).filter((f) => f.endsWith('.csv')).length : 0;
+  const codexCsvCount = fs.existsSync(CODEX_CSV_DIR) ? fs.readdirSync(CODEX_CSV_DIR).filter((f) => f.endsWith('.csv')).length : 0;
+  if (seedCsvCount === 0 && codexCsvCount > 0) {
+    seedDir = CODEX_CSV_DIR;
+    console.log('Using Codex csv folder\n');
+  } else if (seedCsvCount === 0) {
+    if (!fs.existsSync(SEED_DIR)) fs.mkdirSync(SEED_DIR, { recursive: true });
+    console.log('No CSV files. Add feats.csv, etc. to scripts/seed-data/ or Codex csv/');
+    return;
+  }
+
+  const files = fs.readdirSync(seedDir).filter((f) => f.endsWith('.csv'));
   if (files.length === 0) {
-    console.log(`No CSV files in ${SEED_DIR}. Add feats.csv, parts.csv, etc. and run again.`);
+    console.log('No CSV files found.');
     return;
   }
 
   for (const file of files) {
     const base = path.basename(file, '.csv');
-    const tableName = FILE_TO_TABLE[base];
+    const tableKey = fileNameToTableKey(base);
+    const tableName = FILE_TO_TABLE[base] || FILE_TO_TABLE[tableKey];
     if (!tableName) {
       console.log(`Skipping ${file} (no table mapping)`);
       continue;
     }
 
-    const filePath = path.join(SEED_DIR, file);
+    const filePath = path.join(seedDir, file);
     const content = fs.readFileSync(filePath, 'utf-8');
     const rows = parseCSV(content);
 

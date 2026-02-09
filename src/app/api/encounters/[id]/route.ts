@@ -35,6 +35,7 @@ export async function GET(
     description: d.description as string | undefined,
     type: (d.type as Encounter['type']) || 'combat',
     status: (d.status as Encounter['status']) || 'preparing',
+    campaignId: d.campaignId as string | undefined,
     combatants: (d.combatants as Encounter['combatants']) || [],
     round: (d.round as number) ?? 0,
     currentTurnIndex: (d.currentTurnIndex as number) ?? -1,

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, DragEvent, use } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, DragEvent, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -19,8 +19,11 @@ import type { Combatant, CombatantCondition, CombatantType, TrackedCombatant } f
 import type { Encounter } from '@/types/encounter';
 import { CombatantCard } from '@/app/(main)/encounter-tracker/CombatantCard';
 import { CONDITION_OPTIONS } from '@/app/(main)/encounter-tracker/encounter-tracker-constants';
-import { useEncounter, useSaveEncounter, useAutoSave } from '@/hooks';
+import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull, useAuth } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
+import { RollProvider, RollLog } from '@/components/character-sheet';
+import { createClient } from '@/lib/supabase/client';
+import type { Campaign } from '@/types/campaign';
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
@@ -50,6 +53,33 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [addingAllChars, setAddingAllChars] = useState(false);
+  const { user } = useAuth();
+  const { data: campaignsFull = [] } = useCampaignsFull();
+  const syncTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const syncCharacterHealthEnergy = useCallback(
+    (characterId: string, payload: { health: { current: number; max: number }; energy: { current: number; max: number } }) => {
+      const key = characterId;
+      if (syncTimeoutsRef.current[key]) clearTimeout(syncTimeoutsRef.current[key]);
+      syncTimeoutsRef.current[key] = setTimeout(async () => {
+        delete syncTimeoutsRef.current[key];
+        try {
+          await fetch(`/api/characters/${encodeURIComponent(characterId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              health: { current: payload.health.current, max: payload.health.max },
+              energy: { current: payload.energy.current, max: payload.energy.max },
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to sync character HP/EN:', err);
+        }
+      }, 400);
+    },
+    []
+  );
 
   // Initialize local state from API
   useEffect(() => {
@@ -59,6 +89,60 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
       setIsInitialized(true);
     }
   }, [encounterData, isInitialized]);
+
+  // Realtime: when character HP/EN is updated (e.g. from character sheet), sync to encounter combatants
+  const characterIdsForSync = useMemo(() => {
+    if (!encounter?.combatants?.length) return [];
+    return encounter.combatants
+      .filter((c): c is TrackedCombatant => c.sourceType === 'campaign-character' && !!c.sourceId)
+      .map(c => c.sourceId as string)
+      .filter((id, i, arr) => arr.indexOf(id) === i);
+  }, [encounter?.combatants]);
+
+  useEffect(() => {
+    if (characterIdsForSync.length === 0) return;
+    const supabase = createClient();
+    const filter = `id=in.(${characterIdsForSync.join(',')})`;
+    const channel = supabase
+      .channel(`encounter-characters:${encounterId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'users',
+          table: 'characters',
+          filter,
+        },
+        (payload: { new: { id: string; data?: { health?: { current?: number; max?: number }; energy?: { current?: number; max?: number } } } }) => {
+          const row = payload.new;
+          const charId = row.id;
+          const data = row.data;
+          if (!data?.health && !data?.energy) return;
+          setEncounter(prev => {
+            if (!prev) return prev;
+            const hasMatch = prev.combatants.some(c => (c as TrackedCombatant).sourceId === charId);
+            if (!hasMatch) return prev;
+            return {
+              ...prev,
+              combatants: prev.combatants.map(c => {
+                if ((c as TrackedCombatant).sourceId !== charId) return c;
+                const health = data.health;
+                const energy = data.energy;
+                return {
+                  ...c,
+                  ...(health && { currentHealth: health.current ?? c.currentHealth, maxHealth: health.max ?? c.maxHealth }),
+                  ...(energy && { currentEnergy: energy.current ?? c.currentEnergy, maxEnergy: energy.max ?? c.maxEnergy }),
+                };
+              }),
+            };
+          });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [encounterId, characterIdsForSync.join(',')]);
 
   useEffect(() => {
     if (encounter?.name && !isEditingName) setNameInput(encounter.name);
@@ -183,6 +267,62 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     setShowAddModal(false);
   };
 
+  const linkedCampaign = encounter?.campaignId
+    ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
+    : undefined;
+
+  const addAllCampaignCharacters = useCallback(async () => {
+    if (!encounter?.campaignId || !linkedCampaign?.characters?.length) return;
+    setAddingAllChars(true);
+    try {
+      const results = await Promise.all(
+        linkedCampaign.characters.map(async (c: { userId: string; characterId: string; characterName: string }) => {
+          try {
+            const res = await fetch(
+              `/api/campaigns/${encounter.campaignId}/characters/${c.userId}/${c.characterId}?scope=encounter`
+            );
+            if (!res.ok) return null;
+            return { charMeta: c, data: await res.json() };
+          } catch {
+            return null;
+          }
+        })
+      );
+      const combatants: TrackedCombatant[] = results
+        .filter((r): r is NonNullable<typeof r> => r !== null)
+        .map((r) => {
+          const d = r.data;
+          const abilities = d.abilities || {};
+          return {
+            id: generateId(),
+            name: r.charMeta.characterName,
+            initiative: 0,
+            acuity: abilities.acuity ?? 0,
+            maxHealth: d.health?.max ?? 20,
+            currentHealth: d.health?.current ?? d.health?.max ?? 20,
+            maxEnergy: d.energy?.max ?? 10,
+            currentEnergy: d.energy?.current ?? d.energy?.max ?? 10,
+            armor: 0,
+            evasion: d.evasion ?? 10 + (abilities.agility ?? 0),
+            ap: 4,
+            conditions: [],
+            notes: '',
+            combatantType: 'ally' as CombatantType,
+            isAlly: true,
+            isSurprised: false,
+            sourceType: 'campaign-character' as const,
+            sourceId: r.charMeta.characterId,
+            sourceUserId: r.charMeta.userId,
+          };
+        });
+      setEncounter(prev => prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev);
+    } catch (err) {
+      console.error('Failed to add campaign characters:', err);
+    } finally {
+      setAddingAllChars(false);
+    }
+  }, [encounter, linkedCampaign]);
+
   const duplicateCombatant = (combatant: Combatant) => {
     const baseNameMatch = combatant.name.match(/^(.+?)\s*[A-Z]?$/);
     const baseName = baseNameMatch ? baseNameMatch[1].trim() : combatant.name;
@@ -204,7 +344,18 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   };
 
   const updateCombatant = (id: string, updates: Partial<Combatant>) => {
-    setEncounter(prev => prev ? { ...prev, combatants: prev.combatants.map(c => c.id === id ? { ...c, ...updates } : c) } : prev);
+    setEncounter(prev => {
+      if (!prev) return prev;
+      const next = prev.combatants.map(c => c.id === id ? { ...c, ...updates } : c);
+      const updated = next.find(c => c.id === id) as TrackedCombatant | undefined;
+      if (updated?.sourceType === 'campaign-character' && updated.sourceUserId === user?.uid && updated.sourceId && (updates.currentHealth !== undefined || updates.currentEnergy !== undefined || updates.maxHealth !== undefined || updates.maxEnergy !== undefined)) {
+        syncCharacterHealthEnergy(updated.sourceId, {
+          health: { current: updated.currentHealth, max: updated.maxHealth },
+          energy: { current: updated.currentEnergy, max: updated.maxEnergy },
+        });
+      }
+      return { ...prev, combatants: next };
+    });
   };
 
   const addCondition = (id: string, conditionName: string) => {
@@ -339,6 +490,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   }
 
   return (
+    <RollProvider>
     <PageContainer size="full">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -467,6 +619,34 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           <div className="bg-surface rounded-xl shadow-md p-6 flex-shrink-0">
             <h3 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h3>
 
+            {/* Campaign link + Add all Characters */}
+            <div className="mb-4 space-y-2">
+              <label className="block text-sm font-medium text-text-secondary">Campaign</label>
+              <select
+                value={encounter.campaignId ?? ''}
+                onChange={(e) => {
+                  const id = e.target.value || undefined;
+                  setEncounter(prev => prev ? { ...prev, campaignId: id } : prev);
+                }}
+                className="w-full px-3 py-2 rounded-lg border border-border-light bg-background text-text-primary text-sm"
+              >
+                <option value="">No campaign</option>
+                {campaignsFull.map((c: Campaign) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              {linkedCampaign && (linkedCampaign.characters?.length ?? 0) > 0 && (
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={addAllCampaignCharacters}
+                  disabled={addingAllChars || encounter.isActive}
+                >
+                  {addingAllChars ? 'Adding…' : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
+                </Button>
+              )}
+            </div>
+
             {/* Quick add buttons */}
             <Button variant="secondary" className="w-full mb-4" onClick={() => setShowAddModal(true)}>
               From Library / Campaign
@@ -526,6 +706,9 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           mode="combat"
         />
       )}
+
+      <RollLog viewOnlyCampaignId={encounter.campaignId} />
     </PageContainer>
+    </RollProvider>
   );
 }

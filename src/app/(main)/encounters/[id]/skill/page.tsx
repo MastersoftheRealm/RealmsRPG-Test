@@ -33,8 +33,10 @@ import {
   Input,
 } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
-import { useEncounter, useSaveEncounter, useAutoSave } from '@/hooks';
+import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
+import { RollProvider, RollLog } from '@/components/character-sheet';
+import type { Campaign } from '@/types/campaign';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import type { Encounter, SkillParticipant, SkillEncounterState, TrackedCombatant } from '@/types/encounter';
 
@@ -65,6 +67,8 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const [newParticipantName, setNewParticipantName] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [addingAllChars, setAddingAllChars] = useState(false);
+  const { data: campaignsFull = [] } = useCampaignsFull();
 
   // Initialize local state from Prisma (strip legacy requiredSuccesses/requiredFailures)
   useEffect(() => {
@@ -142,6 +146,30 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     updateSkill({ participants: [...(skill?.participants || []), ...participants] });
     setShowAddModal(false);
   };
+
+  const linkedCampaign = encounter?.campaignId
+    ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
+    : undefined;
+
+  const addAllCampaignCharacters = useCallback(async () => {
+    if (!encounter?.campaignId || !linkedCampaign?.characters?.length) return;
+    setAddingAllChars(true);
+    try {
+      const participants: SkillParticipant[] = linkedCampaign.characters.map(
+        (c: { userId: string; characterId: string; characterName: string }) => ({
+          id: generateId(),
+          name: c.characterName,
+          hasRolled: false,
+          sourceType: 'campaign-character' as const,
+          sourceId: c.characterId,
+        })
+      );
+      updateSkill({ participants: [...(skill?.participants || []), ...participants] });
+    } finally {
+      setAddingAllChars(false);
+    }
+  }, [encounter?.campaignId, linkedCampaign, skill?.participants, updateSkill]);
+
 
   const addCombatantsAsParticipants = (combatants: TrackedCombatant[]) => {
     const participants: SkillParticipant[] = combatants.map((c) => ({
@@ -305,6 +333,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   }
 
   return (
+    <RollProvider>
     <PageContainer size="xl">
       <div className="mb-6">
         <Link
@@ -449,6 +478,32 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
           <div className="bg-surface rounded-xl border border-border-light p-6">
             <h3 className="font-bold text-text-primary mb-4">Add Participants</h3>
+            <div className="mb-4 space-y-2">
+              <label className="block text-sm font-medium text-text-secondary">Campaign</label>
+              <select
+                value={encounter.campaignId ?? ''}
+                onChange={(e) => {
+                  const id = e.target.value || undefined;
+                  setEncounter((prev) => (prev ? { ...prev, campaignId: id } : prev));
+                }}
+                className="w-full px-3 py-2 rounded-lg border border-border-light bg-background text-text-primary text-sm"
+              >
+                <option value="">No campaign</option>
+                {campaignsFull.map((c: Campaign) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              {linkedCampaign && (linkedCampaign.characters?.length ?? 0) > 0 && (
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={addAllCampaignCharacters}
+                  disabled={addingAllChars}
+                >
+                  {addingAllChars ? 'Adding…' : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
+                </Button>
+              )}
+            </div>
             <Button
               variant="secondary"
               className="w-full mb-4"
@@ -498,7 +553,10 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           mode="skill"
         />
       )}
+
+      <RollLog viewOnlyCampaignId={encounter.campaignId} />
     </PageContainer>
+    </RollProvider>
   );
 }
 

@@ -56,7 +56,7 @@ export function AdminPropertiesTab() {
 
     setSaving(false);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'properties'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -70,7 +70,7 @@ export function AdminPropertiesTab() {
     }
     const result = await deleteCodexDoc('codex_properties', id);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'properties'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);

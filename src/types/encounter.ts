@@ -25,6 +25,8 @@ export interface TrackedCombatant extends Combatant {
   sourceType?: CombatantSource;
   /** Original ID (creature library ID or character ID) */
   sourceId?: string;
+  /** When sourceType is campaign-character, the character owner's user ID (for HP/EN sync) */
+  sourceUserId?: string;
 }
 
 /** A participant in a skill encounter */
@@ -45,6 +47,7 @@ export interface SkillParticipant {
   /** Source tracking */
   sourceType?: CombatantSource;
   sourceId?: string;
+  sourceUserId?: string;
 }
 
 /** State for a skill encounter */
@@ -70,6 +73,9 @@ export interface Encounter {
   description?: string;
   type: EncounterType;
   status: EncounterStatus;
+
+  /** Optional campaign; when set, "Add all Characters" adds all campaign characters. */
+  campaignId?: string;
 
   // Combat state (combat + mixed)
   combatants: TrackedCombatant[];

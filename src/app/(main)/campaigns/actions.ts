@@ -164,7 +164,20 @@ export async function joinCampaignAction(data: {
       data: { characters: characters as object, memberIds: newMemberIds as object },
     });
 
-    return { success: true, campaignId };
+    // If character was private, set visibility to campaign so RM and members can view it
+    const charData = charRow.data as Record<string, unknown>;
+    const visibility = charData?.visibility as string | undefined;
+    let visibilityUpdated = false;
+    if (visibility === 'private') {
+      const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
+      await prisma.character.update({
+        where: { id: data.characterId },
+        data: { data: merged as object },
+      });
+      visibilityUpdated = true;
+    }
+
+    return { success: true, campaignId, visibilityUpdated };
   } catch (error) {
     console.error('Join campaign error:', error);
     return { success: false, error: 'Failed to join campaign' };
@@ -240,7 +253,20 @@ export async function addCharacterToCampaignAction(data: {
       data: { characters: characters as object, memberIds: memberIds as object },
     });
 
-    return { success: true };
+    // If character was private, set visibility to campaign so RM and members can view it
+    const charData = charRow.data as Record<string, unknown>;
+    const visibility = charData?.visibility as string | undefined;
+    let visibilityUpdated = false;
+    if (visibility === 'private') {
+      const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
+      await prisma.character.update({
+        where: { id: data.characterId },
+        data: { data: merged as object },
+      });
+      visibilityUpdated = true;
+    }
+
+    return { success: true, visibilityUpdated };
   } catch (error) {
     console.error('Add character error:', error);
     return { success: false, error: 'Failed to add character' };

@@ -34,8 +34,10 @@ import {
   Checkbox,
 } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
-import { useEncounter, useSaveEncounter, useAutoSave } from '@/hooks';
+import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
+import { RollProvider, RollLog } from '@/components/character-sheet';
+import type { Campaign } from '@/types/campaign';
 import { CombatantCard } from '@/app/(main)/encounter-tracker/CombatantCard';
 import { CONDITION_OPTIONS } from '@/app/(main)/encounter-tracker/encounter-tracker-constants';
 import type {
@@ -76,6 +78,8 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const [isInitialized, setIsInitialized] = useState(false);
   const [activeView, setActiveView] = useState<ViewTab>('combat');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addingAllChars, setAddingAllChars] = useState(false);
+  const { data: campaignsFull = [] } = useCampaignsFull();
 
   // Initialize
   useEffect(() => {
@@ -286,12 +290,78 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     setShowAddModal(false);
   };
 
+  const linkedCampaign = encounter?.campaignId
+    ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
+    : undefined;
+
+  const addAllCampaignCharacters = useCallback(async () => {
+    if (!encounter?.campaignId || !linkedCampaign?.characters?.length) return;
+    setAddingAllChars(true);
+    try {
+      const results = await Promise.all(
+        linkedCampaign.characters.map(async (c: { userId: string; characterId: string; characterName: string }) => {
+          try {
+            const res = await fetch(
+              `/api/campaigns/${encounter.campaignId}/characters/${c.userId}/${c.characterId}?scope=encounter`
+            );
+            if (!res.ok) return null;
+            return { charMeta: c, data: await res.json() };
+          } catch {
+            return null;
+          }
+        })
+      );
+      const combatants: TrackedCombatant[] = results
+        .filter((r): r is NonNullable<typeof r> => r !== null)
+        .map((r) => {
+          const d = r.data;
+          const abilities = d.abilities || {};
+          return {
+            id: generateId(),
+            name: r.charMeta.characterName,
+            initiative: 0,
+            acuity: abilities.acuity ?? 0,
+            maxHealth: d.health?.max ?? 20,
+            currentHealth: d.health?.current ?? d.health?.max ?? 20,
+            maxEnergy: d.energy?.max ?? 10,
+            currentEnergy: d.energy?.current ?? d.energy?.max ?? 10,
+            armor: 0,
+            evasion: d.evasion ?? 10 + (abilities.agility ?? 0),
+            ap: 4,
+            conditions: [],
+            notes: '',
+            combatantType: 'ally' as CombatantType,
+            isAlly: true,
+            isSurprised: false,
+            sourceType: 'campaign-character' as const,
+            sourceId: r.charMeta.characterId,
+          };
+        });
+      setEncounter(prev => prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev);
+      const participants: SkillParticipant[] = linkedCampaign.characters.map(
+        (c: { userId: string; characterId: string; characterName: string }) => ({
+          id: generateId(),
+          name: c.characterName,
+          hasRolled: false,
+          sourceType: 'campaign-character' as const,
+          sourceId: c.characterId,
+        })
+      );
+      updateSkill({ participants: [...(skill?.participants || []), ...participants] });
+    } catch (err) {
+      console.error('Failed to add campaign characters:', err);
+    } finally {
+      setAddingAllChars(false);
+    }
+  }, [encounter, linkedCampaign, skill?.participants, updateSkill]);
+
   // ==================== RENDER ====================
   if (isLoading) return <PageContainer size="full"><LoadingState message="Loading encounter..." size="lg" /></PageContainer>;
   if (error || (!isLoading && !encounterData)) return <PageContainer size="full"><Alert variant="danger" title="Encounter not found">This encounter may have been deleted.</Alert><Link href="/encounters" className="mt-4 inline-block text-primary-600 hover:underline">Back to Encounters</Link></PageContainer>;
   if (!encounter || !skill) return <PageContainer size="full"><LoadingState message="Initializing..." /></PageContainer>;
 
   return (
+    <RollProvider>
     <PageContainer size="full">
       {/* Header */}
       <div className="mb-6">
@@ -365,6 +435,32 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           <div className="space-y-6">
             <div className="bg-surface rounded-xl shadow-md p-6 sticky top-24">
               <h3 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h3>
+              <div className="mb-4 space-y-2">
+                <label className="block text-sm font-medium text-text-secondary">Campaign</label>
+                <select
+                  value={encounter.campaignId ?? ''}
+                  onChange={(e) => {
+                    const id = e.target.value || undefined;
+                    setEncounter(prev => prev ? { ...prev, campaignId: id } : prev);
+                  }}
+                  className="w-full px-3 py-2 rounded-lg border border-border-light bg-background text-text-primary text-sm"
+                >
+                  <option value="">No campaign</option>
+                  {campaignsFull.map((c: Campaign) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {linkedCampaign && (linkedCampaign.characters?.length ?? 0) > 0 && (
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={addAllCampaignCharacters}
+                    disabled={addingAllChars || encounter.isActive}
+                  >
+                    {addingAllChars ? 'Adding…' : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
+                  </Button>
+                )}
+              </div>
               <Button variant="secondary" className="w-full mb-4" onClick={() => setShowAddModal(true)}>From Library / Campaign</Button>
               <div className="space-y-4">
                 <Input label="Name" value={newCombatant.name} onChange={e => setNewCombatant(p => ({ ...p, name: e.target.value }))} placeholder="Creature name..." />
@@ -469,7 +565,10 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           mode="mixed"
         />
       )}
+
+      <RollLog viewOnlyCampaignId={encounter.campaignId} />
     </PageContainer>
+    </RollProvider>
   );
 }
 

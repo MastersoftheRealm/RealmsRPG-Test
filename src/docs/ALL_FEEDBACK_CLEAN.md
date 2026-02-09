@@ -1,6 +1,6 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-02-06
+Last updated: 2026-02-09
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -116,7 +116,18 @@ Notes:
 - In non-edit mode, display Power and/or Martial proficiency as simple values (e.g., "Power: 2, Martial: 1") instead of the slider.
 - The slider is for editing only.
 
-### 17) Encounters System (Major Redesign)
+### 17) Admin Codex Editor
+- Navbar: Campaigns link should appear after RM Tools, before About. ✅ TASK-153
+- Feat level 0: Display "-" instead of "0" in list views. ✅ TASK-154
+- Delete: List must refresh immediately after delete (no page reload). ✅ TASK-155
+- UI consistency: Admin tabs should match Codex tabs (same filters, search, sort, layout); only pencil/trash differ for edit/delete. ✅ TASK-155 (Admin Feats unified; other tabs can follow)
+- Feat ability: Use dropdown of 6 Abilities + 6 Defenses; allow multi-select. ✅ TASK-156
+- Feat fields: All feat fields must be editable (req_desc, ability_req/abil_req_val pairs, skill_req/skill_req_val, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags, char_feat, state_feat). ✅ TASK-157
+- Array fields: Use dropdowns to select by name (e.g. species skills, feat skill_req), not "ids separated by commas". ✅ TASK-160
+- Input lag: Typing in edit mode should feel responsive. ⏸ TASK-159 (deferred; needs profiling)
+- Centralized schema doc: Create reference for all codex entity fields (name, type, description) for AI/engineer use. ✅ TASK-158
+
+### 18) Encounters System (Major Redesign)
 - **Rename:** "Encounter Tracker" → "Encounters" (hub page).
 - **Encounters hub:** List view of saved encounters; filter, search, sort; create new (combat, skill, or mixed); click to open.
 - **Persist:** Save encounters to Firestore by ID; replace local storage. Save/return to sessions (turns, AP, HP tracked).
@@ -125,6 +136,19 @@ Notes:
 - **Mixed Encounter page:** Combine combat + skill functionality; reuse components from both.
 - **Add from library:** Encounter tracker — add creatures from user's creature library; auto-populate max HP/EN; quantity selector; use existing add combatant/creature modal components.
 - **Campaign integration:** Add characters from campaigns user is in; pull evasion, acuity, HP, EN for quick reference; easy add without manual entry.
+
+### 19) Campaign–Encounter Linkage & Roll Log & Character Visibility
+- **Campaign–Encounter:** Allow attaching a campaign to an encounter (on creation or within). Add "Add all Characters" button to add all campaign characters to the encounter at once.
+- **Encounter combatants:** Fix HP/EN loading — when combatant is tied to a user's character, load accurate current/max health and energy.
+- **Encounter roll log:** Add roll log to encounters (same UI/functionality/styles as character sheet). RM uses it for private rolls (not to campaign). Include tabs so RM can see rolls in their campaigns.
+- **Roll log consistency:** Unify styles across encounter tab (roll log campaign mode), character sheet (campaign mode), and campaign page. Fix roll date display (most show "unavailable").
+- **Roll log real-time:** Rolls synced in real time between characters, campaigns, and users. Supabase Realtime or equivalent.
+- **Health/Energy real-time:** Current HP/EN synced between encounters and characters.
+- **Character visibility:**
+  - **Public:** Anyone can copy link and view in browser (read-only, no edit).
+  - **Campaign only:** RM and other campaign members can see (not edit).
+  - **Private + joins campaign:** Automatically set to campaign only. Show notification when joining campaign with private character that visibility will change.
+- **Character-derived content:** Powers, techniques, armaments, items from user's private library used by a character must be visible to viewers (read-only) when viewing that character.
 
 ---
 
@@ -161,6 +185,22 @@ Notes:
 - [ ] Persist encounters to Firestore; save/return to sessions. (TASK-104)
 - [ ] Designate combat tracker; create skill encounter page; create mixed encounter page. (TASK-105, TASK-106, TASK-107)
 - [ ] Campaign integration: add characters from campaigns to encounters. (TASK-108)
+- [x] Navbar: move Campaigns to right of RM Tools, left of About. (TASK-153)
+- [x] Admin Codex: display "-" for feat level 0 in list. (TASK-154)
+- [x] Admin Codex: fix list refresh after delete; unify UI with Codex tabs. (TASK-155)
+- [x] Feat editing: ability dropdown (6 abilities + 6 defenses, multi-select). (TASK-156)
+- [x] Feat editing: add all missing editable fields. (TASK-157)
+- [x] Create centralized codex schema reference doc for AI. (TASK-158)
+- [ ] Admin Codex: reduce input lag in edit mode. (TASK-159 — deferred)
+- [x] Admin Codex: array fields use dropdowns (skills, etc.), not raw IDs. (TASK-160)
+- [ ] Campaign–Encounter: attach campaign to encounter; "Add all Characters" button. (TASK-161)
+- [ ] Encounter combatants: fix HP/EN loading when combatant tied to user character. (TASK-162)
+- [ ] Encounter roll log: add RM roll log (personal + campaign tabs), same UI as character sheet. (TASK-163)
+- [ ] Roll log consistency: styles, date display ("unavailable" fix), tabs across encounter/campaign/sheet. (TASK-164)
+- [ ] Roll log real-time: Supabase Realtime for campaign rolls sync. (TASK-165)
+- [ ] Health/Energy real-time: sync current HP/EN between encounters and characters. (TASK-166)
+- [ ] Character visibility: public (link share, view-only); campaign (RM + members view); private→campaign on join. (TASK-167)
+- [ ] Character-derived content visibility: powers/techniques/items in private library visible (view-only) when viewing char. (TASK-168)
 
 ---
 
@@ -491,3 +531,65 @@ Notes
 - Priority: High
 - Raw feedback: "Some roll log fonts are dark in darkmode, thus invisible. non-rm characters aren't being added to combatants in combat or skill encounters from the campaign tab. Neither are simply RM characters in the skill encounters being added. audit skill encounter tasks, it isn't working completely right, check raw/clean feedback to see if theres any issues with skill encounters. duplicate / two X buttons at top right of add feat modal in creature creator, may be an issue elsewhere too (like other add modals in creature creator, these should be using logic/code from other modals but seem to still be different) wont let me hit + to add powers. (may have same issues with techniques and armaments. Species skills aren't automatically loaded/added to the character sheet skill list."
 - Extracted/disposition: Roll log dark mode — fixed (dark: variants). Campaign chars — fixed (API ?scope=encounter allows any campaign member). Duplicate X — fixed (UnifiedSelectionModal showCloseButton=false). Species skills — fixed (merge species skills into character sheet skills). Skill encounter audit — TASK-152.
+
+2/9/2026 — Navbar / Structure
+- Context: Main navigation header
+- Priority: Medium
+- Raw feedback: "Navbar: Move campaigns to the right of RM tools and the left of About in the navbar."
+- Expected: Campaigns link appears after RM Tools dropdown, before About
+- Extracted to: TASK-153 | Done 2026-02-09
+
+2/9/2026 — Admin Codex Editor / Feats tab
+- Context: Admin → Codex → Feats list
+- Priority: Low
+- Raw feedback: "If feat level requirement is 0 display - instead of '0' in the list."
+- Expected: feat_lvl 0 → "-" in list display
+- Extracted to: TASK-154 | Done 2026-02-09
+
+2/9/2026 — Admin Codex Editor / List delete & UI consistency
+- Context: Admin Codex all tabs
+- Priority: High
+- Raw feedback: "When I delete a list item, the list still shows the item until I refresh the page. Can use the same ui, filter, styles, etc as the codex here to consistency with the exception of the pencil/trash icons for edit and delete. True for all codex tabs. don't need different/repeated styles/ui as they're the same essentially."
+- Expected: Delete removes item immediately; Admin tabs match Codex UI/filters/styles; Admin retains edit/delete icons
+- Extracted to: TASK-155 | Done 2026-02-09
+
+2/9/2026 — Feat Editing / Ability requirement
+- Context: Admin Codex → Feats → Edit modal
+- Priority: High
+- Raw feedback: "Feat Editing: Should be able to choose ability from a dropdown of the six ability and six defense options, you can pick one or more."
+- Expected: ability_req and ability use multi-select dropdown with 12 options (6 abilities + 6 defenses)
+- Extracted to: TASK-156 | Done 2026-02-09
+
+2/9/2026 — Feat Editing / Missing fields
+- Context: Admin Codex → Feats → Edit modal
+- Priority: High
+- Raw feedback (abbreviated): All feat fields should be editable: name, description, req_desc, ability_req, abil_req_val, skill_req, skill_req_val, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags, char_feat, state_feat. Full semantics described in feedback.
+- Expected: Edit modal has controls for all listed fields
+- Extracted to: TASK-157 | Done 2026-02-09
+
+2/9/2026 — Centralized data schema
+- Context: Documentation, AI reference
+- Priority: Medium
+- Raw feedback: "I'd love if we had a centralized location for all our arrays of data/tables with descriptions of each values that ai can reference to clarify it's utility. For all codex items this is essential as well. Do our best in this area."
+- Expected: Doc with all codex entity schemas, field descriptions, valid values
+- Extracted to: TASK-158 | Done 2026-02-09
+
+2/9/2026 — Admin Codex / Input lag
+- Context: Admin Codex edit modals
+- Priority: Medium
+- Raw feedback: "lag: when inputting data in edit mode, it seems to have some lag while typing/deleting."
+- Expected: Responsive typing in edit inputs
+- Extracted to: TASK-159 | Deferred (needs profiling)
+
+2/9/2026 — Admin Codex / Array editing
+- Context: Admin Codex edit modals, array fields
+- Priority: High
+- Raw feedback: "All editing modals: When it comes to arrays, you should be able to select and add from a dropdown for some arrays, or separate by commas if that's the only option when editing. For instance, skills for species should be a dropdown of skills you can add, not a 'ids separated by commas' since admins don't have ids memorized."
+- Expected: Array fields (species skills, feat skill_req, etc.) use dropdown of names; store IDs internally
+- Extracted to: TASK-160 | Done 2026-02-09
+
+2/9/2026 — Encounters / Campaigns / Roll Log / Character Visibility (Batch)
+- Context: Multiple areas — Encounters, Roll Log, Campaigns, Character Sharing
+- Priority: Critical
+- Raw feedback: "Roll logs/Campaigns/Encounters: Allow attaching a campaign to an encounter upon creation or within the encounter, this allows you to click a button 'Add all Characters' or something that lets you add all the characters from the campaign into the encounter automatically. I also see that encounter combatants are not fully loading with their accurate current/max energy and health (when the combatant is tied to a users character). add a roll log (same ui/functionalty/styles as the character sheet) to encounters for RM to use to make rolls (privately, not to the campaign) but which also has the tabs so they can see the rolls in their campaigns. in the encounter tab (roll log campaign mode), character sheet (campaign mode), and campaign page, make the roll log styles consistent, ensure it shows the roll date, most say 'unavailable' for the date. also rolls should be REAL TIME synced between characters and campaigns and other characters/users, so we may need to update the database, supabase settings, and so on to make it real time. The other realtime data would be current health and energy synced between encounters and the characters themselves. Character visibilty: When a user sets a character to public, anyone else should be able to copy the link to that character and use it in their browser to see the character, with the exception that they wouldn't be allowed to edit ANYTHING. is it's set to campaign only, the RM and other users in the campaign should be able to see (not edit) it. If it's set to private and they join a campaign, it should automatically set the character privacy to campaign only (make a notifcation when they join a campaign with a private character that it will set the characters visibility to campaign only. Note: Since characters use powers, techniques, armametns, items, etc which are also from users private library, these also would need to be visible to others, again, without editing privilages."
+- Extracted to: TASK-161 through TASK-168

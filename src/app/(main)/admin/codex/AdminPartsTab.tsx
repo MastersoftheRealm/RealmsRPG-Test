@@ -71,9 +71,7 @@ export function AdminPartsTab() {
 
     setSaving(false);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'parts'] });
-      queryClient.invalidateQueries({ queryKey: ['codex', 'power-parts'] });
-      queryClient.invalidateQueries({ queryKey: ['codex', 'technique-parts'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -87,9 +85,7 @@ export function AdminPartsTab() {
     }
     const result = await deleteCodexDoc('codex_parts', id);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'parts'] });
-      queryClient.invalidateQueries({ queryKey: ['codex', 'power-parts'] });
-      queryClient.invalidateQueries({ queryKey: ['codex', 'technique-parts'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);

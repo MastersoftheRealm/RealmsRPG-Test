@@ -8,6 +8,18 @@ import type { Character, CharacterSummary } from '@/types';
 
 const API_BASE = '/api/characters';
 
+/** Owner's library items returned when viewing another user's character (read-only enrichment). */
+export interface LibraryForView {
+  powers: Array<Record<string, unknown>>;
+  techniques: Array<Record<string, unknown>>;
+  items: Array<Record<string, unknown>>;
+}
+
+export interface GetCharacterResult {
+  character: Character | null;
+  libraryForView?: LibraryForView;
+}
+
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...options,
@@ -35,20 +47,25 @@ export async function getCharacters(): Promise<CharacterSummary[]> {
 
 /**
  * Get a single character by ID.
+ * When viewing another user's character (public/campaign), includes libraryForView for read-only enrichment.
  */
-export async function getCharacter(characterId: string): Promise<Character | null> {
+export async function getCharacter(characterId: string): Promise<GetCharacterResult> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
   }
 
   const res = await fetch(`${API_BASE}/${encodeURIComponent(characterId.trim())}`);
-  if (res.status === 404) return null;
+  if (res.status === 404) return { character: null };
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error ?? 'Request failed');
   }
 
-  return res.json();
+  const data = await res.json();
+  if (data && typeof data.character !== 'undefined') {
+    return { character: data.character, libraryForView: data.libraryForView };
+  }
+  return { character: data as Character };
 }
 
 /**
@@ -96,7 +113,7 @@ export async function deleteCharacter(characterId: string): Promise<void> {
  * Duplicate a character.
  */
 export async function duplicateCharacter(characterId: string): Promise<string> {
-  const character = await getCharacter(characterId);
+  const { character } = await getCharacter(characterId);
 
   if (!character) {
     throw new Error('Character not found');

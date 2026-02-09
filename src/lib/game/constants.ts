@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Game Constants
  * ===============
  * Centralized game constants for RealmsRPG
@@ -91,3 +91,19 @@ export const COMBAT_DEFAULTS = {
   BASE_EVASION: 10,
   BASE_DEFENSE: 10,
 } as const;
+
+/** Six Abilities + Six Defenses for feat requirements and sorting. Display names per GAME_RULES. */
+export const ABILITIES_AND_DEFENSES = [
+  'Strength',
+  'Vitality',
+  'Agility',
+  'Acuity',
+  'Intelligence',
+  'Charisma',
+  'Might',
+  'Fortitude',
+  'Reflexes',
+  'Discernment',
+  'Mental Fortitude',
+  'Resolve',
+] as const;

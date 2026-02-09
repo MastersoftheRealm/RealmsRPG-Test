@@ -9,7 +9,7 @@
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getCharacter, saveCharacter } from '@/services/character-service';
+import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
@@ -41,6 +41,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const { showToast } = useToast();
   
   const [character, setCharacter] = useState<Character | null>(null);
+  const [libraryForView, setLibraryForView] = useState<LibraryForView | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -89,11 +90,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
     };
   }, [campaignsFull, user?.uid, character]);
   
-  // Enrich character data with full library objects
+  // Enrich character data: use owner's library when viewing another user's character, else current user's library
   const enrichedData = useMemo(() => {
     if (!character) return null;
-    return enrichCharacterData(character, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb);
-  }, [character, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb]);
+    const powers = libraryForView ? (libraryForView.powers as unknown as typeof userPowers) : userPowers;
+    const techniques = libraryForView ? (libraryForView.techniques as unknown as typeof userTechniques) : userTechniques;
+    const items = libraryForView ? (libraryForView.items as unknown as typeof userItems) : userItems;
+    return enrichCharacterData(character, powers, techniques, items, codexEquipment, powerPartsDb, techniquePartsDb);
+  }, [character, libraryForView, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb]);
   
   // Look up character's species and its species_traits (automatically granted to all characters of that species)
   const characterSpeciesTraits = useMemo(() => {
@@ -127,19 +131,21 @@ export default function CharacterSheetPage({ params }: PageParams) {
     return (species?.skills || []) as string[];
   }, [character, allSpecies]);
   
-  // Load character data
+  // Load character data (works for owner, public link, or campaign view)
   useEffect(() => {
     async function loadCharacter() {
-      if (!user || authLoading) return;
+      if (authLoading) return;
 
       try {
         setLoading(true);
+        setError(null);
         const data = await getCharacter(id);
-        if (!data) {
+        if (!data.character) {
           setError('Character not found');
           return;
         }
-        setCharacter(data);
+        setCharacter(data.character);
+        setLibraryForView(data.libraryForView);
       } catch (err) {
         console.error('Error loading character:', err);
         setError('Failed to load character');
@@ -149,8 +155,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
     }
 
     loadCharacter();
-  }, [id, user, authLoading]);
+  }, [id, authLoading]);
   
+  const isOwner = Boolean(character && user && character.userId === user.uid);
+  const effectiveEditMode = isEditMode && isOwner;
+
   // Calculate stats
   const calculatedStats = useMemo(() => {
     if (!character) return null;
@@ -303,7 +312,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       }
     },
     delay: 2000,
-    enabled: isEditMode,
+    enabled: effectiveEditMode,
     onSaveStart: () => setSaving(true),
     onSaveComplete: () => {
       setSaving(false);
@@ -1239,6 +1248,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
           onToggleEditMode={handleToggleEditMode}
           onRecovery={() => setShowRecoveryModal(true)}
           onLevelUp={() => setShowLevelUpModal(true)}
+          canEdit={isOwner}
         />
         
         {/* Character Sheet Content */}
@@ -1248,14 +1258,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
               <SheetHeader
                 character={character}
                 calculatedStats={calculatedStats}
-                isEditMode={isEditMode}
+                isEditMode={effectiveEditMode}
                 onHealthChange={handleHealthChange}
                 onEnergyChange={handleEnergyChange}
                 onHealthPointsChange={handleHealthPointsChange}
                 onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}
                 isUploadingPortrait={uploadingPortrait}
-                onNameChange={isEditMode ? handleNameChange : undefined}
+                onNameChange={effectiveEditMode ? handleNameChange : undefined}
                 onExperienceChange={handleExperienceChange}
                 speedBase={character.speedBase ?? 6}
                 evasionBase={character.evasionBase ?? 10}
@@ -1272,7 +1282,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 archetypeAbility={character.archetype?.ability as AbilityName}
                 martialAbility={character.mart_abil}
                 powerAbility={character.pow_abil}
-                isEditMode={isEditMode}
+                isEditMode={effectiveEditMode}
                 totalAbilityPoints={pointBudgets?.totalAbilityPoints}
                 spentAbilityPoints={pointBudgets?.spentAbilityPoints}
                 totalSkillPoints={pointBudgets?.totalSkillPoints}
@@ -1286,7 +1296,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 <SkillsSection
                   skills={skills}
                   abilities={character.abilities}
-                  isEditMode={isEditMode}
+                  isEditMode={effectiveEditMode}
                   totalSkillPoints={calculateSkillPointsForEntity(character.level || 1, 'character')}
                   speciesSkills={characterSpeciesSkills}
                   onSkillChange={handleSkillChange}
@@ -1300,7 +1310,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
               <div className="flex flex-col min-h-[400px]">
                 <ArchetypeSection
                   character={character}
-                  isEditMode={isEditMode}
+                  isEditMode={effectiveEditMode}
                   onMartialProfChange={handleMartialProfChange}
                   onPowerProfChange={handlePowerProfChange}
                   onMilestoneChoiceChange={handleMilestoneChoiceChange}
@@ -1324,7 +1334,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   innatePools={archetypeProgression?.innatePools || 0}
                   currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof}
-                  isEditMode={isEditMode}
+                  isEditMode={effectiveEditMode}
                   onAddPower={() => setAddModalType('power')}
                   onRemovePower={handleRemovePower}
                   onTogglePowerInnate={handleTogglePowerInnate}

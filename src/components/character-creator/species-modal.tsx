@@ -216,12 +216,14 @@ export function SpeciesModal({
                 <div className="mt-2 p-3 bg-info-50 border border-info-200 rounded-lg">
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-info-800">{selectedSkill.name}</span>
-                    <button 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setSelectedSkill(null)}
-                      className="text-info-600 hover:text-info-800 text-sm"
+                      className="text-info-600 hover:text-info-800 h-auto py-0 px-1 min-w-0"
                     >
                       ✕
-                    </button>
+                    </Button>
                   </div>
                   <p className="text-sm text-info-700">
                     {selectedSkill.description || 'No description available.'}

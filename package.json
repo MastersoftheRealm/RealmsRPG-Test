@@ -10,6 +10,7 @@
     "lint": "eslint",
     "inject-env-vanilla": "node scripts/inject-env-vanilla.js",
     "db:seed": "node scripts/seed-to-supabase.js",
+    "db:seed:reset": "node scripts/seed-to-supabase.js --reset",
     "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {

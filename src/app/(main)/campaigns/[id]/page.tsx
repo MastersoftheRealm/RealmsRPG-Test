@@ -31,6 +31,7 @@ import {
   Alert,
   Modal,
   IconButton,
+  useToast,
 } from '@/components/ui';
 import { DeleteConfirmModal } from '@/components/shared';
 import { RollEntryCard } from '@/components/character-sheet';
@@ -52,6 +53,7 @@ export default function CampaignDetailPage() {
 function CampaignDetailContent() {
   const params = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
   const campaignId = params.id as string;
   const { user } = useAuth();
 
@@ -92,6 +94,9 @@ function CampaignDetailContent() {
       if (result.success) {
         invalidateCampaigns();
         setAddModalOpen(false);
+        if (result.visibilityUpdated) {
+          showToast('Character visibility was set to Campaign so the Realm Master and players can view it.', 'success');
+        }
       } else {
         setActionError(result.error || 'Failed to add character');
       }
@@ -299,7 +304,7 @@ function CampaignDetailContent() {
         </div>
       )}
 
-      {/* Campaign Roll Log */}
+      {/* Campaign Roll Log — same layout/styling as character sheet RollLog */}
       <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
         <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
           <Dices className="w-5 h-5 text-accent-500" />
@@ -308,9 +313,9 @@ function CampaignDetailContent() {
         <p className="text-sm text-text-secondary mb-4">
           Rolls from all characters in this campaign. Updates in real time.
         </p>
-        <div className="max-h-[400px] overflow-y-auto space-y-2">
+        <div className="max-h-[400px] overflow-y-auto p-2 bg-surface-alt rounded-lg">
           {campaignRolls.length === 0 ? (
-            <p className="text-center text-text-muted italic py-8">
+            <p className="text-center text-text-muted italic py-10">
               No campaign rolls yet. Rolls from character sheets will appear here.
             </p>
           ) : (

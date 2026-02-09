@@ -1,24 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { ChipSelect } from '@/components/codex';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useSpecies, type Species } from '@/hooks';
+import { useSpecies, useCodexSkills, type Species } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
+type SpeciesEdit = { id: string; name: string; description: string; type: string; size: string; sizes: string[]; speed: number; skills?: string[] };
+
 export function AdminSpeciesTab() {
   const { data: species, isLoading, error } = useSpecies();
+  const { data: skills = [] } = useCodexSkills();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; type: string; size: string; sizes: string[]; speed: number } | null>(null);
+  const [editing, setEditing] = useState<SpeciesEdit | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', type: '', size: '', sizes: '', speed: 6 });
+  const [form, setForm] = useState({ name: '', description: '', type: '', size: '', sizes: '', speed: 6, skills: [] as string[] });
+
+  const skillOptions = useMemo(() =>
+    skills.map((s: { id: string; name: string }) => ({ value: s.name, label: s.name })),
+    [skills]
+  );
+
+  const resolveSkillNames = (skillIdsOrNames: string[]): string[] => {
+    return skillIdsOrNames.map((s) => {
+      const byId = skills.find((sk: { id: string }) => String(sk.id) === String(s));
+      if (byId) return (byId as { name: string }).name;
+      const byName = skills.find((sk: { name: string }) => sk.name === s);
+      return byName ? (byName as { name: string }).name : s;
+    });
+  };
 
   const filtered = (species || []).filter(
     (s: Species) =>
@@ -29,12 +47,14 @@ export function AdminSpeciesTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', type: '', size: 'Medium', sizes: 'Medium', speed: 6 });
+    setForm({ name: '', description: '', type: '', size: 'Medium', sizes: 'Medium', speed: 6, skills: [] });
     setModalOpen(true);
   };
 
-  const openEdit = (s: { id: string; name: string; description: string; type: string; size: string; sizes: string[]; speed: number }) => {
+  const openEdit = (s: SpeciesEdit) => {
     setEditing(s);
+    const rawSkills = (s as { skills?: string[] }).skills || [];
+    const skillNames = resolveSkillNames(rawSkills);
     setForm({
       name: s.name,
       description: s.description || '',
@@ -42,6 +62,7 @@ export function AdminSpeciesTab() {
       size: s.size || 'Medium',
       sizes: (s.sizes || []).join(', ') || s.size || 'Medium',
       speed: s.speed ?? 6,
+      skills: skillNames,
     });
     setModalOpen(true);
   };
@@ -63,6 +84,7 @@ export function AdminSpeciesTab() {
       size: form.size.trim() || sizes[0] || 'Medium',
       sizes: sizes.length ? sizes : [form.size || 'Medium'],
       speed: form.speed,
+      skills: form.skills,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `species_${Date.now()}`;
@@ -71,7 +93,7 @@ export function AdminSpeciesTab() {
 
     setSaving(false);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'species'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -85,7 +107,7 @@ export function AdminSpeciesTab() {
     }
     const result = await deleteCodexDoc('codex_species', id);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'species'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -167,6 +189,17 @@ export function AdminSpeciesTab() {
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Speed</label>
             <Input type="number" min={0} value={form.speed} onChange={(e) => setForm((f) => ({ ...f, speed: parseInt(e.target.value) || 0 }))} />
+          </div>
+          <div>
+            <ChipSelect
+              label="Skills"
+              placeholder="Add skill"
+              options={skillOptions}
+              selectedValues={form.skills}
+              onSelect={(v) => setForm((f) => ({ ...f, skills: [...f.skills, v] }))}
+              onRemove={(v) => setForm((f) => ({ ...f, skills: f.skills.filter((s) => s !== v) }))}
+            />
+            <p className="text-xs text-text-muted mt-1">Species skills (by name). Add from dropdown.</p>
           </div>
         </div>
       </Modal>

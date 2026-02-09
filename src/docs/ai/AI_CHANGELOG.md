@@ -2,6 +2,32 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-09 | agent:cursor | Session: Queue cleanup, modal button consistency | files: AI_TASK_QUEUE.md, add-feat-modal.tsx, species-modal.tsx | Summary:
+  - Queue: Marked stale TASK-161, TASK-162, TASK-164 as done (were already implemented).
+  - Modal button consistency: add-feat-modal (Cancel, Add Selected) and species-modal (inline ✕) now use shared Button component instead of raw &lt;button&gt; with custom classes.
+  - build passes
+
+- 2026-02-09 | agent:cursor | Session: TASK-165, TASK-166 — Roll log Realtime, HP/EN sync | files: use-campaign-rolls.ts, supabase-rls-policies.sql, encounter types, combat/page.tsx, add-combatant-modal.tsx, AI_TASK_QUEUE.md | TASKs: TASK-165, TASK-166 | Summary:
+  - TASK-165: Roll log real-time — use-campaign-rolls subscribes to postgres_changes on campaigns.campaign_rolls with filter campaign_id=eq.; invalidates query on any change (no more 5s polling). supabase-rls-policies.sql: ALTER PUBLICATION supabase_realtime ADD TABLE campaigns.campaign_rolls; GRANT SELECT to authenticated.
+  - TASK-166: HP/EN real-time — TrackedCombatant/SkillParticipant have sourceUserId. Encounter→character: updateCombatant calls syncCharacterHealthEnergy (debounced 400ms) when owner edits HP/EN; PATCH /api/characters/[id]. Character→encounter: Realtime subscription on users.characters for campaign-character combatant ids; on UPDATE merge health/energy into combatants. Publication + GRANT for users.characters.
+  - build passes
+
+- 2026-02-09 | agent:cursor | Session: TASK-167, TASK-168 — Character visibility, character-derived content | files: api/characters/[id]/route.ts, api/campaigns/.../characters/.../route.ts, owner-library-for-view.ts, character-service.ts, characters/[id]/page.tsx, campaigns/.../view/.../page.tsx, AI_TASK_QUEUE.md | TASKs: TASK-167, TASK-168 | Summary:
+  - TASK-167: Character visibility — GET /api/characters/[id] allows unauthenticated for public; campaign visibility via campaign membership; view-only toolbar when !isOwner; add/join campaign set visibility to campaign when private with toasts.
+  - TASK-168: Character-derived content — getOwnerLibraryForView(ownerUserId) fetches owner's powers/techniques/items; character API and campaign character API return libraryForView when non-owner; character page and campaign view page use libraryForView for enrichment so viewers see owner's library items read-only.
+  - build passes
+
+- 2026-02-09 | agent:cursor | Session: TASK-153–160 — Navbar, Admin Codex, Feat editing, Schema doc | files: header.tsx, AdminFeatsTab, AdminSpeciesTab, admin/codex tabs, constants.ts, CODEX_SCHEMA_REFERENCE.md, AI_TASK_QUEUE.md | TASKs: TASK-153, TASK-154, TASK-155, TASK-156, TASK-157, TASK-158, TASK-160 | Summary:
+  - TASK-153: Navbar — moved Campaigns to right of RM Tools, left of About
+  - TASK-154: Admin Feats — display "-" for feat level 0 (lvl_req)
+  - TASK-155: Admin Codex — fixed invalidateQueries keys (use ['codex']); unified Admin Feats with Codex Feats (FilterSection, SortHeader, filters)
+  - TASK-156: Feat editing — ability dropdown (6 abilities + 6 defenses), multi-select for ability; ability_req rows with dropdown + min value
+  - TASK-157: Feat editing — added req_desc, prereq_text, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, rec_period select; skill_req dropdown with min value
+  - TASK-158: Created CODEX_SCHEMA_REFERENCE.md — field tables for all codex entities
+  - TASK-159: Deferred (input lag — requires profiling)
+  - TASK-160: Species skills — ChipSelect dropdown; feat skill_req — skill dropdown with add/remove rows
+  - build passes
+
 - 2026-02-07 | agent:cursor | Session: TASK-137–141 — Public library, add-to-library, source filter, badges | files: library-service, use-public-library, CodexPublicLibraryTab, grid-list-row, SourceFilter, Library tabs, power/technique/item/creature creators | TASKs: TASK-137, TASK-138, TASK-139, TASK-140, TASK-141 | Summary:
   - TASK-137: Admin My library / Public library toggle in all four creators (done earlier)
   - TASK-138: fetchPublicLibrary, addPublicItemToLibrary, usePublicLibrary, useAddPublicToLibrary; Add to my library in Codex Public tab

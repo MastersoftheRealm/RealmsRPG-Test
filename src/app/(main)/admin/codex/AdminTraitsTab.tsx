@@ -70,7 +70,7 @@ export function AdminTraitsTab() {
 
     setSaving(false);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'traits'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -84,7 +84,7 @@ export function AdminTraitsTab() {
     }
     const result = await deleteCodexDoc('codex_traits', id);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'traits'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);

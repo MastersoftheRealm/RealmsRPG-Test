@@ -12,7 +12,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useCodexFeats, type Feat } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
-import { Spinner, IconButton, Alert, Checkbox, Modal } from '@/components/ui';
+import { Spinner, IconButton, Alert, Checkbox, Modal, Button } from '@/components/ui';
 import { SearchInput, ListHeader, GridListRow, type ChipData } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import type { Character } from '@/types';
@@ -253,24 +253,16 @@ export function AddFeatModal({
         )}
       </div>
       <div className="flex gap-3">
-        <button
-          onClick={onClose}
-          className="px-4 py-2 rounded-lg text-text-secondary hover:bg-surface transition-colors"
-        >
+        <Button variant="secondary" onClick={onClose}>
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="primary"
           onClick={handleConfirm}
           disabled={selectedFeats.length === 0}
-          className={cn(
-            'px-6 py-2 rounded-lg font-medium transition-colors',
-            selectedFeats.length > 0
-              ? 'bg-primary-600 text-white hover:bg-primary-700'
-              : 'bg-surface text-text-muted cursor-not-allowed'
-          )}
         >
           Add Selected
-        </button>
+        </Button>
       </div>
     </div>
   );

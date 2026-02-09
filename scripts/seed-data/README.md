@@ -1,6 +1,6 @@
 # Codex Seed Data
 
-Place your exported Google Sheets CSV files here.
+Place your exported Google Sheets CSV files here. The script also checks `Codex csv/` at project root if this folder is empty.
 
 ## Expected Files
 
@@ -20,11 +20,20 @@ Place your exported Google Sheets CSV files here.
 
 - First row = column headers
 - Use `id` or `name` column for document ID (or one will be generated)
-- Arrays: comma-separated values in a single cell
+- **Descriptions:** Keep as single strings (use quotes in CSV if they contain commas)
+- **Arrays:** Only these columns are parsed as comma-separated arrays: `tags`, `sizes`, `skills`, `species_traits`, `ancestry_traits`, `flaws`, `characteristics`, `languages`, `adulthood_lifespan`, `type`, `mechanic`, `base_skill`
 - Booleans: `true` / `false`
 
 ## Run
 
 ```bash
 npm run db:seed
+```
+
+## Fixing Corrupted Data
+
+If descriptions were incorrectly split into arrays (e.g. from a previous bug), clear and re-seed:
+
+```bash
+npm run db:seed:reset
 ```

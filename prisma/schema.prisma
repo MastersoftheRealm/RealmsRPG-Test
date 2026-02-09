@@ -9,6 +9,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["public", "users", "campaigns", "codex", "encounters"]
 }
 
 // =============================================================================
@@ -33,6 +34,7 @@ model UserProfile {
   usernameLookups  UsernameLookup[]
 
   @@map("user_profiles")
+  @@schema("users")
 }
 
 model UsernameLookup {
@@ -41,6 +43,7 @@ model UsernameLookup {
   user     UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("usernames")
+  @@schema("users")
 }
 
 // =============================================================================
@@ -58,6 +61,7 @@ model Character {
   @@index([userId])
   @@index([userId, updatedAt])
   @@map("characters")
+  @@schema("users")
 }
 
 // =============================================================================
@@ -74,6 +78,7 @@ model UserPower {
 
   @@index([userId])
   @@map("user_powers")
+  @@schema("users")
 }
 
 model UserTechnique {
@@ -86,6 +91,7 @@ model UserTechnique {
 
   @@index([userId])
   @@map("user_techniques")
+  @@schema("users")
 }
 
 model UserItem {
@@ -98,6 +104,7 @@ model UserItem {
 
   @@index([userId])
   @@map("user_items")
+  @@schema("users")
 }
 
 model UserCreature {
@@ -110,6 +117,7 @@ model UserCreature {
 
   @@index([userId])
   @@map("user_creatures")
+  @@schema("users")
 }
 
 // =============================================================================
@@ -132,6 +140,7 @@ model Campaign {
 
   @@index([ownerId])
   @@map("campaigns")
+  @@schema("campaigns")
 }
 
 model CampaignRoll {
@@ -143,6 +152,7 @@ model CampaignRoll {
 
   @@index([campaignId])
   @@map("campaign_rolls")
+  @@schema("campaigns")
 }
 
 // =============================================================================
@@ -159,6 +169,7 @@ model Encounter {
   @@index([userId])
   @@index([userId, updatedAt])
   @@map("encounters")
+  @@schema("encounters")
 }
 
 // =============================================================================
@@ -169,54 +180,63 @@ model CodexFeat {
   id     String @id // Document ID from Firestore/CSV
   data   Json
   @@map("codex_feats")
+  @@schema("codex")
 }
 
 model CodexSkill {
   id     String @id
   data   Json
   @@map("codex_skills")
+  @@schema("codex")
 }
 
 model CodexSpecies {
   id     String @id
   data   Json
   @@map("codex_species")
+  @@schema("codex")
 }
 
 model CodexTrait {
   id     String @id
   data   Json
   @@map("codex_traits")
+  @@schema("codex")
 }
 
 model CodexPart {
   id     String @id
   data   Json   // type: 'power' | 'technique'
   @@map("codex_parts")
+  @@schema("codex")
 }
 
 model CodexProperty {
   id     String @id
   data   Json
   @@map("codex_properties")
+  @@schema("codex")
 }
 
 model CodexEquipment {
   id     String @id
   data   Json
   @@map("codex_equipment")
+  @@schema("codex")
 }
 
 model CodexArchetype {
   id     String @id
   data   Json
   @@map("codex_archetypes")
+  @@schema("codex")
 }
 
 model CodexCreatureFeat {
   id     String @id
   data   Json
   @@map("codex_creature_feats")
+  @@schema("codex")
 }
 
 // =============================================================================
@@ -231,6 +251,7 @@ model PublicPower {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_powers")
+  @@schema("codex")
 }
 
 model PublicTechnique {
@@ -240,6 +261,7 @@ model PublicTechnique {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_techniques")
+  @@schema("codex")
 }
 
 model PublicItem {
@@ -249,6 +271,7 @@ model PublicItem {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_items")
+  @@schema("codex")
 }
 
 model PublicCreature {
@@ -258,4 +281,5 @@ model PublicCreature {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_creatures")
+  @@schema("codex")
 }

@@ -29,6 +29,7 @@ import {
   EmptyState,
   LoadingState,
   Alert,
+  useToast,
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useCampaigns, useCharacters, useInvalidateCampaigns } from '@/hooks';
@@ -318,6 +319,7 @@ function JoinCampaignTab({
   onSuccess: () => void;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [inviteCode, setInviteCode] = useState('');
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
@@ -345,6 +347,9 @@ function JoinCampaignTab({
         archetypeType: archetypeType || undefined,
       });
       if (result.success) {
+        if (result.visibilityUpdated) {
+          showToast('Character visibility was set to Campaign so the Realm Master and players can view it.', 'success');
+        }
         onSuccess();
       } else {
         setError(result.error || 'Failed to join campaign');

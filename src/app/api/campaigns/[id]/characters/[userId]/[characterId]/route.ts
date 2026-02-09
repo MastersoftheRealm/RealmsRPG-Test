@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/supabase/session';
+import { getCharacterMaxHealthEnergy } from '@/lib/game/formulas';
+import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import type { CharacterVisibility } from '@/types';
 
 export async function GET(
@@ -74,13 +76,20 @@ export async function GET(
         acuity: rawAbilities?.acuity ?? rawAbilities?.acu ?? 0,
         agility: rawAbilities?.agility ?? rawAbilities?.agi ?? 0,
       };
+      const { maxHealth, maxEnergy } = getCharacterMaxHealthEnergy(charData as Record<string, unknown>);
       const health = charData?.health as { max?: number; current?: number } | undefined;
       const energy = charData?.energy as { max?: number; current?: number } | undefined;
       const character = {
         name: charData?.name ?? 'Unknown',
         abilities,
-        health: { max: health?.max ?? 20, current: health?.current ?? health?.max ?? 20 },
-        energy: { max: energy?.max ?? 10, current: energy?.current ?? energy?.max ?? 10 },
+        health: {
+          max: health?.max ?? maxHealth,
+          current: health?.current ?? health?.max ?? maxHealth,
+        },
+        energy: {
+          max: energy?.max ?? maxEnergy,
+          current: energy?.current ?? energy?.max ?? maxEnergy,
+        },
         evasion: (charData?.evasion as number) ?? 10 + abilities.agility,
       };
       return NextResponse.json(character);
@@ -93,7 +102,8 @@ export async function GET(
       updatedAt: charData?.updatedAt ?? charRow.updatedAt?.toISOString(),
     };
 
-    return NextResponse.json(character);
+    const libraryForView = await getOwnerLibraryForView(userId);
+    return NextResponse.json({ ...character, libraryForView });
   } catch (error) {
     console.error('Campaign character view error:', error);
     return NextResponse.json(

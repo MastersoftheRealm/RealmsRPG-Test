@@ -72,6 +72,7 @@ function HomeContent() {
             fill
             className="object-cover"
             priority
+            suppressHydrationWarning
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <Image
@@ -81,6 +82,7 @@ function HomeContent() {
               height={200}
               className="w-1/2 h-auto object-contain pointer-events-none"
               priority
+              suppressHydrationWarning
             />
           </div>
         </section>
@@ -92,21 +94,21 @@ function HomeContent() {
               href="/characters/new"
               title="CREATE CHARACTERS"
               description="Design your unique characters with detailed attributes and backgrounds."
-              icon={<Sparkles className="w-6 h-6" />}
+              icon={<Sparkles className="w-6 h-6" suppressHydrationWarning />}
             />
             <div className="w-px h-[106px] bg-neutral-400 flex-shrink-0" />
             <FeatureCard
               href="/power-creator"
               title="DEFINE POWERS"
               description="Customize and create powerful abilities for your characters."
-              icon={<Wand2 className="w-6 h-6" />}
+              icon={<Wand2 className="w-6 h-6" suppressHydrationWarning />}
             />
             <div className="w-px h-[106px] bg-neutral-400 flex-shrink-0" />
             <FeatureCard
               href="/library"
               title="JOIN ADVENTURES"
               description="Browse your library of armaments, powers, and creatures."
-              icon={<Sword className="w-6 h-6" />}
+              icon={<Sword className="w-6 h-6" suppressHydrationWarning />}
             />
           </div>
         </section>
@@ -127,6 +129,7 @@ function HomeContent() {
                   width={24}
                   height={26}
                   className="object-contain"
+                  suppressHydrationWarning
                 />
               </button>
               
@@ -158,6 +161,7 @@ function HomeContent() {
                   width={24}
                   height={26}
                   className="object-contain"
+                  suppressHydrationWarning
                 />
               </button>
             </div>
@@ -181,14 +185,14 @@ function HomeContent() {
                   href="/about"
                   className="btn-outline-clean inline-flex items-center gap-2"
                 >
-                  <BookOpen className="w-5 h-5" />
+                  <BookOpen className="w-5 h-5" suppressHydrationWarning />
                   About Realms
                 </Link>
                 <Link
                   href="/characters/new"
                   className="btn-solid inline-flex items-center gap-2"
                 >
-                  <Sparkles className="w-5 h-5" />
+                  <Sparkles className="w-5 h-5" suppressHydrationWarning />
                   Create a Character
                 </Link>
               </div>

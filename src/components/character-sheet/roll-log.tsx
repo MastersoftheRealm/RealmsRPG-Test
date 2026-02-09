@@ -64,15 +64,35 @@ function generateRollId(): string {
   return `roll-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
+/** Normalize roll timestamp from API (Date serialized as ISO string), Firestore ({ seconds }), or Date to a Date. */
+function normalizeRollTimestamp(
+  timestamp: Date | string | { seconds: number; nanoseconds?: number } | unknown
+): Date {
+  if (timestamp instanceof Date) return timestamp;
+  if (typeof timestamp === 'string') return new Date(timestamp);
+  const sec = (timestamp as { seconds?: number })?.seconds;
+  if (typeof sec === 'number') return new Date(sec * 1000);
+  return new Date();
+}
+
+/** Format roll timestamp for display: short date + time so "unavailable" is avoided. */
+function formatRollTimestamp(timestamp: Date | string | { seconds: number } | unknown): string {
+  const d = normalizeRollTimestamp(timestamp);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 interface RollLogProps {
   className?: string;
+  /** When set (e.g. on encounter page), campaign tab shows this campaign's rolls but new rolls stay personal (not sent to campaign). */
+  viewOnlyCampaignId?: string;
 }
 
 type RollLogMode = 'personal' | 'campaign';
 
-export function RollLog({ className }: RollLogProps) {
+export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const { rolls, addRoll, clearHistory, subscribeToRolls, campaignContext } = useRolls();
-  const campaignId = campaignContext?.campaignId;
+  const campaignId = campaignContext?.campaignId ?? viewOnlyCampaignId;
   const { rolls: campaignRolls } = useCampaignRolls(campaignId);
   const [mode, setMode] = React.useState<RollLogMode>('personal');
   const [isOpen, setIsOpen] = React.useState(false);
@@ -370,16 +390,11 @@ function groupDiceByType(dice: DieResult[]): { type: DieType; results: DieResult
 }
 
 export function RollEntryCard({ roll, characterName }: { roll: RollEntry | CampaignRollEntry; characterName?: string }) {
-  const formatTime = (date: Date | { seconds: number }) => {
-    const d = date instanceof Date ? date : new Date((date as { seconds: number }).seconds * 1000);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const rollDate = roll.timestamp instanceof Date ? roll.timestamp : new Date((roll.timestamp as { seconds: number }).seconds * 1000);
   const diceGroups = groupDiceByType(roll.dice);
   const diceSubtotal = roll.dice.reduce((sum, d) => sum + d.value, 0);
   const showModifier = roll.modifier !== 0;
   const showSubtotal = showModifier || roll.dice.length > 1;
+  const timestampStr = formatRollTimestamp(roll.timestamp);
 
   return (
     <div
@@ -390,7 +405,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
         roll.isCritFail && 'ring-2 ring-red-400'
       )}
     >
-      {/* Header: icon + title + character name (campaign) + timestamp */}
+      {/* Header: icon + title + character name (campaign) + date/time */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm flex-shrink-0">{ROLL_TYPE_ICONS[roll.type as RollType]}</span>
@@ -403,7 +418,9 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
             <span className="font-semibold text-sm text-primary-dark dark:text-primary-200 truncate block">{roll.title}</span>
           </div>
         </div>
-        <span className="text-[10px] text-text-muted dark:text-neutral-400 flex-shrink-0 ml-1">{formatTime(roll.timestamp)}</span>
+        <span className="text-[10px] text-text-muted dark:text-neutral-400 flex-shrink-0 ml-1" title={timestampStr}>
+          {timestampStr}
+        </span>
       </div>
 
       {/* Single-row: dice notation + roll value + bonus + total in boxes */}

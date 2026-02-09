@@ -458,6 +458,37 @@ export function getBaseEnergy(
   return getArchetypeAbility(archetype, abilities);
 }
 
+/**
+ * Compute max health and max energy from raw character data (e.g. from Prisma row.data).
+ * Used by campaign character API (scope=encounter) so combatants get accurate HP/EN.
+ */
+export function getCharacterMaxHealthEnergy(charData: Record<string, unknown>): {
+  maxHealth: number;
+  maxEnergy: number;
+} {
+  const rawAbilities = (charData.abilities || {}) as Record<string, number>;
+  const abilities: Partial<Abilities> = {
+    ...rawAbilities,
+    acuity: rawAbilities.acuity ?? rawAbilities.acu ?? 0,
+    agility: rawAbilities.agility ?? rawAbilities.agi ?? 0,
+  };
+  const level = (charData.level as number) ?? 1;
+  const vitality = abilities.vitality ?? 0;
+  const healthPoints = (charData.healthPoints as number) ?? 0;
+  const energyPoints = (charData.energyPoints as number) ?? 0;
+  const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string } | undefined;
+
+  const maxHealth =
+    vitality < 0
+      ? 8 + vitality + healthPoints
+      : 8 + vitality * level + healthPoints;
+
+  const archetypeAbilityValue = getArchetypeAbility(archetype, abilities);
+  const maxEnergy = archetypeAbilityValue * level + energyPoints;
+
+  return { maxHealth, maxEnergy };
+}
+
 // =============================================================================
 // Skill Helpers
 // =============================================================================

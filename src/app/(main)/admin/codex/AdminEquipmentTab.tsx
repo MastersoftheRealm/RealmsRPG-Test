@@ -68,7 +68,7 @@ export function AdminEquipmentTab() {
 
     setSaving(false);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'equipment'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -82,7 +82,7 @@ export function AdminEquipmentTab() {
     }
     const result = await deleteCodexDoc('codex_equipment', id);
     if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex', 'equipment'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);

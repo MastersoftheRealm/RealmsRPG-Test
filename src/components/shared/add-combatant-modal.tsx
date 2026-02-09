@@ -303,6 +303,7 @@ function CampaignCharactersTab({
             hasRolled: false,
             sourceType: 'campaign-character' as const,
             sourceId: r.charMeta.characterId,
+            sourceUserId: r.charMeta.userId,
           }));
         onAddParticipants(participants);
         onClose();
@@ -333,6 +334,7 @@ function CampaignCharactersTab({
             isSurprised: false,
             sourceType: 'campaign-character' as const,
             sourceId: r.charMeta.characterId,
+            sourceUserId: r.charMeta.userId,
           };
         });
 

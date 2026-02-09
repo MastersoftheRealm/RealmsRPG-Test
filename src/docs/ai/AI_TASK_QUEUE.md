@@ -3250,3 +3250,343 @@ Agents should **create new tasks** during their work when they discover addition
     - npm run build passes
   notes: |
     Done 2026-02-07: Audited skill encounter page. Campaign chars (RM + non-RM) fixed in prior session via API ?scope=encounter. CreatureLibraryTab and CampaignCharactersTab both support mode=skill and onAddParticipants. computeSkillRollResult matches GAME_RULES (roll >= DS: 1 + floor((roll-DS)/5) successes; roll < DS: 1 + floor((DS-roll)/5) failures). Added Required Successes display (participants + 1) per GAME_RULES. Build passes.
+
+- id: TASK-153
+  title: Navbar — Move Campaigns to right of RM Tools, left of About
+  priority: medium
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Reorder navbar: move Campaigns link to appear after RM Tools dropdown and before About. Current order: Characters, Campaigns, Library, Codex, Creators, Rules, RM Tools, About. New order: Characters, Library, Codex, Creators, Rules, RM Tools, Campaigns, About.
+  related_files:
+    - src/components/layout/header.tsx
+  acceptance_criteria:
+    - Campaigns appears after RM Tools and before About (desktop and mobile nav)
+    - All other nav links retain correct order
+    - npm run build passes
+  notes: |
+    Single navLinks array reorder in header.tsx.
+
+- id: TASK-154
+  title: Admin Codex — Display "-" for feat level 0 in list
+  priority: low
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    In Admin Codex Editor Feats tab (and any codex list showing feat_lvl), when feat level requirement is 0, display "-" instead of "0". Per GAME_RULES: feat_lvl indicates the level of the feat itself (e.g. Bloodlust II vs Bloodlust III); no level implies no higher-level variant.
+  related_files:
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+  acceptance_criteria:
+    - feat_lvl 0 displays as "-" in list views
+    - feat_lvl > 0 displays numeric value
+    - Applies to Admin Feats and Codex Feats tabs
+  notes: |
+    Use display helper: (feat_lvl === 0 || feat_lvl == null) ? '-' : String(feat_lvl).
+
+- id: TASK-155
+  title: Admin Codex — List refresh after delete; unify UI with Codex
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    When deleting a list item in Admin Codex, the list still shows the item until page refresh. Fix by ensuring query invalidation/refetch removes deleted item from local state immediately. Also unify Admin Codex tabs with Codex tabs: same UI, filters, styles, search/sort. Exception: Admin uses pencil/trash icons for edit/delete instead of Codex view-only actions. Apply to all admin codex tabs (Feats, Skills, Species, Traits, Parts, Properties, Equipment, Archetypes, Creature Feats).
+  related_files:
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/codex/
+  acceptance_criteria:
+    - Delete removes item from list immediately (no refresh needed)
+    - Each Admin tab uses same layout, filters, search, sort as corresponding Codex tab
+    - Admin tabs retain pencil/trash for edit/delete; Codex remains view-only
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: (1) Fixed invalidateQueries — all admin tabs used wrong keys; useCodex* hooks use ['codex']. Updated AdminFeatsTab, AdminSpeciesTab, AdminSkillsTab, AdminTraitsTab, AdminPartsTab, AdminPropertiesTab, AdminEquipmentTab, AdminCreatureFeatsTab to invalidate ['codex']. (2) Unified Admin Feats with Codex Feats: FilterSection, ChipSelect, AbilityRequirementFilter, TagFilter, SelectFilter, SortHeader, same GridListRow with detailSections. Other tabs (Skills, Species, etc.) can be unified incrementally — same pattern.
+
+- id: TASK-156
+  title: Feat Editing — Ability dropdown (6 abilities + 6 defenses)
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    In Admin Feat edit modal, ability_req and ability (sorting) should use a dropdown of the 12 options: 6 Abilities (Strength, Vitality, Agility, Acuity, Intelligence, Charisma) and 6 Defenses (Might, Fortitude, Reflexes, Discernment, Mental Fortitude, Resolve). Allow selecting one or more. Reference src/types/abilities.ts and GAME_RULES.md for canonical names.
+  related_files:
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/types/abilities.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - ability_req uses multi-select dropdown with 12 options
+    - ability (sorting) uses same dropdown (multi-select)
+    - Options: Strength, Vitality, Agility, Acuity, Intelligence, Charisma, Might, Fortitude, Reflexes, Discernment, Mental Fortitude, Resolve
+    - npm run build passes
+  notes: |
+    Create ABILITIES_AND_DEFENSES constant in src/lib/game/constants.ts or reuse existing. Display names: capitalize per GAME_RULES (e.g. "Mental Fortitude" not "mentalFortitude").
+
+- id: TASK-157
+  title: Feat Editing — Add all missing editable fields
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Admin Feat edit modal is missing many feat fields. Add edit controls for: name, description, req_desc (requirement description), ability_req + abil_req_val (paired: ability/defense name + min value), skill_req + skill_req_val (paired), feat_cat_req (feat category required), pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period (Full/Partial), category, ability (sorting), tags, char_feat, state_feat. Reference GAME_RULES.md and archived Fixes and Improvements for field semantics.
+  related_files:
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/types/feats.ts
+    - src/hooks/use-rtdb.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All listed fields have an input/select/checkbox in edit modal
+    - ability_req/abil_req_val pairs: add/remove rows; dropdown for ability; number for min value
+    - skill_req/skill_req_val pairs: skill dropdown (from codex); number for min bonus
+    - feat_cat_req, rec_period have appropriate controls
+    - feat_lvl displays "-" when 0
+    - npm run build passes
+  notes: |
+    Field semantics: abil_req_val[i] = min value for ability_req[i]. feat_cat_req = category of feat required (e.g. "Defense"). rec_period: Full or Partial. feat_lvl: level of feat (Bloodlust II = 2, Bloodlust = 1). TASK-156 covers ability dropdown.
+
+- id: TASK-158
+  title: Centralized codex data schema — AI reference doc
+  priority: medium
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Create a centralized reference document for all codex entity schemas (feats, skills, species, traits, parts, properties, equipment, archetypes, creature_feats). Each field should have: name, type, description, valid values, and example. Purpose: AI agents and engineers can reference this to clarify field utility when implementing validation, editing, or display logic.
+  related_files:
+    - src/docs/
+    - prisma/schema.prisma
+    - Codex csv/
+  acceptance_criteria:
+    - New doc (e.g. src/docs/CODEX_SCHEMA_REFERENCE.md) lists all codex entities
+    - Each entity has field table: name, type, description, valid values, example
+    - Covers: feats, skills, species, traits, parts, properties, equipment, archetypes, creature_feats
+    - Reference GAME_RULES.md and existing CSV/Prisma for accuracy
+  notes: |
+    Essential for admin codex editors and AI task implementation. Include ability_req/abil_req_val pairing, feat_lvl vs lvl_req, skill_req/skill_req_val order, species skills (IDs vs names), etc.
+
+- id: TASK-159
+  title: Admin Codex — Reduce input lag in edit mode
+  priority: medium
+  status: not-started
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    When typing in edit mode (Admin Codex modals), there is noticeable lag. Likely causes: uncontrolled re-renders, heavy form state updates, or expensive parent re-renders. Investigate and optimize: debounce only where needed, avoid unnecessary re-renders, consider controlled inputs with local state + sync on blur or debounced save.
+  related_files:
+    - src/app/(main)/admin/codex/*.tsx
+    - src/components/ui/Input.tsx
+  acceptance_criteria:
+    - Typing in text inputs feels responsive (no perceptible lag)
+    - Form state still saves correctly on submit
+    - npm run build passes
+  notes: |
+    Deferred: requires profiling to identify root cause. Potential causes: inline handlers, large form state updates, Modal re-renders. Consider: useCallback for handlers, startTransition for non-urgent updates, React.memo for form sections.
+
+- id: TASK-160
+  title: Admin Codex — Array fields use dropdowns, not raw IDs
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    For array fields in Admin Codex edit modals (e.g. species skills, feat skill_req, species traits), use dropdowns to select from codex items by name, not "ids separated by commas". Admins don't have IDs memorized. Allow add-from-dropdown or comma-separated when dropdown is the only practical option. Apply to all codex tabs that have array fields referencing other codex entities.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/hooks/use-codex.ts
+  acceptance_criteria:
+    - Species skills: dropdown of skills (by name) to add; display as chips with remove
+    - Feat skill_req: dropdown of skills to add
+    - Other array fields referencing codex: dropdown where applicable
+    - Store IDs internally; display names in UI
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: (1) Feat skill_req: dropdown of skills by name, add/remove rows with min value. (2) Species skills: ChipSelect dropdown of skills by name; resolve IDs to names when loading. Other array fields (traits, etc.) can follow same pattern.
+
+# Campaign–Encounter, Roll Log, Character Visibility (TASK-161+)
+
+- id: TASK-161
+  title: Campaign–Encounter attachment and "Add all Characters"
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Allow attaching a campaign to an encounter upon creation or within the encounter. Add "Add all Characters" (or similar) button that adds all characters from the attached campaign into the encounter automatically.
+  related_files:
+    - prisma/schema.prisma
+    - src/types/encounter.ts
+    - src/app/(main)/encounters/page.tsx
+    - src/app/(main)/encounters/[id]/combat/page.tsx
+    - src/app/(main)/encounters/[id]/skill/page.tsx
+    - src/app/(main)/encounters/[id]/mixed/page.tsx
+    - src/components/shared/add-combatant-modal.tsx
+  acceptance_criteria:
+    - Encounter can have optional campaignId; set on create or edit
+    - "Add all Characters" button adds all campaign characters to the encounter
+    - Add to combat, skill, and mixed encounter pages
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: encounter.data.campaignId; combat/skill/mixed have campaign dropdown + Add all Characters.
+
+- id: TASK-162
+  title: Fix encounter combatant HP/EN when tied to user character
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Encounter combatants tied to a user's character are not fully loading with accurate current/max energy and health. Ensure the API returns and the add-combatant flow uses correct health/energy from character data.
+  related_files:
+    - src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.ts
+    - src/components/shared/add-combatant-modal.tsx
+    - src/app/(main)/encounters/[id]/combat/page.tsx
+  acceptance_criteria:
+    - Campaign characters added to encounter show correct currentHealth/maxHealth, currentEnergy/maxEnergy
+    - API scope=encounter returns health/energy from character.data (health.current, health.max, etc.)
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: getCharacterMaxHealthEnergy in formulas; API uses when health/energy missing.
+
+- id: TASK-163
+  title: Add roll log to encounters for RM (personal + campaign tabs)
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Add a roll log to encounter pages (combat, skill, mixed) with same UI/functionality/styles as character sheet. RM uses it for private rolls (not broadcast to campaign). Include tabs so RM can also view rolls in their campaigns.
+  related_files:
+    - src/components/character-sheet/roll-log.tsx
+    - src/app/(main)/encounters/[id]/combat/page.tsx
+    - src/app/(main)/encounters/[id]/skill/page.tsx
+    - src/app/(main)/encounters/[id]/mixed/page.tsx
+  acceptance_criteria:
+    - Encounter pages have RollLog component (or equivalent)
+    - Personal tab: RM rolls privately, not sent to campaign
+    - Campaign tab: view campaign rolls (when encounter has campaign)
+    - Same layout, dice builder, RollEntryCard as character sheet
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: RollLog accepts viewOnlyCampaignId; encounter pages wrap in RollProvider (no campaignContext) and render RollLog with viewOnlyCampaignId={encounter.campaignId}. Personal rolls stay local; Campaign tab shows linked campaign rolls.
+
+- id: TASK-164
+  title: Roll log consistency — styles, date display across encounter/campaign/sheet
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Make roll log styles consistent across encounter tab (roll log campaign mode), character sheet (campaign mode), and campaign page. Fix roll date display — most show "unavailable" for the date. Use single RollEntryCard and shared formatting.
+  related_files:
+    - src/components/character-sheet/roll-log.tsx
+    - src/app/(main)/campaigns/[id]/page.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+  acceptance_criteria:
+    - RollEntryCard used everywhere; same layout, colors, spacing
+    - Roll date displays correctly (not "unavailable"); handle Date, {seconds}, ISO string
+    - Encounter, campaign, character sheet roll logs look identical
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: normalizeRollTimestamp + formatRollTimestamp in roll-log; campaign page uses same list styling.
+
+- id: TASK-165
+  title: Roll log real-time sync via Supabase Realtime
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Rolls should sync in real time between characters, campaigns, and other users. Replace polling with Supabase Realtime subscription on campaign_rolls (and personal rolls if stored). Update database, Supabase settings, and hooks.
+  related_files:
+    - src/hooks/use-campaign-rolls.ts
+    - prisma/supabase-rls-policies.sql
+  acceptance_criteria:
+    - Campaign rolls update in real time for all viewers (no 5s poll)
+    - Supabase Realtime enabled for campaign_rolls table
+    - RLS policies allow SELECT for campaign members
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: use-campaign-rolls uses postgres_changes on schema campaigns, table campaign_rolls with filter campaign_id=eq.; invalidates query on any change. prisma/supabase-rls-policies.sql: ALTER PUBLICATION supabase_realtime ADD TABLE campaigns.campaign_rolls; GRANT SELECT to authenticated.
+
+- id: TASK-166
+  title: Health/Energy real-time sync between encounters and characters
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Current health and energy should sync in real time between encounters and the characters themselves. When combatant is tied to a character (sourceType: campaign-character), HP/EN changes in encounter should update character and vice versa.
+  related_files:
+    - src/types/encounter.ts
+    - src/app/(main)/encounters/[id]/combat/page.tsx
+    - src/components/shared/add-combatant-modal.tsx
+    - prisma/supabase-rls-policies.sql
+  acceptance_criteria:
+    - Combatant HP/EN edits sync to character when sourceType is campaign-character
+    - Character HP/EN edits sync to encounter combatants
+    - Real-time or near-real-time; consider Supabase Realtime on characters
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: TrackedCombatant/SkillParticipant have sourceUserId. Encounter→character: updateCombatant calls syncCharacterHealthEnergy (debounced 400ms) when owner edits HP/EN; PATCH /api/characters/[id]. Character→encounter: Realtime subscription on users.characters for campaign-character combatant ids; on UPDATE merge health/energy into combatants. Publication + GRANT for users.characters in supabase-rls-policies.sql.
+
+- id: TASK-167
+  title: Character visibility — public link, campaign-only, private→campaign on join
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Public: anyone can copy link and view character in browser (read-only, no edit). Campaign only: RM and campaign members can see (not edit). Private + joins campaign: auto-set to campaign only; show notification when joining with private character that visibility will change.
+  related_files:
+    - src/types/character.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/app/api/characters/
+    - src/app/(main)/campaigns/
+  acceptance_criteria:
+    - Public: /characters/[id] viewable by unauthenticated or any user when visibility=public
+    - Campaign: RM and members can view via /campaigns/[id]/view/[userId]/[characterId]
+    - Join campaign with private char: auto-update to campaign; show notification
+    - All view modes: read-only (no edit/save)
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: GET /api/characters/[id] allows unauthenticated for public; campaign visibility via in-memory campaign membership check. View-only toolbar when !isOwner. Add/join campaign actions set visibility to campaign when private and return visibilityUpdated; toasts on campaign page and join tab.
+
+- id: TASK-168
+  title: Character-derived content visibility — library items view-only for viewers
+  priority: high
+  status: done
+  created_at: 2026-02-09
+  created_by: agent
+  description: |
+    Characters use powers, techniques, armaments, items from user's private library. When viewing another user's character (public or campaign), these library items must be visible (read-only) to the viewer. No editing of the source items.
+  related_files:
+    - src/lib/owner-library-for-view.ts
+    - src/lib/data-enrichment.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/app/api/characters/[id]/route.ts
+    - src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.ts
+    - src/services/character-service.ts
+  acceptance_criteria:
+    - Viewing a character includes resolved powers, techniques, items (from owner's library)
+    - API returns enriched data for view scope; library items readable by viewer
+    - No edit/delete/save for viewed items
+    - npm run build passes
+  notes: |
+    Done 2026-02-09: getOwnerLibraryForView(ownerUserId) fetches owner's powers/techniques/items. GET /api/characters/[id] returns { character, libraryForView } when non-owner (public/campaign). Campaign character API returns character + libraryForView. Character page and campaign view page use libraryForView for enrichment when present; view-only UI unchanged.

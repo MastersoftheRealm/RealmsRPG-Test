@@ -50,10 +50,11 @@ function CampaignCharacterViewContent() {
   const characterId = params.characterId as string;
 
   const [character, setCharacter] = useState<Character | null>(null);
+  const [libraryForView, setLibraryForView] = useState<{ powers: unknown[]; techniques: unknown[]; items: unknown[] } | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Use current user's library for enrichment (viewed character may reference codex items)
+  // Owner's library for enrichment when viewing another user's character; fallback to current user's for codex-only refs
   const { data: userPowers = [] } = useUserPowers();
   const { data: userTechniques = [] } = useUserTechniques();
   const { data: userItems = [] } = useUserItems();
@@ -79,7 +80,9 @@ function CampaignCharacterViewContent() {
           throw new Error(data.error || `Failed to load (${res.status})`);
         }
         const data = await res.json();
-        setCharacter({ id: data.id, ...data });
+        const { libraryForView: lib, ...charData } = data;
+        setCharacter({ id: charData.id, ...charData });
+        setLibraryForView(lib);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load character');
       } finally {
@@ -90,8 +93,11 @@ function CampaignCharacterViewContent() {
   }, [campaignId, userId, characterId]);
 
   const calculatedStats = character ? calculateStats(character) : null;
+  const powersForEnrich = (libraryForView?.powers as typeof userPowers) ?? userPowers;
+  const techniquesForEnrich = (libraryForView?.techniques as typeof userTechniques) ?? userTechniques;
+  const itemsForEnrich = (libraryForView?.items as typeof userItems) ?? userItems;
   const enrichedData = character
-    ? enrichCharacterData(character, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb)
+    ? enrichCharacterData(character, powersForEnrich, techniquesForEnrich, itemsForEnrich, codexEquipment, powerPartsDb, techniquePartsDb)
     : null;
 
   const characterSpeciesSkills = character && allSpecies.length

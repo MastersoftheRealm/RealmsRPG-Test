@@ -26,6 +26,8 @@ interface SheetActionToolbarProps {
   onToggleEditMode: () => void;
   onRecovery: () => void;
   onLevelUp: () => void;
+  /** When false, hide edit/recovery/level-up/save (view-only mode for non-owners). */
+  canEdit?: boolean;
 }
 
 export function SheetActionToolbar({
@@ -37,7 +39,16 @@ export function SheetActionToolbar({
   onToggleEditMode,
   onRecovery,
   onLevelUp,
+  canEdit = true,
 }: SheetActionToolbarProps) {
+  if (!canEdit) {
+    return (
+      <div className="fixed top-24 right-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-surface border border-border-light text-text-muted text-sm">
+        View only
+      </div>
+    );
+  }
+
   return (
     <div className="fixed top-24 right-4 z-50 flex flex-col gap-2">
       {/* Edit / Done Toggle */}

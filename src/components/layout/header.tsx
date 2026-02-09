@@ -16,7 +16,6 @@ import { ThemeToggle } from '@/components/shared';
 
 const navLinks = [
   { href: '/characters', label: 'Characters' },
-  { href: '/campaigns', label: 'Campaigns' },
   { href: '/library', label: 'Library' },
   { href: '/codex', label: 'Codex' },
   {
@@ -41,6 +40,7 @@ const navLinks = [
       { href: '/creature-creator', label: 'Creature Creator' },
     ],
   },
+  { href: '/campaigns', label: 'Campaigns' },
   { href: '/about', label: 'About' },
 ];
 
@@ -73,6 +73,7 @@ export function Header() {
               height={49}
               className="w-11 h-auto"
               priority
+              suppressHydrationWarning
             />
           </Link>
 
@@ -265,7 +266,7 @@ function MobileDropdown({ item, pathname }: { item: DropdownItem; pathname: stri
 
 function MenuIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className} suppressHydrationWarning>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
     </svg>
   );
@@ -273,7 +274,7 @@ function MenuIcon({ className }: { className?: string }) {
 
 function XIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className} suppressHydrationWarning>
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
     </svg>
   );
@@ -281,7 +282,7 @@ function XIcon({ className }: { className?: string }) {
 
 function ChevronDownIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className}>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className={className} suppressHydrationWarning>
       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
     </svg>
   );
