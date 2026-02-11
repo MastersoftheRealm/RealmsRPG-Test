@@ -6,8 +6,10 @@
 
 'use client';
 
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore, STEP_ORDER, type CreatorStep } from '@/stores/character-creator-store';
+import { ConfirmActionModal } from '@/components/shared';
 
 const STEP_LABELS: Record<CreatorStep, string> = {
   archetype: '1. Archetype',
@@ -23,6 +25,7 @@ const STEP_LABELS: Record<CreatorStep, string> = {
 
 export function CreatorTabBar() {
   const { currentStep, completedSteps, setStep, canNavigateToStep, resetCreator } = useCharacterCreatorStore();
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
 
   return (
     <div className="flex flex-wrap items-center gap-1 p-2 bg-surface-alt rounded-lg mb-4">
@@ -51,15 +54,24 @@ export function CreatorTabBar() {
       })}
       
       <button
-        onClick={() => {
-          if (confirm('Are you sure you want to restart? All progress will be lost.')) {
-            resetCreator();
-          }
-        }}
+        onClick={() => setShowRestartConfirm(true)}
         className="ml-auto px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
       >
         Restart
       </button>
+
+      <ConfirmActionModal
+        isOpen={showRestartConfirm}
+        onClose={() => setShowRestartConfirm(false)}
+        onConfirm={() => {
+          resetCreator();
+          setShowRestartConfirm(false);
+        }}
+        title="Restart Character"
+        description="Are you sure you want to restart? All progress for this character will be lost."
+        confirmLabel="Restart"
+        confirmVariant="danger"
+      />
     </div>
   );
 }

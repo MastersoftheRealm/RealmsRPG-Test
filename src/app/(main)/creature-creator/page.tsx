@@ -37,7 +37,7 @@ import {
   calculateSkillPoints,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
-import { Button, Input, Select, PageContainer, PageHeader, Textarea } from '@/components/ui';
+import { Button, Input, Select, PageContainer, PageHeader, Textarea, Alert } from '@/components/ui';
 import { Skull, FolderOpen } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_SIZES, CONDITIONS } from '@/lib/game/creator-constants';
@@ -96,6 +96,7 @@ function CreatureCreatorContent() {
   const [creature, setCreature] = useState<CreatureState>(initialState);
   const [saving, setSaving] = useState(false);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [showFeatModal, setShowFeatModal] = useState(false);
@@ -397,6 +398,7 @@ function CreatureCreatorContent() {
   // Save creature to user library (Prisma)
   const executeSave = async () => {
     setSaving(true);
+    setSaveMessage(null);
     try {
       const creatureData = {
         ...creature,
@@ -405,15 +407,18 @@ function CreatureCreatorContent() {
 
       if (saveTarget === 'public') {
         await saveToPublicLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() });
-        alert('Creature saved to public library!');
+        setSaveMessage({ type: 'success', text: 'Creature saved to public library!' });
       } else {
         const existing = await findLibraryItemByName('creatures', creature.name.trim());
         await saveToLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-        alert('Creature saved!');
+        setSaveMessage({ type: 'success', text: 'Creature saved!' });
       }
     } catch (err) {
       console.error('Error saving creature:', err);
-      alert('Failed to save creature');
+      setSaveMessage({
+        type: 'error',
+        text: 'Failed to save creature. Please try again.',
+      });
     } finally {
       setSaving(false);
     }
@@ -421,7 +426,7 @@ function CreatureCreatorContent() {
 
   const handleSave = async () => {
     if (!creature.name.trim()) {
-      alert('Please enter a creature name');
+      setSaveMessage({ type: 'error', text: 'Please enter a creature name.' });
       return;
     }
     if (!user) {
@@ -435,16 +440,10 @@ function CreatureCreatorContent() {
     executeSave();
   };
 
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
   const handleReset = () => {
-    if (confirm('Reset all creature data?')) {
-      setCreature(initialState);
-      // Clear localStorage cache
-      try {
-        localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-      } catch (e) {
-        console.error('Failed to clear creature creator cache:', e);
-      }
-    }
+    setShowResetConfirm(true);
   };
 
   const addLanguage = () => {
@@ -1057,7 +1056,13 @@ function CreatureCreatorContent() {
               { label: 'Movement', items: creature.movementTypes },
               { label: 'Languages', items: creature.languages },
             ]}
-          />
+          >
+            {saveMessage && (
+              <Alert variant={saveMessage.type === 'success' ? 'success' : 'danger'}>
+                {saveMessage.text}
+              </Alert>
+            )}
+          </CreatorSummaryPanel>
         </div>
       </div>
 
@@ -1146,6 +1151,25 @@ function CreatureCreatorContent() {
         onClose={() => setShowLoginPrompt(false)}
         returnPath="/creature-creator"
         contentType="creature"
+      />
+
+      {/* Reset Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={() => {
+          setCreature(initialState);
+          try {
+            localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
+          } catch (e) {
+            console.error('Failed to clear creature creator cache:', e);
+          }
+          setShowResetConfirm(false);
+        }}
+        title="Restart Creature"
+        description="Are you sure you want to reset all creature data? This will clear all fields and cannot be undone."
+        confirmLabel="Reset"
+        confirmVariant="danger"
       />
 
       {/* Publish Confirmation Modal */}

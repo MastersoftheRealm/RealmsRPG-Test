@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Characters List Page
  * ======================
  * Displays user's characters with create/delete functionality
@@ -13,6 +13,7 @@ import { CharacterCard, AddCharacterCard } from '@/components/character';
 import { PageContainer, PageHeader, EmptyState } from '@/components/ui';
 import { Spinner } from '@/components/ui/spinner';
 import { Alert } from '@/components/ui/alert';
+import { DeleteConfirmModal } from '@/components/shared';
 import { useCharacters, useDeleteCharacter } from '@/hooks';
 import { UserPlus } from 'lucide-react';
 
@@ -29,24 +30,28 @@ function CharactersContent() {
   const { data: characters, isLoading, error } = useCharacters();
   const deleteCharacter = useDeleteCharacter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleCreateCharacter = () => {
     router.push('/characters/new');
   };
 
-  const handleDeleteCharacter = async (id: string, name: string) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${name}"?\n\nThis action cannot be undone.`
-    );
-    
-    if (!confirmed) return;
+  const handleDeleteCharacter = (id: string, name: string) => {
+    setDeleteTarget({ id, name });
+    setDeleteError(null);
+  };
 
-    setDeletingId(id);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
+    setDeleteError(null);
     try {
-      await deleteCharacter.mutateAsync(id);
+      await deleteCharacter.mutateAsync(deleteTarget.id);
+      setDeleteTarget(null);
     } catch (err) {
       console.error('Error deleting character:', err);
-      alert('Failed to delete character. Please try again.');
+      setDeleteError('Failed to delete character. Please try again.');
     } finally {
       setDeletingId(null);
     }
@@ -87,6 +92,14 @@ function CharactersContent() {
     <PageContainer size="xl">
       <PageHeader title="Characters" />
       
+      {deleteError && (
+        <div className="mb-4">
+          <Alert variant="danger" title="Delete failed">
+            {deleteError}
+          </Alert>
+        </div>
+      )}
+      
       {hasCharacters ? (
         // Grid layout when we have characters
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -111,6 +124,17 @@ function CharactersContent() {
             label: 'Create Character',
             onClick: handleCreateCharacter,
           }}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteConfirmModal
+          itemName={deleteTarget.name}
+          itemType="character"
+          deleteContext="account"
+          isDeleting={deletingId === deleteTarget.id}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setDeleteTarget(null)}
         />
       )}
     </PageContainer>
