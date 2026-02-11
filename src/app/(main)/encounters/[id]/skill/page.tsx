@@ -33,7 +33,7 @@ import {
   Input,
 } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
-import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull, useCodexSkills } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
 import { RollProvider, RollLog } from '@/components/character-sheet';
 import type { Campaign } from '@/types/campaign';
@@ -69,6 +69,7 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   const [nameInput, setNameInput] = useState('');
   const [addingAllChars, setAddingAllChars] = useState(false);
   const { data: campaignsFull = [] } = useCampaignsFull();
+  const { data: codexSkills = [] } = useCodexSkills();
 
   // Initialize local state from Prisma (strip legacy requiredSuccesses/requiredFailures)
   useEffect(() => {
@@ -80,6 +81,8 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           participants: [],
           currentSuccesses: 0,
           currentFailures: 0,
+          additionalSuccesses: 0,
+          additionalFailures: 0,
         };
       } else {
         const sk = enc.skillEncounter as unknown as Record<string, unknown>;
@@ -120,8 +123,12 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
   const skill = encounter?.skillEncounter;
 
-  // Net = successes - failures (they cancel)
-  const netSuccesses = skill ? skill.currentSuccesses - skill.currentFailures : 0;
+  const additionalSuccesses = skill?.additionalSuccesses ?? 0;
+  const additionalFailures = skill?.additionalFailures ?? 0;
+  // Net = (roll successes + additional) - (roll failures + additional); failures cancel successes
+  const netSuccesses = skill
+    ? (skill.currentSuccesses + additionalSuccesses) - (skill.currentFailures + additionalFailures)
+    : 0;
 
   const updateSkill = useCallback((updates: Partial<SkillEncounterState>) => {
     setEncounter((prev) => {
@@ -199,9 +206,10 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
     });
   };
 
-  const updateParticipantRoll = (id: string, rollValue: number) => {
+  const updateParticipantRoll = (id: string, rollValue: number, rmBonus?: number) => {
     if (!skill) return;
-    const { successes, failures } = computeSkillRollResult(rollValue, skill.difficultyScore);
+    const effectiveRoll = rollValue + (rmBonus ?? 0);
+    const { successes, failures } = computeSkillRollResult(effectiveRoll, skill.difficultyScore);
     const prev = skill.participants.find((p) => p.id === id);
     const prevSuccess = prev?.successCount ?? 0;
     const prevFail = prev?.failureCount ?? 0;
@@ -224,6 +232,83 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
       currentSuccesses: Math.max(0, skill.currentSuccesses + deltaSuccess),
       currentFailures: Math.max(0, skill.currentFailures + deltaFail),
     });
+  };
+
+  const addAdditionalSuccess = () => {
+    updateSkill({ additionalSuccesses: (skill?.additionalSuccesses ?? 0) + 1 });
+  };
+
+  const addAdditionalFailure = () => {
+    updateSkill({ additionalFailures: (skill?.additionalFailures ?? 0) + 1 });
+  };
+
+  const removeAdditionalSuccess = () => {
+    const cur = skill?.additionalSuccesses ?? 0;
+    if (cur > 0) updateSkill({ additionalSuccesses: cur - 1 });
+  };
+
+  const removeAdditionalFailure = () => {
+    const cur = skill?.additionalFailures ?? 0;
+    if (cur > 0) updateSkill({ additionalFailures: cur - 1 });
+  };
+
+  const updateParticipantRmBonus = (id: string, rmBonus: number | undefined) => {
+    if (!skill) return;
+    const p = skill.participants.find((x) => x.id === id);
+    if (!p) return;
+    const updatedParticipants = skill.participants.map((x) =>
+      x.id !== id ? x : { ...x, rmBonus }
+    );
+    if (p.hasRolled && p.rollValue != null) {
+      const effectiveRoll = p.rollValue + (rmBonus ?? 0);
+      const { successes, failures } = computeSkillRollResult(effectiveRoll, skill.difficultyScore);
+      const prevSuccess = p.successCount ?? 0;
+      const prevFail = p.failureCount ?? 0;
+      const deltaSuccess = successes - prevSuccess;
+      const deltaFail = failures - prevFail;
+      const finalParticipants = updatedParticipants.map((x) =>
+        x.id !== id
+          ? x
+          : {
+              ...x,
+              successCount: successes,
+              failureCount: failures,
+              isSuccess: successes > 0,
+            }
+      );
+      updateSkill({
+        participants: finalParticipants,
+        currentSuccesses: Math.max(0, skill.currentSuccesses + deltaSuccess),
+        currentFailures: Math.max(0, skill.currentFailures + deltaFail),
+      });
+    } else {
+      updateSkill({ participants: updatedParticipants });
+    }
+  };
+
+  const recomputeParticipantRollsFromDs = (newDs?: number) => {
+    if (!skill) return;
+    const ds = newDs ?? skill.difficultyScore;
+    const updated = skill.participants.map((p) => {
+      if (!p.hasRolled || p.rollValue == null || p.isHelping) return p;
+      const effectiveRoll = p.rollValue + (p.rmBonus ?? 0);
+      const { successes, failures } = computeSkillRollResult(effectiveRoll, ds);
+      return {
+        ...p,
+        successCount: successes,
+        failureCount: failures,
+        isSuccess: successes > 0,
+      };
+    });
+    const newSuccesses = updated.reduce((s, p) => s + (p.isHelping ? 0 : p.successCount ?? 0), 0);
+    const newFailures = updated.reduce((s, p) => s + (p.isHelping ? 0 : p.failureCount ?? 0), 0);
+    updateSkill({ participants: updated, currentSuccesses: newSuccesses, currentFailures: newFailures });
+  };
+
+  const updateParticipantRollOnly = (id: string, rollValue: number) => {
+    const p = skill?.participants.find((x) => x.id === id);
+    if (!skill || !p) return;
+    updateParticipantRoll(id, rollValue, p.rmBonus);
   };
 
   const updateParticipantSkill = (id: string, skillUsed: string) => {
@@ -407,13 +492,29 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          {/* Success/Failure Tracker: failures left, neutral middle, successes right, bubbles */}
+          {/* Successes: net = (successes + additional) - (failures + additional); red cancels green */}
           <div className="bg-surface rounded-xl border border-border-light p-4">
-            <h3 className="text-sm font-semibold text-text-secondary mb-3">Progress</h3>
+            <h3 className="text-sm font-semibold text-text-secondary mb-3">Successes</h3>
             <SuccessFailureTracker
-              successes={skill.currentSuccesses}
-              failures={skill.currentFailures}
+              rollSuccesses={skill.currentSuccesses}
+              rollFailures={skill.currentFailures}
+              additionalSuccesses={additionalSuccesses}
+              additionalFailures={additionalFailures}
             />
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+              <Button size="sm" variant="secondary" onClick={addAdditionalSuccess}>
+                Additional Success
+              </Button>
+              <Button size="sm" variant="secondary" onClick={removeAdditionalSuccess} disabled={additionalSuccesses <= 0}>
+                − Success
+              </Button>
+              <Button size="sm" variant="secondary" onClick={addAdditionalFailure}>
+                Additional Failure
+              </Button>
+              <Button size="sm" variant="secondary" onClick={removeAdditionalFailure} disabled={additionalFailures <= 0}>
+                − Failure
+              </Button>
+            </div>
           </div>
 
           {/* Action bar */}
@@ -441,8 +542,10 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
                   key={p.id}
                   participant={p}
                   ds={skill.difficultyScore}
-                  onUpdateRoll={(val) => updateParticipantRoll(p.id, val)}
+                  codexSkills={codexSkills}
+                  onUpdateRoll={(val) => updateParticipantRollOnly(p.id, val)}
                   onUpdateSkill={(s) => updateParticipantSkill(p.id, s)}
+                  onUpdateRmBonus={(v) => updateParticipantRmBonus(p.id, v)}
                   onClearRoll={() => clearParticipantRoll(p.id)}
                   onSetHelping={(v) => setParticipantHelping(p.id, v)}
                   onRemove={() => removeParticipant(p.id)}
@@ -464,7 +567,10 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
               </label>
               <ValueStepper
                 value={skill.difficultyScore}
-                onChange={(val) => updateSkill({ difficultyScore: val })}
+                onChange={(val) => {
+                  updateSkill({ difficultyScore: val });
+                  recomputeParticipantRollsFromDs(val);
+                }}
                 min={1}
                 max={40}
                 size="sm"
@@ -560,63 +666,84 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
   );
 }
 
-function SuccessFailureTracker({ successes, failures }: { successes: number; failures: number }) {
-  const net = successes - failures;
-  const maxBubbles = Math.max(10, successes + failures, Math.abs(net) + 4);
-  const failBubbles = Math.min(failures, maxBubbles);
-  const successBubbles = Math.min(successes, maxBubbles);
+function SuccessFailureTracker({
+  rollSuccesses,
+  rollFailures,
+  additionalSuccesses,
+  additionalFailures,
+}: {
+  rollSuccesses: number;
+  rollFailures: number;
+  additionalSuccesses: number;
+  additionalFailures: number;
+}) {
+  const totalSuccesses = rollSuccesses + additionalSuccesses;
+  const totalFailures = rollFailures + additionalFailures;
+  const net = totalSuccesses - totalFailures;
+  const netAbs = Math.abs(net);
+  const maxBubbles = Math.max(10, netAbs + 4);
 
   return (
     <div className="flex items-center justify-center gap-2">
-      {/* Failures (left) */}
-      <div className="flex items-center gap-1">
-        {Array.from({ length: failBubbles }).map((_, i) => (
-          <div
-            key={`f-${i}`}
-            className="w-4 h-4 rounded-full bg-red-500 dark:bg-red-600"
-            title="Failure"
-          />
-        ))}
-        {failures > 0 && (
-          <span className="text-xs font-medium text-red-700 dark:text-red-300 ml-1">{failures}</span>
-        )}
-      </div>
-
-      {/* Neutral (middle) */}
+      {/* Net number */}
       <div className="px-4 py-2 rounded-lg bg-surface-alt text-text-muted text-sm font-medium min-w-[4rem] text-center">
         {net === 0 ? '0' : net > 0 ? `+${net}` : net}
       </div>
-
-      {/* Successes (right) */}
+      {/* Dots: green if net > 0, red if net < 0; failures cancel successes */}
       <div className="flex items-center gap-1">
-        {successes > 0 && (
-          <span className="text-xs font-medium text-green-700 dark:text-green-300 mr-1">{successes}</span>
+        {net > 0 &&
+          Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
+            <div
+              key={`g-${i}`}
+              className="w-4 h-4 rounded-full bg-green-500 dark:bg-green-600"
+              title="Success"
+            />
+          ))}
+        {net < 0 &&
+          Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
+            <div
+              key={`r-${i}`}
+              className="w-4 h-4 rounded-full bg-red-500 dark:bg-red-600"
+              title="Failure"
+            />
+          ))}
+        {(net > 0 || net < 0) && (
+          <span
+            className={cn(
+              'text-xs font-medium ml-1',
+              net > 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+            )}
+          >
+            {net > 0 ? `+${net}` : net}
+          </span>
         )}
-        {Array.from({ length: successBubbles }).map((_, i) => (
-          <div
-            key={`s-${i}`}
-            className="w-4 h-4 rounded-full bg-green-500 dark:bg-green-600"
-            title="Success"
-          />
-        ))}
       </div>
     </div>
   );
 }
 
+interface CodexSkillOption {
+  id: string;
+  name: string;
+}
+
 function ParticipantCard({
   participant,
   ds,
+  codexSkills,
   onUpdateRoll,
   onUpdateSkill,
+  onUpdateRmBonus,
   onClearRoll,
   onSetHelping,
   onRemove,
 }: {
   participant: SkillParticipant;
   ds: number;
+  codexSkills: CodexSkillOption[];
   onUpdateRoll: (value: number) => void;
   onUpdateSkill: (skill: string) => void;
+  onUpdateRmBonus: (value: number | undefined) => void;
   onClearRoll: () => void;
   onSetHelping: (v: boolean) => void;
   onRemove: () => void;
@@ -624,6 +751,10 @@ function ParticipantCard({
   const [rollInput, setRollInput] = useState('');
   const hasActed = participant.hasRolled || participant.isHelping;
   const isSuccess = (participant.successCount ?? 0) > 0;
+  const effectiveRoll =
+    participant.hasRolled && participant.rollValue != null && (participant.rmBonus ?? 0) !== 0
+      ? participant.rollValue + (participant.rmBonus ?? 0)
+      : null;
 
   const submitRoll = () => {
     const val = parseInt(rollInput, 10);
@@ -661,13 +792,29 @@ function ParticipantCard({
 
       <div className="flex-1 min-w-0">
         <div className="font-medium text-text-primary">{participant.name}</div>
-        <div className="flex items-center gap-2 mt-1">
-          <input
-            type="text"
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <select
             value={participant.skillUsed || ''}
             onChange={(e) => onUpdateSkill(e.target.value)}
-            placeholder="Skill used..."
-            className="text-xs bg-transparent border-b border-border-light text-text-secondary focus:border-primary-500 focus:outline-none px-0 py-0.5 w-32"
+            className="text-xs bg-transparent border border-border-light rounded px-1 py-0.5 text-text-secondary focus:border-primary-500 focus:outline-none min-w-0 max-w-[140px]"
+          >
+            <option value="">Skill...</option>
+            {codexSkills.map((s) => (
+              <option key={s.id} value={s.name}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-text-muted">RM Bonus:</span>
+          <input
+            type="number"
+            value={participant.rmBonus ?? ''}
+            onChange={(e) => {
+              const v = e.target.value.trim();
+              onUpdateRmBonus(v === '' || v === '-' ? undefined : parseInt(v, 10));
+            }}
+            placeholder="+0"
+            className="w-12 px-1 py-0.5 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-500 focus:outline-none"
           />
           {participant.hasRolled && participant.rollValue != null && (
             <span className="text-xs text-text-muted">
@@ -697,6 +844,11 @@ function ParticipantCard({
               )}
             >
               {participant.rollValue}
+              {(participant.rmBonus ?? 0) !== 0 && (
+                <span className="text-xs font-normal ml-1">
+                  ({participant.rmBonus! > 0 ? '+' : ''}{participant.rmBonus}) = {effectiveRoll}
+                </span>
+              )}
               <span className="text-xs font-normal ml-1">vs {ds}</span>
             </div>
             <button

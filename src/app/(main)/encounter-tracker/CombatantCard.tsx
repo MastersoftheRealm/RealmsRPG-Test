@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
@@ -52,6 +52,13 @@ export function CombatantCard({
   const [customCondition, setCustomCondition] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingInitiative, setIsEditingInitiative] = useState(false);
+  const initiativeInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingInitiative && initiativeInputRef.current) {
+      initiativeInputRef.current.select();
+    }
+  }, [isEditingInitiative]);
 
   const healthPercent = combatant.maxHealth > 0 ? (combatant.currentHealth / combatant.maxHealth) * 100 : 0;
   const energyPercent = combatant.maxEnergy > 0 ? (combatant.currentEnergy / combatant.maxEnergy) * 100 : 0;
@@ -149,6 +156,7 @@ export function CombatantCard({
           >
             {isEditingInitiative ? (
               <input
+                ref={initiativeInputRef}
                 type="number"
                 value={combatant.initiative}
                 onChange={(e) => onUpdate({ initiative: parseInt(e.target.value) || 0 })}
@@ -195,15 +203,15 @@ export function CombatantCard({
                 Companion
               </span>
             )}
-            {combatant.isSurprised && (
-              <span
-                className="px-1.5 py-0.5 text-[10px] bg-warning-light dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 rounded font-medium cursor-pointer hover:bg-warning-200 dark:hover:bg-warning-800/40"
-                onClick={() => onUpdate({ isSurprised: false })}
-                title="Click to remove surprised"
-              >
-                Surprised ×
-              </span>
-            )}
+            <label className="flex items-center gap-1 cursor-pointer select-none" title="Surprised (goes last in round 1)">
+              <input
+                type="checkbox"
+                checked={!!combatant.isSurprised}
+                onChange={(e) => onUpdate({ isSurprised: e.target.checked })}
+                className="rounded border-border-light w-3.5 h-3.5"
+              />
+              <span className="text-[10px] text-text-muted">Surprised</span>
+            </label>
             {isCurrentTurn && (
               <span className="px-1.5 py-0.5 text-[10px] bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded font-medium">
                 Current

@@ -641,3 +641,7 @@ Notes
   17. core_rulebook_extracted.txt is the pure source of truth for game rules.
 - Expected: GAME_RULES.md corrected with all values. Task queue updated. TASK-195 cancelled (code was correct). TASK-198, TASK-199 resolved with owner-confirmed values. TASK-221 creature values corrected.
 - Extracted to: Updates applied to TASK-195 (cancelled), TASK-198 (resolved), TASK-199 (resolved), TASK-221 (corrected), GAME_RULES.md (updated)
+
+### 2/11/2026 — About page, Skill encounter, Combat tracker (batch)
+- Raw feedback (abbreviated): About: dice carousel no brackets, center below content, cycle with selected middle (d10 d12 d20 [d4] d6 d8 d10), add second d10 slide (Join Community/Discord). Skill encounter: skill dropdown, success/failure descriptions per roll, allow updating DS post-rolls, fix save/load of rolls, rename Progress to Successes, red failure dots cancel green (net display), Additional Success/Failure buttons, RM Bonus per participant. Combat: surprised checkbox on list items, initiative edit auto-select value, delete combatant don't advance turn, re-sort initiative each round start, keep Sort Initiative in bar when active, Auto Sort Initiative toggle.
+- Extracted to: TASK-235 (About dice carousel), TASK-236 (Skill encounter Successes/RM bonus/DS), TASK-237 (Combat surprised/initiative/delete/auto-sort). Implemented 2026-02-11.

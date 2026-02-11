@@ -5583,6 +5583,57 @@ Agents should **create new tasks** during their work when they discover addition
     - Fallback to COMBAT_DEFAULTS when rules not provided
     - npm run build passes
 
+- id: TASK-235
+  title: About page — dice carousel redesign (center, 7 dice, wrap, no brackets)
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Redesign About page dice carousel: remove brackets around selected die; center carousel horizontally below content; order d10, d12, d20, d4, d6, d8, d10 with d4 center on load; cycle so selected die stays center (leftmost moves right on next); add second d10 slide "Join the Community" with Discord link and core-rules language.
+  related_files:
+    - src/app/(main)/about/page.tsx
+  acceptance_criteria:
+    - No ring/brackets on selected die; coloration and centering indicate selection
+    - Carousel centered below content; 7 dice; wrap-around cycling
+    - "Join the Community" slide with Discord and Core Rules links
+  notes: "Done 2026-02-11. Seven dice (d10 twice), CENTER_INDEX 3 (d4), transform centering, bg highlight for selected, scale-x-[-1] for second d10."
+
+- id: TASK-236
+  title: Skill encounter — Successes UI, DS post-roll, RM bonus, additional success/failure
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Rename Progress to Successes; show net dots (failures cancel successes); add Additional Success / Additional Failure buttons; allow updating DS post-rolls (recompute participant results); add RM Bonus per participant; skill dropdown from codex; fix save/load consistency for rolls.
+  related_files:
+    - src/app/(main)/encounters/[id]/skill/page.tsx
+    - src/types/encounter.ts
+  acceptance_criteria:
+    - "Successes" section with net display (green or red dots only); Additional Success/Failure buttons
+    - DS change recomputes all participant roll results; RM Bonus modifies effective roll
+    - Skill dropdown (codex); RM Bonus input per participant
+  notes: "Done 2026-02-11. SuccessFailureTracker net-only dots; additionalSuccesses/additionalFailures; recomputeParticipantRollsFromDs on DS change; rmBonus on SkillParticipant; ParticipantCard skill select + RM Bonus."
+
+- id: TASK-237
+  title: Combat tracker — surprised checkbox, initiative select-all, delete turn, auto-sort
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Add surprised checkbox on combatant list items; initiative edit auto-select value for overwrite; when combatant deleted do not advance turn; re-sort initiative at start of each round (optional Auto Sort Initiative toggle); keep Sort Initiative in top bar when combat active.
+  related_files:
+    - src/app/(main)/encounters/[id]/combat/page.tsx
+    - src/app/(main)/encounter-tracker/CombatantCard.tsx
+    - src/types/encounter.ts
+  acceptance_criteria:
+    - Surprised checkbox on each CombatantCard; initiative input select-all on focus
+    - removeCombatant adjusts currentTurnIndex so turn does not advance
+    - nextTurn re-sorts at round start when autoSortInitiative; Sort Initiative always visible; Auto Sort checkbox
+  notes: "Done 2026-02-11. CombatantCard surprised checkbox + initiative ref/useEffect select; removeCombatant buildSorted + newTurnIndex; nextTurn round-start sort when autoSortInitiative; Encounter.autoSortInitiative."
+
 # =====================================================================
 # INTEGRATED EXECUTION ORDER
 # =====================================================================

@@ -12,19 +12,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { PageContainer, PageHeader } from '@/components/ui';
-import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap } from 'lucide-react';
+import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap, MessageCircle } from 'lucide-react';
 
-// Order: left to right = d12, d20, d4(center), d6, d8, d10 — cycling left/right rolls around
+// Order: d10, d12, d20, d4(center on load), d6, d8, d10 — 7 dice; selected always centered; cycling wraps (leftmost moves to right)
 const DICE_IMAGES = [
-  { src: '/images/D12.png', alt: 'D12', label: 'How You Adventure' },
-  { src: '/images/D20_1.png', alt: 'D20', label: 'Join the Adventure' },
-  { src: '/images/D4.png', alt: 'D4', label: 'Our Philosophy' },
-  { src: '/images/D6.png', alt: 'D6', label: 'What We Offer' },
-  { src: '/images/D8.png', alt: 'D8', label: 'What Makes Realms Unique' },
-  { src: '/images/D10.png', alt: 'D10', label: 'Choose Who You Play' },
+  { src: '/images/D10.png', alt: 'D10', label: 'How You Adventure', className: '' },
+  { src: '/images/D12.png', alt: 'D12', label: 'Join the Adventure', className: '' },
+  { src: '/images/D20_1.png', alt: 'D20', label: 'Our Philosophy', className: '' },
+  { src: '/images/D4.png', alt: 'D4', label: 'What We Offer', className: '' },
+  { src: '/images/D6.png', alt: 'D6', label: 'What Makes Realms Unique', className: '' },
+  { src: '/images/D8.png', alt: 'D8', label: 'Choose Who You Play', className: '' },
+  { src: '/images/D10.png', alt: 'D10', label: 'Join the Community', className: 'scale-x-[-1]' },
 ];
 
-// Ordered to match DICE_IMAGES: d12, d20, d4, d6, d8, d10 — d4 at index 2 (center)
+// Ordered to match DICE_IMAGES: d10, d12, d20, d4, d6, d8, d10 — d4 at index 3 (center on load)
 const CAROUSEL_SLIDES = [
   {
     title: 'How You Adventure',
@@ -170,6 +171,34 @@ const CAROUSEL_SLIDES = [
       </>
     ),
   },
+  {
+    title: 'Join the Community',
+    content: (
+      <>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          <strong className="text-text-primary">Realms is better together.</strong> Connect with other players and Realm Masters, share house rules, and find games. The core rules give you the foundation—your table brings it to life.
+        </p>
+        <p className="text-lg text-text-secondary leading-relaxed mb-4">
+          Join the community to get the most out of Realms: ask questions, share characters and creatures, and stay updated on tools and rules.
+        </p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          <a
+            href="https://discord.gg/realmsrpg"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-solid inline-flex items-center gap-2"
+          >
+            <MessageCircle className="w-5 h-5" />
+            Join the Discord
+          </a>
+          <Link href="/rules" className="btn-outline-clean">
+            <BookOpen className="w-5 h-5" />
+            Core Rules
+          </Link>
+        </div>
+      </>
+    ),
+  },
 ];
 
 // Fixed height so carousel doesn't jump when switching slides
@@ -177,8 +206,10 @@ const CAROUSEL_CONTENT_MIN_H = 'min-h-[420px]';
 
 const FADE_DURATION_MS = 180;
 
+const CENTER_INDEX = 3; // d4 in order: d10, d12, d20, d4, d6, d8, d10
+
 export default function AboutPage() {
-  const [currentSlide, setCurrentSlide] = useState(2); // Start on d4 (center)
+  const [currentSlide, setCurrentSlide] = useState(CENTER_INDEX); // Start on d4 (center)
   const [pendingSlide, setPendingSlide] = useState<number | null>(null);
   const [isFadingOut, setIsFadingOut] = useState(false);
 
@@ -258,11 +289,11 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Dice selector - active die cycles to center, sleek borderless hover */}
-        <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden">
+        {/* Dice carousel - selected die always center; no brackets; cycle wraps (leftmost moves right) */}
+        <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden w-full">
           <button
             onClick={goPrev}
-            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 transition-all hover:scale-110 z-10"
+            className="absolute left-2 md:left-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10"
             aria-label="Previous slide"
           >
             <Image src="/images/ArrowL.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />
@@ -270,9 +301,9 @@ export default function AboutPage() {
 
           <div className="flex items-center justify-center w-full overflow-hidden">
             <div
-              className="flex items-center justify-center gap-2 transition-transform duration-500 ease-out"
+              className="flex items-center justify-center gap-1 md:gap-2 transition-transform duration-500 ease-out"
               style={{
-                transform: `translateX(calc(${currentSlide * -56}px - 50% + 28px))`,
+                transform: `translateX(calc(50% - 28px - ${currentSlide * 52}px))`,
               }}
             >
               {DICE_IMAGES.map((dice, index) => {
@@ -284,12 +315,12 @@ export default function AboutPage() {
 
                 return (
                   <button
-                    key={dice.alt}
+                    key={`${dice.alt}-${index}`}
                     onClick={() => goToSlide(index)}
                     className={cn(
                       'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2',
                       'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                      isSelected ? 'ring-2 ring-primary-400/40' : 'hover:ring-2 hover:ring-primary-300/30'
+                      isSelected ? 'bg-primary-100/60 dark:bg-primary-900/40' : 'hover:bg-surface-alt/80'
                     )}
                     style={{
                       transform: `scale(${scale})`,
@@ -305,7 +336,7 @@ export default function AboutPage() {
                       alt={dice.alt}
                       width={48}
                       height={48}
-                      className="w-10 h-10 md:w-12 md:h-12 object-contain"
+                      className={cn('w-10 h-10 md:w-12 md:h-12 object-contain', dice.className)}
                     />
                   </button>
                 );
@@ -315,7 +346,7 @@ export default function AboutPage() {
 
           <button
             onClick={goNext}
-            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 transition-all hover:scale-110 z-10"
+            className="absolute right-2 md:right-4 p-2 rounded-full hover:bg-primary-50/80 dark:hover:bg-primary-900/30 transition-all hover:scale-110 z-10"
             aria-label="Next slide"
           >
             <Image src="/images/ArrowR.png" alt="" width={24} height={26} className="opacity-60 hover:opacity-100 transition-opacity" />

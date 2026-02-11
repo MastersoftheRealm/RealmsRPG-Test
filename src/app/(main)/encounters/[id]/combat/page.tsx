@@ -340,7 +340,34 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   };
 
   const removeCombatant = (id: string) => {
-    setEncounter(prev => prev ? { ...prev, combatants: prev.combatants.filter(c => c.id !== id) } : prev);
+    setEncounter(prev => {
+      if (!prev) return prev;
+      const combatants = prev.combatants.filter(c => c.id !== id);
+      const sortFn = (a: Combatant, b: Combatant) => {
+        if (b.initiative !== a.initiative) return b.initiative - a.initiative;
+        return b.acuity - a.acuity;
+      };
+      const buildSorted = (list: Combatant[]) => {
+        const companions = list.filter(c => c.combatantType === 'companion').sort(sortFn);
+        const nonCompanions = list.filter(c => c.combatantType !== 'companion');
+        if (prev.round === 1) {
+          const notSurprised = nonCompanions.filter(c => !c.isSurprised);
+          const surprised = nonCompanions.filter(c => c.isSurprised);
+          return [...notSurprised, ...surprised, ...companions];
+        }
+        return [...nonCompanions, ...companions];
+      };
+      const oldSorted = buildSorted(prev.combatants);
+      const removedIndex = oldSorted.findIndex(c => c.id === id);
+      const newSorted = buildSorted(combatants);
+      const newLen = newSorted.length;
+      let newTurnIndex = prev.currentTurnIndex;
+      if (removedIndex >= 0) {
+        if (removedIndex < prev.currentTurnIndex) newTurnIndex = prev.currentTurnIndex - 1;
+        else if (removedIndex === prev.currentTurnIndex) newTurnIndex = Math.min(prev.currentTurnIndex, Math.max(0, newLen - 1));
+      }
+      return { ...prev, combatants, currentTurnIndex: newTurnIndex };
+    });
   };
 
   const updateCombatant = (id: string, updates: Partial<Combatant>) => {
@@ -410,6 +437,34 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
       if (!prev) return prev;
       const nextIndex = prev.currentTurnIndex + 1;
       if (nextIndex >= sortedCombatants.length) {
+        const autoSort = prev.autoSortInitiative !== false;
+        if (autoSort) {
+          const sortByRollAndAcuity = (a: Combatant, b: Combatant) => {
+            if (b.initiative !== a.initiative) return b.initiative - a.initiative;
+            return b.acuity - a.acuity;
+          };
+          const companions = prev.combatants.filter(c => c.combatantType === 'companion').sort(sortByRollAndAcuity);
+          const allies = prev.combatants.filter(c => c.combatantType === 'ally').sort(sortByRollAndAcuity);
+          const enemies = prev.combatants.filter(c => c.combatantType === 'enemy').sort(sortByRollAndAcuity);
+          let startWithAlly = true;
+          if (allies[0] && enemies[0]) {
+            startWithAlly = sortByRollAndAcuity(allies[0], enemies[0]) <= 0;
+          } else if (!allies[0]) {
+            startWithAlly = false;
+          }
+          const sorted: Combatant[] = [];
+          const alliesCopy = [...allies];
+          const enemiesCopy = [...enemies];
+          let useAlly = startWithAlly;
+          while (alliesCopy.length > 0 || enemiesCopy.length > 0) {
+            if (useAlly && alliesCopy.length > 0) sorted.push(alliesCopy.shift()!);
+            else if (!useAlly && enemiesCopy.length > 0) sorted.push(enemiesCopy.shift()!);
+            else if (alliesCopy.length > 0) sorted.push(alliesCopy.shift()!);
+            else if (enemiesCopy.length > 0) sorted.push(enemiesCopy.shift()!);
+            useAlly = !useAlly;
+          }
+          return { ...prev, combatants: [...sorted, ...companions], round: prev.round + 1, currentTurnIndex: 0 };
+        }
         return { ...prev, round: prev.round + 1, currentTurnIndex: 0 };
       }
       return { ...prev, currentTurnIndex: nextIndex };
@@ -563,15 +618,25 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
             {!encounter.isActive ? (
               <>
                 <Button onClick={startCombat} disabled={encounter.combatants.length === 0}>Start Encounter</Button>
-                <Button onClick={sortInitiative} title="Sort by alternative initiative">Sort Initiative</Button>
+                <Button onClick={sortInitiative} title="Sort by initiative and acuity">Sort Initiative</Button>
               </>
             ) : (
               <>
                 <Button variant="secondary" onClick={previousTurn}>Previous</Button>
                 <Button onClick={nextTurn}>Next Turn</Button>
+                <Button onClick={sortInitiative} title="Sort by initiative and acuity">Sort Initiative</Button>
                 <Button variant="danger" onClick={endCombat}>End Combat</Button>
               </>
             )}
+            <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
+              <input
+                type="checkbox"
+                checked={encounter.autoSortInitiative !== false}
+                onChange={(e) => setEncounter(prev => prev ? { ...prev, autoSortInitiative: e.target.checked } : prev)}
+                className="rounded border-border-light"
+              />
+              Auto Sort Initiative
+            </label>
             <Button variant="ghost" onClick={resetEncounter} className="ml-auto">Reset All</Button>
             <Button variant="danger" onClick={() => setEncounter(prev => prev ? { ...prev, combatants: [] } : prev)}>Clear All</Button>
           </div>

@@ -44,6 +44,8 @@ export interface SkillParticipant {
   notes?: string;
   /** When true, participant helped but roll doesn't count toward encounter totals */
   isHelping?: boolean;
+  /** RM bonus applied to this participant's roll (e.g. +2, +4) for situational benefits */
+  rmBonus?: number;
   /** Source tracking */
   sourceType?: CombatantSource;
   sourceId?: string;
@@ -60,6 +62,10 @@ export interface SkillEncounterState {
   currentSuccesses: number;
   /** Running total of failures (each 5 under DS = +1). Net = successes - failures */
   currentFailures: number;
+  /** RM-added successes (buttons "Additional Success") */
+  additionalSuccesses?: number;
+  /** RM-added failures (buttons "Additional Failure") */
+  additionalFailures?: number;
   /** @deprecated Legacy: optional target for successes (mixed page) */
   requiredSuccesses?: number;
   /** @deprecated Legacy: optional target for failures (mixed page) */
@@ -83,6 +89,8 @@ export interface Encounter {
   currentTurnIndex: number;
   isActive: boolean;
   applySurprise: boolean;
+  /** When true, initiative is re-sorted at the start of each new round (e.g. after deaths). */
+  autoSortInitiative?: boolean;
 
   // Skill state (skill + mixed)
   skillEncounter?: SkillEncounterState;
