@@ -9,7 +9,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useCodexFeats, type Feat } from '@/hooks';
+import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, IconButton, Alert, Checkbox, Modal, Button } from '@/components/ui';
@@ -64,6 +64,7 @@ export function AddFeatModal({
   onAdd,
 }: AddFeatModalProps) {
   const { data: codexFeats = [], isLoading: loading, error: queryError } = useCodexFeats();
+  const { data: codexSkills = [] } = useCodexSkills();
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -121,6 +122,15 @@ export function AddFeatModal({
     };
   }, [feats, featType]);
 
+  // Map skill ID -> name for display/requirements
+  const skillIdToName = useMemo(() => {
+    const map = new Map<string, string>();
+    (codexSkills as Skill[]).forEach((s) => {
+      map.set(String(s.id), s.name);
+    });
+    return map;
+  }, [codexSkills]);
+
   // Check if feat requirements are met
   const checkRequirements = useCallback((feat: FeatModal): { meets: boolean; warning?: string } => {
     const warnings: string[] = [];
@@ -138,6 +148,19 @@ export function AddFeatModal({
         const current = abilities[abil.toLowerCase() as keyof typeof abilities] ?? 0;
         if (current < required) {
           warnings.push(`Requires ${abil} ${required}+`);
+        }
+      });
+    }
+
+    // Skill requirements (feat.skill_req as IDs)
+    if (feat.skill_req && feat.skill_req_val) {
+      const charSkills = character.skills || {};
+      feat.skill_req.forEach((skillId, idx) => {
+        const required = feat.skill_req_val?.[idx] ?? 1;
+        const skillName = skillIdToName.get(String(skillId)) || String(skillId);
+        const current = charSkills[skillName] ?? 0;
+        if (current < required) {
+          warnings.push(`Requires ${skillName} ${required}+`);
         }
       });
     }
@@ -160,7 +183,7 @@ export function AddFeatModal({
       meets: warnings.length === 0,
       warning: warnings.join(', '),
     };
-  }, [character]);
+  }, [character, skillIdToName]);
 
   // Filter feats
   const filteredFeats = useMemo(() => {
@@ -396,9 +419,10 @@ export function AddFeatModal({
                 if (abilityReqChips.length > 0) {
                   detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
                 }
-                const skillReqChips: ChipData[] = (feat.skill_req || []).map((s, i) => {
+                const skillReqChips: ChipData[] = (feat.skill_req || []).map((id, i) => {
+                  const label = skillIdToName.get(String(id)) || String(id);
                   const val = feat.skill_req_val?.[i];
-                  return { name: `${s}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+                  return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
                 });
                 if (skillReqChips.length > 0) {
                   detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });

@@ -17,23 +17,23 @@ ALTER TABLE users.user_profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own profile"
 ON users.user_profiles FOR SELECT
 TO authenticated
-USING (id = auth.uid()::text);
+USING (id = (select auth.uid())::text);
 
 CREATE POLICY "Users can insert own profile"
 ON users.user_profiles FOR INSERT
 TO authenticated
-WITH CHECK (id = auth.uid()::text);
+WITH CHECK (id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own profile"
 ON users.user_profiles FOR UPDATE
 TO authenticated
-USING (id = auth.uid()::text)
-WITH CHECK (id = auth.uid()::text);
+USING (id = (select auth.uid())::text)
+WITH CHECK (id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own profile"
 ON users.user_profiles FOR DELETE
 TO authenticated
-USING (id = auth.uid()::text);
+USING (id = (select auth.uid())::text);
 
 -- usernames: Used for lookup; authenticated users can read (profile display);
 -- only owner can insert/update/delete (username changes)
@@ -47,18 +47,18 @@ USING (true);
 CREATE POLICY "Users can insert own username"
 ON users.usernames FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid()::text);
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own username"
 ON users.usernames FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text)
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own username"
 ON users.usernames FOR DELETE
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 -- characters: User owns their characters
 ALTER TABLE users.characters ENABLE ROW LEVEL SECURITY;
@@ -66,23 +66,23 @@ ALTER TABLE users.characters ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own characters"
 ON users.characters FOR SELECT
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can insert own characters"
 ON users.characters FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid()::text);
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own characters"
 ON users.characters FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text)
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own characters"
 ON users.characters FOR DELETE
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 -- user_powers: User library
 ALTER TABLE users.user_powers ENABLE ROW LEVEL SECURITY;
@@ -90,23 +90,23 @@ ALTER TABLE users.user_powers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own powers"
 ON users.user_powers FOR SELECT
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can insert own powers"
 ON users.user_powers FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid()::text);
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own powers"
 ON users.user_powers FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text)
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own powers"
 ON users.user_powers FOR DELETE
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 -- user_techniques: User library
 ALTER TABLE users.user_techniques ENABLE ROW LEVEL SECURITY;
@@ -114,23 +114,23 @@ ALTER TABLE users.user_techniques ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own techniques"
 ON users.user_techniques FOR SELECT
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can insert own techniques"
 ON users.user_techniques FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid()::text);
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own techniques"
 ON users.user_techniques FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text)
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own techniques"
 ON users.user_techniques FOR DELETE
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 -- user_items: User library
 ALTER TABLE users.user_items ENABLE ROW LEVEL SECURITY;
@@ -138,23 +138,23 @@ ALTER TABLE users.user_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own items"
 ON users.user_items FOR SELECT
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can insert own items"
 ON users.user_items FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid()::text);
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own items"
 ON users.user_items FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text)
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own items"
 ON users.user_items FOR DELETE
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 -- user_creatures: User library
 ALTER TABLE users.user_creatures ENABLE ROW LEVEL SECURITY;
@@ -162,23 +162,23 @@ ALTER TABLE users.user_creatures ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own creatures"
 ON users.user_creatures FOR SELECT
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can insert own creatures"
 ON users.user_creatures FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid()::text);
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own creatures"
 ON users.user_creatures FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text)
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own creatures"
 ON users.user_creatures FOR DELETE
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 -- -----------------------------------------------------------------------------
 -- CAMPAIGNS SCHEMA
@@ -193,19 +193,19 @@ ALTER TABLE campaigns.campaigns ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Owner can do anything on own campaigns"
 ON campaigns.campaigns FOR ALL
 TO authenticated
-USING (owner_id = auth.uid()::text)
-WITH CHECK (owner_id = auth.uid()::text);
+USING (owner_id = (select auth.uid())::text)
+WITH CHECK (owner_id = (select auth.uid())::text);
 
 CREATE POLICY "Members can read and update campaigns they belong to"
 ON campaigns.campaigns FOR SELECT
 TO authenticated
-USING ("memberIds"::jsonb @> jsonb_build_array(auth.uid()::text));
+USING ("memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text));
 
 CREATE POLICY "Members can update campaigns they belong to"
 ON campaigns.campaigns FOR UPDATE
 TO authenticated
-USING ("memberIds"::jsonb @> jsonb_build_array(auth.uid()::text))
-WITH CHECK (true);
+USING ("memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text))
+WITH CHECK ("memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text));
 
 -- campaign_rolls: Only campaign owner or members can access
 -- (Requires subquery to check campaign membership)
@@ -218,7 +218,7 @@ USING (
   EXISTS (
     SELECT 1 FROM campaigns.campaigns c
     WHERE c.id = campaign_rolls.campaign_id
-    AND (c.owner_id = auth.uid()::text OR c."memberIds"::jsonb @> jsonb_build_array(auth.uid()::text))
+    AND (c.owner_id = (select auth.uid())::text OR c."memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text))
   )
 );
 
@@ -229,7 +229,7 @@ WITH CHECK (
   EXISTS (
     SELECT 1 FROM campaigns.campaigns c
     WHERE c.id = campaign_rolls.campaign_id
-    AND (c.owner_id = auth.uid()::text OR c."memberIds"::jsonb @> jsonb_build_array(auth.uid()::text))
+    AND (c.owner_id = (select auth.uid())::text OR c."memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text))
   )
 );
 
@@ -240,14 +240,14 @@ USING (
   EXISTS (
     SELECT 1 FROM campaigns.campaigns c
     WHERE c.id = campaign_rolls.campaign_id
-    AND (c.owner_id = auth.uid()::text OR c."memberIds"::jsonb @> jsonb_build_array(auth.uid()::text))
+    AND (c.owner_id = (select auth.uid())::text OR c."memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text))
   )
 )
 WITH CHECK (
   EXISTS (
     SELECT 1 FROM campaigns.campaigns c
     WHERE c.id = campaign_rolls.campaign_id
-    AND (c.owner_id = auth.uid()::text OR c."memberIds"::jsonb @> jsonb_build_array(auth.uid()::text))
+    AND (c.owner_id = (select auth.uid())::text OR c."memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text))
   )
 );
 
@@ -258,7 +258,7 @@ USING (
   EXISTS (
     SELECT 1 FROM campaigns.campaigns c
     WHERE c.id = campaign_rolls.campaign_id
-    AND (c.owner_id = auth.uid()::text OR c."memberIds"::jsonb @> jsonb_build_array(auth.uid()::text))
+    AND (c.owner_id = (select auth.uid())::text OR c."memberIds"::jsonb @> jsonb_build_array((select auth.uid())::text))
   )
 );
 
@@ -271,23 +271,23 @@ ALTER TABLE encounters.encounters ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read own encounters"
 ON encounters.encounters FOR SELECT
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can insert own encounters"
 ON encounters.encounters FOR INSERT
 TO authenticated
-WITH CHECK (user_id = auth.uid()::text);
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can update own encounters"
 ON encounters.encounters FOR UPDATE
 TO authenticated
-USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text)
+WITH CHECK (user_id = (select auth.uid())::text);
 
 CREATE POLICY "Users can delete own encounters"
 ON encounters.encounters FOR DELETE
 TO authenticated
-USING (user_id = auth.uid()::text);
+USING (user_id = (select auth.uid())::text);
 
 -- -----------------------------------------------------------------------------
 -- CODEX SCHEMA

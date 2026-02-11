@@ -1,0 +1,49 @@
+id,name,description,base_ip,base_tp,base_c,op_1_desc,op_1_ip,op_1_tp,op_1_c,type,mechanic
+1,Damage Reduction,"All Physical Damage (Damage that either targets your Evasion, Reflexes, or Might to hit, or is physical in nature) is reduced by this much.",1.5,2,3.5,Increase damage reduction by 1.,1.5,2,3.5,Armor,true
+2,Armor Strength Requirement,You require at least 1 Strength to wear this Armor effectively.,-1.5,1,2.5,1 to Strength Requirement,-1,1,2.5,Armor,true
+3,Armor Agility Requirement,You require at least 1 Vitality to wear this Armor effectively. Adding this property must be approved by the RM,-1,1,1.5,1 to Agility Requirement,-0.5,1,1.5,Armor,true
+4,Armor Vitality Requirement,You require at least 1 Vitality to wear this Armor effectively. Adding this property must be approved by the RM,-1,1,1.5,1 to Vitality Requirement,-0.5,1,1.5,Armor,true
+5,Agility Reduction,You reduce at your Agility by 1 while wearing this Armor.,-1.5,1,0.5,1 to Agility Reduction,-1.5,1,1,Armor,true
+6,Weapon Strength Requirement,You require at least 1 Strength to wield this Weapon with proficiency.,-0.5,1,0.5,1 to Strength Requirement,-0.25,1,0.5,Weapon,true
+7,Weapon Agility Requirement,You require at least 1 Agility to wield this Weapon with proficiency.,-0.5,1,0.5,1 to Agility Requirement,-0.25,1,0.5,Weapon,true
+8,Weapon Vitality Requirement,You require at least 1 Vitality to wield this Weapon with proficiency. Adding this property must be approved by the RM,-0.5,1,0.5,1 to Vitality Requirement,-0.25,1,1,Weapon,true
+9,Weapon Acuity Requirement,You require at least 1 Acuity to wield this Weapon with proficiency.,-0.5,1,0.5,1 to Acuity Requirement,-0.25,1,0.5,Weapon,true
+10,Weapon Intelligence Requirement,You require at least 1 Intelligence to wield this Weapon with proficiency. Adding this property must be approved by the RM,-0.5,1,0.5,1 to Intelligence Requirement,-0.25,1,1,Weapon,true
+11,Weapon Charisma Requirement,You require at least 1 Charisma to wield this Weapon with proficiency. Adding this property must be approved by the RM,-0.5,1,0.5,1 to Charisma Requirement,-0.25,1,1,Weapon,true
+12,Split Damage Dice,"A 'Split' damage dice is when dice could be represented by less dice of greater size, but are 'split' into smaller sizes instead. Ie 2d6 instead of 1d12 represents one die 'split' by splitting 1d12 into 2d6.",1,1,1,"Each additional time a die is split, ie 3d4 instead of 1d12 is 2 splits instead of 1, this property increases by one.",1,1,1,Weapon,true
+13,Range,Increases the weapon's range by 8 spaces per level (level starts at 1 for the first increment).,1,1,0.5,Additional 8 spaces range increment,1,1,0.5,Weapon,true
+14,Two-Handed,"Changes the weapon to two-handed, reducing item points but increasing training and gold points.",-1.5,2,1.5,,,,,Weapon,true
+15,Shield Base,Base cost applied to all shields.,1,0,2.5,,,,,Shield,true
+16,Armor Base,Base cost applied to all armor.,2,0,0,,,,,Armor,true
+17,Weapon Damage,"Add 1d4 piercing, Bludgeoning, or slashing damage to this weapon.",2,2,2,Increase damage by 1d2 damage.,1,1,1,Weapon,true
+18,Damage Type Resistance,Your Armor Reduction is double against these damage types.,2,2,2.5,Add additional Resistance.,2,4,2.5,Armor,FALSE
+19,Bludgeoning Vulnerability,Bludgeoning damage is not reduced at all by this Armor.,-1.5,0,-1,,,,,Armor,FALSE
+20,Piercing Vulnerability,Piercing damage is not reduced at all by this Armor.,-1.5,0,-1,,,,,Armor,FALSE
+21,Slashing Vulnerability,Slashing damage is not reduced at all by this Armor.,-1.5,0,-1,,,,,Armor,FALSE
+22,Critical Range +1,"Increase your critical range against damage types reduced by the Armor by 1, and resisted by the Armor by 2.",0.5,2,1.5,Increase critical range by an additional +1/+2.,1,1,1.5,Armor,FALSE
+23,Critical Range,Reduce the critical range of this Weapon by 1.,2,3,2,1 to Critical Range Reduction.,1.5,3,3,Weapon,FALSE
+24,Critical Multiplier,"The critical damage multiplier increases by 1. (3x damage rather than 2x, and so on)",2,3,2,Increase critical multiplier by +1,2,3,3,Weapon,FALSE
+25,Thrown,You may throw this Weapon (dealing a different damage type than it's default if you choose) up to 3 spaces away using Strength for the attack roll and damage.,1,1,1.5,Increase thrown range by 2 spaces.,0.5,1,1.5,Weapon,FALSE
+26,Finesse,This Weapon uses Agility for attack and damage rolls instead of another ability.,1,1,1.5,,,,,Weapon,FALSE
+27,Damaged,This Weapon is damaged and thus is cheaper.,0.5,0,-1,Decrease cost - Potentially increasing Rarity.,0.5,0,-1,Weapon,FALSE
+28,Graze,When missing non-critically with this Weapon you still deal damage of the Weapons type equal to half of your attack bonus.,1,2,1.5,Increase once to make this equal your full attack bonus instead.,1,2,1.5,Weapon,FALSE
+29,Loading,This Weapon requires an interaction to load before it can be used to attack with.,-0.5,1,1.5,,,,,Weapon,FALSE
+30,Knockback,"After successfully hitting with this Weapon you may knock the target hit back 1 space, they must roll Might or Reflex against your Martial Potency to overcome.",1,1,1.5, +1 space for each increase of this property up to 3 spaces knocked back.,1,1,1.5,Weapon,FALSE
+31,Wounding,When you successfully deal damage with this Weapon target rolls Fortitude against your Martial Potency gaining Weakened 1 on failure.,1.5,2,1.5,Increase level of Weakened by 1. ,1.5,2,1.5,Weapon,FALSE
+32,Slow,When you successfully deal damage with this Weapon target rolls Fortitude or Might (your choice upon weapon creation) against your Martial Potency gaining Slow 1 on failure.,0.5,1,1.5,Increase level of Slow by 1.,0.5,1,1.5,Weapon,FALSE
+33,Topple,After successfully hitting with this Weapon you may knock the target rolls Might or Reflex (your choice upon weapon creation) against your Martial Potency becoming Prone on failure.,1,2,1.5,,,,,Weapon,FALSE
+34,Expose,After successfully hitting with this Weapon target rolls Might against your Martial Potency gaining Exposed 1 on failure.,1,1,1.5,Increase level of Expose by 1.,0.5,1,0.5,Weapon,FALSE
+35,Charging,"If you move at least 4 spaces toward the target before attacking, add +1 to this attack attack and damage rolls.",1,2,1.5,,,,,Weapon,FALSE
+36,Hidden,"As an Interaction plus Ability Roll action, hide this Weapon with the Slight of Hand Skill against target's Discernment, if hidden from an enemy when you attack get +2 on the roll to hit and damage.",1,2,1.5,,,,,Weapon,FALSE
+37,Ammunition,"This Weapon requires ammunition, which deals the same damage as the Weapon, the Weapon cannot be used for ranged attacks without ammunition. The Ammunition costs 1/8 of the weapon's cost for a bundle of 10 pieces.",-0.5,1,-0.5,,,,,Weapon,FALSE
+38,Bleed,When you successfully deal damage with this Weapon target rolls Fortitude against your Martial Potency gaining Bleed 1 on failure.,0.5,1,1,Increase the level of Bleed by 1.,0.5,1,0.5,Weapon,FALSE
+39,Shield Amount,"As a Defend Reaction, you can reduce the damage dealt by an attack by 1d4 + Martial Bonus.",2,4,3,1d2 for each level of increase.,1,2,1,Shield,FALSE
+40,Shield Damage,This Shield can deal 1d4 Bludgeoning damage as a melee Weapon attack. Shields with this property are considered Interchangeable,2,4,5,1d2 for each level of increase.,1,2,2.5,Shield,FALSE
+41,Reach,The melee range of this Weapon is 1 additional space.,1.5,2,2,Increase melee range of this weapon by 1 additional space.,1.5,2,2,Weapon,FALSE
+42,Mounted,This Weapon deals an additional 1d4 while mounted.,1,2,1,,,,,Weapon,FALSE
+43,Versatile,"This can be wielded with 2 hands or with 1 hand, but adds 1d2 more to all damage dice when wielded with 2. (Add only to a 'One-Handed' weapon.)",0.5,1,0.5,,,,,Weapon,FALSE
+44,Cleave,This Weapon hits 2 connected spaces within your melee range when attacking. Roll your attack and damage once.,1.5,2,2,Increase cleave to hit an additional connected space.,1,1,2,Weapon,FALSE
+45,Interchangeable,This Weapon can be wielded by itself or with another Weapon with the interchangeable feat of dual-wielded Weapons.,1.5,2,1,,,,,Weapon,FALSE
+46,Block,"As a Quick Reaction you may make an attack roll with this Weapon against another melee Weapon attack made within your melee range. If you exceed the attack roll of the triggering attack, you prevent the attack from hitting.",1.5,3,2,,,,,Weapon,FALSE
+47,Quick,The multiple attack penalty for this Weapon is -4 for each additional attack.,0.5,2,1.5,Reduce penalty by an additional -1.,0.5,2,1.5,Weapon,FALSE
+48,Pull,"When you successfully hit with this Weapon you may cause the target to roll Might against your Martial Potency, getting pulled one space closer upon failure.",0.5,1,1,Increase distance pulled by 1 space.,0.5,1,1,Weapon,FALSE

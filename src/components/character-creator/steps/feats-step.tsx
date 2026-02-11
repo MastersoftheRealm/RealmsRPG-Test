@@ -27,7 +27,7 @@ import {
   SelectFilter 
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useCodexFeats, type Feat } from '@/hooks';
+import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { getArchetypeFeatLimit } from '@/lib/game/formulas';
 import type { ArchetypeCategory } from '@/types';
 
@@ -56,6 +56,7 @@ interface FeatFilters {
 export function FeatsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: feats, isLoading } = useCodexFeats();
+  const { data: skillsDb = [] } = useCodexSkills();
   
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
@@ -65,6 +66,15 @@ export function FeatsStep() {
     sortCol: 'name',
     sortDir: 1,
   });
+
+  // Build skill ID -> name map for requirements and display
+  const skillIdToName = useMemo(() => {
+    const map = new Map<string, string>();
+    (skillsDb as Skill[]).forEach((s) => {
+      map.set(String(s.id), s.name);
+    });
+    return map;
+  }, [skillsDb]);
 
   // Get archetype feat limit based on archetype type
   const archetypeType = (draft.archetype?.type || 'power') as ArchetypeCategory;
@@ -121,12 +131,13 @@ export function FeatsStep() {
     
     // Check skill requirements
     for (let i = 0; i < feat.skill_req.length; i++) {
-      const reqSkill = feat.skill_req[i];
+      const skillId = feat.skill_req[i];
+      const reqSkillName = skillIdToName.get(String(skillId)) || String(skillId);
       const reqValue = feat.skill_req_val[i] || 1;
-      const charValue = skills[reqSkill] || 0;
+      const charValue = skills[reqSkillName] || 0;
       
       if (charValue < reqValue) {
-        return { met: false, reason: `Requires ${reqSkill} ${reqValue}+` };
+        return { met: false, reason: `Requires ${reqSkillName} ${reqValue}+` };
       }
     }
     
@@ -136,7 +147,7 @@ export function FeatsStep() {
     }
     
     return { met: true };
-  }, [draft.abilities, draft.skills, draft.level, draft.archetype?.mart_abil]);
+  }, [draft.abilities, draft.skills, draft.level, draft.archetype?.mart_abil, skillIdToName]);
 
   // Filter and sort feats
   const filteredFeats = useMemo(() => {
@@ -272,9 +283,10 @@ export function FeatsStep() {
     }
     
     // Skill Requirements
-    const skillReqChips: ChipData[] = (feat.skill_req || []).map((s, i) => {
+    const skillReqChips: ChipData[] = (feat.skill_req || []).map((id, i) => {
+      const label = skillIdToName.get(String(id)) || String(id);
       const val = feat.skill_req_val?.[i];
-      return { name: `${s}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+      return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
     });
     if (skillReqChips.length > 0) {
       detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });

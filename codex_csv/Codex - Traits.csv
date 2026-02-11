@@ -60,7 +60,7 @@ id,name,description,uses_per_rec,rec_period,flaw,characteristic
 59,Elemental Specialty,"An amount of times per combat equal to your archetype proficiency you may add an additional 1d2 damage to an Attack of the chosen damage types:  Fire, Lightning, Cold, Acid, Poison.",,,FALSE,FALSE
 60,Xenophobe,Reduce your Persuade by -2 when trying to relate to other species.,,,TRUE,FALSE
 61,Natural Grace,Rough terrain only has half of its original effect on you; every 2 spaces moved on rough terrain count as 3 spaces.,,,FALSE,FALSE
-62,Charm Resistance,"You have a +2 to Resolve against powers with ""Charm"" Power Parts.",,,FALSE,FALSE
+62,Charm Resistance,You have a +2 to Resolve against powers with 'Charm' Power Parts.,,,FALSE,FALSE
 63,Elvish Ancestry,"Choose one: Sun Elf: Once per combat after hitting a target, you may add your Charisma ability as Spiritual/Holy damage to your damage rolls. Moon Elf: You may spend a quick action to become invisible while within dim or dark lighting. Wood Elf: Your base Walking speed is 7, additionally Rough terrain only has half of its original effect on you, every 2 spaces moved on rough terrain count as 3 spaces. Dark Elf: Darkvision range is 24 spaces, additionally while within dim or dark lighting you count as one level higher of obscured from creatures with Darkvision.",,,FALSE,FALSE
 64,Endurance,Increase the max Health you gain each level by 1.,,,FALSE,FALSE
 65,Euphoric Spores,"You may release imperceptible spores to make yourself more alluring or convincing. As a quick action, you can give yourself +2 to Charisma-based skill rolls for one minute.",1,Partial,FALSE,FALSE
@@ -68,7 +68,7 @@ id,name,description,uses_per_rec,rec_period,flaw,characteristic
 67,Expansion,"You may grow by one size category for 10 rounds, doubling your height and quadrupling your weight. While grown in this way, you add 1d2 to the first damage you deal each round.",1,Partial,FALSE,FALSE
 68,Experienced,"Choose a skill from a previous level (or level 1). When rolling with that skill, treat a success as one degree higher. You choose which skill this is after each full recovery.",,,FALSE,FALSE
 69,Eye For Steel,"When purchasing weapons or armor, reduce the price of items bought by 12.5%.",,,FALSE,FALSE
-70,Family Craft,"Choose one acquired Crafting Skill. You gain +2 when rolling with that Skill. This can stack with the ""Experienced"" species trait.",,,FALSE,FALSE
+70,Family Craft,Choose one acquired Crafting Skill. You gain +2 when rolling with that Skill. This can stack with the 'Experienced' species trait.,,,FALSE,FALSE
 71,Fear of Predators,"When interacting with beasts larger than you, roll Resolve against the creature's Intimidate score. On a failure, you have -1 to all D20 rolls made against that creature.",,,TRUE,FALSE
 72,Fey Heritage,"When traversing a natural environment, some local insects will follow and dance around you. Additionally, some plants will subtly bow as you pass. This can vary widely based on the aspect of the fey you represent or are descended from.",,,FALSE,TRUE
 73,Fey Resistance,"You are immune to powers that put you to sleep. Additionally, once per partial recovery, when you are targeted by a power from a Fey creature, you may increase your defenses by +2.",1,Partial,FALSE,FALSE
@@ -132,7 +132,7 @@ id,name,description,uses_per_rec,rec_period,flaw,characteristic
 131,Dense,You cannot make athletics rolls to swim.,,,TRUE,FALSE
 132,Odd Physiology,You require a form of sustenance other than the typical food and water. Work with your RM to come up with what keeps you going and ways to obtain and possibly stockpile it.,,,FALSE,TRUE
 133,Older Than This Town,You can generally tell the age of structures provided there is architecture left to observe,,,FALSE,TRUE
-134,One of Those Faces,"You just have ""one of those faces."" You are often mistaken for a local in most regions with a population of your species.",,,FALSE,TRUE
+134,One of Those Faces,You just have 'one of those faces.' You are often mistaken for a local in most regions with a population of your species.,,,FALSE,TRUE
 135,Pack Bond,"Your species forms strong bonds with their pack members, allowing them to sense the emotions or general well-being of their allies.",,,FALSE,TRUE
 136,Pack Mentality,"Increase your roll to hit against a target by +1 for each ally within melee range of it, up to a maximum of +3.",,,FALSE,FALSE
 137,Patagium Flight,"You gain a flying speed equal to half your walking speed, while flying in this way you may not use any powers or techniques that affect other creatures or attack.",,,FALSE,FALSE

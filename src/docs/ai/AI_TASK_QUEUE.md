@@ -2820,7 +2820,7 @@ Agents should **create new tasks** during their work when they discover addition
   created_at: 2026-02-06
   created_by: agent
   description: |
-    Admin Skills tab: list, add, edit, delete. Fields: name, description, ability, category, base_skill_id, trained_only. Reuse patterns.
+    Admin Skills tab: list, add, edit, delete. Fields: name, description, ability, base_skill_id, and any additional narrative fields defined in the codex schema. Reuse patterns.
   related_files:
     - src/app/(main)/admin/codex/AdminSkillsTab.tsx
   acceptance_criteria:
@@ -3640,3 +3640,224 @@ Agents should **create new tasks** during their work when they discover addition
     - npm run build passes
   notes: |
     Implemented 2026-02-11: imported shared Codex filter components (FilterSection, ChipSelect, SelectFilter) and SortHeader/useSort into Admin tabs, aligned grid column definitions, and wired filters/sorting to the same fields the Codex tabs use.
+
+- id: TASK-171
+  title: Admin Skills — base skill dropdown resolves base_skill_id
+  priority: medium
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    In the Admin Skills edit modal, `base_skill_id` currently requires admins to know and type numeric IDs. Replace this with a dropdown of base skill names (non-sub-skills), storing the corresponding `base_skill_id` internally. value "" should mean no base skill (not a sub-skill), and id 0 should indicate the skill can be a sub-skill of any base skill.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/api/codex/route.ts
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+  acceptance_criteria:
+    - Admin Skills modal shows a "Base skill" select listing base skill names instead of a free-text numeric ID
+    - On save, the selected base skill name is resolved to its `base_skill_id` and stored correctly; blank => undefined, "Any" => 0
+    - Editing an existing sub-skill pre-selects the correct base skill in the dropdown
+    - npm run build passes
+  notes: |
+    Use codex skills list to build the dropdown (filter out sub-skills where base_skill_id is set). Keep raw IDs internal to avoid admins needing to look them up.
+
+- id: TASK-172
+  title: Admin Skills — expose additional description fields
+  priority: medium
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Admin Skills edit modal should include inputs for all narrative fields defined in the codex schema: `success_desc`, `failure_desc`, `ds_calc`, `craft_success_desc`, and `craft_failure_desc`. These complement the main `description` and are used for Codex display and RM guidance.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/api/codex/route.ts
+  acceptance_criteria:
+    - Admin Skills modal has labeled inputs/textarea controls for success_desc, failure_desc, ds_calc, craft_success_desc, craft_failure_desc
+    - Values load when editing an existing skill and persist on save
+    - npm run build passes
+  notes: |
+    These fields are descriptive helpers for RMs and should be treated as optional text fields, displayed alongside the primary description in Codex views.
+
+- id: TASK-173
+  title: Skills — render extra descriptions as expandable chips in item cards
+  priority: medium
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Skill data includes additional descriptive fields (success_desc, failure_desc, ds_calc, craft_success_desc, craft_failure_desc) that should appear as expandable chips on skill item cards. Chips should be used in Codex Skills tab, add-skill modals, and add sub-skill modals, appended after the primary description.
+  related_files:
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/creator/skills-step.tsx
+  acceptance_criteria:
+    - Skill item cards show chips like "Success Outcomes", "Failure Outcomes", "DS Calculation", "Craft Success", "Craft Failure" when corresponding fields are present
+    - Chips expand to reveal the full text when clicked, consistent with existing chip expansion patterns
+    - Implementation is reused across Codex and skill selection/summary UIs
+    - npm run build passes
+  notes: |
+    Follow the existing chip expansion UX used for feats and parts so RMs get additional details without cluttering the main description.
+
+- id: TASK-174
+  title: Codex schema — add Use column and align fields
+  priority: medium
+  status: in-progress
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Extend the centralized Codex schema reference so each field includes a clear "Use" explanation, and align listed fields with the canonical RTDB data review/spec for feats, skills, species, traits, items, parts, properties, and creature feats. Ensure that narrative skill fields (success_desc, failure_desc, ds_calc, craft_success_desc, craft_failure_desc) and all feat requirement fields are documented with their exact purposes (validation vs display vs RM guidance).
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/docs/ALL_FEEDBACK_RAW.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  acceptance_criteria:
+    - Each codex entity table in CODEX_SCHEMA_REFERENCE has a "Use" column with accurate, concrete descriptions based on owner spec
+    - Feat, skill, species, trait, item, part, property, and creature feat field lists match the RTDB DATA REVIEW plus latest feedback (no extra/missing fields)
+    - Narrative skill fields and feat requirement fields clearly distinguish validation logic vs display/reference text
+    - npm run build passes
+  notes: |
+    Partially implemented 2026-02-11: Feats, skills, species, traits, parts, properties, items, and creature feats updated with Use column and aligned fields. Further refinements can follow as schema evolves.
+
+- id: TASK-175
+  title: Codex skills — remove invalid trained_only field
+  priority: high
+  status: in-progress
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    `trained_only` is not a real field in the canonical skills schema. Remove it across docs, types, API responses, admin editors, and migration scripts so future work does not rely on it. Preserve any legacy data in Firestore/RTDB, but stop reading or writing this field in the application.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/hooks/use-rtdb.ts
+    - src/app/api/codex/route.ts
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - scripts/migrate_rtdb_to_firestore.js
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  acceptance_criteria:
+    - CODEX_SCHEMA_REFERENCE no longer lists `trained_only` under Skills
+    - Skill types in use-rtdb and anywhere else do not include trained_only
+    - Codex API skills payload does not expose trained_only or rely on it
+    - AdminSkillsTab no longer shows or saves a "Trained only" checkbox
+    - Migration scripts do not write trained_only into codex_skills documents
+    - npm run build passes
+  notes: |
+    Implemented initial removal 2026-02-11 based on owner clarification that trained_only is not part of the skills data model. Legacy codex documents may still contain this field but it is ignored by the app.
+
+- id: TASK-176
+  title: Codex seeding — wipe and reseed from canonical CSVs
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Update the Supabase/Prisma codex seeding so that running the seed script fully clears all codex tables and replaces them with data from the canonical Codex CSVs, using the updated codex schema (ID-based cross-refs, equipment rename, properties.mechanic). This ensures the live codex matches the curated CSVs exactly.
+  related_files:
+    - scripts/seed-to-supabase.js
+    - codex_csv/
+    - prisma/schema.prisma
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+  acceptance_criteria:
+    - Running `node scripts/seed-to-supabase.js` deletes all rows from codex_* tables and then repopulates them from the CSVs
+    - Feats, skills, species, traits, parts, properties, equipment, archetypes, and creature feats load without runtime errors using the revised schema
+    - Codex seeding supports ID-based arrays for feat.skill_req and species skills/traits/flaws/characteristics
+    - `npm run db:seed` (or equivalent) works end-to-end and can be safely used to recreate codex data in Supabase
+  notes: |
+    Initial implementation 2026-02-11: seed-to-supabase now always clears codex tables via clearCodexTables() before upserting CSV rows. Further work may be needed as CSVs evolve.
+
+- id: TASK-177
+  title: Codex schema usage audit — IDs, equipment, mechanic properties
+  priority: medium
+  status: done
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Audit the codebase for any discrepancies between the updated codex schema and actual usage. Focus on: feat.skill_req being treated as names instead of IDs; species skills/traits/flaws/characteristics treated as names instead of IDs; any lingering references to “items” where the canonical collection is now “equipment” / codex_equipment; and ensuring properties.mechanic is available wherever needed.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/hooks/use-rtdb.ts
+    - src/app/api/codex/route.ts
+    - src/app/(main)/admin/codex/
+    - src/app/(main)/codex/
+    - src/components/creator/
+  acceptance_criteria:
+    - A short list of concrete mismatches (e.g. places comparing feat.skill_req to skill names, or rendering species_traits as names without lookup) is documented
+    - New follow-up tasks are created for each category of mismatch (feat.skill_req IDs, species trait/skill IDs, equipment naming in UI, mechanic property behavior)
+    - CODEX_SCHEMA_REFERENCE remains the single source of truth for codex field semantics
+  notes: |
+    This is primarily a planning/audit task; follow-up implementation tasks will handle the actual code changes.
+
+- id: TASK-178
+  title: Armament creator — hide mechanic properties from add-property lists
+  priority: medium
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Use the new `mechanic` boolean on codex_properties to hide mechanic-only properties (e.g. Damage Reduction, stat requirements, base armor/weapon/shield costs, Split Damage Dice, Range, Two-Handed, Armor Base, Shield Base, Weapon Damage) from the normal "add property" dropdowns in the armament creator. These should be wired into the UI logic instead of being selectable like regular user-facing properties.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - codex_csv/Codex - Properties.csv
+    - src/app/(main)/item-creator/
+    - src/lib/item-transformers.ts
+    - src/components/creator/
+  acceptance_criteria:
+    - Properties with mechanic=true do not appear in standard add-property dropdowns or selection lists
+    - Existing armament creator behavior for these mechanic properties is preserved or improved (requirements, base costs, etc. handled via code, not manual selection)
+    - Non-mechanic properties continue to display and behave as before
+    - npm run build passes
+  notes: |
+    This task focuses on using the mechanic flag in the UI; seeding of the mechanic field itself is handled by TASK-176.
+
+- id: TASK-179
+  title: Feat skill_req — convert to ID-based everywhere
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Feat.skill_req is currently treated as an array of skill names in several places (Admin Feats editor, Codex Feats tab, character creator feats-step, character sheet add-feat modal, and requirement-checking logic). Update the system so feats store and operate on skill IDs instead of names, matching the codex schema and CSVs, while still displaying human-readable skill names via codex lookups.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/hooks/use-rtdb.ts
+    - src/app/api/codex/route.ts
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+  acceptance_criteria:
+    - Feat.skill_req arrays in the database and codex API contain skill IDs, not names
+    - Admin Feats modal uses a dropdown of skill names but saves the corresponding IDs into skill_req
+    - Codex Feats, character creator feats-step, and add-feat-modal all render skill requirement chips using resolved skill names from codex_skills based on IDs
+    - Requirement-checking logic (e.g. in feats-step and add-feat-modal) correctly maps feat.skill_req IDs to the character’s skill bonuses via ID→name resolution
+    - npm run build passes
+  notes: |
+    This task depends on having canonical skill IDs in the Codex CSVs; the UI should treat IDs as the source of truth and derive names via lookups.
+
+- id: TASK-180
+  title: Species skills/traits/flaws/characteristics — enforce ID-based usage
+  priority: medium
+  status: done
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Ensure that species.skills, species_traits, ancestry_traits, flaws, and characteristics are consistently treated as ID arrays across the React app. Any UI that currently assumes these are names should be updated to resolve IDs to names via codex lookups (traits, skills) while preserving IDs in saved data and API payloads.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/api/codex/route.ts
+    - src/hooks/use-rtdb.ts
+    - src/app/(main)/codex/CodexSpeciesTab.tsx
+    - src/components/character-creator/species-modal.tsx
+    - src/components/character-creator/steps/ancestry-step.tsx
+    - src/components/character-creator/steps/species-step.tsx
+    - src/lib/item-transformers.ts
+  acceptance_criteria:
+    - Species CSVs and Supabase codex_species rows store only IDs (no names) in skills/species_traits/ancestry_traits/flaws/characteristics
+    - Codex API returns these as ID arrays, and all downstream code treats them as such
+    - UI components resolve IDs to names using codex_skills and codex_traits when displaying traits/skills
+    - No code path relies on trait or skill names being stored directly in the species arrays
+    - npm run build passes
+  notes: |
+    Some vanilla-site JS still uses name-based arrays; this task is limited to the React/Next.js codebase.

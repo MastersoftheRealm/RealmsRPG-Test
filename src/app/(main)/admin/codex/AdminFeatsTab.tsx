@@ -19,7 +19,7 @@ import {
   ListEmptyState as EmptyState,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useCodexFeats, useCodexSkills, type Feat } from '@/hooks';
+import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
@@ -131,6 +131,7 @@ export function AdminFeatsTab() {
     ability_req: [] as string[],
     abil_req_val: [] as number[],
     tags: [] as string[],
+    // Skill requirement IDs (string IDs from codex_skills)
     skill_req: [] as string[],
     skill_req_val: [] as number[],
     feat_cat_req: '',
@@ -150,6 +151,15 @@ export function AdminFeatsTab() {
   const ABILITY_OPTIONS = ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a }));
 
   const [form, setForm] = useState(formDefaults);
+
+  // Map skill ID -> name for display
+  const skillIdToName = useMemo(() => {
+    const map = new Map<string, string>();
+    (skills as Skill[]).forEach((s) => {
+      map.set(String(s.id), s.name);
+    });
+    return map;
+  }, [skills]);
 
   const openAdd = () => {
     setEditing(null);
@@ -376,9 +386,10 @@ export function AdminFeatsTab() {
               return { name: `${a}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'default' as const };
             });
             if (abilityReqChips.length > 0) detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
-            const skillReqChips = (feat.skill_req || []).map((s, i) => {
+            const skillReqChips = (feat.skill_req || []).map((id, i) => {
+              const label = skillIdToName.get(String(id)) || String(id);
               const val = feat.skill_req_val?.[i];
-              return { name: `${s}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+              return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
             });
             if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
             return (
@@ -578,12 +589,12 @@ export function AdminFeatsTab() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Skill Requirements (skill + min bonus)</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Skill Requirements (skill ID + min bonus)</label>
             <div className="space-y-2">
-              {form.skill_req.map((skillName, i) => (
+              {form.skill_req.map((skillId, i) => (
                 <div key={i} className="flex gap-2 items-center">
                   <select
-                    value={skillName}
+                    value={skillId}
                     onChange={(e) => {
                       const next = [...form.skill_req];
                       next[i] = e.target.value;
@@ -591,11 +602,11 @@ export function AdminFeatsTab() {
                     }}
                     className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
                   >
-                    {skillName && !skills.some((s: { name: string }) => s.name === skillName) && (
-                      <option value={skillName}>{skillName}</option>
+                    {skillId && !(skills as Skill[]).some((s) => String(s.id) === String(skillId)) && (
+                      <option value={skillId}>{skillId}</option>
                     )}
-                    {skills.map((s: { id: string; name: string }) => (
-                      <option key={s.id} value={s.name}>{s.name}</option>
+                    {(skills as Skill[]).map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
                   </select>
                   <Input
@@ -625,10 +636,10 @@ export function AdminFeatsTab() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const firstSkill = skills[0] as { name: string } | undefined;
+                  const firstSkill = (skills as Skill[])[0];
                   setForm((f) => ({
                     ...f,
-                    skill_req: [...f.skill_req, firstSkill?.name ?? ''],
+                    skill_req: [...f.skill_req, firstSkill ? String(firstSkill.id) : ''],
                     skill_req_val: [...f.skill_req_val, 0],
                   }));
                 }}

@@ -40,8 +40,8 @@ id,name,description,feat_points,feat_lvl,lvl_req,mechanic
 39,Slow,This creature's movement speed is decreased by 2.,-0.5,1,,TRUE
 40,Slow II,This creature's movement speed is decreased by 4.,-1.5,2,,TRUE
 41,Slow III,This creature's movement speed is decreased by 6.,-3,3,,TRUE
-42,Resources,"This creature has 1.5x the normal currency for obtaining equipment or it's equivilent in natural weapons, armor, and equipment.",2,1,,FALSE
-43,Resources II,"This creature has 3x the normal currency for obtaining equipment or it's equivilent in natural weapons, armor, and equipment.",4,2,,FALSE
+42,Resources,"This creature has 1.5x the normal currency for obtaining equipment or its equivalent in natural weapons, armor, and equipment.",2,1,,FALSE
+43,Resources II,"This creature has 3x the normal currency for obtaining equipment or its equivalent in natural weapons, armor, and equipment.",4,2,,FALSE
 44,Hover,"This creature must end it's turn within 1 space of the ground, but need not touch it. Only applicable if the creature has a flying speed. -1 per level of flying speed.",-1,1,,TRUE
 45,Telepathically Intune,This creature can perceive content of all telepathic communication within 12 spaces.,1,1,,TRUE
 46,Hard to Stand Up,"If this creature has the prone condition it must succeed on a Might roll DS 10 when it attempts to stand or remain prone. It can only attempt to stand from prone once each turn, and the movement to stand is spend whether it stands or not.",-0.5,1,,FALSE
@@ -59,8 +59,8 @@ id,name,description,feat_points,feat_lvl,lvl_req,mechanic
 58,Elemental Affinity,Add half of the creature's archetype proficiency to the damage of their attacks as a chosen elemental damage type.,1,1,,FALSE
 59,Elemental Affinity II,Add the creature's archetype proficiency to the damage of their attacks as a chosen elemental damage type.,2,2,,FALSE
 60,Elemental Affinity III,Add of the creature's archetype bonus to the damage of their attacks as a chosen elemental damage type.,3,3,,FALSE
-61,Instinct,Add 3 to checks using Percieve with any physical sense; this also applies to Passive Percieve. The creature may ignore the effects of negative Acuity on Percieve.,1,1,,FALSE
-62,Instinct II,Add 5 to checks using Percieve with any physical sense; this also applies to Passive Percieve. The creature may ignore the effects of negative Acuity on Percieve.,2,2,,FALSE
+61,Instinct,Add 3 to checks using Perceive with any physical sense; this also applies to Passive Perceive. The creature may ignore the effects of negative Acuity on Perceive.,1,1,,FALSE
+62,Instinct II,Add 5 to checks using Perceive with any physical sense; this also applies to Passive Perceive. The creature may ignore the effects of negative Acuity on Perceive.,2,2,,FALSE
 63,Jaws,"On a critical strike with unarmed prowess or natural weapons, you have a 1/8 chance to break a bone.",1,1,,FALSE
 64,Lycanthrope,"Spend a quick action to transform into a special hybrid form for up to 10 rounds. While in this form, gain +1 to unarmed prowess or natural weapon damage. ",1,1,,FALSE
 65,Lycanthrope II,Same as Lycanthropy but additionally reduce 1 damage taken from all physical attacks from non-silvered weapons.,2,2,,FALSE
@@ -74,7 +74,7 @@ id,name,description,feat_points,feat_lvl,lvl_req,mechanic
 73,Champion V,This creature takes two turns during combat encounters. It rolls initiative for its first turn as normal. Its second turn occurs second-to-last in the combat round order. This creature gains 6 Action Points at the start of combat and at the end of each turn. The Multiple Action Penalty for the creature is 3.,7,5,,FALSE
 74,Champion VI,"This creature takes three turns during combat encounters. It rolls initiative for its first turn as normal, and for it's second turn with a -5. Its third turn occurs second-to-last in the combat round order.",8,6,,FALSE
 75,This creature can't Speak,"This creature understands languages it knows, but cannot speak.",0,1,,FALSE
-76,Returning Weapons,After using a specified thrown weapon (natural or not) the weapon returns to this creature's possesion on a hit or miss.,1,1,,FALSE
+76,Returning Weapons,After using a specified thrown weapon (natural or not) the weapon returns to this creature's possession on a hit or miss.,1,1,,FALSE
 77,Power Resistant,This creature has a +1 bonus to overcome powers.,1,1,,FALSE
 78,Power Resistant II,This creature has a +2 bonus to overcome powers.,1.5,2,,FALSE
 79,Power Resistant III,This creature has a +3 bonus to overcome powers.,2.5,3,,FALSE

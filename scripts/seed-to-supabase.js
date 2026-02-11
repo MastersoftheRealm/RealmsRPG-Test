@@ -10,9 +10,8 @@
  * Run: npm run db:seed
  * Or:  node scripts/seed-to-supabase.js
  *
- * To fix corrupted data (e.g. descriptions split into arrays): clear tables and re-seed:
- *   npm run db:seed:reset
- * Or:  node scripts/seed-to-supabase.js --reset
+ * This script always clears all codex tables before seeding so the database matches
+ * the current CSVs exactly. Use with care against production data.
  */
 
 const fs = require('fs');
@@ -187,10 +186,8 @@ async function clearCodexTables() {
 }
 
 async function main() {
-  const reset = process.argv.includes('--reset');
-  if (reset) {
-    await clearCodexTables();
-  }
+  // Always clear codex tables before seeding so we fully replace existing data.
+  await clearCodexTables();
 
   console.log('Seeding codex data from CSV...\n');
 

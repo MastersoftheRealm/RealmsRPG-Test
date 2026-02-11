@@ -39,11 +39,20 @@ export function AdminSkillsTab() {
     subSkillMode: 'all',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; ability: string; category: string; base_skill_id?: number; trained_only?: boolean } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string; description: string; ability: string; base_skill_id?: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', ability: '', category: '', base_skill_id: '', trained_only: false });
+  const [form, setForm] = useState({ name: '', description: '', ability: '', baseSkillName: '' });
+
+  const baseSkillOptions = useMemo(() => {
+    if (!skills) return [] as { id: string; name: string }[];
+    // Base skills are those without a base_skill_id (or with base_skill_id === 0 meaning can be a base for any)
+    const baseSkills = (skills as Skill[]).filter((s) => s.base_skill_id === undefined || s.base_skill_id === 0);
+    return baseSkills
+      .map((s) => ({ id: String(s.id), name: s.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [skills]);
 
   const skillIdToName = useMemo((): Map<string, string> => {
     if (!skills) return new Map<string, string>();
@@ -63,7 +72,6 @@ export function AdminSkillsTab() {
           if (trimmed) abilities.add(trimmed);
         });
       }
-      if (s.category && typeof s.category === 'string') baseSkills.add(s.category);
       if (s.base_skill_id !== undefined) {
         const baseSkillName: string | undefined = skillIdToName.get(String(s.base_skill_id));
         if (typeof baseSkillName === 'string') baseSkills.add(baseSkillName);
@@ -127,19 +135,27 @@ export function AdminSkillsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', ability: '', category: '', base_skill_id: '', trained_only: false });
+    setForm({ name: '', description: '', ability: '', baseSkillName: '' });
     setModalOpen(true);
   };
 
-  const openEdit = (s: { id: string; name: string; description: string; ability: string; category: string; base_skill_id?: number; trained_only?: boolean }) => {
+  const openEdit = (s: { id: string; name: string; description: string; ability: string; base_skill_id?: number }) => {
     setEditing(s);
+    // Resolve base skill name from id (including 0 meaning "Any")
+    let baseSkillName = '';
+    if (s.base_skill_id != null) {
+      if (s.base_skill_id === 0) {
+        baseSkillName = 'Any';
+      } else {
+        const match = baseSkillOptions.find((opt) => String(opt.id) === String(s.base_skill_id));
+        baseSkillName = match?.name ?? '';
+      }
+    }
     setForm({
       name: s.name,
       description: s.description || '',
       ability: s.ability || '',
-      category: s.category || '',
-      base_skill_id: s.base_skill_id != null ? String(s.base_skill_id) : '',
-      trained_only: s.trained_only ?? false,
+      baseSkillName,
     });
     setModalOpen(true);
   };
@@ -153,13 +169,26 @@ export function AdminSkillsTab() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+
+    // Resolve base_skill_id from selected baseSkillName
+    let base_skill_id: number | undefined;
+    const trimmedBase = form.baseSkillName.trim();
+    if (trimmedBase) {
+      if (trimmedBase === 'Any') {
+        base_skill_id = 0;
+      } else {
+        const match = baseSkillOptions.find((opt) => opt.name === trimmedBase);
+        if (match) {
+          base_skill_id = parseInt(String(match.id), 10);
+        }
+      }
+    }
+
     const data = {
       name: form.name.trim(),
       description: form.description.trim(),
       ability: form.ability.trim(),
-      category: form.category.trim(),
-      base_skill_id: form.base_skill_id ? parseInt(form.base_skill_id) : undefined,
-      trained_only: form.trained_only,
+      base_skill_id,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `skill_${Date.now()}`;
@@ -332,25 +361,25 @@ export function AdminSkillsTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
             <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Skill description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>
-              <Input value={form.ability} onChange={(e) => setForm((f) => ({ ...f, ability: e.target.value }))} placeholder="e.g. Dexterity" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-              <Input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="e.g. Physical" />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>
+            <Input value={form.ability} onChange={(e) => setForm((f) => ({ ...f, ability: e.target.value }))} placeholder="e.g. Agility" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Base skill ID (for sub-skills)</label>
-              <Input value={form.base_skill_id} onChange={(e) => setForm((f) => ({ ...f, base_skill_id: e.target.value }))} placeholder="Number or empty" />
-            </div>
-            <label className="flex items-center gap-2 pt-8">
-              <input type="checkbox" checked={form.trained_only} onChange={(e) => setForm((f) => ({ ...f, trained_only: e.target.checked }))} />
-              <span className="text-sm text-text-secondary">Trained only</span>
-            </label>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Base skill (for sub-skills)</label>
+            <select
+              value={form.baseSkillName}
+              onChange={(e) => setForm((f) => ({ ...f, baseSkillName: e.target.value }))}
+              className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+            >
+              <option value="">— None (base skill)</option>
+              <option value="Any">Any base skill (id 0)</option>
+              {baseSkillOptions.map((opt) => (
+                <option key={opt.id} value={opt.name}>
+                  {opt.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </Modal>

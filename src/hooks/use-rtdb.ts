@@ -98,9 +98,7 @@ export interface Skill {
   name: string;
   description: string;
   ability: string;
-  category: string;
   base_skill_id?: number;
-  trained_only?: boolean;
 }
 
 export interface Species {

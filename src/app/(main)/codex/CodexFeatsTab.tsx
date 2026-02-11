@@ -24,7 +24,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { Input } from '@/components/ui';
-import { useCodexFeats, type Feat } from '@/hooks';
+import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 
@@ -40,7 +40,7 @@ interface FeatFilters {
   stateFeatMode: 'all' | 'only' | 'hide';
 }
 
-function FeatCard({ feat }: { feat: Feat }) {
+function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<string, string> }) {
   const detailSections: Array<{ label: string; chips: { name: string; category?: 'default' | 'tag' | 'skill' | 'archetype' }[]; hideLabelIfSingle?: boolean }> = [];
 
   const typeChips: { name: string; category: 'skill' | 'archetype' }[] = [];
@@ -68,9 +68,10 @@ function FeatCard({ feat }: { feat: Feat }) {
     detailSections.push({ label: 'Ability Requirements', chips: abilityReqChips });
   }
 
-  const skillReqChips = (feat.skill_req || []).map((s, i) => {
+  const skillReqChips = (feat.skill_req || []).map((id, i) => {
+    const label = skillIdToName.get(String(id)) || String(id);
     const val = feat.skill_req_val?.[i];
-    return { name: `${s}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
+    return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
   });
   if (skillReqChips.length > 0) {
     detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
@@ -96,6 +97,7 @@ function FeatCard({ feat }: { feat: Feat }) {
 
 export function CodexFeatsTab() {
   const { data: feats, isLoading, error } = useCodexFeats();
+  const { data: skills = [] } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const [filters, setFilters] = useState<FeatFilters>({
@@ -135,6 +137,14 @@ export function CodexFeatsTab() {
       abilReqAbilities: Array.from(abilReqAbilities).sort(),
     };
   }, [feats]);
+
+  const skillIdToName = useMemo(() => {
+    const map = new Map<string, string>();
+    (skills as Skill[]).forEach((s) => {
+      map.set(String(s.id), s.name);
+    });
+    return map;
+  }, [skills]);
 
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
@@ -308,7 +318,7 @@ export function CodexFeatsTab() {
           <div className="p-8 text-center text-text-muted">No feats match your filters.</div>
         ) : (
           filteredFeats.map(feat => (
-            <FeatCard key={feat.id} feat={feat} />
+            <FeatCard key={feat.id} feat={feat} skillIdToName={skillIdToName} />
           ))
         )}
       </div>

@@ -33,6 +33,11 @@ Append-only log. Agents must add an entry for each PR/merge.
   - TASK-170: Updated Admin Skills, Parts, Properties, and Equipment tabs to share Codex-style search, filters, sort headers, and GridListRow layouts, with edit/delete controls layered on top
   - build pending
 
+- 2026-02-11 | agent:cursor | Session: TASK-171 — Admin Skills base skill dropdown | files: AdminSkillsTab.tsx, AI_TASK_QUEUE.md, ALL_FEEDBACK_CLEAN.md | TASKs: TASK-171 | Summary:
+  - Replaced numeric `base_skill_id` input in Admin Skills modal with a dropdown of base skill names (plus an "Any" option mapped to id 0)
+  - On save, the selected name is resolved to `base_skill_id` and stored internally; editing a sub-skill pre-selects the correct base skill
+  - `npm run build` passes
+
 - 2026-02-07 | agent:cursor | Session: TASK-137–141 — Public library, add-to-library, source filter, badges | files: library-service, use-public-library, CodexPublicLibraryTab, grid-list-row, SourceFilter, Library tabs, power/technique/item/creature creators | TASKs: TASK-137, TASK-138, TASK-139, TASK-140, TASK-141 | Summary:
   - TASK-137: Admin My library / Public library toggle in all four creators (done earlier)
   - TASK-138: fetchPublicLibrary, addPublicItemToLibrary, usePublicLibrary, useAddPublicToLibrary; Add to my library in Codex Public tab
@@ -489,6 +494,12 @@ Append-only log. Agents must add an entry for each PR/merge.
 
 - 2026-02-06 | agent | TASK-096: Split characters/[id] page | files: characters/[id]/character-sheet-utils.ts, CharacterSheetModals.tsx, page.tsx | TASK: TASK-096 | Summary:
   Extracted character sheet (~1586 lines) into: character-sheet-utils.ts (calculateStats), CharacterSheetModals.tsx (AddLibraryItemModal, DeleteConfirmModal, AddFeatModal, AddSkillModal, AddSubSkillModal, LevelUpModal, RecoveryModal). Main page reduced by ~200 lines. Build passes.
+
+- 2026-02-11 | agent | TASK-174, TASK-175: Codex schema Use column + remove trained_only | files: src/docs/CODEX_SCHEMA_REFERENCE.md, src/hooks/use-rtdb.ts, src/app/api/codex/route.ts, src/app/(main)/admin/codex/AdminSkillsTab.tsx, scripts/migrate_rtdb_to_firestore.js, src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/AI_TASK_QUEUE.md | TASK: TASK-174,TASK-175 | pr_link: (pending local changes) | merged_at: 2026-02-11 | Summary:
+  Extended CODEX_SCHEMA_REFERENCE so each codex field includes a concrete “Use” explanation and aligned the feat/skill/species/trait/item/part/property/creature-feat tables with the RTDB DATA REVIEW and latest owner spec. Removed the invalid `trained_only` field from the skills schema across docs, TypeScript types, the Codex API payload, the Admin Skills editor, and the RTDB→Firestore migration script, so future work no longer relies on it.
+
+- 2026-02-11 | agent | TASK-176–TASK-180: Codex seeding and feat.skill_req IDs | files: scripts/seed-to-supabase.js, src/docs/CODEX_SCHEMA_REFERENCE.md, src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/AI_TASK_QUEUE.md, src/app/(main)/admin/codex/AdminFeatsTab.tsx, src/app/(main)/codex/CodexFeatsTab.tsx, src/components/character-creator/steps/feats-step.tsx, src/components/character-sheet/add-feat-modal.tsx | TASK: TASK-176,TASK-177,TASK-178,TASK-179,TASK-180 | pr_link: (pending local changes) | merged_at: 2026-02-11 | Summary:
+  Updated the codex seeding script to always clear all codex_* tables before upserting rows from the canonical Codex CSVs, ensuring a full replacement of codex data on each run. Refined CODEX_SCHEMA_REFERENCE for ID-based cross-references (feat.skill_req as skill IDs, species skills/traits/flaws/characteristics as trait/skill IDs, equipment naming, properties.mechanic), and wired feat.skill_req toward ID semantics in the React app: AdminFeatsTab now saves skill_req as IDs selected from codex skills; CodexFeatsTab, the character-creator feats-step, and the character sheet AddFeatModal all resolve skill_req IDs back to skill names for display and requirement chips.
 
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 

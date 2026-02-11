@@ -732,6 +732,8 @@ function ItemCreatorContent() {
     const selectableProps = itemProperties.filter((p: ItemProperty) => {
       // Exclude general properties
       if (isGeneralProperty(p)) return false;
+      // Exclude mechanic properties; these are handled automatically by the UI logic
+      if (p.mechanic) return false;
       // Include properties that match the armament type or have no type specified
       const propType = (p.type || '').toLowerCase();
       if (!propType || propType === 'general') return true;

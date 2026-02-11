@@ -72,9 +72,7 @@ export async function GET() {
       name: (d.name as string) || '',
       description: (d.description as string) || '',
       ability,
-      category: (d.category as string) || '',
       base_skill_id: !isNaN(baseSkillId as number) ? baseSkillId : undefined,
-      trained_only: d.trained_only === true || d.trained_only === 'true',
     };
   });
 
