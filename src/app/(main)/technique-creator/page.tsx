@@ -543,13 +543,26 @@ function TechniqueCreatorContent() {
 
     try {
       // Format parts for saving
-      const partsToSave = selectedParts.map((sp) => ({
-        id: Number(sp.part.id),
-        name: sp.part.name,
-        op_1_lvl: sp.op_1_lvl,
-        op_2_lvl: sp.op_2_lvl,
-        op_3_lvl: sp.op_3_lvl,
-      }));
+      // Include both user-selected parts and auto-generated mechanic parts
+      // so that TP/EN costs can be correctly recomputed outside the creator.
+      const partsToSave = [
+        // Explicit technique parts chosen in the UI
+        ...selectedParts.map((sp) => ({
+          id: Number(sp.part.id),
+          name: sp.part.name,
+          op_1_lvl: sp.op_1_lvl,
+          op_2_lvl: sp.op_2_lvl,
+          op_3_lvl: sp.op_3_lvl,
+        })),
+        // Mechanic parts derived from action type, weapon, and damage
+        ...mechanicParts.map((mp) => ({
+          id: mp.id,
+          name: mp.name,
+          op_1_lvl: mp.op_1_lvl,
+          op_2_lvl: mp.op_2_lvl,
+          op_3_lvl: mp.op_3_lvl,
+        })),
+      ];
 
       // Format damage
       const damageToSave =
@@ -649,10 +662,14 @@ function TechniqueCreatorContent() {
     const loadedParts: SelectedPart[] = [];
     for (const savedPart of savedParts) {
       const matchedPart = techniqueParts.find(
-        (p: { id: string; name: string }) => p.id === String(savedPart.id) || p.name === savedPart.name
+        (p: { id: string; name: string; mechanic?: boolean }) =>
+          p.id === String(savedPart.id) || p.name === savedPart.name
       );
-      
-      if (matchedPart) {
+
+      // Skip mechanic-only parts when loading; these are auto-generated
+      // from action / damage / weapon and should not appear as editable rows.
+      // They will be re-created by buildMechanicPartPayload.
+      if (matchedPart && !matchedPart.mechanic) {
         loadedParts.push({
           part: matchedPart,
           op_1_lvl: savedPart.op_1_lvl || 0,

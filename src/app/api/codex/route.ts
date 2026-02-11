@@ -22,7 +22,7 @@ function toNumArray(val: unknown): number[] {
 
 export async function GET() {
   try {
-    const [feats, skills, species, traits, parts, properties, equipment, archetypes, creatureFeats] = await Promise.all([
+    const [feats, skills, species, traits, parts, properties, equipment, archetypes, creatureFeats, coreRulesRows] = await Promise.all([
     prisma.codexFeat.findMany(),
     prisma.codexSkill.findMany(),
     prisma.codexSpecies.findMany(),
@@ -32,6 +32,7 @@ export async function GET() {
     prisma.codexEquipment.findMany(),
     prisma.codexArchetype.findMany(),
     prisma.codexCreatureFeat.findMany(),
+    prisma.coreRules.findMany().catch(() => []), // Graceful fallback if table doesn't exist yet
   ]);
 
   const codexFeats = feats.map((r) => {
@@ -118,9 +119,13 @@ export async function GET() {
       id: r.id,
       name: (d.name as string) || '',
       description: (d.description as string) || '',
+      // Optional targeting / usage metadata
       species: toStrArray(d.species),
       uses_per_rec: d.uses_per_rec as number | undefined,
       rec_period: d.rec_period as string | undefined,
+      // New booleans per CODEX_SCHEMA_REFERENCE
+      flaw: d.flaw === true || d.flaw === 'true',
+      characteristic: d.characteristic === true || d.characteristic === 'true',
     };
   });
 
@@ -159,7 +164,7 @@ export async function GET() {
       id: r.id,
       name: (d.name as string) || '',
       description: (d.description as string) || '',
-      type: ((d.type as string) || 'general') as 'weapon' | 'armor' | 'shield' | 'general',
+      type: (d.type as string | undefined) || undefined,
       tp_cost: parseFloat(d.tp_cost as string) || 0,
       gold_cost: parseFloat(d.gold_cost as string) || 0,
       base_ip: parseFloat(d.base_ip as string) || 0,
@@ -169,6 +174,7 @@ export async function GET() {
       op_1_ip: parseFloat(d.op_1_ip as string) || 0,
       op_1_tp: parseFloat(d.op_1_tp as string) || 0,
       op_1_c: parseFloat(d.op_1_c as string) || 0,
+      mechanic: d.mechanic === true || d.mechanic === 'true',
     };
   });
 
@@ -200,10 +206,19 @@ export async function GET() {
       name: (d.name as string) || '',
       description: (d.description as string) || '',
       points: Number(d.points ?? d.feat_points ?? d.cost ?? 0),
+      feat_lvl: d.feat_lvl != null ? Number(d.feat_lvl) : undefined,
+      lvl_req: d.lvl_req != null ? Number(d.lvl_req) : undefined,
+      mechanic: d.mechanic === true || d.mechanic === 'true',
       tiers: d.tiers ? Number(d.tiers) : undefined,
       prereqs: toStrArray(d.prereqs),
     };
   });
+
+  // Build core_rules as a keyed object { CATEGORY_ID: data }
+  const coreRules: Record<string, unknown> = {};
+  for (const row of coreRulesRows) {
+    coreRules[row.id] = row.data;
+  }
 
   return NextResponse.json({
     feats: codexFeats,
@@ -217,6 +232,7 @@ export async function GET() {
     equipment: codexEquipment,
     archetypes: codexArchetypes,
     creatureFeats: codexCreatureFeats,
+    coreRules,
   });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';

@@ -2,7 +2,7 @@
  * Skill Allocation Utilities
  * ===========================
  * Centralized logic for skill point costs, caps, and defense allocation.
- * Per user spec: chars 3 pts/level, creatures 5 pts/level.
+ * Characters: 3 pts/level. Creatures: 5 at L1, 3 per level after.
  * Species skills: 2 permanent, always proficient, can't be removed.
  */
 
@@ -17,10 +17,21 @@ export const BASE_SKILL_PAST_CAP_COST = 3;
 export const SUB_SKILL_PAST_CAP_COST = 2;
 export const DEFENSE_INCREASE_COST = 2;
 
-/** Skill points per level: characters 3, creatures 5 */
+/** Skill points per level for characters (simple: 3 * level) */
+export const CHARACTER_SKILL_POINTS_PER_LEVEL = 3;
+
+/** Creature skill points: 5 at level 1, +3 per additional level */
+export const CREATURE_SKILL_POINTS = {
+  base: 5,
+  perLevel: 3,
+} as const;
+
+/**
+ * @deprecated Use CHARACTER_SKILL_POINTS_PER_LEVEL and CREATURE_SKILL_POINTS instead.
+ */
 export const SKILL_POINTS_PER_LEVEL = {
   character: 3,
-  creature: 5,
+  creature: 3, // corrected: creatures get 5 at L1 + 3/level (use getTotalSkillPoints)
 } as const;
 
 /** Species grants 2 permanent skills (don't cost points) */
@@ -32,13 +43,17 @@ export const SPECIES_SKILL_COUNT = 2;
 
 /**
  * Get total skill points for an entity at a given level.
+ * Characters: 3 * level. Creatures: 5 + 3 * (level - 1).
  */
 export function getTotalSkillPoints(
   level: number,
   entityType: 'character' | 'creature'
 ): number {
-  const perLevel = SKILL_POINTS_PER_LEVEL[entityType];
-  return perLevel * Math.max(1, Math.floor(level));
+  const parsedLevel = Math.max(1, Math.floor(level));
+  if (entityType === 'creature') {
+    return CREATURE_SKILL_POINTS.base + CREATURE_SKILL_POINTS.perLevel * (parsedLevel - 1);
+  }
+  return CHARACTER_SKILL_POINTS_PER_LEVEL * parsedLevel;
 }
 
 /**

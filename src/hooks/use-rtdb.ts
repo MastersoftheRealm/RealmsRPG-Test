@@ -72,6 +72,7 @@ export interface ItemProperty {
   op_1_ip?: number;
   op_1_tp?: number;
   op_1_c?: number;
+  mechanic?: boolean;
 }
 
 export interface Feat {
@@ -79,7 +80,8 @@ export interface Feat {
   name: string;
   description: string;
   category: string;
-  ability?: string;
+  // May be a single ability/defense or multiple (see CODEX_SCHEMA_REFERENCE ability field)
+  ability?: string | string[];
   ability_req: string[];
   abil_req_val: number[];
   tags: string[];
@@ -129,6 +131,10 @@ export interface Trait {
   species?: string[];
   uses_per_rec?: number;
   rec_period?: string;
+   /** True if this trait is a flaw (schema: codex_traits.flaw) */
+  flaw?: boolean;
+  /** True if this trait is a characteristic (schema: codex_traits.characteristic) */
+  characteristic?: boolean;
 }
 
 export interface EquipmentItem {
@@ -151,7 +157,14 @@ export interface CreatureFeat {
   id: string;
   name: string;
   description: string;
+  /** Creature feat point cost (schema: feat_points) */
   points: number;
+  /** Feat level / tier (schema: feat_lvl) */
+  feat_lvl?: number;
+  /** Required creature level (schema: lvl_req) */
+  lvl_req?: number;
+  /** Mechanic-only flag (schema: mechanic) */
+  mechanic?: boolean;
   tiers?: number;
   prereqs?: string[];
 }

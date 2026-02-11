@@ -11,12 +11,14 @@ import { ArrowUp, Star, Heart, Zap, Shield, Sword, Plus, Check } from 'lucide-re
 import { Modal, Button } from '@/components/ui';
 import {
   calculateAbilityPoints,
-  calculateSkillPoints,
+  calculateSkillPointsForEntity,
   calculateHealthEnergyPool,
   calculateProficiency,
   calculateTrainingPoints,
+  calculateMaxArchetypeFeats,
+  calculateMaxCharacterFeats,
 } from '@/lib/game/formulas';
-import type { Character } from '@/types';
+import type { Character, ArchetypeCategory } from '@/types';
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -35,15 +37,20 @@ interface ProgressionDelta {
   characterFeats: number;
 }
 
-function calculateLevelGains(currentLevel: number, newLevel: number, highestAbility: number = 0): ProgressionDelta {
+function calculateLevelGains(
+  currentLevel: number, 
+  newLevel: number, 
+  highestAbility: number = 0,
+  archetypeType?: ArchetypeCategory
+): ProgressionDelta {
   const currentHE = calculateHealthEnergyPool(currentLevel, 'PLAYER');
   const newHE = calculateHealthEnergyPool(newLevel, 'PLAYER');
   
   const currentAP = calculateAbilityPoints(currentLevel);
   const newAP = calculateAbilityPoints(newLevel);
   
-  const currentSP = calculateSkillPoints(currentLevel);
-  const newSP = calculateSkillPoints(newLevel);
+  const currentSP = calculateSkillPointsForEntity(currentLevel, 'character');
+  const newSP = calculateSkillPointsForEntity(newLevel, 'character');
   
   const currentTP = calculateTrainingPoints(currentLevel, highestAbility);
   const newTP = calculateTrainingPoints(newLevel, highestAbility);
@@ -57,8 +64,8 @@ function calculateLevelGains(currentLevel: number, newLevel: number, highestAbil
     skillPoints: newSP - currentSP,
     trainingPoints: newTP - currentTP,
     proficiency: newProf - currentProf,
-    archetypeFeats: newLevel - currentLevel, // 1 per level
-    characterFeats: newLevel - currentLevel, // 1 per level
+    archetypeFeats: calculateMaxArchetypeFeats(newLevel, archetypeType) - calculateMaxArchetypeFeats(currentLevel, archetypeType),
+    characterFeats: calculateMaxCharacterFeats(newLevel) - calculateMaxCharacterFeats(currentLevel),
   };
 }
 
@@ -89,8 +96,9 @@ export function LevelUpModal({
   
   // Calculate level gains
   const gains = useMemo(() => {
-    return calculateLevelGains(currentLevel, targetLevel, highestAbility);
-  }, [currentLevel, targetLevel, highestAbility]);
+    const archType = (character.archetype?.type || 'power') as ArchetypeCategory;
+    return calculateLevelGains(currentLevel, targetLevel, highestAbility, archType);
+  }, [currentLevel, targetLevel, highestAbility, character]);
   
   // Get milestone info
   const getMilestones = () => {

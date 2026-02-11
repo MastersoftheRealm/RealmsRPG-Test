@@ -8,12 +8,13 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createCharacter } from '@/services/character-service';
+import { createCharacter, saveCharacter } from '@/services/character-service';
 import { useAuth, useCodexSkills, useSpecies, type Species } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints, getBaseHealth, getBaseEnergy } from '@/lib/game/formulas';
+import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
+import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
 import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
@@ -133,18 +134,17 @@ function ValidationModal({
 function HealthEnergyAllocationSection() {
   const { draft, updateDraft } = useCharacterCreatorStore();
   
-  // Calculate base values
-  const abilities = draft.abilities || {};
-  const archetype = { 
-    type: draft.archetype?.type, 
-    pow_abil: draft.pow_abil, 
-    mart_abil: draft.mart_abil 
-  };
-  const baseHealth = getBaseHealth(archetype, abilities);
-  const baseEnergy = getBaseEnergy(archetype, abilities);
+  // Calculate base values using centralized calculations
+  const abilities = draft.abilities || { strength: 0, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 };
+  const level = draft.level || 1;
+  const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
+  const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
+  
+  // Base = max with 0 allocation; used for display
+  const baseHealth = calculateMaxHealth(0, abilities.vitality || 0, level, powAbil, abilities);
+  const baseEnergy = calculateMaxEnergy(0, powAbil || martAbil, abilities, level);
   
   // HE pool is 18 at level 1, +2 per level
-  const level = draft.level || 1;
   const hePool = BASE_HE_POOL + (level - 1) * 2;
   
   // Now using bonus values (stored directly)
@@ -152,8 +152,8 @@ function HealthEnergyAllocationSection() {
   const enBonus = draft.energyPoints || 0;
   
   // Calculated max values for display
-  const maxHp = baseHealth + hpBonus;
-  const maxEnergy = baseEnergy + enBonus;
+  const maxHp = calculateMaxHealth(hpBonus, abilities.vitality || 0, level, powAbil, abilities);
+  const maxEnergy = calculateMaxEnergy(enBonus, powAbil || martAbil, abilities, level);
   
   return (
     <div className="mb-6">
@@ -404,7 +404,7 @@ export function FinalizeStep() {
       draft.skills || {},
       speciesSkillIds,
       skillMeta,
-      draft.defenseSkills
+      draft.defenseVals || draft.defenseSkills
     );
     const remainingSkillPoints = maxSkillPoints - totalUsedSkillPoints;
     
@@ -585,10 +585,47 @@ export function FinalizeStep() {
 
       const sanitizedCharacter = sanitize(characterData);
 
+      // If portrait is base64, strip it from initial save (will upload to Storage after)
+      const hasBase64Portrait = sanitizedCharacter.portrait && 
+        typeof sanitizedCharacter.portrait === 'string' && 
+        sanitizedCharacter.portrait.startsWith('data:');
+      const base64Portrait = hasBase64Portrait ? sanitizedCharacter.portrait : null;
+      if (hasBase64Portrait) {
+        delete sanitizedCharacter.portrait;
+      }
+
       const characterId = await createCharacter({
         ...sanitizedCharacter,
         userId: user.uid,
       });
+
+      // Upload base64 portrait to Supabase Storage and save the URL
+      if (base64Portrait && characterId) {
+        try {
+          // Convert base64 data URI to a File
+          const res = await fetch(base64Portrait);
+          const blob = await res.blob();
+          const file = new File([blob], 'portrait.jpg', { type: 'image/jpeg' });
+
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('characterId', characterId);
+
+          const uploadRes = await fetch('/api/upload/portrait', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (uploadRes.ok) {
+            const { url } = (await uploadRes.json()) as { url: string };
+            // Update character with the Storage URL
+            await saveCharacter(characterId, { portrait: url });
+          }
+          // If upload fails, character is still created without portrait — not a critical error
+        } catch (uploadErr) {
+          console.error('Portrait upload failed (character still saved):', uploadErr);
+        }
+      }
 
       // Clear the creator store
       resetCreator();

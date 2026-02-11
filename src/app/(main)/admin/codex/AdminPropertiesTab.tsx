@@ -43,7 +43,7 @@ export function AdminPropertiesTab() {
   const [form, setForm] = useState({
     name: '',
     description: '',
-    type: 'general',
+    type: 'Armor',
     base_ip: 0,
     base_tp: 0,
     base_c: 0,
@@ -92,7 +92,7 @@ export function AdminPropertiesTab() {
     setForm({
       name: '',
       description: '',
-      type: 'general',
+      type: 'Armor',
       base_ip: 0,
       base_tp: 0,
       base_c: 0,
@@ -107,10 +107,19 @@ export function AdminPropertiesTab() {
 
   const openEdit = (p: { id: string; name: string; description: string; type?: string; base_ip?: number; base_tp?: number; base_c?: number; op_1_desc?: string; op_1_ip?: number; op_1_tp?: number; op_1_c?: number; mechanic?: boolean }) => {
     setEditing(p);
+    const rawType = (p.type as string | undefined) || '';
+    const normalizedType =
+      rawType.toLowerCase() === 'armor'
+        ? 'Armor'
+        : rawType.toLowerCase() === 'shield'
+          ? 'Shield'
+          : rawType.toLowerCase() === 'weapon'
+            ? 'Weapon'
+            : 'Armor';
     setForm({
       name: p.name,
       description: p.description || '',
-      type: (p.type as string) || 'general',
+      type: normalizedType,
       base_ip: p.base_ip ?? 0,
       base_tp: p.base_tp ?? 0,
       base_c: p.base_c ?? 0,
@@ -206,7 +215,18 @@ export function AdminPropertiesTab() {
           <SelectFilter
             label="Type"
             value={filters.typeFilter}
-            options={typeOptions.map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
+            options={typeOptions.map(t => {
+              const lower = t.toLowerCase();
+              const label =
+                lower === 'armor'
+                  ? 'Armor'
+                  : lower === 'shield'
+                    ? 'Shield'
+                    : lower === 'weapon'
+                      ? 'Weapon'
+                      : t;
+              return { value: label, label };
+            })}
             onChange={(v) => setFilters(f => ({ ...f, typeFilter: v }))}
             placeholder="All Types"
           />
@@ -236,54 +256,100 @@ export function AdminPropertiesTab() {
               size="sm"
             />
           ) : (
-            filteredProperties.map((p: ItemProperty) => (
-              <GridListRow
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                description={p.description || ''}
-                gridColumns={PROPERTY_GRID_COLUMNS}
-                columns={[
-                  { key: 'Type', value: (p.type || 'general') as string },
-                  { key: 'IP', value: p.base_ip && p.base_ip > 0 ? String(p.base_ip) : '-', className: 'text-blue-600' },
-                  {
-                    key: 'TP',
-                    value: (p.base_tp ?? p.tp_cost ?? 0) > 0 ? String(p.base_tp ?? p.tp_cost ?? 0) : '-',
-                    className: 'text-tp',
-                  },
-                  {
-                    key: 'Cost',
-                    value: (p.base_c ?? p.gold_cost ?? 0) > 0 ? `×${p.base_c ?? p.gold_cost ?? 0}` : '-',
-                  },
-                ]}
-                rightSlot={
-                  <div className="flex items-center gap-1 pr-2">
-                    {pendingDeleteId === p.id ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(p.id, p.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPendingDeleteId(p.id)}
-                          label="Delete"
-                          className="text-danger hover:text-danger-600 hover:bg-transparent"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </>
-                    )}
-                  </div>
-                }
-              />
-            ))
+            filteredProperties.map((p: ItemProperty) => {
+              const typeLabel = p.type
+                ? p.type.charAt(0).toUpperCase() + p.type.slice(1).toLowerCase()
+                : 'Armor';
+
+              const optionChips =
+                p.op_1_desc && p.op_1_desc.length > 0
+                  ? [
+                      {
+                        name: 'Option',
+                        description: p.op_1_desc,
+                        category: 'default' as const,
+                      },
+                    ]
+                  : [];
+
+              const detailSections =
+                optionChips.length > 0
+                  ? [
+                      {
+                        label: 'Options',
+                        chips: optionChips,
+                      },
+                    ]
+                  : undefined;
+
+              return (
+                <GridListRow
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  description={p.description || ''}
+                  gridColumns={PROPERTY_GRID_COLUMNS}
+                  columns={[
+                    { key: 'Type', value: typeLabel },
+                    {
+                      key: 'IP',
+                      value: p.base_ip && p.base_ip > 0 ? String(p.base_ip) : '-',
+                      className: 'text-blue-600',
+                    },
+                    {
+                      key: 'TP',
+                      value: (p.base_tp ?? p.tp_cost ?? 0) > 0 ? String(p.base_tp ?? p.tp_cost ?? 0) : '-',
+                      className: 'text-tp',
+                    },
+                    {
+                      key: 'Cost',
+                      value: (p.base_c ?? p.gold_cost ?? 0) > 0 ? `×${p.base_c ?? p.gold_cost ?? 0}` : '-',
+                    },
+                  ]}
+                  detailSections={detailSections}
+                  rightSlot={
+                    <div className="flex items-center gap-1 pr-2">
+                      {pendingDeleteId === p.id ? (
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleInlineDelete(p.id, p.name)}
+                            className="text-xs px-2 py-0.5 h-6"
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setPendingDeleteId(null)}
+                            className="text-xs px-2 py-0.5 h-6"
+                          >
+                            No
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
+                            <Pencil className="w-4 h-4" />
+                          </IconButton>
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPendingDeleteId(p.id)}
+                            label="Delete"
+                            className="text-danger hover:text-danger-600 hover:bg-transparent"
+                          >
+                            <X className="w-4 h-4" />
+                          </IconButton>
+                        </>
+                      )}
+                    </div>
+                  }
+                />
+              );
+            })
           )}
         </div>
       )}

@@ -13,7 +13,7 @@ import { getCharacter, saveCharacter, type LibraryForView } from '@/services/cha
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
-import { calculateArchetypeProgression, calculateSkillPointsForEntity } from '@/lib/game/formulas';
+import { calculateArchetypeProgression, calculateSkillPointsForEntity, calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import {
   SheetHeader,
   AbilitiesSection,
@@ -25,7 +25,7 @@ import {
   SheetActionToolbar,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
-import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat } from '@/types';
+import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat, Feat } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { calculateStats } from './character-sheet-utils';
 import { CharacterSheetModals, type AddModalType, type FeatModalType, type SkillModalType } from './CharacterSheetModals';
@@ -213,9 +213,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
       return sum + cost;
     }, 0);
     
-    // Defense skills cost 2 per point
-    const defenseSkills = character.defenseSkills || {};
-    const spentDefensePoints = Object.values(defenseSkills).reduce((sum: number, val) => sum + ((val as number || 0) * 2), 0);
+    // Defense vals cost 2 skill points per 1
+    const defVals = character.defenseVals || character.defenseSkills || {};
+    const spentDefensePoints = Object.values(defVals).reduce((sum: number, val) => sum + ((val as number || 0) * 2), 0);
     spentSkillPoints += spentDefensePoints;
     
     return {
@@ -275,14 +275,15 @@ export default function CharacterSheetPage({ params }: PageParams) {
       }
       return sum + cost;
     }, 0);
-    // Defense skills cost 2 per point
-    const defenseSkills = character.defenseSkills || {};
-    const spentDefensePoints = Object.values(defenseSkills).reduce((sum: number, val) => sum + ((val as number) * 2), 0);
+    // Defense vals cost 2 skill points per 1
+    const defVals2 = character.defenseVals || character.defenseSkills || {};
+    const spentDefensePoints = Object.values(defVals2).reduce((sum: number, val) => sum + ((val as number) * 2), 0);
     const skillPointsRemaining = totalSkillPoints - spentSkillPoints - spentDefensePoints;
     
-    // Calculate feat slots: 1 archetype feat per 4 levels, 1 character feat per 4 levels
-    const archetypeFeatSlots = Math.floor(level / 4) + 1;
-    const characterFeatSlots = Math.floor(level / 4) + 1;
+    // Calculate feat slots using correct formulas
+    const archetypeType = character.archetype?.type || 'power';
+    const archetypeFeatSlots = calculateMaxArchetypeFeats(level, archetypeType);
+    const characterFeatSlots = calculateMaxCharacterFeats(level);
     const usedArchetypeFeats = (character.archetypeFeats || []).length;
     const usedCharacterFeats = (character.feats || []).length;
     const archetypeFeatsRemaining = archetypeFeatSlots - usedArchetypeFeats;
@@ -337,7 +338,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     if (!character) return;
     setCharacter(prev => prev ? {
       ...prev,
-      health: { ...prev.health, current: value, max: prev.health?.max || 0 }
+      currentHealth: value,
     } : null);
   }, [character]);
   
@@ -345,7 +346,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     if (!character) return;
     setCharacter(prev => prev ? {
       ...prev,
-      energy: { ...prev.energy, current: value, max: prev.energy?.max || 0 }
+      currentEnergy: value,
     } : null);
   }, [character]);
   
@@ -418,9 +419,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
     if (!character) return;
     setCharacter(prev => prev ? {
       ...prev,
-      defenseSkills: { 
+      defenseVals: { 
         ...DEFAULT_DEFENSE_SKILLS,
-        ...(prev.defenseSkills || {}), 
+        ...(prev.defenseVals || prev.defenseSkills || {}), 
         [defense]: Math.max(0, value) 
       }
     } : null);
@@ -442,15 +443,13 @@ export default function CharacterSheetPage({ params }: PageParams) {
       const oldMax = vitality < 0
         ? 8 + vitality + oldPoints
         : 8 + (vitality * level) + oldPoints;
-      const currentHP = prev.health?.current ?? oldMax;
+      const currentHP = prev.currentHealth ?? prev.health?.current ?? oldMax;
       const shouldBump = currentHP >= oldMax;
       const newCurrent = shouldBump ? currentHP + delta : currentHP;
       return {
         ...prev,
         healthPoints: newPoints,
-        health: prev.health
-          ? { ...prev.health, current: newCurrent }
-          : { current: newCurrent, max: oldMax + delta },
+        currentHealth: newCurrent,
       };
     });
   }, [character]);
@@ -470,15 +469,13 @@ export default function CharacterSheetPage({ params }: PageParams) {
       const powerAbil = prev.pow_abil?.toLowerCase() as AbilityName | undefined;
       const powerVal = powerAbil ? (prev.abilities?.[powerAbil] ?? 0) : 0;
       const oldMax = (powerVal * level) + oldPoints;
-      const currentEN = prev.energy?.current ?? oldMax;
+      const currentEN = prev.currentEnergy ?? prev.energy?.current ?? oldMax;
       const shouldBump = currentEN >= oldMax;
       const newCurrent = shouldBump ? currentEN + delta : currentEN;
       return {
         ...prev,
         energyPoints: newPoints,
-        energy: prev.energy
-          ? { ...prev.energy, current: newCurrent }
-          : { current: newCurrent, max: oldMax + delta },
+        currentEnergy: newCurrent,
       };
     });
   }, [character]);
@@ -492,21 +489,38 @@ export default function CharacterSheetPage({ params }: PageParams) {
       const lower = (r || '').toLowerCase();
       return lower.includes('full') || lower.includes('partial');
     };
+
+    // Lookup codex data for a feat (maxUses, recovery period)
+    const getCodexFeat = (feat: CharacterFeat) => {
+      let dbFeat = featsDb.find((f: Feat) => f.id === String(feat.id));
+      if (!dbFeat && feat.name) dbFeat = featsDb.find((f: Feat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+      return dbFeat as Feat | undefined;
+    };
     
     // Reset feat uses only when recovery type is Full or Partial (not one-time-use)
-    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => ({
-      ...feat,
-      currentUses: hasFullOrPartialRecovery(feat.recovery) && feat.maxUses != null
-        ? feat.maxUses
-        : feat.currentUses,
-    }));
+    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => {
+      const codex = getCodexFeat(feat);
+      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
+      const recovery = feat.recovery || codex?.rec_period;
+      return {
+        ...feat,
+        currentUses: hasFullOrPartialRecovery(recovery) && maxUses != null
+          ? maxUses
+          : feat.currentUses,
+      };
+    });
     
-    const resetCharacterFeats = (character.feats || []).map(feat => ({
-      ...feat,
-      currentUses: hasFullOrPartialRecovery(feat.recovery) && feat.maxUses != null
-        ? feat.maxUses
-        : feat.currentUses,
-    }));
+    const resetCharacterFeats = (character.feats || []).map(feat => {
+      const codex = getCodexFeat(feat);
+      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
+      const recovery = feat.recovery || codex?.rec_period;
+      return {
+        ...feat,
+        currentUses: hasFullOrPartialRecovery(recovery) && maxUses != null
+          ? maxUses
+          : feat.currentUses,
+      };
+    });
     
     // Reset trait uses to max (traits with uses_per_rec have a recovery period)
     const resetTraitUses: Record<string, number> = {};
@@ -521,8 +535,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
     
     setCharacter(prev => prev ? {
       ...prev,
-      health: { current: calculatedStats.maxHealth, max: calculatedStats.maxHealth },
-      energy: { current: calculatedStats.maxEnergy, max: calculatedStats.maxEnergy },
+      currentHealth: calculatedStats.maxHealth,
+      currentEnergy: calculatedStats.maxEnergy,
       conditions: [], // Clear all conditions
       archetypeFeats: resetArchetypeFeats,
       feats: resetCharacterFeats,
@@ -530,29 +544,46 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
     
     showToast('Full recovery complete!', 'success');
-  }, [character, calculatedStats, traitsDb, showToast]);
+  }, [character, calculatedStats, traitsDb, featsDb, showToast]);
   
   // Partial recovery handler - restores specified HP/EN and resets partial-recovery feats/traits
   const handlePartialRecovery = useCallback((hpRestored: number, enRestored: number, resetPartialFeats: boolean) => {
     if (!character || !calculatedStats) return;
     
-    const currentHP = character.health?.current ?? calculatedStats.maxHealth;
-    const currentEN = character.energy?.current ?? calculatedStats.maxEnergy;
+    const currentHP = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
+    const currentEN = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
     
+    // Lookup codex data for a feat (maxUses, recovery period)
+    const getCodexFeat = (feat: CharacterFeat) => {
+      let dbFeat = featsDb.find((f: Feat) => f.id === String(feat.id));
+      if (!dbFeat && feat.name) dbFeat = featsDb.find((f: Feat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+      return dbFeat as Feat | undefined;
+    };
+
     // Reset feats with "Partial" recovery to max uses
-    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => ({
-      ...feat,
-      currentUses: resetPartialFeats && feat.recovery?.toLowerCase().includes('partial')
-        ? feat.maxUses || feat.currentUses
-        : feat.currentUses,
-    }));
+    const resetArchetypeFeats = (character.archetypeFeats || []).map(feat => {
+      const codex = getCodexFeat(feat);
+      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
+      const recovery = feat.recovery || codex?.rec_period;
+      return {
+        ...feat,
+        currentUses: resetPartialFeats && recovery?.toLowerCase().includes('partial')
+          ? maxUses || feat.currentUses
+          : feat.currentUses,
+      };
+    });
     
-    const resetCharacterFeats = (character.feats || []).map(feat => ({
-      ...feat,
-      currentUses: resetPartialFeats && feat.recovery?.toLowerCase().includes('partial')
-        ? feat.maxUses || feat.currentUses
-        : feat.currentUses,
-    }));
+    const resetCharacterFeats = (character.feats || []).map(feat => {
+      const codex = getCodexFeat(feat);
+      const maxUses = feat.maxUses ?? codex?.uses_per_rec;
+      const recovery = feat.recovery || codex?.rec_period;
+      return {
+        ...feat,
+        currentUses: resetPartialFeats && recovery?.toLowerCase().includes('partial')
+          ? maxUses || feat.currentUses
+          : feat.currentUses,
+      };
+    });
     
     // Reset trait uses for "Partial" recovery traits
     const resetTraitUses: Record<string, number> = {};
@@ -567,21 +598,15 @@ export default function CharacterSheetPage({ params }: PageParams) {
     
     setCharacter(prev => prev ? {
       ...prev,
-      health: { 
-        current: Math.min(currentHP + hpRestored, calculatedStats.maxHealth), 
-        max: calculatedStats.maxHealth 
-      },
-      energy: { 
-        current: Math.min(currentEN + enRestored, calculatedStats.maxEnergy), 
-        max: calculatedStats.maxEnergy 
-      },
+      currentHealth: Math.min(currentHP + hpRestored, calculatedStats.maxHealth),
+      currentEnergy: Math.min(currentEN + enRestored, calculatedStats.maxEnergy),
       archetypeFeats: resetArchetypeFeats,
       feats: resetCharacterFeats,
       traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
     } : null);
     
     showToast(`Recovered ${hpRestored} HP and ${enRestored} EN`, 'success');
-  }, [character, calculatedStats, traitsDb, showToast]);
+  }, [character, calculatedStats, traitsDb, featsDb, showToast]);
   
   // Level up handler
   const handleLevelUp = useCallback((newLevel: number) => {
@@ -640,15 +665,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Use power handler (deducts energy)
   const handleUsePower = useCallback((powerId: string | number, energyCost: number) => {
     if (!character || !calculatedStats) return;
-    const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
-    if (currentEnergy < energyCost) return;
+    const curEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
+    if (curEnergy < energyCost) return;
     
     setCharacter(prev => prev ? {
       ...prev,
-      energy: { 
-        current: currentEnergy - energyCost, 
-        max: prev.energy?.max ?? calculatedStats.maxEnergy 
-      }
+      currentEnergy: curEnergy - energyCost,
     } : null);
   }, [character, calculatedStats]);
   
@@ -673,15 +695,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Use technique handler (deducts energy)
   const handleUseTechnique = useCallback((techId: string | number, energyCost: number) => {
     if (!character || !calculatedStats) return;
-    const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
-    if (currentEnergy < energyCost) return;
+    const curEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
+    if (curEnergy < energyCost) return;
     
     setCharacter(prev => prev ? {
       ...prev,
-      energy: { 
-        current: currentEnergy - energyCost, 
-        max: prev.energy?.max ?? calculatedStats.maxEnergy 
-      }
+      currentEnergy: curEnergy - energyCost,
     } : null);
   }, [character, calculatedStats]);
   
@@ -861,15 +880,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
-  // Add feats handler
+  // Add feats handler — saves lean: { id, name, currentUses }
+  // description/maxUses/recovery derived from codex on display
   const handleAddFeats = useCallback((feats: { id: string; name: string; description?: string; effect?: string; max_uses?: number }[], type: 'archetype' | 'character') => {
     if (!character) return;
     const newFeats: CharacterFeat[] = feats.map(f => ({
       id: f.id,
       name: f.name,
-      description: f.description || f.effect || '',
-      maxUses: f.max_uses,
-      currentUses: f.max_uses,
+      currentUses: f.max_uses, // Start at max uses; maxUses itself derived from codex
     }));
     
     if (type === 'archetype') {
@@ -1050,16 +1068,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [character]);
   
   // Feat uses change handler (+/- buttons for feat tracking)
+  // maxUses derived from codex, with saved feat.maxUses as backward compat fallback
   const handleFeatUsesChange = useCallback((featId: string, delta: number) => {
     if (!character) return;
+    const codexFeat = featsDb.find((f: Feat) => f.id === featId) as Feat | undefined;
     setCharacter(prev => {
       if (!prev) return null;
       
       // Update archetype feats
       const updatedArchetypeFeats = (prev.archetypeFeats || []).map(feat => {
-        if (String(feat.id) === featId && feat.maxUses) {
-          const currentUses = feat.currentUses ?? feat.maxUses;
-          const newUses = Math.max(0, Math.min(feat.maxUses, currentUses + delta));
+        const maxUses = feat.maxUses ?? codexFeat?.uses_per_rec;
+        if (String(feat.id) === featId && maxUses) {
+          const currentUses = feat.currentUses ?? maxUses;
+          const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
           return { ...feat, currentUses: newUses };
         }
         return feat;
@@ -1067,9 +1088,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
       
       // Update character feats
       const updatedCharFeats = (prev.feats || []).map(feat => {
-        if (String(feat.id) === featId && feat.maxUses) {
-          const currentUses = feat.currentUses ?? feat.maxUses;
-          const newUses = Math.max(0, Math.min(feat.maxUses, currentUses + delta));
+        const maxUses = feat.maxUses ?? codexFeat?.uses_per_rec;
+        if (String(feat.id) === featId && maxUses) {
+          const currentUses = feat.currentUses ?? maxUses;
+          const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
           return { ...feat, currentUses: newUses };
         }
         return feat;
@@ -1081,7 +1103,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
         feats: updatedCharFeats,
       };
     });
-  }, [character]);
+  }, [character, featsDb]);
   
   // Trait uses change handler (+/- buttons for trait tracking)
   const handleTraitUsesChange = useCallback((traitName: string, delta: number) => {
@@ -1277,9 +1299,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
               
               <AbilitiesSection
                 abilities={character.abilities}
-                defenseSkills={character.defenseSkills}
+                defenseSkills={character.defenseVals || character.defenseSkills}
                 level={character.level || 1}
-                archetypeAbility={character.archetype?.ability as AbilityName}
+                archetypeAbility={(character.pow_abil || character.archetype?.ability) as AbilityName}
                 martialAbility={character.mart_abil}
                 powerAbility={character.pow_abil}
                 isEditMode={effectiveEditMode}
@@ -1316,6 +1338,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onMilestoneChoiceChange={handleMilestoneChoiceChange}
                   unarmedProwess={character.unarmedProwess}
                   onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
+                  enrichedWeapons={enrichedData?.weapons}
+                  enrichedArmor={enrichedData?.armor}
                   className="flex-1"
                 />
               </div>
@@ -1325,14 +1349,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   className="flex-1"
                   powers={enrichedData?.powers || character.powers || []}
                   techniques={enrichedData?.techniques || character.techniques || []}
-                  weapons={enrichedData?.weapons || (character.equipment?.weapons || []) as Item[]}
-                  armor={enrichedData?.armor || (character.equipment?.armor || []) as Item[]}
-                  equipment={enrichedData?.equipment || (character.equipment?.items || []) as Item[]}
+                  weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
+                  armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
+                  equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
                   currency={character.currency}
                   innateEnergy={archetypeProgression?.innateEnergy || 0}
                   innateThreshold={archetypeProgression?.innateThreshold || 0}
                   innatePools={archetypeProgression?.innatePools || 0}
-                  currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
+                  currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof}
                   isEditMode={effectiveEditMode}
                   onAddPower={() => setAddModalType('power')}

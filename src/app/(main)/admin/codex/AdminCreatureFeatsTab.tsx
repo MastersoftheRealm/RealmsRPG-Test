@@ -24,12 +24,19 @@ export function AdminCreatureFeatsTab() {
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; points: number } | null>(null);
+  const [editing, setEditing] = useState<CreatureFeat | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', points: 0 });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    points: 0,
+    feat_lvl: 0,
+    lvl_req: 0,
+    mechanic: false,
+  });
 
   const filtered = sortItems<CreatureFeat>(
     (creatureFeats || []).filter(
@@ -42,13 +49,20 @@ export function AdminCreatureFeatsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', points: 0 });
+    setForm({ name: '', description: '', points: 0, feat_lvl: 0, lvl_req: 0, mechanic: false });
     setModalOpen(true);
   };
 
-  const openEdit = (f: { id: string; name: string; description: string; points: number }) => {
+  const openEdit = (f: CreatureFeat) => {
     setEditing(f);
-    setForm({ name: f.name, description: f.description || '', points: f.points ?? 0 });
+    setForm({
+      name: f.name,
+      description: f.description || '',
+      points: f.points ?? 0,
+      feat_lvl: f.feat_lvl ?? 0,
+      lvl_req: f.lvl_req ?? 0,
+      mechanic: f.mechanic === true,
+    });
     setModalOpen(true);
   };
 
@@ -61,11 +75,22 @@ export function AdminCreatureFeatsTab() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    const data = { name: form.name.trim(), description: form.description.trim(), points: form.points };
+    const data: Record<string, unknown> = {
+      name: form.name.trim(),
+      description: form.description.trim(),
+      // Store both points and feat_points for compatibility with existing data/CSV
+      points: form.points,
+      feat_points: form.points,
+      feat_lvl: form.feat_lvl || 0,
+      lvl_req: form.lvl_req || 0,
+      mechanic: form.mechanic,
+    };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `cf_${Date.now()}`;
 
-    const result = editing ? await updateCodexDoc('codex_creature_feats', editing.id, data) : await createCodexDoc('codex_creature_feats', id, data);
+    const result = editing
+      ? await updateCodexDoc('codex_creature_feats', editing.id, data)
+      : await createCodexDoc('codex_creature_feats', id, data);
 
     setSaving(false);
     if (result.success) {
@@ -116,10 +141,11 @@ export function AdminCreatureFeatsTab() {
 
       <div
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: '1.5fr 0.8fr 40px' }}
+        style={{ gridTemplateColumns: '1.5fr 0.6fr 0.6fr 40px' }}
       >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="POINTS" col="points" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="REQ. LEVEL" col="lvl_req" sortState={sortState} onSort={handleSort} />
       </div>
 
       {isLoading ? (
@@ -140,9 +166,10 @@ export function AdminCreatureFeatsTab() {
                 id={f.id}
                 name={f.name}
                 description={f.description || ''}
-                gridColumns="1.5fr 0.8fr 40px"
+                gridColumns="1.5fr 0.6fr 0.6fr 40px"
                 columns={[
                   { key: 'Points', value: String(f.points ?? '-') },
+                  { key: 'Req. Level', value: f.lvl_req != null && f.lvl_req > 0 ? String(f.lvl_req) : '-' },
                 ]}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">
@@ -198,16 +225,59 @@ export function AdminCreatureFeatsTab() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Creature feat name" />
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Creature feat name"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Feat description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Feat description"
+              className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              rows={3}
+            />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Points (cost in feat points)</label>
-            <Input type="number" value={form.points} onChange={(e) => setForm((f) => ({ ...f, points: parseInt(e.target.value) || 0 }))} />
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Feat Points</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.points}
+                onChange={(e) => setForm((f) => ({ ...f, points: parseInt(e.target.value, 10) || 0 }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Feat Level</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.feat_lvl}
+                onChange={(e) => setForm((f) => ({ ...f, feat_lvl: parseInt(e.target.value, 10) || 0 }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Required Creature Level</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.lvl_req}
+                onChange={(e) => setForm((f) => ({ ...f, lvl_req: parseInt(e.target.value, 10) || 0 }))}
+              />
+            </div>
           </div>
+          <label className="flex items-center gap-2 mt-2">
+            <input
+              type="checkbox"
+              checked={form.mechanic}
+              onChange={(e) => setForm((f) => ({ ...f, mechanic: e.target.checked }))}
+            />
+            <span className="text-sm text-text-secondary">Mechanic-only feat (not a normal selectable feat)</span>
+          </label>
         </div>
       </Modal>
     </div>

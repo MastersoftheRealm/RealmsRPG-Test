@@ -28,8 +28,10 @@ export const PLAYER_CONSTANTS = {
 /** Creature/NPC specific constants */
 export const CREATURE_CONSTANTS = {
   BASE_HIT_ENERGY: 26,
-  BASE_TRAINING_POINTS: 9,
-  TP_PER_LEVEL: 1,
+  BASE_TRAINING_POINTS: 22,
+  TP_PER_LEVEL: 2,
+  BASE_SKILL_POINTS: 5,
+  SKILL_POINTS_PER_LEVEL: 3,
   BASE_FEAT_POINTS: 4,
   FEAT_POINTS_PER_LEVEL: 1,
   BASE_CURRENCY: 200,
@@ -40,7 +42,11 @@ export const CREATURE_CONSTANTS = {
 export const ABILITY_LIMITS = {
   MIN: -2,
   MAX_STARTING: 3,
-  MAX_ABSOLUTE: 6,
+  /** Hard cap for player characters (no level-based cap; cost doubling at 4+ is the soft cap) */
+  MAX_ABSOLUTE: 10,
+  /** Hard cap for creatures/NPCs */
+  MAX_ABSOLUTE_CREATURE: 20,
+  /** Abilities cost 2 per point at this value and above (4→5 costs 2, 3→4 costs 1) */
   COST_INCREASE_THRESHOLD: 4,
 } as const;
 
@@ -50,26 +56,32 @@ export const SKILL_LIMITS = {
   DEFENSE_MAX: 3,
 } as const;
 
-/** Archetype configurations */
+/** Archetype configurations (level 1 starting values) */
 export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   power: {
-    featLimit: 1,
-    armamentMax: 4,
-    innateEnergy: 8,
+    featLimit: 0,           // No bonus archetype feats (total = level)
+    armamentMax: 3,         // Martial Prof 0 → Armament Prof 3
+    innateEnergy: 8,        // Innate Threshold 8
+    innateThreshold: 8,
+    innatePools: 2,
     proficiency: { martial: 0, power: 2 },
     trainingPointBonus: 0,
   },
   'powered-martial': {
-    featLimit: 2,
-    armamentMax: 8,
-    innateEnergy: 6,
+    featLimit: 1,           // +1 bonus from martial proficiency joining
+    armamentMax: 8,         // Martial Prof 1 → Armament Prof 8
+    innateEnergy: 6,        // Innate Threshold 6
+    innateThreshold: 6,
+    innatePools: 1,
     proficiency: { martial: 1, power: 1 },
     trainingPointBonus: 0,
   },
   martial: {
-    featLimit: 3,
-    armamentMax: 16,
+    featLimit: 2,           // +2 bonus archetype feats at level 1
+    armamentMax: 12,        // Martial Prof 2 → Armament Prof 12
     innateEnergy: 0,
+    innateThreshold: 0,
+    innatePools: 0,
     proficiency: { martial: 2, power: 0 },
     trainingPointBonus: 0,
   },

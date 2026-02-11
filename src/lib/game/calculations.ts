@@ -1,12 +1,22 @@
-﻿/**
- * Character Calculations
- * =======================
- * Combat and derived stat calculations for characters
+/**
+ * Character Calculations — SINGLE SOURCE OF TRUTH
+ * =================================================
+ * All combat and derived stat calculations for characters AND creatures.
+ * Every formula lives here. No other file should inline health/energy/defense/
+ * speed/evasion calculations.
+ *
+ * All functions accept an optional `rules` parameter (from useGameRules()).
+ * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
+ *
  * Ported from public/js/character-sheet/calculations.js
  */
 
-import type { Abilities, Defenses, DefenseBonuses, DefenseSkills, Character, AbilityName } from '@/types';
+import type { Abilities, DefenseBonuses, DefenseSkills, Character, AbilityName, Item } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
+import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { COMBAT_DEFAULTS } from './constants';
+
+type Rules = Partial<CoreRulesMap>;
 
 // =============================================================================
 // Defense Calculations
@@ -17,10 +27,12 @@ import { COMBAT_DEFAULTS } from './constants';
  */
 export function calculateDefenses(
   abilities: Partial<Abilities>,
-  defenseVals: Partial<DefenseSkills>
-): { defenseBonuses: DefenseBonuses; defenseScores: Defenses } {
+  defenseVals: Partial<DefenseSkills>,
+  rules?: Rules
+): { defenseBonuses: DefenseBonuses; defenseScores: Record<string, number> } {
   const a = abilities || {};
   const d = defenseVals || {};
+  const baseDefense = rules?.COMBAT?.baseDefense ?? COMBAT_DEFAULTS.BASE_DEFENSE;
   
   const defenseBonuses: DefenseBonuses = {
     might: (a.strength || 0) + (d.might || 0),
@@ -31,13 +43,13 @@ export function calculateDefenses(
     resolve: (a.charisma || 0) + (d.resolve || 0),
   };
   
-  const defenseScores: Defenses = {
-    might: COMBAT_DEFAULTS.BASE_DEFENSE + defenseBonuses.might,
-    fortitude: COMBAT_DEFAULTS.BASE_DEFENSE + defenseBonuses.fortitude,
-    reflex: COMBAT_DEFAULTS.BASE_DEFENSE + defenseBonuses.reflex,
-    discernment: COMBAT_DEFAULTS.BASE_DEFENSE + defenseBonuses.discernment,
-    mentalFortitude: COMBAT_DEFAULTS.BASE_DEFENSE + defenseBonuses.mentalFortitude,
-    resolve: COMBAT_DEFAULTS.BASE_DEFENSE + defenseBonuses.resolve,
+  const defenseScores: Record<string, number> = {
+    might: baseDefense + defenseBonuses.might,
+    fortitude: baseDefense + defenseBonuses.fortitude,
+    reflex: baseDefense + defenseBonuses.reflex,
+    discernment: baseDefense + defenseBonuses.discernment,
+    mentalFortitude: baseDefense + defenseBonuses.mentalFortitude,
+    resolve: baseDefense + defenseBonuses.resolve,
   };
   
   return { defenseBonuses, defenseScores };
@@ -51,16 +63,18 @@ export function calculateDefenses(
  * Calculate speed from agility.
  * Speed = speedBase + (agility / 2) rounded up
  */
-export function calculateSpeed(agility: number, speedBase = COMBAT_DEFAULTS.BASE_SPEED): number {
-  return speedBase + Math.ceil(agility / 2);
+export function calculateSpeed(agility: number, speedBase?: number, rules?: Rules): number {
+  const base = speedBase ?? rules?.COMBAT?.baseSpeed ?? COMBAT_DEFAULTS.BASE_SPEED;
+  return base + Math.ceil(agility / 2);
 }
 
 /**
  * Calculate evasion from agility.
  * Evasion = evasionBase + agility
  */
-export function calculateEvasion(agility: number, evasionBase = COMBAT_DEFAULTS.BASE_EVASION): number {
-  return evasionBase + agility;
+export function calculateEvasion(agility: number, evasionBase?: number, rules?: Rules): number {
+  const base = evasionBase ?? rules?.COMBAT?.baseEvasion ?? COMBAT_DEFAULTS.BASE_EVASION;
+  return base + agility;
 }
 
 /**
@@ -71,15 +85,17 @@ export function calculateMaxHealth(
   vitality: number,
   level: number,
   archetypeAbility: AbilityName | string | undefined,
-  abilities: Partial<Abilities>
+  abilities: Partial<Abilities>,
+  rules?: Rules
 ): number {
+  const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? 8;
   const useStrength = archetypeAbility?.toLowerCase() === 'vitality';
   const abilityMod = useStrength ? (abilities?.strength || 0) : vitality;
   
   if (abilityMod < 0) {
-    return 8 + abilityMod + healthPoints;
+    return baseHealth + abilityMod + healthPoints;
   } else {
-    return 8 + (abilityMod * level) + healthPoints;
+    return baseHealth + (abilityMod * level) + healthPoints;
   }
 }
 
@@ -97,7 +113,7 @@ export function calculateMaxEnergy(
 }
 
 /**
- * Get the archetype ability score for a character (max of pow_abil or mart_abil).
+ * Get the archetype ability score for a character.
  */
 export function getArchetypeAbilityScore(charData: Partial<Character>): number {
   if (!charData?.abilities) return 0;
@@ -180,13 +196,123 @@ export function calculateBonuses(
 /**
  * Get the current speed base value.
  */
-export function getSpeedBase(charData: Partial<Character>): number {
-  return charData?.speedBase ?? COMBAT_DEFAULTS.BASE_SPEED;
+export function getSpeedBase(charData: Partial<Character>, rules?: Rules): number {
+  return charData?.speedBase ?? rules?.COMBAT?.baseSpeed ?? COMBAT_DEFAULTS.BASE_SPEED;
 }
 
 /**
  * Get the current evasion base value.
  */
-export function getEvasionBase(charData: Partial<Character>): number {
-  return charData?.evasionBase ?? COMBAT_DEFAULTS.BASE_EVASION;
+export function getEvasionBase(charData: Partial<Character>, rules?: Rules): number {
+  return charData?.evasionBase ?? rules?.COMBAT?.baseEvasion ?? COMBAT_DEFAULTS.BASE_EVASION;
+}
+
+// =============================================================================
+// Terminal Threshold
+// =============================================================================
+
+/**
+ * Calculate terminal threshold (1/4 max health, rounded up).
+ */
+export function calculateTerminal(maxHealth: number): number {
+  return Math.ceil(maxHealth / 4);
+}
+
+// =============================================================================
+// Master Stats Function
+// =============================================================================
+
+export interface AllDerivedStats {
+  maxHealth: number;
+  maxEnergy: number;
+  terminal: number;
+  speed: number;
+  evasion: number;
+  armor: number;
+  defenseBonuses: Record<string, number>;
+  defenseScores: Record<string, number>;
+}
+
+/**
+ * Calculate ALL derived stats for a character in one call.
+ * This is the single source of truth.
+ */
+export function calculateAllStats(character: Partial<Character>, rules?: Rules): AllDerivedStats {
+  const abilities = character.abilities || {
+    strength: 0, vitality: 0, agility: 0,
+    acuity: 0, intelligence: 0, charisma: 0,
+  };
+
+  const defenseVals: DefenseSkills = {
+    ...DEFAULT_DEFENSE_SKILLS,
+    ...(character.defenseSkills || {}),
+    ...(character.defenseVals || {}),
+  };
+
+  // --- Defenses ---
+  const { defenseBonuses, defenseScores } = calculateDefenses(abilities, defenseVals, rules);
+
+  // --- Speed & Evasion ---
+  const speedBase = character.speedBase ?? rules?.COMBAT?.baseSpeed ?? COMBAT_DEFAULTS.BASE_SPEED;
+  const speed = calculateSpeed(abilities.agility || 0, speedBase, rules);
+
+  const evasionBase = character.evasionBase ?? rules?.COMBAT?.baseEvasion ?? COMBAT_DEFAULTS.BASE_EVASION;
+  const evasion = calculateEvasion(abilities.agility || 0, evasionBase, rules);
+
+  // --- Armor ---
+  const armorItems = (character.equipment?.armor || []) as Item[];
+  const armor = armorItems
+    .filter(item => item.equipped)
+    .reduce((sum, item) => sum + (item.armor || 0), 0);
+
+  // --- Health & Energy ---
+  const level = character.level || 1;
+  const healthPoints = character.healthPoints || 0;
+  const energyPoints = character.energyPoints || 0;
+
+  const archetype = character.archetype;
+  const powAbil = character.pow_abil || archetype?.pow_abil || archetype?.ability;
+  const martAbil = character.mart_abil || archetype?.mart_abil;
+
+  const maxHealth = calculateMaxHealth(healthPoints, abilities.vitality || 0, level, powAbil, abilities, rules);
+  const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
+
+  const terminal = calculateTerminal(maxHealth);
+
+  return {
+    maxHealth,
+    maxEnergy,
+    terminal,
+    speed,
+    evasion,
+    armor,
+    defenseBonuses: { ...defenseBonuses },
+    defenseScores: { ...defenseScores },
+  };
+}
+
+/**
+ * Compute max health and max energy from raw character data.
+ */
+export function computeMaxHealthEnergy(charData: Record<string, unknown>, rules?: Rules): {
+  maxHealth: number;
+  maxEnergy: number;
+} {
+  const rawAbilities = (charData.abilities || {}) as Record<string, number>;
+  const abilities: Partial<Abilities> = {
+    ...rawAbilities,
+    acuity: rawAbilities.acuity ?? rawAbilities.acu ?? 0,
+    agility: rawAbilities.agility ?? rawAbilities.agi ?? 0,
+  };
+  const level = (charData.level as number) ?? 1;
+  const healthPoints = (charData.healthPoints as number) ?? 0;
+  const energyPoints = (charData.energyPoints as number) ?? 0;
+  const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string } | undefined;
+  const powAbil = archetype?.pow_abil;
+  const martAbil = archetype?.mart_abil;
+
+  const maxHealth = calculateMaxHealth(healthPoints, abilities.vitality || 0, level, powAbil, abilities, rules);
+  const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
+
+  return { maxHealth, maxEnergy };
 }

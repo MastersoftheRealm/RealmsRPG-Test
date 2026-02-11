@@ -131,9 +131,7 @@ function PropertyCard({
 
   // Calculate property's individual contribution
   const propIP =
-    // @ts-expect-error - base_ip/op_1_ip exist on RTDB item property records
     ((property.base_ip as number | undefined) || 0) +
-    // @ts-expect-error - base_ip/op_1_ip exist on RTDB item property records
     (((property.op_1_ip as number | undefined) || 0) * selectedProperty.op_1_lvl);
   const propTP =
     (property.base_tp || property.tp_cost || 0) +

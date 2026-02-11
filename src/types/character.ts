@@ -133,12 +133,16 @@ export interface Character {
   pow_abil?: AbilityName;
   mart_abil?: AbilityName;
   
-  // Ancestry
+  // Ancestry (lean: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic })
   ancestry?: CharacterAncestry;
-  species?: string; // Legacy field - species name (redundant with ancestry.name)
+  /** @deprecated Use ancestry.name instead. Kept for backward compat with old saves. */
+  species?: string;
   
   // Skills
   skills?: CharacterSkills;
+  /** Canonical defense allocation field — vals represent 2 skill points spent per 1 */
+  defenseVals?: DefenseSkills;
+  /** @deprecated Use defenseVals instead. Kept for backward compat with old saved data. */
   defenseSkills?: DefenseSkills;
   
   // Feats
@@ -155,26 +159,40 @@ export interface Character {
   currency?: number;
   
   // Resources
+  /** @deprecated Use currentHealth instead. ResourcePool kept for backward compat with old saves. */
   health?: ResourcePool;
+  /** @deprecated Use currentEnergy instead. ResourcePool kept for backward compat with old saves. */
   energy?: ResourcePool;
   healthPoints?: number; // Points allocated to health
   energyPoints?: number; // Points allocated to energy
+  /** Current health (runtime state). Canonical field — replaces health.current */
+  currentHealth?: number;
+  /** Current energy (runtime state). Canonical field — replaces energy.current */
+  currentEnergy?: number;
   
-  // Combat stats
+  // Combat stats — speedBase/evasionBase are user inputs; speed/evasion/armor are derived
+  /** @deprecated Derived from calculateAllStats(). Use calculatedStats.speed instead. */
   speed?: number;
+  /** Base speed (default 6). Modifiable by feats/traits. */
   speedBase?: number;
+  /** @deprecated Derived from calculateAllStats(). Use calculatedStats.evasion instead. */
   evasion?: number;
+  /** Base evasion (default 10). Modifiable by feats/traits. */
   evasionBase?: number;
+  /** @deprecated Derived from calculateAllStats(). Use calculatedStats.armor instead. */
   armor?: number;
   
   // Conditions
   conditions?: CharacterCondition[];
   
-  // Proficiency
+  // Proficiency — mart_prof/pow_prof are canonical
+  /** @deprecated Use mart_prof instead. */
   martialProficiency?: number;
+  /** @deprecated Use pow_prof instead. */
   powerProficiency?: number;
-  // Legacy aliases (vanilla site uses these)
+  /** Martial proficiency (user choice, set from archetype type) */
   mart_prof?: number;
+  /** Power proficiency (user choice, set from archetype type) */
   pow_prof?: number;
   
   // Unarmed Prowess - fighting style for unarmed combat
@@ -198,14 +216,21 @@ export interface Character {
   /** Who can view this character: private (owner only), campaign (owner + campaign members), public */
   visibility?: CharacterVisibility;
   
-  // Legacy fields for compatibility (vanilla site format)
+  // Legacy fields for backward compatibility (vanilla site format)
+  /** @deprecated Display-only computed field. Not saved. */
   allTraits?: unknown[];
+  /** @deprecated Display-only computed field. Not saved. */
   _displayFeats?: unknown[];
-  // Vanilla site stores traits at top level instead of inside ancestry object
+  /** @deprecated Use ancestry.selectedTraits instead. */
   ancestryTraits?: string[];
+  /** @deprecated Use ancestry.selectedFlaw instead. */
   flawTrait?: string | null;
+  /** @deprecated Use ancestry.selectedCharacteristic instead. */
   characteristicTrait?: string | null;
+  /** @deprecated Derived from codex by species ID. Not saved. */
   speciesTraits?: string[];
+  /** @deprecated Removed from save. Use healthPoints/energyPoints instead. */
+  health_energy_points?: { health: number; energy: number };
 }
 
 /** Character summary for list views */
@@ -224,4 +249,86 @@ export interface CharacterSummary {
 export interface CharacterDraft extends Partial<Character> {
   step?: number;
   isComplete?: boolean;
+}
+
+// =============================================================================
+// LEAN CHARACTER SAVE DATA (TIER 6+ target schema)
+// =============================================================================
+// This is the design target for what gets persisted in the character JSONB column.
+// Only user choices and runtime state — all display/computed values are derived
+// from the codex/database at load time via enrichment.
+// Implementation: TASK-203 through TASK-210 will migrate to this schema.
+
+/** Lean character data — only what must be persisted */
+export interface CharacterSaveData {
+  // Identity
+  name: string;
+  status: CharacterStatus;
+  portrait?: string; // Eventually move to Supabase Storage (TASK-219)
+  visibility?: CharacterVisibility;
+
+  // Core
+  level: number;
+  experience?: number;
+  speciesId: string; // Reference to codex species by ID
+  archetypeId: string; // Reference to codex archetype by ID (e.g., 'power', 'martial', 'powered-martial')
+  abilities: Abilities;
+
+  // Archetype abilities (player choice of which abilities power their archetype)
+  pow_abil?: AbilityName;
+  mart_abil?: AbilityName;
+
+  // Species selections (from character creation)
+  selectedTraits: string[]; // Trait IDs chosen from species ancestry_traits
+  selectedFlaw: string; // Trait ID chosen from species flaws
+  selectedCharacteristic: string; // Trait ID chosen from species characteristics
+
+  // Health/Energy allocation (user-set points, not computed max)
+  healthPoints: number;
+  energyPoints: number;
+  currentHealth: number; // Runtime state — always saved
+  currentEnergy: number; // Runtime state — always saved
+
+  // Proficiency
+  mart_prof: number;
+  pow_prof: number;
+  archetypeChoices?: Record<number, 'innate' | 'feat'>; // P-M milestone choices
+
+  // Skills — minimal: just ID → { prof, val } 
+  skills: Record<string, { prof: boolean; val: number; selectedBaseSkillId?: string }>;
+  defenseVals: DefenseSkills; // Vals represent 2 skill points spent per 1
+
+  // Feats — just IDs + runtime uses
+  archetypeFeats: Array<{ id: string; currentUses?: number }>;
+  characterFeats: Array<{ id: string; currentUses?: number }>;
+
+  // Powers/Techniques — just IDs + innate flag
+  powers: Array<{ id: string; innate?: boolean }>;
+  techniques: Array<{ id: string }>;
+
+  // Equipment — just IDs + quantity + equipped flag
+  inventory: Array<{ id: string; quantity: number; equipped?: boolean }>;
+  currency: number;
+
+  // Unarmed prowess
+  unarmedProwess?: number;
+  trainingPointsSpent?: number;
+
+  // Conditions (runtime state)
+  conditions?: Array<{ name: string; level: number; decaying: boolean }>;
+
+  // Trait uses (runtime state)
+  traitUses?: Record<string, number>;
+
+  // User notes (free-form, always saved)
+  description?: string;
+  notes?: string;
+  namedNotes?: Array<{ id: string; name: string; content: string }>;
+  appearance?: string;
+  archetypeDesc?: string;
+  backstory?: string;
+
+  // Timestamps
+  createdAt?: string;
+  updatedAt?: string;
 }

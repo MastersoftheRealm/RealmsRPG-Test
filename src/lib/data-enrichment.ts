@@ -68,9 +68,12 @@ export interface EnrichedItem {
   description?: string;
   type: 'weapon' | 'armor' | 'equipment' | 'shield';
   equipped?: boolean;
+  quantity?: number;
   // Display fields
   damage?: string | SavedDamage[];
+  range?: string;
   armorValue?: number;
+  armor?: number;
   properties?: string[];
   displayProperties?: Array<{
     name: string;
@@ -293,7 +296,7 @@ export interface CodexEquipmentItem {
  * Falls back to Codex equipment data for general items if not found in user library
  */
 export function enrichItems(
-  characterItems: Array<{ name: string; equipped?: boolean; type?: string }> | undefined,
+  characterItems: Array<{ id?: string | number; name?: string; equipped?: boolean; type?: string; quantity?: number }> | undefined,
   userItemLibrary: UserItem[],
   itemType: 'weapon' | 'armor' | 'equipment',
   codexEquipment?: CodexEquipmentItem[]
@@ -301,8 +304,9 @@ export function enrichItems(
   if (!characterItems || characterItems.length === 0) return [];
   
   return characterItems.map(charItem => {
-    const name = typeof charItem === 'string' ? charItem : charItem.name;
+    const name = typeof charItem === 'string' ? charItem : (charItem.name || String(charItem.id || ''));
     const equipped = typeof charItem === 'object' ? !!charItem.equipped : false;
+    const quantity = typeof charItem === 'object' ? (charItem.quantity ?? 1) : 1;
     
     // First try user's library
     const libraryItem = findInLibrary(userItemLibrary, charItem);
@@ -319,6 +323,7 @@ export function enrichItems(
         description: libraryItem.description || '',
         type: libraryItem.type || itemType,
         equipped,
+        quantity,
         damage: libraryItem.damage,
         armorValue: libraryItem.armorValue,
         properties: propertyNames,
@@ -330,10 +335,12 @@ export function enrichItems(
       };
     }
     
-    // For equipment, also check Codex as fallback
+    // For equipment, also check Codex as fallback (by ID first, then name)
     if (codexEquipment && codexEquipment.length > 0) {
-      const searchName = name.toLowerCase();
+      const searchName = (name || '').toLowerCase();
+      const charId = typeof charItem === 'object' ? String(charItem.id || '') : '';
       const codexItem = codexEquipment.find(item => 
+        (charId && item.id === charId) ||
         String(item.name ?? '').toLowerCase() === searchName ||
         item.id === name
       );
@@ -345,6 +352,7 @@ export function enrichItems(
           description: codexItem.description || '',
           type: codexItem.type || itemType,
           equipped,
+          quantity,
           damage: codexItem.damage,
           armorValue: codexItem.armor_value,
           properties: codexItem.properties || [],
@@ -353,12 +361,14 @@ export function enrichItems(
     }
     
     // Not found in library or Codex - return placeholder
+    const itemId = typeof charItem === 'object' ? String(charItem.id || name) : name;
     return {
-      id: name,
-      name,
+      id: itemId,
+      name: name || itemId,
       description: 'Item not found in your library',
       type: itemType,
       equipped,
+      quantity,
       notInLibrary: true,
     };
   });
@@ -376,19 +386,35 @@ export interface EnrichedCharacterData {
   equipment: EnrichedItem[];
 }
 
-/** Helper to safely convert equipment arrays */
-function toEquipmentArray(items: unknown): Array<{ name: string; equipped?: boolean }> {
+/** Helper to safely convert equipment arrays — preserves id, name, equipped, quantity */
+function toEquipmentArray(items: unknown): Array<{ id?: string | number; name?: string; equipped?: boolean; quantity?: number }> {
   if (!items) return [];
   if (Array.isArray(items)) {
-    return items.map(item => ({
-      name: typeof item === 'string' ? item : (item?.name || ''),
-      equipped: typeof item === 'object' ? !!item?.equipped : false,
-    })).filter(item => item.name);
+    return items.map(item => {
+      if (typeof item === 'string') return { name: item };
+      if (item && typeof item === 'object') {
+        const obj = item as Record<string, unknown>;
+        const result: { id?: string | number; name?: string; equipped?: boolean; quantity?: number } = {};
+        if (obj.id) result.id = obj.id as string | number;
+        if (obj.name) result.name = obj.name as string;
+        if (obj.equipped) result.equipped = true;
+        if (obj.quantity && obj.quantity !== 1) result.quantity = obj.quantity as number;
+        return result;
+      }
+      return null;
+    }).filter((item): item is NonNullable<typeof item> => !!(item && (item.name || item.id)));
   }
   // Single item (e.g., Armor object)
-  if (typeof items === 'object' && 'name' in items) {
-    const obj = items as { name?: string; equipped?: boolean };
-    return obj.name ? [{ name: obj.name, equipped: !!obj.equipped }] : [];
+  if (typeof items === 'object' && items !== null) {
+    const obj = items as Record<string, unknown>;
+    if (obj.name || obj.id) {
+      return [{ 
+        id: obj.id as string | number | undefined, 
+        name: obj.name as string | undefined, 
+        equipped: !!obj.equipped,
+        quantity: obj.quantity as number | undefined,
+      }];
+    }
   }
   return [];
 }
@@ -445,34 +471,42 @@ export function enrichCharacterData(
  * Mirrors vanilla site's SAVEABLE_FIELDS in main.js cleanForSave().
  */
 const SAVEABLE_FIELDS = [
-  // Identity
-  'name', 'species', 'gender', 'portrait', 'xp', 'level',
+  // Identity (species derived from ancestry.id via codex)
+  'name', 'gender', 'portrait', 'xp', 'experience', 'level',
+  'status', 'description',
   // Core stats (user-set values only)
-  'abilities', 'defenseSkills', 'baseAbilities', 'ancestryAbilities',
-  'health', 'energy', 'healthPoints', 'energyPoints', 'innateEnergy',
+  'abilities', 'defenseVals', 'baseAbilities', 'ancestryAbilities',
+  'healthPoints', 'energyPoints', 'innateEnergy',
+  'currentHealth', 'currentEnergy',
   'speedBase', 'evasionBase',
   // Skills (user selections)
   'skills',
-  // Archetype/Build
-  'archetype', 'archetypeName', 'archetypeAbility',
+  // Archetype/Build (lean: { id, type } only — name/description derived from codex)
+  'archetype',
   // Proficiency data
   'mart_prof', 'pow_prof', 'mart_abil', 'pow_abil', 'archetypeChoices',
-  // References (names only, not full objects)
-  'feats', 'techniques', 'powers', 'traits',
+  // References (IDs or minimal data — not full objects)
+  'feats', 'archetypeFeats', 'techniques', 'powers', 'traits',
   // Trait uses tracking
   'traitUses',
+  // Unarmed prowess (allocated by player)
+  'unarmedProwess',
   // Inventory (names/equipped status only, not full item data)
   'equipment', 'currency',
   // Notes and misc user data
-  'notes', 'backstory', 'appearance', 'archetypeDesc', 'allies', 'organizations',
+  'notes', 'namedNotes', 'backstory', 'appearance', 'archetypeDesc', 'allies', 'organizations',
+  // Physical attributes
+  'weight', 'height',
   // Character visibility (who can view sheet)
   'visibility',
-  // Ancestry data
-  'ancestry', 'ancestryId', 'ancestryTraits',
+  // Ancestry/Species data (lean: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic })
+  'ancestry',
   // Conditions
   'conditions',
+  // Training points tracking
+  'trainingPointsSpent',
   // Timestamps
-  'createdAt', 'updatedAt',
+  'createdAt', 'updatedAt', 'lastPlayedAt',
 ] as const;
 
 /**
@@ -511,29 +545,67 @@ export function cleanForSave(data: Character): Partial<Character> {
     }
   }
 
-  // Clean up skills - ensure no undefined values and proper structure
+  // Migrate defenseSkills → defenseVals (backward compat for old saves)
+  if (!cleaned.defenseVals && data.defenseSkills) {
+    cleaned.defenseVals = data.defenseSkills;
+  }
+
+  // Migrate health/energy ResourcePool → currentHealth/currentEnergy
+  if (cleaned.currentHealth === undefined && data.health?.current !== undefined) {
+    cleaned.currentHealth = data.health.current;
+  }
+  if (cleaned.currentEnergy === undefined && data.energy?.current !== undefined) {
+    cleaned.currentEnergy = data.energy.current;
+  }
+
+  // Strip ancestry to lean { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }
+  // size/speed/abilities are derived from codex; name kept for server-side listing.
+  if (cleaned.ancestry && typeof cleaned.ancestry === 'object') {
+    const anc = cleaned.ancestry as Record<string, unknown>;
+    const leanAnc: Record<string, unknown> = {};
+    if (anc.id) leanAnc.id = anc.id;
+    if (anc.name) leanAnc.name = anc.name; // Kept for server-side listing
+    if (anc.selectedTraits) leanAnc.selectedTraits = anc.selectedTraits;
+    if (anc.selectedFlaw !== undefined) leanAnc.selectedFlaw = anc.selectedFlaw;
+    if (anc.selectedCharacteristic !== undefined) leanAnc.selectedCharacteristic = anc.selectedCharacteristic;
+    cleaned.ancestry = leanAnc;
+  }
+
+  // Migrate legacy species string → ancestry.name if ancestry is missing
+  if (!cleaned.ancestry && data.species) {
+    cleaned.ancestry = { name: data.species };
+  }
+
+  // Strip archetype to lean { id, type } — name/description/ability derived from codex
+  if (cleaned.archetype && typeof cleaned.archetype === 'object') {
+    const arch = cleaned.archetype as Record<string, unknown>;
+    const leanArch: Record<string, unknown> = {};
+    if (arch.id) leanArch.id = arch.id;
+    if (arch.type) leanArch.type = arch.type;
+    cleaned.archetype = leanArch;
+  }
+
+  // Clean up skills — save { id, name, skill_val, prof, selectedBaseSkillId? } only.
+  // ability, baseSkillId, category, description derived from codex_skills on load.
+  // name kept as backward compat lookup key; id is primary lookup.
+  // Handle both Array<SkillObject> and Record<skillId, number> formats.
+  if (cleaned.skills && typeof cleaned.skills === 'object' && !Array.isArray(cleaned.skills)) {
+    // Record<skillId, number> format — convert to lean array
+    const record = cleaned.skills as Record<string, number>;
+    cleaned.skills = Object.entries(record)
+      .filter(([, val]) => typeof val === 'number' && val > 0)
+      .map(([id, val]) => ({ id, skill_val: val, prof: true }));
+  }
   if (Array.isArray(cleaned.skills)) {
     cleaned.skills = cleaned.skills.map((s: unknown) => {
       if (typeof s === 'string') return { name: s, skill_val: 0, prof: false };
-      if (s && typeof s === 'object' && 'name' in s) {
-        const skill = s as { 
-          id?: string; 
-          name: string; 
-          skill_val?: number; 
-          prof?: boolean; 
-          ability?: string;
-          baseSkillId?: number | null; // ID of base skill (0 = any, undefined = not a sub-skill)
-          selectedBaseSkillId?: string; // User-selected base skill for "any" sub-skills
-        };
-        const cleanSkill: Record<string, unknown> = {
-          name: skill.name,
-          skill_val: skill.skill_val ?? 0,
-          prof: skill.prof ?? false,
-        };
-        // Only add optional fields if they have values (not undefined/null)
+      if (s && typeof s === 'object') {
+        const skill = s as Record<string, unknown>;
+        const cleanSkill: Record<string, unknown> = {};
         if (skill.id) cleanSkill.id = skill.id;
-        if (skill.ability) cleanSkill.ability = skill.ability;
-        if (skill.baseSkillId !== undefined) cleanSkill.baseSkillId = skill.baseSkillId;
+        if (skill.name) cleanSkill.name = skill.name; // Backward compat lookup key
+        cleanSkill.skill_val = (skill.skill_val as number) ?? 0;
+        cleanSkill.prof = !!(skill.prof);
         if (skill.selectedBaseSkillId) cleanSkill.selectedBaseSkillId = skill.selectedBaseSkillId;
         return cleanSkill;
       }
@@ -541,55 +613,67 @@ export function cleanForSave(data: Character): Partial<Character> {
     }).filter(Boolean);
   }
 
-  // Clean up feats - only save name, type, and currentUses
+  // Clean up feats — save id + name (compat fallback) + currentUses only.
+  // name/description/maxUses/recovery are derived from codex on load.
   if (Array.isArray(cleaned.feats)) {
     cleaned.feats = cleaned.feats.map((f: unknown) => {
       if (typeof f === 'string') return { name: f };
-      if (f && typeof f === 'object' && 'name' in f) {
-        const feat = f as { name: string; type?: string; currentUses?: number };
-        const cleanFeat: { name: string; type?: string; currentUses?: number } = { name: feat.name };
-        if (feat.type) cleanFeat.type = feat.type;
+      if (f && typeof f === 'object') {
+        const feat = f as { id?: string | number; name?: string; currentUses?: number };
+        const cleanFeat: Record<string, unknown> = {};
+        if (feat.id) cleanFeat.id = feat.id;
+        if (feat.name) cleanFeat.name = feat.name; // Backward compat lookup key
         if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
-        return cleanFeat;
+        return Object.keys(cleanFeat).length > 0 ? cleanFeat : null;
       }
       return null;
     }).filter(Boolean);
   }
 
-  // Clean up archetypeFeats similarly
+  // Clean up archetypeFeats — same lean format
   if (Array.isArray(cleaned.archetypeFeats)) {
     cleaned.archetypeFeats = (cleaned.archetypeFeats as unknown[]).map((f: unknown) => {
       if (typeof f === 'string') return { name: f };
-      if (f && typeof f === 'object' && 'name' in f) {
-        const feat = f as { id?: string | number; name: string; currentUses?: number; maxUses?: number };
-        const cleanFeat: Record<string, unknown> = { name: feat.name };
+      if (f && typeof f === 'object') {
+        const feat = f as { id?: string | number; name?: string; currentUses?: number };
+        const cleanFeat: Record<string, unknown> = {};
         if (feat.id) cleanFeat.id = feat.id;
+        if (feat.name) cleanFeat.name = feat.name; // Backward compat lookup key
         if (typeof feat.currentUses === 'number') cleanFeat.currentUses = feat.currentUses;
-        if (typeof feat.maxUses === 'number') cleanFeat.maxUses = feat.maxUses;
-        return cleanFeat;
+        return Object.keys(cleanFeat).length > 0 ? cleanFeat : null;
       }
       return null;
     }).filter(Boolean);
   }
 
-  // Clean up powers - save name and innate flag only
+  // Clean up powers — save id + name (compat) + innate flag only.
+  // description, parts, cost, damage, etc. derived from library enrichment on load.
   if (Array.isArray(cleaned.powers)) {
     cleaned.powers = cleaned.powers.map((p: unknown) => {
       if (typeof p === 'string') return { name: p, innate: false };
-      if (p && typeof p === 'object' && 'name' in p) {
-        const power = p as { name: string; innate?: boolean };
-        return { name: power.name, innate: !!power.innate };
+      if (p && typeof p === 'object') {
+        const power = p as { id?: string | number; name?: string; innate?: boolean };
+        const clean: Record<string, unknown> = {};
+        if (power.id) clean.id = power.id;
+        if (power.name) clean.name = power.name; // Backward compat lookup key
+        clean.innate = !!power.innate;
+        return clean;
       }
       return null;
     }).filter(Boolean);
   }
 
-  // Clean up techniques - save name only
+  // Clean up techniques — save id + name (compat) only.
+  // description, parts, cost, damage, etc. derived from library enrichment on load.
   if (Array.isArray(cleaned.techniques)) {
     cleaned.techniques = cleaned.techniques.map((t: unknown) => {
-      if (typeof t === 'string') return t;
-      if (t && typeof t === 'object' && 'name' in t) {
-        return (t as { name: string }).name;
+      if (typeof t === 'string') return { name: t };
+      if (t && typeof t === 'object') {
+        const tech = t as { id?: string | number; name?: string };
+        const clean: Record<string, unknown> = {};
+        if (tech.id) clean.id = tech.id;
+        if (tech.name) clean.name = tech.name; // Backward compat lookup key
+        return Object.keys(clean).length > 0 ? clean : null;
       }
       return null;
     }).filter(Boolean);
@@ -606,52 +690,42 @@ export function cleanForSave(data: Character): Partial<Character> {
     }).filter(Boolean);
   }
 
-  // Clean up equipment items - only save name and equipped/quantity status
+  // Clean up equipment — save { id, name, equipped?, quantity? } per item.
+  // description/damage/properties/cost/etc derived from codex/library on load.
+  // name kept as backward compat lookup key; id is primary lookup.
   if (cleaned.equipment && typeof cleaned.equipment === 'object') {
     const equip = cleaned.equipment as {
       weapons?: unknown[];
       armor?: unknown[];
       items?: unknown[];
+      inventory?: unknown[]; // Remove redundant inventory array
+    };
+
+    const cleanItem = (item: unknown): Record<string, unknown> | null => {
+      if (typeof item === 'string') return { name: item };
+      if (item && typeof item === 'object') {
+        const i = item as Record<string, unknown>;
+        const clean: Record<string, unknown> = {};
+        if (i.id) clean.id = i.id;
+        if (i.name) clean.name = i.name;
+        if (i.equipped) clean.equipped = true;
+        if (i.quantity && i.quantity !== 1) clean.quantity = i.quantity;
+        return Object.keys(clean).length > 0 ? clean : null;
+      }
+      return null;
     };
 
     if (Array.isArray(equip.weapons)) {
-      equip.weapons = equip.weapons.map((w: unknown) => {
-        if (typeof w === 'string') return { name: w };
-        if (w && typeof w === 'object' && 'name' in w) {
-          const weapon = w as { name: string; equipped?: boolean };
-          const clean: { name: string; equipped?: boolean } = { name: weapon.name };
-          if (weapon.equipped) clean.equipped = true;
-          return clean;
-        }
-        return null;
-      }).filter(Boolean);
+      equip.weapons = equip.weapons.map(cleanItem).filter(Boolean) as unknown[];
     }
-
     if (Array.isArray(equip.armor)) {
-      equip.armor = equip.armor.map((a: unknown) => {
-        if (typeof a === 'string') return { name: a };
-        if (a && typeof a === 'object' && 'name' in a) {
-          const armor = a as { name: string; equipped?: boolean };
-          const clean: { name: string; equipped?: boolean } = { name: armor.name };
-          if (armor.equipped) clean.equipped = true;
-          return clean;
-        }
-        return null;
-      }).filter(Boolean);
+      equip.armor = equip.armor.map(cleanItem).filter(Boolean) as unknown[];
     }
-
     if (Array.isArray(equip.items)) {
-      equip.items = equip.items.map((e: unknown) => {
-        if (typeof e === 'string') return { name: e };
-        if (e && typeof e === 'object' && 'name' in e) {
-          const item = e as { name: string; quantity?: number };
-          const clean: { name: string; quantity?: number } = { name: item.name };
-          if (item.quantity && item.quantity !== 1) clean.quantity = item.quantity;
-          return clean;
-        }
-        return null;
-      }).filter(Boolean);
+      equip.items = equip.items.map(cleanItem).filter(Boolean) as unknown[];
     }
+    // Remove redundant inventory array (weapons/armor/items are the source of truth)
+    delete equip.inventory;
 
     cleaned.equipment = equip;
   }

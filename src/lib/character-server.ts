@@ -18,8 +18,9 @@ export async function getUserCharacters(userId: string) {
       name: (d.name as string) || 'Unnamed',
       level: (d.level as number) || 1,
       portrait: d.portrait,
-      archetypeName: (d.archetype as { name?: string })?.name,
-      ancestryName: (d.ancestry as { name?: string })?.name,
+      archetypeName: (d.archetype as { name?: string; type?: string })?.name
+        || ((d.archetype as { type?: string })?.type?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
+      ancestryName: (d.ancestry as { name?: string })?.name || (d.species as string),
       status: d.status,
       updatedAt: r.updatedAt,
     };

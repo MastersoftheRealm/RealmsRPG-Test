@@ -284,19 +284,19 @@ export function AdminSkillsTab() {
             value={filters.baseSkill}
             options={filterOptions.baseSkills.map(s => ({ value: s, label: s }))}
             onChange={(v) => setFilters(f => ({ ...f, baseSkill: v }))}
-            placeholder="Any"
+            placeholder="Base skill (any)"
           />
 
           <SelectFilter
             label="Skill Type"
             value={filters.subSkillMode}
             options={[
-              { value: 'all', label: 'All Skills' },
+              { value: 'all', label: 'All' },
               { value: 'only', label: 'Only Sub-Skills' },
               { value: 'hide', label: 'Hide Sub-Skills' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, subSkillMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="All Skills"
+            placeholder="Skill type"
           />
         </div>
       </FilterSection>
@@ -334,9 +334,11 @@ export function AdminSkillsTab() {
                   {
                     key: 'Base Skill',
                     value:
-                      s.base_skill_id !== undefined
-                        ? (skillIdToName.get(String(s.base_skill_id)) || '-')
-                        : '-',
+                      s.base_skill_id === 0
+                        ? 'Any'
+                        : s.base_skill_id !== undefined
+                          ? (skillIdToName.get(String(s.base_skill_id)) || '-')
+                          : '-',
                   },
                 ]}
                 rightSlot={

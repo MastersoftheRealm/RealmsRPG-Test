@@ -3,17 +3,26 @@
  * ==============
  * Centralized game calculation formulas for RealmsRPG
  * Ported from public/js/shared/game-formulas.js
+ *
+ * All functions accept an optional `rules` parameter (from useGameRules()).
+ * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
  */
 
-import type { EntityType, Abilities, Defenses, DefenseBonuses, ArchetypeCategory, Character } from '@/types';
+import type { EntityType, Abilities, ArchetypeCategory, Character } from '@/types';
+import type { CoreRulesMap, ArchetypeConfigRules } from '@/types/core-rules';
 import { 
   SHARED_CONSTANTS, 
   PLAYER_CONSTANTS, 
   CREATURE_CONSTANTS, 
   ABILITY_LIMITS,
   ARCHETYPE_CONFIGS,
-  COMBAT_DEFAULTS,
 } from './constants';
+
+// =============================================================================
+// Optional rules shortcut — avoids verbose fallback chains
+// =============================================================================
+
+type Rules = Partial<CoreRulesMap>;
 
 // =============================================================================
 // Level Progression Calculations
@@ -23,25 +32,25 @@ import {
  * Calculate ability points based on level.
  * Formula: 7 at level 1, +1 at level 3 and each 3 levels (3, 6, 9, 12...)
  */
-export function calculateAbilityPoints(level: number, allowSubLevel = false): number {
+export function calculateAbilityPoints(level: number, allowSubLevel = false, rules?: Rules): number {
   const parsedLevel = parseFloat(String(level)) || 1;
+  const base = rules?.PROGRESSION_PLAYER?.baseAbilityPoints ?? SHARED_CONSTANTS.BASE_ABILITY_POINTS;
+  const perIncrease = rules?.PROGRESSION_PLAYER?.abilityPointsPerIncrease ?? SHARED_CONSTANTS.ABILITY_POINTS_PER_3_LEVELS;
+  const interval = rules?.PROGRESSION_PLAYER?.abilityPointsEveryNLevels ?? 3;
   
   if (allowSubLevel && parsedLevel < 1) {
-    return Math.ceil(SHARED_CONSTANTS.BASE_ABILITY_POINTS * parsedLevel);
+    return Math.ceil(base * parsedLevel);
   }
   
   if (parsedLevel < 1) return 0;
-  if (parsedLevel < 3) return SHARED_CONSTANTS.BASE_ABILITY_POINTS;
+  if (parsedLevel < interval) return base;
   
-  // +1 at level 3, 6, 9, 12... (floor(level/3) gives count of bonus levels)
-  const bonusPoints = Math.floor(parsedLevel / 3) * SHARED_CONSTANTS.ABILITY_POINTS_PER_3_LEVELS;
-  return SHARED_CONSTANTS.BASE_ABILITY_POINTS + bonusPoints;
+  const bonusPoints = Math.floor(parsedLevel / interval) * perIncrease;
+  return base + bonusPoints;
 }
 
 /**
- * Calculate skill points based on level.
- * Legacy formula: 2 + level * 3 (for backward compatibility in some displays).
- * Use calculateSkillPointsForEntity for character/creature allocation.
+ * @deprecated Use calculateSkillPointsForEntity() instead.
  */
 export function calculateSkillPoints(level: number, allowSubLevel = false): number {
   const parsedLevel = parseFloat(String(level)) || 1;
@@ -55,15 +64,20 @@ export function calculateSkillPoints(level: number, allowSubLevel = false): numb
 }
 
 /**
- * Skill points per level: characters 3, creatures 5.
- * Used for skill allocation in character creator and creature creator.
+ * Skill points: characters 3/level. Creatures 5 at L1 + 3/level.
  */
 export function calculateSkillPointsForEntity(
   level: number,
-  entityType: 'character' | 'creature'
+  entityType: 'character' | 'creature',
+  rules?: Rules
 ): number {
   const parsedLevel = Math.max(1, Math.floor(parseFloat(String(level)) || 1));
-  const perLevel = entityType === 'character' ? 3 : 5;
+  if (entityType === 'creature') {
+    const baseSkills = rules?.PROGRESSION_CREATURE?.skillPointsAtLevel1 ?? CREATURE_CONSTANTS.BASE_SKILL_POINTS;
+    const perLevel = rules?.PROGRESSION_CREATURE?.skillPointsPerLevel ?? CREATURE_CONSTANTS.SKILL_POINTS_PER_LEVEL;
+    return baseSkills + perLevel * (parsedLevel - 1);
+  }
+  const perLevel = rules?.PROGRESSION_PLAYER?.skillPointsPerLevel ?? SHARED_CONSTANTS.SKILL_POINTS_PER_LEVEL;
   return perLevel * parsedLevel;
 }
 
@@ -73,62 +87,69 @@ export function calculateSkillPointsForEntity(
 export function calculateHealthEnergyPool(
   level: number, 
   entityType: EntityType = 'PLAYER', 
-  allowSubLevel = false
+  allowSubLevel = false,
+  rules?: Rules
 ): number {
   const parsedLevel = parseFloat(String(level)) || 1;
-  const config = entityType === 'CREATURE' ? CREATURE_CONSTANTS : PLAYER_CONSTANTS;
+  const basePool = entityType === 'CREATURE'
+    ? (rules?.PROGRESSION_CREATURE?.baseHitEnergyPool ?? CREATURE_CONSTANTS.BASE_HIT_ENERGY)
+    : (rules?.PROGRESSION_PLAYER?.baseHitEnergyPool ?? PLAYER_CONSTANTS.BASE_HIT_ENERGY);
+  const perLevel = entityType === 'CREATURE'
+    ? (rules?.PROGRESSION_CREATURE?.hitEnergyPerLevel ?? SHARED_CONSTANTS.HIT_ENERGY_PER_LEVEL)
+    : (rules?.PROGRESSION_PLAYER?.hitEnergyPerLevel ?? SHARED_CONSTANTS.HIT_ENERGY_PER_LEVEL);
   
   if (allowSubLevel && parsedLevel < 1) {
-    return Math.ceil(config.BASE_HIT_ENERGY * parsedLevel);
+    return Math.ceil(basePool * parsedLevel);
   }
   
-  return config.BASE_HIT_ENERGY + (SHARED_CONSTANTS.HIT_ENERGY_PER_LEVEL * (parsedLevel - 1));
+  return basePool + (perLevel * (parsedLevel - 1));
 }
 
 /**
  * Calculate proficiency points based on level.
  * Formula: 2 + 1 every 5 levels starting at level 5
  */
-export function calculateProficiency(level: number, allowSubLevel = false): number {
+export function calculateProficiency(level: number, allowSubLevel = false, rules?: Rules): number {
   const parsedLevel = parseFloat(String(level)) || 1;
+  const base = rules?.PROGRESSION_PLAYER?.baseProficiency ?? SHARED_CONSTANTS.BASE_PROFICIENCY;
+  const perIncrease = rules?.PROGRESSION_PLAYER?.proficiencyPerIncrease ?? SHARED_CONSTANTS.PROFICIENCY_PER_5_LEVELS;
+  const interval = rules?.PROGRESSION_PLAYER?.proficiencyEveryNLevels ?? 5;
   
   if (allowSubLevel && parsedLevel < 1) {
-    return Math.ceil(SHARED_CONSTANTS.BASE_PROFICIENCY * parsedLevel);
+    return Math.ceil(base * parsedLevel);
   }
   
   if (parsedLevel < 1) return 0;
-  if (parsedLevel < 5) return SHARED_CONSTANTS.BASE_PROFICIENCY;
+  if (parsedLevel < interval) return base;
   
-  const bonusPoints = Math.floor(parsedLevel / 5) * SHARED_CONSTANTS.PROFICIENCY_PER_5_LEVELS;
-  return SHARED_CONSTANTS.BASE_PROFICIENCY + bonusPoints;
+  const bonusPoints = Math.floor(parsedLevel / interval) * perIncrease;
+  return base + bonusPoints;
 }
 
 /**
  * Calculate training points for a player character.
  * Formula: 22 + ability + ((2 + ability) * (level - 1))
  */
-export function calculateTrainingPoints(level: number, highestArchetypeAbility = 0): number {
+export function calculateTrainingPoints(level: number, highestArchetypeAbility = 0, rules?: Rules): number {
   const ability = highestArchetypeAbility || 0;
-  const base = PLAYER_CONSTANTS.BASE_TRAINING_POINTS;
-  const perLevel = PLAYER_CONSTANTS.TP_PER_LEVEL_MULTIPLIER + ability;
+  const base = rules?.PROGRESSION_PLAYER?.baseTrainingPoints ?? PLAYER_CONSTANTS.BASE_TRAINING_POINTS;
+  const perLevel = (rules?.PROGRESSION_PLAYER?.tpPerLevelMultiplier ?? PLAYER_CONSTANTS.TP_PER_LEVEL_MULTIPLIER) + ability;
   
   return base + ability + (perLevel * (level - 1));
 }
 
 /**
  * Calculate training points for a creature.
- * Formula: 9 + ability + (level - 1) * (1 + ability)
  */
-export function calculateCreatureTrainingPoints(level: number, highestNonVitality = 0): number {
+export function calculateCreatureTrainingPoints(level: number, highestNonVitality = 0, rules?: Rules): number {
   const parsedLevel = parseFloat(String(level)) || 1;
   const ability = highestNonVitality || 0;
+  const base = rules?.PROGRESSION_CREATURE?.baseTrainingPoints ?? CREATURE_CONSTANTS.BASE_TRAINING_POINTS;
+  const perLevel = (rules?.PROGRESSION_CREATURE?.tpPerLevelMultiplier ?? CREATURE_CONSTANTS.TP_PER_LEVEL) + ability;
   
   if (parsedLevel < 1) {
-    return Math.ceil(22 * parsedLevel) + ability;
+    return Math.ceil(base * parsedLevel) + ability;
   }
-  
-  const base = CREATURE_CONSTANTS.BASE_TRAINING_POINTS;
-  const perLevel = CREATURE_CONSTANTS.TP_PER_LEVEL + ability;
   
   if (parsedLevel <= 1) return base + ability;
   return base + ability + ((parsedLevel - 1) * perLevel);
@@ -136,52 +157,60 @@ export function calculateCreatureTrainingPoints(level: number, highestNonVitalit
 
 /**
  * Calculate creature feat points based on level and martial proficiency.
- * Base Formula at level 1: 1.5 + martial proficiency
- * Additional levels: +1 per level after level 1
- * For sub-levels: ceil((1.5 + martial) * level)
  */
-export function calculateCreatureFeatPoints(level: number, martialProficiency = 0): number {
+export function calculateCreatureFeatPoints(level: number, martialProficiency = 0, rules?: Rules): number {
   const parsedLevel = parseFloat(String(level)) || 1;
   const martial = martialProficiency || 0;
+  const baseFeat = rules?.PROGRESSION_CREATURE?.baseFeatPoints ?? 1.5;
   
   if (parsedLevel < 1) {
-    // Fractional levels: (1.5 + martial) * level, rounded up
-    return Math.ceil((1.5 + martial) * parsedLevel);
+    return Math.ceil((baseFeat + martial) * parsedLevel);
   }
   
-  // Base feat points at level 1: 1.5 + martial proficiency
-  const baseAtLevel1 = 1.5 + martial;
-  
-  // Add 1 per level after level 1
+  const baseAtLevel1 = baseFeat + martial;
   const levelBonus = parsedLevel > 1 ? (parsedLevel - 1) : 0;
-  
   return baseAtLevel1 + levelBonus;
 }
 
 /**
  * Calculate creature currency based on level.
- * Formula: 200 * 1.45^(level-1)
  */
-export function calculateCreatureCurrency(level: number): number {
+export function calculateCreatureCurrency(level: number, rules?: Rules): number {
   const parsedLevel = parseFloat(String(level)) || 1;
-  return Math.round(
-    CREATURE_CONSTANTS.BASE_CURRENCY * 
-    Math.pow(CREATURE_CONSTANTS.CURRENCY_GROWTH, parsedLevel - 1)
-  );
+  const baseCurrency = rules?.PROGRESSION_CREATURE?.baseCurrency ?? CREATURE_CONSTANTS.BASE_CURRENCY;
+  const growth = rules?.PROGRESSION_CREATURE?.currencyGrowthRate ?? CREATURE_CONSTANTS.CURRENCY_GROWTH;
+  return Math.round(baseCurrency * Math.pow(growth, parsedLevel - 1));
 }
 
 /**
- * Calculate maximum archetype feats allowed based on level.
+ * Calculate maximum archetype feats allowed based on level and archetype type.
  */
-export function calculateMaxArchetypeFeats(level: number): number {
-  return Math.max(0, Math.floor(level));
+export function calculateMaxArchetypeFeats(
+  level: number, 
+  archetypeType?: ArchetypeCategory,
+  rules?: Rules
+): number {
+  const parsedLevel = Math.max(1, Math.floor(level));
+  const martialBase = rules?.ARCHETYPES?.martialBonusFeatsBase ?? 2;
+  const martialInterval = rules?.ARCHETYPES?.martialBonusFeatsInterval ?? 3;
+  
+  if (archetypeType === 'martial') {
+    const martialBonus = martialBase + Math.floor((parsedLevel - 1) / martialInterval);
+    return parsedLevel + martialBonus;
+  }
+  
+  if (archetypeType === 'powered-martial') {
+    return parsedLevel + 1;
+  }
+  
+  return parsedLevel;
 }
 
 /**
  * Calculate maximum character feats allowed based on level.
  */
 export function calculateMaxCharacterFeats(level: number): number {
-  return Math.max(0, Math.floor(level));
+  return Math.max(1, Math.floor(level));
 }
 
 // =============================================================================
@@ -191,11 +220,12 @@ export function calculateMaxCharacterFeats(level: number): number {
 /**
  * Get the cost to increase an ability score.
  */
-export function getAbilityIncreaseCost(currentValue: number): number {
-  if (currentValue >= ABILITY_LIMITS.COST_INCREASE_THRESHOLD) {
-    return 2;
-  }
-  return 1;
+export function getAbilityIncreaseCost(currentValue: number, rules?: Rules): number {
+  const threshold = rules?.ABILITY_RULES?.costIncreaseThreshold ?? ABILITY_LIMITS.COST_INCREASE_THRESHOLD;
+  const increasedCost = rules?.ABILITY_RULES?.increasedCost ?? 2;
+  const normalCost = rules?.ABILITY_RULES?.normalCost ?? 1;
+  if (currentValue >= threshold) return increasedCost;
+  return normalCost;
 }
 
 /**
@@ -204,20 +234,27 @@ export function getAbilityIncreaseCost(currentValue: number): number {
 export function canIncreaseAbility(
   currentValue: number, 
   availablePoints: number, 
-  isCreation = true
+  isCreation = true,
+  isCreature = false,
+  rules?: Rules
 ): boolean {
-  const max = isCreation ? ABILITY_LIMITS.MAX_STARTING : ABILITY_LIMITS.MAX_ABSOLUTE;
+  const maxStarting = rules?.ABILITY_RULES?.maxStarting ?? ABILITY_LIMITS.MAX_STARTING;
+  const maxChar = rules?.ABILITY_RULES?.maxAbsoluteCharacter ?? ABILITY_LIMITS.MAX_ABSOLUTE;
+  const maxCreature = rules?.ABILITY_RULES?.maxAbsoluteCreature ?? ABILITY_LIMITS.MAX_ABSOLUTE_CREATURE;
+  
+  const max = isCreation ? maxStarting : (isCreature ? maxCreature : maxChar);
   if (currentValue >= max) return false;
   
-  const cost = getAbilityIncreaseCost(currentValue);
+  const cost = getAbilityIncreaseCost(currentValue, rules);
   return availablePoints >= cost;
 }
 
 /**
  * Check if an ability decrease is valid.
  */
-export function canDecreaseAbility(currentValue: number): boolean {
-  return currentValue > ABILITY_LIMITS.MIN;
+export function canDecreaseAbility(currentValue: number, rules?: Rules): boolean {
+  const min = rules?.ABILITY_RULES?.min ?? ABILITY_LIMITS.MIN;
+  return currentValue > min;
 }
 
 // =============================================================================
@@ -227,31 +264,45 @@ export function canDecreaseAbility(currentValue: number): boolean {
 /**
  * Get archetype configuration.
  */
-export function getArchetypeConfig(archetypeType: ArchetypeCategory | string) {
+export function getArchetypeConfig(archetypeType: ArchetypeCategory | string, rules?: Rules): ArchetypeConfigRules {
+  // Try DB rules first
+  const dbConfigs = rules?.ARCHETYPES?.configs;
+  if (dbConfigs) {
+    const cfg = dbConfigs[archetypeType as ArchetypeCategory];
+    if (cfg) return cfg;
+  }
+  // Fallback to constants
   return ARCHETYPE_CONFIGS[archetypeType as ArchetypeCategory] || ARCHETYPE_CONFIGS.power;
 }
 
 /**
  * Get the maximum armament value for an archetype.
  */
-export function getArmamentMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }): number {
+export function getArmamentMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
   const type = typeof archetype === 'string' ? archetype : archetype?.type;
-  return getArchetypeConfig(type || 'power').armamentMax;
+  return getArchetypeConfig(type || 'power', rules).armamentMax;
 }
 
 /**
- * Calculate armament proficiency (max training points for weapons/armor) based on martial proficiency.
- * Formula:
- *   0 martial prof = 3 TP
- *   1 martial prof = 8 TP
- *   2 martial prof = 12 TP
- *   3+ martial prof = 12 + 3 * (martialProf - 2) = 15, 18, 21, etc.
+ * Calculate armament proficiency based on martial proficiency.
  */
-export function calculateArmamentProficiency(martialProf: number): number {
+export function calculateArmamentProficiency(martialProf: number, rules?: Rules): number {
+  // Try DB lookup table first
+  const table = rules?.ARMAMENT_PROFICIENCY?.table;
+  if (table && table.length > 0) {
+    // Find exact match or highest entry below martialProf
+    const sorted = [...table].sort((a, b) => a.martialProf - b.martialProf);
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      if (sorted[i].martialProf <= martialProf) return sorted[i].armamentMax;
+    }
+    return sorted[0]?.armamentMax ?? 3;
+  }
+  
+  // Fallback to hardcoded formula
   if (martialProf === 0) return 3;
   if (martialProf === 1) return 8;
   if (martialProf === 2) return 12;
-  return 12 + (3 * (martialProf - 2)); // 15, 18, 21, etc.
+  return 12 + (3 * (martialProf - 2));
 }
 
 /**
@@ -266,41 +317,48 @@ export function getArchetypeType(martialProf: number, powerProf: number): 'power
 
 /**
  * Calculate base innate threshold for pure power archetype.
- * Formula: 8 at level 1, +1 every 3 levels starting at level 4
  */
-export function calculateBaseInnateThreshold(level: number): number {
-  if (level < 4) return 8;
-  const bonuses = Math.floor((level - 1) / 3);
-  return 8 + bonuses;
+export function calculateBaseInnateThreshold(level: number, rules?: Rules): number {
+  const base = rules?.ARCHETYPES?.configs?.power?.innateThreshold ?? 8;
+  const interval = rules?.ARCHETYPES?.poweredMartialMilestoneInterval ?? 3;
+  const startLevel = rules?.ARCHETYPES?.poweredMartialMilestoneStartLevel ?? 4;
+  if (level < startLevel) return base;
+  const bonuses = Math.floor((level - 1) / interval);
+  return base + bonuses;
 }
 
 /**
  * Calculate base innate pools for pure power archetype.
- * Formula: 2 at level 1, +1 every 3 levels starting at level 4
  */
-export function calculateBaseInnatePools(level: number): number {
-  if (level < 4) return 2;
-  const bonuses = Math.floor((level - 1) / 3);
-  return 2 + bonuses;
+export function calculateBaseInnatePools(level: number, rules?: Rules): number {
+  const base = rules?.ARCHETYPES?.configs?.power?.innatePools ?? 2;
+  const interval = rules?.ARCHETYPES?.poweredMartialMilestoneInterval ?? 3;
+  const startLevel = rules?.ARCHETYPES?.poweredMartialMilestoneStartLevel ?? 4;
+  if (level < startLevel) return base;
+  const bonuses = Math.floor((level - 1) / interval);
+  return base + bonuses;
 }
 
 /**
  * Calculate bonus archetype feats for pure martial archetype.
- * Formula: 2 at level 1, +1 every 3 levels starting at level 4
  */
-export function calculateBonusArchetypeFeats(level: number): number {
-  if (level < 4) return 2;
-  const bonuses = Math.floor((level - 1) / 3);
-  return 2 + bonuses;
+export function calculateBonusArchetypeFeats(level: number, rules?: Rules): number {
+  const base = rules?.ARCHETYPES?.martialBonusFeatsBase ?? 2;
+  const interval = rules?.ARCHETYPES?.martialBonusFeatsInterval ?? 3;
+  const startLevel = rules?.ARCHETYPES?.martialBonusFeatsStartLevel ?? 4;
+  if (level < startLevel) return base;
+  const bonuses = Math.floor((level - 1) / interval);
+  return base + bonuses;
 }
 
 /**
  * Get milestone levels for mixed archetype choices.
- * Milestones occur at levels 4, 7, 10, 13, 16, etc.
  */
-export function getArchetypeMilestoneLevels(currentLevel: number): number[] {
+export function getArchetypeMilestoneLevels(currentLevel: number, rules?: Rules): number[] {
+  const startLevel = rules?.ARCHETYPES?.poweredMartialMilestoneStartLevel ?? 4;
+  const interval = rules?.ARCHETYPES?.poweredMartialMilestoneInterval ?? 3;
   const milestones: number[] = [];
-  for (let lvl = 4; lvl <= currentLevel; lvl += 3) {
+  for (let lvl = startLevel; lvl <= currentLevel; lvl += interval) {
     milestones.push(lvl);
   }
   return milestones;
@@ -323,33 +381,36 @@ export function calculateArchetypeProgression(
   level: number,
   martialProf: number,
   powerProf: number,
-  archetypeChoices: Record<number, 'innate' | 'feat'> = {}
+  archetypeChoices: Record<number, 'innate' | 'feat'> = {},
+  rules?: Rules
 ): ArchetypeProgression {
   const archetype = getArchetypeType(martialProf, powerProf);
-  const armamentProficiency = calculateArmamentProficiency(martialProf);
+  const armamentProficiency = calculateArmamentProficiency(martialProf, rules);
   
   let innateThreshold = 0;
   let innatePools = 0;
   let innateEnergy = 0;
   let bonusArchetypeFeats = 0;
   
+  const mixedConfig = getArchetypeConfig('powered-martial', rules);
+  
   switch (archetype) {
     case 'power':
-      innateThreshold = calculateBaseInnateThreshold(level);
-      innatePools = calculateBaseInnatePools(level);
+      innateThreshold = calculateBaseInnateThreshold(level, rules);
+      innatePools = calculateBaseInnatePools(level, rules);
       innateEnergy = innateThreshold * innatePools;
       break;
       
     case 'martial':
-      bonusArchetypeFeats = calculateBonusArchetypeFeats(level);
+      bonusArchetypeFeats = calculateBonusArchetypeFeats(level, rules);
       break;
       
     case 'mixed':
-      innateThreshold = 6;
-      innatePools = 1;
-      bonusArchetypeFeats = 1;
+      innateThreshold = mixedConfig.innateThreshold;
+      innatePools = mixedConfig.innatePools;
+      bonusArchetypeFeats = mixedConfig.featLimit;
       
-      const milestones = getArchetypeMilestoneLevels(level);
+      const milestones = getArchetypeMilestoneLevels(level, rules);
       for (const milestoneLevel of milestones) {
         const choice = archetypeChoices[milestoneLevel];
         if (choice === 'innate') {
@@ -374,7 +435,7 @@ export function calculateArchetypeProgression(
     innatePools,
     innateEnergy,
     bonusArchetypeFeats,
-    availableMilestones: archetype === 'mixed' ? getArchetypeMilestoneLevels(level) : [],
+    availableMilestones: archetype === 'mixed' ? getArchetypeMilestoneLevels(level, rules) : [],
   };
 }
 
@@ -388,23 +449,21 @@ export function calculatePowerPotency(powerProf: number, powerAbilityScore: numb
 /**
  * Get the archetype feat limit.
  */
-export function getArchetypeFeatLimit(archetype: ArchetypeCategory | { type?: ArchetypeCategory }): number {
+export function getArchetypeFeatLimit(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
   const type = typeof archetype === 'string' ? archetype : archetype?.type;
-  return getArchetypeConfig(type || 'power').featLimit;
+  return getArchetypeConfig(type || 'power', rules).featLimit;
 }
 
 /**
  * Get the maximum innate energy for an archetype.
  */
-export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }): number {
+export function getInnateEnergyMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
   const type = typeof archetype === 'string' ? archetype : archetype?.type;
-  return getArchetypeConfig(type || 'power').innateEnergy;
+  return getArchetypeConfig(type || 'power', rules).innateEnergy;
 }
 
 /**
- * Get the archetype ability score (the highest ability linked to archetype abilities).
- * For powered-martial: max of power and martial ability scores
- * For power/martial: the single archetype ability score
+ * Get the archetype ability score.
  */
 export function getArchetypeAbility(
   archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
@@ -420,36 +479,34 @@ export function getArchetypeAbility(
     return Math.max(powVal, marVal);
   }
   
-  // For power or martial, use pow_abil or mart_abil (whichever is set)
   const abilityKey = (archetype.pow_abil || archetype.mart_abil)?.toLowerCase() as keyof Abilities;
   return abilityKey ? (abilities[abilityKey] || 0) : 0;
 }
 
 /**
- * Get base health for a character.
- * Formula: 8 + vitality (or strength if vitality is archetype ability)
+ * @deprecated Use calculateMaxHealth() from @/lib/game/calculations instead.
  */
 export function getBaseHealth(
   archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
-  abilities: Partial<Abilities>
+  abilities: Partial<Abilities>,
+  rules?: Rules
 ): number {
+  const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? 8;
   const vitality = abilities.vitality || 0;
   
-  // If vitality is an archetype ability, use strength instead
   const isVitalityArchetype = 
     archetype?.pow_abil?.toLowerCase() === 'vitality' ||
     archetype?.mart_abil?.toLowerCase() === 'vitality';
   
   if (isVitalityArchetype) {
-    return 8 + (abilities.strength || 0);
+    return baseHealth + (abilities.strength || 0);
   }
   
-  return 8 + vitality;
+  return baseHealth + vitality;
 }
 
 /**
- * Get base energy for a character.
- * Formula: 0 + archetype ability score
+ * @deprecated Use calculateMaxEnergy() from @/lib/game/calculations instead.
  */
 export function getBaseEnergy(
   archetype: { type?: string; pow_abil?: string; mart_abil?: string } | undefined,
@@ -459,8 +516,7 @@ export function getBaseEnergy(
 }
 
 /**
- * Compute max health and max energy from raw character data (e.g. from Prisma row.data).
- * Used by campaign character API (scope=encounter) so combatants get accurate HP/EN.
+ * @deprecated Use computeMaxHealthEnergy() from @/lib/game/calculations instead.
  */
 export function getCharacterMaxHealthEnergy(charData: Record<string, unknown>): {
   maxHealth: number;
@@ -473,15 +529,15 @@ export function getCharacterMaxHealthEnergy(charData: Record<string, unknown>): 
     agility: rawAbilities.agility ?? rawAbilities.agi ?? 0,
   };
   const level = (charData.level as number) ?? 1;
-  const vitality = abilities.vitality ?? 0;
   const healthPoints = (charData.healthPoints as number) ?? 0;
   const energyPoints = (charData.energyPoints as number) ?? 0;
   const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string } | undefined;
 
-  const maxHealth =
-    vitality < 0
-      ? 8 + vitality + healthPoints
-      : 8 + vitality * level + healthPoints;
+  const baseHealth = getBaseHealth(archetype, abilities);
+  const healthAbility = baseHealth - 8;
+  const maxHealth = healthAbility < 0
+    ? 8 + healthAbility + healthPoints
+    : 8 + healthAbility * level + healthPoints;
 
   const archetypeAbilityValue = getArchetypeAbility(archetype, abilities);
   const maxEnergy = archetypeAbilityValue * level + energyPoints;
@@ -493,9 +549,6 @@ export function getCharacterMaxHealthEnergy(charData: Record<string, unknown>): 
 // Skill Helpers
 // =============================================================================
 
-/** 
- * Ability name to abilities object key mapping 
- */
 const ABILITY_MAP: Record<string, keyof Abilities> = {
   'strength': 'strength',
   'vitality': 'vitality', 
@@ -507,7 +560,6 @@ const ABILITY_MAP: Record<string, keyof Abilities> = {
 
 /**
  * Get the highest ability modifier from a list of linked abilities.
- * Skills can have multiple linked abilities, and we use the highest.
  */
 export function getHighestLinkedAbility(
   linkedAbilities: string | string[] | undefined,
@@ -535,12 +587,6 @@ export function getHighestLinkedAbility(
 
 /**
  * Calculate skill bonus: highest linked ability + skill value.
- * This formula is used across creature creator and character sheet.
- * 
- * @param linkedAbilities - The ability/abilities linked to this skill (from skill.ability)
- * @param skillValue - The points allocated to this skill
- * @param abilities - The character/creature's ability scores
- * @returns The total skill bonus
  */
 export function calculateSkillBonus(
   linkedAbilities: string | string[] | undefined,
@@ -553,13 +599,6 @@ export function calculateSkillBonus(
 
 /**
  * Calculate total skill bonus including proficiency.
- * Per core rulebook: Proficient = Ability + Skill Value; Unproficient = ½ Ability (or ×2 if negative).
- * 
- * @param linkedAbilities - The ability/abilities linked to this skill
- * @param skillValue - The points allocated to this skill  
- * @param abilities - The character/creature's ability scores
- * @param isProficient - Whether the character is proficient in this skill
- * @returns The total skill bonus
  */
 export function calculateSkillBonusWithProficiency(
   linkedAbilities: string | string[] | undefined,
@@ -570,10 +609,8 @@ export function calculateSkillBonusWithProficiency(
   const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
   
   if (isProficient) {
-    // Proficient: ability + skill value
     return abilityMod + skillValue;
   } else {
-    // Unproficient: half ability (rounded up) or double negative
     const unprofAbilityBonus = abilityMod < 0 ? abilityMod * 2 : Math.ceil(abilityMod / 2);
     return unprofAbilityBonus;
   }
@@ -581,9 +618,6 @@ export function calculateSkillBonusWithProficiency(
 
 /**
  * Calculate sub-skill bonus.
- * Proficient: Ability + Base Skill Value + Sub-Skill Value.
- * Unproficient (base proficient): Ability + Base Skill Value.
- * Unproficient (base not proficient): unprofBonus(Ability) + Base Skill Value.
  */
 export function calculateSubSkillBonusWithProficiency(
   linkedAbilities: string | string[] | undefined,

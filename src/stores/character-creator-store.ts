@@ -14,6 +14,7 @@ import type {
   Abilities 
 } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
+import { calculateMaxHealth, calculateMaxEnergy, getArchetypeAbilityScore } from '@/lib/game/calculations';
 
 export type CreatorStep = 
   | 'archetype' 
@@ -204,20 +205,23 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       getCharacter: () => {
         const { draft } = get();
         
-        // Calculate base and allocated health/energy
-        const baseHealth = 10; // Default base health
-        const baseEnergy = 10; // Default base energy
+        // Calculate health/energy using centralized formulas (calculations.ts)
+        const abilities = draft.abilities || { ...DEFAULT_ABILITIES };
+        const level = draft.level || 1;
         const allocatedHealth = draft.healthPoints || 0;
         const allocatedEnergy = draft.energyPoints || 0;
         
-        // Build archetype without undefined fields (JSONB compatibility)
+        const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
+        const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
+        
+        const maxHealth = calculateMaxHealth(allocatedHealth, abilities.vitality || 0, level, powAbil, abilities);
+        const maxEnergy = calculateMaxEnergy(allocatedEnergy, powAbil || martAbil, abilities, level);
+        
+        // Save lean archetype — just id + type. Name/description derived from codex on load.
+        // pow_abil/mart_abil saved at top level as user choices.
         const archetype = draft.archetype ? {
           id: draft.archetype.id,
-          name: draft.archetype.name,
           type: draft.archetype.type,
-          ability: draft.archetype.ability,
-          ...(draft.archetype.pow_abil && { pow_abil: draft.archetype.pow_abil }),
-          ...(draft.archetype.mart_abil && { mart_abil: draft.archetype.mart_abil }),
         } : undefined;
         
         // Transform equipment from inventory format to weapons/armor/items format
@@ -236,8 +240,8 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         
         return {
           name: draft.name || 'Unnamed Character',
-          level: draft.level || 1,
-          abilities: draft.abilities || { ...DEFAULT_ABILITIES },
+          level,
+          abilities,
           ...(archetype && { archetype }),
           ...(draft.pow_abil && { pow_abil: draft.pow_abil }),
           ...(draft.mart_abil && { mart_abil: draft.mart_abil }),
@@ -255,12 +259,10 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           energyPoints: draft.energyPoints || 0,
           // Currency remaining from equipment purchases
           currency: draft.currency ?? 500,
-          // Match vanilla naming
-          species: draft.ancestry?.name || '',
+          // Species/ancestry — lean save: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }
           ancestry: draft.ancestry,
           skills: draft.skills || {},
-          defenseSkills: draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
-          defenseVals: draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
+          defenseVals: draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
           // Separate feats by type - archetype feats vs character feats
           // The feats step stores them with type: 'archetype' | 'character'
           archetypeFeats: (draft.feats || [])
@@ -273,13 +275,9 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           techniques: draft.techniques || [],
           equipment: equipment,
           unarmedProwess: draft.unarmedProwess ?? 0,
-          // Health/Energy tracking
-          health_energy_points: {
-            health: allocatedHealth,
-            energy: allocatedEnergy,
-          },
-          currentHealth: baseHealth + allocatedHealth,
-          currentEnergy: baseEnergy + allocatedEnergy,
+          // Health/Energy current values (max is calculated from healthPoints + level + abilities)
+          currentHealth: maxHealth,
+          currentEnergy: maxEnergy,
           // Optional fields - only include if defined
           ...(draft.description && { description: draft.description }),
           ...(draft.notes && { notes: draft.notes }),

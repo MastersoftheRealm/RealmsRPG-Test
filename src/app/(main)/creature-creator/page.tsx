@@ -34,7 +34,7 @@ import {
   calculateHealthEnergyPool,
   calculateProficiency,
   calculateAbilityPoints,
-  calculateSkillPoints,
+  calculateSkillPointsForEntity,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
 import { Button, Input, Select, PageContainer, PageHeader, Textarea, Alert } from '@/components/ui';
@@ -295,7 +295,7 @@ function CreatureCreatorContent() {
     const hePool = calculateHealthEnergyPool(level, 'CREATURE', true);
     const proficiency = calculateProficiency(level, true);
     const abilityPoints = calculateAbilityPoints(level, true);
-    const skillPoints = calculateSkillPoints(level, true);
+    const skillPoints = calculateSkillPointsForEntity(Math.max(1, Math.floor(level)), 'creature');
     
     // Max archetype proficiency points based on level (vanilla formula)
     // level < 1: ceil(2 * level), else: 2 + floor(level / 5)

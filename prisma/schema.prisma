@@ -239,6 +239,14 @@ model CodexCreatureFeat {
   @@schema("codex")
 }
 
+model CoreRules {
+  id        String    @id // Category key (e.g., "PROGRESSION_PLAYER", "CONDITIONS", etc.)
+  data      Json      // Category-specific JSON structure
+  updatedAt DateTime? @map("updated_at")
+  @@map("core_rules")
+  @@schema("codex")
+}
+
 // =============================================================================
 // Public Library (admin-curated, browsable by all users)
 // Structure mirrors user library; write via admin server actions only

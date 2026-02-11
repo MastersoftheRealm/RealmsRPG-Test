@@ -167,9 +167,9 @@ export function CharacterSheetModals({
         <RecoveryModal
           isOpen={showRecoveryModal}
           onClose={() => setShowRecoveryModal(false)}
-          currentHealth={character.health?.current ?? calculatedStats.maxHealth}
+          currentHealth={character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth}
           maxHealth={calculatedStats.maxHealth}
-          currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
+          currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
           maxEnergy={calculatedStats.maxEnergy}
           feats={
             [

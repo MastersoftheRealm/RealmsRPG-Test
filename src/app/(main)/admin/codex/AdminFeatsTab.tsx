@@ -72,7 +72,11 @@ export function AdminFeatsTab() {
     const abilReqAbilities = new Set<string>();
     feats.forEach((f: Feat) => {
       if (f.lvl_req && f.lvl_req > 0) levels.add(f.lvl_req);
-      if (f.ability) abilities.add(f.ability);
+      if (Array.isArray(f.ability)) {
+        f.ability.forEach((a: string) => abilities.add(a));
+      } else if (f.ability) {
+        abilities.add(f.ability);
+      }
       if (f.category) categories.add(f.category);
       f.tags?.forEach((t: string) => tags.add(t));
       f.ability_req?.forEach((a: string) => abilReqAbilities.add(a));
@@ -110,7 +114,14 @@ export function AdminFeatsTab() {
         }
       }
       if (filters.categories.length > 0 && !filters.categories.includes(f.category || '')) return false;
-      if (filters.abilities.length > 0 && (!f.ability || !filters.abilities.includes(f.ability))) return false;
+      if (filters.abilities.length > 0) {
+        const featAbilities = Array.isArray(f.ability)
+          ? f.ability
+          : f.ability
+            ? [f.ability]
+            : [];
+        if (!featAbilities.some(a => filters.abilities.includes(a))) return false;
+      }
       if (filters.tags.length > 0) {
         if (filters.tagMode === 'all') {
           if (!filters.tags.every(t => f.tags?.includes(t))) return false;
@@ -343,23 +354,23 @@ export function AdminFeatsTab() {
             label="Feat Type"
             value={filters.featTypeMode}
             options={[
-              { value: 'all', label: 'All' },
-              { value: 'archetype', label: 'Archetype' },
-              { value: 'character', label: 'Character' },
+              { value: 'all', label: 'All types' },
+              { value: 'archetype', label: 'Archetype feats' },
+              { value: 'character', label: 'Character feats' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, featTypeMode: v as 'all' | 'archetype' | 'character' }))}
-            placeholder="All"
+            placeholder="Feat type"
           />
           <SelectFilter
             label="State Feats"
             value={filters.stateFeatMode}
             options={[
-              { value: 'all', label: 'All Feats' },
-              { value: 'only', label: 'Only State Feats' },
-              { value: 'hide', label: 'Hide State Feats' },
+              { value: 'all', label: 'All states' },
+              { value: 'only', label: 'Only state feats' },
+              { value: 'hide', label: 'Hide state feats' },
             ]}
             onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="All Feats"
+            placeholder="State filter"
           />
         </div>
       </FilterSection>

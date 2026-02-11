@@ -432,8 +432,8 @@ export function SheetHeader({
   innateThreshold = 0,
   innatePools = 0,
 }: SheetHeaderProps) {
-  const currentHealth = character.health?.current ?? calculatedStats.maxHealth;
-  const currentEnergy = character.energy?.current ?? calculatedStats.maxEnergy;
+  const currentHealth = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
+  const currentEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
   
   // State for editing character name
   const [isEditingName, setIsEditingName] = useState(false);
@@ -573,7 +573,7 @@ export function SheetHeader({
             
             {/* Archetype: Abilities */}
             <p className="text-base text-text-primary">
-              {character.archetype?.name || 'No Archetype'}
+              {character.archetype?.name || (character.archetype?.type ? character.archetype.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'No Archetype')}
               {(character.pow_abil || character.mart_abil) && ': '}
               {character.pow_abil && (
                 <span className="text-category-power capitalize">{character.pow_abil}</span>

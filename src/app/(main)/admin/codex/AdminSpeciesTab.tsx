@@ -36,6 +36,7 @@ export function AdminSpeciesTab() {
     name: '',
     description: '',
     type: '',
+    // Primary size is derived from sizes; keep in state for convenience but do not expose as a separate field
     size: 'Medium',
     sizes: 'Medium',
     skillIds: [] as string[],
@@ -137,7 +138,8 @@ export function AdminSpeciesTab() {
       name: s.name,
       description: s.description || '',
       type: s.type || '',
-      size: s.size || 'Medium',
+      // Derive primary size from sizes array; kept internal only
+      size: s.size || (s.sizes && s.sizes[0]) || 'Medium',
       sizes: (s.sizes || []).join(', ') || s.size || 'Medium',
       skillIds,
       speciesTraitIds,
@@ -176,8 +178,9 @@ export function AdminSpeciesTab() {
       name: form.name.trim(),
       description: form.description.trim(),
       type: form.type.trim(),
-      size: form.size.trim() || sizes[0] || 'Medium',
-      sizes: sizes.length ? sizes : [form.size || 'Medium'],
+      // Primary size is derived from sizes; do not treat it as a separate editable field
+      size: sizes[0] || form.size.trim() || 'Medium',
+      sizes: sizes.length ? sizes : [sizes[0] || form.size || 'Medium'],
       skills: form.skillIds,
       species_traits: form.speciesTraitIds,
       ancestry_traits: form.ancestryTraitIds,
@@ -283,45 +286,115 @@ export function AdminSpeciesTab() {
               size="sm"
             />
           ) : (
-            filtered.map((s: Species) => (
-              <GridListRow
-                key={s.id}
-                id={s.id}
-                name={s.name}
-                description={s.description || ''}
-                gridColumns="1.5fr 1fr 0.8fr 40px"
-                columns={[
-                  { key: 'Type', value: s.type || '-' },
-                  { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },
-                ]}
-                rightSlot={
-                  <div className="flex items-center gap-1 pr-2">
-                    {pendingDeleteId === s.id ? (
-                      <div className="flex items-center gap-1 text-xs">
-                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
-                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(s.id, s.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
-                      </div>
-                    ) : (
-                      <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
-                          <Pencil className="w-4 h-4" />
-                        </IconButton>
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPendingDeleteId(s.id)}
-                          label="Delete"
-                          className="text-danger hover:text-danger-600 hover:bg-transparent"
-                        >
-                          <X className="w-4 h-4" />
-                        </IconButton>
-                      </>
-                    )}
-                  </div>
-                }
-              />
-            ))
+            filtered.map((s: Species) => {
+              // Build expandable chips for skills and traits so RMs can read descriptions inline
+              const skillIdToName = new Map<string, string>(
+                (skills as Skill[]).map((sk) => [String(sk.id), sk.name]),
+              );
+              const traitIdToTrait = new Map<string, Trait>(
+                (traits as Trait[]).map((t) => [String(t.id), t]),
+              );
+
+              const makeTraitChips = (ids: (string | number)[] | undefined) =>
+                (ids || []).map((id) => {
+                  const key = String(id);
+                  const trait = traitIdToTrait.get(key);
+                  return {
+                    name: trait?.name ?? key,
+                    description: trait?.description,
+                    category: 'default' as const,
+                  };
+                });
+
+              const skillsChips =
+                (s.skills || []).map((id) => {
+                  const key = String(id);
+                  const name = skillIdToName.get(key) || key;
+                  return { name, category: 'skill' as const };
+                });
+
+              const speciesTraitChips = makeTraitChips(s.species_traits as string[] | undefined);
+              const ancestryTraitChips = makeTraitChips(s.ancestry_traits as string[] | undefined);
+              const flawChips = makeTraitChips(s.flaws as string[] | undefined);
+              const characteristicChips = makeTraitChips(s.characteristics as string[] | undefined);
+
+              const detailSections: Array<{
+                label: string;
+                chips: { name: string; description?: string; category?: 'default' | 'skill' | 'tag' | 'archetype' }[];
+                hideLabelIfSingle?: boolean;
+              }> = [];
+
+              if (skillsChips.length > 0) {
+                detailSections.push({ label: 'Skills', chips: skillsChips, hideLabelIfSingle: true });
+              }
+              if (speciesTraitChips.length > 0) {
+                detailSections.push({ label: 'Species Traits', chips: speciesTraitChips });
+              }
+              if (ancestryTraitChips.length > 0) {
+                detailSections.push({ label: 'Ancestry Traits', chips: ancestryTraitChips });
+              }
+              if (flawChips.length > 0) {
+                detailSections.push({ label: 'Flaws', chips: flawChips });
+              }
+              if (characteristicChips.length > 0) {
+                detailSections.push({ label: 'Characteristics', chips: characteristicChips });
+              }
+
+              return (
+                <GridListRow
+                  key={s.id}
+                  id={s.id}
+                  name={s.name}
+                  description={s.description || ''}
+                  gridColumns="1.5fr 1fr 0.8fr 40px"
+                  columns={[
+                    { key: 'Type', value: s.type || '-' },
+                    { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },
+                  ]}
+                  detailSections={detailSections.length > 0 ? detailSections : undefined}
+                  rightSlot={
+                    <div className="flex items-center gap-1 pr-2">
+                      {pendingDeleteId === s.id ? (
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleInlineDelete(s.id, s.name)}
+                            className="text-xs px-2 py-0.5 h-6"
+                          >
+                            Yes
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setPendingDeleteId(null)}
+                            className="text-xs px-2 py-0.5 h-6"
+                          >
+                            No
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                            <Pencil className="w-4 h-4" />
+                          </IconButton>
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPendingDeleteId(s.id)}
+                            label="Delete"
+                            className="text-danger hover:text-danger-600 hover:bg-transparent"
+                          >
+                            <X className="w-4 h-4" />
+                          </IconButton>
+                        </>
+                      )}
+                    </div>
+                  }
+                />
+              );
+            })
           )}
         </div>
       )}
@@ -360,15 +433,11 @@ export function AdminSpeciesTab() {
               <Input value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} placeholder="e.g. Humanoid" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Primary Size</label>
-              <Input value={form.size} onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))} placeholder="e.g. Medium" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">All Sizes (comma-separated)</label>
               <Input value={form.sizes} onChange={(e) => setForm((f) => ({ ...f, sizes: e.target.value }))} placeholder="Small, Medium, Large" />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Languages (comma-separated)</label>
               <Input value={form.languages} onChange={(e) => setForm((f) => ({ ...f, languages: e.target.value }))} placeholder="Universal, Any, ..." />

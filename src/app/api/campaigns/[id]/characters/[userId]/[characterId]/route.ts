@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/supabase/session';
-import { getCharacterMaxHealthEnergy } from '@/lib/game/formulas';
+import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import type { CharacterVisibility } from '@/types';
 
@@ -76,7 +76,7 @@ export async function GET(
         acuity: rawAbilities?.acuity ?? rawAbilities?.acu ?? 0,
         agility: rawAbilities?.agility ?? rawAbilities?.agi ?? 0,
       };
-      const { maxHealth, maxEnergy } = getCharacterMaxHealthEnergy(charData as Record<string, unknown>);
+      const { maxHealth, maxEnergy } = computeMaxHealthEnergy(charData as Record<string, unknown>);
       const health = charData?.health as { max?: number; current?: number } | undefined;
       const energy = charData?.energy as { max?: number; current?: number } | undefined;
       const character = {

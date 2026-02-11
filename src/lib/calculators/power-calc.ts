@@ -240,9 +240,9 @@ function getDamagePartId(damageType: string): number | null {
     case 'radiant':
       return PART_IDS.LIGHT_DAMAGE;
     case 'fire':
-    case 'cold':
-    case 'lightning':
     case 'ice':
+    case 'cold':       // backward compat alias for 'ice'
+    case 'lightning':
     case 'acid':
       return PART_IDS.ELEMENTAL_DAMAGE;
     case 'poison':
@@ -254,7 +254,6 @@ function getDamagePartId(damageType: string): number | null {
       return PART_IDS.SPIRITUAL_DAMAGE;
     case 'psychic':
       return PART_IDS.PSYCHIC_DAMAGE;
-    case 'physical':
     case 'bludgeoning':
     case 'piercing':
     case 'slashing':
@@ -275,9 +274,9 @@ function getDamagePartName(damageType: string): string {
     case 'radiant':
       return 'Light Damage';
     case 'fire':
-    case 'cold':
-    case 'lightning':
     case 'ice':
+    case 'cold':       // backward compat alias for 'ice'
+    case 'lightning':
     case 'acid':
       return 'Elemental Damage';
     case 'poison':

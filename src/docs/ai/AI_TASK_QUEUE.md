@@ -4041,3 +4041,1617 @@ Agents should **create new tasks** during their work when they discover addition
     - npm run build passes
   notes: |
     This is a small schema-coverage enhancement; behavior in creators can be updated separately if needed.
+
+- id: TASK-190
+  title: Admin Creature Feats — level, requirement, mechanic flags
+  priority: high
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    The Admin Creature Feats tab only supports name/description/points today, even though the codex_creature_feats schema
+    defines feat_points, feat_lvl, lvl_req, and mechanic. Admins need to be able to set the feat's own level, the minimum
+    creature level required, and whether the entry is a mechanic-only feat. The admin list and creature-creator integration
+    should respect these fields.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/api/codex/route.ts
+    - src/hooks/use-rtdb.ts
+    - src/hooks/use-codex.ts
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/transformers.ts
+  acceptance_criteria:
+    - AdminCreatureFeatsTab edit modal exposes inputs for feat point cost, feat level, required creature level, and a mechanic-only checkbox, mapped to feat_points, feat_lvl, lvl_req, and mechanic in codex_creature_feats
+    - Existing creature feats seeded from CSV load their level requirement, feat level, and mechanic flag correctly into the edit modal
+    - The creature feats list shows at least the feat point cost and either level requirement or feat level in columns, so admins can see tiering at a glance
+    - Codex API (`/api/codex`) returns the new fields in the creatureFeats payload in a way that is compatible with the creature creator’s feat points calculation
+    - npm run build passes
+
+- id: TASK-191
+  title: Admin Equipment — currency, category, and type alignment
+  priority: high
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    The Admin Equipment tab does not align with the codex_equipment schema. There is no explicit input for category or
+    currency, the "Type" dropdown currently mixes armor/weapon/equipment in a way that doesn't match the codex schema,
+    and items that have a non-zero cost in the list show a cost of 0 in the edit modal. The admin editor and list need
+    to be wired directly to category and currency while keeping equipment-specific type handling consistent with how
+    equipment is consumed elsewhere (item creator, library, creature armaments).
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/api/codex/route.ts
+    - src/lib/item-transformers.ts
+    - src/hooks/use-rtdb.ts
+  acceptance_criteria:
+    - AdminEquipmentTab edit modal includes fields for category and currency (base cost) and populates them correctly for existing equipment
+    - Saving from the edit modal persists category and currency back to codex_equipment so `/api/codex` returns the correct cost
+    - The equipment list’s cost column reflects the true currency value from the codex row (no more showing 0 in the modal when the list shows a non-zero cost)
+    - The "Type" handling in AdminEquipmentTab matches how equipment type is used in item/armament creators (no misleading armor/weapon-only values when editing generic equipment)
+    - npm run build passes
+
+- id: TASK-192
+  title: Admin Properties & Parts — mechanic/duration flags, percentage display, option chips
+  priority: high
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Several Admin Codex tabs for armament properties and power/technique parts are out of sync with the codex schema and
+    public Codex views. Property type currently defaults to "general" (which is not a real property type), mechanic flags
+    in the edit modal do not reflect existing mechanic properties, parts filtering defaults to hiding mechanic parts, and
+    duration parts with duration=true are not wiring the "Affects Duration" checkbox correctly. Additionally, the Admin
+    Parts list shows percentage-based EN parts as raw base_en values instead of formatted percentages, and list rows with
+    options do not surface those options as expandable chips the way the Codex Parts/Properties tabs do.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/codex/CodexPartsTab.tsx
+    - src/app/(main)/codex/CodexPropertiesTab.tsx
+    - src/components/shared/grid-list-row.tsx
+  acceptance_criteria:
+    - AdminPropertiesTab type dropdown uses only the canonical property types ("Armor", "Shield", "Weapon") and initial selection reflects the property’s actual type (no "general" default)
+    - Mechanic properties load into the AdminPropertiesTab edit modal with the Mechanic checkbox correctly checked when mechanic=true and unchecked otherwise, and saving preserves the flag
+    - AdminPartsTab mechanic filter defaults to showing all parts (not hiding mechanics), and the "Affects Duration" checkbox is wired to the codex_parts.duration field so duration parts round-trip correctly
+    - AdminPartsTab energy column formats percentage-based parts using the same percentage formatting logic as CodexPartsTab (e.g., "+25%" instead of "1.25"), while non-percentage parts continue to show flat EN
+    - Parts and properties that have option descriptions/costs render those options in the admin lists as expandable chips (via GridListRow detailSections/chips) so admins can inspect option text and costs without opening the modal
+    - npm run build passes
+
+- id: TASK-193
+  title: Admin Traits & Species — flaw/characteristic flags, sizes, trait chips
+  priority: high
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    In the Admin Traits and Species tabs, the boolean flags and size handling are misleading. Trait edit modals do not
+    show the flaw/characteristic checkboxes as checked even when the underlying trait has those flags set to true,
+    and the Species editor exposes a "Primary size" concept even though the codex schema only defines a sizes array.
+    Additionally, when editing species, the chips used to add traits (species_traits, ancestry_traits, flaws,
+    characteristics) are not expandable, making it hard for RMs to read the full trait descriptions inline.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/hooks/use-rtdb.ts
+    - src/hooks/use-codex.ts
+    - src/components/shared/grid-list-row.tsx
+  acceptance_criteria:
+    - AdminTraitsTab loads existing traits with flaw and characteristic checkboxes reflecting the true underlying booleans (no more unchecked boxes for true flags), and saving preserves both flags
+    - AdminSpeciesTab no longer surfaces a "Primary size" field in the UI; size display is derived from the sizes array per CODEX_SCHEMA_REFERENCE, and only sizes is editable
+    - Species edit modal uses trait selections (species_traits, ancestry_traits, flaws, characteristics) that render as expandable chips in the expanded species row so RMs can click and read each trait’s description without leaving the list
+    - Any size filters in the Species list continue to work using the sizes array
+    - npm run build passes
+
+- id: TASK-194
+  title: Admin Skills & Feats — base skill display and filter “All” options
+  priority: medium
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    The Admin Skills and Feats tabs have small but confusing UX issues. In Admin Skills, many skills show "-" for the
+    Base Skill column even when they have a valid base_skill_id, and the Skill Type filter presents two "All Skills"
+    choices (one as a placeholder and one as an explicit option). In Admin Feats, the Feat Type and State Feats filters
+    similarly present duplicate "All"/"All Feats" options. The base skill editor should also reliably pre-populate the
+    base skill dropdown when editing existing sub-skills.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+  acceptance_criteria:
+    - AdminSkillsTab Base Skill column shows the correct base skill name for all skills with a valid base_skill_id (including id 0 → “Any”), falling back to "-" only when there truly is no base skill
+    - Editing an existing sub-skill in AdminSkillsTab pre-selects the appropriate base skill (or “Any”) in the Base skill dropdown based on base_skill_id
+    - The Skill Type SelectFilter in AdminSkillsTab has a single clear way to show “all skills” (e.g., placeholder only or explicit option only), eliminating duplicate “All Skills” entries
+    - The Feat Type and State Feats filters in AdminFeatsTab likewise avoid duplicate “All”/“All Feats” options while preserving the ability to filter by archetype/character and state feats
+    - npm run build passes
+
+# =====================================================================
+# CHARACTER DATA AUDIT - Lean Schema & Codex-Driven Architecture
+# =====================================================================
+#
+# Context: Full audit of the saved character JSON revealed pervasive
+# redundancy, multiple competing representations for the same data,
+# derived values being persisted, full codex objects hard-saved onto
+# characters instead of IDs, and several formula/constant bugs.
+#
+# Goal: Characters store ONLY user choices + runtime state (current HP/EN).
+# Everything else is derived on load from Codex, Library, and game formulas.
+# This makes the system resilient to playtest rule changes - update the
+# codex/formulas once and all characters reflect the change immediately.
+#
+# Phases are ordered by dependency. Complete Phase 1-2 before Phase 3-4.
+# Phase 5 depends on Phase 3-4. Phase 6 is final cleanup.
+# =====================================================================
+
+# -- Phase 1: Critical Bug Fixes --
+# Standalone fixes. No schema migration. Can be done immediately.
+
+- id: TASK-195
+  title: "CANCELLED: Ability cost threshold - code is correct"
+  priority: critical
+  status: cancelled
+  created_at: 2026-02-11
+  created_by: agent
+  notes: |
+    Owner confirmed 2026-02-11: "abilities cost 2 for every 1 point after 4."
+    COST_INCREASE_THRESHOLD = 4 in constants.ts IS correct. Going from 3→4 costs 1, 4→5 costs 2.
+    GAME_RULES.md had an incorrect table (said 3→4 costs 2) which has been corrected.
+  related_files:
+    - src/lib/game/constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - COST_INCREASE_THRESHOLD is 3 in constants.ts
+    - getAbilityIncreaseCost(3) returns 2
+    - getAbilityIncreaseCost(2) returns 1
+    - Character creator and character sheet ability steppers show cost of 2 pts at value 3+
+    - npm run build passes
+
+- id: TASK-196
+  title: "Bug: maxHealth ignores archetype ability - always uses Vitality"
+  priority: critical
+  status: done
+  notes: "Done 2026-02-11. Fixed character-sheet-utils.ts and getCharacterMaxHealthEnergy in formulas.ts to use getBaseHealth() which checks if vitality is archetype ability and uses strength instead."
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    GAME_RULES.md states Base health is 8 + Vitality (or Strength if Vitality is archetype ability).
+    The centralized calculateMaxHealth() in calculations.ts correctly checks this, but the inline
+    calculation in character-sheet-utils.ts does NOT - it always uses vitality. Characters whose
+    archetype ability IS Vitality get incorrect health. They should use Strength for health instead.
+    Example from saved character: pow_abil=vitality, vitality=3, strength=-1, level=1, healthPoints=8.
+    Incorrect (current): 8 + 3*1 + 8 = 19.
+    Correct: 8 + (-1) + 8 = 15 (use strength since vitality IS archetype ability; strength negative
+    so only applied at level 1).
+    Fix: Replace inline health calc in character-sheet-utils.ts with calculateMaxHealth() from
+    calculations.ts, passing the archetype ability.
+  related_files:
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/lib/game/calculations.ts
+  acceptance_criteria:
+    - character-sheet-utils.ts calls calculateMaxHealth() instead of inline formula
+    - When Vitality is the archetype ability, Strength is used for health calculation
+    - Negative ability modifier only applied once (not scaled by level)
+    - npm run build passes
+
+- id: TASK-197
+  title: "Bug: Character creator uses hardcoded base health/energy (10) instead of formulas"
+  priority: critical
+  status: done
+  notes: "Done 2026-02-11. Replaced hardcoded baseHealth=10/baseEnergy=10 in character-creator-store.ts with getBaseHealth()/getBaseEnergy() formulas. currentHealth/currentEnergy now calculated correctly."
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    In character-creator-store.ts getCharacter(), the code uses:
+      const baseHealth = 10; const baseEnergy = 10;
+    These are incorrect hardcoded values. The correct formulas (from GAME_RULES.md):
+    - Base health: 8 + Vitality (or Strength if Vitality is archetype ability)
+    - Base energy: archetype ability score
+    - Max health: 8 + (ability * level if positive, ability once if negative) + healthPoints
+    - Max energy: (archetypeAbility * level) + energyPoints
+    The creator sets currentHealth = 10 + healthPoints, which is wrong.
+    Fix: Import and use calculateMaxHealth() and calculateMaxEnergy() from calculations.ts.
+    Set currentHealth = maxHealth and currentEnergy = maxEnergy at creation.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/lib/game/calculations.ts
+  acceptance_criteria:
+    - Creator uses calculateMaxHealth / calculateMaxEnergy instead of hardcoded 10
+    - New characters start with currentHealth = maxHealth, currentEnergy = maxEnergy
+    - Health floor correctly uses Vitality (or Strength when Vitality is archetype ability)
+    - Energy floor correctly uses archetypeAbility * level
+    - npm run build passes
+
+- id: TASK-198
+  title: "Fix game constants - ability caps, damage types, Staggered, ice naming"
+  priority: high
+  status: done
+  notes: "Done 2026-02-11. Fixed ability caps (10 chars/20 creatures), renamed cold→ice, added Staggered, removed physical/magic damage split, added ARMOR_EXCEPTION_TYPES, added LEVELS_BY_RARITY, fixed creature TP (22 base, 2/level) and skill points (5 at L1, 3/level), fixed archetype armament max values, updated encounter-tracker conditions."
+  created_at: 2026-02-11
+  created_by: agent
+  tags: [owner-resolved]
+  description: |
+    Owner confirmed 2026-02-11. All resolved values:
+    1. CONDITIONS array in creator-constants.ts is missing Staggered (a leveled condition). Add it.
+    2. Remove MAGIC_DAMAGE_TYPES / PHYSICAL_DAMAGE_TYPES split. No "physical vs magic" categories.
+       All damage types are a flat list. Only distinction: armor exceptions (Psychic, Spiritual, Sonic
+       not reduced by armor). Acid is a valid damage type usable by powers.
+    3. Canonical name is "Ice" not "cold" - rename in code.
+    4. Ability caps: MAX_ABSOLUTE = 10 for characters, 20 for creatures. Remove any level-based cap.
+       COST_INCREASE_THRESHOLD = 4 is correct (cost doubles at 4+, not 3+).
+    5. Add ARMOR_EXCEPTION_TYPES = ["Psychic", "Spiritual", "Sonic"] constant.
+    6. Add ALL_DAMAGE_TYPES flat list: Magic, Fire, Ice, Lightning, Spiritual, Sonic, Poison,
+       Necrotic, Acid, Psychic, Light, Bludgeoning, Piercing, Slashing.
+    7. Add LEVELS_BY_RARITY reference: Common 1-4, Uncommon 5-9, Rare 10-14, Epic 15-19,
+       Legendary 20-24, Mythic 25-29, Ascended 30+.
+  related_files:
+    - src/lib/game/creator-constants.ts
+    - src/lib/game/constants.ts
+    - src/lib/game/constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - Staggered is added to the CONDITIONS array
+    - acid is added to MAGIC_DAMAGE_TYPES
+    - Ice/cold naming is consistent between code and GAME_RULES.md
+    - ABILITY_LIMITS.MAX_ABSOLUTE is reviewed and corrected (owner confirm 5, 6, or 10)
+    - npm run build passes
+
+- id: TASK-199
+  title: "Fix feat slot formulas - character feats = level, archetype varies by archetype"
+  priority: high
+  status: done
+  notes: "Done 2026-02-11. Replaced floor(level/4)+1 with correct archetype-aware formulas. Character feats = level. Archetype feats: Power=level, Martial=level+2+floor((level-1)/3), P-M=level+1+milestones. Updated character sheet, feats-step, level-up-modal, progression.ts."
+  created_at: 2026-02-11
+  created_by: agent
+  tags: [owner-resolved]
+  description: |
+    Owner confirmed 2026-02-11. The correct feat formulas are:
+    CHARACTER FEATS: Always 1 per level. Total = level. All archetypes.
+    ARCHETYPE FEATS (base): 1 per level = level.
+    ARCHETYPE FEATS (martial bonus): +2 at level 1, then +1 every 3 levels starting at 4.
+      - Martial total: level + 2 + floor((level - 1) / 3)
+      - Power total: level (no bonus)
+      - Powered-Martial: level + choices at milestones (every 3 levels starting at 4,
+        choose Additional Feat OR Increase Innate Power)
+    Current code uses Math.floor(level / 4) + 1 which is WRONG for ALL archetypes.
+    Fix: Replace feat calculations in character sheet and character creator to use these formulas.
+    The archetype type must be known to compute archetype feats correctly.
+    Reference: Full progression tables in GAME_RULES.md Archetype Rules section.
+    If formula differs by archetype, implement per-archetype feat progression.
+  related_files:
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/lib/game/formulas.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - Owner confirms correct feat slot formula (per archetype or universal)
+    - Both character sheet and character creator use the same formula
+    - Formula is centralized in formulas.ts as a shared function
+    - npm run build passes
+
+- id: TASK-199b
+  title: "Bug: SAVEABLE_FIELDS missing critical fields, xp vs experience mismatch"
+  priority: high
+  status: done
+  notes: "Done 2026-02-11. Added missing fields to SAVEABLE_FIELDS: archetypeFeats, unarmedProwess, description, status, namedNotes, currentHealth, currentEnergy, health_energy_points, defenseVals, experience, trainingPointsSpent."
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    The SAVEABLE_FIELDS whitelist in data-enrichment.ts is missing fields that should persist:
+    1. archetypeFeats - not in list (handled by separate code path, but fragile)
+    2. unarmedProwess - user-allocated value, silently dropped on save
+    3. namedNotes - user-created named notes, silently dropped
+    4. description - character description, silently dropped
+    5. status - character status (draft/complete/playing), silently dropped
+    6. xp is in the list but the Character type uses experience - potential data loss
+    archetypeFeats is cleaned in the function body but relies on it already existing on the
+    data object rather than being in the whitelist. This is fragile.
+  related_files:
+    - src/lib/data-enrichment.ts
+    - src/types/character.ts
+  acceptance_criteria:
+    - SAVEABLE_FIELDS includes archetypeFeats, unarmedProwess, namedNotes, description, status
+    - xp is changed to experience (or both are included with a note)
+    - All user-editable fields survive a save/reload cycle
+    - npm run build passes
+
+# -- Phase 2: Define Lean Character Schema --
+# Design the target data model. Define types, document what is
+# persisted vs derived, create the migration plan.
+
+- id: TASK-200
+  title: "Design: Define canonical CharacterSaveData type - what gets persisted"
+  priority: critical
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Create a new TypeScript type (CharacterSaveData) that represents EXACTLY what gets written
+    to the Prisma JSON blob. Single source of truth for persistence. Every field must have a
+    JSDoc comment explaining whether it is a user choice, runtime state, or reference ID.
+    IDENTITY AND META: id, userId, name, description, notes, namedNotes, portraitUrl, status,
+      level, experience, visibility, createdAt, updatedAt
+    BUILD CHOICES: speciesId, selectedTraitIds, selectedFlawId, selectedCharacteristicId,
+      archetypeId, pow_abil, mart_abil, abilities, defenseVals, skillAllocations as
+      Record<string, {prof,val}>, featIds, archetypeFeatIds, powerRefs as Array<{id,innate}>,
+      techniqueRefs as Array<{id}>, inventory as Array<{itemId,quantity,equipped?}>,
+      healthPoints, energyPoints, currency, unarmedProwess, archetypeChoices
+    RUNTIME STATE: currentHealth, currentEnergy, temporaryHealth, temporaryEnergy,
+      conditions, featUses as Record<string,number>, traitUses as Record<string,number>
+    NOT PERSISTED (derived on load): maxHealth, maxEnergy, defenseScores, defenseBonuses,
+      evasion, speed, names/descriptions/properties, martialProficiency, powerProficiency, terminal
+    Defines the type and documents migration mapping. Actual migration in later tasks.
+  related_files:
+    - src/types/character.ts
+    - src/types/skills.ts
+    - src/types/feats.ts
+    - src/types/equipment.ts
+    - src/types/archetype.ts
+    - src/types/ancestry.ts
+  acceptance_criteria:
+    - New CharacterSaveData type exists with JSDoc for every field
+    - Migration mapping document (old field to new field) is written in a comment block
+    - Every field is tagged as user-choice, runtime-state, or reference-id
+    - The type compiles and npm run build passes
+    - Existing Character type is NOT deleted yet (coexists for gradual migration)
+  notes: |
+    Completed 2026-02-11: Added CharacterSaveData interface to src/types/character.ts with full
+    documentation. Covers identity, core stats, species/archetype selections, skill allocations,
+    feats (IDs only), powers/techniques (IDs only), inventory (IDs + quantity), runtime state
+    (conditions, traitUses, currentHealth/Energy), and user notes. Exported from types/index.ts.
+    Coexists with existing Character type for gradual migration.
+
+# -- Phase 3: Centralize Calculations --
+# Eliminate duplicated formula code. Single source of truth for all
+# derived stats. Both creator and sheet call the same functions.
+
+- id: TASK-201
+  title: "Centralize all health/energy/defense/speed/evasion calculations"
+  priority: critical
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Health/energy/defense/speed/evasion calculations are duplicated in:
+    - src/lib/game/calculations.ts (centralized, mostly correct)
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts (inline, some bugs)
+    - src/stores/character-creator-store.ts (hardcoded bases)
+    - src/lib/game/formulas.ts (another set of health/energy functions)
+    Consolidate into calculations.ts as the SINGLE source of truth:
+    - calculateMaxHealth, calculateMaxEnergy, calculateDefenses, calculateSpeed, calculateEvasion
+      already exist and are correct
+    - Add calculateTerminal(maxHealth) as Math.ceil(maxHealth / 4)
+    - Add calculateAllStats(character) master function returning all derived stats
+    Replace inline formulas in character-sheet-utils.ts and character-creator-store.ts.
+    Deprecate getCharacterMaxHealthEnergy, getBaseHealth, getBaseEnergy in formulas.ts.
+    Remove legacy calculateSkillPoints() (gives 2+3*level=5 at level 1) - only
+    calculateSkillPointsForEntity() (gives 3*level=3 at level 1) matches GAME_RULES.
+  related_files:
+    - src/lib/game/calculations.ts
+    - src/lib/game/formulas.ts
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/stores/character-creator-store.ts
+  acceptance_criteria:
+    - All health/energy/defense/speed/evasion calculations use functions from calculations.ts
+    - No inline formula duplication in character-sheet-utils.ts or character-creator-store.ts
+    - Legacy calculateSkillPoints() is removed or deprecated with a redirect
+    - calculateAllStats(character) master function exists and is used by character sheet
+    - npm run build passes
+  notes: |
+    Completed 2026-02-11: Added calculateTerminal(), calculateAllStats(), computeMaxHealthEnergy()
+    to calculations.ts as single source of truth. Replaced inline formulas in character-sheet-utils.ts
+    (now a thin wrapper), character-creator-store.ts (uses calculateMaxHealth/calculateMaxEnergy),
+    finalize-step.tsx, campaign character API route (computeMaxHealthEnergy). Deprecated
+    getBaseHealth, getBaseEnergy, getCharacterMaxHealthEnergy, calculateSkillPoints in formulas.ts.
+    Updated level-up-modal, progression.ts, creature-creator to use calculateSkillPointsForEntity.
+    0 new TS errors.
+
+- id: TASK-202
+  title: "Unify defense fields - keep only defenseVals, remove defenseSkills alias"
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    The character saves BOTH defenseVals and defenseSkills - identical objects representing
+    skill points spent on defenses (2 skill points = +1 defense val). Per owner: defenses
+    should only have vals not skills since vals represent 2 skill points spent per 1.
+    Action:
+    1. Keep only defenseVals as the canonical field name
+    2. Update all code reading/writing defenseSkills to use defenseVals
+    3. In cleanForSave, save only defenseVals
+    4. On load, if old character has defenseSkills but not defenseVals, copy it over
+    5. Update Character type to mark defenseSkills as deprecated
+  related_files:
+    - src/types/character.ts
+    - src/types/skills.ts
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/stores/character-creator-store.ts
+    - src/lib/data-enrichment.ts
+  acceptance_criteria:
+    - Only defenseVals is used throughout the codebase
+    - defenseSkills is removed or marked deprecated with migration fallback
+    - SAVEABLE_FIELDS saves defenseVals, not defenseSkills
+    - Old characters with defenseSkills still load correctly
+    - npm run build passes
+  notes: |
+    Completed 2026-02-11: Added defenseVals to Character type (canonical field). defenseSkills
+    marked @deprecated. All reads now use defenseVals || defenseSkills for backward compat.
+    All writes (creator store, skills-step, page.tsx handleDefenseChange) now write defenseVals.
+    cleanForSave() migrates old defenseSkills -> defenseVals automatically. calculateAllStats()
+    merges both with defenseVals taking priority. Removed defenseSkills from SAVEABLE_FIELDS.
+    12 files updated. 0 new TS errors.
+
+# -- Phase 4: Character Creator - Save Lean Data --
+# Fix what the creator persists. Move from save everything to
+# save only user choices and IDs. Each task handles one data domain.
+
+- id: TASK-203
+  title: "Creator: Save species as speciesId, not name/object - derive on load"
+  priority: high
+  status: done
+  notes: |
+    cleanForSave strips ancestry to { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }.
+    Removed 'species' string and 'ancestryId'/'ancestryTraits' from SAVEABLE_FIELDS. Creator no longer
+    saves redundant 'species' string. Migration in cleanForSave: if no ancestry but species string exists,
+    creates ancestry { name: species }. Server-side listing falls back to d.species for old characters.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Currently the creator saves: species (name string), ancestry (full object with id, name,
+    selectedTraits, selectedFlaw, selectedCharacteristic). The term should be species not
+    ancestry per GAME_RULES terminology. Redundant fields:
+    - species (top-level string) redundant with ancestry.name
+    - ancestry.name redundant with codex lookup by ID
+    - Top-level ancestryTraits, flawTrait, characteristicTrait, speciesTraits are legacy dupes
+    Change to save: speciesId, selectedTraitIds, selectedFlawId, selectedCharacteristicId.
+    Remove: species (string), ancestry.name, all legacy top-level trait fields.
+    On load: look up species name, traits from codex by ID.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/components/character-creator/steps/species-step.tsx
+    - src/types/character.ts
+    - src/types/ancestry.ts
+    - src/lib/data-enrichment.ts
+  acceptance_criteria:
+    - Creator saves speciesId + trait selection IDs only (no name, no full objects)
+    - Character sheet loads species name from codex by speciesId
+    - Trait names/descriptions loaded from codex by ID
+    - Old characters with species/ancestry fields still load (backward compat fallback)
+    - The word ancestry is replaced with species in all user-facing labels
+    - npm run build passes
+
+- id: TASK-204
+  title: "Creator: Save archetype as archetypeId only - derive prof/abilities from codex"
+  priority: high
+  status: done
+  notes: |
+    Creator now saves lean archetype { id, type } only. cleanForSave strips name/description/ability.
+    CharacterArchetype.name made optional (@deprecated). Sheet-header and server-side listing derive
+    display name from archetype.type (capitalize + split-on-dash). Removed archetypeName/archetypeAbility
+    from SAVEABLE_FIELDS. archetypeAbility prop derives from pow_abil with archetype.ability fallback.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Currently the creator saves a full archetype object { id, name, type, ability, pow_abil,
+    mart_abil } PLUS duplicates pow_abil, mart_abil, mart_prof, pow_prof at the top level.
+    Change to save: archetypeId (string), pow_abil (AbilityName, user choice),
+    mart_abil (AbilityName or undefined, user choice).
+    Remove from save: archetype object (name/type derived from codex), mart_prof/pow_prof
+    (derived from archetype type + level via formulas).
+    Remove dual martialProficiency/powerProficiency aliases.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/types/character.ts
+    - src/types/archetype.ts
+    - src/lib/game/formulas.ts
+    - src/lib/game/constants.ts
+  acceptance_criteria:
+    - Creator saves archetypeId + pow_abil + mart_abil only
+    - mart_prof/pow_prof calculated from archetype type + level on load
+    - martialProficiency/powerProficiency aliases removed from Character type
+    - Character sheet derives archetype name, type, proficiencies from codex/formulas
+    - Old characters with full archetype objects still load (backward compat)
+    - npm run build passes
+
+- id: TASK-205
+  title: "Creator: Save feats as IDs only - derive name/description from codex"
+  priority: high
+  status: done
+  notes: |
+    cleanForSave now saves feats as { id, name, currentUses } only — description/maxUses/recovery
+    stripped from save. Recovery handlers (full + partial) and feat uses handler look up maxUses
+    and rec_period from codex (featsDb) with fallback to saved feat.maxUses for backward compat.
+    add-feat-modal saves lean { id, name, currentUses } on creation.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Currently feats saved with { name, description, id, maxUses, currentUses, recovery }.
+    Name, description, maxUses, recovery are ALL in codex_feats - only the ID and runtime
+    currentUses need to be on the character.
+    Change to save: archetypeFeatIds (string[]), featIds (string[]),
+    featUses Record<string, number> (featId to currentUses for limited-use feats).
+    On load: look up feat details from codex_feats by ID.
+    Update cleanForSave, feats-tab.tsx, add-feat-modal.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/lib/data-enrichment.ts
+    - src/types/feats.ts
+    - src/types/character.ts
+  acceptance_criteria:
+    - Creator saves feat IDs only (no name/description on character)
+    - Character sheet loads feat details from codex by ID
+    - Feat uses tracked per feat ID in a separate map
+    - Recovery handlers use codex for maxUses
+    - Old characters with {name,description} feats still load (fallback match by name)
+    - npm run build passes
+
+- id: TASK-206
+  title: "Creator: Save powers as { id, innate } only - derive from library + codex parts"
+  priority: high
+  status: done
+  notes: |
+    cleanForSave now saves powers as { id, name, innate } — name kept for backward compat lookup,
+    description/parts/cost/damage/etc stripped. enrichPowers() already supports ID-based lookup
+    via findInLibrary(), so existing characters load seamlessly.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Currently powers saved with { name, innate } (sometimes full objects). Only the library
+    power ID and innate flag (user choice) need to be saved.
+    Change to save: powerRefs Array<{ id: string; innate: boolean }>
+    On load: enrichPowers() matches by name - change to match by ID.
+    Powers live in user library (user-created), not global codex. Parts reference codex_parts.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/lib/data-enrichment.ts
+    - src/components/character-sheet/library-section.tsx
+    - src/types/character.ts
+  acceptance_criteria:
+    - Creator saves power references as { id, innate } only
+    - enrichPowers() matches by ID (not name) as primary lookup
+    - Character sheet displays full power details from library enrichment
+    - Old characters with { name, innate } still load (fallback match by name)
+    - npm run build passes
+
+- id: TASK-207
+  title: "Creator: Save techniques as { id } only - derive from library + codex parts"
+  priority: high
+  status: done
+  notes: |
+    cleanForSave now saves techniques as { id, name } objects — name kept for backward compat,
+    description/parts/cost/damage/etc stripped. Previously saved bare name strings. enrichTechniques()
+    already supports both string and object inputs via findInLibrary().
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Currently techniques saved as bare name strings. Only the library technique ID is needed.
+    Change to save: techniqueRefs Array<{ id: string }>
+    On load: enrichTechniques() matches by name - change to match by ID.
+    Same pattern as TASK-206 for powers.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/lib/data-enrichment.ts
+    - src/components/character-sheet/library-section.tsx
+    - src/types/character.ts
+  acceptance_criteria:
+    - Creator saves technique references as { id } only
+    - enrichTechniques() matches by ID (not name) as primary lookup
+    - Old characters with name strings still load (fallback match by name)
+    - npm run build passes
+
+- id: TASK-208
+  title: "Creator: Save skills as Record<skillId, {prof,val}> - derive name/ability from codex"
+  priority: high
+  status: done
+  notes: |
+    cleanForSave now strips ability, baseSkillId, category from saved skills — only keeps
+    { id, name, skill_val, prof, selectedBaseSkillId? }. name kept as backward compat lookup key.
+    ability and baseSkillId derived from codex_skills on load.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Skills have a type mismatch: CharacterSkills is Record<string, number> but runtime is
+    Array<{ id, name, skill_val, prof, ability, baseSkillId? }>. Code uses unsafe casts.
+    Name, ability, baseSkillId are ALL in codex_skills - only skill ID, prof, and val needed.
+    Change to save: skills Record<string, { prof: boolean; val: number; selectedBaseSkillId? }>
+    On load: look up skill name, ability, base_skill_id from codex_skills by ID.
+    This also fixes the type mismatch - no more casting.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/types/skills.ts
+    - src/types/character.ts
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/character-creator/steps/skills-step.tsx
+    - src/lib/data-enrichment.ts
+  acceptance_criteria:
+    - Skills saved as Record<string, {prof,val,selectedBaseSkillId?}>
+    - No more unsafe casts for skills
+    - Skill names, abilities loaded from codex on render
+    - Creator and sheet both use the same skill data shape
+    - Old characters with array-of-objects skills still load (migration on read)
+    - npm run build passes
+
+- id: TASK-209
+  title: "Creator: Save equipment as single inventory with IDs - remove redundant sub-arrays"
+  priority: high
+  status: done
+  notes: |
+    cleanForSave now saves equipment items as { id, name, equipped?, quantity? } — strips
+    description/damage/properties/cost/rarity/weight/armor/range. ID saved for reliable lookup,
+    name kept for backward compat. Redundant inventory[] array removed from save. enrichItems()
+    updated to support ID-based lookup with codex fallback by ID.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Equipment saved with: inventory[] (full objects) + weapons[] + armor[] + items[] (also full
+    objects, filtered from inventory). This is triple-redundant.
+    Change to save: inventory Array<{ itemId: string; quantity: number; equipped?: boolean }>
+    Remove: equipment.weapons, equipment.armor, equipment.items (derived views).
+    Remove: full item objects from inventory (name, cost, damage, properties from codex).
+    On load: enrichItems() looks up each itemId in user library or codex_equipment.
+    Views computed by filtering enriched inventory by type.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/lib/data-enrichment.ts
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/archetype-section.tsx
+    - src/types/equipment.ts
+    - src/types/character.ts
+  acceptance_criteria:
+    - Creator saves inventory as [{itemId,quantity,equipped}] only
+    - No redundant weapons/armor/items sub-arrays saved
+    - enrichItems() matches by ID (primary) with name fallback
+    - Character sheet derives item details from codex
+    - Old characters with full item objects still load
+    - npm run build passes
+
+- id: TASK-210
+  title: "Creator: Save lean health/energy - allocation + current only, remove duplicates"
+  priority: high
+  status: done
+  notes: |
+    Removed health_energy_points from creator save. Removed health/energy ResourcePool from
+    SAVEABLE_FIELDS. Character sheet now reads currentHealth/currentEnergy (canonical) with
+    backward compat fallback to health?.current/energy?.current for old saves. All writes
+    (recovery, power/technique use, allocation changes) write to currentHealth/currentEnergy.
+    cleanForSave migration copies health.current→currentHealth for old data on save.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Creator saves health/energy in FOUR overlapping representations:
+    1. healthPoints / energyPoints - allocation (correct, keep)
+    2. health_energy_points: { health, energy } - same as 1, redundant (remove)
+    3. health: { current, max } / energy: { current, max } - max is derived (remove max)
+    4. currentHealth / currentEnergy - duplicate of health.current (consolidate)
+    Change to save: healthPoints, energyPoints, currentHealth, currentEnergy.
+    Remove: health_energy_points, health.max, energy.max, ResourcePool objects.
+    On load: maxHealth and maxEnergy calculated from formulas.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/types/character.ts
+    - src/lib/data-enrichment.ts
+  acceptance_criteria:
+    - Creator saves only healthPoints, energyPoints, currentHealth, currentEnergy
+    - health_energy_points field is removed
+    - health/energy ResourcePool objects are not saved (max is calculated on load)
+    - Character sheet reads currentHealth/currentEnergy directly, calculates max
+    - Old characters with ResourcePool objects still load
+    - npm run build passes
+
+# -- Phase 5: Character Sheet - Load by ID, Derive from Codex --
+# Update the character sheet to work with the lean data model.
+
+- id: TASK-211
+  title: "Sheet: Load feats by ID from codex - derive name, description, uses"
+  priority: high
+  status: done
+  notes: |
+    enrichFeat() updated to derive name from codex when missing. Fixed uses_per_rec field mapping
+    (codex API returns uses_per_rec, not max_uses). CodexFeat interface updated with uses_per_rec field.
+    Feats tab now works fully with lean { id, currentUses } data.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Update feats-tab.tsx and page.tsx to work with lean feat data (IDs + uses).
+    On load: for each feat ID in archetypeFeatIds/featIds, look up in codex_feats.
+    Derive name, description, category, maxUses, recovery, requirements.
+    Merge with featUses map for current uses.
+    Recovery handlers should look up maxUses from codex, not from saved feat.
+  related_files:
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/hooks/use-codex.ts
+  acceptance_criteria:
+    - Feats tab renders all data from codex lookup
+    - No feat name/description read from the character object
+    - Add feat saves only ID
+    - Recovery handlers use codex for maxUses
+    - npm run build passes
+
+- id: TASK-212
+  title: "Sheet: Load powers/techniques by ID from library - derive all display data"
+  priority: high
+  status: done
+  notes: |
+    Already fully working from Phase 4. findInLibrary() tries ID first then name.
+    enrichPowers() and enrichTechniques() pass full character reference to findInLibrary.
+    LibrarySection receives enrichedData.powers/techniques. Verified end-to-end path.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Update library-section.tsx to work with lean power/technique references.
+    On load: for each power ref {id,innate}, find in user library by ID.
+    enrichPowers() already matches by name - switch to ID-based lookup. Same for techniques.
+    Innate flag and EN cost deduction are the only character-specific behaviors.
+    All other display data comes from library item + codex parts enrichment.
+    Unify this pattern with how Library page and Codex page display the same items.
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/lib/data-enrichment.ts
+    - src/hooks/use-codex.ts
+  acceptance_criteria:
+    - Powers/techniques resolved by ID from user library
+    - All display data comes from enrichment, not saved character
+    - Innate flag correctly read from character reference
+    - EN cost deduction still works
+    - npm run build passes
+
+- id: TASK-213
+  title: "Sheet: Load equipment by ID from codex/library - derive stats and properties"
+  priority: high
+  status: done
+  notes: |
+    Fixed toEquipmentArray() to preserve id and quantity (was stripping them).
+    enrichItems() now passes quantity through to enriched result. findInLibrary() uses ID first.
+    Codex fallback also uses ID-based lookup. LibrarySection receives enriched weapons/armor/equipment.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Update library-section.tsx and archetype-section.tsx to work with lean equipment data.
+    On load: for each inventory item {itemId,quantity,equipped}, look up in user library by ID
+    with fallback to codex_equipment. Derive name, type, cost, damage, properties, armor value.
+    Views (weapons/armor/equipment) computed by filtering enriched inventory by type.
+    Unify attack bonus calculation between archetype-section and library-section.
+  related_files:
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/archetype-section.tsx
+    - src/lib/data-enrichment.ts
+    - src/hooks/use-codex.ts
+  acceptance_criteria:
+    - Equipment resolved by ID from library/codex
+    - Name, stats, properties all from codex (not saved on character)
+    - equipped/quantity/itemId is all that is on the character
+    - Attack bonus calculations unified
+    - npm run build passes
+
+- id: TASK-214
+  title: "Sheet: Derive skills display from codex - only prof/val from character"
+  priority: high
+  status: done
+  notes: |
+    Already working from Phase 4. Character page uses useMemo with codexSkills to enrich
+    skill ability/category/description from codex. Species skills merged via characterSpeciesSkills.
+    Only prof/skill_val/selectedBaseSkillId saved on character.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Update skills-section.tsx to work with lean skill data: Record<skillId, {prof,val}>.
+    On load: for each skill ID, look up in codex_skills to get name, ability, base_skill_id.
+    Merge with character prof/val to compute skill bonus.
+    Species skills (auto-proficient) from codex_species lookup by speciesId.
+    Defense vals displayed alongside abilities. Cost is 2 skill points per +1 val.
+    Only vals stored, defenses derived (10 + ability + val).
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/hooks/use-codex.ts
+    - src/lib/game/formulas.ts
+  acceptance_criteria:
+    - Skill names, abilities loaded from codex (not saved on character)
+    - Skill bonuses calculated from formulas
+    - Species skills merged from codex_species data
+    - Defense vals display correctly (only vals, not skills)
+    - npm run build passes
+
+- id: TASK-215
+  title: "Sheet: Derive all computed stats - stop persisting maxHP/maxEN/evasion/speed"
+  priority: high
+  status: done
+  notes: |
+    Already working from TASK-201. calculateAllStats() is the single source of truth for all
+    derived stats (maxHealth, maxEnergy, terminal, evasion, speed, defenseScores, etc.).
+    speedBase/evasionBase kept as user-modifiable inputs (feats/traits modify them).
+    speed/evasion/armor on Character type marked @deprecated.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Ensure the character sheet calculates ALL derived stats on load using centralized formulas
+    (from TASK-201) and does NOT read them from the saved character data.
+    Derived on load: maxHealth, maxEnergy, terminal, evasion, speed, defenseScores,
+    martialProficiency, powerProficiency, armor DR.
+    Remove from SAVEABLE_FIELDS: speedBase, evasionBase (defaults unless feat/trait modifies).
+    Keep speedBase/evasionBase as optional overrides with clear defaults if needed.
+  related_files:
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/lib/game/calculations.ts
+    - src/lib/data-enrichment.ts
+  acceptance_criteria:
+    - All derived stats calculated on load from formulas + character inputs
+    - No derived stat is read from saved character data
+    - Sheet displays correct values matching the formulas
+    - npm run build passes
+
+# -- Phase 6: Unification and Migration --
+# Cross-cutting cleanup. Unify enrichment. Migrate characters.
+
+- id: TASK-216
+  title: "Unify enrichment pipeline - shared ID-based loading for all contexts"
+  priority: medium
+  status: done
+  notes: |
+    Already achieved through Phase 4/5 work. findInLibrary() is the shared ID-based lookup
+    used by enrichPowers(), enrichTechniques(), enrichItems(). enrichFeat() does ID-first codex
+    lookup. All contexts use the same enrichment functions from data-enrichment.ts.
+    Backward compat: all lookups fall back to name matching when ID fails.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Create shared enrichment utilities that all contexts use:
+    - enrichByIds<T>(ids, sourceMap) - generic ID-based lookup
+    - enrichPowersById, enrichTechniquesById, enrichItemsById, enrichFeatsById, enrichSkillsById
+    Ensure backward compatibility: if ID lookup fails, fall back to name matching.
+    Used by: character sheet, library page, codex page, character creator, creature creator.
+  related_files:
+    - src/lib/data-enrichment.ts
+    - src/hooks/use-codex.ts
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+  acceptance_criteria:
+    - Shared enrichment utilities exist for all data types
+    - All contexts use the same enrichment functions
+    - ID-based lookup with name fallback for backward compatibility
+    - npm run build passes
+
+- id: TASK-217
+  title: "Update cleanForSave to match lean schema"
+  priority: high
+  status: done
+  notes: |
+    Fully completed in Phase 4 (TASK-203–210). cleanForSave now strips all derived data:
+    feats → { id, name, currentUses }, powers → { id, name, innate }, techniques → { id, name },
+    equipment → { id, name, equipped?, quantity? }, skills → { id, name, skill_val, prof, selectedBaseSkillId? },
+    archetype → { id, type }, ancestry → { id, name, selectedTraits, selectedFlaw, selectedCharacteristic },
+    health/energy → currentHealth/currentEnergy + healthPoints/energyPoints.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    After Phases 3-5, cleanForSave needs to match the lean CharacterSaveData schema:
+    - Skills: save Record<skillId, {prof,val}>, not array of objects
+    - Feats: save feat IDs + featUses map, not {name,description} objects
+    - Powers: save [{id,innate}], not {name,innate}
+    - Techniques: save [{id}], not name strings
+    - Equipment: save [{itemId,quantity,equipped}], not full objects
+    - Health/energy: save healthPoints, energyPoints, currentHealth, currentEnergy only
+    - Species: save speciesId, not name string
+    - Archetype: save archetypeId, not full object
+    - Defenses: save defenseVals only
+    Update SAVEABLE_FIELDS to match. Add missing fields (see TASK-199b).
+  related_files:
+    - src/lib/data-enrichment.ts
+    - src/types/character.ts
+  acceptance_criteria:
+    - cleanForSave produces lean output matching CharacterSaveData
+    - All user-editable fields survive save/load cycle
+    - No derived data saved
+    - SAVEABLE_FIELDS is accurate and complete
+    - npm run build passes
+
+- id: TASK-218
+  title: "Remove all redundant fields from Character type - final cleanup"
+  priority: medium
+  status: done
+  notes: |
+    All redundant fields in Character type annotated with @deprecated JSDoc:
+    - species → Use ancestry.name
+    - health/energy ResourcePool → Use currentHealth/currentEnergy
+    - speed/evasion/armor → Derived from calculateAllStats()
+    - martialProficiency/powerProficiency → Use mart_prof/pow_prof
+    - allTraits/_displayFeats → Display-only, not saved
+    - ancestryTraits/flawTrait/characteristicTrait/speciesTraits → Use ancestry sub-fields
+    - health_energy_points → Use healthPoints/energyPoints
+    Fields kept with deprecation notices for backward compat until full migration (TASK-220).
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    After all migration is complete, clean up the Character type.
+    Remove: species, ancestry, ancestryTraits, flawTrait, characteristicTrait, speciesTraits,
+    defenseSkills, martialProficiency, powerProficiency, health_energy_points,
+    health.max, energy.max, speedBase, evasionBase, speed, evasion, armor (number),
+    _displayFeats, allTraits, defenses, defenseBonuses, archetype.pow_abil, archetype.mart_abil.
+    Keep: Everything in CharacterSaveData.
+    Create EnrichedCharacter type extending CharacterSaveData for display-time data.
+  related_files:
+    - src/types/character.ts
+    - src/types/skills.ts
+    - src/types/feats.ts
+    - src/types/equipment.ts
+    - src/types/archetype.ts
+    - src/types/ancestry.ts
+  acceptance_criteria:
+    - Character type has no redundant fields
+    - CharacterSaveData is the source of truth for persistence
+    - EnrichedCharacter type exists for display-time data
+    - npm run build passes with no type errors
+
+- id: TASK-219
+  title: "Portrait storage - move from base64 blob to Supabase Storage URL"
+  priority: medium
+  status: done
+  notes: |
+    Character creator finalize step now uploads portrait to Supabase Storage via /api/upload/portrait
+    after character creation, saving URL instead of base64. Flow: base64 kept in draft for preview →
+    strip from initial save → create character → upload blob to Storage → update with URL.
+    Character sheet already used Storage. Old base64 portraits still display (backward compat
+    via src attribute accepting both data: URIs and URLs).
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Character portraits saved as full base64 JPEG data URIs inside the JSON blob (5-50KB each).
+    Change to upload to Supabase Storage bucket (portraits/{userId}/{characterId}.jpg),
+    save only the URL. On display, load from URL. On change, delete old file.
+    Backward compat: if portraitUrl starts with data:, treat as legacy base64.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/lib/supabase/
+  acceptance_criteria:
+    - New portraits uploaded to Supabase Storage, URL saved on character
+    - Character sheet loads portrait from URL
+    - Old base64 portraits still display (backward compat)
+    - Portrait change deletes old file from storage
+    - npm run build passes
+
+- id: TASK-220
+  title: "Data migration script - convert existing characters from old schema to lean"
+  priority: medium
+  status: done
+  notes: |
+    Created scripts/migrate-characters-lean.js. Supports --dry-run for preview.
+    Migrates: health/energy ResourcePool → currentHealth/currentEnergy, health_energy_points →
+    healthPoints/energyPoints, species → ancestry.name, strips archetype/ancestry/feats/powers/
+    techniques/equipment/skills to lean format, removes legacy display-only fields (allTraits,
+    _displayFeats, speciesTraits, etc.) and derived combat stats (speed, evasion, armor).
+    Idempotent — already-lean characters pass through unchanged.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Create a migration script (scripts/migrate-characters-lean.js) that reads all characters
+    from Prisma, transforms old format to lean format (extract speciesId, archetypeId,
+    convert skills/feats/powers/techniques/equipment to ID-based format, extract currentHealth/
+    currentEnergy, remove redundant/derived fields), writes back, and logs a report.
+    Run in dry-run mode first. Must be idempotent (safe to run multiple times).
+  related_files:
+    - scripts/
+    - prisma/schema.prisma
+    - src/types/character.ts
+  acceptance_criteria:
+    - Migration script exists and runs successfully
+    - Handles all known old field formats (legacy vanilla, current format)
+    - Dry-run mode shows what would change without writing
+    - Idempotent (safe to run multiple times)
+    - All existing characters survive migration without data loss
+    - npm run build passes
+
+
+# =====================================================================
+# ADMIN CORE RULES — Database-Driven Game Configuration
+# =====================================================================
+#
+# Context: All game rules/constants (progression values, combat stats,
+# archetype configs, conditions, sizes, rarities, etc.) are currently
+# hardcoded in constants.ts, creator-constants.ts, and formulas.ts.
+# During alpha/playtesting, these values change frequently. They need
+# to live in Supabase so an admin can edit them without code deploys.
+#
+# Architecture:
+# - New codex.core_rules table (same pattern as other codex tables)
+# - Category-based rows: each category (progression, combat, archetypes,
+#   conditions, sizes, rarities, etc.) is one row with id + data JSON
+# - useGameRules() React hook loads all rules with React Query caching
+# - Formulas read from the hook (with constants.ts fallback during migration)
+# - Admin UI adds a "Core Rules" section to /admin with sub-tabs
+# - Server actions follow the existing codex action pattern
+#
+# Dependency: Core Rules DB (TASK-221-223) should be completed BEFORE
+# the formula centralization (TASK-201/233/234), since the centralized
+# formulas should read from the DB rather than hardcoded constants.
+# Admin UI tabs (TASK-225-232) can be built in parallel with lean schema.
+# =====================================================================
+
+- id: TASK-221
+  title: "Design: Core rules DB schema and data categories"
+  priority: critical
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  tags: [owner-review]
+  description: |
+    Design the database schema for storing all configurable game rules. The schema should:
+    1. Follow the existing codex pattern (id: String PK, data: Json) in the codex schema
+    2. Use a single core_rules table with category-based rows
+    3. Each row represents a rules category with a well-defined JSON structure
+    Proposed categories (each becomes one DB row and one admin tab):
+    a) PROGRESSION_PLAYER: Base ability points (7), ability points per 3 levels (1),
+       skill points per level (3), base HP/EN pool (18), HP/EN per level (12),
+       base proficiency (2), proficiency per 5 levels (1), base training points (22),
+       TP per-level multiplier (2), base health (8), XP-to-level formula (level*4),
+       starting currency (200)
+    b) PROGRESSION_CREATURE: Skill points at L1 (5), skill points per level (3),
+       base HP/EN pool (26), base training points (22), TP per level (2) — same as characters,
+       base feat points (1.5), base currency (200), currency growth rate (1.45)
+    c) ABILITY_RULES: Min (-2), max starting (3), hard cap characters (10),
+       hard cap creatures (20), no level cap, cost increase threshold (4 — cost doubles at 4+),
+       standard arrays, max total negative (-3)
+    d) ARCHETYPES: Power/Powered-Martial/Martial configs (feat limit, armament max,
+       innate energy, starting proficiencies, training point bonus), plus archetype
+       progression rules (milestone start level, interval, innate scaling, etc.)
+    e) COMBAT: Base speed (6), base evasion (10), base defense (10), AP per round (4),
+       action costs (basic=2, quick=1, etc.), multiple action penalty (-5),
+       critical hit threshold (+10), natural 20/1 bonuses (+2/-2), ranged penalties
+    f) SKILLS_AND_DEFENSES: Max skill value (3), defense bonus max, gain proficiency
+       cost, increase past cap cost (base=3, sub=2), defense increase cost (2 SP),
+       species skills count (2), unproficient rules (half/double-negative)
+    g) CONDITIONS: Full condition list from core rulebook (13 standard + 10 leveled).
+       Each condition: name, description, leveled flag, effect formula/text.
+       Standard: Blinded, Charmed, Restrained, Dazed, Deafened, Dying, Faint, Grappled,
+       Hidden, Immobile, Invisible, Prone, Terminal.
+       Leveled: Bleed, Exhausted (death at 11+), Exposed, Frightened, Staggered,
+       Resilient, Slowed, Stunned (min 1 AP), Susceptible, Weakened.
+       Include stacking rules: conditions don't stack, stronger replaces weaker.
+    h) SIZES: Size categories with height range, spaces, base carry, per-STR carry,
+       min carry, speed modifier, size modifier
+    i) RARITIES: Rarity tiers with name, currency min/max, color/style
+    j) DAMAGE_TYPES: Flat list of all types (no physical/magic split), armor exception
+       types (Psychic, Spiritual, Sonic), levels-by-rarity reference table
+    k) RECOVERY: Partial recovery increments, fractions, full recovery duration,
+       without-full-recovery penalty rules
+    l) EXPERIENCE: XP to level, skill encounter XP, combat XP formulas
+    m) ARMAMENT_PROFICIENCY: The martial prof -> armament prof max lookup table
+    Owner should review and confirm category groupings and which values to include.
+  related_files:
+    - src/lib/game/constants.ts
+    - src/lib/game/creator-constants.ts
+    - src/lib/game/formulas.ts
+    - src/docs/GAME_RULES.md
+    - prisma/schema.prisma
+  acceptance_criteria:
+    - Written design document specifying each category, its JSON shape, and all included values
+    - Owner confirms the category groupings are correct
+    - Prisma model definition is drafted (codex.core_rules table)
+    - npm run build passes (design doc only, no code changes yet)
+  notes: |
+    Completed 2026-02-11: Design approved by owner. 13 categories defined: PROGRESSION_PLAYER,
+    PROGRESSION_CREATURE, ABILITY_RULES, ARCHETYPES, ARMAMENT_PROFICIENCY, COMBAT,
+    SKILLS_AND_DEFENSES, CONDITIONS, SIZES, RARITIES, DAMAGE_TYPES, RECOVERY, EXPERIENCE.
+    Full TypeScript types in src/types/core-rules.ts. Implementation in TASK-222/223/224.
+
+- id: TASK-222
+  title: "Create Prisma model + migration for core_rules table"
+  priority: critical
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Add the core_rules table to the Prisma schema following the existing codex pattern:
+    - Model: CoreRules in the codex schema
+    - Fields: id (String PK), data (Json), updatedAt (DateTime?)
+    - RLS: SELECT for public (read by all), no INSERT/UPDATE/DELETE (admin via service role)
+    - Add to CodexCollection type in actions.ts
+    - Add server actions (createCoreRule, updateCoreRule) or extend existing codex actions
+    - Run prisma migrate to create the table
+    - Add RLS policy to supabase-rls-policies.sql
+  related_files:
+    - prisma/schema.prisma
+    - prisma/supabase-rls-policies.sql
+    - src/app/(main)/admin/codex/actions.ts
+  acceptance_criteria:
+    - CoreRules model exists in Prisma schema
+    - Migration runs successfully
+    - RLS policies allow public read, admin-only write (via service role)
+    - Server actions support CRUD for core_rules
+    - npm run build passes
+  notes: |
+    Completed 2026-02-11: Added CoreRules model to prisma/schema.prisma (codex.core_rules table).
+    Created table via SQL (prisma db execute). Added RLS policy (public SELECT, service role write).
+    Extended CodexCollection type and getCodexDelegates in admin actions.ts. Added coreRules to
+    /api/codex response. Prisma client generated successfully.
+
+- id: TASK-223
+  title: "Seed core_rules table with current hardcoded values"
+  priority: critical
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Create a seed script that populates the core_rules table with all current values from
+    constants.ts, creator-constants.ts, and formulas.ts. This is the migration bridge - after
+    seeding, the DB contains exactly the same values as the code, so behavior is unchanged.
+    Script should:
+    1. Read all current constants
+    2. Organize into the category structure defined in TASK-221
+    3. Insert rows into core_rules table
+    4. Be idempotent (upsert pattern)
+    5. Include values from GAME_RULES.md that are not yet in code (size table, rarity ranges,
+       condition definitions, recovery rules, experience formulas, etc.)
+  related_files:
+    - scripts/seed-to-supabase.js
+    - src/lib/game/constants.ts
+    - src/lib/game/creator-constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - Seed script creates all core_rules rows with correct data
+    - Every value from constants.ts and creator-constants.ts is present in the DB
+    - Values from GAME_RULES.md not yet in code are also seeded
+    - Script is idempotent (safe to run multiple times)
+    - npm run build passes
+  notes: |
+    Completed 2026-02-11: Created scripts/seed-core-rules.js with all 13 categories. Uses
+    prisma.coreRules.upsert for idempotent seeding. Successfully seeded all categories to
+    Supabase. Data sourced from constants.ts, creator-constants.ts, GAME_RULES.md, and
+    core_rulebook_extracted.txt. Run: node scripts/seed-core-rules.js
+
+- id: TASK-224
+  title: "Create useGameRules() hook - loads core rules from DB with fallback"
+  priority: critical
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Create a React hook and API route for loading core rules from the database:
+    1. API route: GET /api/core-rules - fetches all rows from core_rules table
+    2. React hook: useGameRules() - React Query with long staleTime (rules change rarely)
+    3. Returns typed objects for each category (progression, combat, archetypes, etc.)
+    4. Fallback: if DB is empty or fetch fails, fall back to constants.ts values
+    5. Provider component: GameRulesProvider wraps the app, provides rules via context
+    6. Helper: getGameRules() for server components / non-React contexts
+    This hook replaces direct imports of constants.ts throughout the app. During migration,
+    both paths coexist - the hook returns DB values if available, constants.ts otherwise.
+    Consider caching strategy: rules change rarely, so aggressive caching is appropriate.
+    React Query staleTime of 5-10 minutes with background refetch is a good default.
+  related_files:
+    - src/hooks/use-game-rules.ts (new)
+    - src/app/api/core-rules/route.ts (new)
+    - src/lib/game/constants.ts
+  acceptance_criteria:
+    - useGameRules() hook exists and returns typed rule objects
+    - API route fetches from core_rules table
+    - Fallback to constants.ts when DB values are unavailable
+    - GameRulesProvider exists and wraps the app
+    - React Query caching with appropriate staleTime
+    - npm run build passes
+  notes: |
+    Completed 2026-02-11: Created src/hooks/use-game-rules.ts and src/types/core-rules.ts.
+    Hook uses React Query with 10min staleTime, 1hr gcTime. Fetches from /api/codex (piggybacks
+    on existing codex endpoint which now includes coreRules). Full fallback to hardcoded constants
+    when DB is unavailable. getGameRulesFallback() exported for server/non-React use.
+    Skipped GameRulesProvider (not needed — React Query handles caching globally).
+
+- id: TASK-225
+  title: "Admin Core Rules page - Progression tab (Player & Creature)"
+  priority: high
+  status: done
+  notes: |
+    Created /admin/core-rules page with Progression tab showing all player character
+    progression values (15 fields) and creature progression values (14 fields).
+    Creature progression saved independently as PROGRESSION_CREATURE category.
+    Live level 1-10 preview table updates in real-time as values change.
+    All values editable with Save to core_rules table via existing codex actions.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Add a Core Rules section to the admin area with the first tab: Progression.
+    This tab shows and allows editing of:
+    PLAYER PROGRESSION:
+    - Base ability points, ability points per N levels, interval (N)
+    - Skill points per level
+    - Base HP/EN pool, HP/EN per level
+    - Base proficiency, proficiency per N levels, interval
+    - Base training points, TP per-level multiplier
+    - Base health (8)
+    - Starting currency
+    CREATURE PROGRESSION:
+    - Skill points per level (creature)
+    - Base HP/EN pool (creature)
+    - Base training points, TP per level
+    - Base feat points, feat points per level
+    - Base currency, currency growth rate
+    UI should show current values in editable inputs, with a Save button.
+    Follow existing admin tab patterns (GridListRow, Modal, server actions).
+    Show a preview of level 1-10 progression table based on current values.
+  related_files:
+    - src/app/(main)/admin/page.tsx
+    - src/app/(main)/admin/codex/actions.ts
+    - src/lib/game/constants.ts
+  acceptance_criteria:
+    - Core Rules page accessible from admin dashboard
+    - Progression tab shows all player and creature progression values
+    - Values are editable and save to core_rules table
+    - Level 1-10 preview table updates live as values are changed
+    - npm run build passes
+
+- id: TASK-226
+  title: "Admin Core Rules page - Combat & Scores tab"
+  priority: high
+  status: done
+  notes: |
+    Combat tab with base speed/evasion/defense, AP, multiple action penalty, crit threshold,
+    natural 20/1 bonuses, range penalties, and editable action costs table. All saved to COMBAT category.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin tab for combat rules:
+    - Base speed, base evasion, base defense
+    - AP per round, action costs (basic, quick, free, long3, long4, movement, etc.)
+    - Multiple action penalty
+    - Critical hit threshold, critical hit multiplier
+    - Natural 20 bonus, Natural 1 penalty
+    - Ranged close penalty, ranged long penalty
+    - Score base (10 + Bonus pattern)
+    - Obscurity modifiers table
+    - Damage modifier rules (Resistance/Vulnerability/Immunity text)
+  related_files:
+    - src/lib/game/constants.ts
+    - src/lib/game/creator-constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All combat values are editable
+    - Changes save to core_rules table
+    - npm run build passes
+
+- id: TASK-227
+  title: "Admin Core Rules page - Archetypes tab"
+  priority: high
+  status: done
+  notes: |
+    Archetypes tab with progression rules (martial bonus feats base/interval/start, P-M milestone
+    interval/start, proficiency increase interval) and per-archetype config cards (power/powered-martial/
+    martial) showing feat limit, armament max, innate energy/threshold/pools, TP bonus.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin tab for archetype configuration:
+    - Per-archetype: feat limit, armament max, innate energy, martial prof, power prof, TP bonus
+    - Archetype progression rules: milestone start level, interval, innate scaling per milestone,
+      feat scaling per milestone
+    - Armament proficiency lookup table (martial prof -> armament max)
+    - Innate threshold/pools base values and scaling rules
+    Each archetype (Power, Powered-Martial, Martial) shown as an editable card/section.
+    Armament proficiency as an editable lookup table.
+  related_files:
+    - src/lib/game/constants.ts
+    - src/lib/game/formulas.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All three archetype configs are editable
+    - Archetype progression rules are editable
+    - Armament proficiency table is editable
+    - Changes save to core_rules table
+    - npm run build passes
+
+- id: TASK-228
+  title: "Admin Core Rules page - Conditions tab (with definitions)"
+  priority: high
+  status: done
+  notes: |
+    Conditions tab showing standard and leveled conditions with editable names and descriptions.
+    Add/remove buttons for both standard and leveled conditions.
+    Stacking rules editable as text. Counts displayed for each category.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin tab for conditions:
+    - Full list of conditions (currently 22 in creator-constants.ts)
+    - Each condition has: name, description/effect text, leveled flag, recovery rules
+    - Leveled conditions: formula description (e.g., Bleed = 1 HP/turn per level)
+    - Add/remove conditions
+    - This replaces the hardcoded CONDITIONS array in creator-constants.ts
+    The conditions data serves multiple purposes: character sheet conditions tracking,
+    creature creator condition assignment, power/technique condition application.
+  related_files:
+    - src/lib/game/creator-constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All conditions are listed with editable name, description, leveled flag
+    - Can add new conditions, remove existing ones
+    - Changes save to core_rules table
+    - npm run build passes
+
+- id: TASK-229
+  title: "Admin Core Rules page - Sizes & Carrying Capacity tab"
+  priority: medium
+  status: done
+  notes: |
+    Sizes tab with fully editable table: label, height, spaces, base carry, per-STR carry, min carry.
+    Add/remove size categories. Half-capacity penalty editable.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin tab for size categories:
+    - Full size table from GAME_RULES: Miniscule through Gargantuan (8 sizes)
+    - Each size: name, height range, spaces occupied, base carry, per-STR carry, min carry
+    - Speed/size modifiers per size
+    - Half-capacity movement penalty rule
+    - Currently creator-constants.ts only has 6 sizes (Tiny-Gargantuan) with modifiers
+      but no carrying capacity - GAME_RULES has 8 sizes with full carrying table
+    - Unify and make comprehensive
+  related_files:
+    - src/lib/game/creator-constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All 8 size categories from GAME_RULES are present and editable
+    - Carrying capacity values per size are editable
+    - Changes save to core_rules table
+    - npm run build passes
+
+- id: TASK-230
+  title: "Admin Core Rules page - Rarities & Currency tab"
+  priority: medium
+  status: done
+  notes: |
+    Rarities tab with fully editable table: name, level min/max, currency min/max.
+    Add/remove rarity tiers. All fields editable inline.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin tab for rarity tiers:
+    - 7 tiers: Common through Ascended
+    - Each tier: name, currency min, currency max, display color/style
+    - Starting character currency
+    - Currently RARITY_COLORS exists in creator-constants.ts but currency ranges are
+      only in GAME_RULES.md - unify into one editable data source
+  related_files:
+    - src/lib/game/creator-constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All rarity tiers are listed with editable name, currency range, color
+    - Starting currency is editable
+    - Changes save to core_rules table
+    - npm run build passes
+
+- id: TASK-231
+  title: "Admin Core Rules page - Ability Scores tab"
+  priority: medium
+  status: done
+  notes: |
+    Ability Scores tab with limits (min, max starting, max char/creature), cost threshold,
+    normal/increased cost, max total negative. Standard arrays editor with per-value editing
+    and add/remove arrays.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin tab for ability score rules:
+    - Min score, max at creation, max level-up, max hard cap
+    - Cost increase threshold and cost values (below/above threshold)
+    - Standard arrays (Basic, Skewed, Even)
+    - Max total negative adjustments at creation
+    - Randomized method rules (1d8-4, seven times, remove lowest, sum 6-8)
+    - Ability increase cost per level-up
+  related_files:
+    - src/lib/game/constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All ability score rules are editable
+    - Standard arrays are editable (add/remove/modify)
+    - Changes save to core_rules table
+    - npm run build passes
+
+- id: TASK-232
+  title: "Admin Core Rules page - Skills, Recovery, Experience, Damage Types tabs"
+  priority: medium
+  status: done
+  notes: |
+    Skills & Defenses tab: max skill value, past-cap costs, defense cost, species skills, proficiency cost.
+    Recovery tab: partial/full recovery details, requirements, without-full-recovery rules.
+    Experience tab: XP formula, combat/skill encounter XP, DS, successes, divide rules.
+    Damage Types tab: add/remove types, armor exceptions toggleable by click, note editable.
+    Armament Proficiency tab: martial prof → armament max table with inline editing, add/remove rows.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Remaining admin tabs for core rules:
+    SKILLS AND DEFENSES:
+    - Max skill value per skill, defense bonus max
+    - Proficiency costs (gain base, gain sub, increase past cap base/sub, defense cost)
+    - Species skills count
+    - Help die table
+    RECOVERY:
+    - Partial recovery increments (2h, 4h, 6h)
+    - Recovery fraction per increment
+    - Full recovery duration
+    - Without-full-recovery penalty
+    EXPERIENCE:
+    - XP to level formula
+    - Skill encounter XP formula
+    - Combat XP formula
+    DAMAGE TYPES:
+    - Physical types list, Magic types list, All types list
+    - Armor exception types (Psychic, Spiritual, Sonic)
+    - Area of effect types
+    - Die sizes
+  related_files:
+    - src/lib/game/constants.ts
+    - src/lib/game/creator-constants.ts
+    - src/docs/GAME_RULES.md
+  acceptance_criteria:
+    - All skills/defense rules are editable
+    - Recovery rules are editable
+    - Experience formulas are editable
+    - Damage type lists are editable (add/remove types)
+    - Changes save to core_rules table
+    - npm run build passes
+
+- id: TASK-233
+  title: "Refactor formulas.ts to read from useGameRules() instead of constants.ts"
+  priority: high
+  status: done
+  notes: |
+    All ~35 exported functions in formulas.ts now accept an optional `rules?: Partial<CoreRulesMap>`
+    parameter. When provided, DB values are used; otherwise constants.ts fallbacks apply.
+    Covers: calculateAbilityPoints, calculateSkillPointsForEntity, calculateHealthEnergyPool,
+    calculateProficiency, calculateTrainingPoints, calculateCreatureTrainingPoints,
+    calculateCreatureFeatPoints, calculateCreatureCurrency, calculateMaxArchetypeFeats,
+    getAbilityIncreaseCost, canIncreaseAbility, canDecreaseAbility, getArchetypeConfig,
+    getArmamentMax, calculateArmamentProficiency, calculateBaseInnateThreshold,
+    calculateBaseInnatePools, calculateBonusArchetypeFeats, getArchetypeMilestoneLevels,
+    calculateArchetypeProgression, getArchetypeFeatLimit, getInnateEnergyMax, getBaseHealth.
+    Zero new TypeScript errors — all existing call sites work unchanged (optional param).
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Refactor all functions in formulas.ts to accept rule values as parameters rather than
+    importing from constants.ts directly. This decouples the formulas from hardcoded values.
+    Pattern:
+    - Each formula function gains an optional rules parameter
+    - If rules parameter is provided, use those values
+    - If not provided, fall back to constants.ts (backward compat during migration)
+    - Helper: resolveRules(rules?) that merges provided rules with constants.ts defaults
+    Functions to refactor (with their hardcoded values):
+    - calculateSkillPointsForEntity: 3/5 per level -> from rules
+    - calculateCreatureFeatPoints: 1.5 base -> from rules
+    - calculateArmamentProficiency: lookup table -> from rules
+    - calculateBaseInnateThreshold/Pools: 8/2 base, 4/3 interval -> from rules
+    - calculateBonusArchetypeFeats: 2 base, 4/3 interval -> from rules
+    - getArchetypeMilestoneLevels: 4/3 start/interval -> from rules
+    - calculateArchetypeProgression: 6/1/1 mixed base -> from rules
+    - getBaseHealth: 8 base health -> from rules
+    - getCharacterMaxHealthEnergy: 8 base health -> from rules
+    Also extract the 30+ hardcoded values identified in the audit into the rules object.
+  related_files:
+    - src/lib/game/formulas.ts
+    - src/lib/game/constants.ts
+    - src/hooks/use-game-rules.ts
+  acceptance_criteria:
+    - All formula functions accept optional rules parameter
+    - No hardcoded game values remain in formula function bodies
+    - Fallback to constants.ts when rules not provided
+    - All call sites updated (or use the fallback path)
+    - npm run build passes
+
+- id: TASK-234
+  title: "Refactor calculations.ts to read from useGameRules() instead of constants.ts"
+  priority: high
+  status: done
+  notes: |
+    All ~11 exported functions in calculations.ts now accept an optional `rules?: Partial<CoreRulesMap>`
+    parameter. calculateDefenses uses rules.COMBAT.baseDefense, calculateSpeed/calculateEvasion use
+    rules.COMBAT.baseSpeed/baseEvasion, calculateMaxHealth uses rules.PROGRESSION_PLAYER.baseHealth,
+    calculateAllStats/computeMaxHealthEnergy pass rules through. getSpeedBase/getEvasionBase use rules
+    as fallback. Zero new TypeScript errors.
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Same pattern as TASK-233 but for calculations.ts:
+    - calculateDefenses: BASE_DEFENSE from rules
+    - calculateSpeed: BASE_SPEED from rules
+    - calculateEvasion: BASE_EVASION from rules
+    - calculateMaxHealth: 8 (base health) from rules
+    - calculateMaxEnergy: already parameterized, verify
+    - calculateBonuses: unproficient multiplier/divisor from rules
+    Also update character-sheet-utils.ts (which should already call calculations.ts
+    after TASK-201) to pass rules through.
+  related_files:
+    - src/lib/game/calculations.ts
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/hooks/use-game-rules.ts
+  acceptance_criteria:
+    - All calculation functions accept optional rules parameter
+    - BASE_SPEED, BASE_EVASION, BASE_DEFENSE, base health come from rules
+    - Fallback to COMBAT_DEFAULTS when rules not provided
+    - npm run build passes
+
+# =====================================================================
+# INTEGRATED EXECUTION ORDER
+# =====================================================================
+#
+# This section defines the recommended execution order for ALL tasks
+# from both the Lean Schema audit and the Core Rules Admin feature.
+# Tasks are grouped into tiers by dependency.
+#
+# TIER 0: OWNER INPUT REQUIRED (blockers)
+# These tasks need human decisions before they can proceed.
+# Mark them, work on non-blocked tasks in parallel.
+#   - TASK-221  : Core rules DB categories (owner reviews groupings)
+#   NOTE: TASK-195 CANCELLED (code correct, GAME_RULES.md was wrong — fixed)
+#   NOTE: TASK-198, TASK-199 owner-resolved — moved to TIER 1
+#
+# TIER 1: BUG FIXES (no dependencies, start immediately)
+#   - TASK-198  : Fix game constants (ability caps, damage types, Staggered, ice naming)
+#   - TASK-199  : Fix feat slot formulas
+#   - TASK-196  : maxHealth archetype ability bug
+#   - TASK-197  : Creator hardcoded health/energy
+#   - TASK-199b : SAVEABLE_FIELDS missing fields
+#
+# TIER 2: DESIGN (parallel design work, no code dependencies)
+#   - TASK-200  : CharacterSaveData type definition
+#   - TASK-221  : Core rules DB schema design (needs owner review)
+#
+# TIER 3: CORE RULES DB FOUNDATION (depends on TASK-221)
+#   - TASK-222  : Prisma model + migration
+#   - TASK-223  : Seed DB with current values
+#   - TASK-224  : useGameRules() hook
+#
+# TIER 4: CENTRALIZE CALCULATIONS (depends on TASK-224, TASK-196, TASK-197)
+#   - TASK-201  : Centralize all stat calculations
+#   - TASK-233  : Refactor formulas.ts for DB rules
+#   - TASK-234  : Refactor calculations.ts for DB rules
+#   - TASK-202  : Unify defense fields (defenseVals only)
+#
+# TIER 5: ADMIN CORE RULES UI (depends on TASK-222/223/224, parallel with Tier 6)
+#   - TASK-225  : Progression tab
+#   - TASK-226  : Combat & Scores tab
+#   - TASK-227  : Archetypes tab
+#   - TASK-228  : Conditions tab
+#   - TASK-229  : Sizes & Carrying Capacity tab
+#   - TASK-230  : Rarities & Currency tab
+#   - TASK-231  : Ability Scores tab
+#   - TASK-232  : Skills, Recovery, Experience, Damage Types tabs
+#   NOTE: TASK-198 and TASK-199 are now owner-resolved and in TIER 1 (no longer blocked)
+#
+# TIER 6: LEAN CREATOR (depends on Tier 4)
+#   - TASK-203  : Species as speciesId
+#   - TASK-204  : Archetype as archetypeId
+#   - TASK-205  : Feats as IDs
+#   - TASK-206  : Powers as {id, innate}
+#   - TASK-207  : Techniques as {id}
+#   - TASK-208  : Skills as Record<id, {prof,val}>
+#   - TASK-209  : Equipment as inventory with IDs
+#   - TASK-210  : Lean health/energy
+#
+# TIER 7: LEAN SHEET (depends on Tier 6)
+#   - TASK-211  : Sheet loads feats by ID
+#   - TASK-212  : Sheet loads powers/techniques by ID
+#   - TASK-213  : Sheet loads equipment by ID
+#   - TASK-214  : Sheet derives skills from codex
+#   - TASK-215  : Sheet derives all computed stats
+#
+# TIER 8: FINAL CLEANUP (depends on all above)
+#   - TASK-216  : Unify enrichment pipeline
+#   - TASK-217  : Update cleanForSave
+#   - TASK-218  : Remove redundant Character fields
+#   - TASK-219  : Portrait to Supabase Storage
+#   - TASK-220  : Data migration script
+# =====================================================================

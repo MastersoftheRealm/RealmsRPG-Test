@@ -113,7 +113,13 @@ export function AddFeatModal({
       if (featType === 'archetype' && f.char_feat) return;
       
       if (f.category) cats.add(f.category);
-      if (f.ability) abils.add(f.ability);
+      if (f.ability) {
+        if (Array.isArray(f.ability)) {
+          f.ability.forEach(a => abils.add(a));
+        } else {
+          abils.add(f.ability);
+        }
+      }
     });
     
     return {

@@ -48,12 +48,18 @@ export function AdminEquipmentTab() {
     rarityFilter: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description?: string; type?: string; gold_cost?: number } | null>(null);
+  const [editing, setEditing] = useState<EquipmentListItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', type: 'equipment' as 'weapon' | 'armor' | 'equipment', gold_cost: 0 });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    category: '',
+    currency: 0,
+    rarity: 'Common',
+  });
 
   const filterOptions = useMemo(() => {
     if (!equipment) return { categories: [] as string[], rarities: [] as string[] };
@@ -98,17 +104,18 @@ export function AdminEquipmentTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', type: 'equipment', gold_cost: 0 });
+    setForm({ name: '', description: '', category: '', currency: 0, rarity: 'Common' });
     setModalOpen(true);
   };
 
-  const openEdit = (e: { id: string; name: string; description?: string; type?: string; gold_cost?: number }) => {
+  const openEdit = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
     setEditing(e);
     setForm({
       name: e.name,
       description: e.description || '',
-      type: (e.type || 'equipment') as 'weapon' | 'armor' | 'equipment',
-      gold_cost: e.gold_cost ?? 0,
+      category: e.category || '',
+      currency: e.currency ?? e.gold_cost ?? 0,
+      rarity: e.rarity || 'Common',
     });
     setModalOpen(true);
   };
@@ -125,10 +132,11 @@ export function AdminEquipmentTab() {
     const data = {
       name: form.name.trim(),
       description: form.description.trim(),
-      type: form.type,
-      gold_cost: form.gold_cost,
-      currency: form.gold_cost,
-      properties: [],
+      // Equipment items are generic equipment, not weapons/armor
+      type: 'equipment',
+      category: form.category.trim() || undefined,
+      currency: form.currency,
+      rarity: form.rarity.trim() || undefined,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `equip_${Date.now()}`;
@@ -235,7 +243,7 @@ export function AdminEquipmentTab() {
                 description={e.description || ''}
                 gridColumns={EQUIPMENT_GRID_COLUMNS}
                 columns={[
-                  { key: 'Category', value: (e.category || e.type || 'equipment') as string },
+                  { key: 'Category', value: (e.category || 'Equipment') as string },
                   { key: 'Cost', value: e.cost > 0 ? `${e.cost} c` : '-', highlight: true },
                   { key: 'Rarity', value: e.rarity || '-' },
                 ]}
@@ -293,24 +301,47 @@ export function AdminEquipmentTab() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Equipment name" />
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Equipment name"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Equipment description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Equipment description"
+              className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              rows={3}
+            />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-              <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as 'weapon' | 'armor' | 'equipment' }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary">
-                <option value="weapon">Weapon</option>
-                <option value="armor">Armor</option>
-                <option value="equipment">Equipment</option>
-              </select>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
+              <Input
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                placeholder="e.g. Consumable, Tool"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Currency Cost</label>
-              <Input type="number" min={0} value={form.gold_cost} onChange={(e) => setForm((f) => ({ ...f, gold_cost: parseInt(e.target.value) || 0 }))} />
+              <Input
+                type="number"
+                min={0}
+                value={form.currency}
+                onChange={(e) => setForm((f) => ({ ...f, currency: parseInt(e.target.value, 10) || 0 }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Rarity</label>
+              <Input
+                value={form.rarity}
+                onChange={(e) => setForm((f) => ({ ...f, rarity: e.target.value }))}
+                placeholder="e.g. Common"
+              />
             </div>
           </div>
         </div>

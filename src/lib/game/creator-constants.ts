@@ -27,28 +27,33 @@ export type ActionType = typeof ACTION_OPTIONS[number]['value'];
 export const DIE_SIZES = [4, 6, 8, 10, 12] as const;
 export type DieSize = typeof DIE_SIZES[number];
 
-/** Physical damage types (used by techniques, weapons) */
-export const PHYSICAL_DAMAGE_TYPES = [
+/**
+ * Damage types — NO "physical vs magic" split.
+ * All damage types are equal categories. The only meaningful distinction
+ * is which types are reduced by armor (all except ARMOR_EXCEPTION_TYPES).
+ */
+
+/** Technique damage types (physical combat — includes 'none' for non-damaging techniques) */
+export const TECHNIQUE_DAMAGE_TYPES = [
   'none',
-  'physical',
-  'slashing',
-  'piercing',
   'bludgeoning',
+  'piercing',
+  'slashing',
 ] as const;
 
-/** Weapon-only damage types (slashing, piercing, bludgeoning - no 'physical' or 'none') */
+/** Weapon-only damage types (slashing, piercing, bludgeoning) */
 export const WEAPON_DAMAGE_TYPES = [
   'slashing',
   'piercing',
   'bludgeoning',
 ] as const;
 
-/** Magic damage types (used by powers) */
-export const MAGIC_DAMAGE_TYPES = [
+/** Power damage types (all non-physical damage types — includes 'none' for non-damaging powers) */
+export const POWER_DAMAGE_TYPES = [
   'none',
   'magic',
   'fire',
-  'cold',
+  'ice',
   'lightning',
   'necrotic',
   'light',
@@ -56,29 +61,42 @@ export const MAGIC_DAMAGE_TYPES = [
   'spiritual',
   'poison',
   'sonic',
+  'acid',
 ] as const;
 
 /** All damage types (used by creatures and items with mixed damage) */
 export const ALL_DAMAGE_TYPES = [
   'none',
-  'physical',
-  'slashing',
-  'piercing',
-  'bludgeoning',
   'magic',
   'fire',
-  'cold',
+  'ice',
   'lightning',
   'spiritual',
-  'acid',
+  'sonic',
   'poison',
   'necrotic',
-  'light',
+  'acid',
   'psychic',
-  'sonic',
+  'light',
+  'bludgeoning',
+  'piercing',
+  'slashing',
 ] as const;
 
 export type DamageType = typeof ALL_DAMAGE_TYPES[number];
+
+/** Damage types NOT reduced by standard armor */
+export const ARMOR_EXCEPTION_TYPES = ['psychic', 'spiritual', 'sonic'] as const;
+
+/**
+ * @deprecated Use POWER_DAMAGE_TYPES instead. Kept for backward compatibility.
+ */
+export const MAGIC_DAMAGE_TYPES = POWER_DAMAGE_TYPES;
+
+/**
+ * @deprecated Use TECHNIQUE_DAMAGE_TYPES instead. Kept for backward compatibility.
+ */
+export const PHYSICAL_DAMAGE_TYPES = TECHNIQUE_DAMAGE_TYPES;
 
 // =============================================================================
 // Area of Effect
@@ -177,25 +195,43 @@ export const CREATURE_TYPES = [
 export type CreatureType = typeof CREATURE_TYPES[number];
 
 export const CREATURE_SIZES = [
-  { value: 'tiny', label: 'Tiny', modifier: -2 },
-  { value: 'small', label: 'Small', modifier: -1 },
-  { value: 'medium', label: 'Medium', modifier: 0 },
-  { value: 'large', label: 'Large', modifier: 1 },
-  { value: 'huge', label: 'Huge', modifier: 2 },
-  { value: 'gargantuan', label: 'Gargantuan', modifier: 3 },
+  { value: 'miniscule', label: 'Miniscule', modifier: -3, spaces: 0.125, baseCarry: 10, perStrCarry: 5, minCarry: 5, height: 'Under 1 ft' },
+  { value: 'tiny', label: 'Tiny', modifier: -2, spaces: 0.25, baseCarry: 25, perStrCarry: 10, minCarry: 10, height: '1–2 ft' },
+  { value: 'small', label: 'Small', modifier: -1, spaces: 1, baseCarry: 50, perStrCarry: 25, minCarry: 25, height: '2–4 ft' },
+  { value: 'medium', label: 'Medium', modifier: 0, spaces: 1, baseCarry: 100, perStrCarry: 50, minCarry: 50, height: '5–7 ft' },
+  { value: 'large', label: 'Large', modifier: 1, spaces: 2, baseCarry: 200, perStrCarry: 100, minCarry: 100, height: '7–10 ft' },
+  { value: 'huge', label: 'Huge', modifier: 2, spaces: 4, baseCarry: 400, perStrCarry: 200, minCarry: 200, height: '10–15 ft' },
+  { value: 'humongous', label: 'Humongous', modifier: 3, spaces: 9, baseCarry: 800, perStrCarry: 400, minCarry: 400, height: '15–25 ft' },
+  { value: 'gargantuan', label: 'Gargantuan', modifier: 4, spaces: 16, baseCarry: 1600, perStrCarry: 800, minCarry: 800, height: '25+ ft' },
 ] as const;
 
 export type CreatureSize = typeof CREATURE_SIZES[number]['value'];
+
+// =============================================================================
+// Levels by Rarity (Reference)
+// =============================================================================
+
+/** What rarity of items/feats/powers a character should have at a given level */
+export const LEVELS_BY_RARITY = [
+  { rarity: 'Common', minLevel: 1, maxLevel: 4 },
+  { rarity: 'Uncommon', minLevel: 5, maxLevel: 9 },
+  { rarity: 'Rare', minLevel: 10, maxLevel: 14 },
+  { rarity: 'Epic', minLevel: 15, maxLevel: 19 },
+  { rarity: 'Legendary', minLevel: 20, maxLevel: 24 },
+  { rarity: 'Mythic', minLevel: 25, maxLevel: 29 },
+  { rarity: 'Ascended', minLevel: 30, maxLevel: Infinity },
+] as const;
 
 // =============================================================================
 // Conditions
 // =============================================================================
 
 export const CONDITIONS = [
-  'Bleeding', 'Blinded', 'Charmed', 'Restrained', 'Dazed', 'Deafened',
-  'Dying', 'Exhausted', 'Exposed', 'Faint', 'Frightened', 'Grappled',
-  'Hidden', 'Immobile', 'Invisible', 'Prone', 'Resilient', 'Slowed',
-  'Stunned', 'Susceptible', 'Terminal', 'Weakened',
+  'Bleed', 'Blinded', 'Charmed', 'Dazed', 'Deafened', 'Dying',
+  'Exhausted', 'Exposed', 'Faint', 'Frightened', 'Grappled',
+  'Hidden', 'Immobile', 'Invisible', 'Prone', 'Resilient',
+  'Restrained', 'Slowed', 'Staggered', 'Stunned', 'Susceptible',
+  'Terminal', 'Weakened',
 ] as const;
 
 export type Condition = typeof CONDITIONS[number];

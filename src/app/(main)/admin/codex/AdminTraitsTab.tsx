@@ -60,8 +60,9 @@ export function AdminTraitsTab() {
       description: t.description || '',
       uses_per_rec: t.uses_per_rec != null ? String(t.uses_per_rec) : '',
       rec_period: t.rec_period || '',
-      flaw: Boolean((t as any).flaw),
-      characteristic: Boolean((t as any).characteristic),
+      // flaw/characteristic now come through from the codex API; fall back to false if missing
+      flaw: t.flaw === true,
+      characteristic: t.characteristic === true,
     });
     setModalOpen(true);
   };

@@ -2,6 +2,19 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-11 | agent:cursor | Session: TASK-201, TASK-202 — Centralize calculations + unify defense fields | files: src/lib/game/calculations.ts, src/lib/game/formulas.ts, src/lib/game/progression.ts, src/app/(main)/characters/[id]/character-sheet-utils.ts, src/stores/character-creator-store.ts, src/components/character-creator/steps/finalize-step.tsx, src/components/character-creator/steps/skills-step.tsx, src/components/character-sheet/level-up-modal.tsx, src/app/(main)/creature-creator/page.tsx, src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.ts, src/types/character.ts, src/lib/data-enrichment.ts, src/app/(main)/characters/[id]/page.tsx, src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx | TASKs: TASK-201, TASK-202 | Summary:
+  - TASK-201: Added calculateTerminal(), calculateAllStats(), computeMaxHealthEnergy() to calculations.ts as SINGLE SOURCE OF TRUTH. character-sheet-utils.ts is now a thin wrapper. Replaced inline health/energy formulas in creator store and finalize step. Deprecated getBaseHealth/getBaseEnergy/getCharacterMaxHealthEnergy/calculateSkillPoints in formulas.ts. Updated 8+ callers to use centralized functions.
+  - TASK-202: defenseVals is now the canonical field (defenseSkills deprecated). All writes save defenseVals only. All reads use defenseVals || defenseSkills for backward compat. cleanForSave() auto-migrates. Removed defenseSkills from SAVEABLE_FIELDS.
+  - build compiles (no new TS errors)
+
+- 2026-02-11 | agent:cursor | Session: TASK-200, TASK-221, TASK-222, TASK-223, TASK-224 — CharacterSaveData type + Core Rules DB foundation | files: src/types/character.ts, src/types/core-rules.ts, src/types/index.ts, prisma/schema.prisma, prisma/supabase-rls-policies.sql, src/app/api/codex/route.ts, src/app/(main)/admin/codex/actions.ts, src/hooks/use-game-rules.ts, scripts/seed-core-rules.js, scripts/create-core-rules-table.sql | TASKs: TASK-200, TASK-221, TASK-222, TASK-223, TASK-224 | Summary:
+  - TASK-200: Added CharacterSaveData interface to character.ts — lean persistence-only type (IDs, user choices, runtime state). Coexists with existing Character type.
+  - TASK-221: Designed 13 core rules categories (PROGRESSION_PLAYER, PROGRESSION_CREATURE, ABILITY_RULES, ARCHETYPES, ARMAMENT_PROFICIENCY, COMBAT, SKILLS_AND_DEFENSES, CONDITIONS, SIZES, RARITIES, DAMAGE_TYPES, RECOVERY, EXPERIENCE). Full TypeScript types in core-rules.ts.
+  - TASK-222: Added CoreRules Prisma model (codex.core_rules table). Created via SQL, RLS policy added, admin actions extended.
+  - TASK-223: Created seed-core-rules.js — idempotent upsert of all 13 categories. Successfully seeded to Supabase.
+  - TASK-224: Created useGameRules() hook — React Query with 10min staleTime, fetches from /api/codex coreRules field, falls back to hardcoded constants. getGameRulesFallback() for server use.
+  - build compiles (no new TS errors introduced)
+
 - 2026-02-09 | agent:cursor | Session: Queue cleanup, modal button consistency | files: AI_TASK_QUEUE.md, add-feat-modal.tsx, species-modal.tsx | Summary:
   - Queue: Marked stale TASK-161, TASK-162, TASK-164 as done (were already implemented).
   - Modal button consistency: add-feat-modal (Cancel, Add Selected) and species-modal (inline ✕) now use shared Button component instead of raw &lt;button&gt; with custom classes.
@@ -511,6 +524,71 @@ Append-only log. Agents must add an entry for each PR/merge.
   7. Fixed technique-creator not saving actionType/isReaction fields.
   8. Updated TechniqueDocument interface and deriveTechniqueDisplay to use saved actionType/isReaction, preventing display mismatches.
   9. Fixed pre-existing build errors in CodexSkillsTab.tsx and item-creator.
+
+- 2026-02-11 | agent:claude-opus | TASK-196,TASK-197,TASK-198,TASK-199,TASK-199b: TIER 1 bug fixes — game constants, feat formulas, health/energy calculations, SAVEABLE_FIELDS | files: src/lib/game/constants.ts, src/lib/game/creator-constants.ts, src/lib/game/formulas.ts, src/lib/game/skill-allocation.ts, src/lib/game/progression.ts, src/types/archetype.ts, src/app/(main)/power-creator/page.tsx, src/app/(main)/characters/[id]/page.tsx, src/app/(main)/characters/[id]/character-sheet-utils.ts, src/app/(main)/encounter-tracker/encounter-tracker-constants.ts, src/components/character-creator/steps/feats-step.tsx, src/components/character-sheet/level-up-modal.tsx, src/stores/character-creator-store.ts, src/lib/data-enrichment.ts, src/lib/calculators/power-calc.ts, src/docs/GAME_RULES.md | TASK: TASK-196,TASK-197,TASK-198,TASK-199,TASK-199b | pr_link: (pending) | Summary:
+  TIER 1 bug fixes from character data audit. (1) TASK-198: Fixed ability caps to 10/20 (chars/creatures), removed physical/magic damage type split, renamed cold→ice, added Staggered/acid, added ARMOR_EXCEPTION_TYPES and LEVELS_BY_RARITY, fixed creature skill points (5 at L1, 3/level) and training points (22 base, 2/level), fixed archetype armament max (Power=3, Martial=12), added all 8 size categories, updated encounter-tracker conditions with full rulebook descriptions. (2) TASK-199: Replaced wrong feat formula (floor(level/4)+1) with correct archetype-aware calculations across character sheet, creator, level-up modal, and progression. (3) TASK-196: Fixed maxHealth to use strength when vitality is archetype ability. (4) TASK-197: Replaced hardcoded baseHealth/baseEnergy=10 in creator with getBaseHealth()/getBaseEnergy(). (5) TASK-199b: Added 11 missing fields to SAVEABLE_FIELDS whitelist.
+
+- 2026-02-11 | agent:claude-opus | TASK-205,TASK-206,TASK-207,TASK-210: Phase 4 — Creator lean save (feats, powers, techniques, health/energy) | files: src/lib/data-enrichment.ts, src/stores/character-creator-store.ts, src/app/(main)/characters/[id]/page.tsx, src/components/character-sheet/sheet-header.tsx, src/app/(main)/characters/[id]/CharacterSheetModals.tsx, src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx, src/components/shared/add-combatant-modal.tsx, src/app/(main)/encounters/[id]/combat/page.tsx, src/app/(main)/encounters/[id]/mixed/page.tsx, src/types/character.ts | TASK: TASK-205,TASK-206,TASK-207,TASK-210 | pr_link: (pending) | Summary:
+  Phase 4 lean data migration. (1) TASK-210: Removed health_energy_points and health/energy ResourcePool from save. currentHealth/currentEnergy is now canonical. All 10 consumer files updated to read currentHealth first with backward compat fallback to health?.current. All writes (recovery, power use, allocation) now write to currentHealth/currentEnergy directly. (2) TASK-205: cleanForSave strips feat description/maxUses/recovery, saves { id, name, currentUses } only. Recovery handlers and feat uses handler now look up maxUses/rec_period from codex featsDb. (3) TASK-206: Powers saved as { id, name, innate } — description/parts/cost/damage stripped. enrichPowers() already supports ID-based lookup. (4) TASK-207: Techniques saved as { id, name } objects instead of bare name strings. enrichTechniques() handles both formats via findInLibrary().
+
+- 2026-02-11 | agent:claude-opus | TASK-203,TASK-204,TASK-208,TASK-209: Phase 4 — Creator lean save (species, archetype, skills, equipment) | files: src/lib/data-enrichment.ts, src/stores/character-creator-store.ts, src/types/archetype.ts, src/types/character.ts, src/components/character-sheet/sheet-header.tsx, src/lib/character-server.ts, src/app/api/characters/route.ts, src/app/(main)/characters/actions.ts, src/app/(main)/characters/[id]/page.tsx, src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx | TASK: TASK-203,TASK-204,TASK-208,TASK-209 | pr_link: (pending) | Summary:
+  Completed Phase 4 lean data migration for all remaining data domains. (1) TASK-204: Archetype stripped to { id, type }. CharacterArchetype.name optional + @deprecated. Display name derived from type. archetypeName/archetypeAbility removed from SAVEABLE_FIELDS. (2) TASK-203: Ancestry stripped to { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }. 'species' string and legacy ancestry fields removed from SAVEABLE_FIELDS. Migration for old species-only characters. (3) TASK-208: Skills stripped to { id, name, skill_val, prof, selectedBaseSkillId? }. ability/baseSkillId/category derived from codex. (4) TASK-209: Equipment items stripped to { id, name, equipped?, quantity? }. Full item data derived from library/codex. Redundant inventory[] array removed. enrichItems() updated for ID-based codex lookup.
+
+- 2026-02-11 | agent:claude-opus | TASK-211,TASK-213: Phase 5 — Feats & equipment enrichment fixes | files: src/components/character-sheet/feats-tab.tsx, src/lib/data-enrichment.ts | TASK: TASK-211,TASK-213 | pr_link: (pending) | Summary:
+  Phase 5 enrichment fixes. (1) TASK-211: enrichFeat() now derives name from codex when missing (lean feats have no name). Fixed uses_per_rec field mapping — CodexFeat interface updated to include uses_per_rec alongside legacy max_uses. Feats fully work with lean { id, currentUses }. (2) TASK-213: Fixed toEquipmentArray() to preserve id and quantity (was stripping them, breaking ID-based lookup). enrichItems() now passes quantity through to enriched results.
+
+- 2026-02-11 | agent:claude-opus | TASK-212,TASK-214,TASK-215,TASK-216,TASK-217: Phase 5/6 — Verification & close-out | files: (verification only, no code changes) | TASK: TASK-212,TASK-214,TASK-215,TASK-216,TASK-217 | pr_link: (pending) | Summary:
+  Verified Phase 5/6 tasks already satisfied by Phase 4 work. TASK-212: Powers/techniques enrichment via findInLibrary() ID-first lookup already works. TASK-214: Skills already enriched from codexSkills via useMemo in page.tsx. TASK-215: All derived stats already computed by calculateAllStats() from TASK-201. TASK-216: Unified enrichment pipeline already achieved through shared findInLibrary/enrichPowers/enrichTechniques/enrichItems. TASK-217: cleanForSave already produces lean output from Phase 4.
+
+- 2026-02-11 | agent:claude-opus | TASK-218: Phase 6 — Character type @deprecated annotations | files: src/types/character.ts | TASK: TASK-218 | pr_link: (pending) | Summary:
+  Annotated all redundant fields in Character type with @deprecated JSDoc: species, health/energy ResourcePool, speed/evasion/armor (derived), martialProficiency/powerProficiency, allTraits/_displayFeats, legacy ancestryTraits/flawTrait/characteristicTrait/speciesTraits, health_energy_points. Added health_energy_points field to type for completeness. Fields kept for backward compat until TASK-220 migration.
+
+- 2026-02-11 | agent:claude-opus | TASK-219: Portrait storage — base64 → Supabase Storage URL | files: src/components/character-creator/steps/finalize-step.tsx | TASK: TASK-219 | pr_link: (pending) | Summary:
+  Creator finalize step now uploads portrait to Supabase Storage after character creation instead of saving base64 to the JSON blob. Base64 kept in draft for preview during creation; stripped before initial save; uploaded as file to /api/upload/portrait; URL saved via saveCharacter. Old base64 portraits still display (backward compat). Character sheet upload was already using Storage.
+
+- 2026-02-11 | agent:claude-opus | TASK-220: Lean data migration script | files: scripts/migrate-characters-lean.js | TASK: TASK-220 | pr_link: (pending) | Summary:
+  Created idempotent migration script for existing characters. Converts: health/energy ResourcePool → currentHealth/currentEnergy, health_energy_points → healthPoints/energyPoints, species string → ancestry.name, strips archetype/ancestry/feats/powers/techniques/equipment/skills to lean format, removes legacy display-only fields and derived combat stats. Supports --dry-run for preview. Already-lean characters pass through unchanged.
+
+- 2026-02-11 | agent:claude-opus | Audit fixes: enrichment, SAVEABLE_FIELDS, migration, ArchetypeSection | files: src/lib/data-enrichment.ts, src/components/character-sheet/archetype-section.tsx, src/app/(main)/characters/[id]/page.tsx, src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx, scripts/migrate-characters-lean.js | TASK: audit | pr_link: (pending) | Summary:
+  Comprehensive audit of all lean schema work found 6 issues, all fixed:
+  (1) enrichItems() placeholder now uses charItem.id when name is missing.
+  (2) SAVEABLE_FIELDS added missing weight, height, lastPlayedAt.
+  (3) cleanForSave now handles skills as Record<id,number> or Array format (was Array-only).
+  (4) Migration script: added martialProficiency→mart_prof, powerProficiency→pow_prof, defenseSkills→defenseVals migration before removal. Fixed archetype stripping to return undefined when no lean fields exist. Added skills Record→Array conversion.
+  (5) ArchetypeSection now receives enrichedWeapons/enrichedArmor props from page.tsx — no longer uses raw character.equipment (which has lean data missing damage/properties/armor).
+  (6) EnrichedItem type added quantity, range, armor fields for full display data.
+
+- 2026-02-11 | agent:claude-opus | TASK-233: Refactor formulas.ts — DB-driven rules | files: src/lib/game/formulas.ts | TASK: TASK-233 | pr_link: (pending) | Summary:
+  All ~35 exported functions now accept optional `rules?: Partial<CoreRulesMap>` param.
+  DB values used when provided, constants.ts fallbacks otherwise. Zero breaking changes.
+
+- 2026-02-11 | agent:claude-opus | TASK-234: Refactor calculations.ts — DB-driven rules | files: src/lib/game/calculations.ts | TASK: TASK-234 | pr_link: (pending) | Summary:
+  All ~11 exported functions now accept optional `rules?: Partial<CoreRulesMap>` param.
+  calculateDefenses, Speed, Evasion, MaxHealth, AllStats, computeMaxHealthEnergy all
+  accept DB rules. Zero breaking changes.
+
+- 2026-02-11 | agent:claude-opus | TASK-225–232: Admin Core Rules Editor page | files: src/app/(main)/admin/core-rules/page.tsx, src/app/(main)/admin/page.tsx | TASK: TASK-225,226,227,228,229,230,231,232 | pr_link: (pending) | Summary:
+  Created /admin/core-rules page with 12 sub-tabs: Progression (TASK-225), Combat (226),
+  Archetypes (227), Ability Scores (231), Skills & Defenses (232), Conditions (228),
+  Sizes (229), Rarities (230), Damage Types (232), Recovery (232), Experience (232),
+  Armament Proficiency (232). Each tab loads data from useGameRules(), provides form
+  editors for all fields, and saves via updateCodexDoc('core_rules', categoryId, data).
+  Admin dashboard updated with Core Rules Editor card and link.
+
+- 2026-02-11 | agent:claude-opus | Audit & fix: all TS errors + admin core-rules completeness | files: src/app/(main)/admin/codex/AdminSpeciesTab.tsx, src/app/(main)/item-creator/page.tsx, src/components/character-sheet/add-feat-modal.tsx, src/app/(main)/admin/core-rules/page.tsx | TASK: audit | pr_link: (pending) | Summary:
+  (1) Fixed all 9 pre-existing TypeScript errors:
+    - AdminSpeciesTab: detailSections.chips type was single object instead of array (6 errors).
+    - item-creator: removed 2 stale @ts-expect-error directives.
+    - add-feat-modal: handled f.ability as string|string[] (1 error).
+  (2) Admin Core Rules page audit fixes:
+    - TASK-225: Added full creature progression fields (14 editable fields) and live level 1-10 preview table.
+    - TASK-228: Added add/remove buttons for standard and leveled conditions (was edit-only).
+    - TASK-229: Made size table fully editable (was read-only). Added add/remove rows.
+    - TASK-230: Made rarity tiers fully editable with add/remove. All fields editable inline.
+    - TASK-231: Added standard arrays editor with per-value editing and add/remove arrays.
+    - TASK-232: Damage types now support add/remove. Armor exceptions toggleable by clicking.
+    - Armament proficiency table now supports add/remove rows.
+  Zero TypeScript errors. npm run build passes cleanly.
 
 - YYYY-MM-DD | agent-id | short summary | files: [comma-separated] | PR: <link-or-commit> | TASK: TASK-### | merged_at: YYYY-MM-DD
 

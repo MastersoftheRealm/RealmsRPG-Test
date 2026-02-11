@@ -12,6 +12,7 @@ import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } f
 import { useRollsOptional } from './roll-context';
 import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider } from '@/components/shared';
 import type { Character, Abilities, Item } from '@/types';
+import type { EnrichedItem } from '@/lib/data-enrichment';
 
 interface ArchetypeSectionProps {
   character: Character;
@@ -22,6 +23,9 @@ interface ArchetypeSectionProps {
   // Unarmed Prowess props
   unarmedProwess?: number; // 0 = not selected, 1-5 = prowess level
   onUnarmedProwessChange?: (level: number) => void;
+  // Enriched equipment (from codex/library) — used instead of raw character.equipment
+  enrichedWeapons?: EnrichedItem[];
+  enrichedArmor?: EnrichedItem[];
   className?: string;
 }
 
@@ -143,17 +147,19 @@ function WeaponsSection({
   unarmedProwess = 0,
   onRollAttack,
   onRollDamage,
+  enrichedWeapons,
 }: {
   character: Character;
   martialProf: number;
   unarmedProwess?: number;
   onRollAttack?: (name: string, bonus: number) => void;
   onRollDamage?: (damageStr: string, bonus: number) => void;
+  enrichedWeapons?: EnrichedItem[];
 }) {
   const abilities = character.abilities || {};
   
-  // Get equipped weapons from character equipment
-  const weapons = (character.equipment?.weapons || []) as Item[];
+  // Use enriched weapons if available, fallback to raw character equipment
+  const weapons = enrichedWeapons || (character.equipment?.weapons || []) as Item[];
   const equippedWeapons = weapons.filter(w => w.equipped);
   
   // Calculate bonuses for attack
@@ -317,15 +323,17 @@ function WeaponsSection({
 // Armor Section - displays equipped armor with stats
 function ArmorSection({
   character,
+  enrichedArmor,
 }: {
   character: Character;
+  enrichedArmor?: EnrichedItem[];
 }) {
   const abilities = character.abilities || {};
   const agility = abilities.agility ?? 0;
   const baseEvasion = 10 + agility;
   
-  // Get equipped armor from character
-  const armor = (character.equipment?.armor || character.armor || []) as Item[];
+  // Use enriched armor if available, fallback to raw character equipment
+  const armor = enrichedArmor || (character.equipment?.armor || character.armor || []) as Item[];
   const armorArray = Array.isArray(armor) ? armor : [armor].filter(Boolean);
   const equippedArmor = armorArray.filter((a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true);
 
@@ -413,6 +421,8 @@ export function ArchetypeSection({
   onMilestoneChoiceChange,
   unarmedProwess,
   onUnarmedProwessChange,
+  enrichedWeapons,
+  enrichedArmor,
   className,
 }: ArchetypeSectionProps) {
   const martialProf = character.mart_prof ?? character.martialProficiency ?? 0;
@@ -675,10 +685,11 @@ export function ArchetypeSection({
         unarmedProwess={unarmedProwess}
         onRollAttack={handleRollBonus}
         onRollDamage={handleRollDamage}
+        enrichedWeapons={enrichedWeapons}
       />
 
       {/* Armor Section */}
-      <ArmorSection character={character} />
+      <ArmorSection character={character} enrichedArmor={enrichedArmor} />
     </div>
   );
 }

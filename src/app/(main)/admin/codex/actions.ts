@@ -14,7 +14,8 @@ type CodexCollection =
   | 'codex_properties'
   | 'codex_equipment'
   | 'codex_archetypes'
-  | 'codex_creature_feats';
+  | 'codex_creature_feats'
+  | 'core_rules';
 
 async function requireAdmin() {
   const { user } = await getSession();
@@ -41,6 +42,7 @@ function getCodexDelegates(collection: CodexCollection): CodexDelegate {
     case 'codex_equipment': return prisma.codexEquipment as CodexDelegate;
     case 'codex_archetypes': return prisma.codexArchetype as CodexDelegate;
     case 'codex_creature_feats': return prisma.codexCreatureFeat as CodexDelegate;
+    case 'core_rules': return prisma.coreRules as CodexDelegate;
     default: throw new Error(`Unknown collection: ${collection}`);
   }
 }

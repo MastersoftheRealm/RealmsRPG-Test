@@ -86,7 +86,12 @@ function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<stri
       columns={[
         { key: 'Req. Level', value: feat.lvl_req || '-' },
         { key: 'Category', value: feat.category || '-' },
-        { key: 'Ability', value: feat.ability || '-' },
+        {
+          key: 'Ability',
+          value: Array.isArray(feat.ability)
+            ? feat.ability.join(', ')
+            : (feat.ability || '-'),
+        },
         { key: 'Recovery', value: feat.rec_period || '-' },
         { key: 'Uses', value: feat.uses_per_rec || '-' },
       ]}
@@ -123,7 +128,11 @@ export function CodexFeatsTab() {
 
     feats.forEach((f: Feat) => {
       if (f.lvl_req > 0) levels.add(f.lvl_req);
-      if (f.ability) abilities.add(f.ability);
+      if (Array.isArray(f.ability)) {
+        f.ability.forEach((a: string) => abilities.add(a));
+      } else if (f.ability) {
+        abilities.add(f.ability);
+      }
       if (f.category) categories.add(f.category);
       f.tags?.forEach((t: string) => tags.add(t));
       f.ability_req?.forEach((a: string) => abilReqAbilities.add(a));
@@ -181,8 +190,15 @@ export function CodexFeatsTab() {
         return false;
       }
 
-      if (filters.abilities.length > 0 && (!f.ability || !filters.abilities.includes(f.ability))) {
-        return false;
+      if (filters.abilities.length > 0) {
+        const featAbilities = Array.isArray(f.ability)
+          ? f.ability
+          : f.ability
+            ? [f.ability]
+            : [];
+        if (!featAbilities.some(a => filters.abilities.includes(a))) {
+          return false;
+        }
       }
 
       if (filters.tags.length > 0) {

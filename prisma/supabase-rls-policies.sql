@@ -399,6 +399,14 @@ ON codex.public_creatures FOR SELECT
 TO public
 USING (true);
 
+-- core_rules: Admin-configured game rules; anyone can read, writes via service role only
+ALTER TABLE codex.core_rules ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read core rules"
+ON codex.core_rules FOR SELECT
+TO public
+USING (true);
+
 -- =============================================================================
 -- REALTIME PUBLICATION (campaign_rolls)
 -- =============================================================================

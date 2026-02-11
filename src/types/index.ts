@@ -73,7 +73,29 @@ export type {
   Character,
   CharacterSummary,
   CharacterDraft,
+  CharacterSaveData,
 } from './character';
+
+// Core Rules
+export type {
+  CoreRulesMap,
+  CoreRulesCategory,
+  ProgressionPlayerRules,
+  ProgressionCreatureRules,
+  AbilityRules,
+  ArchetypeRules,
+  ArchetypeConfigRules,
+  ArmamentProficiencyRules,
+  CombatRules,
+  SkillsAndDefensesRules,
+  ConditionsRules,
+  ConditionDef,
+  SizesRules,
+  RaritiesRules,
+  DamageTypesRules,
+  RecoveryRules,
+  ExperienceRules,
+} from './core-rules';
 
 // Item Display System
 export type {

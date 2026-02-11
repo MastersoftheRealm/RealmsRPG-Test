@@ -37,7 +37,7 @@ import {
 } from '@/lib/calculators';
 import {
   ACTION_OPTIONS,
-  MAGIC_DAMAGE_TYPES as DAMAGE_TYPES,
+  POWER_DAMAGE_TYPES as DAMAGE_TYPES,
   DIE_SIZES,
   AREA_TYPES,
   DURATION_TYPES,
@@ -357,8 +357,9 @@ function PowerCreatorContent() {
     setSaveMessage(null);
 
     try {
-      // Format parts for saving (combine regular and advanced parts)
+      // Format parts for saving (combine regular, advanced, and mechanic parts)
       const partsToSave = [
+        // User-selected non-mechanic parts from the main editor
         ...selectedParts.map((sp) => ({
           id: Number(sp.part.id),
           name: sp.part.name,
@@ -367,6 +368,7 @@ function PowerCreatorContent() {
           op_3_lvl: sp.op_3_lvl,
           applyDuration: sp.applyDuration,
         })),
+        // Explicit advanced mechanic parts from the Advanced section
         ...selectedAdvancedParts.map((ap) => ({
           id: Number(ap.part.id),
           name: ap.part.name,
@@ -375,6 +377,17 @@ function PowerCreatorContent() {
           op_3_lvl: ap.op_3_lvl,
           applyDuration: ap.applyDuration,
           isAdvanced: true, // Flag for identifying advanced mechanics
+        })),
+        // Auto-generated mechanic parts derived from action, damage, range, area, duration
+        // These are needed so that TP/EN costs can be re-derived outside the creator
+        ...mechanicParts.map((mp) => ({
+          id: mp.id,
+          name: mp.name,
+          op_1_lvl: mp.op_1_lvl,
+          op_2_lvl: mp.op_2_lvl,
+          op_3_lvl: mp.op_3_lvl,
+          applyDuration: mp.applyDuration,
+          isMechanic: true,
         })),
       ];
 

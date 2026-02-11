@@ -2,7 +2,8 @@
 
 > **Purpose:** Centralized game rules for AI agents and engineers. Use when implementing validation, caps, display logic, helpful subtext, and calculations. Parsed from the Core Rulebook.
 
-**Sources of truth:** `src/lib/game/constants.ts`, `src/lib/game/formulas.ts`, `src/lib/game/progression.ts`, `src/lib/game/creator-constants.ts`
+**Pure source of truth:** `core_rulebook_extracted.txt` (the extracted Core Rulebook)
+**Code sources:** `src/lib/game/constants.ts`, `src/lib/game/formulas.ts`, `src/lib/game/progression.ts`, `src/lib/game/creator-constants.ts`
 
 ---
 
@@ -177,9 +178,10 @@ Every Character, creature, and monster has six Abilities:
 |------|-------|------|
 | Typical range | -3 to 5 | Default for player Characters |
 | Absolute min | -5 | Never below |
-| Absolute max | 10 | Can exceed 5 via Feats/rules |
+| Hard cap (characters) | 10 | Absolute maximum for player Characters |
+| Hard cap (creatures) | 20 | Absolute maximum for creatures |
 | Max at creation | 3 | From point allocation alone |
-| Max absolute (level-up) | 5 | Unless specified otherwise by Feats |
+| Level cap | None | No level-based ability cap; cost increase provides soft cap |
 
 ### Ability Point Allocation (Creation)
 
@@ -193,8 +195,10 @@ Every Character, creature, and monster has six Abilities:
 
 | Current Value | Cost to Increase |
 |---------------|------------------|
-| 0 → 1, 1 → 2, 2 → 3 | 1 point |
-| 3 → 4, 4 → 5, 5 → 6 | 2 points |
+| 0 → 1, 1 → 2, 2 → 3, 3 → 4 | 1 point |
+| 4 → 5, 5 → 6, 6 → 7, etc. | 2 points per +1 |
+
+**Soft cap:** The doubled cost starting at 4+ serves as the auto-balancing soft cap. No hard level-based ability cap exists.
 
 **Display:** Use "Abilities" not "Ability Scores". For values 4+, show "Next: 2 Points".
 
@@ -283,7 +287,8 @@ D20 + Skill Bonus = Total
 |------|-------|------|
 | Max skill value per skill | 3 | Skill Value Cap |
 | Skill points per level (characters) | 3 | e.g. 3 at level 1, 6 at level 2 |
-| Skill points per level (creatures) | 5 | No species; e.g. 5 at level 1 |
+| Skill points at level 1 (creatures) | 5 | No species skills |
+| Skill points per level (creatures) | 3 | e.g. 5 at level 1, 8 at level 2 |
 | Species skills | 2 permanent | Always proficient, cannot remove; proficiency free |
 | Gain proficiency (base skill) | 1 Skill Point | |
 | Gain proficiency (sub-skill) | 1 Skill Point | Also grants +1 skill value |
@@ -376,8 +381,8 @@ Any Bonus can be converted to a Score by adding 10.
 | HP/EN pool | 18 | +12 |
 | Proficiency | 2 | +1 every 5 levels |
 | Training points | 22 + ability + (2 + ability) × (level − 1) | `calculateTrainingPoints` |
-| Max archetype feats | level | `floor(level)` |
-| Max character feats | level | `floor(level)` |
+| Character feats | 1 per level | Always = level, all archetypes |
+| Archetype feats (base) | 1 per level | = level; martial gets bonus (see Archetype Progression) |
 
 ### Health & Energy Allocation
 
@@ -393,31 +398,117 @@ Any Bonus can be converted to a Score by adding 10.
 | Resource | Level 1 | Per Level |
 |----------|---------|-----------|
 | Ability points | 7 | +1 every 3 levels |
-| Skill points | 5 | +5 |
+| Skill points | 5 | +3 |
 | HP/EN pool | 26 | +12 |
 | Proficiency | 2 | +1 every 5 levels |
-| Training points | 9 + ability + (1 + ability) × (level − 1) | `calculateCreatureTrainingPoints` |
+| Training points | 22 + ability + (2 + ability) × (level − 1) | Same formula as characters |
 | Currency | 200 × 1.45^(level−1) | `calculateCreatureCurrency` |
 
 ---
 
 ## Archetype Rules
 
-| Archetype | Feat limit | Armament max | Innate energy |
-|-----------|------------|--------------|---------------|
-| Power | 1 | 4 | 8 |
-| Powered-Martial | 2 | 8 | 6 |
-| Martial | 3 | 16 | 0 |
-
-**Powered-Martial:** At levels 4, 7, 10, etc., player chooses innate (threshold+pools) or feat.
-
 ### Archetype Progression (Level 1)
 
-| Archetype | Martial Prof | Power Prof | Innate Threshold | Innate Pools | Armament Prof |
-|-----------|--------------|------------|------------------|--------------|---------------|
-| Power | 0 | 2 | 8 | 2 | — |
-| Martial | 2 | 0 | — | — | 12 |
-| Powered-Martial | 1 | 1 | 6 | 1 | 8 |
+| Archetype | Martial Prof | Power Prof | Innate Threshold | Innate Pools | Innate Energy | Armament Prof |
+|-----------|--------------|------------|------------------|--------------|---------------|---------------|
+| Power | 0 | 2 | 8 | 2 | 16 | 3 |
+| Martial | 2 | 0 | — | — | — | 12 |
+| Powered-Martial | 1 | 1 | 6 | 1 | 6 | 8 |
+
+### Character Feats
+
+**Always 1 per level, regardless of archetype.** Total character feats = level.
+
+### Archetype Feats
+
+**Base:** 1 per level (all archetypes).
+**Martial bonus:** +2 at level 1, then +1 every 3 levels starting at 4.
+- Formula (martial total): level + 2 + floor((level − 1) / 3)
+- Power characters: total archetype feats = level (no martial bonus)
+- Powered-Martial: at milestones (every 3 levels starting at 4), choose Additional Feat OR Increase Innate Power
+
+### Power Character Progression
+
+| Level | Innate Threshold | Innate Energy | Innate Pools | Power Prof |
+|-------|-----------------|---------------|--------------|------------|
+| 1 | 8 | 16 | 2 | 2 |
+| 2 | 8 | 16 | 2 | 2 |
+| 3 | 8 | 16 | 2 | 2 |
+| 4 | 9 | 27 | 3 | 2 |
+| 5 | 9 | 27 | 3 | 3 |
+| 6 | 9 | 27 | 3 | 3 |
+| 7 | 10 | 40 | 4 | 3 |
+| 8 | 10 | 40 | 4 | 3 |
+| 9 | 10 | 40 | 4 | 3 |
+| 10 | 11 | 55 | 5 | 4 |
+| 11 | 11 | 55 | 5 | 4 |
+| 12 | 11 | 55 | 5 | 4 |
+| 13 | 12 | 72 | 6 | 4 |
+| 14 | 12 | 72 | 6 | 4 |
+| 15 | 12 | 72 | 6 | 5 |
+| 16 | 13 | 91 | 7 | 5 |
+| 17 | 13 | 91 | 7 | 5 |
+| 18 | 13 | 91 | 7 | 5 |
+| 19 | 14 | 112 | 8 | 5 |
+| 20 | 14 | 112 | 8 | 6 |
+
+**Innate Threshold:** Max energy cost for a power to be Innate. Increases by +1 every 3 levels starting at 4.
+**Innate Energy:** Innate Pools × Innate Threshold. Total combined energy of all innate powers.
+**Innate Pools:** Number of innate powers (if each uses max threshold). +1 every 3 levels starting at 4.
+
+### Martial Character Progression
+
+| Level | Bonus Archetype Feats | Total Archetype Feats | Armament Prof | Martial Prof |
+|-------|----------------------|----------------------|---------------|--------------|
+| 1 | +2 | 3 | 12 | 2 |
+| 2 | — | 4 | 12 | 2 |
+| 3 | — | 5 | 12 | 2 |
+| 4 | +1 | 7 | 12 | 2 |
+| 5 | — | 8 | 15 | 3 |
+| 6 | — | 9 | 15 | 3 |
+| 7 | +1 | 11 | 15 | 3 |
+| 8 | — | 12 | 15 | 3 |
+| 9 | — | 13 | 15 | 3 |
+| 10 | +1 | 15 | 18 | 4 |
+| 11 | — | 16 | 18 | 4 |
+| 12 | — | 17 | 18 | 4 |
+| 13 | +1 | 19 | 18 | 4 |
+| 14 | — | 20 | 18 | 4 |
+| 15 | — | 21 | 21 | 5 |
+| 16 | +1 | 23 | 21 | 5 |
+| 17 | — | 24 | 21 | 5 |
+| 18 | — | 25 | 21 | 5 |
+| 19 | +1 | 27 | 21 | 5 |
+| 20 | — | 28 | 24 | 6 |
+
+### Powered-Martial Character Progression
+
+**Becoming Powered-Martial:** When you increase an Archetype Proficiency from 0 to 1:
+- **Power Prof gained:** Innate Threshold=6, Innate Energy=6, 1 Innate Pool
+- **Martial Prof gained:** +1 Archetype Feat, Armament Prof Max=8
+
+| Level | Innate Power or Feat | Archetype Prof Increase |
+|-------|---------------------|------------------------|
+| 1–3 | — | — |
+| 4 | +1 | — |
+| 5 | — | +1 |
+| 6 | — | — |
+| 7 | +1 | — |
+| 8–9 | — | — |
+| 10 | +1 | +1 |
+| 11–12 | — | — |
+| 13 | +1 | — |
+| 14 | — | — |
+| 15 | — | +1 |
+| 16 | +1 | — |
+| 17–18 | — | — |
+| 19 | +1 | — |
+| 20 | — | +1 |
+
+**Increase Innate Power:** +1 Innate Pool; Threshold 6→8 or +1 if already 8+. Innate Energy = Threshold × Pools.
+**Additional Feat:** Gain 1 Archetype or Character feat.
+**Every 5th level:** +1 to either Martial or Power Proficiency.
 
 ### Armament Proficiency by Martial Proficiency
 
@@ -435,21 +526,29 @@ Any Bonus can be converted to a Score by adding 10.
 
 ## Damage Types
 
-### Physical (Weapons)
+There is no "physical vs magic" split. All damage types are equal categories. The only distinction is which types are reduced by armor.
 
-- **Bludgeoning** — Chair leg, club, fall damage
-- **Piercing** — Dagger, arrow, needle
-- **Slashing** — Sword, shard of glass
+### All Damage Types
 
-### Magic / Elemental (Powers)
-
-Reference `creator-constants.ts` for full list. Common types:
-
-- Magic, Fire, Ice, Lightning, Light, Acid, Poison, Necrotic, Psychic, Spiritual, Sonic
+Magic, Fire, Ice, Lightning, Spiritual, Sonic, Poison, Necrotic, Acid, Psychic, Light, Bludgeoning, Piercing, Slashing
 
 ### Armor Exceptions
 
-Standard armor **does not reduce** Psychic, Spiritual, or Sonic damage. Specialized armor may.
+Standard armor **does not reduce** Psychic, Spiritual, or Sonic damage. All other damage types ARE reduced by armor. Specialized armor may override this.
+
+### Levels by Rarity (Reference)
+
+Helpful reference for what rarity of items/feats/powers a character should have at a given level:
+
+| Rarity | Character Levels |
+|--------|-----------------|
+| Common | 1–4 |
+| Uncommon | 5–9 |
+| Rare | 10–14 |
+| Epic | 15–19 |
+| Legendary | 20–24 |
+| Mythic | 25–29 |
+| Ascended | 30+ |
 
 ### Energy Below Zero
 
@@ -478,18 +577,22 @@ When healed, regain HP up to maximum. **Healing from a Power** adds the healer's
 
 ## Recovery
 
+**Requirements:** Adequate nutrition/hydration, reasonably temperate conditions, bedding if necessary. Characters must doff armor to sleep.
+
+**Resources restored:** Health, Energy, and some Feat Uses.
+
 | Type | Duration | Effect |
 |------|----------|--------|
-| **Partial** | 2, 4, or 6 hours | Each 2 hours = ¼ max to allocate between HP and EN (or ½ to one). Allocate in ¼ increments only. |
-| **Full** | 8–10 hours | HP→max, EN→max, most temporary effects removed; Feat uses (Full) restored |
+| **Partial** | 2, 4, or 6 hours | Each 2 hours: regain ¼ of both max Energy and Health, OR ½ of one (Health or Energy). Some temporary effects wear off. |
+| **Full** | 8–10 hours | Fully restore Energy and Health, remove most temporary effects. Feat uses (Full) restored. Can do light activities (investigate, repair, practice, keep watch) as long as 8+ hours of downtime including sleep. |
 
-**Partial recovery quarters:** 2h = 1 quarter (½ total resources), 4h = 2 quarters (1 whole), 6h = 3 quarters (1½ total). 8h is full recovery, not partial.
+**Partial recovery interruption:** If interrupted, you lose benefits of the interrupted block. For 4+ hour recoveries, you keep completed 2-hour blocks if you resume within 10 minutes of interruption.
 
 **Rounding:** Round up for fractions (e.g., 9 max HP ÷ 4 = 3 HP per quarter).
 
 **Feat uses:** Partial recovery resets "Partial" only; "Full" requires full recovery.
 
-**Without Full Recovery:** If 24 hours pass without full recovery, max HP and EN reduce by ¼ each (accumulates, min 1 each).
+**Without Full Recovery:** If 24 hours pass without full recovery, max HP and EN reduce by ¼ each (accumulates, min 1 each HP and EN).
 
 ---
 
@@ -583,36 +686,44 @@ Carrying > ½ capacity halves movement speed.
 
 ---
 
-## Conditions (Summary)
+## Conditions
+
+Conditions are temporary effects. Leveled conditions have proportional effects. Conditions don't stack — stronger replaces weaker.
+
+**Leveled Conditions:** Most conditions followed by a number (e.g., "Stunned 2"). If a condition exceeds the value it reduces (e.g., Stunned 5 vs 4 AP), it reduces to a minimum of 1.
+
+### Standard Conditions
 
 | Condition | Effect |
 |-----------|--------|
-| Blinded | Targets Completely Obscured; sight-based Acuity fails |
-| Charmed | Can't attack charmer; charmer's Charisma rolls +2 |
-| Restrained | No Actions/Reactions requiring arms |
-| Dazed | No Reactions |
-| Deafened | Can't hear; Resistance to Sonic |
-| Dying | Prone, 1 AP/turn; escalating damage each turn |
-| Faint | -1 Evasion, Might, Reflex, balance/poise rolls |
-| Grappled | -2 Attack, +2 to be hit, can't move away |
-| Hidden | +2 Attack vs. unaware; location unknown until Perceive/Search |
-| Immobile | Speed 0, no Movement |
-| Invisible | Completely Obscured to basic vision |
-| Prone | ½ Speed; +2 to be hit from melee |
-| Terminal | HP ≤ ¼ max (gravely injured, close to defeat) |
+| **Blinded** | All targets Completely Obscured to blinded creature relying on basic vision. Sight-based Acuity rolls auto-fail. |
+| **Charmed** | Can't attack or perform harmful Actions against charmer. Charmer's Charisma rolls and potencies gain +2. |
+| **Restrained** | Cannot take Actions or Reactions requiring arms. RM may allow limited-mobility arm actions. |
+| **Dazed** | Cannot take Reactions. |
+| **Deafened** | Cannot hear. Resistance to Sonic damage. Hearing-based Acuity rolls auto-fail. |
+| **Dying** | HP at 0 or negative. Prone, 1 AP/turn. Take 1d4 irreducible damage at start of turn, doubling each turn (1d4, 1d8, 2d8, 4d8...). AP reduced to 1 on entry. |
+| **Faint** | -1 to Evasion, Might, Reflex, and all D20 rolls requiring balance/poise. Outside forces gain +1 to D20 rolls and potency to make you prone, knock back, or grapple. |
+| **Grappled** | -2 to Attack rolls, +2 to be hit, cannot move away from grappler, cannot take Movement Actions. |
+| **Hidden** | +2 bonus on Attack rolls vs unaware creatures (plus Obscurity bonus). Location unknown until Perceive/Search roll vs Stealth/Hide Score. |
+| **Immobile** | Cannot take Movement Actions, Speed = 0. Speed cannot be increased until removed. |
+| **Invisible** | Completely Obscured to all creatures relying on basic vision. |
+| **Prone** | Speed reduced by ½. +2 to be hit from creatures within melee range. +2 Obscurity vs creatures not above you or in melee range. |
+| **Terminal** | Current HP ≤ ¼ max HP. Appears gravely injured, close to defeat. |
 
 ### Leveled Conditions
 
-- **Bleed:** Lose 1 HP/turn per level
-- **Exhausted:** -1 all Bonuses/Evasion per level; -1 Speed per 2 levels; death at 11+
-- **Exposed:** -1 all Defenses/Evasion per level
-- **Frightened:** Penalty vs. fear source
-- **Staggered:** -Evasion per level
-- **Resilient:** -Damage taken per level
-- **Slowed:** -Speed per level
-- **Stunned:** -AP per level (min 1)
-- **Susceptible:** +Damage taken per level
-- **Weakened:** -D20 rolls per level
+| Condition | Effect per Level |
+|-----------|-----------------|
+| **Bleed** | Lose 1 HP at start of turn per level. Healing received reduces Bleed by amount healed (but also reduces HP restored by same amount). |
+| **Exhausted** | -1 to all Bonuses and Evasion per level. -1 Speed per 2 levels (starting at level 2). Affects all Scores calculated from Bonuses. Each full recovery reduces by 1. Death at level 11+. |
+| **Exposed** | -1 to all Defenses and Evasion per level. |
+| **Frightened** | Penalty to all Scores/D20 rolls vs fear source equal to level. Penalty to all Scores/D20 rolls while seeing fear source equal to ½ level. |
+| **Staggered** | -1 Evasion per level. |
+| **Resilient** | Reduce damage taken by amount equal to level. |
+| **Slowed** | -1 to all Speed types per level. |
+| **Stunned** | Lose AP equal to level (removes immediately and reduces AP gained at end of turn). Always receives at least 1 AP at end of turn. |
+| **Susceptible** | Increase all damage taken by amount equal to level. |
+| **Weakened** | -1 to all D20 rolls per level. |
 
 ---
 
@@ -660,4 +771,4 @@ Use these for tooltips, placeholders, and contextual help:
 - *"Each 5 points above the target = 1 additional Success."*
 - *"Standard armor doesn't reduce Psychic, Spiritual, or Sonic damage."*
 - *"Round up for all fractions in calculations."*
-- *"Increasing an Ability above +3 costs 2 points per increase."*
+- *"Increasing an Ability above +4 costs 2 points per increase."*

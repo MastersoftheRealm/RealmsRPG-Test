@@ -47,6 +47,7 @@ interface CodexFeat {
   description?: string;
   effect?: string;
   max_uses?: number;
+  uses_per_rec?: number; // Canonical field from API
   rec_period?: string;
   category?: string;
 }
@@ -191,7 +192,7 @@ export function FeatsTab({
     };
   }, [traitsDb]);
 
-  // Enrich feat with RTDB data
+  // Enrich feat with codex data — derive name/description/maxUses/recovery when not on character
   const enrichFeat = useCallback((feat: FeatData) => {
     let dbFeat = featsDb.find(f => f.id === String(feat.id));
     if (!dbFeat) {
@@ -199,8 +200,9 @@ export function FeatsTab({
     }
     return {
       ...feat,
+      name: feat.name || dbFeat?.name || String(feat.id),
       description: feat.description || dbFeat?.description || dbFeat?.effect,
-      maxUses: feat.maxUses ?? dbFeat?.max_uses ?? 0,
+      maxUses: feat.maxUses ?? dbFeat?.uses_per_rec ?? dbFeat?.max_uses ?? 0,
       recovery: feat.recovery || dbFeat?.rec_period,
     };
   }, [featsDb]);

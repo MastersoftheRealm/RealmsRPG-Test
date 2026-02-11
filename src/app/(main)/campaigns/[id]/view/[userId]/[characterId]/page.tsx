@@ -197,9 +197,9 @@ function CampaignCharacterViewContent() {
               />
               <AbilitiesSection
                 abilities={character.abilities}
-                defenseSkills={character.defenseSkills}
+                defenseSkills={character.defenseVals || character.defenseSkills}
                 level={character.level || 1}
-                archetypeAbility={character.archetype?.ability as keyof typeof character.abilities}
+                archetypeAbility={(character.pow_abil || character.archetype?.ability) as keyof typeof character.abilities}
                 martialAbility={character.mart_abil}
                 powerAbility={character.pow_abil}
                 isEditMode={false}
@@ -220,20 +220,22 @@ function CampaignCharacterViewContent() {
                 <ArchetypeSection
                   character={character}
                   isEditMode={false}
+                  enrichedWeapons={enrichedData?.weapons}
+                  enrichedArmor={enrichedData?.armor}
                   className="flex-1"
                 />
                 <LibrarySection
                   className="flex-1"
                   powers={enrichedData?.powers || character.powers || []}
                   techniques={enrichedData?.techniques || character.techniques || []}
-                  weapons={enrichedData?.weapons || (character.equipment?.weapons || []) as Item[]}
-                  armor={enrichedData?.armor || (character.equipment?.armor || []) as Item[]}
-                  equipment={enrichedData?.equipment || (character.equipment?.items || []) as Item[]}
+                  weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
+                  armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
+                  equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
                   currency={character.currency}
                   innateEnergy={archetypeProgression?.innateEnergy || 0}
                   innateThreshold={archetypeProgression?.innateThreshold || 0}
                   innatePools={archetypeProgression?.innatePools || 0}
-                  currentEnergy={character.energy?.current ?? calculatedStats.maxEnergy}
+                  currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof ?? 0}
                   isEditMode={false}
                   onAddPower={() => {}}

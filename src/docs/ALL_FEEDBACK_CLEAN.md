@@ -610,3 +610,34 @@ Notes
 - Priority: Critical
 - Raw feedback: "Roll logs/Campaigns/Encounters: Allow attaching a campaign to an encounter upon creation or within the encounter, this allows you to click a button 'Add all Characters' or something that lets you add all the characters from the campaign into the encounter automatically. I also see that encounter combatants are not fully loading with their accurate current/max energy and health (when the combatant is tied to a users character). add a roll log (same ui/functionalty/styles as the character sheet) to encounters for RM to use to make rolls (privately, not to the campaign) but which also has the tabs so they can see the rolls in their campaigns. in the encounter tab (roll log campaign mode), character sheet (campaign mode), and campaign page, make the roll log styles consistent, ensure it shows the roll date, most say 'unavailable' for the date. also rolls should be REAL TIME synced between characters and campaigns and other characters/users, so we may need to update the database, supabase settings, and so on to make it real time. The other realtime data would be current health and energy synced between encounters and the characters themselves. Character visibilty: When a user sets a character to public, anyone else should be able to copy the link to that character and use it in their browser to see the character, with the exception that they wouldn't be allowed to edit ANYTHING. is it's set to campaign only, the RM and other users in the campaign should be able to see (not edit) it. If it's set to private and they join a campaign, it should automatically set the character privacy to campaign only (make a notifcation when they join a campaign with a private character that it will set the characters visibility to campaign only. Note: Since characters use powers, techniques, armametns, items, etc which are also from users private library, these also would need to be visible to others, again, without editing privilages."
 - Extracted to: TASK-161 through TASK-168
+
+2/11/2026 — Admin Codex UI — Creature Feats, Equipment, Traits, Species, Skills, Feats, Parts, Properties
+- Context: Admin Codex → Creature Feats / Equipment / Traits / Species / Skills / Feats / Parts / Properties
+- Priority: High
+- Raw feedback (abbreviated): Admin Codex edit and list UIs are missing or misrepresenting important schema fields. For creature feats there is no way to set feat level, required creature level, or a mechanic flag; equipment lacks proper inputs for category and currency, uses an incorrect type selector, and loads existing cost as 0 in the edit modal; property edit modals default type to a non-existent \"general\" type and do not reflect mechanic properties accurately; parts editing/filtering mishandles mechanic and duration flags and shows percentage-based EN as raw values instead of percentages; list rows with options (parts/properties) do not show those options as expandable chips; trait edit modals do not show flaw/characteristic checkboxes as checked when true; species editing exposes a \"Primary size\" concept instead of only sizes[] and does not make selected traits expandable for RMs to read descriptions; skills and feats filters show duplicate \"All\" options, skills base-skill columns show \"-\" even when base_skill_id is set, and skill edit modals do not reliably surface the base skill.
+- Expected: Admin Codex tabs for creature feats, equipment, traits, species, skills, feats, parts, and properties align with CODEX_SCHEMA_REFERENCE: editors expose all relevant schema fields (including feat_points/feat_lvl/lvl_req/mechanic, equipment category/currency, property type/mechanic, part mechanic/percentage/duration), boolean flags load into checkboxes correctly, size handling uses sizes[] rather than a separate primary size, base skills display and edit correctly, filter dropdowns avoid duplicate \"All\" options, percentage-based EN is formatted as percentages, and any parts/properties with options render those options as expandable chips in both Codex and Admin Codex list expanded views.
+- Extracted to: TASK-190, TASK-191, TASK-192, TASK-193, TASK-194
+
+2/11/2026 — Core Rules Corrections (Owner Batch from Core Rulebook)
+- Context: Game rules, ability caps, damage types, feat formulas, creature progression, conditions, sizes, recovery, experience, archetype progression
+- Priority: Critical
+- Raw feedback (aggregated from multiple messages):
+  1. Damage Types: No "physical vs magic" split. All damage types are a flat list. Only distinction is armor exceptions (Psychic, Spiritual, Sonic not reduced by armor). Full list: Magic, Fire, Ice, Lightning, Spiritual, Sonic, Poison, Necrotic, Acid, Psychic, Light, Bludgeoning, Piercing, Slashing.
+  2. Levels by Rarity: Common 1-4, Uncommon 5-9, Rare 10-14, Epic 15-19, Legendary 20-24, Mythic 25-29, Ascended 30+.
+  3. Ability caps: Hard cap 10 for characters, 20 for creatures. NO level cap. Cost 2 per point starting at 4+ (NOT 3+). Code was correct, GAME_RULES.md table was wrong.
+  4. Skill soft cap: 3 points per 1 increase past 3 (base), 2 per 1 past 3 (sub-skill). Already correct in docs.
+  5. Character feats: 1 per level, always, all archetypes. Total = level.
+  6. Archetype feats: 1 per level base + martial bonus (Martial gets +2 at L1, +1 every 3 levels starting at 4). Power = level. Powered-Martial = milestones choose feat or innate.
+  7. Full Power Character Progression table provided (innate threshold/energy/pools/power prof by level).
+  8. Full Martial Character Progression table provided (bonus feats/total feats/armament prof/martial prof by level).
+  9. Full Powered-Martial Progression table provided (innate or feat choice every 3 levels, prof increase every 5).
+  10. Armament Proficiency by Martial Prof confirmed: 0→3, 1→8, 2→12, 3→15, 4→18, 5→21, 6→24.
+  11. Creature skill points: 5 at level 1, 3 per level (NOT 5 per level as previously documented).
+  12. Creature base training points: 22, TP per level: 2 (same as characters, NOT 9/1).
+  13. Full conditions list provided from core rulebook (13 standard + 10 leveled) with detailed descriptions.
+  14. Full sizes table (8 sizes: Miniscule through Gargantuan) with carrying capacity — already in GAME_RULES.
+  15. Full recovery rules from core rulebook — requirements (nutrition, doff armor, etc.), interruption rules.
+  16. Full experience/leveling rules: XP threshold = Level × 4, Combat XP = sum enemy levels × 2.
+  17. core_rulebook_extracted.txt is the pure source of truth for game rules.
+- Expected: GAME_RULES.md corrected with all values. Task queue updated. TASK-195 cancelled (code was correct). TASK-198, TASK-199 resolved with owner-confirmed values. TASK-221 creature values corrected.
+- Extracted to: Updates applied to TASK-195 (cancelled), TASK-198 (resolved), TASK-199 (resolved), TASK-221 (corrected), GAME_RULES.md (updated)

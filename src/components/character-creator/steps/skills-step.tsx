@@ -32,7 +32,7 @@ export function SkillsStep() {
   }, [draft.ancestry?.id, draft.ancestry?.name, draft.species, allSpecies]);
 
   const allocations = draft.skills || {};
-  const defenseSkills = draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS };
+  const defenseVals = draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS };
   const abilities = draft.abilities || { ...DEFAULT_ABILITIES };
   const level = draft.level || 1;
 
@@ -52,14 +52,14 @@ export function SkillsStep() {
   );
 
   const handleDefenseChange = useCallback(
-    (newDefense: typeof defenseSkills) => {
-      updateDraft({ defenseSkills: newDefense });
+    (newDefense: typeof defenseVals) => {
+      updateDraft({ defenseVals: newDefense });
     },
     [updateDraft]
   );
 
   const handleContinue = () => {
-    updateDraft({ skills: allocationsWithSpecies, defenseSkills });
+    updateDraft({ skills: allocationsWithSpecies, defenseVals });
     nextStep();
   };
 
@@ -87,7 +87,7 @@ export function SkillsStep() {
       level={level}
       abilities={abilities}
       allocations={allocationsWithSpecies}
-      defenseSkills={defenseSkills}
+      defenseSkills={defenseVals}
       speciesSkillIds={speciesSkillIds}
       onAllocationsChange={handleAllocationsChange}
       onDefenseChange={handleDefenseChange}

@@ -4,10 +4,9 @@
  * Select character feats with Codex-style filtering and GridListRow cards.
  * Features auto-filters based on character stats to hide unqualified feats.
  * 
- * Feat Limits by Archetype:
- * - Power: 1 archetype feat + 1 character feat
- * - Powered-Martial: 2 archetype feats + 1 character feat
- * - Martial: 3 archetype feats + 1 character feat
+ * Character feats: always 1 per level (= level).
+ * Archetype feats: varies by archetype (see calculateMaxArchetypeFeats).
+ * At level 1: Power=1, Powered-Martial=2, Martial=3.
  */
 
 'use client';
@@ -28,11 +27,8 @@ import {
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
-import { getArchetypeFeatLimit } from '@/lib/game/formulas';
+import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import type { ArchetypeCategory } from '@/types';
-
-// Character feats are always 1 at level 1
-const CHARACTER_FEAT_LIMIT = 1;
 
 // Grid columns for feat display
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 40px';
@@ -76,10 +72,11 @@ export function FeatsStep() {
     return map;
   }, [skillsDb]);
 
-  // Get archetype feat limit based on archetype type
+  // Get feat limits based on archetype type and level
   const archetypeType = (draft.archetype?.type || 'power') as ArchetypeCategory;
-  const maxArchetypeFeats = getArchetypeFeatLimit(archetypeType);
-  const maxCharacterFeats = CHARACTER_FEAT_LIMIT;
+  const level = draft.level || 1;
+  const maxArchetypeFeats = calculateMaxArchetypeFeats(level, archetypeType);
+  const maxCharacterFeats = calculateMaxCharacterFeats(level);
   
   // Separate selected feats by type
   const { selectedArchetypeFeats, selectedCharacterFeats } = useMemo(() => {
