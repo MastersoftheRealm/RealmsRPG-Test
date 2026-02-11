@@ -22,6 +22,15 @@ async function fetchCodex() {
   return res.json();
 }
 
+/** Full codex response (all collections). Use for spreadsheet or multi-collection views. */
+export function useCodexFull(): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>, Error> {
+  return useQuery({
+    queryKey: ['codex'],
+    queryFn: fetchCodex,
+    ...DEFAULT_OPTIONS,
+  });
+}
+
 export function useCodexFeats(): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['feats'], Error> {
   return useQuery({
     queryKey: ['codex'],

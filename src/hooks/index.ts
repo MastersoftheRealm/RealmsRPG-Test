@@ -58,6 +58,7 @@ export {
 
 // Codex Data (Prisma via API)
 export {
+  useCodexFull,
   useCodexFeats,
   useCodexSkills,
   useCodexSpecies as useSpecies,
