@@ -130,6 +130,11 @@ function PropertyCard({
   }, [allProperties, armamentType]);
 
   // Calculate property's individual contribution
+  const propIP =
+    // @ts-expect-error - base_ip/op_1_ip exist on RTDB item property records
+    ((property.base_ip as number | undefined) || 0) +
+    // @ts-expect-error - base_ip/op_1_ip exist on RTDB item property records
+    (((property.op_1_ip as number | undefined) || 0) * selectedProperty.op_1_lvl);
   const propTP =
     (property.base_tp || property.tp_cost || 0) +
     (property.op_1_tp || 0) * selectedProperty.op_1_lvl;
@@ -150,6 +155,11 @@ function PropertyCard({
           </span>
           <span className="font-medium text-text-primary truncate">{property.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
+            {propIP > 0 && (
+              <span className="text-primary-600">
+                IP: {formatCost(propIP)}
+              </span>
+            )}
             {propTP > 0 && (
               <span className="text-tp">TP: {formatCost(propTP)}</span>
             )}
@@ -238,12 +248,12 @@ function PropertyCard({
 
 const RARITY_REFERENCE = [
   { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-secondary bg-neutral-100' },
-  { name: 'Uncommon', ipRange: '4.01 – 6', baseCost: 100, color: 'text-green-700 bg-green-100' },
-  { name: 'Rare', ipRange: '6.01 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100' },
-  { name: 'Epic', ipRange: '8.01 – 11', baseCost: 2500, color: 'text-power-text bg-power-light' },
-  { name: 'Legendary', ipRange: '11.01 – 14', baseCost: 10000, color: 'text-amber-700 bg-amber-100' },
-  { name: 'Mythic', ipRange: '14.01 – 16', baseCost: 50000, color: 'text-red-700 bg-red-100' },
-  { name: 'Ascended', ipRange: '16.01+', baseCost: 100000, color: 'text-pink-700 bg-pink-100' },
+  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100, color: 'text-green-700 bg-green-100' },
+  { name: 'Rare', ipRange: '6 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100' },
+  { name: 'Epic', ipRange: '8 – 11', baseCost: 2500, color: 'text-power-text bg-power-light' },
+  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000, color: 'text-amber-700 bg-amber-100' },
+  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000, color: 'text-red-700 bg-red-100' },
+  { name: 'Ascended', ipRange: '16+', baseCost: 100000, color: 'text-pink-700 bg-pink-100' },
 ];
 
 function RarityReferenceTable({ currentIP }: { currentIP: number }) {
@@ -586,9 +596,9 @@ function ItemCreatorContent() {
       op_1_lvl: sp.op_1_lvl,
     }));
     
-    // === WEAPON PROPERTIES ===
-    // Add Two-Handed property if weapon and selected
-    if (armamentType === 'Weapon' && isTwoHanded) {
+    // === WEAPON / SHIELD PROPERTIES ===
+    // Add Two-Handed property if weapon/shield and selected
+    if ((armamentType === 'Weapon' || armamentType === 'Shield') && isTwoHanded) {
       const twoHandedProp = itemProperties.find((p: ItemProperty) => p.name === 'Two-Handed');
       if (twoHandedProp) {
         baseProps.push({ id: Number(twoHandedProp.id), name: 'Two-Handed', op_1_lvl: 0 });
@@ -802,25 +812,30 @@ function ItemCreatorContent() {
         ...(armamentType === 'Weapon' && {
           isTwoHanded,
           rangeLevel,
-          abilityRequirement: abilityRequirement ? {
-            id: abilityRequirement.id,
-            name: abilityRequirement.name,
-            level: abilityRequirement.level,
-          } : null,
+          abilityRequirement: abilityRequirement
+            ? {
+                id: abilityRequirement.id,
+                name: abilityRequirement.name,
+                level: abilityRequirement.level,
+              }
+            : null,
         }),
         // Armor-specific fields
         ...(armamentType === 'Armor' && {
           damageReduction,
           agilityReduction,
           criticalRangeIncrease,
-          abilityRequirement: abilityRequirement ? {
-            id: abilityRequirement.id,
-            name: abilityRequirement.name,
-            level: abilityRequirement.level,
-          } : null,
+          abilityRequirement: abilityRequirement
+            ? {
+                id: abilityRequirement.id,
+                name: abilityRequirement.name,
+                level: abilityRequirement.level,
+              }
+            : null,
         }),
         // Shield-specific fields
         ...(armamentType === 'Shield' && {
+          isTwoHanded,
           shieldDR: { amount: shieldDR.amount, size: shieldDR.size },
           hasShieldDamage,
           shieldDamage: hasShieldDamage ? { amount: shieldDamage.amount, size: shieldDamage.size } : null,
@@ -979,6 +994,7 @@ function ItemCreatorContent() {
     
     // Load shield-specific fields
     if (loadedType === 'Shield') {
+      setIsTwoHanded(item.isTwoHanded || false);
       if (item.shieldDR) {
         setShieldDR({
           amount: item.shieldDR.amount || 1,
@@ -1143,10 +1159,12 @@ function ItemCreatorContent() {
             </div>
           </div>
 
-          {/* Weapon Configuration - Handedness & Range */}
-          {armamentType === 'Weapon' && (
+          {/* Weapon / Shield Configuration - Handedness & (Weapon) Range */}
+          {(armamentType === 'Weapon' || armamentType === 'Shield') && (
             <div className="bg-surface rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-text-primary mb-4">Weapon Configuration</h3>
+              <h3 className="text-lg font-bold text-text-primary mb-4">
+                {armamentType === 'Weapon' ? 'Weapon Configuration' : 'Shield Configuration'}
+              </h3>
               <div className="flex flex-wrap items-center gap-6">
                 {/* Handedness Toggle */}
                 <div className="flex items-center gap-3">
@@ -1179,21 +1197,23 @@ function ItemCreatorContent() {
                   </div>
                 </div>
 
-                {/* Range Control */}
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-text-secondary">Range:</span>
-                  <span className="font-medium text-amber-600 min-w-[80px]">{rangeDisplay}</span>
-                  <NumberStepper
-                    value={rangeLevel}
-                    onChange={setRangeLevel}
-                    min={0}
-                    max={20}
-                    size="sm"
-                  />
-                  {rangeLevel > 0 && (
-                    <span className="text-xs text-text-muted">(8 spaces per level)</span>
-                  )}
-                </div>
+                {/* Range Control (Weapons only) */}
+                {armamentType === 'Weapon' && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-text-secondary">Range:</span>
+                    <span className="font-medium text-amber-600 min-w-[80px]">{rangeDisplay}</span>
+                    <NumberStepper
+                      value={rangeLevel}
+                      onChange={setRangeLevel}
+                      min={0}
+                      max={20}
+                      size="sm"
+                    />
+                    {rangeLevel > 0 && (
+                      <span className="text-xs text-text-muted">(8 spaces per level)</span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1473,18 +1493,25 @@ function ItemCreatorContent() {
             statRows={[
               { label: 'Type', value: armamentType },
               { label: 'Item Points', value: `${formatCost(costs.totalIP)} IP` },
-              ...(armamentType === 'Weapon' ? [
-                { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
-                { label: 'Range', value: rangeDisplay },
-              ] : []),
+              ...(armamentType === 'Weapon'
+                ? [
+                    { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
+                    { label: 'Range', value: rangeDisplay },
+                  ]
+                : []),
               ...(armamentType === 'Armor' ? [
                 { label: 'Damage Reduction', value: String(damageReduction) },
                 ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-red-600' }] : []),
               ] : []),
-              ...(armamentType === 'Shield' ? [
-                { label: 'Shield Block', value: `${shieldDR.amount}d${shieldDR.size}` },
-                ...(hasShieldDamage ? [{ label: 'Shield Damage', value: `${shieldDamage.amount}d${shieldDamage.size}` }] : []),
-              ] : []),
+              ...(armamentType === 'Shield'
+                ? [
+                    { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
+                    { label: 'Shield Block', value: `${shieldDR.amount}d${shieldDR.size}` },
+                    ...(hasShieldDamage
+                      ? [{ label: 'Shield Damage', value: `${shieldDamage.amount}d${shieldDamage.size}` }]
+                      : []),
+                  ]
+                : []),
               ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
             ]}
             breakdowns={selectedProperties.length > 0 ? [

@@ -130,7 +130,7 @@ export function CreatorSummaryPanel({
 }: CreatorSummaryPanelProps) {
   return (
     <div className={cn(
-      'bg-surface rounded-xl shadow-md p-6 sticky top-24',
+      'bg-surface rounded-xl shadow-md p-6',
       className
     )}>
       <h3 className="text-lg font-bold text-text-primary mb-4">{title}</h3>
