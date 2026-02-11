@@ -27,7 +27,7 @@ import { Pencil, Trash2, Plus, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 
-const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 80px';
+const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 
 interface FeatFilters {
   search: string;
@@ -382,38 +382,37 @@ export function AdminFeatsTab() {
             });
             if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
             return (
-              <div key={feat.id} className="flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <GridListRow
-                    id={feat.id}
-                    name={feat.name}
-                    description={feat.description}
-                    gridColumns={FEAT_GRID_COLUMNS}
-                    columns={[
-                      { key: 'Req. Level', value: (feat.lvl_req === 0 || feat.lvl_req == null) ? '-' : String(feat.lvl_req) },
-                      { key: 'Category', value: feat.category || '-' },
-                      { key: 'Ability', value: Array.isArray(feat.ability) ? feat.ability.join(', ') : (feat.ability || '-') },
-                      { key: 'Recovery', value: feat.rec_period || '-' },
-                      { key: 'Uses', value: (feat.uses_per_rec === 0 || feat.uses_per_rec == null) ? '-' : String(feat.uses_per_rec) },
-                    ]}
-                    detailSections={detailSections.length > 0 ? detailSections : undefined}
-                  />
-                </div>
-                <div className="flex gap-1 shrink-0">
-                  <IconButton variant="ghost" size="sm" onClick={() => openEdit(feat)} label="Edit">
-                    <Pencil className="w-4 h-4" />
-                  </IconButton>
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEdit(feat)}
-                    label="Delete"
-                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </IconButton>
-                </div>
-              </div>
+              <GridListRow
+                key={feat.id}
+                id={feat.id}
+                name={feat.name}
+                description={feat.description}
+                gridColumns={FEAT_GRID_COLUMNS}
+                columns={[
+                  { key: 'Req. Level', value: (feat.lvl_req === 0 || feat.lvl_req == null) ? '-' : String(feat.lvl_req) },
+                  { key: 'Category', value: feat.category || '-' },
+                  { key: 'Ability', value: Array.isArray(feat.ability) ? feat.ability.join(', ') : (feat.ability || '-') },
+                  { key: 'Recovery', value: feat.rec_period || '-' },
+                  { key: 'Uses', value: (feat.uses_per_rec === 0 || feat.uses_per_rec == null) ? '-' : String(feat.uses_per_rec) },
+                ]}
+                detailSections={detailSections.length > 0 ? detailSections : undefined}
+                rightSlot={
+                  <div className="flex gap-1">
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(feat)} label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(feat)}
+                      label="Delete"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                  </div>
+                }
+              />
             );
           })
         )}

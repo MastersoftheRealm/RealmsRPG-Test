@@ -1,9 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
+import {
+  SectionHeader,
+  SearchInput,
+  LoadingState,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+  ListEmptyState as EmptyState,
+  SortHeader,
+} from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
+import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -13,6 +22,7 @@ export function AdminCreatureFeatsTab() {
   const { data: creatureFeats, isLoading, error } = useCreatureFeats();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; description: string; points: number } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -20,11 +30,13 @@ export function AdminCreatureFeatsTab() {
 
   const [form, setForm] = useState({ name: '', description: '', points: 0 });
 
-  const filtered = (creatureFeats || []).filter(
-    (f: CreatureFeat) =>
-      !search ||
-      f.name.toLowerCase().includes(search.toLowerCase()) ||
-      f.description?.toLowerCase().includes(search.toLowerCase())
+  const filtered = sortItems<CreatureFeat>(
+    (creatureFeats || []).filter(
+      (f: CreatureFeat) =>
+        !search ||
+        f.name.toLowerCase().includes(search.toLowerCase()) ||
+        f.description?.toLowerCase().includes(search.toLowerCase()),
+    ),
   );
 
   const openAdd = () => {
@@ -86,27 +98,54 @@ export function AdminCreatureFeatsTab() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search creature feats..." />
       </div>
 
+      <div
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: '1.5fr 0.8fr 40px' }}
+      >
+        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="POINTS" col="points" sortState={sortState} onSort={handleSort} />
+      </div>
+
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((f: CreatureFeat) => (
-            <div key={f.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
-              <div className="flex-1 min-w-0">
-                <GridListRow id={f.id} name={f.name} description={f.description || ''} columns={[{ key: 'Points', value: String(f.points ?? '-') }]} />
-              </div>
-              <div className="flex gap-1 pr-2">
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(f)} label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </IconButton>
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(f)} label="Delete" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <EmptyState title="No creature feats found" description="Add one to get started." action={{ label: 'Add Creature Feat', onClick: openAdd }} size="sm" />
+        <div className="flex flex-col gap-1 mt-2">
+          {filtered.length === 0 ? (
+            <EmptyState
+              title="No creature feats found"
+              description="Add one to get started."
+              action={{ label: 'Add Creature Feat', onClick: openAdd }}
+              size="sm"
+            />
+          ) : (
+            filtered.map((f: CreatureFeat) => (
+              <GridListRow
+                key={f.id}
+                id={f.id}
+                name={f.name}
+                description={f.description || ''}
+                gridColumns="1.5fr 0.8fr 40px"
+                columns={[
+                  { key: 'Points', value: String(f.points ?? '-') },
+                ]}
+                rightSlot={
+                  <div className="flex gap-1 pr-2">
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(f)} label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(f)}
+                      label="Delete"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                  </div>
+                }
+              />
+            ))
           )}
         </div>
       )}

@@ -19,7 +19,7 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
-const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 80px';
+const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
 
 interface PropertyFilters {
   search: string;
@@ -173,43 +173,42 @@ export function AdminPropertiesTab() {
             />
           ) : (
             filteredProperties.map((p: ItemProperty) => (
-              <div key={p.id} className="flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <GridListRow
-                    id={p.id}
-                    name={p.name}
-                    description={p.description || ''}
-                    gridColumns={PROPERTY_GRID_COLUMNS}
-                    columns={[
-                      { key: 'Type', value: (p.type || 'general') as string },
-                      { key: 'IP', value: p.base_ip && p.base_ip > 0 ? String(p.base_ip) : '-', className: 'text-blue-600' },
-                      {
-                        key: 'TP',
-                        value: (p.base_tp ?? p.tp_cost ?? 0) > 0 ? String(p.base_tp ?? p.tp_cost ?? 0) : '-',
-                        className: 'text-tp',
-                      },
-                      {
-                        key: 'Cost',
-                        value: (p.base_c ?? p.gold_cost ?? 0) > 0 ? `×${p.base_c ?? p.gold_cost ?? 0}` : '-',
-                      },
-                    ]}
-                  />
-                </div>
-                <div className="flex gap-1 shrink-0 pr-2">
-                  <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
-                    <Pencil className="w-4 h-4" />
-                  </IconButton>
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEdit(p)}
-                    label="Delete"
-                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </IconButton>
-                </div>
-              </div>
+              <GridListRow
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                description={p.description || ''}
+                gridColumns={PROPERTY_GRID_COLUMNS}
+                columns={[
+                  { key: 'Type', value: (p.type || 'general') as string },
+                  { key: 'IP', value: p.base_ip && p.base_ip > 0 ? String(p.base_ip) : '-', className: 'text-blue-600' },
+                  {
+                    key: 'TP',
+                    value: (p.base_tp ?? p.tp_cost ?? 0) > 0 ? String(p.base_tp ?? p.tp_cost ?? 0) : '-',
+                    className: 'text-tp',
+                  },
+                  {
+                    key: 'Cost',
+                    value: (p.base_c ?? p.gold_cost ?? 0) > 0 ? `×${p.base_c ?? p.gold_cost ?? 0}` : '-',
+                  },
+                ]}
+                rightSlot={
+                  <div className="flex gap-1 pr-2">
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(p)}
+                      label="Delete"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                  </div>
+                }
+              />
             ))
           )}
         </div>

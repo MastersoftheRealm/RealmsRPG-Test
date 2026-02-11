@@ -19,7 +19,7 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
-const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 80px';
+const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
 
 interface SkillFilters {
   search: string;
@@ -262,40 +262,39 @@ export function AdminSkillsTab() {
             />
           ) : (
             filteredSkills.map((s: Skill) => (
-              <div key={s.id} className="flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <GridListRow
-                    id={s.id}
-                    name={s.name}
-                    description={s.description || ''}
-                    gridColumns={SKILL_GRID_COLUMNS}
-                    columns={[
-                      { key: 'Ability', value: s.ability || '-' },
-                      {
-                        key: 'Base Skill',
-                        value:
-                          s.base_skill_id !== undefined
-                            ? (skillIdToName.get(String(s.base_skill_id)) || '-')
-                            : '-',
-                      },
-                    ]}
-                  />
-                </div>
-                <div className="flex gap-1 shrink-0 pr-2">
-                  <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
-                    <Pencil className="w-4 h-4" />
-                  </IconButton>
-                  <IconButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEdit(s)}
-                    label="Delete"
-                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </IconButton>
-                </div>
-              </div>
+              <GridListRow
+                key={s.id}
+                id={s.id}
+                name={s.name}
+                description={s.description || ''}
+                gridColumns={SKILL_GRID_COLUMNS}
+                columns={[
+                  { key: 'Ability', value: s.ability || '-' },
+                  {
+                    key: 'Base Skill',
+                    value:
+                      s.base_skill_id !== undefined
+                        ? (skillIdToName.get(String(s.base_skill_id)) || '-')
+                        : '-',
+                  },
+                ]}
+                rightSlot={
+                  <div className="flex gap-1 pr-2">
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(s)}
+                      label="Delete"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                  </div>
+                }
+              />
             ))
           )}
         </div>

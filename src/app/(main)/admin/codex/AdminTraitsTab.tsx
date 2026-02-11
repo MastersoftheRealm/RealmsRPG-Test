@@ -8,9 +8,11 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
+  SortHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
+import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -20,6 +22,7 @@ export function AdminTraitsTab() {
   const { data: traits, isLoading, error } = useTraits();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; description: string; species: string[] } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -27,11 +30,13 @@ export function AdminTraitsTab() {
 
   const [form, setForm] = useState({ name: '', description: '', species: '' });
 
-  const filtered = (traits || []).filter(
-    (t: Trait) =>
-      !search ||
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.description?.toLowerCase().includes(search.toLowerCase())
+  const filtered = sortItems<Trait>(
+    (traits || []).filter(
+      (t: Trait) =>
+        !search ||
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.description?.toLowerCase().includes(search.toLowerCase()),
+    ),
   );
 
   const openAdd = () => {
@@ -100,27 +105,50 @@ export function AdminTraitsTab() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search traits..." />
       </div>
 
+      <div
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: '1.5fr 40px' }}
+      >
+        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
+      </div>
+
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((t: Trait) => (
-            <div key={t.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
-              <div className="flex-1 min-w-0">
-                <GridListRow id={t.id} name={t.name} description={t.description || ''} />
-              </div>
-              <div className="flex gap-1 pr-2">
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </IconButton>
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Delete" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <EmptyState title="No traits found" description="Add one to get started." action={{ label: 'Add Trait', onClick: openAdd }} size="sm" />
+        <div className="flex flex-col gap-1 mt-2">
+          {filtered.length === 0 ? (
+            <EmptyState
+              title="No traits found"
+              description="Add one to get started."
+              action={{ label: 'Add Trait', onClick: openAdd }}
+              size="sm"
+            />
+          ) : (
+            filtered.map((t: Trait) => (
+              <GridListRow
+                key={t.id}
+                id={t.id}
+                name={t.name}
+                description={t.description || ''}
+                gridColumns="1.5fr 40px"
+                rightSlot={
+                  <div className="flex gap-1 pr-2">
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(t)}
+                      label="Delete"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                  </div>
+                }
+              />
+            ))
           )}
         </div>
       )}

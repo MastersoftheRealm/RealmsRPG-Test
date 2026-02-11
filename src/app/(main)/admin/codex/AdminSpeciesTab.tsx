@@ -1,14 +1,23 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChipSelect } from '@/components/codex';
-import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
+import { ChipSelect, FilterSection } from '@/components/codex';
+import {
+  SectionHeader,
+  SearchInput,
+  LoadingState,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+  ListEmptyState as EmptyState,
+  SortHeader,
+} from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { useSpecies, useCodexSkills, type Species } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import { useSort } from '@/hooks/use-sort';
 
 type SpeciesEdit = { id: string; name: string; description: string; type: string; size: string; sizes: string[]; speed: number; skills?: string[] };
 
@@ -17,6 +26,7 @@ export function AdminSpeciesTab() {
   const { data: skills = [] } = useCodexSkills();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<SpeciesEdit | null>(null);
   const [saving, setSaving] = useState(false);
@@ -24,25 +34,49 @@ export function AdminSpeciesTab() {
 
   const [form, setForm] = useState({ name: '', description: '', type: '', size: '', sizes: '', speed: 6, skills: [] as string[] });
 
-  const skillOptions = useMemo(() =>
-    skills.map((s: { id: string; name: string }) => ({ value: s.name, label: s.name })),
-    [skills]
+  const skillOptions = useMemo(
+    () => skills.map((s: { id: string; name: string }) => ({ value: s.name, label: s.name })),
+    [skills],
   );
 
-  const resolveSkillNames = (skillIdsOrNames: string[]): string[] => {
-    return skillIdsOrNames.map((s) => {
+  const resolveSkillNames = (skillIdsOrNames: string[]): string[] =>
+    skillIdsOrNames.map((s) => {
       const byId = skills.find((sk: { id: string }) => String(sk.id) === String(s));
       if (byId) return (byId as { name: string }).name;
       const byName = skills.find((sk: { name: string }) => sk.name === s);
       return byName ? (byName as { name: string }).name : s;
     });
-  };
 
-  const filtered = (species || []).filter(
-    (s: Species) =>
-      !search ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description?.toLowerCase().includes(search.toLowerCase())
+  const [typeFilters, setTypeFilters] = useState<string[]>([]);
+  const [sizeFilters, setSizeFilters] = useState<string[]>([]);
+
+  const filterOptions = useMemo(() => {
+    if (!species) return { types: [] as string[], sizes: [] as string[] };
+    const types = new Set<string>();
+    const sizes = new Set<string>();
+    species.forEach((s: Species) => {
+      if (s.type) types.add(s.type);
+      s.sizes?.forEach((sz: string) => sizes.add(sz));
+    });
+    return {
+      types: Array.from(types).sort(),
+      sizes: Array.from(sizes).sort(),
+    };
+  }, [species]);
+
+  const filtered = sortItems<Species>(
+    (species || []).filter((s: Species) => {
+      if (
+        search &&
+        !s.name.toLowerCase().includes(search.toLowerCase()) &&
+        !s.description?.toLowerCase().includes(search.toLowerCase())
+      ) {
+        return false;
+      }
+      if (typeFilters.length > 0 && !typeFilters.includes(s.type)) return false;
+      if (sizeFilters.length > 0 && !s.sizes?.some((sz: string) => sizeFilters.includes(sz))) return false;
+      return true;
+    }),
   );
 
   const openAdd = () => {
@@ -123,27 +157,78 @@ export function AdminSpeciesTab() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search species..." />
       </div>
 
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ChipSelect
+            label="Type"
+            placeholder="Choose type"
+            options={filterOptions.types.map(t => ({ value: t, label: t }))}
+            selectedValues={typeFilters}
+            onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
+            onRemove={(v) => setTypeFilters((prev) => prev.filter(t => t !== v))}
+          />
+
+          <ChipSelect
+            label="Size"
+            placeholder="Choose size"
+            options={filterOptions.sizes.map(s => ({ value: s, label: s }))}
+            selectedValues={sizeFilters}
+            onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
+            onRemove={(v) => setSizeFilters((prev) => prev.filter(s => s !== v))}
+          />
+        </div>
+      </FilterSection>
+
+      <div
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: '1.5fr 1fr 0.8fr 40px' }}
+      >
+        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="SPEED" col="speed" sortState={sortState} onSort={handleSort} />
+      </div>
+
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((s: Species) => (
-            <div key={s.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
-              <div className="flex-1 min-w-0">
-                <GridListRow id={s.id} name={s.name} description={s.description || ''} columns={[{ key: 'Type', value: s.type || '-' }, { key: 'Size', value: s.size || '-' }, { key: 'Speed', value: String(s.speed ?? '-') }]} />
-              </div>
-              <div className="flex gap-1 pr-2">
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </IconButton>
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Delete" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <EmptyState title="No species found" description="Add one to get started." action={{ label: 'Add Species', onClick: openAdd }} size="sm" />
+        <div className="flex flex-col gap-1 mt-2">
+          {filtered.length === 0 ? (
+            <EmptyState
+              title="No species found"
+              description="Add one to get started."
+              action={{ label: 'Add Species', onClick: openAdd }}
+              size="sm"
+            />
+          ) : (
+            filtered.map((s: Species) => (
+              <GridListRow
+                key={s.id}
+                id={s.id}
+                name={s.name}
+                description={s.description || ''}
+                gridColumns="1.5fr 1fr 0.8fr 40px"
+                columns={[
+                  { key: 'Type', value: s.type || '-' },
+                  { key: 'Speed', value: String(s.speed ?? '-') },
+                ]}
+                rightSlot={
+                  <div className="flex gap-1 pr-2">
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(s)}
+                      label="Delete"
+                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                  </div>
+                }
+              />
+            ))
           )}
         </div>
       )}
