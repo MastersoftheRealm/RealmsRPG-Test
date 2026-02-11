@@ -31,6 +31,7 @@ export { ItemSelectionModal } from './item-selection-modal';
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';
 export { DeleteConfirmModal } from './delete-confirm-modal';
+export { ConfirmActionModal } from './confirm-action-modal';
 
 // ============================================================================
 // GridListRow - UNIFIED expandable list row component

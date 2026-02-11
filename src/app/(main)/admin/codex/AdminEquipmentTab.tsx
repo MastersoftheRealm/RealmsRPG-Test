@@ -16,7 +16,7 @@ import { useEquipment } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
@@ -51,6 +51,7 @@ export function AdminEquipmentTab() {
   const [editing, setEditing] = useState<{ id: string; name: string; description?: string; type?: string; gold_cost?: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const [form, setForm] = useState({ name: '', description: '', type: 'equipment' as 'weapon' | 'armor' | 'equipment', gold_cost: 0 });
 
@@ -157,6 +158,21 @@ export function AdminEquipmentTab() {
     }
   };
 
+  const handleInlineDelete = async (id: string, name: string) => {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+    const result = await deleteCodexDoc('codex_equipment', id);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+    } else {
+      alert(result.error);
+      setPendingDeleteId(null);
+    }
+  };
+
   if (error) return <ErrorState message="Failed to load equipment" />;
 
   return (
@@ -224,19 +240,29 @@ export function AdminEquipmentTab() {
                   { key: 'Rarity', value: e.rarity || '-' },
                 ]}
                 rightSlot={
-                  <div className="flex gap-1 shrink-0 pr-2">
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(e)}
-                      label="Delete"
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </IconButton>
+                  <div className="flex items-center gap-1 pr-2">
+                    {pendingDeleteId === e.id ? (
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(e.id, e.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPendingDeleteId(e.id)}
+                          label="Delete"
+                          className="text-danger hover:text-danger-600 hover:bg-transparent"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 }
               />

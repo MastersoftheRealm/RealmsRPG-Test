@@ -373,6 +373,21 @@ export function GridListRow({
 
         </button>
         
+        {/* Inline Edit pencil - visible in collapsed state for quick editing */}
+        {onEdit && (
+          <div className="flex items-center flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            <IconButton
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              label="Edit"
+              className="text-text-muted hover:text-primary-600 hover:bg-transparent"
+            >
+              <Edit className="w-4 h-4" />
+            </IconButton>
+          </div>
+        )}
+
         {/* Delete X - simple red X matching add button style, visible in collapsed state */}
         {onDelete && (
           <div className="flex items-center flex-shrink-0 pr-1" onClick={(e) => e.stopPropagation()}>

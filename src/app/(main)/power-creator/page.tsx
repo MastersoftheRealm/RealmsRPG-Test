@@ -12,13 +12,14 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Zap, Target, Info, FolderOpen } from 'lucide-react';
 import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
 import { usePowerParts, useUserPowers, useAdmin, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoginPromptModal } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
@@ -82,6 +83,8 @@ interface PowerCreatorCache {
 function PowerCreatorContent() {
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
+  const searchParams = useSearchParams();
+  const editPowerId = searchParams.get('edit');
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -110,6 +113,7 @@ function PowerCreatorContent() {
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
 
   // Fetch power parts
   const { data: powerParts = [], isLoading, error } = usePowerParts();
@@ -348,17 +352,7 @@ function PowerCreatorContent() {
     );
   }, []);
 
-  const handleSave = async () => {
-    if (!name.trim()) {
-      setSaveMessage({ type: 'error', text: 'Please enter a power name' });
-      return;
-    }
-    if (!user) {
-      // Show login prompt modal instead of error message
-      setShowLoginPrompt(true);
-      return;
-    }
-
+  const executeSave = async () => {
     setSaving(true);
     setSaveMessage(null);
 
@@ -442,6 +436,23 @@ function PowerCreatorContent() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      setSaveMessage({ type: 'error', text: 'Please enter a power name' });
+      return;
+    }
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    // Show confirmation for public library saves
+    if (saveTarget === 'public') {
+      setShowPublishConfirm(true);
+      return;
+    }
+    executeSave();
   };
 
   const handleReset = () => {
@@ -600,6 +611,29 @@ function PowerCreatorContent() {
     setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
     setTimeout(() => setSaveMessage(null), 2000);
   }, [powerParts]);
+
+  // Load power for editing from URL parameter (?edit=<id>)
+  useEffect(() => {
+    if (!editPowerId || !userPowers || userPowers.length === 0 || powerParts.length === 0 || isInitialized) return;
+    
+    // Find the power to edit by docId or id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const powerToEdit = (userPowers as any[]).find(
+      (p: { docId?: string; id?: string }) => p.docId === editPowerId || p.id === editPowerId
+    );
+    if (!powerToEdit) {
+      console.warn(`Power with ID ${editPowerId} not found in library`);
+      setIsInitialized(true);
+      return;
+    }
+    
+    // Use the existing handleLoadPower callback to populate the form
+    handleLoadPower(powerToEdit);
+    
+    // Clear localStorage cache when loading for edit
+    localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
+    setIsInitialized(true);
+  }, [editPowerId, userPowers, powerParts, isInitialized, handleLoadPower]);
 
   if (isLoading) {
     return (
@@ -1036,6 +1070,20 @@ function PowerCreatorContent() {
         returnPath="/power-creator"
         contentType="power"
       />
+
+      {/* Publish Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={showPublishConfirm}
+        onClose={() => setShowPublishConfirm(false)}
+        onConfirm={() => {
+          setShowPublishConfirm(false);
+          executeSave();
+        }}
+        title="Publish to Public Library"
+        description={`Are you sure you wish to publish this power "${name.trim()}" to the public library? All users will be able to see and use it.`}
+        confirmLabel="Publish"
+        icon="publish"
+      />
     </PageContainer>
   );
 }
@@ -1043,7 +1091,9 @@ function PowerCreatorContent() {
 export default function PowerCreatorPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
-      <PowerCreatorContent />
+      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+        <PowerCreatorContent />
+      </Suspense>
     </div>
   );
 }

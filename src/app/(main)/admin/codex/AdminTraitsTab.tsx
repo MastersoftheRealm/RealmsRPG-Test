@@ -15,7 +15,7 @@ import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 export function AdminTraitsTab() {
@@ -24,11 +24,19 @@ export function AdminTraitsTab() {
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; species: string[] } | null>(null);
+  const [editing, setEditing] = useState<Trait | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', species: '' });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    uses_per_rec: '',
+    rec_period: '',
+    flaw: false,
+    characteristic: false,
+  });
 
   const filtered = sortItems<Trait>(
     (traits || []).filter(
@@ -41,16 +49,19 @@ export function AdminTraitsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', species: '' });
+    setForm({ name: '', description: '', uses_per_rec: '', rec_period: '', flaw: false, characteristic: false });
     setModalOpen(true);
   };
 
-  const openEdit = (t: { id: string; name: string; description: string; species?: string[] }) => {
-    setEditing({ ...t, species: t.species ?? [] });
+  const openEdit = (t: Trait) => {
+    setEditing(t);
     setForm({
       name: t.name,
       description: t.description || '',
-      species: (t.species || []).join(', '),
+      uses_per_rec: t.uses_per_rec != null ? String(t.uses_per_rec) : '',
+      rec_period: t.rec_period || '',
+      flaw: Boolean((t as any).flaw),
+      characteristic: Boolean((t as any).characteristic),
     });
     setModalOpen(true);
   };
@@ -64,8 +75,16 @@ export function AdminTraitsTab() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    const species = form.species.split(',').map((s) => s.trim()).filter(Boolean);
-    const data = { name: form.name.trim(), description: form.description.trim(), species };
+    const uses_per_rec = form.uses_per_rec ? parseInt(form.uses_per_rec, 10) || 0 : undefined;
+    const rec_period = form.rec_period.trim() || undefined;
+    const data: Record<string, unknown> = {
+      name: form.name.trim(),
+      description: form.description.trim(),
+      uses_per_rec,
+      rec_period,
+      flaw: form.flaw,
+      characteristic: form.characteristic,
+    };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `trait_${Date.now()}`;
 
@@ -96,6 +115,21 @@ export function AdminTraitsTab() {
     }
   };
 
+  const handleInlineDelete = async (id: string, name: string) => {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+    const result = await deleteCodexDoc('codex_traits', id);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+    } else {
+      alert(result.error);
+      setPendingDeleteId(null);
+    }
+  };
+
   if (error) return <ErrorState message="Failed to load traits" />;
 
   return (
@@ -107,9 +141,11 @@ export function AdminTraitsTab() {
 
       <div
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: '1.5fr 40px' }}
+        style={{ gridTemplateColumns: '1.5fr 0.6fr 0.6fr 40px' }}
       >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="USES" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="RECOVERY" col="rec_period" sortState={sortState} onSort={handleSort} />
       </div>
 
       {isLoading ? (
@@ -130,21 +166,35 @@ export function AdminTraitsTab() {
                 id={t.id}
                 name={t.name}
                 description={t.description || ''}
-                gridColumns="1.5fr 40px"
+                gridColumns="1.5fr 0.6fr 0.6fr 40px"
+                columns={[
+                  { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
+                  { key: 'Recovery', value: t.rec_period || '-' },
+                ]}
                 rightSlot={
-                  <div className="flex gap-1 pr-2">
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(t)}
-                      label="Delete"
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </IconButton>
+                  <div className="flex items-center gap-1 pr-2">
+                    {pendingDeleteId === t.id ? (
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(t.id, t.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPendingDeleteId(t.id)}
+                          label="Delete"
+                          className="text-danger hover:text-danger-600 hover:bg-transparent"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 }
               />
@@ -195,9 +245,46 @@ export function AdminTraitsTab() {
               rows={3}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Species (comma-separated)</label>
-            <Input value={form.species} onChange={(e) => setForm((f) => ({ ...f, species: e.target.value }))} placeholder="Human, Elf, ..." />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Uses per Recovery</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.uses_per_rec}
+                onChange={(e) => setForm((f) => ({ ...f, uses_per_rec: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Recovery Period</label>
+              <select
+                value={form.rec_period}
+                onChange={(e) => setForm((f) => ({ ...f, rec_period: e.target.value }))}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              >
+                <option value="">—</option>
+                <option value="Full">Full</option>
+                <option value="Partial">Partial</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.flaw}
+                onChange={(e) => setForm((f) => ({ ...f, flaw: e.target.checked }))}
+              />
+              <span className="text-sm text-text-secondary">Flaw</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.characteristic}
+                onChange={(e) => setForm((f) => ({ ...f, characteristic: e.target.checked }))}
+              />
+              <span className="text-sm text-text-secondary">Characteristic</span>
+            </label>
           </div>
         </div>
       </Modal>

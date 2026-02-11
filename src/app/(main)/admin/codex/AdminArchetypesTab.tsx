@@ -6,7 +6,7 @@ import { Modal, Button, Input } from '@/components/ui';
 import { useArchetypes } from '@/hooks/use-game-data';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 export function AdminArchetypesTab() {
@@ -18,6 +18,7 @@ export function AdminArchetypesTab() {
   const [editing, setEditing] = useState<ArchetypeItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const [form, setForm] = useState({ name: '', type: 'power' as 'power' | 'powered-martial' | 'martial', description: '' });
 
@@ -82,6 +83,21 @@ export function AdminArchetypesTab() {
     }
   };
 
+  const handleInlineDelete = async (id: string, name: string) => {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+    const result = await deleteCodexDoc('codex_archetypes', id);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
+      setPendingDeleteId(null);
+    } else {
+      alert(result.error);
+      setPendingDeleteId(null);
+    }
+  };
+
   if (error) return <ErrorState message="Failed to load archetypes" />;
 
   return (
@@ -100,13 +116,29 @@ export function AdminArchetypesTab() {
               <div className="flex-1 min-w-0">
                 <GridListRow id={a.id} name={a.name || ''} description={(a as { description?: string }).description || ''} columns={[{ key: 'Type', value: (a.type || '-') as string }]} />
               </div>
-              <div className="flex gap-1 pr-2">
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(a)} label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </IconButton>
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(a)} label="Delete" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
+              <div className="flex items-center gap-1 pr-2">
+                {pendingDeleteId === a.id ? (
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                    <Button size="sm" variant="danger" onClick={() => handleInlineDelete(a.id, a.name || '')} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                    <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                  </div>
+                ) : (
+                  <>
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(a)} label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPendingDeleteId(a.id)}
+                      label="Delete"
+                      className="text-danger hover:text-danger-600 hover:bg-transparent"
+                    >
+                      <X className="w-4 h-4" />
+                    </IconButton>
+                  </>
+                )}
               </div>
             </div>
           ))}

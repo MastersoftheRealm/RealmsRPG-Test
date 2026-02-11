@@ -16,7 +16,7 @@ import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
@@ -35,11 +35,24 @@ export function AdminPropertiesTab() {
     typeFilter: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; type?: string } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string; description: string; type?: string; base_ip?: number; base_tp?: number; base_c?: number; op_1_desc?: string; op_1_ip?: number; op_1_tp?: number; op_1_c?: number; mechanic?: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', type: 'general' });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    type: 'general',
+    base_ip: 0,
+    base_tp: 0,
+    base_c: 0,
+    op_1_desc: '',
+    op_1_ip: 0,
+    op_1_tp: 0,
+    op_1_c: 0,
+    mechanic: false,
+  });
 
   const typeOptions = useMemo(() => {
     if (!properties) return [] as string[];
@@ -76,13 +89,37 @@ export function AdminPropertiesTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', type: 'general' });
+    setForm({
+      name: '',
+      description: '',
+      type: 'general',
+      base_ip: 0,
+      base_tp: 0,
+      base_c: 0,
+      op_1_desc: '',
+      op_1_ip: 0,
+      op_1_tp: 0,
+      op_1_c: 0,
+      mechanic: false,
+    });
     setModalOpen(true);
   };
 
-  const openEdit = (p: { id: string; name: string; description: string; type?: string }) => {
+  const openEdit = (p: { id: string; name: string; description: string; type?: string; base_ip?: number; base_tp?: number; base_c?: number; op_1_desc?: string; op_1_ip?: number; op_1_tp?: number; op_1_c?: number; mechanic?: boolean }) => {
     setEditing(p);
-    setForm({ name: p.name, description: p.description || '', type: (p.type as string) || 'general' });
+    setForm({
+      name: p.name,
+      description: p.description || '',
+      type: (p.type as string) || 'general',
+      base_ip: p.base_ip ?? 0,
+      base_tp: p.base_tp ?? 0,
+      base_c: p.base_c ?? 0,
+      op_1_desc: (p as any).op_1_desc || '',
+      op_1_ip: (p as any).op_1_ip ?? 0,
+      op_1_tp: (p as any).op_1_tp ?? 0,
+      op_1_c: (p as any).op_1_c ?? 0,
+      mechanic: Boolean((p as any).mechanic),
+    });
     setModalOpen(true);
   };
 
@@ -95,7 +132,19 @@ export function AdminPropertiesTab() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    const data = { name: form.name.trim(), description: form.description.trim(), type: form.type };
+    const data: Record<string, unknown> = {
+      name: form.name.trim(),
+      description: form.description.trim(),
+      type: form.type,
+      base_ip: form.base_ip,
+      base_tp: form.base_tp,
+      base_c: form.base_c,
+      op_1_desc: form.op_1_desc.trim() || undefined,
+      op_1_ip: form.op_1_desc.trim() ? form.op_1_ip || 0 : 0,
+      op_1_tp: form.op_1_desc.trim() ? form.op_1_tp || 0 : 0,
+      op_1_c: form.op_1_desc.trim() ? form.op_1_c || 0 : 0,
+      mechanic: form.mechanic,
+    };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `prop_${Date.now()}`;
 
@@ -121,6 +170,21 @@ export function AdminPropertiesTab() {
       closeModal();
     } else {
       alert(result.error);
+    }
+  };
+
+  const handleInlineDelete = async (id: string, name: string) => {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+    const result = await deleteCodexDoc('codex_properties', id);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+    } else {
+      alert(result.error);
+      setPendingDeleteId(null);
     }
   };
 
@@ -193,19 +257,29 @@ export function AdminPropertiesTab() {
                   },
                 ]}
                 rightSlot={
-                  <div className="flex gap-1 pr-2">
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(p)}
-                      label="Delete"
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </IconButton>
+                  <div className="flex items-center gap-1 pr-2">
+                    {pendingDeleteId === p.id ? (
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(p.id, p.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPendingDeleteId(p.id)}
+                          label="Delete"
+                          className="text-danger hover:text-danger-600 hover:bg-transparent"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 }
               />
@@ -242,14 +316,93 @@ export function AdminPropertiesTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
             <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Property description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-            <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary">
-              <option value="general">General</option>
-              <option value="weapon">Weapon</option>
-              <option value="armor">Armor</option>
-              <option value="shield">Shield</option>
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
+              <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary">
+                <option value="general">General</option>
+                <option value="weapon">Weapon</option>
+                <option value="armor">Armor</option>
+                <option value="shield">Shield</option>
+              </select>
+            </div>
+            <label className="flex items-center gap-2 mt-6">
+              <input
+                type="checkbox"
+                checked={form.mechanic}
+                onChange={(e) => setForm((f) => ({ ...f, mechanic: e.target.checked }))}
+              />
+              <span className="text-sm text-text-secondary">Mechanic Property</span>
+            </label>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Base IP</label>
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                value={form.base_ip}
+                onChange={(e) => setForm((f) => ({ ...f, base_ip: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Base TP</label>
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                value={form.base_tp}
+                onChange={(e) => setForm((f) => ({ ...f, base_tp: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Base Cost Multiplier</label>
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                value={form.base_c}
+                onChange={(e) => setForm((f) => ({ ...f, base_c: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-text-secondary">Option 1</h4>
+              <span className="text-xs text-text-muted">Leave blank if this property has no options</span>
+            </div>
+            <div className="grid grid-cols-4 gap-3 items-center">
+              <Input
+                value={form.op_1_desc}
+                onChange={(e) => setForm((f) => ({ ...f, op_1_desc: e.target.value }))}
+                placeholder="Option description"
+              />
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                value={form.op_1_ip}
+                onChange={(e) => setForm((f) => ({ ...f, op_1_ip: parseFloat(e.target.value) || 0 }))}
+                placeholder="IP"
+              />
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                value={form.op_1_tp}
+                onChange={(e) => setForm((f) => ({ ...f, op_1_tp: parseFloat(e.target.value) || 0 }))}
+                placeholder="TP"
+              />
+              <Input
+                type="number"
+                min={0}
+                step={0.5}
+                value={form.op_1_c}
+                onChange={(e) => setForm((f) => ({ ...f, op_1_c: parseFloat(e.target.value) || 0 }))}
+                placeholder="Cost ×"
+              />
+            </div>
           </div>
         </div>
       </Modal>

@@ -12,39 +12,60 @@ import {
   SortHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useSpecies, useCodexSkills, type Species } from '@/hooks';
+import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
-
-type SpeciesEdit = { id: string; name: string; description: string; type: string; size: string; sizes: string[]; speed: number; skills?: string[] };
 
 export function AdminSpeciesTab() {
   const { data: species, isLoading, error } = useSpecies();
   const { data: skills = [] } = useCodexSkills();
+  const { data: traits = [] } = useTraits();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<SpeciesEdit | null>(null);
+  const [editing, setEditing] = useState<Species | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', type: '', size: '', sizes: '', speed: 6, skills: [] as string[] });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    type: '',
+    size: 'Medium',
+    sizes: 'Medium',
+    skillIds: [] as string[],
+    speciesTraitIds: [] as string[],
+    ancestryTraitIds: [] as string[],
+    flawIds: [] as string[],
+    characteristicIds: [] as string[],
+    aveHeight: '',
+    aveWeight: '',
+    adultAge: '',
+    maxAge: '',
+    languages: '',
+  });
 
   const skillOptions = useMemo(
-    () => skills.map((s: { id: string; name: string }) => ({ value: s.name, label: s.name })),
+    () => (skills as Skill[]).map((s) => ({ value: String(s.id), label: s.name })),
     [skills],
   );
 
-  const resolveSkillNames = (skillIdsOrNames: string[]): string[] =>
-    skillIdsOrNames.map((s) => {
-      const byId = skills.find((sk: { id: string }) => String(sk.id) === String(s));
-      if (byId) return (byId as { name: string }).name;
-      const byName = skills.find((sk: { name: string }) => sk.name === s);
-      return byName ? (byName as { name: string }).name : s;
+  const traitOptions = useMemo(
+    () => (traits as Trait[]).map((t) => ({ value: String(t.id), label: t.name })),
+    [traits],
+  );
+
+  const normalizeIds = (values: string[] = [], all: Array<{ id: string; name: string }>): string[] =>
+    values.map((val) => {
+      const byId = all.find((it) => String(it.id) === String(val));
+      if (byId) return String(byId.id);
+      const byName = all.find((it) => it.name === val);
+      return byName ? String(byName.id) : String(val);
     });
 
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
@@ -81,22 +102,53 @@ export function AdminSpeciesTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', type: '', size: 'Medium', sizes: 'Medium', speed: 6, skills: [] });
+    setForm({
+      name: '',
+      description: '',
+      type: '',
+      size: 'Medium',
+      sizes: 'Medium',
+      skillIds: [],
+      speciesTraitIds: [],
+      ancestryTraitIds: [],
+      flawIds: [],
+      characteristicIds: [],
+      aveHeight: '',
+      aveWeight: '',
+      adultAge: '',
+      maxAge: '',
+      languages: '',
+    });
     setModalOpen(true);
   };
 
-  const openEdit = (s: SpeciesEdit) => {
+  const openEdit = (s: Species) => {
     setEditing(s);
-    const rawSkills = (s as { skills?: string[] }).skills || [];
-    const skillNames = resolveSkillNames(rawSkills);
+    const allSkillsArr = skills as Skill[];
+    const allTraitsArr = traits as Trait[];
+    const skillIds = normalizeIds((s.skills || []) as string[], allSkillsArr);
+    const speciesTraitIds = normalizeIds((s.species_traits || []) as string[], allTraitsArr);
+    const ancestryTraitIds = normalizeIds((s.ancestry_traits || []) as string[], allTraitsArr);
+    const flawIds = normalizeIds((s.flaws || []) as string[], allTraitsArr);
+    const characteristicIds = normalizeIds((s.characteristics || []) as string[], allTraitsArr);
+    const adult = s.adulthood_lifespan && s.adulthood_lifespan[0] != null ? String(s.adulthood_lifespan[0]) : '';
+    const max = s.adulthood_lifespan && s.adulthood_lifespan[1] != null ? String(s.adulthood_lifespan[1]) : '';
     setForm({
       name: s.name,
       description: s.description || '',
       type: s.type || '',
       size: s.size || 'Medium',
       sizes: (s.sizes || []).join(', ') || s.size || 'Medium',
-      speed: s.speed ?? 6,
-      skills: skillNames,
+      skillIds,
+      speciesTraitIds,
+      ancestryTraitIds,
+      flawIds,
+      characteristicIds,
+      aveHeight: s.ave_height != null ? String(s.ave_height) : '',
+      aveWeight: s.ave_weight != null ? String(s.ave_weight) : '',
+      adultAge: adult,
+      maxAge: max,
+      languages: (s.languages || []).join(', '),
     });
     setModalOpen(true);
   };
@@ -111,14 +163,30 @@ export function AdminSpeciesTab() {
     if (!form.name.trim()) return;
     setSaving(true);
     const sizes = form.sizes.split(',').map((x) => x.trim()).filter(Boolean);
+    const adult = form.adultAge ? parseInt(form.adultAge, 10) || 0 : 0;
+    const max = form.maxAge ? parseInt(form.maxAge, 10) || 0 : 0;
+    const adulthood_lifespan = adult > 0 && max > 0 ? [adult, max] : undefined;
+    const ave_height = form.aveHeight ? parseInt(form.aveHeight, 10) || 0 : undefined;
+    const ave_weight = form.aveWeight ? parseInt(form.aveWeight, 10) || 0 : undefined;
+    const languages = form.languages
+      .split(',')
+      .map((l) => l.trim())
+      .filter(Boolean);
     const data = {
       name: form.name.trim(),
       description: form.description.trim(),
       type: form.type.trim(),
       size: form.size.trim() || sizes[0] || 'Medium',
       sizes: sizes.length ? sizes : [form.size || 'Medium'],
-      speed: form.speed,
-      skills: form.skills,
+      skills: form.skillIds,
+      species_traits: form.speciesTraitIds,
+      ancestry_traits: form.ancestryTraitIds,
+      flaws: form.flawIds,
+      characteristics: form.characteristicIds,
+      ave_height,
+      ave_weight,
+      adulthood_lifespan,
+      languages,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `species_${Date.now()}`;
@@ -145,6 +213,21 @@ export function AdminSpeciesTab() {
       closeModal();
     } else {
       alert(result.error);
+    }
+  };
+
+  const handleInlineDelete = async (id: string, name: string) => {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+    const result = await deleteCodexDoc('codex_species', id);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+    } else {
+      alert(result.error);
+      setPendingDeleteId(null);
     }
   };
 
@@ -185,7 +268,7 @@ export function AdminSpeciesTab() {
       >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="SPEED" col="speed" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="SIZES" col="sizes" sortState={sortState} onSort={handleSort} />
       </div>
 
       {isLoading ? (
@@ -209,22 +292,32 @@ export function AdminSpeciesTab() {
                 gridColumns="1.5fr 1fr 0.8fr 40px"
                 columns={[
                   { key: 'Type', value: s.type || '-' },
-                  { key: 'Speed', value: String(s.speed ?? '-') },
+                  { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },
                 ]}
                 rightSlot={
-                  <div className="flex gap-1 pr-2">
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(s)}
-                      label="Delete"
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </IconButton>
+                  <div className="flex items-center gap-1 pr-2">
+                    {pendingDeleteId === s.id ? (
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(s.id, s.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPendingDeleteId(s.id)}
+                          label="Delete"
+                          className="text-danger hover:text-danger-600 hover:bg-transparent"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 }
               />
@@ -267,24 +360,118 @@ export function AdminSpeciesTab() {
               <Input value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} placeholder="e.g. Humanoid" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Sizes (comma-separated)</label>
-              <Input value={form.sizes} onChange={(e) => setForm((f) => ({ ...f, sizes: e.target.value }))} placeholder="Medium, Small" />
+              <label className="block text-sm font-medium text-text-secondary mb-1">Primary Size</label>
+              <Input value={form.size} onChange={(e) => setForm((f) => ({ ...f, size: e.target.value }))} placeholder="e.g. Medium" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">All Sizes (comma-separated)</label>
+              <Input value={form.sizes} onChange={(e) => setForm((f) => ({ ...f, sizes: e.target.value }))} placeholder="Small, Medium, Large" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Languages (comma-separated)</label>
+              <Input value={form.languages} onChange={(e) => setForm((f) => ({ ...f, languages: e.target.value }))} placeholder="Universal, Any, ..." />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Average Height (cm)</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.aveHeight}
+                onChange={(e) => setForm((f) => ({ ...f, aveHeight: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Average Weight (kg)</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.aveWeight}
+                onChange={(e) => setForm((f) => ({ ...f, aveWeight: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Adulthood Age</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.adultAge}
+                onChange={(e) => setForm((f) => ({ ...f, adultAge: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Max Age</label>
+              <Input
+                type="number"
+                min={0}
+                value={form.maxAge}
+                onChange={(e) => setForm((f) => ({ ...f, maxAge: e.target.value }))}
+              />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Speed</label>
-            <Input type="number" min={0} value={form.speed} onChange={(e) => setForm((f) => ({ ...f, speed: parseInt(e.target.value) || 0 }))} />
-          </div>
-          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Species Skills</label>
             <ChipSelect
-              label="Skills"
-              placeholder="Add skill"
+              label=""
+              placeholder="Choose skills"
               options={skillOptions}
-              selectedValues={form.skills}
-              onSelect={(v) => setForm((f) => ({ ...f, skills: [...f.skills, v] }))}
-              onRemove={(v) => setForm((f) => ({ ...f, skills: f.skills.filter((s) => s !== v) }))}
+              selectedValues={form.skillIds}
+              onSelect={(v) => setForm((f) => ({ ...f, skillIds: [...f.skillIds, v] }))}
+              onRemove={(v) => setForm((f) => ({ ...f, skillIds: f.skillIds.filter((id) => id !== v) }))}
             />
-            <p className="text-xs text-text-muted mt-1">Species skills (by name). Add from dropdown.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Species Traits</label>
+              <ChipSelect
+                label=""
+                placeholder="Choose traits"
+                options={traitOptions}
+                selectedValues={form.speciesTraitIds}
+                onSelect={(v) => setForm((f) => ({ ...f, speciesTraitIds: [...f.speciesTraitIds, v] }))}
+                onRemove={(v) => setForm((f) => ({ ...f, speciesTraitIds: f.speciesTraitIds.filter((id) => id !== v) }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Ancestry Traits</label>
+              <ChipSelect
+                label=""
+                placeholder="Choose traits"
+                options={traitOptions}
+                selectedValues={form.ancestryTraitIds}
+                onSelect={(v) => setForm((f) => ({ ...f, ancestryTraitIds: [...f.ancestryTraitIds, v] }))}
+                onRemove={(v) => setForm((f) => ({ ...f, ancestryTraitIds: f.ancestryTraitIds.filter((id) => id !== v) }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Flaws</label>
+              <ChipSelect
+                label=""
+                placeholder="Choose flaw traits"
+                options={traitOptions}
+                selectedValues={form.flawIds}
+                onSelect={(v) => setForm((f) => ({ ...f, flawIds: [...f.flawIds, v] }))}
+                onRemove={(v) => setForm((f) => ({ ...f, flawIds: f.flawIds.filter((id) => id !== v) }))}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Characteristics</label>
+              <ChipSelect
+                label=""
+                placeholder="Choose characteristic traits"
+                options={traitOptions}
+                selectedValues={form.characteristicIds}
+                onSelect={(v) => setForm((f) => ({ ...f, characteristicIds: [...f.characteristicIds, v] }))}
+                onRemove={(v) => setForm((f) => ({ ...f, characteristicIds: f.characteristicIds.filter((id) => id !== v) }))}
+              />
+            </div>
           </div>
         </div>
       </Modal>

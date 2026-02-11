@@ -13,10 +13,11 @@ import {
 import { Modal, Button, Input } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useCodexSkills, type Skill } from '@/hooks';
+import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
@@ -42,8 +43,14 @@ export function AdminSkillsTab() {
   const [editing, setEditing] = useState<{ id: string; name: string; description: string; ability: string; base_skill_id?: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', ability: '', baseSkillName: '' });
+  const [form, setForm] = useState({ name: '', description: '', abilities: [] as string[], baseSkillName: '' });
+
+  const ABILITY_OPTIONS = useMemo(
+    () => ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a })),
+    [],
+  );
 
   const baseSkillOptions = useMemo(() => {
     if (!skills) return [] as { id: string; name: string }[];
@@ -135,7 +142,7 @@ export function AdminSkillsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', ability: '', baseSkillName: '' });
+    setForm({ name: '', description: '', abilities: [], baseSkillName: '' });
     setModalOpen(true);
   };
 
@@ -151,10 +158,14 @@ export function AdminSkillsTab() {
         baseSkillName = match?.name ?? '';
       }
     }
+    const abilityArr =
+      typeof s.ability === 'string' && s.ability.length > 0
+        ? s.ability.split(',').map((a: string) => a.trim()).filter(Boolean)
+        : [];
     setForm({
       name: s.name,
       description: s.description || '',
-      ability: s.ability || '',
+      abilities: abilityArr,
       baseSkillName,
     });
     setModalOpen(true);
@@ -184,10 +195,16 @@ export function AdminSkillsTab() {
       }
     }
 
-    const data = {
+    const data: Record<string, unknown> = {
       name: form.name.trim(),
       description: form.description.trim(),
-      ability: form.ability.trim(),
+      // Save as single string or array, depending on count
+      ability:
+        form.abilities.length === 0
+          ? undefined
+          : form.abilities.length === 1
+            ? form.abilities[0]
+            : form.abilities,
       base_skill_id,
     };
 
@@ -217,6 +234,21 @@ export function AdminSkillsTab() {
       closeModal();
     } else {
       alert(result.error);
+    }
+  };
+
+  const handleInlineDelete = async (id: string, name: string) => {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+    const result = await deleteCodexDoc('codex_skills', id);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+    } else {
+      alert(result.error);
+      setPendingDeleteId(null);
     }
   };
 
@@ -308,19 +340,29 @@ export function AdminSkillsTab() {
                   },
                 ]}
                 rightSlot={
-                  <div className="flex gap-1 pr-2">
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(s)}
-                      label="Delete"
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </IconButton>
+                  <div className="flex items-center gap-1 pr-2">
+                    {pendingDeleteId === s.id ? (
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(s.id, s.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPendingDeleteId(s.id)}
+                          label="Delete"
+                          className="text-danger hover:text-danger-600 hover:bg-transparent"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 }
               />
@@ -363,7 +405,14 @@ export function AdminSkillsTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>
-            <Input value={form.ability} onChange={(e) => setForm((f) => ({ ...f, ability: e.target.value }))} placeholder="e.g. Agility" />
+            <ChipSelect
+              label=""
+              placeholder="Choose governing ability/defense"
+              options={ABILITY_OPTIONS}
+              selectedValues={form.abilities}
+              onSelect={(v) => setForm((f) => ({ ...f, abilities: [...f.abilities, v] }))}
+              onRemove={(v) => setForm((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Base skill (for sub-skills)</label>

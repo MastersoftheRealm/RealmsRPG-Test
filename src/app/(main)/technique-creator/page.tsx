@@ -12,13 +12,14 @@
 
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, FolderOpen } from 'lucide-react';
 import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
 import { useTechniqueParts, useUserTechniques, useUserItems, useAdmin, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { LoginPromptModal } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
@@ -344,6 +345,8 @@ interface TechniqueCreatorCache {
 function TechniqueCreatorContent() {
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
+  const searchParams = useSearchParams();
+  const editTechniqueId = searchParams.get('edit');
   
   // State
   const [isInitialized, setIsInitialized] = useState(false);
@@ -359,6 +362,7 @@ function TechniqueCreatorContent() {
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
 
   // Fetch technique parts
   const { data: techniqueParts = [], isLoading, error } = useTechniqueParts();
@@ -533,17 +537,7 @@ function TechniqueCreatorContent() {
     );
   }, []);
 
-  const handleSave = async () => {
-    if (!name.trim()) {
-      setSaveMessage({ type: 'error', text: 'Please enter a technique name' });
-      return;
-    }
-    if (!user) {
-      // Show login prompt modal instead of error message
-      setShowLoginPrompt(true);
-      return;
-    }
-
+  const executeSave = async () => {
     setSaving(true);
     setSaveMessage(null);
 
@@ -569,6 +563,8 @@ function TechniqueCreatorContent() {
         parts: partsToSave,
         damage: damageToSave,
         weapon: Number(weapon.id) > 0 ? weapon : null,
+        actionType,
+        isReaction,
         updatedAt: new Date(),
       };
 
@@ -599,6 +595,22 @@ function TechniqueCreatorContent() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      setSaveMessage({ type: 'error', text: 'Please enter a technique name' });
+      return;
+    }
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    if (saveTarget === 'public') {
+      setShowPublishConfirm(true);
+      return;
+    }
+    executeSave();
   };
 
   const handleReset = () => {
@@ -677,6 +689,29 @@ function TechniqueCreatorContent() {
     setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
     setTimeout(() => setSaveMessage(null), 2000);
   }, [techniqueParts, allWeaponOptions]);
+
+  // Load technique for editing from URL parameter (?edit=<id>)
+  useEffect(() => {
+    if (!editTechniqueId || !userTechniques || userTechniques.length === 0 || techniqueParts.length === 0 || isInitialized) return;
+    
+    // Find the technique to edit by docId or id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const techniqueToEdit = (userTechniques as any[]).find(
+      (t: { docId?: string; id?: string }) => t.docId === editTechniqueId || t.id === editTechniqueId
+    );
+    if (!techniqueToEdit) {
+      console.warn(`Technique with ID ${editTechniqueId} not found in library`);
+      setIsInitialized(true);
+      return;
+    }
+    
+    // Use the existing handleLoadTechnique callback to populate the form
+    handleLoadTechnique(techniqueToEdit);
+    
+    // Clear localStorage cache when loading for edit
+    localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
+    setIsInitialized(true);
+  }, [editTechniqueId, userTechniques, techniqueParts, isInitialized, handleLoadTechnique]);
 
   if (isLoading) {
     return (
@@ -971,6 +1006,20 @@ function TechniqueCreatorContent() {
         returnPath="/technique-creator"
         contentType="technique"
       />
+
+      {/* Publish Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={showPublishConfirm}
+        onClose={() => setShowPublishConfirm(false)}
+        onConfirm={() => {
+          setShowPublishConfirm(false);
+          executeSave();
+        }}
+        title="Publish to Public Library"
+        description={`Are you sure you wish to publish this technique "${name.trim()}" to the public library? All users will be able to see and use it.`}
+        confirmLabel="Publish"
+        icon="publish"
+      />
     </PageContainer>
   );
 }
@@ -978,7 +1027,9 @@ function TechniqueCreatorContent() {
 export default function TechniqueCreatorPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
-      <TechniqueCreatorContent />
+      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+        <TechniqueCreatorContent />
+      </Suspense>
     </div>
   );
 }

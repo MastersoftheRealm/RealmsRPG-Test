@@ -57,6 +57,10 @@ export interface TechniqueDocument {
   parts?: TechniquePartPayload[];
   damage?: { amount?: number | string; size?: number | string; type?: string };
   weapon?: { id?: number; name?: string };
+  /** Saved action type (basic, full, bonus, etc.) — used to avoid recalculation */
+  actionType?: string;
+  /** Whether the technique can be used as a reaction */
+  isReaction?: boolean;
 }
 
 export interface MechanicContext {
@@ -353,7 +357,12 @@ export function deriveTechniqueDisplay(
     : [];
 
   const calc = calculateTechniqueCosts(partsPayload, partsDb);
-  const actionType = computeActionType(partsPayload, partsDb);
+  // Use saved actionType/isReaction if available; fall back to derivation from parts
+  const derivedAction = computeActionType(partsPayload, partsDb);
+  const savedAction = techniqueDoc.actionType
+    ? computeActionTypeFromSelection(techniqueDoc.actionType, !!techniqueDoc.isReaction)
+    : null;
+  const actionType = savedAction || derivedAction;
   const damageStr = formatTechniqueDamage(techniqueDoc.damage);
   const weaponName =
     techniqueDoc.weapon && (techniqueDoc.weapon.name || techniqueDoc.weapon.id)

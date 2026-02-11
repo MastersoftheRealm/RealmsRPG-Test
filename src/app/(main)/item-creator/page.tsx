@@ -18,7 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
-import { LoginPromptModal } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { NumberStepper } from '@/components/creator/number-stepper';
@@ -362,6 +362,7 @@ function ItemCreatorContent() {
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [isTwoHanded, setIsTwoHanded] = useState(false);
   const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
   
@@ -733,7 +734,8 @@ function ItemCreatorContent() {
       // Exclude general properties
       if (isGeneralProperty(p)) return false;
       // Exclude mechanic properties; these are handled automatically by the UI logic
-      if (p.mechanic) return false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((p as any).mechanic) return false;
       // Include properties that match the armament type or have no type specified
       const propType = (p.type || '').toLowerCase();
       if (!propType || propType === 'general') return true;
@@ -765,26 +767,19 @@ function ItemCreatorContent() {
     );
   }, []);
 
-  const handleSave = async () => {
-    if (!name.trim()) {
-      setSaveMessage({ type: 'error', text: 'Please enter an item name' });
-      return;
-    }
-    if (!user) {
-      // Show login prompt modal instead of error message
-      setShowLoginPrompt(true);
-      return;
-    }
-
+  const executeSave = async () => {
     setSaving(true);
     setSaveMessage(null);
 
     try {
-      // Format properties for saving
-      const propertiesToSave = selectedProperties.map((sp) => ({
-        id: Number(sp.property.id),
-        name: sp.property.name,
-        op_1_lvl: sp.op_1_lvl,
+      // Format ALL properties for saving (including auto-generated ones from propertiesPayload)
+      // This fixes a critical bug where auto-generated properties (Weapon Damage, Two-Handed,
+      // Range, Armor Base, Shield Amount, etc.) were not being saved, causing cost mismatches
+      // when viewing items outside the creator.
+      const propertiesToSave = propertiesPayload.map((pp) => ({
+        id: pp.id,
+        name: pp.name,
+        op_1_lvl: pp.op_1_lvl,
       }));
 
       // Format damage
@@ -858,6 +853,22 @@ function ItemCreatorContent() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      setSaveMessage({ type: 'error', text: 'Please enter an item name' });
+      return;
+    }
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    if (saveTarget === 'public') {
+      setShowPublishConfirm(true);
+      return;
+    }
+    executeSave();
   };
 
   const handleReset = () => {
@@ -1507,6 +1518,20 @@ function ItemCreatorContent() {
         onClose={() => setShowLoginPrompt(false)}
         returnPath="/item-creator"
         contentType="armament"
+      />
+
+      {/* Publish Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={showPublishConfirm}
+        onClose={() => setShowPublishConfirm(false)}
+        onConfirm={() => {
+          setShowPublishConfirm(false);
+          executeSave();
+        }}
+        title="Publish to Public Library"
+        description={`Are you sure you wish to publish this ${armamentType.toLowerCase()} "${name.trim()}" to the public library? All users will be able to see and use it.`}
+        confirmLabel="Publish"
+        icon="publish"
       />
     </PageContainer>
   );

@@ -16,7 +16,7 @@ import { useParts, type Part } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
@@ -39,11 +39,31 @@ export function AdminPartsTab() {
     mechanicMode: 'hide',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number; mechanic?: boolean; percentage?: boolean; duration?: boolean; op_1_desc?: string; op_1_en?: number; op_1_tp?: number; op_2_desc?: string; op_2_en?: number; op_2_tp?: number; op_3_desc?: string; op_3_en?: number; op_3_tp?: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', category: '', type: 'power' as 'power' | 'technique', base_en: 0, base_tp: 0 });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    category: '',
+    type: 'power' as 'power' | 'technique',
+    base_en: 0,
+    base_tp: 0,
+    mechanic: false,
+    percentage: false,
+    duration: false,
+    op_1_desc: '',
+    op_1_en: 0,
+    op_1_tp: 0,
+    op_2_desc: '',
+    op_2_en: 0,
+    op_2_tp: 0,
+    op_3_desc: '',
+    op_3_en: 0,
+    op_3_tp: 0,
+  });
 
   const filterOptions = useMemo(() => {
     if (!parts) return { categories: [] as string[] };
@@ -83,11 +103,30 @@ export function AdminPartsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', category: '', type: 'power', base_en: 0, base_tp: 0 });
+    setForm({
+      name: '',
+      description: '',
+      category: '',
+      type: 'power',
+      base_en: 0,
+      base_tp: 0,
+      mechanic: false,
+      percentage: false,
+      duration: false,
+      op_1_desc: '',
+      op_1_en: 0,
+      op_1_tp: 0,
+      op_2_desc: '',
+      op_2_en: 0,
+      op_2_tp: 0,
+      op_3_desc: '',
+      op_3_en: 0,
+      op_3_tp: 0,
+    });
     setModalOpen(true);
   };
 
-  const openEdit = (p: { id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number }) => {
+  const openEdit = (p: { id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number; mechanic?: boolean; percentage?: boolean; duration?: boolean; op_1_desc?: string; op_1_en?: number; op_1_tp?: number; op_2_desc?: string; op_2_en?: number; op_2_tp?: number; op_3_desc?: string; op_3_en?: number; op_3_tp?: number }) => {
     setEditing(p);
     setForm({
       name: p.name,
@@ -96,6 +135,18 @@ export function AdminPartsTab() {
       type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
       base_en: p.base_en ?? 0,
       base_tp: p.base_tp ?? 0,
+      mechanic: Boolean((p as any).mechanic),
+      percentage: Boolean((p as any).percentage),
+      duration: Boolean((p as any).duration),
+      op_1_desc: (p as any).op_1_desc || '',
+      op_1_en: (p as any).op_1_en ?? 0,
+      op_1_tp: (p as any).op_1_tp ?? 0,
+      op_2_desc: (p as any).op_2_desc || '',
+      op_2_en: (p as any).op_2_en ?? 0,
+      op_2_tp: (p as any).op_2_tp ?? 0,
+      op_3_desc: (p as any).op_3_desc || '',
+      op_3_en: (p as any).op_3_en ?? 0,
+      op_3_tp: (p as any).op_3_tp ?? 0,
     });
     setModalOpen(true);
   };
@@ -109,13 +160,25 @@ export function AdminPartsTab() {
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    const data = {
+    const data: Record<string, unknown> = {
       name: form.name.trim(),
       description: form.description.trim(),
       category: form.category.trim(),
       type: form.type,
       base_en: form.base_en,
       base_tp: form.base_tp,
+      mechanic: form.mechanic,
+      percentage: form.percentage,
+      duration: form.duration,
+      op_1_desc: form.op_1_desc.trim() || undefined,
+      op_1_en: form.op_1_desc.trim() ? form.op_1_en || 0 : 0,
+      op_1_tp: form.op_1_desc.trim() ? form.op_1_tp || 0 : 0,
+      op_2_desc: form.op_2_desc.trim() || undefined,
+      op_2_en: form.op_2_desc.trim() ? form.op_2_en || 0 : 0,
+      op_2_tp: form.op_2_desc.trim() ? form.op_2_tp || 0 : 0,
+      op_3_desc: form.op_3_desc.trim() || undefined,
+      op_3_en: form.op_3_desc.trim() ? form.op_3_en || 0 : 0,
+      op_3_tp: form.op_3_desc.trim() ? form.op_3_tp || 0 : 0,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `part_${Date.now()}`;
@@ -140,8 +203,24 @@ export function AdminPartsTab() {
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
+      setDeleteConfirm(null);
     } else {
       alert(result.error);
+    }
+  };
+
+  const handleInlineDelete = async (id: string, name: string) => {
+    if (pendingDeleteId !== id) {
+      setPendingDeleteId(id);
+      return;
+    }
+    const result = await deleteCodexDoc('codex_parts', id);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+    } else {
+      alert(result.error);
+      setPendingDeleteId(null);
     }
   };
 
@@ -229,19 +308,29 @@ export function AdminPartsTab() {
                   { key: 'TP', value: p.base_tp != null ? String(p.base_tp) : '-', className: 'text-tp' },
                 ]}
                 rightSlot={
-                  <div className="flex gap-1 pr-2">
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(p)}
-                      label="Delete"
-                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </IconButton>
+                  <div className="flex items-center gap-1 pr-2">
+                    {pendingDeleteId === p.id ? (
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="text-red-600 font-medium whitespace-nowrap">Remove?</span>
+                        <Button size="sm" variant="danger" onClick={() => handleInlineDelete(p.id, p.name)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
+                        <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                      </div>
+                    ) : (
+                      <>
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
+                          <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPendingDeleteId(p.id)}
+                          label="Delete"
+                          className="text-danger hover:text-danger-600 hover:bg-transparent"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      </>
+                    )}
                   </div>
                 }
               />
@@ -299,6 +388,112 @@ export function AdminPartsTab() {
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Base TP</label>
               <Input type="number" min={0} step={0.5} value={form.base_tp} onChange={(e) => setForm((f) => ({ ...f, base_tp: parseFloat(e.target.value) || 0 }))} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.mechanic}
+                onChange={(e) => setForm((f) => ({ ...f, mechanic: e.target.checked }))}
+              />
+              <span className="text-sm text-text-secondary">Mechanic Part</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.percentage}
+                onChange={(e) => setForm((f) => ({ ...f, percentage: e.target.checked }))}
+              />
+              <span className="text-sm text-text-secondary">Percentage Cost</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.duration}
+                onChange={(e) => setForm((f) => ({ ...f, duration: e.target.checked }))}
+              />
+              <span className="text-sm text-text-secondary">Affects Duration</span>
+            </label>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-text-secondary">Options</h4>
+              <span className="text-xs text-text-muted">Leave empty to omit</span>
+            </div>
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-3 items-center">
+                <Input
+                  value={form.op_1_desc}
+                  onChange={(e) => setForm((f) => ({ ...f, op_1_desc: e.target.value }))}
+                  placeholder="Option 1 description"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_1_en}
+                  onChange={(e) => setForm((f) => ({ ...f, op_1_en: parseFloat(e.target.value) || 0 }))}
+                  placeholder="EN"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_1_tp}
+                  onChange={(e) => setForm((f) => ({ ...f, op_1_tp: parseFloat(e.target.value) || 0 }))}
+                  placeholder="TP"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3 items-center">
+                <Input
+                  value={form.op_2_desc}
+                  onChange={(e) => setForm((f) => ({ ...f, op_2_desc: e.target.value }))}
+                  placeholder="Option 2 description"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_2_en}
+                  onChange={(e) => setForm((f) => ({ ...f, op_2_en: parseFloat(e.target.value) || 0 }))}
+                  placeholder="EN"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_2_tp}
+                  onChange={(e) => setForm((f) => ({ ...f, op_2_tp: parseFloat(e.target.value) || 0 }))}
+                  placeholder="TP"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3 items-center">
+                <Input
+                  value={form.op_3_desc}
+                  onChange={(e) => setForm((f) => ({ ...f, op_3_desc: e.target.value }))}
+                  placeholder="Option 3 description"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_3_en}
+                  onChange={(e) => setForm((f) => ({ ...f, op_3_en: parseFloat(e.target.value) || 0 }))}
+                  placeholder="EN"
+                />
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_3_tp}
+                  onChange={(e) => setForm((f) => ({ ...f, op_3_tp: parseFloat(e.target.value) || 0 }))}
+                  placeholder="TP"
+                />
+              </div>
+              <p className="text-xs text-text-muted">
+                Only options with a description are saved; leave rows blank if this part has fewer options.
+              </p>
             </div>
           </div>
         </div>

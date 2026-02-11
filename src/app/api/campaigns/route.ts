@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     const rows = await prisma.$queryRaw<CampaignRow[]>(Prisma.sql`
       SELECT id, owner_id, name, description, invite_code, characters, "memberIds", owner_username, created_at, updated_at
-      FROM campaigns
+      FROM campaigns.campaigns
       WHERE owner_id = ${userId}
       OR "memberIds"::jsonb @> jsonb_build_array(${userId})
       ORDER BY updated_at DESC NULLS LAST

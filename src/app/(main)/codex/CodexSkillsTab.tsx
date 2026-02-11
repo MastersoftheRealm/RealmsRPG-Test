@@ -92,7 +92,9 @@ export function CodexSkillsTab() {
           if (trimmed) abilities.add(trimmed);
         });
       }
-      if (s.category && typeof s.category === 'string') baseSkills.add(s.category);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cat = (s as any).category;
+      if (cat && typeof cat === 'string') baseSkills.add(cat);
       if (s.base_skill_id !== undefined) {
         const baseSkillName: string | undefined = skillIdToName.get(String(s.base_skill_id));
         if (typeof baseSkillName === 'string') baseSkills.add(baseSkillName);

@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, UnifiedSelectionModal, ItemCard, SkillRow } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
 import {
@@ -101,6 +101,7 @@ function CreatureCreatorContent() {
   const [showFeatModal, setShowFeatModal] = useState(false);
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
   
   // Transform user library data to DisplayItem[] for modals
@@ -394,17 +395,7 @@ function CreatureCreatorContent() {
   }, [creature, featPointsMap]);
 
   // Save creature to user library (Prisma)
-  const handleSave = async () => {
-    if (!creature.name.trim()) {
-      alert('Please enter a creature name');
-      return;
-    }
-    if (!user) {
-      // Show login prompt modal instead of alert
-      setShowLoginPrompt(true);
-      return;
-    }
-    
+  const executeSave = async () => {
     setSaving(true);
     try {
       const creatureData = {
@@ -426,6 +417,22 @@ function CreatureCreatorContent() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (!creature.name.trim()) {
+      alert('Please enter a creature name');
+      return;
+    }
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    if (saveTarget === 'public') {
+      setShowPublishConfirm(true);
+      return;
+    }
+    executeSave();
   };
 
   const handleReset = () => {
@@ -1139,6 +1146,20 @@ function CreatureCreatorContent() {
         onClose={() => setShowLoginPrompt(false)}
         returnPath="/creature-creator"
         contentType="creature"
+      />
+
+      {/* Publish Confirmation Modal */}
+      <ConfirmActionModal
+        isOpen={showPublishConfirm}
+        onClose={() => setShowPublishConfirm(false)}
+        onConfirm={() => {
+          setShowPublishConfirm(false);
+          executeSave();
+        }}
+        title="Publish to Public Library"
+        description={`Are you sure you wish to publish this creature "${creature.name.trim()}" to the public library? All users will be able to see and use it.`}
+        confirmLabel="Publish"
+        icon="publish"
       />
     </PageContainer>
   );

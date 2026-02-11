@@ -3792,7 +3792,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-178
   title: Armament creator — hide mechanic properties from add-property lists
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -3861,3 +3861,183 @@ Agents should **create new tasks** during their work when they discover addition
     - npm run build passes
   notes: |
     Some vanilla-site JS still uses name-based arrays; this task is limited to the React/Next.js codebase.
+
+- id: TASK-181
+  title: Admin Skills — ability multi-select aligned with schema
+  priority: medium
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    The Skills schema defines `ability` as a string[] of governing abilities/defenses, but AdminSkillsTab currently treats it as a single free-text string. Update the Admin Skills editor so `ability` is a multi-select (using the 12 canonical abilities/defenses) and save the result as an array, while still supporting backward-compatible display of existing string values.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/api/codex/route.ts
+    - src/hooks/use-rtdb.ts
+  acceptance_criteria:
+    - Admin Skills modal uses a ChipSelect/multi-select for `ability`, with options from the canonical 12 abilities/defenses
+    - Saved skills have `ability` persisted as a string[] (or a single string when only one is chosen, consistent with API expectations)
+    - API and hooks correctly serialize/deserialize ability arrays for display and filters
+    - npm run build passes
+  notes: |
+    This extends the earlier feat ability_req/ability work to skills so the governing abilities are structured, not free text.
+
+- id: TASK-182
+  title: Admin Equipment — align fields with codex_equipment schema
+  priority: medium
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    The Equipment schema documents only name, description, category, currency, and rarity, but AdminEquipmentTab currently exposes type and gold_cost/currency in ways that mix codex data with library-style fields. Reconcile Admin Equipment with the schema: ensure category, currency, and rarity are fully editable, and either (a) drop or (b) clearly separate any non-schema fields so codex_equipment remains a clean reference table.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/api/codex/route.ts
+    - src/hooks/use-rtdb.ts
+  acceptance_criteria:
+    - AdminEquipmentTab exposes inputs for category, currency, and rarity consistent with CODEX_SCHEMA_REFERENCE
+    - Any extra fields (type, gold_cost, properties, etc.) are either removed from the Admin Codex editor or justified by an updated schema/doc
+    - Codex equipment displayed in Codex/Library stays in sync with the canonical codex_equipment shape
+    - npm run build passes
+  notes: |
+    This is primarily a reconciliation/cleanup task; it may be resolved either by trimming the editor or by deliberately extending the equipment schema and docs.
+
+- id: TASK-184
+  title: Publish confirmation modal in all creators
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Add a confirmation modal when admin saves to public library in power, technique, item, and creature creators. Shows "Are you sure you wish to publish this [type] to the public library?" before executing the save.
+  related_files:
+    - src/components/shared/confirm-action-modal.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  acceptance_criteria:
+    - ConfirmActionModal reusable component created
+    - All 4 creators show confirmation when saveTarget === 'public'
+    - npm run build passes
+  notes: "Completed 2026-02-11. Created ConfirmActionModal shared component with publish/warning icon variants."
+
+- id: TASK-185
+  title: Unify admin codex delete icons (Trash2 → X) and fix delete handler bug
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Replace Trash2 icons with X icons in all 9 admin codex tabs to unify with the rest of the site's remove button pattern. Fix critical bug where delete buttons called openEdit() instead of delete handler.
+  related_files:
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+  acceptance_criteria:
+    - All admin codex tabs use X icon instead of Trash2
+    - Delete buttons trigger inline confirmation, not openEdit()
+    - npm run build passes
+  notes: "Completed 2026-02-11. Fixed critical delete handler bug in all 9 tabs."
+
+- id: TASK-186
+  title: Inline delete confirmation in admin codex
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin codex delete buttons now show an inline "Remove? Yes/No" confirmation instead of opening a modal. Same pattern used for both list row delete and modal footer delete.
+  related_files:
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+  acceptance_criteria:
+    - Clicking delete on a list item shows inline "Remove? Yes/No" text
+    - Clicking "Yes" performs the delete, "No" cancels
+    - npm run build passes
+  notes: "Completed 2026-02-11."
+
+- id: TASK-187
+  title: Add inline pencil/edit icon to GridListRow for library items
+  priority: medium
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Added inline Edit (pencil) icon to GridListRow collapsed row when onEdit is provided. Previously edit button was only visible in expanded content. Now users can quickly click edit from the row.
+  related_files:
+    - src/components/shared/grid-list-row.tsx
+  acceptance_criteria:
+    - Edit icon visible in collapsed row when onEdit is provided
+    - Uses same Edit icon from lucide-react
+    - npm run build passes
+  notes: "Completed 2026-02-11."
+
+- id: TASK-188
+  title: Power and technique creators handle ?edit= query param to load items
+  priority: high
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Power creator and technique creator now handle ?edit=<id> URL parameter to load an existing item for editing, matching the item creator's existing behavior. Library edit buttons navigate to /power-creator?edit=<id> or /technique-creator?edit=<id>.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+  acceptance_criteria:
+    - Power creator loads power from URL param using handleLoadPower
+    - Technique creator loads technique from URL param using handleLoadTechnique
+    - Suspense boundary wraps content for useSearchParams
+    - npm run build passes
+  notes: "Completed 2026-02-11."
+
+- id: TASK-189
+  title: Fix save/display pipeline — item auto-gen properties, technique actionType, enrichment
+  priority: critical
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Fixed multiple data pipeline issues causing powers/techniques/items to show incorrect costs when viewed outside creators:
+    1. Item creator was saving only selectedProperties, missing auto-generated properties (Weapon Damage, Two-Handed, Range, Armor Base, Shield Amount, etc.). Fixed to save propertiesPayload.
+    2. Technique creator was not saving actionType/isReaction fields. Fixed to include them.
+    3. TechniqueDocument interface lacked actionType/isReaction. Updated interface and deriveTechniqueDisplay to use saved values with fallback to derivation.
+  related_files:
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/lib/calculators/technique-calc.ts
+  acceptance_criteria:
+    - Item creator saves all properties including auto-generated ones
+    - Technique creator saves actionType and isReaction
+    - deriveTechniqueDisplay uses saved actionType/isReaction when available
+    - npm run build passes
+  notes: "Completed 2026-02-11. Root cause of reported display mismatch: auto-gen properties not saved + technique action type derived instead of using saved value."
+
+- id: TASK-183
+  title: Admin Parts — edit defense targets
+  priority: low
+  status: not-started
+  created_at: 2026-02-11
+  created_by: owner
+  description: |
+    Parts support an optional `defense` string[] to indicate which defenses they target, but the Admin Parts modal currently has no UI for this field. Add an editor control (multi-select of the 6 defenses) so admins can set or clear defense targets for duration/defense-related parts.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+  acceptance_criteria:
+    - AdminPartsTab exposes a multi-select for defense targeting, with options from the 6 canonical defenses
+    - Saved parts persist `defense` as per schema, and CodexPartsTab can display/use this information as needed
+    - npm run build passes
+  notes: |
+    This is a small schema-coverage enhancement; behavior in creators can be updated separately if needed.
