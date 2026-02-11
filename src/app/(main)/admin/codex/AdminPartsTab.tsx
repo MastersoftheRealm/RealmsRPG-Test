@@ -1,19 +1,43 @@
 'use client';
 
-import { useState } from 'react';
-import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
+import { useMemo, useState } from 'react';
+import {
+  SectionHeader,
+  SearchInput,
+  LoadingState,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+  ListEmptyState as EmptyState,
+  SortHeader,
+} from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
+import { SelectFilter, FilterSection } from '@/components/codex';
 import { useParts, type Part } from '@/hooks';
+import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
+const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 80px';
+
+interface PartFilters {
+  search: string;
+  categoryFilter: string;
+  typeFilter: 'all' | 'power' | 'technique';
+  mechanicMode: 'all' | 'only' | 'hide';
+}
+
 export function AdminPartsTab() {
   const { data: parts, isLoading, error } = useParts();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'power' | 'technique'>('all');
+  const { sortState, handleSort, sortItems } = useSort('name');
+  const [filters, setFilters] = useState<PartFilters>({
+    search: '',
+    categoryFilter: '',
+    typeFilter: 'all',
+    mechanicMode: 'hide',
+  });
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -21,12 +45,41 @@ export function AdminPartsTab() {
 
   const [form, setForm] = useState({ name: '', description: '', category: '', type: 'power' as 'power' | 'technique', base_en: 0, base_tp: 0 });
 
-  const filtered = (parts || [])
-    .filter(
-      (p: Part) =>
-        (!search || p.name.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase())) &&
-        (typeFilter === 'all' || (p.type || 'power').toLowerCase() === typeFilter)
-    );
+  const filterOptions = useMemo(() => {
+    if (!parts) return { categories: [] as string[] };
+    const categories = new Set<string>();
+    parts.forEach((p: Part) => {
+      if (p.category) categories.add(p.category);
+    });
+    return {
+      categories: Array.from(categories).sort(),
+    };
+  }, [parts]);
+
+  const filteredParts = useMemo(() => {
+    if (!parts) return [];
+
+    const filtered = parts.filter((p: Part) => {
+      if (
+        filters.search &&
+        !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !p.description?.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
+        return false;
+      }
+      if (filters.categoryFilter && p.category !== filters.categoryFilter) return false;
+
+      if (filters.typeFilter !== 'all' && (p.type || 'power') !== filters.typeFilter) return false;
+
+      if (filters.mechanicMode === 'only' && !p.mechanic) return false;
+      if (filters.mechanicMode === 'hide' && p.mechanic) return false;
+
+      return true;
+    });
+
+    type FilteredPart = Part & { category: string };
+    return sortItems<FilteredPart>(filtered.map((p: Part) => ({ ...p, category: p.category || '' })));
+  }, [parts, filters, sortItems]);
 
   const openAdd = () => {
     setEditing(null);
@@ -97,36 +150,103 @@ export function AdminPartsTab() {
   return (
     <div>
       <SectionHeader title="Power & Technique Parts" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2 flex gap-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search parts..." />
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'all' | 'power' | 'technique')} className="px-3 py-2 rounded-md border border-border bg-background text-text-primary">
-          <option value="all">All Types</option>
-          <option value="power">Power</option>
-          <option value="technique">Technique</option>
-        </select>
+      <div className="mb-4 mt-2">
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
+          placeholder="Search parts..."
+        />
+      </div>
+
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SelectFilter
+            label="Category"
+            value={filters.categoryFilter}
+            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
+            placeholder="All Categories"
+          />
+
+          <SelectFilter
+            label="Type"
+            value={filters.typeFilter}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'power', label: 'Power' },
+              { value: 'technique', label: 'Technique' },
+            ]}
+            onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
+            placeholder="All"
+          />
+
+          <SelectFilter
+            label="Mechanics"
+            value={filters.mechanicMode}
+            options={[
+              { value: 'all', label: 'All Parts' },
+              { value: 'only', label: 'Only Mechanics' },
+              { value: 'hide', label: 'Hide Mechanics' },
+            ]}
+            onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
+            placeholder="Hide Mechanics"
+          />
+        </div>
+      </FilterSection>
+
+      <div
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: PART_GRID_COLUMNS }}
+      >
+        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
+        <span>ENERGY</span>
+        <span>TP</span>
       </div>
 
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((p: Part) => (
-            <div key={p.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
-              <div className="flex-1 min-w-0">
-                <GridListRow id={p.id} name={p.name} description={p.description || ''} columns={[{ key: 'Type', value: (p.type || 'power').charAt(0).toUpperCase() + (p.type || 'power').slice(1) }, { key: 'EN', value: String(p.base_en ?? '-') }, { key: 'TP', value: String(p.base_tp ?? '-') }]} />
+        <div className="flex flex-col gap-1 mt-2">
+          {filteredParts.length === 0 ? (
+            <EmptyState
+              title="No parts found"
+              description="No parts match your filters."
+              action={{ label: 'Add Part', onClick: openAdd }}
+              size="sm"
+            />
+          ) : (
+            filteredParts.map((p: Part) => (
+              <div key={p.id} className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <GridListRow
+                    id={p.id}
+                    name={p.name}
+                    description={p.description || ''}
+                    gridColumns={PART_GRID_COLUMNS}
+                    columns={[
+                      { key: 'Type', value: (p.type || 'power').charAt(0).toUpperCase() + (p.type || 'power').slice(1) },
+                      { key: 'EN', value: p.base_en != null ? String(p.base_en) : '-' },
+                      { key: 'TP', value: p.base_tp != null ? String(p.base_tp) : '-' },
+                    ]}
+                  />
+                </div>
+                <div className="flex gap-1 shrink-0 pr-2">
+                  <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
+                    <Pencil className="w-4 h-4" />
+                  </IconButton>
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openEdit(p)}
+                    label="Delete"
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </IconButton>
+                </div>
               </div>
-              <div className="flex gap-1 pr-2">
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </IconButton>
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Delete" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <EmptyState title="No parts found" description="Add one to get started." action={{ label: 'Add Part', onClick: openAdd }} size="sm" />
+            ))
           )}
         </div>
       )}

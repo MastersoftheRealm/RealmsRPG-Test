@@ -145,7 +145,6 @@ export function AdminFeatsTab() {
     rec_period: '',
     char_feat: false,
     state_feat: false,
-    prereq_text: '',
   };
 
   const ABILITY_OPTIONS = ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a }));
@@ -187,7 +186,6 @@ export function AdminFeatsTab() {
       rec_period: feat.rec_period || '',
       char_feat: feat.char_feat ?? false,
       state_feat: feat.state_feat ?? false,
-      prereq_text: feat.prereq_text || '',
     });
     setModalOpen(true);
   };
@@ -224,7 +222,6 @@ export function AdminFeatsTab() {
       rec_period: form.rec_period.trim() || undefined,
       char_feat: form.char_feat,
       state_feat: form.state_feat,
-      prereq_text: form.prereq_text.trim() || undefined,
     };
 
     const id = (form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '') || `feat_${Date.now()}`).slice(0, 100);
@@ -474,14 +471,6 @@ export function AdminFeatsTab() {
               value={form.req_desc}
               onChange={(e) => setForm((f) => ({ ...f, req_desc: e.target.value }))}
               placeholder="Human-readable requirement text"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Prerequisite Text (prereq_text)</label>
-            <Input
-              value={form.prereq_text}
-              onChange={(e) => setForm((f) => ({ ...f, prereq_text: e.target.value }))}
-              placeholder="Legacy prerequisite text"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">

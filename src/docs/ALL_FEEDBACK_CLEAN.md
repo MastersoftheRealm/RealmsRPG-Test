@@ -126,6 +126,8 @@ Notes:
 - Array fields: Use dropdowns to select by name (e.g. species skills, feat skill_req), not "ids separated by commas". ✅ TASK-160
 - Input lag: Typing in edit mode should feel responsive. ⏸ TASK-159 (deferred; needs profiling)
 - Centralized schema doc: Create reference for all codex entity fields (name, type, description) for AI/engineer use. ✅ TASK-158
+ - Feat prerequisites: `prereq_text` is not a real feat attribute and should not appear in schema docs, types, or Admin editors. Use `req_desc` only. ✅ TASK-169
+ - Other Admin tabs: Admin Skills, Parts, Properties, and Equipment tabs should use the same search, filters, sort headers, and GridListRow layout as their Codex counterparts, with only edit/delete controls added. ✅ TASK-170
 
 ### 18) Encounters System (Major Redesign)
 - **Rename:** "Encounter Tracker" → "Encounters" (hub page).

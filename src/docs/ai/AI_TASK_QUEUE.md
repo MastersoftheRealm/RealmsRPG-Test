@@ -3590,3 +3590,53 @@ Agents should **create new tasks** during their work when they discover addition
     - npm run build passes
   notes: |
     Done 2026-02-09: getOwnerLibraryForView(ownerUserId) fetches owner's powers/techniques/items. GET /api/characters/[id] returns { character, libraryForView } when non-owner (public/campaign). Campaign character API returns character + libraryForView. Character page and campaign view page use libraryForView for enrichment when present; view-only UI unchanged.
+
+- id: TASK-169
+  title: Admin Feats — remove prereq_text and rely on req_desc
+  priority: medium
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    The `prereq_text` field was mistakenly treated as a real feat attribute. It should not exist in the canonical feats schema or Admin editors. Use `req_desc` (requirement description) as the single source of truth for human-readable requirements and remove `prereq_text` from schema docs, types, API mapping, migration scripts, and the Admin Feats UI.
+  related_files:
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/hooks/use-rtdb.ts
+    - src/app/api/codex/route.ts
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - scripts/migrate_rtdb_to_firestore.js
+  acceptance_criteria:
+    - `prereq_text` no longer appears in CODEX_SCHEMA_REFERENCE for feats
+    - Feat type definitions and codex API responses no longer expose `prereq_text`
+    - Admin Feats modal does not show or save `prereq_text`
+    - Migration script does not write `prereq_text` into Firestore
+    - npm run build passes
+  notes: |
+    Implemented 2026-02-11 based on owner feedback that `prereq_text` was never a real attribute. Existing data with this field is effectively ignored.
+
+- id: TASK-170
+  title: Admin Codex — unify Skills, Parts, Properties, and Equipment tabs with Codex layout
+  priority: medium
+  status: done
+  created_at: 2026-02-11
+  created_by: agent
+  description: |
+    Admin Codex tabs for Skills, Parts, Properties, and Equipment should mirror their Codex counterparts: same search, filters, sort headers, and GridListRow-based list layout, with only the addition of edit/delete controls. This reduces redundancy and makes "learn one UI, use it everywhere" true for Codex vs Admin editing.
+  related_files:
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/app/(main)/codex/CodexPartsTab.tsx
+    - src/app/(main)/codex/CodexPropertiesTab.tsx
+    - src/app/(main)/codex/CodexEquipmentTab.tsx
+  acceptance_criteria:
+    - Admin Skills tab uses the same filters (Ability, Base Skill, Skill Type) and NAME/ABILITIES/BASE SKILL headers as Codex Skills
+    - Admin Parts tab uses Codex Parts-style filters (Category, Type, Mechanics) and NAME/CATEGORY/ENERGY/TP headers
+    - Admin Properties tab uses a Type filter and NAME/TYPE/ITEM PTS/TP/COST MULT headers like Codex Properties
+    - Admin Equipment tab uses Category and Rarity filters with NAME/CATEGORY/COST/RARITY headers similar to Codex Equipment
+    - All four tabs still provide add/edit/delete modals with existing behavior
+    - npm run build passes
+  notes: |
+    Implemented 2026-02-11: imported shared Codex filter components (FilterSection, ChipSelect, SelectFilter) and SortHeader/useSort into Admin tabs, aligned grid column definitions, and wired filters/sorting to the same fields the Codex tabs use.

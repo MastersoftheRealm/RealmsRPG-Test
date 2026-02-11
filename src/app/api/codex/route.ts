@@ -53,7 +53,6 @@ export async function GET() {
       char_feat: Boolean(d.char_feat),
       state_feat: Boolean(d.state_feat),
       rec_period: d.rec_period as string | undefined,
-      prereq_text: d.prereq_text as string | undefined,
     };
   });
 

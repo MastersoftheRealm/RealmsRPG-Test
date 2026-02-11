@@ -103,7 +103,6 @@ const MIGRATIONS = [
           char_feat: Boolean(feat.char_feat),
           state_feat: Boolean(feat.state_feat),
           rec_period: feat.rec_period,
-          prereq_text: feat.prereq_text,
         };
       }),
   },

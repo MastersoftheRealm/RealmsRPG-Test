@@ -1,18 +1,43 @@
 'use client';
 
-import { useState } from 'react';
-import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
+import { useMemo, useState } from 'react';
+import {
+  SectionHeader,
+  SearchInput,
+  LoadingState,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+  ListEmptyState as EmptyState,
+  SortHeader,
+} from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
+import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useCodexSkills, type Skill } from '@/hooks';
+import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
+const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 80px';
+
+interface SkillFilters {
+  search: string;
+  abilities: string[];
+  baseSkill: string;
+  subSkillMode: 'all' | 'only' | 'hide';
+}
+
 export function AdminSkillsTab() {
   const { data: skills, isLoading, error } = useCodexSkills();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
+  const [filters, setFilters] = useState<SkillFilters>({
+    search: '',
+    abilities: [],
+    baseSkill: '',
+    subSkillMode: 'all',
+  });
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; description: string; ability: string; category: string; base_skill_id?: number; trained_only?: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -20,12 +45,85 @@ export function AdminSkillsTab() {
 
   const [form, setForm] = useState({ name: '', description: '', ability: '', category: '', base_skill_id: '', trained_only: false });
 
-  const filtered = (skills || []).filter(
-    (s: Skill) =>
-      !search ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  const skillIdToName = useMemo((): Map<string, string> => {
+    if (!skills) return new Map<string, string>();
+    return new Map(skills.map((s: Skill) => [String(s.id), s.name] as [string, string]));
+  }, [skills]);
+
+  const filterOptions = useMemo(() => {
+    if (!skills) return { abilities: [] as string[], baseSkills: [] as string[] };
+
+    const abilities = new Set<string>();
+    const baseSkills = new Set<string>();
+
+    skills.forEach((s: Skill) => {
+      if (s.ability && typeof s.ability === 'string') {
+        s.ability.split(',').forEach((ab: string) => {
+          const trimmed = ab.trim();
+          if (trimmed) abilities.add(trimmed);
+        });
+      }
+      if (s.category && typeof s.category === 'string') baseSkills.add(s.category);
+      if (s.base_skill_id !== undefined) {
+        const baseSkillName: string | undefined = skillIdToName.get(String(s.base_skill_id));
+        if (typeof baseSkillName === 'string') baseSkills.add(baseSkillName);
+      }
+    });
+
+    return {
+      abilities: Array.from(abilities).sort(),
+      baseSkills: Array.from(baseSkills).sort(),
+    };
+  }, [skills, skillIdToName]);
+
+  const filteredSkills = useMemo(() => {
+    if (!skills) return [];
+
+    const filtered = skills.filter((s: Skill) => {
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        if (
+          !s.name.toLowerCase().includes(searchLower) &&
+          !s.description?.toLowerCase().includes(searchLower)
+        ) {
+          return false;
+        }
+      }
+
+      if (filters.abilities.length > 0) {
+        const skillAbilities = s.ability?.split(',').map((a: string) => a.trim()) || [];
+        const hasMatchingAbility = filters.abilities.some(filterAb =>
+          skillAbilities.includes(filterAb)
+        );
+        if (!hasMatchingAbility) return false;
+      }
+
+      if (filters.baseSkill) {
+        const isThisBaseSkill = s.name === filters.baseSkill;
+        const baseSkillName = s.base_skill_id !== undefined ? skillIdToName.get(String(s.base_skill_id)) : undefined;
+        const hasThisBaseSkill = baseSkillName === filters.baseSkill;
+        if (!isThisBaseSkill && !hasThisBaseSkill) return false;
+      }
+
+      const isSubSkill = s.base_skill_id !== undefined;
+      if (filters.subSkillMode === 'only' && !isSubSkill) return false;
+      if (filters.subSkillMode === 'hide' && isSubSkill) return false;
+
+      return true;
+    });
+
+    if (filters.baseSkill) {
+      return filtered.sort((a: Skill, b: Skill) => {
+        const aIsBase = a.name === filters.baseSkill;
+        const bIsBase = b.name === filters.baseSkill;
+        if (aIsBase && !bIsBase) return -1;
+        if (!aIsBase && bIsBase) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    }
+
+    return sortItems<Skill>(filtered);
+  }, [skills, filters, sortItems, skillIdToName]);
 
   const openAdd = () => {
     setEditing(null);
@@ -99,30 +197,106 @@ export function AdminSkillsTab() {
     <div>
       <SectionHeader title="Skills" onAdd={openAdd} size="md" />
       <div className="mb-4 mt-2">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search skills..." />
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
+          placeholder="Search names, descriptions..."
+        />
+      </div>
+
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <ChipSelect
+            label="Ability"
+            placeholder="Choose ability"
+            options={filterOptions.abilities.map(a => ({
+              value: a,
+              label: typeof a === 'string' && a.length > 0 ? a.charAt(0).toUpperCase() + a.slice(1) : String(a),
+            }))}
+            selectedValues={filters.abilities}
+            onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
+            onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
+          />
+
+          <SelectFilter
+            label="Base Skill"
+            value={filters.baseSkill}
+            options={filterOptions.baseSkills.map(s => ({ value: s, label: s }))}
+            onChange={(v) => setFilters(f => ({ ...f, baseSkill: v }))}
+            placeholder="Any"
+          />
+
+          <SelectFilter
+            label="Skill Type"
+            value={filters.subSkillMode}
+            options={[
+              { value: 'all', label: 'All Skills' },
+              { value: 'only', label: 'Only Sub-Skills' },
+              { value: 'hide', label: 'Hide Sub-Skills' },
+            ]}
+            onChange={(v) => setFilters(f => ({ ...f, subSkillMode: v as 'all' | 'only' | 'hide' }))}
+            placeholder="All Skills"
+          />
+        </div>
+      </FilterSection>
+
+      <div
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: SKILL_GRID_COLUMNS }}
+      >
+        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
       </div>
 
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((s: Skill) => (
-            <div key={s.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
-              <div className="flex-1 min-w-0">
-                <GridListRow id={s.id} name={s.name} description={s.description || ''} columns={[{ key: 'Ability', value: s.ability || '-' }, { key: 'Category', value: s.category || '-' }]} />
+        <div className="flex flex-col gap-1 mt-2">
+          {filteredSkills.length === 0 ? (
+            <EmptyState
+              title="No skills found"
+              description="No skills match your filters."
+              action={{ label: 'Add Skill', onClick: openAdd }}
+              size="sm"
+            />
+          ) : (
+            filteredSkills.map((s: Skill) => (
+              <div key={s.id} className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <GridListRow
+                    id={s.id}
+                    name={s.name}
+                    description={s.description || ''}
+                    gridColumns={SKILL_GRID_COLUMNS}
+                    columns={[
+                      { key: 'Ability', value: s.ability || '-' },
+                      {
+                        key: 'Base Skill',
+                        value:
+                          s.base_skill_id !== undefined
+                            ? (skillIdToName.get(String(s.base_skill_id)) || '-')
+                            : '-',
+                      },
+                    ]}
+                  />
+                </div>
+                <div className="flex gap-1 shrink-0 pr-2">
+                  <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                    <Pencil className="w-4 h-4" />
+                  </IconButton>
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openEdit(s)}
+                    label="Delete"
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </IconButton>
+                </div>
               </div>
-              <div className="flex gap-1 pr-2">
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </IconButton>
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Delete" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <EmptyState title="No skills found" description="Add one to get started." action={{ label: 'Add Skill', onClick: openAdd }} size="sm" />
+            ))
           )}
         </div>
       )}

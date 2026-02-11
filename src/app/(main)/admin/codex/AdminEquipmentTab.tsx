@@ -1,19 +1,52 @@
 'use client';
 
-import { useState } from 'react';
-import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
+import { useMemo, useState } from 'react';
+import {
+  SectionHeader,
+  SearchInput,
+  LoadingState,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+  ListEmptyState as EmptyState,
+  SortHeader,
+} from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
+import { SelectFilter, FilterSection } from '@/components/codex';
 import { useEquipment } from '@/hooks';
+import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
+const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 80px';
+
+interface EquipmentListItem {
+  id: string;
+  name: string;
+  description?: string;
+  type?: string;
+  category?: string;
+  gold_cost?: number;
+  currency?: number;
+  rarity?: string;
+}
+
+interface EquipmentFilters {
+  search: string;
+  categoryFilter: string;
+  rarityFilter: string;
+}
+
 export function AdminEquipmentTab() {
   const { data: equipment, isLoading, error } = useEquipment();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'weapon' | 'armor' | 'equipment'>('all');
+  const { sortState, handleSort, sortItems } = useSort('name');
+  const [filters, setFilters] = useState<EquipmentFilters>({
+    search: '',
+    categoryFilter: '',
+    rarityFilter: '',
+  });
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; description?: string; type?: string; gold_cost?: number } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -21,11 +54,46 @@ export function AdminEquipmentTab() {
 
   const [form, setForm] = useState({ name: '', description: '', type: 'equipment' as 'weapon' | 'armor' | 'equipment', gold_cost: 0 });
 
-  const filtered = (equipment || []).filter(
-    (e: { id: string; name: string; description?: string; type?: string }) =>
-      (!search || e.name.toLowerCase().includes(search.toLowerCase()) || e.description?.toLowerCase().includes(search.toLowerCase())) &&
-      (typeFilter === 'all' || (e.type || 'equipment') === typeFilter)
-  );
+  const filterOptions = useMemo(() => {
+    if (!equipment) return { categories: [] as string[], rarities: [] as string[] };
+    const categories = new Set<string>();
+    const rarities = new Set<string>();
+    equipment.forEach((e: EquipmentListItem) => {
+      if (e.category) categories.add(e.category);
+      if (e.rarity) rarities.add(e.rarity);
+    });
+    return {
+      categories: Array.from(categories).sort(),
+      rarities: Array.from(rarities).sort(),
+    };
+  }, [equipment]);
+
+  const filteredEquipment = useMemo(() => {
+    if (!equipment) return [];
+
+    const filtered = equipment.filter((e: EquipmentListItem) => {
+      if (
+        filters.search &&
+        !e.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !e.description?.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
+        return false;
+      }
+      if (filters.categoryFilter && e.category !== filters.categoryFilter) return false;
+      if (filters.rarityFilter && e.rarity !== filters.rarityFilter) return false;
+      return true;
+    });
+
+    type FilteredItem = EquipmentListItem & { category: string; cost: number; rarity: string };
+    return sortItems<FilteredItem>(
+      filtered.map((e: EquipmentListItem) => ({
+        ...e,
+        category: e.category || '',
+        cost: e.currency ?? e.gold_cost ?? 0,
+        rarity: e.rarity || '',
+      })),
+    );
+  }, [equipment, filters, sortItems]);
 
   const openAdd = () => {
     setEditing(null);
@@ -94,37 +162,86 @@ export function AdminEquipmentTab() {
   return (
     <div>
       <SectionHeader title="Equipment" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2 flex gap-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search equipment..." />
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'all' | 'weapon' | 'armor' | 'equipment')} className="px-3 py-2 rounded-md border border-border bg-background text-text-primary">
-          <option value="all">All Types</option>
-          <option value="weapon">Weapon</option>
-          <option value="armor">Armor</option>
-          <option value="equipment">Equipment</option>
-        </select>
+      <div className="mb-4 mt-2">
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => setFilters(f => ({ ...f, search: v }))}
+          placeholder="Search equipment..."
+        />
+      </div>
+
+      <FilterSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SelectFilter
+            label="Category"
+            value={filters.categoryFilter}
+            options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+            onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
+            placeholder="All Categories"
+          />
+          <SelectFilter
+            label="Rarity"
+            value={filters.rarityFilter}
+            options={filterOptions.rarities.map(r => ({ value: r, label: r }))}
+            onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
+            placeholder="All Rarities"
+          />
+        </div>
+      </FilterSection>
+
+      <div
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        style={{ gridTemplateColumns: EQUIPMENT_GRID_COLUMNS }}
+      >
+        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="COST" col="cost" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="RARITY" col="rarity" sortState={sortState} onSort={handleSort} />
       </div>
 
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-surface">
-          {filtered.map((e: { id: string; name: string; description?: string; type?: string; gold_cost?: number }) => (
-            <div key={e.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
-              <div className="flex-1 min-w-0">
-                <GridListRow id={e.id} name={e.name} description={e.description || ''} columns={[{ key: 'Type', value: (e.type || 'equipment') as string }, { key: 'Cost', value: `${e.gold_cost ?? 0} c` }]} />
+        <div className="flex flex-col gap-1 mt-2">
+          {filteredEquipment.length === 0 ? (
+            <EmptyState
+              title="No equipment found"
+              description="No equipment matches your filters."
+              action={{ label: 'Add Equipment', onClick: openAdd }}
+              size="sm"
+            />
+          ) : (
+            filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => (
+              <div key={e.id} className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <GridListRow
+                    id={e.id}
+                    name={e.name}
+                    description={e.description || ''}
+                    gridColumns={EQUIPMENT_GRID_COLUMNS}
+                    columns={[
+                      { key: 'Category', value: (e.category || e.type || 'equipment') as string },
+                      { key: 'Cost', value: e.cost > 0 ? `${e.cost} c` : '-', highlight: true },
+                      { key: 'Rarity', value: e.rarity || '-' },
+                    ]}
+                  />
+                </div>
+                <div className="flex gap-1 shrink-0 pr-2">
+                  <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit">
+                    <Pencil className="w-4 h-4" />
+                  </IconButton>
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openEdit(e)}
+                    label="Delete"
+                    className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </IconButton>
+                </div>
               </div>
-              <div className="flex gap-1 pr-2">
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </IconButton>
-                <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Delete" className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30">
-                  <Trash2 className="w-4 h-4" />
-                </IconButton>
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <EmptyState title="No equipment found" description="Add one to get started." action={{ label: 'Add Equipment', onClick: openAdd }} size="sm" />
+            ))
           )}
         </div>
       )}

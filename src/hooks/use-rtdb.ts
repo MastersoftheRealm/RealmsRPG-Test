@@ -91,7 +91,6 @@ export interface Feat {
   char_feat: boolean;
   state_feat: boolean;
   rec_period?: string;
-  prereq_text?: string;
 }
 
 export interface Skill {

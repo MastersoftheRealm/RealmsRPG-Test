@@ -13,7 +13,6 @@
 | `name` | string | Feat name | Non-empty | "Skilled Actor" |
 | `description` | string | Full feat description | | "When acting in a way that would require..." |
 | `req_desc` | string | Human-readable requirement description | | |
-| `prereq_text` | string | Legacy prerequisite text | | |
 | `ability_req` | string[] | Ability/Defense names required (6 Abilities + 6 Defenses) | Strength, Vitality, Agility, Acuity, Intelligence, Charisma, Might, Fortitude, Reflexes, Discernment, Mental Fortitude, Resolve | ["Agility", "Fortitude"] |
 | `abil_req_val` | number[] | Min value for each ability_req (paired by index) | | [3, 4] |
 | `skill_req` | string[] | Skill names required | From codex_skills | ["Stealth", "Acrobatics"] |

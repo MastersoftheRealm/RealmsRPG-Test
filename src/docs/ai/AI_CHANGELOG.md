@@ -28,6 +28,11 @@ Append-only log. Agents must add an entry for each PR/merge.
   - TASK-160: Species skills — ChipSelect dropdown; feat skill_req — skill dropdown with add/remove rows
   - build passes
 
+- 2026-02-11 | agent:cursor | Session: TASK-169–170 — Admin Feats prereq_text removal, Admin Codex tab unification | files: AdminFeatsTab, AdminSkillsTab, AdminPartsTab, AdminPropertiesTab, AdminEquipmentTab, use-rtdb.ts, api/codex/route.ts, migrate_rtdb_to_firestore.js, CODEX_SCHEMA_REFERENCE.md, AI_TASK_QUEUE.md, ALL_FEEDBACK_CLEAN.md | TASKs: TASK-169, TASK-170 | Summary:
+  - TASK-169: Removed non-canonical `prereq_text` from feats schema docs, feat types, codex API mapping, migration script, and Admin Feats editor; rely on `req_desc` for human-readable requirements
+  - TASK-170: Updated Admin Skills, Parts, Properties, and Equipment tabs to share Codex-style search, filters, sort headers, and GridListRow layouts, with edit/delete controls layered on top
+  - build pending
+
 - 2026-02-07 | agent:cursor | Session: TASK-137–141 — Public library, add-to-library, source filter, badges | files: library-service, use-public-library, CodexPublicLibraryTab, grid-list-row, SourceFilter, Library tabs, power/technique/item/creature creators | TASKs: TASK-137, TASK-138, TASK-139, TASK-140, TASK-141 | Summary:
   - TASK-137: Admin My library / Public library toggle in all four creators (done earlier)
   - TASK-138: fetchPublicLibrary, addPublicItemToLibrary, usePublicLibrary, useAddPublicToLibrary; Add to my library in Codex Public tab
