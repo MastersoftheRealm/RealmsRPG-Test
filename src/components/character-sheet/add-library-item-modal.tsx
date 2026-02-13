@@ -257,21 +257,20 @@ export function AddLibraryItemModal({
     }
   };
   
+  const contentGrid = getModalGridColumns(itemType);
+  const rowGrid = contentGrid + ' 2.5rem';
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={getTitle()}>
       <div className="flex flex-col h-[60vh]">
-        {/* Search */}
-        <div className="mb-4">
+        <div className="pb-3 border-b border-border-subtle">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder={`Search your ${itemType}s...`}
-            size="sm"
           />
         </div>
-        
-        {/* Items List */}
-        <div className="flex-1 overflow-y-auto border border-border-light rounded-lg">
+        <div className="flex-1 min-h-0 flex flex-col border border-border-light rounded-lg overflow-hidden mt-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Spinner size="md" />
@@ -295,48 +294,50 @@ export function AddLibraryItemModal({
               )}
             </div>
           ) : (
-            <div className="p-2">
-              {/* List Header with sorting */}
-              <ListHeader
-                columns={getListHeaderColumns(itemType)}
-                sortState={sortState}
-                onSort={handleSort}
-                hasSelectionColumn
-              />
-              
-              <div className="space-y-2">
-              {filteredItems.map((item) => {
-                const isSelected = selectedIds.has(item.id);
-                const showQuantity = itemType === 'equipment' && isSelected;
-                
-                return (
-                  <div key={item.id} className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <GridListRow
-                        id={item.id}
-                        name={item.name}
-                        description={item.description || 'No description available.'}
-                        columns={getItemColumns(item, itemType)}
-                        selectable
-                        isSelected={isSelected}
-                        onSelect={() => toggleSelection(item.id)}
-                        compact
-                      />
-                    </div>
-                    {/* Quantity selector for selected equipment items */}
-                    {showQuantity && (
-                      <div className="flex-shrink-0 px-2">
-                        <QuantitySelector
-                          quantity={quantities[item.id] || 1}
-                          onChange={(qty) => updateQuantity(item.id, qty)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <>
+              <div className="flex-shrink-0 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
+                <ListHeader
+                  columns={getListHeaderColumns(itemType)}
+                  gridColumns={contentGrid}
+                  sortState={sortState}
+                  onSort={handleSort}
+                  hasSelectionColumn
+                />
               </div>
-            </div>
+              <div className="flex-1 overflow-y-auto">
+                <div className="flex flex-col gap-2 p-2">
+                  {filteredItems.map((item) => {
+                    const isSelected = selectedIds.has(item.id);
+                    const showQuantity = itemType === 'equipment' && isSelected;
+                    return (
+                      <div key={item.id} className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <GridListRow
+                            id={item.id}
+                            name={item.name}
+                            description={item.description || 'No description available.'}
+                            columns={getItemColumns(item, itemType)}
+                            gridColumns={rowGrid}
+                            selectable
+                            isSelected={isSelected}
+                            onSelect={() => toggleSelection(item.id)}
+                            compact
+                          />
+                        </div>
+                        {showQuantity && (
+                          <div className="flex-shrink-0">
+                            <QuantitySelector
+                              quantity={quantities[item.id] || 1}
+                              onChange={(qty) => updateQuantity(item.id, qty)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
           )}
         </div>
         
@@ -406,12 +407,25 @@ function formatDamageForSort(damage: unknown): string {
   return '';
 }
 
-// Get ListHeader columns based on item type
+function getModalGridColumns(itemType: ItemType): string {
+  switch (itemType) {
+    case 'power':
+    case 'technique':
+      return '1.5fr 0.8fr';
+    case 'weapon':
+    case 'armor':
+      return '1.5fr 1fr';
+    case 'equipment':
+      return '1.5fr';
+    default:
+      return '1.5fr';
+  }
+}
+
 function getListHeaderColumns(itemType: ItemType) {
   const baseColumns = [
     { key: 'name', label: 'Name', sortable: true },
   ];
-  
   switch (itemType) {
     case 'power':
       return [...baseColumns, { key: 'level', label: 'Level', sortable: true, align: 'center' as const }];

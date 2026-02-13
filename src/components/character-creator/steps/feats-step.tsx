@@ -30,8 +30,8 @@ import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
 import type { ArchetypeCategory } from '@/types';
 
-// Grid columns for feat display
-const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 40px';
+// Grid columns for feat display (Name, Level, Category, Ability, Uses, Add)
+const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 40px';
 
 interface SelectedFeat {
   id: string;
@@ -43,7 +43,8 @@ interface SelectedFeat {
 interface FeatFilters {
   search: string;
   categories: string[];
-  featType: 'all' | 'archetype' | 'character';
+  /** Either archetype feats or character feats (no "all" in creator) */
+  featType: 'archetype' | 'character';
   hideUnqualified: boolean;
   sortCol: string;
   sortDir: 1 | -1;
@@ -54,11 +55,12 @@ export function FeatsStep() {
   const { data: feats, isLoading } = useCodexFeats();
   const { data: skillsDb = [] } = useCodexSkills();
   
+  const [expandedSelectedId, setExpandedSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
     categories: [],
-    featType: 'all',
-    hideUnqualified: true, // Auto-hide unqualified by default
+    featType: 'archetype', // Either/or: picking archetype or character feats
+    hideUnqualified: true,
     sortCol: 'name',
     sortDir: 1,
   });
@@ -168,7 +170,7 @@ export function FeatsStep() {
         if (!matches) return false;
       }
       
-      // Feat type filter
+      // Feat type: either archetype or character (no "all" in creator)
       if (filters.featType === 'archetype' && feat.char_feat) return false;
       if (filters.featType === 'character' && !feat.char_feat) return false;
       
@@ -186,16 +188,14 @@ export function FeatsStep() {
       return true;
     }).sort((a: Feat, b: Feat) => {
       const col = filters.sortCol as keyof Feat;
-      const aVal = a[col];
-      const bVal = b[col];
-      
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return filters.sortDir * aVal.localeCompare(bVal);
-      }
+      const aVal = a[col] as string | number | undefined;
+      const bVal = b[col] as string | number | undefined;
+      const aStr = aVal != null ? String(aVal) : '';
+      const bStr = bVal != null ? String(bVal) : '';
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return filters.sortDir * (aVal - bVal);
       }
-      return 0;
+      return filters.sortDir * aStr.localeCompare(bStr);
     });
   }, [feats, filters, checkRequirements]);
 
@@ -304,8 +304,9 @@ export function FeatsStep() {
         description={feat.description}
         gridColumns={FEAT_GRID_COLUMNS}
         columns={[
-          { key: 'Level', value: feat.lvl_req || '-' },
+          { key: 'Level', value: feat.lvl_req ?? '-' },
           { key: 'Category', value: feat.category || '-' },
+          { key: 'Ability', value: feat.ability || '-' },
           { key: 'Uses', value: feat.uses_per_rec ? `${feat.uses_per_rec}/${feat.rec_period || 'rest'}` : '-' },
         ]}
         detailSections={detailSections.length > 0 ? detailSections : undefined}
@@ -363,20 +364,35 @@ export function FeatsStep() {
             {selectedArchetypeFeats.length === 0 ? (
               <span className="text-sm text-text-muted italic">None selected</span>
             ) : (
-              selectedArchetypeFeats.map(feat => (
-                <span
-                  key={feat.id}
-                  className="px-3 py-1 bg-white text-amber-700 rounded-full text-sm flex items-center gap-2 border border-amber-200"
-                >
-                  {feat.name}
-                  <button
-                    onClick={() => updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) })}
-                    className="hover:text-red-500 font-bold"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
+              selectedArchetypeFeats.map(feat => {
+                const key = `arch-${feat.id}`;
+                const isExpanded = expandedSelectedId === key;
+                return (
+                  <div key={feat.id} className="rounded-lg border border-amber-200 bg-white overflow-hidden max-w-md">
+                    <div className="px-3 py-1.5 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
+                        className="text-amber-700 font-medium text-sm text-left flex-1 truncate"
+                      >
+                        {feat.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
+                        className="hover:text-red-500 font-bold flex-shrink-0"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {isExpanded && feat.description && (
+                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-amber-100">
+                        {feat.description}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -403,20 +419,35 @@ export function FeatsStep() {
             {selectedCharacterFeats.length === 0 ? (
               <span className="text-sm text-text-muted italic">None selected</span>
             ) : (
-              selectedCharacterFeats.map(feat => (
-                <span
-                  key={feat.id}
-                  className="px-3 py-1 bg-white dark:bg-surface-alt text-blue-700 dark:text-blue-300 rounded-full text-sm flex items-center gap-2 border border-blue-200 dark:border-blue-800"
-                >
-                  {feat.name}
-                  <button
-                    onClick={() => updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) })}
-                    className="hover:text-red-500 font-bold"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
+              selectedCharacterFeats.map(feat => {
+                const key = `char-${feat.id}`;
+                const isExpanded = expandedSelectedId === key;
+                return (
+                  <div key={feat.id} className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-surface-alt overflow-hidden max-w-md">
+                    <div className="px-3 py-1.5 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
+                        className="text-blue-700 dark:text-blue-300 font-medium text-sm text-left flex-1 truncate"
+                      >
+                        {feat.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
+                        className="hover:text-red-500 font-bold flex-shrink-0"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {isExpanded && feat.description && (
+                      <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-blue-100 dark:border-blue-800">
+                        {feat.description}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -444,22 +475,22 @@ export function FeatsStep() {
             onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
           />
 
-          {/* Feat Type Filter - placeholder is "All Feats", options exclude it to avoid duplicate */}
+          {/* Feat Type: either/or (archetype or character) */}
           <SelectFilter
-            label="Feat Type"
-            value={filters.featType === 'all' ? '' : filters.featType}
+            label="Showing"
+            value={filters.featType}
             options={[
-              { value: 'archetype', label: 'Archetype Only' },
-              { value: 'character', label: 'Character Only' },
+              { value: 'archetype', label: 'Archetype feats' },
+              { value: 'character', label: 'Character feats' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, featType: (v || 'all') as 'all' | 'archetype' | 'character' }))}
-            placeholder="All Feats"
+            onChange={(v) => setFilters(f => ({ ...f, featType: (v || 'archetype') as 'archetype' | 'character' }))}
+            placeholder="Archetype feats"
           />
 
-          {/* Hide Unqualified Toggle */}
+          {/* Qualification Filter */}
           <div className="filter-group">
             <label className="block text-sm font-medium text-text-secondary mb-1">
-              Qualification Filter
+              Qualification
             </label>
             <button
               onClick={() => setFilters(f => ({ ...f, hideUnqualified: !f.hideUnqualified }))}
@@ -470,21 +501,22 @@ export function FeatsStep() {
                   : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt'
               )}
             >
-              {filters.hideUnqualified ? '✓ Hiding unqualified' : 'Show all feats'}
+              {filters.hideUnqualified ? '✓ Hiding unqualified' : 'Showing all feats'}
             </button>
             <p className="text-xs text-text-muted mt-1">
-              {filters.hideUnqualified ? 'Only showing feats you qualify for' : 'Showing all feats including unqualified'}
+              {filters.hideUnqualified ? 'Only feats you qualify for' : 'Including unqualified'}
             </p>
           </div>
         </div>
       </FilterSection>
 
-      {/* Column Headers - Uses same text-xs font-semibold as SortHeader for consistency */}
+      {/* Column Headers */}
       <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light rounded-t-lg text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300"
            style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}>
         <SortHeader label="NAME" col="name" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <SortHeader label="LEVEL" col="lvl_req" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
+        <SortHeader label="ABILITY" col="ability" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <span className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">USES</span>
         <span></span>
       </div>

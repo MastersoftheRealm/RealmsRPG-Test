@@ -119,6 +119,8 @@ export interface GridListRowProps {
   innate?: boolean;
   /** Uses tracking for feats with limited uses */
   uses?: { current: number; max: number };
+  /** When true, do not show (current/max) after name (e.g. when Uses column has a stepper) */
+  hideUsesInName?: boolean;
   /** Quantity for stackable items (equipment, consumables) */
   quantity?: number;
   /** Callback when quantity changes (enables +/- controls) */
@@ -195,6 +197,7 @@ export function GridListRow({
   equipped = false,
   innate = false,
   uses,
+  hideUsesInName = false,
   quantity,
   onQuantityChange,
   // UI options
@@ -296,8 +299,8 @@ export function GridListRow({
             {innate && (
               <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
             )}
-            {/* Uses display */}
-            {uses && (
+            {/* Uses display (hidden when Uses column shows stepper) */}
+            {uses && !hideUsesInName && (
               <span className="text-xs text-text-muted flex-shrink-0">
                 ({uses.current}/{uses.max})
               </span>

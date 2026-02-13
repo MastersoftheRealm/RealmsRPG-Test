@@ -16,7 +16,7 @@
 'use client';
 
 import { useMemo, useState, useCallback } from 'react';
-import { SectionHeader, ListHeader, GridListRow } from '@/components/shared';
+import { SectionHeader, ListHeader, GridListRow, DecrementButton, IncrementButton } from '@/components/shared';
 import type { SortState, ListColumn } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 
@@ -100,20 +100,20 @@ interface FeatsTabProps {
 // =============================================================================
 
 const TRAIT_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
   { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
-  { key: 'uses', label: 'Uses', width: '6rem', align: 'center' },
+  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
 ];
 
-const TRAIT_GRID = '1fr 2.5fr 6rem';
+const TRAIT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem';
 
 const FEAT_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
   { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
-  { key: 'uses', label: 'Uses', width: '6rem', align: 'center' },
+  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
 ];
 
-const FEAT_GRID = '1fr 2.5fr 6rem';
+const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem';
 
 // =============================================================================
 // Helper: Truncate description for collapsed view
@@ -333,7 +333,25 @@ export function FeatsTab({
                 max: trait.maxUses,
               } : undefined;
               const categoryLabel = trait.category ? getCategoryLabel(trait.category) : undefined;
-              
+              const usesStepper = uses && onTraitUsesChange ? (
+                <div className="flex items-center justify-center gap-1">
+                  <DecrementButton
+                    onClick={() => onTraitUsesChange(trait.name, -1)}
+                    disabled={uses.current <= 0}
+                    size="sm"
+                  />
+                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                    {uses.current}/{uses.max}
+                  </span>
+                  <IncrementButton
+                    onClick={() => onTraitUsesChange(trait.name, 1)}
+                    disabled={uses.current >= uses.max}
+                    size="sm"
+                  />
+                </div>
+              ) : uses ? (
+                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
+              ) : null;
               return (
                 <GridListRow
                   key={`${trait.category}-${index}`}
@@ -343,13 +361,12 @@ export function FeatsTab({
                   gridColumns={TRAIT_GRID}
                   columns={[
                     { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: formatUsesWithRecovery(uses, trait.recoveryPeriod) },
+                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
                   ]}
                   badges={categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined}
                   uses={uses}
-                  onQuantityChange={trait.maxUses > 0 && onTraitUsesChange
-                    ? (delta) => onTraitUsesChange(trait.name, delta)
-                    : undefined}
+                  hideUsesInName={!!(uses && onTraitUsesChange)}
+                  onQuantityChange={undefined}
                   compact
                 />
               );
@@ -384,24 +401,42 @@ export function FeatsTab({
                 current: feat.currentUses ?? feat.maxUses,
                 max: feat.maxUses,
               } : undefined;
-              
+              const featId = String(feat.id || index);
+              const usesStepper = uses && onFeatUsesChange ? (
+                <div className="flex items-center justify-center gap-1">
+                  <DecrementButton
+                    onClick={() => onFeatUsesChange(featId, -1)}
+                    disabled={uses.current <= 0}
+                    size="sm"
+                  />
+                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                    {uses.current}/{uses.max}
+                  </span>
+                  <IncrementButton
+                    onClick={() => onFeatUsesChange(featId, 1)}
+                    disabled={uses.current >= uses.max}
+                    size="sm"
+                  />
+                </div>
+              ) : uses ? (
+                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
+              ) : null;
               return (
                 <GridListRow
                   key={feat.id || index}
-                  id={String(feat.id || index)}
+                  id={featId}
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
                   columns={[
                     { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: formatUsesWithRecovery(uses, feat.recovery) },
+                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
                   ]}
                   uses={uses}
-                  onQuantityChange={onFeatUsesChange
-                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
-                    : undefined}
+                  hideUsesInName={!!(uses && onFeatUsesChange)}
+                  onQuantityChange={undefined}
                   onDelete={isEditMode && onRemoveFeat 
-                    ? () => onRemoveFeat(String(feat.id || index), feat.name) 
+                    ? () => onRemoveFeat(featId, feat.name) 
                     : undefined}
                   compact
                 />
@@ -437,24 +472,42 @@ export function FeatsTab({
                 current: feat.currentUses ?? feat.maxUses,
                 max: feat.maxUses,
               } : undefined;
-              
+              const featId = String(feat.id || index);
+              const usesStepper = uses && onFeatUsesChange ? (
+                <div className="flex items-center justify-center gap-1">
+                  <DecrementButton
+                    onClick={() => onFeatUsesChange(featId, -1)}
+                    disabled={uses.current <= 0}
+                    size="sm"
+                  />
+                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                    {uses.current}/{uses.max}
+                  </span>
+                  <IncrementButton
+                    onClick={() => onFeatUsesChange(featId, 1)}
+                    disabled={uses.current >= uses.max}
+                    size="sm"
+                  />
+                </div>
+              ) : uses ? (
+                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
+              ) : null;
               return (
                 <GridListRow
                   key={feat.id || index}
-                  id={String(feat.id || index)}
+                  id={featId}
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
                   columns={[
                     { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: formatUsesWithRecovery(uses, feat.recovery) },
+                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
                   ]}
                   uses={uses}
-                  onQuantityChange={onFeatUsesChange
-                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
-                    : undefined}
+                  hideUsesInName={!!(uses && onFeatUsesChange)}
+                  onQuantityChange={undefined}
                   onDelete={isEditMode && onRemoveFeat 
-                    ? () => onRemoveFeat(String(feat.id || index), feat.name) 
+                    ? () => onRemoveFeat(featId, feat.name) 
                     : undefined}
                   compact
                 />
@@ -488,26 +541,44 @@ export function FeatsTab({
                 current: feat.currentUses ?? feat.maxUses,
                 max: feat.maxUses,
               } : undefined;
+              const featId = String(feat.id || index);
               const typeLabel = feat.stateType === 'archetype' ? 'Archetype' : 'Character';
-              
+              const usesStepper = uses && onFeatUsesChange ? (
+                <div className="flex items-center justify-center gap-1">
+                  <DecrementButton
+                    onClick={() => onFeatUsesChange(featId, -1)}
+                    disabled={uses.current <= 0}
+                    size="sm"
+                  />
+                  <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                    {uses.current}/{uses.max}
+                  </span>
+                  <IncrementButton
+                    onClick={() => onFeatUsesChange(featId, 1)}
+                    disabled={uses.current >= uses.max}
+                    size="sm"
+                  />
+                </div>
+              ) : uses ? (
+                <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
+              ) : null;
               return (
                 <GridListRow
                   key={feat.id || index}
-                  id={String(feat.id || index)}
+                  id={featId}
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
                   columns={[
                     { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: formatUsesWithRecovery(uses, feat.recovery) },
+                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
                   ]}
                   badges={[{ label: typeLabel, color: 'blue' }]}
                   uses={uses}
-                  onQuantityChange={onFeatUsesChange
-                    ? (delta) => onFeatUsesChange(String(feat.id || index), delta)
-                    : undefined}
+                  hideUsesInName={!!(uses && onFeatUsesChange)}
+                  onQuantityChange={undefined}
                   onDelete={isEditMode && onRemoveFeat 
-                    ? () => onRemoveFeat(String(feat.id || index), feat.name) 
+                    ? () => onRemoveFeat(featId, feat.name) 
                     : undefined}
                   compact
                 />
