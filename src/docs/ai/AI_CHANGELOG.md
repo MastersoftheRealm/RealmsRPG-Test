@@ -2,6 +2,14 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-13 | agent | Session: Feat restrictions, species skill Any, creator skills UX, defense bonuses | files: src/lib/game/formulas.ts, src/components/character-sheet/add-feat-modal.tsx, src/components/character-creator/steps/feats-step.tsx, src/hooks/use-rtdb.ts, src/components/character-creator/species-modal.tsx, src/components/character-creator/steps/skills-step.tsx, src/components/shared/skills-allocation-page.tsx, src/app/(main)/characters/[id]/page.tsx | Summary:
+  - Feat restrictions: skill_req_val is required SKILL BONUS (not value). Added getSkillBonusForFeatRequirement() in formulas.ts; add-feat-modal and feats-step now require proficiency and compare character/draft skill bonus to feat.skill_req_val. Supports character.skills as array or record and draft allocations.
+  - Species skill id "0": Display as "Any" in species-modal and ancestry-step (resolveSkillIdsToNames). Id 0 = extra skill point: skills-step passes extraSkillPoints to SkillsAllocationPage; character sheet totalSkillPoints adds 1 when species has 0; allocations never set allocations['0'].
+  - Character creator skills: Removed ability-grouped tabs. Single flat table (Prof, Skill, Ability, Bonus, Value) matching character sheet; SkillRow variant="table". Add Skill/Add Sub-Skill disabled when no points; adding a skill sets value to 1 (auto proficient).
+  - Skill points display: PointStatus wrapped in flex-shrink-0 whitespace-nowrap so current/max stays on one row.
+  - Defense bonuses in creator: Defense allocation section shows total bonus (ability + points), formatBonus styling, and +N (2sp) indicator like character sheet edit mode.
+  - build passes
+
 - 2026-02-11 | agent:cursor | Session: TASK-235, TASK-236, TASK-237 — About dice carousel, Skill encounter Successes/RM bonus, Combat tracker UX | files: about/page.tsx, encounters/[id]/skill/page.tsx, encounters/[id]/combat/page.tsx, CombatantCard.tsx, types/encounter.ts, AI_TASK_QUEUE.md, ALL_FEEDBACK_CLEAN.md | TASKs: TASK-235, TASK-236, TASK-237 | Summary:
   - TASK-235: About page dice carousel — 7 dice (d10 d12 d20 d4 d6 d8 d10), no brackets on selected (coloration/centering), centered below content, wrap-around cycling; added "Join the Community" slide with Discord link (second d10, scale-x-[-1]).
   - TASK-236: Skill encounter — Renamed Progress to Successes; net dots only (failures cancel successes); Additional Success / Additional Failure buttons; DS change recomputes all participant results; RM Bonus per participant; skill dropdown from codex; ParticipantCard shows effective roll when bonus set.

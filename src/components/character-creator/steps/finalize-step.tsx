@@ -11,6 +11,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
 import { useAuth, useCodexSkills, useSpecies, type Species } from '@/hooks';
 import { cn } from '@/lib/utils';
+import { cleanForSave } from '@/lib/data-enrichment';
+import type { Character } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
@@ -566,6 +568,10 @@ export function FinalizeStep() {
         
         characterData.skills = skillsArray as any;
       }
+
+      // Strip to lean schema (feats, powers, techniques, skills, equipment, etc.) so we don't persist
+      // full codex/library data — it's derived on load from codex.
+      const leanData = cleanForSave(characterData as unknown as Character);
       
       // Remove any undefined values (PostgreSQL JSONB rejects undefined)
       const sanitize = (val: any): any => {
@@ -583,7 +589,7 @@ export function FinalizeStep() {
         return val;
       };
 
-      const sanitizedCharacter = sanitize(characterData);
+      const sanitizedCharacter = sanitize(leanData);
 
       // If portrait is base64, strip it from initial save (will upload to Storage after)
       const hasBase64Portrait = sanitizedCharacter.portrait && 

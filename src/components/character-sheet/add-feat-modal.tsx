@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import { getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { Spinner, IconButton, Alert, Checkbox, Modal, Button } from '@/components/ui';
@@ -158,15 +159,37 @@ export function AddFeatModal({
       });
     }
 
-    // Skill requirements (feat.skill_req as IDs)
+    // Skill requirements: skill_req_val = required SKILL BONUS (not value). Proficiency required for all.
     if (feat.skill_req && feat.skill_req_val) {
       const charSkills = character.skills || {};
+      let skillsForReq: Record<string, { prof?: boolean; val?: number }>;
+      if (Array.isArray(charSkills)) {
+        skillsForReq = {};
+        (charSkills as Array<{ id?: string; name?: string; skill_val?: number; prof?: boolean }>).forEach((s) => {
+          const id = s.id != null ? String(s.id) : '';
+          const name = s.name != null ? String(s.name) : '';
+          const entry = { prof: s.prof ?? false, val: s.skill_val ?? 0 };
+          if (id) skillsForReq[id] = entry;
+          if (name && name !== id) skillsForReq[name] = entry;
+        });
+      } else if (typeof charSkills === 'object') {
+        skillsForReq = charSkills as Record<string, { prof?: boolean; val?: number }>;
+      } else {
+        skillsForReq = {};
+      }
       feat.skill_req.forEach((skillId, idx) => {
-        const required = feat.skill_req_val?.[idx] ?? 1;
+        const requiredBonus = feat.skill_req_val?.[idx] ?? 1;
         const skillName = skillIdToName.get(String(skillId)) || String(skillId);
-        const current = charSkills[skillName] ?? 0;
-        if (current < required) {
-          warnings.push(`Requires ${skillName} ${required}+`);
+        const { bonus, proficient } = getSkillBonusForFeatRequirement(
+          String(skillId),
+          character.abilities || {},
+          skillsForReq,
+          codexSkills
+        );
+        if (!proficient) {
+          warnings.push(`Requires proficiency in ${skillName}`);
+        } else if (bonus < requiredBonus) {
+          warnings.push(`Requires ${skillName} bonus ${requiredBonus}+ (yours: ${bonus})`);
         }
       });
     }
@@ -189,7 +212,7 @@ export function AddFeatModal({
       meets: warnings.length === 0,
       warning: warnings.join(', '),
     };
-  }, [character, skillIdToName]);
+  }, [character, skillIdToName, codexSkills]);
 
   // Filter feats
   const filteredFeats = useMemo(() => {

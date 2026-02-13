@@ -36,13 +36,17 @@ export function SkillsStep() {
   const abilities = draft.abilities || { ...DEFAULT_ABILITIES };
   const level = draft.level || 1;
 
+  // Species skill id "0" = "Any" (extra skill point), not a fixed skill — don't set allocations['0']
   const allocationsWithSpecies = useMemo(() => {
     const next = { ...allocations };
     speciesSkillIds.forEach((id) => {
+      if (id === '0') return; // Any = extra point only
       if (!(id in next) || next[id] < 1) next[id] = 1;
     });
     return next;
   }, [allocations, speciesSkillIds]);
+
+  const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
 
   const handleAllocationsChange = useCallback(
     (newAllocations: Record<string, number>) => {
@@ -89,6 +93,7 @@ export function SkillsStep() {
       allocations={allocationsWithSpecies}
       defenseSkills={defenseVals}
       speciesSkillIds={speciesSkillIds}
+      extraSkillPoints={extraSkillPoints}
       onAllocationsChange={handleAllocationsChange}
       onDefenseChange={handleDefenseChange}
       abilityDefenseBonuses={abilityDefenseBonuses}

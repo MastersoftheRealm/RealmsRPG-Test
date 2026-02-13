@@ -192,11 +192,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
       }
     });
     
-    // Skill points: 2 + (level * 3), but species auto-allocates 2 points
-    // For display, show only choosable points: total - speciesCost, spent - speciesCost
+    // Skill points: 2 + (level * 3). Species skills consume points; id "0" = "Any" gives +1 point
     const rawTotalSkillPoints = 2 + (level * 3);
-    const speciesSkillCount = characterSpeciesSkills.length;
-    const totalSkillPoints = rawTotalSkillPoints - speciesSkillCount;
+    const speciesSkillCount = characterSpeciesSkills.filter((id) => id !== '0').length;
+    const hasAnySpeciesSkill = characterSpeciesSkills.some((id) => id === '0');
+    const totalSkillPoints = rawTotalSkillPoints - speciesSkillCount + (hasAnySpeciesSkill ? 1 : 0);
     
     // Calculate spent skill points (exclude species skill proficiency costs)
     const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string; name?: string; id?: string }>;
@@ -259,10 +259,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
     const hePointsRemaining = totalHEPoints - spentHEPoints;
     
-    // Calculate skill points: 2 + (level * 3) minus species auto-allocated skills
+    // Calculate skill points: 2 + (level * 3) minus species skills; id "0" = Any adds 1 point
     const rawTotalSkillPoints = 2 + (level * 3);
-    const speciesCount = characterSpeciesSkills.length;
-    const totalSkillPoints = rawTotalSkillPoints - speciesCount;
+    const speciesCount = characterSpeciesSkills.filter((id) => id !== '0').length;
+    const hasAnySpeciesSkill = characterSpeciesSkills.some((id) => id === '0');
+    const totalSkillPoints = rawTotalSkillPoints - speciesCount + (hasAnySpeciesSkill ? 1 : 0);
     const skills = (character.skills || []) as Array<{ skill_val?: number; prof?: boolean; baseSkill?: string; name?: string; id?: string }>;
     const spentSkillPoints = skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;

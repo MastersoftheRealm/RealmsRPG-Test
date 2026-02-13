@@ -27,7 +27,7 @@ import {
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
-import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
 import type { ArchetypeCategory } from '@/types';
 
 // Grid columns for feat display
@@ -126,15 +126,22 @@ export function FeatsStep() {
       }
     }
     
-    // Check skill requirements
+    // Skill requirements: skill_req_val = required SKILL BONUS (not value). Proficiency required for all.
     for (let i = 0; i < feat.skill_req.length; i++) {
-      const skillId = feat.skill_req[i];
-      const reqSkillName = skillIdToName.get(String(skillId)) || String(skillId);
-      const reqValue = feat.skill_req_val[i] || 1;
-      const charValue = skills[reqSkillName] || 0;
-      
-      if (charValue < reqValue) {
-        return { met: false, reason: `Requires ${reqSkillName} ${reqValue}+` };
+      const skillId = String(feat.skill_req[i]);
+      const reqSkillName = skillIdToName.get(skillId) || skillId;
+      const requiredBonus = feat.skill_req_val?.[i] ?? 1;
+      const { bonus, proficient } = getSkillBonusForFeatRequirement(
+        skillId,
+        abilities,
+        skills as Record<string, number>,
+        skillsDb as import('@/lib/game/formulas').CodexSkillForFeat[]
+      );
+      if (!proficient) {
+        return { met: false, reason: `Requires proficiency in ${reqSkillName}` };
+      }
+      if (bonus < requiredBonus) {
+        return { met: false, reason: `Requires ${reqSkillName} bonus ${requiredBonus}+ (yours: ${bonus})` };
       }
     }
     
@@ -144,7 +151,7 @@ export function FeatsStep() {
     }
     
     return { met: true };
-  }, [draft.abilities, draft.skills, draft.level, draft.archetype?.mart_abil, skillIdToName]);
+  }, [draft.abilities, draft.skills, draft.level, draft.archetype?.mart_abil, skillIdToName, skillsDb]);
 
   // Filter and sort feats
   const filteredFeats = useMemo(() => {

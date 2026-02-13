@@ -124,15 +124,18 @@ export function SpeciesModal({
     };
   }, [species, traits]);
 
-  // Resolve species skill IDs to full skill objects (not just names)
+  // Resolve species skill IDs to display: id "0" = "Any" (extra skill point), others = codex skill
   const speciesSkills = useMemo(() => {
-    if (!species?.skills || !allSkills) return [];
-    return species.skills
-      .map(skillId => {
-        const idStr = String(skillId);
-        return allSkills.find((s: Skill) => s.id === idStr || String(s.name ?? '').toLowerCase() === idStr.toLowerCase());
-      })
-      .filter((s: Skill | undefined): s is Skill => s != null);
+    if (!species?.skills || !allSkills) return [] as Array<Skill & { displayName: string }>;
+    return species.skills.map(skillId => {
+      const idStr = String(skillId);
+      if (idStr === '0') {
+        return { id: '0', name: 'Any', displayName: 'Any' } as Skill & { displayName: string };
+      }
+      const found = allSkills.find((s: Skill) => s.id === idStr || String(s.name ?? '').toLowerCase() === idStr.toLowerCase());
+      if (!found) return null;
+      return { ...found, displayName: found.name ?? idStr };
+    }).filter((s): s is Skill & { displayName: string } => s != null);
   }, [species?.skills, allSkills]);
 
   if (!species || !isOpen) return null;
@@ -202,12 +205,12 @@ export function SpeciesModal({
               <div className="flex flex-wrap gap-2">
                 {speciesSkills.map(skill => (
                   <Chip 
-                    key={skill.id} 
+                    key={String(skill.id)} 
                     variant="info"
                     className="cursor-pointer hover:ring-2 hover:ring-info-300 transition-all"
                     onClick={() => setSelectedSkill(selectedSkill?.id === skill.id ? null : skill)}
                   >
-                    {skill.name}
+                    {(skill as { displayName?: string; name?: string }).displayName ?? (skill as { name?: string }).name ?? String(skill.id)}
                   </Chip>
                 ))}
               </div>
@@ -215,7 +218,7 @@ export function SpeciesModal({
               {selectedSkill && (
                 <div className="mt-2 p-3 bg-info-50 border border-info-200 rounded-lg">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-info-800">{selectedSkill.name}</span>
+                    <span className="font-medium text-info-800">{(selectedSkill as { displayName?: string; name?: string }).displayName ?? (selectedSkill as { name?: string }).name ?? 'Skill'}</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -226,7 +229,9 @@ export function SpeciesModal({
                     </Button>
                   </div>
                   <p className="text-sm text-info-700">
-                    {selectedSkill.description || 'No description available.'}
+                    {String(selectedSkill.id) === '0'
+                      ? 'Your choice: pick any one skill as your second species skill, or treat this as an extra skill point.'
+                      : ((selectedSkill as { description?: string }).description || 'No description available.')}
                   </p>
                   {selectedSkill.ability && (
                     <p className="text-xs text-info-600 mt-1">

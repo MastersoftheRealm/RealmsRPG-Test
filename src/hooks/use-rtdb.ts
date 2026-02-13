@@ -222,9 +222,13 @@ export function buildSkillIdToNameMap(skills: Skill[]): Map<string, string> {
   return new Map(skills.map((s) => [s.id, s.name]));
 }
 
+/** Species skill id "0" means "Any" (user picks any skill / extra skill point). */
 export function resolveSkillIdsToNames(skillIds: (string | number)[], allSkills: Skill[]): string[] {
   const skillMap = buildSkillIdToNameMap(allSkills);
-  return skillIds.map((id) => skillMap.get(String(id)) || String(id));
+  return skillIds.map((id) => {
+    if (String(id) === '0') return 'Any';
+    return skillMap.get(String(id)) || String(id);
+  });
 }
 
 export function useSkillIdToNameMap(): {

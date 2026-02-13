@@ -29,6 +29,7 @@ import {
   calculateSimpleSkillPointsSpent,
   canIncreaseDefense,
 } from '@/lib/game/skill-allocation';
+import { formatBonus } from '@/lib/utils';
 import { SkillRow } from '@/components/shared';
 import { Button, Spinner, Alert } from '@/components/ui';
 import { PointStatus } from '@/components/shared';
@@ -36,8 +37,6 @@ import { AddSkillModal } from '@/components/character-sheet/add-skill-modal';
 import { AddSubSkillModal } from '@/components/character-sheet/add-sub-skill-modal';
 import type { Abilities, DefenseSkills } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
-
-const ABILITY_ORDER = ['Strength', 'Vitality', 'Agility', 'Acuity', 'Intelligence', 'Charisma'];
 
 const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
   'might',
@@ -66,8 +65,10 @@ export interface SkillsAllocationPageProps {
   allocations: Record<string, number>;
   /** Defense bonuses from skill points */
   defenseSkills: DefenseSkills;
-  /** Species skill IDs (always proficient, can't remove) */
+  /** Species skill IDs (always proficient, can't remove). Id "0" = "Any" (extra skill point only). */
   speciesSkillIds: Set<string>;
+  /** Extra skill points (e.g. when species has skill id "0" = Any) */
+  extraSkillPoints?: number;
   /** Callback when allocations change */
   onAllocationsChange: (allocations: Record<string, number>) => void;
   /** Callback when defense skills change */
@@ -87,6 +88,7 @@ export function SkillsAllocationPage({
   allocations,
   defenseSkills,
   speciesSkillIds,
+  extraSkillPoints = 0,
   onAllocationsChange,
   onDefenseChange,
   abilityDefenseBonuses = {},
@@ -94,11 +96,10 @@ export function SkillsAllocationPage({
   className,
 }: SkillsAllocationPageProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Strength']));
   const [addSkillModalOpen, setAddSkillModalOpen] = useState(false);
   const [addSubSkillModalOpen, setAddSubSkillModalOpen] = useState(false);
 
-  const totalPoints = getTotalSkillPoints(level, entityType);
+  const totalPoints = getTotalSkillPoints(level, entityType) + extraSkillPoints;
 
   const skillMeta = useMemo(() => {
     const map = new Map<string, { isSubSkill: boolean }>();
@@ -121,14 +122,11 @@ export function SkillsAllocationPage({
 
   const remainingPoints = totalPoints - spentPoints;
 
-  const { groupedSkills, subSkillsByBase } = useMemo(() => {
-    if (!allSkills.length) return { groupedSkills: {} as Record<string, Skill[]>, subSkillsByBase: {} as Record<string, Skill[]> };
-    const groups: Record<string, Skill[]> = {};
+  const { subSkillsByBase, orderedSkills } = useMemo(() => {
     const subsByBase: Record<string, Skill[]> = {};
-    ABILITY_ORDER.forEach((a) => { groups[a] = []; });
-
-    const skillById: Record<string, Skill> = {};
-    allSkills.forEach((s: Skill) => { skillById[s.id] = s; });
+    const inList = (id: string) =>
+      (speciesSkillIds.has(id) && id !== '0') || id in allocations;
+    if (!allSkills.length) return { subSkillsByBase: subsByBase, orderedSkills: [] as Skill[] };
 
     allSkills.forEach((s: Skill) => {
       if (s.base_skill_id !== undefined) {
@@ -138,24 +136,20 @@ export function SkillsAllocationPage({
       }
     });
 
-    allSkills.forEach((s: Skill) => {
-      if (s.base_skill_id !== undefined) return;
-      const abs = typeof s.ability === 'string'
-        ? s.ability.split(',').map((a) => a.trim())
-        : Array.isArray(s.ability)
-          ? (s.ability as string[]).map((x) => String(x).trim())
-          : [];
-      abs.forEach((a) => {
-        const key = a.charAt(0).toUpperCase() + a.slice(1).toLowerCase();
-        if (ABILITY_ORDER.includes(key) && !groups[key].some((x) => x.id === s.id)) {
-          groups[key].push(s);
-        }
-      });
-      if (abs.length === 0) groups[ABILITY_ORDER[0]].push(s);
+    const baseSkills = allSkills.filter((s: Skill) => s.base_skill_id === undefined);
+    baseSkills.sort((a: Skill, b: Skill) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
+    const result: Skill[] = [];
+    baseSkills.forEach((base: Skill) => {
+      const subs = subSkillsByBase[base.id] || [];
+      const subsInList = subs.filter((sub: Skill) => inList(sub.id));
+      const baseInList = inList(base.id);
+      if (!baseInList && subsInList.length === 0) return;
+      if (baseInList) result.push(base);
+      subsInList.sort((a: Skill, b: Skill) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
+      result.push(...subsInList);
     });
-
-    return { groupedSkills: groups, subSkillsByBase: subsByBase };
-  }, [allSkills]);
+    return { subSkillsByBase: subsByBase, orderedSkills: result };
+  }, [allSkills, speciesSkillIds, allocations]);
 
   const existingSkillIds = useMemo(
     () => new Set([...speciesSkillIds, ...Object.keys(allocations)]),
@@ -222,7 +216,7 @@ export function SkillsAllocationPage({
     (skills: Skill[]) => {
       const next = { ...allocations };
       skills.forEach((s: Skill) => {
-        if (!(s.id in next)) next[s.id] = 0;
+        if (!(s.id in next)) next[s.id] = 1; // Auto proficient when adding
       });
       onAllocationsChange(next);
       setAddSkillModalOpen(false);
@@ -235,9 +229,9 @@ export function SkillsAllocationPage({
       const next = { ...allocations };
       skills.forEach((s: Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }) => {
         if (s.autoAddBaseSkill && !(s.autoAddBaseSkill.id in next)) {
-          next[s.autoAddBaseSkill.id] = 0;
+          next[s.autoAddBaseSkill.id] = 1; // Auto proficient
         }
-        if (!(s.id in next)) next[s.id] = 0;
+        if (!(s.id in next)) next[s.id] = 1; // Auto proficient when adding sub-skill
       });
       onAllocationsChange(next);
       setAddSubSkillModalOpen(false);
@@ -282,15 +276,6 @@ export function SkillsAllocationPage({
     [abilities]
   );
 
-  const toggleCategory = useCallback((cat: string) => {
-    setExpandedCategories((prev) => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
-      return next;
-    });
-  }, []);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -301,20 +286,28 @@ export function SkillsAllocationPage({
 
   return (
     <div className={cn('max-w-5xl mx-auto', className)}>
-      <div className="flex items-start justify-between mb-6">
-        <div>
+      <div className="flex flex-nowrap items-start justify-between gap-4 mb-6">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold text-text-primary mb-2">Allocate Skills</h1>
           <p className="text-text-secondary">
             Spend skill points to gain proficiency, increase skill values, or boost defenses.
             Species skills are always proficient and cannot be removed.
+            {speciesSkillIds.has('0') && ' Species option "Any" gives one extra skill point.'}
           </p>
         </div>
-        <PointStatus total={totalPoints} spent={spentPoints} variant="compact" />
+        <span className="flex-shrink-0 whitespace-nowrap">
+          <PointStatus total={totalPoints} spent={spentPoints} variant="compact" />
+        </span>
       </div>
 
-      {/* Add Skill / Add Sub-Skill buttons */}
+      {/* Add Skill / Add Sub-Skill — disabled when no points */}
       <div className="flex gap-3 mb-6">
-        <Button size="sm" onClick={() => setAddSkillModalOpen(true)}>
+        <Button
+          size="sm"
+          onClick={() => setAddSkillModalOpen(true)}
+          disabled={remainingPoints < 1}
+          title={remainingPoints < 1 ? 'No skill points remaining' : undefined}
+        >
           <Plus size={14} />
           Add Skill
         </Button>
@@ -323,146 +316,77 @@ export function SkillsAllocationPage({
           variant="secondary"
           className="bg-teal-100 hover:bg-teal-200 text-teal-700"
           onClick={() => setAddSubSkillModalOpen(true)}
+          disabled={remainingPoints < 1}
+          title={remainingPoints < 1 ? 'No skill points remaining' : undefined}
         >
           <Plus size={14} />
           Add Sub-Skill
         </Button>
       </div>
 
-      {/* Species skills section */}
-      {speciesSkillIds.size > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-2 uppercase tracking-wide">Species Skills</h2>
-          <p className="text-sm text-text-muted mb-3">
-            These skills are granted by your species. You can increase their values but cannot remove them.
-          </p>
-          <div className="space-y-2">
-            {allSkills
-              .filter((s: Skill) => speciesSkillIds.has(s.id))
-              .map((skill: Skill) => {
-                const value = Math.max(1, allocations[skill.id] ?? 1);
-                const isProficient = true;
-                const bonus = getSkillBonus(skill, value, isProficient);
+      {/* Single flat skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}
+      <div className="bg-surface rounded-xl shadow-md overflow-hidden mb-8">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
+                <th className="w-10 py-2 text-center">Prof</th>
+                <th className="text-left py-2 pl-2">Skill</th>
+                <th className="w-16 py-2 text-center">Ability</th>
+                <th className="w-20 py-2 text-center">Bonus</th>
+                <th className="w-24 py-2 text-center">Value</th>
+                <th className="w-8 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderedSkills.map((skill) => {
+                const isSubSkill = skill.base_skill_id !== undefined;
+                const baseSkill = isSubSkill
+                  ? allSkills.find((s: Skill) => String(s.id) === String(skill.base_skill_id))
+                  : null;
+                const baseValue = baseSkill ? (allocations[baseSkill.id] ?? 0) : 0;
+                const baseProficient = baseValue > 0 || (baseSkill && speciesSkillIds.has(baseSkill.id));
+                const value = Math.max(0, allocations[skill.id] ?? 0);
+                const isSpeciesSkill = speciesSkillIds.has(skill.id);
+                const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
+                const proficient = effectiveValue > 0;
+                const bonus = isSubSkill
+                  ? getSubSkillBonus(skill, effectiveValue, baseValue, baseProficient, proficient)
+                  : getSkillBonus(skill, effectiveValue, proficient);
+                const skillAbility = skill.ability?.split(',')[0]?.trim() || 'strength';
+                const canInc = isSubSkill
+                  ? baseProficient && remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, true))
+                  : remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, false));
                 return (
                   <SkillRow
                     key={skill.id}
                     id={skill.id}
-                    name={skill.name}
-                    value={value}
+                    name={skill.name ?? ''}
+                    isSubSkill={isSubSkill}
+                    baseSkillName={baseSkill?.name}
+                    proficient={proficient}
+                    canToggleProficiency={false}
+                    value={effectiveValue}
                     bonus={bonus}
-                    proficient={isProficient}
-                    ability={skill.ability?.split(',')[0]?.trim()}
+                    ability={skillAbility}
                     isEditing={true}
                     onValueChange={(d) => handleAllocate(skill.id, d)}
-                    minValue={1}
-                    canIncrease={remainingPoints >= getSkillValueIncreaseCost(value, false)}
-                    isSpeciesSkill={true}
-                    onRemove={() => {}}
-                    variant="card"
+                    minValue={isSpeciesSkill ? 1 : 0}
+                    canIncrease={canInc}
+                    isSpeciesSkill={isSpeciesSkill}
+                    onRemove={isSpeciesSkill ? undefined : () => handleRemoveSkill(skill.id)}
+                    variant="table"
                   />
                 );
               })}
-          </div>
+            </tbody>
+          </table>
         </div>
-      )}
-
-      {/* Skills by ability - only show species skills + skills user has added + bases with added sub-skills */}
-      <div className="space-y-4 mb-8">
-        {ABILITY_ORDER.map((ability) => {
-          const allInCategory = groupedSkills[ability] || [];
-          const categorySkills = allInCategory.filter((s) => {
-            if (speciesSkillIds.has(s.id) || s.id in allocations) return true;
-            const subs = subSkillsByBase[s.id] || [];
-            return subs.some((sub) => speciesSkillIds.has(sub.id) || sub.id in allocations);
-          });
-          if (categorySkills.length === 0) return null;
-
-          const isExpanded = expandedCategories.has(ability);
-          return (
-            <div key={ability} className="bg-surface rounded-xl shadow-md overflow-hidden">
-              <button
-                onClick={() => toggleCategory(ability)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface transition-colors"
-              >
-                <h3 className="font-bold text-text-primary">{ability}</h3>
-                <span className={cn('transition-transform', isExpanded && 'rotate-180')}>▼</span>
-              </button>
-              {isExpanded && (
-                <div className="p-4 space-y-3">
-                  {categorySkills.map((skill) => {
-                    const skillSubSkills = [
-                      ...(subSkillsByBase[skill.id] || []),
-                      ...(subSkillsByBase['0'] || []),
-                    ];
-                    const baseValue = allocations[skill.id] ?? 0;
-                    const isSpeciesSkill = speciesSkillIds.has(skill.id);
-                    const effectiveBase = isSpeciesSkill ? Math.max(1, baseValue) : baseValue;
-                    const baseProficient = effectiveBase > 0;
-                    const skillAbility = skill.ability?.split(',')[0]?.trim() || 'strength';
-
-                    return (
-                      <div key={`${ability}-${skill.id}`}>
-                        <SkillRow
-                          id={skill.id}
-                          name={skill.name}
-                          value={effectiveBase}
-                          bonus={getSkillBonus(skill, effectiveBase, baseProficient)}
-                          proficient={baseProficient}
-                          ability={skillAbility}
-                          isEditing={true}
-                          onValueChange={(d) => handleAllocate(skill.id, d)}
-                          minValue={isSpeciesSkill ? 1 : 0}
-                          canIncrease={
-                            remainingPoints >= (effectiveBase === 0 ? 1 : getSkillValueIncreaseCost(effectiveBase, false))
-                          }
-                          isSpeciesSkill={isSpeciesSkill}
-                          onRemove={isSpeciesSkill ? undefined : () => handleRemoveSkill(skill.id)}
-                          variant="card"
-                        />
-                        {skillSubSkills.length > 0 && (
-                          <div className="ml-6 mt-2 pl-3 border-l-2 border-border-light space-y-2">
-                            {skillSubSkills
-                              .filter((sub) => speciesSkillIds.has(sub.id) || sub.id in allocations)
-                              .map((sub) => {
-                              const subValue = allocations[sub.id] ?? 0;
-                              const subIsSpecies = speciesSkillIds.has(sub.id);
-                              const effectiveSub = subIsSpecies ? Math.max(1, subValue) : subValue;
-                              const subProficient = effectiveSub > 0;
-                              const isUnlocked = baseProficient || subIsSpecies;
-                              return (
-                                <SkillRow
-                                  key={sub.id}
-                                  id={sub.id}
-                                  name={sub.name}
-                                  isSubSkill={true}
-                                  value={effectiveSub}
-                                  bonus={getSubSkillBonus(sub, effectiveSub, effectiveBase, baseProficient, subProficient)}
-                                  proficient={subProficient}
-                                  isEditing={true}
-                                  onValueChange={(d) => handleAllocate(sub.id, d)}
-                                  minValue={subIsSpecies ? 1 : 0}
-                                  canIncrease={
-                                    isUnlocked &&
-                                    remainingPoints >= (effectiveSub === 0 ? 1 : getSkillValueIncreaseCost(effectiveSub, true))
-                                  }
-                                  isUnlocked={isUnlocked}
-                                  baseSkillName={skill.name}
-                                  isSpeciesSkill={subIsSpecies}
-                                  onRemove={subIsSpecies ? undefined : () => handleRemoveSkill(sub.id)}
-                                  variant="compact"
-                                />
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {orderedSkills.length === 0 && (
+          <div className="text-center py-8 text-text-muted">
+            No skills added yet. Use &quot;Add Skill&quot; or &quot;Add Sub-Skill&quot; (need at least 1 skill point).
+          </div>
+        )}
       </div>
 
       {/* Defense allocation */}
@@ -475,14 +399,15 @@ export function SkillsAllocationPage({
           {DEFENSE_KEYS.map((key) => {
             const current = defenseSkills[key] ?? 0;
             const abilityBonus = abilityDefenseBonuses[key] ?? 0;
+            const totalBonus = abilityBonus + current;
             const canInc = canIncreaseDefense(current, level, abilityBonus, remainingPoints);
             return (
               <div
                 key={key}
-                className="flex items-center justify-between p-3 rounded-lg bg-surface-alt border border-border-light"
+                className="flex flex-col p-3 rounded-lg bg-surface-alt border border-border-light"
               >
-                <span className="font-medium text-text-primary">{DEFENSE_LABELS[key]}</span>
-                <div className="flex items-center gap-2">
+                <span className="font-medium text-text-primary mb-1">{DEFENSE_LABELS[key]}</span>
+                <div className="flex items-center justify-between gap-2">
                   <button
                     onClick={() => handleDefenseChange(key, -1)}
                     disabled={current <= 0}
@@ -490,15 +415,23 @@ export function SkillsAllocationPage({
                   >
                     −
                   </button>
-                  <span className="w-6 text-center font-mono text-sm">{current}</span>
+                  <span className="text-sm font-bold min-w-[36px] text-center text-blue-600 dark:text-blue-400">
+                    {formatBonus(totalBonus)}
+                  </span>
                   <button
                     onClick={() => handleDefenseChange(key, 1)}
                     disabled={!canInc}
                     className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold bg-surface hover:bg-surface-alt disabled:opacity-50"
+                    title={canInc ? 'Cost: 2 skill points' : `Max at level ${level}`}
                   >
                     +
                   </button>
                 </div>
+                {current > 0 && (
+                  <span className="text-[9px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
+                    +{current} ({current * 2}sp)
+                  </span>
+                )}
               </div>
             );
           })}
