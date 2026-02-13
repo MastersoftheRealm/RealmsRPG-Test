@@ -585,9 +585,10 @@ export function cleanForSave(data: Character): Partial<Character> {
     cleaned.archetype = leanArch;
   }
 
-  // Clean up skills — save { id, name, skill_val, prof, selectedBaseSkillId? } only.
-  // ability, baseSkillId, category, description derived from codex_skills on load.
-  // name kept as backward compat lookup key; id is primary lookup.
+  // Clean up skills — save { id, name, skill_val, prof, selectedBaseSkillId?, ability? }.
+  // ability: when a skill has multiple governing abilities in codex (e.g. Lockpick: Agility or Intelligence),
+  // the player's selected ability must be saved so bonus calculations use the right one. Omit when only one option.
+  // baseSkillId, category, description derived from codex_skills on load.
   // Handle both Array<SkillObject> and Record<skillId, number> formats.
   if (cleaned.skills && typeof cleaned.skills === 'object' && !Array.isArray(cleaned.skills)) {
     // Record<skillId, number> format — convert to lean array
@@ -607,6 +608,8 @@ export function cleanForSave(data: Character): Partial<Character> {
         cleanSkill.skill_val = (skill.skill_val as number) ?? 0;
         cleanSkill.prof = !!(skill.prof);
         if (skill.selectedBaseSkillId) cleanSkill.selectedBaseSkillId = skill.selectedBaseSkillId;
+        // Persist player's selected ability for skills with multiple options (e.g. Lockpick → Agility or Intelligence)
+        if (skill.ability && typeof skill.ability === 'string') cleanSkill.ability = skill.ability;
         return cleanSkill;
       }
       return null;

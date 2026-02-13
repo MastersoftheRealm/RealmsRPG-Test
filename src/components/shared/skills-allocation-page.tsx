@@ -140,7 +140,7 @@ export function SkillsAllocationPage({
     baseSkills.sort((a: Skill, b: Skill) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
     const result: Skill[] = [];
     baseSkills.forEach((base: Skill) => {
-      const subs = subSkillsByBase[base.id] || [];
+      const subs = subsByBase[base.id] || [];
       const subsInList = subs.filter((sub: Skill) => inList(sub.id));
       const baseInList = inList(base.id);
       if (!baseInList && subsInList.length === 0) return;

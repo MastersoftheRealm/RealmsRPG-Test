@@ -2,6 +2,12 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-13 | agent | Session: Creator feats filter, add modals, feats tab uses/columns | files: src/components/character-creator/steps/feats-step.tsx, src/components/character-sheet/add-library-item-modal.tsx, src/components/character-sheet/feats-tab.tsx, src/components/shared/grid-list-row.tsx | Summary:
+  - Character Creator feats: Either/or filter (Archetype feats | Character feats), no "All Feats". Qualification button label "Showing all feats" (not "Show all feats"). Ability column added as sort option. Selected feat chips (archetype/character) expandable to show description.
+  - Add Power/Technique (Add Library Item) modal: Aligned with add-feat/character sheet — primary header bar, contentGrid + rowGrid for header/row alignment, ListHeader with gridColumns, expandable rows.
+  - Feats tab: Uses column shows steppers (DecrementButton/IncrementButton + current/max) for traits and feats; hideUsesInName on GridListRow removes redundant (X/X) after name. Name column widened (minmax(140px, 1.6fr)), Uses column 5rem.
+  - build passes
+
 - 2026-02-13 | agent | Session: Feat restrictions, species skill Any, creator skills UX, defense bonuses | files: src/lib/game/formulas.ts, src/components/character-sheet/add-feat-modal.tsx, src/components/character-creator/steps/feats-step.tsx, src/hooks/use-rtdb.ts, src/components/character-creator/species-modal.tsx, src/components/character-creator/steps/skills-step.tsx, src/components/shared/skills-allocation-page.tsx, src/app/(main)/characters/[id]/page.tsx | Summary:
   - Feat restrictions: skill_req_val is required SKILL BONUS (not value). Added getSkillBonusForFeatRequirement() in formulas.ts; add-feat-modal and feats-step now require proficiency and compare character/draft skill bonus to feat.skill_req_val. Supports character.skills as array or record and draft allocations.
   - Species skill id "0": Display as "Any" in species-modal and ancestry-step (resolveSkillIdsToNames). Id 0 = extra skill point: skills-step passes extraSkillPoints to SkillsAllocationPage; character sheet totalSkillPoints adds 1 when species has 0; allocations never set allocations['0'].

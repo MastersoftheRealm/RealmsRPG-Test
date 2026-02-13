@@ -21,6 +21,8 @@ alwaysApply: true
 
 When the owner provides feedback (raw text, messages, or updates to `ALL_FEEDBACK_CLEAN.md`):
 
+**Step 0 — Always log raw feedback:** Before or while processing, append the raw feedback to `src/docs/ALL_FEEDBACK_CLEAN.md` under **Raw Feedback Log** using the Raw Entry Template (date, context, priority, feedback text, expected behavior). Do this whether you create new tasks, implement directly, or both. Every time the owner sends feedback that you act on, it must be recorded in the log.
+
 **Step 1 — Sentence-level extraction:** Split the raw feedback into individual, atomic actionable items. One sentence may contain 2-3 separate requests. Do NOT summarize or group prematurely. Create a numbered checklist of every discrete request.
 
 **Step 2 — Cross-reference:** For EACH extracted item, check:
@@ -32,9 +34,10 @@ When the owner provides feedback (raw text, messages, or updates to `ALL_FEEDBAC
 **Step 3 — Gap identification:** Any item NOT covered by an existing task or verified as done gets:
 - A new curated section entry in `ALL_FEEDBACK_CLEAN.md`
 - A new task in `AI_TASK_QUEUE.md` with proper ID, priority, and description
-- Added to the High-Level Action Items checklist
+- Added to the High-Level Action Items checklist  
+Items that you implement directly (without a new task) still get the raw feedback appended in Step 0; no separate task is required for the log.
 
-**Step 4 — Verification summary:** Output a brief checklist showing: each extracted item, its disposition (existing task #, new task #, or already done), and confidence level.
+**Step 4 — Verification summary:** Output a brief checklist showing: each extracted item, its disposition (existing task #, new task #, implemented directly, or already done), and confidence level.
 
 **Common pitfalls to avoid:**
 - Feedback often contains multiple requests per sentence (e.g., "rename X and also fix Y") — split these into separate items.

@@ -1,6 +1,6 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-02-09
+Last updated: 2026-02-13
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -16,10 +16,11 @@ Agent Integration
 - Read `src/docs/ai/AGENT_GUIDE.md` for workflow and sources of truth.
 - For data flow and game rules: `ARCHITECTURE.md`, `GAME_RULES.md`.
 - Workflow:
-	1. Human appends raw feedback to this file (bottom) using the Raw Entry Template.
-	2. AI agent runs `node scripts/extract_feedback.js` and creates a task in `src/docs/ai/AI_TASK_QUEUE.md` using `AI_REQUEST_TEMPLATE.md`.
-	3. Agents implement, create PRs with `ai/` branch prefix, append to `src/docs/ai/AI_CHANGELOG.md`.
-	4. On merge, agents mark task `done` in `AI_TASK_QUEUE.md` with PR link and summary.
+	1. Human sends feedback (or appends raw feedback to this file using the Raw Entry Template).
+	2. AI agent **always** appends that raw feedback to this file under "Raw Feedback Log" (date, context, priority, feedback text)—whether the agent will create a task or implement it directly.
+	3. Agent runs extraction/cross-reference; creates tasks in `AI_TASK_QUEUE.md` for items that need future work; implements directly when appropriate.
+	4. For tasks: implement, create PRs with `ai/` branch prefix, append to `src/docs/ai/AI_CHANGELOG.md`. On merge, mark task `done` in `AI_TASK_QUEUE.md` with PR link and summary.
+	5. For direct implementation (no new task): still append raw feedback per step 2; optionally add a curated note or "Implemented YYYY-MM-DD" in the raw entry.
 
 Notes:
 - Do NOT place secrets or service account keys in these docs. Use `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` for deployment env vars.
@@ -645,3 +646,32 @@ Notes
 ### 2/11/2026 — About page, Skill encounter, Combat tracker (batch)
 - Raw feedback (abbreviated): About: dice carousel no brackets, center below content, cycle with selected middle (d10 d12 d20 [d4] d6 d8 d10), add second d10 slide (Join Community/Discord). Skill encounter: skill dropdown, success/failure descriptions per roll, allow updating DS post-rolls, fix save/load of rolls, rename Progress to Successes, red failure dots cancel green (net display), Additional Success/Failure buttons, RM Bonus per participant. Combat: surprised checkbox on list items, initiative edit auto-select value, delete combatant don't advance turn, re-sort initiative each round start, keep Sort Initiative in bar when active, Auto Sort Initiative toggle.
 - Extracted to: TASK-235 (About dice carousel), TASK-236 (Skill encounter Successes/RM bonus/DS), TASK-237 (Combat surprised/initiative/delete/auto-sort). Implemented 2026-02-11.
+
+### 2/13/2026 — Feat restrictions, species skill Any, creator skills, defense bonuses (batch 1 — implemented)
+- Feat requirements: skill_req_val = required skill BONUS (not value); all skill requirements require proficiency. Example: sub skill req 5 = ability + base value + sub value = 5 bonus.
+- Species skill id "0": Display as "Any"; represents user picks any skill or extra skill point. Character sheet/creation: id 0 = +1 skill point; don't allocate a fixed skill for 0.
+- Character creator skills: Remove ability-grouped sub-tabs; single flat list like character sheet with headers Prof, Skill, Ability, Bonus, Value; reuse SkillRow/table layout; auto proficient when adding; disable Add when no skill points; skill points display one row (no wrap).
+- Defense bonuses in creator: Show bonus when increasing defense (same styles as character sheet defense edit section).
+- Implemented 2026-02-13 (formulas.ts getSkillBonusForFeatRequirement; add-feat-modal, feats-step; species id 0 in resolveSkillIdsToNames, species-modal, skills-step, SkillsAllocationPage, characters page; skills-allocation-page flat table, PointStatus nowrap, defense bonus display).
+
+### 2/13/2026 — Creator feats filter, add modals, feats tab (batch 2 — implemented)
+- Character Creator feats: Either/or filter (Archetype feats | Character feats), not "All Feats". Label "Showing all feats" not "Show all feats". Add ability as sort option. Selected feat chips expandable to show description.
+- Add Power / Add Technique modals: Align with add-feat and library — list headers, collapsed/expandable rows, add button on right, shared styles and gridColumns.
+- Feats tab: Uses current/max as steppers (increase/decrease); remove redundant (X/X) after feat/trait name; expand name column, move uses column right; reuse quantity-editor-style steppers.
+- Implemented 2026-02-13 (feats-step filter/sort/chips; add-library-item-modal layout; feats-tab steppers, hideUsesInName, column widths).
+
+---
+
+**Raw Feedback Log — 2/13/2026 (session batch 1)**  
+- Date: 2026-02-13  
+- Context: Feat requirements, species skills, character creator skills, defense display  
+- Priority: High  
+- Feedback: Feat skill_req_val = required BONUS not value; proficiency required. Species skill id 0 = "Any" / extra skill point; display "Any", account for extra point in sheet/creator. Creator skills: flat list, sheet-style table (Prof, Skill, Ability, Bonus, Value), no ability tabs, auto proficient on add, no add if no points; skill points one row. Defense bonuses shown when increasing in creator.  
+- Expected: Implemented 2026-02-13.
+
+**Raw Feedback Log — 2/13/2026 (session batch 2)**  
+- Date: 2026-02-13  
+- Context: Creator feats filter, add modals, feats tab  
+- Priority: High  
+- Feedback: Creator feats either/or (archetype or character). "Showing all feats" not "Show all feats". Ability sort in creator. Selected feat chips expandable with description. Add power/technique modals align with add-feat and library (headers, collapsed views, add on right, shared styles). Feats tab: uses as steppers; remove redundant X/X after name; widen name column, uses column right.  
+- Expected: Implemented 2026-02-13.
