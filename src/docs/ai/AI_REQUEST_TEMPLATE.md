@@ -50,4 +50,4 @@ Example:
     - Run `npm run build` successfully
     - Manual verification: create character, add skill, save, reload
   notes: |
-    See `archived_docs/COMPONENT_CONSOLIDATION.md` for migration notes.
+    Reference UNIFICATION_STATUS.md and DESIGN_SYSTEM.md for component patterns.

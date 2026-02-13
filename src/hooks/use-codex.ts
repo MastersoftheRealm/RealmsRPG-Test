@@ -8,19 +8,15 @@
 'use client';
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { fetchCodex } from '@/lib/api-client';
 
+// Codex data rarely changes (admin-only edits) — cache aggressively
 const DEFAULT_OPTIONS = {
-  staleTime: 5 * 60 * 1000,
-  gcTime: 30 * 60 * 1000,
+  staleTime: 30 * 60 * 1000,  // 30 min (was 5 min)
+  gcTime: 60 * 60 * 1000,     // 60 min (was 30 min)
   retry: 2,
   refetchOnWindowFocus: false,
 };
-
-async function fetchCodex() {
-  const res = await fetch('/api/codex');
-  if (!res.ok) throw new Error('Failed to fetch codex');
-  return res.json();
-}
 
 /** Full codex response (all collections). Use for spreadsheet or multi-collection views. */
 export function useCodexFull(): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>, Error> {

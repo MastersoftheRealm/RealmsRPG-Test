@@ -21,7 +21,7 @@
  * - Species skill highlighting
  */
 
-import { ReactNode } from 'react';
+import { memo, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ABILITY_ABBR, ABILITY_OPTIONS } from '@/lib/constants/skills';
@@ -108,7 +108,7 @@ export interface SkillRowProps {
 // Component
 // =============================================================================
 
-export function SkillRow({
+export const SkillRow = memo(function SkillRow({
   id,
   name,
   isSubSkill = false,
@@ -151,7 +151,7 @@ export function SkillRow({
         className={cn(
           'border-b border-border-subtle transition-colors',
           isSubSkill ? 'bg-surface-alt' : 'bg-surface',
-          !isEditing && !isLocked && 'hover:bg-blue-50 dark:hover:bg-primary-900/30',
+          !isEditing && !isLocked && 'hover:bg-primary-50 dark:hover:bg-primary-900/30',
           !isUnlocked && 'opacity-50',
           className
         )}
@@ -165,8 +165,8 @@ export function SkillRow({
               className={cn(
                 'w-4 h-4 rounded-full inline-block transition-all',
                 proficient 
-                  ? 'bg-blue-600 border-2 border-blue-600' 
-                  : 'bg-orange-400 border-2 border-orange-400',
+                  ? 'bg-primary-600 border-2 border-primary-600' 
+                  : 'bg-warning-400 border-2 border-warning-400',
                 canToggleProficiency && !isLocked && !isSpeciesSkill && 'cursor-pointer hover:scale-110',
                 (isLocked || isSpeciesSkill) && 'opacity-70'
               )}
@@ -218,7 +218,7 @@ export function SkillRow({
           {isEditing || !showRollButton ? (
             <span className={cn(
               'inline-block min-w-[40px] font-bold',
-              bonus > 0 ? 'text-green-600 dark:text-green-400' : bonus < 0 ? 'text-red-600 dark:text-red-400' : 'text-text-secondary'
+              bonus > 0 ? 'text-success-600 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
             )}>
               {formatBonus(bonus)}
             </span>
@@ -290,7 +290,7 @@ export function SkillRow({
     return (
       <div className={cn(
         'p-3 rounded-lg border transition-colors',
-        isSpeciesSkill ? 'bg-blue-50 dark:bg-primary-900/30 border-blue-200 dark:border-primary-600/50' : 
+        isSpeciesSkill ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-600/50' : 
           value > 0 ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700/50' : 'bg-surface-alt border-border-light',
         !isUnlocked && 'opacity-50',
         className
@@ -335,7 +335,7 @@ export function SkillRow({
             </div>
             
             {isSpeciesSkill && (
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(species)</span>
+              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">(species)</span>
             )}
           </div>
           
@@ -355,7 +355,7 @@ export function SkillRow({
                 {/* Bonus display */}
                 <span className={cn(
                   'w-12 text-right font-bold',
-                  bonus > 0 ? 'text-green-600 dark:text-green-400' : bonus < 0 ? 'text-red-600 dark:text-red-400' : 'text-text-muted'
+                  bonus > 0 ? 'text-success-600 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted'
                 )}>
                   {formatBonus(bonus)}
                 </span>
@@ -376,7 +376,7 @@ export function SkillRow({
     return (
       <div className={cn(
         'p-2 rounded-lg border transition-colors text-sm',
-        isSpeciesSkill ? 'bg-blue-50 dark:bg-primary-900/30 border-blue-200 dark:border-primary-600/50' :
+        isSpeciesSkill ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-600/50' :
           !isUnlocked && 'opacity-50 bg-surface border-border-light',
         isUnlocked && value > 0 && 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700/50',
         isUnlocked && value === 0 && 'bg-surface-alt border-border-light',
@@ -387,13 +387,13 @@ export function SkillRow({
             <span className="text-xs text-text-muted">↳</span>
             <span className={cn(
               'font-medium',
-              isSpeciesSkill ? 'text-blue-700' :
+              isSpeciesSkill ? 'text-primary-700' :
                 isUnlocked ? 'text-text-primary' : 'text-text-muted'
             )}>
               {name}
             </span>
             {isSpeciesSkill && (
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">(species)</span>
+              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">(species)</span>
             )}
           </div>
           
@@ -420,6 +420,8 @@ export function SkillRow({
   }
   
   return null;
-}
+});
+
+SkillRow.displayName = 'SkillRow';
 
 export default SkillRow;

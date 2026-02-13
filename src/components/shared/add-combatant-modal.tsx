@@ -32,6 +32,11 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
 
+/** Roll initiative: d20 + acuity bonus */
+function rollInitiative(acuity: number): number {
+  return Math.floor(Math.random() * 20) + 1 + acuity;
+}
+
 export function AddCombatantModal({ onClose, onAdd, onAddParticipants, mode }: AddCombatantModalProps) {
   const [tab, setTab] = useState<TabId>('library');
 
@@ -132,7 +137,7 @@ function CreatureLibraryTab({
       combatants.push({
         id: generateId(),
         name: selected.name + suffix,
-        initiative: 0,
+        initiative: rollInitiative(acuity),
         acuity,
         maxHealth,
         currentHealth: maxHealth,
@@ -315,11 +320,12 @@ function CampaignCharactersTab({
         .map((r) => {
           const d = r.data;
           const abilities = d.abilities || {};
+          const acuity = abilities.acuity ?? 0;
           return {
             id: generateId(),
             name: r.charMeta.characterName,
-            initiative: 0,
-            acuity: abilities.acuity ?? 0,
+            initiative: rollInitiative(acuity),
+            acuity,
             maxHealth: d.health?.max ?? 20,
             currentHealth: (d as Record<string, unknown>).currentHealth as number ?? d.health?.current ?? d.health?.max ?? 20,
             maxEnergy: d.energy?.max ?? 10,

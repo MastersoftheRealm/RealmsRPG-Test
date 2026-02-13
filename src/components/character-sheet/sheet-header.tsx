@@ -193,15 +193,15 @@ function ResourceInput({
   
   // Color classes based on variant (softer in dark mode)
   const bgColor = colorVariant === 'health' 
-    ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/50' 
+    ? 'bg-danger-50 dark:bg-danger-950/40 border-danger-200 dark:border-danger-900/50' 
     : colorVariant === 'energy'
-      ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/50'
+      ? 'bg-info-50 dark:bg-info-950/40 border-info-200 dark:border-info-900/50'
       : 'bg-surface-alt border-border-light';
   
   const labelColor = colorVariant === 'health'
-    ? 'text-red-700 dark:text-red-400'
+    ? 'text-danger-700 dark:text-danger-400'
     : colorVariant === 'energy'
-      ? 'text-blue-700 dark:text-blue-400'
+      ? 'text-info-700 dark:text-info-400'
       : 'text-text-secondary';
   
   // Calculate bar percentage - cap at 100% for display but allow tracking above max
@@ -212,10 +212,10 @@ function ResourceInput({
   // Half health = amber/yellow-orange (distinguishable from terminal red)
   // Terminal = deep crimson red
   const barColorClass = isAboveMax 
-    ? 'bg-amber-400' // Gold when above max
+    ? 'bg-warning-400' // Gold when above max
     : colorVariant === 'health' 
-      ? (percentage > 50 ? 'bg-green-500' : percentage > 25 ? 'bg-amber-500' : 'bg-red-700')
-      : colorVariant === 'energy' ? 'bg-blue-500' : 'bg-primary-500';
+      ? (percentage > 50 ? 'bg-success-500' : percentage > 25 ? 'bg-warning-500' : 'bg-danger-700')
+      : colorVariant === 'energy' ? 'bg-info-500' : 'bg-primary-500';
   
   return (
     <div className={cn('flex flex-col p-3 rounded-lg border', bgColor)}>
@@ -240,8 +240,8 @@ function ResourceInput({
           className={cn(
             'w-12 text-center text-lg font-bold rounded border px-1 py-0.5',
             'focus:outline-none focus:ring-2 focus:ring-primary-500',
-            colorVariant === 'health' && 'border-red-300 dark:border-red-800 text-red-800 dark:text-red-300',
-            colorVariant === 'energy' && 'border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-300',
+            colorVariant === 'health' && 'border-danger-300 dark:border-danger-800 text-danger-800 dark:text-danger-300',
+            colorVariant === 'energy' && 'border-info-300 dark:border-info-800 text-info-800 dark:text-info-300',
             colorVariant === 'default' && 'border-border-light text-text-primary'
           )}
         />
@@ -399,9 +399,9 @@ function HealthBar({
   const healthColor = getHealthColor(current, max);
   
   const barColorClass = 
-    healthColor === 'green' ? 'bg-green-500' :
-    healthColor === 'orange' ? 'bg-amber-500' :
-    'bg-red-700';
+    healthColor === 'green' ? 'bg-success-500' :
+    healthColor === 'orange' ? 'bg-warning-500' :
+    'bg-danger-700';
   
   return (
     <div className="relative h-3 bg-surface rounded-full overflow-hidden">
@@ -498,9 +498,9 @@ export function SheetHeader({
           <div 
             className={cn(
               "relative w-28 h-28 md:w-36 md:h-36 rounded-xl overflow-hidden bg-surface flex-shrink-0 border-3 shadow-lg",
-              healthColor === 'green' && 'border-green-400',
-              healthColor === 'orange' && 'border-amber-400',
-              healthColor === 'red' && 'border-red-600',
+              healthColor === 'green' && 'border-success-400',
+              healthColor === 'orange' && 'border-warning-400',
+              healthColor === 'red' && 'border-danger-600',
               isEditMode && onPortraitChange && "cursor-pointer group"
             )}
             onClick={handlePortraitClick}
@@ -554,10 +554,10 @@ export function SheetHeader({
             ) : (
               <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate flex items-center gap-2">
                 {character.name}
-                {onNameChange && (
+                {onNameChange && isEditMode && (
                   <button
                     onClick={() => setIsEditingName(true)}
-                    className="text-blue-500 hover:text-blue-600 transition-colors hover:scale-110"
+                    className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
                     title="Edit name"
                   >
                     <Pencil className="w-4 h-4" />
@@ -615,7 +615,7 @@ export function SheetHeader({
                         setXpInput(String(character.experience ?? 0));
                         setIsEditingXP(true);
                       }}
-                      className="text-blue-500 hover:text-blue-600 transition-colors hover:scale-110"
+                      className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
                       title="Edit XP"
                     >
                       <Pencil className="w-4 h-4" />

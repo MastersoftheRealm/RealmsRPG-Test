@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { prisma } from '@/lib/prisma';
+import { validateImageMagicBytes } from '@/lib/validate-image';
 
 const BUCKET = 'profile-pictures';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -32,6 +33,12 @@ export async function POST(request: NextRequest) {
 
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: 'Image must be less than 5MB' }, { status: 400 });
+  }
+
+  // Validate file content matches a real image format (prevents spoofed MIME types)
+  const isValidImage = await validateImageMagicBytes(file);
+  if (!isValidImage) {
+    return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
   }
 
   const ext = file.name.split('.').pop() || 'jpg';
@@ -58,10 +65,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
-    console.error('Profile picture upload error:', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Upload failed' },
-      { status: 500 }
-    );
+    console.error('[API Error] POST /api/upload/profile-picture:', err);
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
 }

@@ -12,7 +12,6 @@
  * - Collapsible sections
  */
 
-export { NumberStepper } from './number-stepper';
 export { LoadFromLibraryModal } from './LoadFromLibraryModal';
 export { HealthEnergyAllocator, type HealthEnergyAllocatorProps } from './health-energy-allocator';
 export { AbilityScoreEditor, type AbilityScoreEditorProps } from './ability-score-editor';

@@ -662,7 +662,9 @@ export function getSkillBonusForFeatRequirement(
   skills: Record<string, number | { prof?: boolean; val?: number }>,
   codexSkills: CodexSkillForFeat[]
 ): { bonus: number; proficient: boolean } {
-  const codexSkill = codexSkills.find((s) => String(s.id) === String(skillId));
+  // Look up by ID first, then fall back to name match (feat data may use either)
+  const codexSkill = codexSkills.find((s) => String(s.id) === String(skillId))
+    || codexSkills.find((s) => s.name != null && s.name.toLowerCase() === String(skillId).toLowerCase());
   if (!codexSkill) return { bonus: 0, proficient: false };
 
   const getVal = (key: string): number => {

@@ -252,7 +252,7 @@ export function AbilitiesSection({
               key={ability}
               className={cn(
                 'flex flex-col items-center p-3 bg-gradient-to-b from-surface to-surface-alt rounded-xl border-2 transition-all',
-                isPower ? 'border-purple-400' : isMartial ? 'border-red-400' : 'border-border-light',
+                isPower ? 'border-power-border' : isMartial ? 'border-martial-border' : 'border-border-light',
                 !showEditControls && 'hover:shadow-md'
               )}
             >
@@ -293,8 +293,8 @@ export function AbilitiesSection({
               
               {/* Cost indicator in edit mode - only show if next point costs 2 */}
               {showEditControls && value >= 3 && canIncrease && (
-                <span className="text-[10px] text-amber-600 font-medium mt-1">
-                  Next: {cost}pt
+                <span className="text-[10px] text-warning-600 font-medium mt-1">
+                  Next: {cost} Points
                 </span>
               )}
             </div>
@@ -338,7 +338,7 @@ export function AbilitiesSection({
                       disabled={!canDecreaseDefense}
                       size="sm"
                     />
-                    <span className="text-sm font-bold min-w-[36px] text-center text-blue-600 dark:text-blue-400">
+                    <span className="text-sm font-bold min-w-[36px] text-center text-primary-600 dark:text-primary-400">
                       {formatBonus(defenseBonus)}
                     </span>
                     <IncrementButton
@@ -360,7 +360,7 @@ export function AbilitiesSection({
                 
                 {/* Defense skill allocation indicator */}
                 {showEditControls && defenseValue > 0 && (
-                  <span className="text-[9px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
+                  <span className="text-[9px] text-primary-600 dark:text-primary-400 font-medium mt-0.5">
                     +{defenseValue} ({defenseValue * 2}sp)
                   </span>
                 )}

@@ -393,11 +393,13 @@ export function FinalizeStep() {
     }
     
     // 5. Skill points (characters: 3/level; proper cost model for proficiency + values + defenses)
-    const maxSkillPoints = calculateSkillPointsForEntity(level, 'character');
     const species = draft.ancestry?.id
       ? allSpecies.find((s: Species) => s.id === draft.ancestry?.id)
       : allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase());
     const speciesSkillIds = new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
+    // Species skill "0" = "Any" grants 1 extra skill point (matches skills-step logic)
+    const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
+    const maxSkillPoints = calculateSkillPointsForEntity(level, 'character') + extraSkillPoints;
     const skillMeta = new Map<string, { isSubSkill: boolean }>();
     (codexSkills || []).forEach((s: { id: string; base_skill_id?: number }) => {
       skillMeta.set(s.id, { isSubSkill: s.base_skill_id !== undefined });

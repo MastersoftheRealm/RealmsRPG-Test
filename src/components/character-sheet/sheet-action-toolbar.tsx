@@ -73,7 +73,7 @@ export function SheetActionToolbar({
         {/* Notification dot for unapplied points */}
         {hasUnappliedPoints && !isEditMode && (
           <span
-            className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full animate-pulse"
+            className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-danger-500 rounded-full animate-pulse"
             title="You have unspent points!"
           />
         )}
@@ -85,8 +85,8 @@ export function SheetActionToolbar({
         className={cn(
           'w-11 h-11 rounded-full shadow-lg transition-all duration-200',
           'flex items-center justify-center',
-          'bg-surface border border-border-light text-blue-600',
-          'hover:scale-110 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-200 dark:hover:border-blue-700/50 active:scale-95'
+          'bg-surface border border-border-light text-primary-600',
+          'hover:scale-110 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-200 dark:hover:border-primary-700/50 active:scale-95'
         )}
         title="Recovery"
         aria-label="Recovery"
@@ -117,9 +117,9 @@ export function SheetActionToolbar({
           isSaving
             ? 'bg-surface border border-border-light text-text-muted'
             : hasUnsavedChanges
-              ? 'bg-amber-50 border border-amber-300 text-amber-600'
+              ? 'bg-warning-50 border border-warning-300 text-warning-600'
               : lastSaved
-                ? 'bg-green-50 border border-green-300 text-green-600'
+                ? 'bg-success-50 border border-success-300 text-success-600'
                 : 'bg-surface border border-border-light text-text-muted'
         )}
         title={

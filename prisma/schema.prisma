@@ -139,6 +139,7 @@ model Campaign {
   rolls CampaignRoll[]
 
   @@index([ownerId])
+  @@index([inviteCode])
   @@map("campaigns")
   @@schema("campaigns")
 }
@@ -151,6 +152,7 @@ model CampaignRoll {
   createdAt  DateTime? @map("created_at")
 
   @@index([campaignId])
+  @@index([campaignId, createdAt])
   @@map("campaign_rolls")
   @@schema("campaigns")
 }

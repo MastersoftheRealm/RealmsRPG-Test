@@ -228,102 +228,52 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
   return (result as { id: string }).id;
 }
 
-export function useDeletePower(): UseMutationResult<void, Error, string> {
-  const { user } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (docId: string) => deleteLibraryItem('powers', docId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userPowers(user?.uid || '') });
-    },
-  });
-}
-
-export function useDeleteTechnique(): UseMutationResult<void, Error, string> {
-  const { user } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (docId: string) => deleteLibraryItem('techniques', docId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userTechniques(user?.uid || '') });
-    },
-  });
-}
-
-export function useDeleteItem(): UseMutationResult<void, Error, string> {
-  const { user } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (docId: string) => deleteLibraryItem('items', docId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userItems(user?.uid || '') });
-    },
-  });
-}
-
-export function useDeleteCreature(): UseMutationResult<void, Error, string> {
-  const { user } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (docId: string) => deleteLibraryItem('creatures', docId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userCreatures(user?.uid || '') });
-    },
-  });
-}
-
 // =============================================================================
-// Duplicate Mutations
+// Generic Mutation Factories
 // =============================================================================
 
-export function useDuplicatePower(): UseMutationResult<string, Error, string> {
+type LibraryType = 'powers' | 'techniques' | 'items' | 'creatures';
+
+const TYPE_QUERY_KEYS: Record<LibraryType, (uid: string) => readonly string[]> = {
+  powers: QUERY_KEYS.userPowers,
+  techniques: QUERY_KEYS.userTechniques,
+  items: QUERY_KEYS.userItems,
+  creatures: QUERY_KEYS.userCreatures,
+};
+
+/** Generic delete mutation for any library type */
+function useDeleteLibraryItem(type: LibraryType): UseMutationResult<void, Error, string> {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (docId: string) => duplicateLibraryItem('powers', docId),
+    mutationFn: (docId: string) => deleteLibraryItem(type, docId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userPowers(user?.uid || '') });
+      queryClient.invalidateQueries({ queryKey: TYPE_QUERY_KEYS[type](user?.uid || '') });
     },
   });
 }
 
-export function useDuplicateTechnique(): UseMutationResult<string, Error, string> {
+/** Generic duplicate mutation for any library type */
+function useDuplicateLibraryItem(type: LibraryType): UseMutationResult<string, Error, string> {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (docId: string) => duplicateLibraryItem('techniques', docId),
+    mutationFn: (docId: string) => duplicateLibraryItem(type, docId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userTechniques(user?.uid || '') });
+      queryClient.invalidateQueries({ queryKey: TYPE_QUERY_KEYS[type](user?.uid || '') });
     },
   });
 }
 
-export function useDuplicateItem(): UseMutationResult<string, Error, string> {
-  const { user } = useAuthStore();
-  const queryClient = useQueryClient();
+// Named exports for backward compatibility
+export const useDeletePower = () => useDeleteLibraryItem('powers');
+export const useDeleteTechnique = () => useDeleteLibraryItem('techniques');
+export const useDeleteItem = () => useDeleteLibraryItem('items');
+export const useDeleteCreature = () => useDeleteLibraryItem('creatures');
 
-  return useMutation({
-    mutationFn: (docId: string) => duplicateLibraryItem('items', docId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userItems(user?.uid || '') });
-    },
-  });
-}
-
-export function useDuplicateCreature(): UseMutationResult<string, Error, string> {
-  const { user } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (docId: string) => duplicateLibraryItem('creatures', docId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userCreatures(user?.uid || '') });
-    },
-  });
-}
+export const useDuplicatePower = () => useDuplicateLibraryItem('powers');
+export const useDuplicateTechnique = () => useDuplicateLibraryItem('techniques');
+export const useDuplicateItem = () => useDuplicateLibraryItem('items');
+export const useDuplicateCreature = () => useDuplicateLibraryItem('creatures');

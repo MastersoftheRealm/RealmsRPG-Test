@@ -7,7 +7,7 @@
  * Used in Codex, Library, Character Creator, and Character Sheet
  */
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Check, Edit, Copy, Eye, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconButton } from '@/components/ui';
@@ -33,7 +33,7 @@ const badgeVariants = {
   info: 'bg-info-100 text-info-700',
 };
 
-export function ItemCard({ 
+export const ItemCard = memo(function ItemCard({ 
   item, 
   mode = 'view', 
   actions,
@@ -268,6 +268,6 @@ export function ItemCard({
       )}
     </div>
   );
-}
+});
 
 export default ItemCard;

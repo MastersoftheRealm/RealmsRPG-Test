@@ -5,18 +5,9 @@
  */
 
 import type { Campaign, CampaignSummary } from '@/types/campaign';
+import { apiFetch } from '@/lib/api-client';
 
 const API_BASE = '/api/campaigns';
-
-async function apiFetch<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Request failed');
-  }
-  if (res.status === 404) return null as T;
-  return res.json();
-}
 
 /**
  * Get campaigns the current user owns or is a member of (full Campaign with characters).

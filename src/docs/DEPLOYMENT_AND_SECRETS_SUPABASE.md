@@ -195,4 +195,4 @@ See `ADMIN_SETUP.md` for current implementation.
 
 ## Migration Note
 
-If migrating from Firebase, the old docs (`DEPLOYMENT_SECRETS.md`, `ADMIN_SDK_SECRETS_SETUP.md`, `SECRETS_SETUP.md`) are archived in `archived_docs/` for reference.
+If migrating from Firebase, the old docs (`DEPLOYMENT_SECRETS.md`, `ADMIN_SDK_SECRETS_SETUP.md`, `SECRETS_SETUP.md`) were previously archived and have since been removed as part of codebase cleanup.

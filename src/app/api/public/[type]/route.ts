@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
+import { validateJson, publicItemSchema } from '@/lib/api-validation';
 
 const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures'] as const;
 type PublicType = (typeof VALID_TYPES)[number];
@@ -33,67 +34,80 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ type: string }> }
 ) {
-  const { type } = await params;
-  if (!VALID_TYPES.includes(type as PublicType)) {
-    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+  try {
+    const { type } = await params;
+    if (!VALID_TYPES.includes(type as PublicType)) {
+      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    }
+
+    const delegate = getDelegate(type as PublicType);
+    const rows = await delegate.findMany();
+
+    const items = rows.map((r) => {
+      const d = r.data as Record<string, unknown>;
+      return {
+        id: r.id,
+        docId: r.id,
+        ...d,
+        _source: 'public' as const,
+      };
+    });
+
+    items.sort((a, b) => {
+      const na = String((a as Record<string, unknown>).name ?? '');
+      const nb = String((b as Record<string, unknown>).name ?? '');
+      return na.localeCompare(nb);
+    });
+
+    return NextResponse.json(items);
+  } catch (err) {
+    console.error('[API Error] GET /api/public/[type]:', err);
+    return NextResponse.json({ error: 'Failed to load items' }, { status: 500 });
   }
-
-  const delegate = getDelegate(type as PublicType);
-  const rows = await delegate.findMany();
-
-  const items = rows.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    return {
-      id: r.id,
-      docId: r.id,
-      ...d,
-      _source: 'public' as const,
-    };
-  });
-
-  items.sort((a, b) => {
-    const na = String((a as Record<string, unknown>).name ?? '');
-    const nb = String((b as Record<string, unknown>).name ?? '');
-    return na.localeCompare(nb);
-  });
-
-  return NextResponse.json(items);
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ type: string }> }
 ) {
-  const { user, error } = await getSession();
-  if (error || !user?.uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  if (!(await isAdmin(user.uid))) {
-    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-  }
+  try {
+    const { user, error } = await getSession();
+    if (error || !user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!(await isAdmin(user.uid))) {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
 
-  const { type } = await params;
-  if (!VALID_TYPES.includes(type as PublicType)) {
-    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
-  }
+    const { type } = await params;
+    if (!VALID_TYPES.includes(type as PublicType)) {
+      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    }
 
-  const body = await request.json() as Record<string, unknown>;
-  const delegate = getDelegate(type as PublicType);
+    const validation = await validateJson(request, publicItemSchema);
+    if (!validation.success) return validation.error;
+    const body = validation.data as Record<string, unknown>;
 
-  const existingId = body.id as string | undefined;
-  const data = { ...body, updatedAt: new Date().toISOString() };
-  delete (data as Record<string, unknown>).id;
+    const delegate = getDelegate(type as PublicType);
 
-  if (existingId) {
-    await delegate.update({
-      where: { id: existingId },
-      data: { data: data as object },
+    const existingId = body.id as string | undefined;
+    const data = { ...body, updatedAt: new Date().toISOString() };
+    delete (data as Record<string, unknown>).id;
+
+    if (existingId) {
+      await delegate.update({
+        where: { id: existingId },
+        data: { data: data as object },
+      });
+      return NextResponse.json({ id: existingId });
+    }
+
+    const created = await delegate.create({
+      data: { data: { ...data, createdAt: new Date().toISOString() } as object },
     });
-    return NextResponse.json({ id: existingId });
+    return NextResponse.json({ id: created.id });
+  } catch (err) {
+    console.error('[API Error] POST /api/public/[type]:', err);
+    return NextResponse.json({ error: 'Failed to save item' }, { status: 500 });
   }
-
-  const created = await delegate.create({
-    data: { data: { ...data, createdAt: new Date().toISOString() } as object },
-  });
-  return NextResponse.json({ id: created.id });
 }

@@ -146,8 +146,8 @@ const valueDisplayVariants = cva(
         positive: 'text-success-700',
         negative: 'text-danger-700',
         neutral: 'text-text-primary',
-        health: 'text-green-600',
-        energy: 'text-blue-600',
+        health: 'text-success-600',
+        energy: 'text-info-600',
       },
     },
     defaultVariants: {
@@ -245,14 +245,14 @@ export function ValueStepper({
 
   // Button color classes based on colorVariant
   const getDecrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-green-200 dark:bg-green-900/50 hover:bg-green-300 dark:hover:bg-green-800/50 text-green-700 dark:text-green-400';
-    if (colorVariant === 'energy') return 'bg-blue-200 dark:bg-blue-900/50 hover:bg-blue-300 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-400';
+    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400';
+    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400';
     return 'btn-stepper btn-stepper-danger';
   };
 
   const getIncrementButtonClass = () => {
-    if (colorVariant === 'health') return 'bg-green-200 dark:bg-green-900/50 hover:bg-green-300 dark:hover:bg-green-800/50 text-green-700 dark:text-green-400';
-    if (colorVariant === 'energy') return 'bg-blue-200 dark:bg-blue-900/50 hover:bg-blue-300 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-400';
+    if (colorVariant === 'health') return 'bg-success-200 dark:bg-success-900/50 hover:bg-success-300 dark:hover:bg-success-800/50 text-success-700 dark:text-success-400';
+    if (colorVariant === 'energy') return 'bg-info-200 dark:bg-info-900/50 hover:bg-info-300 dark:hover:bg-info-800/50 text-info-700 dark:text-info-400';
     return 'btn-stepper btn-stepper-success';
   };
 

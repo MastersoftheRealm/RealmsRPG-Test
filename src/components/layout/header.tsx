@@ -112,7 +112,7 @@ export function Header() {
           <div className="flex items-center gap-4">
             {user ? (
               <div className="relative group">
-                <button className="flex items-center gap-2">
+                <button type="button" aria-label="Account menu" className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
                     {user.displayName?.charAt(0).toUpperCase() ?? user.email?.charAt(0).toUpperCase() ?? '?'}
                   </div>
@@ -130,6 +130,7 @@ export function Header() {
                     {/* Divider */}
                     <div className="border-t border-border-light my-1" />
                     <button
+                      type="button"
                       onClick={() => signOut()}
                       className="w-full text-left px-4 py-2 text-text-secondary hover:bg-surface-alt"
                     >
@@ -140,6 +141,7 @@ export function Header() {
               </div>
             ) : (
               <button
+                type="button"
                 onClick={handleLoginClick}
                 className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors whitespace-nowrap"
               >
@@ -150,10 +152,11 @@ export function Header() {
             {/* Mobile menu button */}
             <button
               type="button"
+              aria-expanded={mobileMenuOpen}
+              aria-label="Toggle navigation menu"
               className="lg:hidden p-2 text-text-secondary"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              <span className="sr-only">Open menu</span>
               {mobileMenuOpen ? (
                 <XIcon className="w-6 h-6" />
               ) : (
@@ -207,7 +210,7 @@ interface DropdownItem {
 function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string }) {
   return (
     <div className="relative group">
-      <button className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors flex items-center gap-1 whitespace-nowrap">
+      <button type="button" aria-label={`${item.label} menu`} className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors flex items-center gap-1 whitespace-nowrap">
         {item.label}
         <ChevronDownIcon className="w-4 h-4 group-hover:rotate-180 transition-transform" />
       </button>
@@ -238,6 +241,9 @@ function MobileDropdown({ item, pathname }: { item: DropdownItem; pathname: stri
   return (
     <div>
       <button
+        type="button"
+        aria-expanded={open}
+        aria-label={`${item.label} menu`}
         className="flex items-center justify-between w-full py-2 text-lg font-semibold text-primary-700"
         onClick={() => setOpen(!open)}
       >

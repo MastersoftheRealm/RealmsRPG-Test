@@ -177,8 +177,8 @@ export function AbilityScoreEditor({
             borderClass = 'border-martial';
             bgClass = 'bg-martial-light/50';
           } else if (isLegacyHighlight) {
-            borderClass = 'border-amber-400';
-            bgClass = 'bg-amber-50/50 dark:bg-amber-900/20';
+            borderClass = 'border-warning-400';
+            bgClass = 'bg-warning-50/50 dark:bg-warning-900/20';
           }
 
           return (
@@ -235,9 +235,9 @@ export function AbilityScoreEditor({
                 {isEditMode && useHighAbilityCost && (
                   <p className={cn(
                     "text-[10px] font-medium text-center mt-1",
-                    value >= 3 && canInc ? "text-amber-600" : "invisible"
+                    value >= 3 && canInc ? "text-warning-600" : "invisible"
                   )}>
-                    Next: {increaseCost}pt
+                    Next: {increaseCost} Points
                   </p>
                 )}
               </div>

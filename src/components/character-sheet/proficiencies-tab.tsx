@@ -436,7 +436,7 @@ export function ProficienciesTab({
                         <span className="text-sm font-medium text-text-primary">{prowessLevel.name}</span>
                         <span className="text-xs text-text-muted ml-2">({prowessLevel.damage})</span>
                       </div>
-                      <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded">
+                      <span className="text-xs font-semibold text-warning-700 dark:text-warning-300 bg-warning-50 dark:bg-warning-900/30 px-2 py-0.5 rounded">
                         {tpCost} TP
                       </span>
                     </div>

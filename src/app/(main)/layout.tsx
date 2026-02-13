@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Main App Layout
  * =================
  * Layout for authenticated app pages with header/footer
@@ -14,7 +14,7 @@ export default function MainLayout({
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         {children}
       </main>
       <Footer />

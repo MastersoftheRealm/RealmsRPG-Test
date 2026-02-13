@@ -3711,7 +3711,6 @@ Agents should **create new tasks** during their work when they discover addition
     Extend the centralized Codex schema reference so each field includes a clear "Use" explanation, and align listed fields with the canonical RTDB data review/spec for feats, skills, species, traits, items, parts, properties, and creature feats. Ensure that narrative skill fields (success_desc, failure_desc, ds_calc, craft_success_desc, craft_failure_desc) and all feat requirement fields are documented with their exact purposes (validation vs display vs RM guidance).
   related_files:
     - src/docs/CODEX_SCHEMA_REFERENCE.md
-    - src/docs/ALL_FEEDBACK_RAW.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
   acceptance_criteria:
     - Each codex entity table in CODEX_SCHEMA_REFERENCE has a "Use" column with accurate, concrete descriptions based on owner spec
@@ -3724,7 +3723,8 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-175
   title: Codex skills — remove invalid trained_only field
   priority: high
-  status: in-progress
+  status: done
+  notes: "Verified 2026-02-13: trained_only field no longer exists in any source code file. Only present in documentation references."
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -5634,6 +5634,185 @@ Agents should **create new tasks** during their work when they discover addition
     - nextTurn re-sorts at round start when autoSortInitiative; Sort Initiative always visible; Auto Sort checkbox
   notes: "Done 2026-02-11. CombatantCard surprised checkbox + initiative ref/useEffect select; removeCombatant buildSorted + newTurnIndex; nextTurn round-start sort when autoSortInitiative; Encounter.autoSortInitiative."
 
+- id: TASK-238
+  title: "Codebase Audit 2026-02-13 — Phase 1-3 implementation"
+  priority: high
+  status: done
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    Full 98-finding codebase audit. Phase 1 (security): remove NEXT_PUBLIC_ADMIN_UIDS, add security headers, fix auth race condition. Phase 2 (UI/UX): design token migration on critical shared components, feedback fixes (name edit gating, ability label). Phase 3 (dead code): extract shared apiFetch, remove legacy hooks/services, remove empty dirs, consolidate CSS vars. Phase 4 (performance): React.memo on GridListRow/SkillRow, ErrorBoundary component.
+  related_files:
+    - src/docs/ai/CODEBASE_AUDIT_2026-02-13.md
+    - src/lib/admin.ts
+    - next.config.ts
+    - src/hooks/use-auth.ts
+    - src/lib/api-client.ts
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/error-boundary.tsx
+  acceptance_criteria:
+    - NEXT_PUBLIC_ADMIN_UIDS no longer read in admin.ts
+    - Security headers configured in next.config.ts
+    - Auth race condition fixed with mountedRef
+    - Character name pencil gated to edit mode
+    - "Next: 2 Points" label (not "2pt")
+    - ListHeader, EditSectionToggle, ValueStepper, SheetActionToolbar use design tokens
+    - Shared apiFetch in src/lib/api-client.ts, imported by 3 services
+    - Legacy hooks/services cleaned (use-game-data, game-data-service)
+    - GridListRow, SkillRow wrapped in React.memo
+    - ErrorBoundary component created
+    - npm run build passes
+  notes: "Done 2026-02-13. All items verified. Build passes."
+
+- id: TASK-239
+  title: "Audit Phase 2 — Complete design token migration (blue/green/red/amber → tokens)"
+  priority: high
+  status: done
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    20+ components still use hardcoded blue-*, green-*, red-*, amber-* Tailwind classes instead of design tokens. This is the single biggest UI consistency issue. Audit finding UX-1 + UX-2 from CODEBASE_AUDIT_2026-02-13.md. Components to migrate: skill-row.tsx, sheet-header.tsx, recovery-modal.tsx, feats-step.tsx, abilities-section.tsx, archetype-section.tsx, add-sub-skill-modal.tsx, library-section.tsx, ancestry-step.tsx, finalize-step.tsx, health-energy-allocator.tsx, creature-stat-block.tsx, tab-summary-section.tsx, level-up-modal.tsx, skills-allocation-page.tsx, encounter tracker pages, item/technique/creature creators, admin pages.
+  related_files:
+    - src/components/character-sheet/
+    - src/components/character-creator/steps/
+    - src/app/(main)/encounters/
+    - src/docs/DESIGN_SYSTEM.md
+  acceptance_criteria:
+    - Zero hardcoded blue-*/green-*/red-*/amber-* classes in shared components (search confirms)
+    - All replaced with semantic tokens (primary-*, success-*, danger-*, warning-*, info-*, energy-*, health-*)
+    - DESIGN_SYSTEM.md updated with color migration guide
+    - npm run build passes
+
+- id: TASK-240
+  title: "Audit Phase 2 — Standardize modal/error/loading patterns"
+  priority: medium
+  status: not-started
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    Multiple modal implementations, error display patterns, and loading states exist. Audit findings UX-3, UX-4, UX-5. Standardize: modals extend base Modal with consistent header/footer; errors use Alert (persistent) or Toast (transient); loading uses LoadingState (page), skeletons (lists), Spinner (inline).
+  related_files:
+    - src/components/ui/modal.tsx
+    - src/components/ui/spinner.tsx
+    - src/components/shared/
+  acceptance_criteria:
+    - All modals use base Modal component with consistent API
+    - Error display standardized (Alert for persistent, Toast for transient)
+    - Loading states standardized per context
+
+- id: TASK-241
+  title: "Audit Phase 1 — Add Zod input validation to API routes"
+  priority: high
+  status: done
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    All POST/PATCH API routes accept JSON without schema validation. Audit finding S-1. Add Zod schemas to: /api/characters (POST/PATCH), /api/encounters (POST/PATCH), /api/user/library/[type] (POST/PATCH), /api/campaigns (POST/PATCH). Also validate Content-Type headers.
+  related_files:
+    - src/app/api/characters/route.ts
+    - src/app/api/encounters/route.ts
+    - src/app/api/user/library/[type]/route.ts
+    - src/app/api/campaigns/route.ts
+  acceptance_criteria:
+    - Every POST/PATCH handler validates body with Zod before processing
+    - Invalid payloads return 400 with descriptive error
+    - npm run build passes
+
+- id: TASK-242
+  title: "Audit Phase 1 — Add rate limiting to API routes"
+  priority: high
+  status: done
+  notes: "Added sliding-window in-memory rate limiter (src/lib/rate-limit.ts) with standard (30/min), strict (10/min), and invite-code (5/min) presets. Applied to all POST/PATCH/DELETE handlers for characters, encounters, library items, and invite code lookup."
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    Zero rate limiting on any API endpoint. Audit finding S-2. Add @upstash/ratelimit or similar to protect against DoS, brute-force (especially invite code enumeration), and abuse.
+  related_files:
+    - src/middleware.ts
+    - src/app/api/
+  acceptance_criteria:
+    - Rate limiting active on mutation endpoints (POST/PATCH/DELETE)
+    - Invite code lookup rate-limited more aggressively
+    - Returns 429 with Retry-After header when exceeded
+
+- id: TASK-243
+  title: "Audit Phase 4 — Add loading.tsx and error.tsx route handlers"
+  priority: medium
+  status: done
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    Most routes in src/app/(main)/ lack loading.tsx and error.tsx handlers. Audit finding P-3. Add at least per route-group handlers for graceful loading and error UX.
+  related_files:
+    - src/app/(main)/
+  acceptance_criteria:
+    - loading.tsx exists for (main) route group (minimum)
+    - error.tsx exists for (main) route group (minimum)
+    - Loading uses LoadingState or skeleton pattern
+    - Error uses ErrorBoundary with retry
+
+- id: TASK-244
+  title: "Audit Phase 5 — Add missing Prisma indexes"
+  priority: medium
+  status: done
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    Missing database indexes for frequently queried fields. Audit findings DB-1, DB-2, DB-3. Add: Campaign @@index([inviteCode]), composite indexes for sorted queries (userId+updatedAt on library tables, campaignId+createdAt on CampaignRoll). Consider @unique on inviteCode.
+  related_files:
+    - prisma/schema.prisma
+  acceptance_criteria:
+    - inviteCode indexed (and optionally @unique)
+    - Composite indexes added for sorted queries
+    - Migration generated and applied
+
+- id: TASK-245
+  title: "Audit Phase 6 — Public character view page (frontend)"
+  priority: medium
+  status: done
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    API supports public character viewing but no dedicated frontend page exists. Audit finding FB-3. Create a route that renders the character sheet in read-only mode for unauthenticated users when visibility is public, or for campaign members when visibility is campaign-only.
+  related_files:
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/api/characters/[id]/route.ts
+  acceptance_criteria:
+    - Public characters viewable via shared URL without auth
+    - Character sheet renders in read-only mode (no edit controls)
+    - Owner's library items (powers, techniques, armaments) visible to viewers
+  notes: "Done 2026-02-13: The character sheet page already supported public viewing — API returns character + libraryForView for non-owners. Removed the auth redirect that was blocking unauthenticated access. isOwner controls edit mode. getOwnerLibraryForView returns the owner's powers/techniques/items for viewers."
+
+- id: TASK-246
+  title: "Audit Phase 6 — Character creator skill auto-save on tab switch"
+  priority: medium
+  status: done
+  notes: "Verified 2026-02-13: Skills already auto-save via updateDraft() callbacks + Zustand persist middleware. No additional work needed."
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    Skills allocated in character creator are not persisted when switching tabs. Audit finding FB-2. Add onBeforeTabChange callback or auto-persist via the Zustand store when navigating away from skills step.
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/components/character-creator/
+  acceptance_criteria:
+    - Skill allocations persist when switching to another tab and back
+    - No data loss on tab navigation
+
+- id: TASK-247
+  title: "Audit Phase 4 — Optimize React Query stale times for codex data"
+  priority: low
+  status: done
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    Codex data rarely changes but uses default 1-minute staleTime. Audit finding P-4. Set staleTime to 30 minutes for codex queries to reduce unnecessary refetches.
+  related_files:
+    - src/hooks/use-codex.ts
+  acceptance_criteria:
+    - Codex hooks use staleTime of 30 minutes
+    - gcTime set to 60 minutes
+
 # =====================================================================
 # INTEGRATED EXECUTION ORDER
 # =====================================================================
@@ -5706,3 +5885,48 @@ Agents should **create new tasks** during their work when they discover addition
 #   - TASK-219  : Portrait to Supabase Storage
 #   - TASK-220  : Data migration script
 # =====================================================================
+
+# =====================================================================
+# DEFERRED AUDIT ITEMS
+# =====================================================================
+
+- id: TASK-248
+  title: "P-5: Create CharacterSheetContext to reduce prop drilling"
+  priority: medium
+  status: not-started
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    The character sheet page passes 40+ props through multiple levels. Create a CharacterSheetContext
+    to hold shared state (character, editMode, isOwner, callbacks, enriched data) and reduce prop drilling.
+    This is a large refactor affecting the page and all section components (LibrarySection, AbilitiesSection,
+    SkillsSection, ArchetypeSection, SheetHeader, SheetActionToolbar).
+  related_files:
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/character-sheet/archetype-section.tsx
+  acceptance_criteria:
+    - CharacterSheetContext created with shared state
+    - Section components consume from context instead of props
+    - No behavioral changes — all existing functionality preserved
+    - npm run build passes
+  notes: "Identified during codebase audit 2026-02-13 (P-5). Deferred from audit implementation due to high risk/scope."
+
+- id: TASK-249
+  title: "FB-6: Campaign join notification for visibility change"
+  priority: low
+  status: not-started
+  created_at: 2026-02-13
+  created_by: agent
+  description: |
+    When a private character joins a campaign, their visibility should change to 'campaign' so campaign members
+    can view them. Currently the visibility setting exists in the Notes tab but there is no notification/modal
+    informing the user about this change. Add a confirmation dialog when joining a campaign.
+  related_files:
+    - src/app/(main)/campaigns/[id]/page.tsx
+  acceptance_criteria:
+    - Notification or modal shown when a private character joins a campaign
+    - User informed that visibility will change to 'campaign'
+  notes: "Identified from owner feedback (2/9/2026) and codebase audit 2026-02-13 (FB-6)."

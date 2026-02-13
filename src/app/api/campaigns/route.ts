@@ -67,10 +67,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(summaries);
   } catch (err) {
-    console.error('Campaigns API error:', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to load campaigns' },
-      { status: 500 }
-    );
+    console.error('[API Error] GET /api/campaigns:', err);
+    return NextResponse.json({ error: 'Failed to load campaigns' }, { status: 500 });
   }
 }

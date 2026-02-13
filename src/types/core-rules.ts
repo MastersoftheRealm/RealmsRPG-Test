@@ -139,7 +139,8 @@ export interface ConditionsRules {
 
 // ─── Sizes ────────────────────────────────────────────────────────────────
 
-export interface SizeCategory {
+/** Full size category definition (used in game rules reference). Not to be confused with the SizeCategory union type in ancestry.ts. */
+export interface SizeCategoryDef {
   value: string;
   label: string;
   height: string;
@@ -150,7 +151,7 @@ export interface SizeCategory {
 }
 
 export interface SizesRules {
-  categories: SizeCategory[];
+  categories: SizeCategoryDef[];
   halfCapacitySpeedPenalty: string;
 }
 

@@ -141,7 +141,7 @@ export function ArchetypeSelector({
             </span>
             <span className={cn(
               'text-xl font-bold',
-              value === 'martial' ? 'text-red-600' : 'text-violet-500'
+              value === 'martial' ? 'text-martial-dark' : 'text-power-dark'
             )}>
               +{maxProficiency}
             </span>

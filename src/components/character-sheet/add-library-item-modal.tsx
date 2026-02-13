@@ -367,18 +367,31 @@ export function AddLibraryItemModal({
   );
 }
 
-// Helper to get item-specific columns for GridListRow
+/** Capitalize first letter of each word */
+function capitalize(s: string | undefined): string {
+  if (!s) return '-';
+  return s.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// Helper to get item-specific columns for GridListRow — matches character sheet display
 function getItemColumns(item: UserPower | UserTechnique | UserItem | { id: string; name?: string; description?: string; damage?: unknown; armorValue?: number }, itemType: ItemType) {
   if (itemType === 'power') {
     const power = item as UserPower;
+    const damageStr = power.damage?.length
+      ? power.damage.map(d => capitalize(d.type)).join(', ')
+      : '-';
+    const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
     return [
-      { key: 'Level', value: power.parts?.length || '-' },
+      { key: 'Action', value: capitalize(power.actionType), align: 'center' as const },
+      { key: 'Damage', value: damageStr, align: 'center' as const },
+      { key: 'Area', value: areaStr, align: 'center' as const },
     ];
   }
   if (itemType === 'technique') {
     const technique = item as UserTechnique;
     return [
-      { key: 'Parts', value: technique.parts?.length || '-' },
+      { key: 'Weapon', value: technique.weapon?.name || '-', align: 'center' as const },
+      { key: 'Parts', value: technique.parts?.length || '-', align: 'center' as const },
     ];
   }
   if (itemType === 'weapon') {
@@ -410,8 +423,9 @@ function formatDamageForSort(damage: unknown): string {
 function getModalGridColumns(itemType: ItemType): string {
   switch (itemType) {
     case 'power':
+      return '1.4fr 0.8fr 0.8fr 0.7fr'; // Name, Action, Damage, Area
     case 'technique':
-      return '1.5fr 0.8fr';
+      return '1.4fr 0.8fr 0.8fr'; // Name, Action, Weapon
     case 'weapon':
     case 'armor':
       return '1.5fr 1fr';

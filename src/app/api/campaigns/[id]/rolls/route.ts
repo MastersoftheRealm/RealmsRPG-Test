@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/supabase/session';
+import { validateJson, campaignRollCreateSchema } from '@/lib/api-validation';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
@@ -41,106 +42,113 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, error } = await getSession();
-  if (error || !user?.uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const { user, error } = await getSession();
+    if (error || !user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: campaignId } = await params;
+
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+    });
+
+    if (!campaign) {
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+    }
+
+    const memberIds = (campaign.memberIds as string[]) || [];
+    const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
+    if (!isMember) {
+      return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
+    }
+
+    const rows = await prisma.campaignRoll.findMany({
+      where: { campaignId },
+      orderBy: { createdAt: 'desc' },
+      take: MAX_CAMPAIGN_ROLLS,
+    });
+
+    const rolls = rows.map(toEntry);
+    return NextResponse.json(rolls);
+  } catch (err) {
+    console.error('[API Error] GET /api/campaigns/[id]/rolls:', err);
+    return NextResponse.json({ error: 'Failed to load rolls' }, { status: 500 });
   }
-
-  const { id: campaignId } = await params;
-
-  const campaign = await prisma.campaign.findUnique({
-    where: { id: campaignId },
-  });
-
-  if (!campaign) {
-    return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-  }
-
-  const memberIds = (campaign.memberIds as string[]) || [];
-  const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
-  if (!isMember) {
-    return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
-  }
-
-  const rows = await prisma.campaignRoll.findMany({
-    where: { campaignId },
-    orderBy: { createdAt: 'desc' },
-    take: MAX_CAMPAIGN_ROLLS,
-  });
-
-  const rolls = rows.map(toEntry);
-  return NextResponse.json(rolls);
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, error } = await getSession();
-  if (error || !user?.uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  try {
+    const { user, error } = await getSession();
+    if (error || !user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  const { id: campaignId } = await params;
+    const { id: campaignId } = await params;
 
-  const campaign = await prisma.campaign.findUnique({
-    where: { id: campaignId },
-  });
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+    });
 
-  if (!campaign) {
-    return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-  }
+    if (!campaign) {
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+    }
 
-  const memberIds = (campaign.memberIds as string[]) || [];
-  const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
-  if (!isMember) {
-    return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
-  }
+    const memberIds = (campaign.memberIds as string[]) || [];
+    const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
+    if (!isMember) {
+      return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
+    }
 
-  const body = await request.json();
-  const { characterId, characterName, roll } = body;
+    const validation = await validateJson(request, campaignRollCreateSchema);
+    if (!validation.success) return validation.error;
+    const { characterId, characterName, roll } = validation.data;
 
-  if (!characterId || !characterName || !roll) {
-    return NextResponse.json({ error: 'characterId, characterName, and roll required' }, { status: 400 });
-  }
+    const rollData = {
+      characterId,
+      characterName,
+      userId: user.uid,
+      type: roll.type,
+      title: roll.title,
+      dice: roll.dice ?? [],
+      modifier: roll.modifier ?? 0,
+      total: roll.total ?? 0,
+      isCrit: roll.isCrit ?? false,
+      isCritFail: roll.isCritFail ?? false,
+      critMessage: roll.critMessage ?? null,
+      timestamp: new Date().toISOString(),
+    };
 
-  const rollData = {
-    characterId,
-    characterName,
-    userId: user.uid,
-    type: roll.type,
-    title: roll.title,
-    dice: roll.dice ?? [],
-    modifier: roll.modifier ?? 0,
-    total: roll.total ?? 0,
-    isCrit: roll.isCrit ?? false,
-    isCritFail: roll.isCritFail ?? false,
-    critMessage: roll.critMessage ?? null,
-    timestamp: new Date().toISOString(),
-  };
+    await prisma.campaignRoll.create({
+      data: {
+        campaignId,
+        data: rollData as object,
+      },
+    });
 
-  await prisma.campaignRoll.create({
-    data: {
-      campaignId,
-      data: rollData as object,
-    },
-  });
-
-  const count = await prisma.campaignRoll.count({
-    where: { campaignId },
-  });
-
-  if (count > MAX_CAMPAIGN_ROLLS) {
-    const toDelete = await prisma.campaignRoll.findMany({
+    const count = await prisma.campaignRoll.count({
       where: { campaignId },
-      orderBy: { createdAt: 'asc' },
-      take: count - MAX_CAMPAIGN_ROLLS,
-      select: { id: true },
     });
-    await prisma.campaignRoll.deleteMany({
-      where: { id: { in: toDelete.map((r) => r.id) } },
-    });
-  }
 
-  return NextResponse.json({ success: true });
+    if (count > MAX_CAMPAIGN_ROLLS) {
+      const toDelete = await prisma.campaignRoll.findMany({
+        where: { campaignId },
+        orderBy: { createdAt: 'asc' },
+        take: count - MAX_CAMPAIGN_ROLLS,
+        select: { id: true },
+      });
+      await prisma.campaignRoll.deleteMany({
+        where: { id: { in: toDelete.map((r) => r.id) } },
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('[API Error] POST /api/campaigns/[id]/rolls:', err);
+    return NextResponse.json({ error: 'Failed to save roll' }, { status: 500 });
+  }
 }

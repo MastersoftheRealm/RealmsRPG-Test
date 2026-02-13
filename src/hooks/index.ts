@@ -41,19 +41,11 @@ export {
   useDuplicateCharacter,
 } from './use-characters';
 
-// Game Data
+// Game Data (only archetypes remain — use useCodex* hooks for skills/feats/species)
 export {
   gameDataKeys,
   useArchetypes,
   useArchetype,
-  useSkills,
-  useSkill,
-  useFeats,
-  useFeat,
-  useAncestries,
-  useAncestry,
-  useGameData,
-  useGameDataList,
 } from './use-game-data';
 
 // Codex Data (Prisma via API)

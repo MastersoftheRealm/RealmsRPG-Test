@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
@@ -39,9 +39,11 @@ export function useAuth() {
   } = useAuthStore();
 
   const [supabaseReady, setSupabaseReady] = useState(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     setSupabaseReady(true);
+    return () => { mountedRef.current = false; };
   }, []);
 
   useEffect(() => {
@@ -50,18 +52,24 @@ export function useAuth() {
     const supabase = createClient();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(toAuthUser(session?.user ?? null));
-      setInitialized(true);
+      if (mountedRef.current) {
+        setUser(toAuthUser(session?.user ?? null));
+        setInitialized(true);
+      }
     });
 
-    // Get initial session
+    // Get initial session (only sets state if onAuthStateChange hasn't fired yet)
     supabase.auth.getUser().then(({ data: { user: u } }) => {
-      setUser(toAuthUser(u));
-      setInitialized(true);
+      if (mountedRef.current) {
+        setUser(toAuthUser(u));
+        setInitialized(true);
+      }
     }).catch((err) => {
-      console.error('Auth init error:', err);
-      setError('Failed to initialize auth');
-      setInitialized(true);
+      if (mountedRef.current) {
+        console.error('Auth init error:', err);
+        setError('Failed to initialize auth');
+        setInitialized(true);
+      }
     });
 
     return () => subscription.unsubscribe();

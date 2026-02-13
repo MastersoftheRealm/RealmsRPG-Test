@@ -28,9 +28,9 @@ export interface TabSummarySectionProps {
 const variantStyles = {
   default: 'bg-gradient-to-r from-surface-alt to-surface border-border-light dark:from-surface dark:to-surface-alt',
   power: 'bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-900/30 dark:to-indigo-900/30 border-violet-200 dark:border-violet-700/50',
-  martial: 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border-green-200 dark:border-green-700/50',
-  currency: 'bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-200 dark:border-amber-700/50',
-  physical: 'bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border-blue-200 dark:border-blue-700/50',
+  martial: 'bg-gradient-to-r from-success-50 to-success-100 dark:from-success-900/30 dark:to-success-800/20 border-success-200 dark:border-success-700/50',
+  currency: 'bg-gradient-to-r from-warning-50 to-warning-100 dark:from-warning-900/30 dark:to-warning-800/20 border-warning-200 dark:border-warning-700/50',
+  physical: 'bg-gradient-to-r from-info-50 to-info-100 dark:from-info-900/30 dark:to-info-800/20 border-info-200 dark:border-info-700/50',
 };
 
 export function TabSummarySection({
@@ -72,11 +72,11 @@ export interface SummaryItemProps {
 
 const highlightColors = {
   primary: 'text-primary-600 dark:text-primary-400',
-  success: 'text-green-600 dark:text-green-400',
-  warning: 'text-amber-600 dark:text-amber-400',
-  danger: 'text-red-600 dark:text-red-400',
+  success: 'text-success-600 dark:text-success-400',
+  warning: 'text-warning-600 dark:text-warning-400',
+  danger: 'text-danger-600 dark:text-danger-400',
   power: 'text-violet-600 dark:text-violet-400',
-  martial: 'text-green-700 dark:text-green-400',
+  martial: 'text-success-700 dark:text-success-400',
 };
 
 export function SummaryItem({

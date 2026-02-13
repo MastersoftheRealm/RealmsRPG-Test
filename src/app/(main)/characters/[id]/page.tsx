@@ -7,7 +7,6 @@
 'use client';
 
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, type Species, type Trait, type Skill } from '@/hooks';
@@ -36,7 +35,6 @@ interface PageParams {
 
 export default function CharacterSheetPage({ params }: PageParams) {
   const { id } = use(params);
-  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
   
@@ -1225,12 +1223,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
     });
   }, [character, codexSkills, characterSpeciesSkills]);
   
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [authLoading, user, router]);
+  // Note: No auth redirect — this page supports public/campaign character viewing.
+  // The API enforces visibility rules; owners get edit controls via `isOwner`.
   
   if (authLoading || loading) {
     return (

@@ -38,11 +38,11 @@ const DIE_IMAGES: Record<DieType, string> = {
 
 // Roll type colors (left border accent)
 const ROLL_TYPE_COLORS: Record<RollType, string> = {
-  attack: 'border-l-red-500',
-  damage: 'border-l-orange-500',
-  skill: 'border-l-blue-500',
-  ability: 'border-l-purple-500',
-  defense: 'border-l-teal-500',
+  attack: 'border-l-danger-500',
+  damage: 'border-l-martial-dark',
+  skill: 'border-l-primary-500',
+  ability: 'border-l-power-dark',
+  defense: 'border-l-info-500',
   custom: 'border-l-border',
 };
 
@@ -401,8 +401,8 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
       className={cn(
         'bg-surface rounded-lg mb-2 p-3 shadow-sm border-l-4',
         ROLL_TYPE_COLORS[roll.type],
-        roll.isCrit && 'ring-2 ring-green-400',
-        roll.isCritFail && 'ring-2 ring-red-400'
+        roll.isCrit && 'ring-2 ring-success-400',
+        roll.isCritFail && 'ring-2 ring-danger-400'
       )}
     >
       {/* Header: icon + title + character name (campaign) + date/time */}
@@ -446,13 +446,13 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
                   die.type === 'd20'
                     ? cn(
                         'border',
-                        die.isMax && 'bg-green-100 border-green-500 text-green-800',
-                        die.isMin && 'bg-red-100 border-red-500 text-red-800',
+                        die.isMax && 'bg-success-100 border-success-500 text-success-800',
+                        die.isMin && 'bg-danger-100 border-danger-500 text-danger-800',
                         !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-neutral-800 text-text-secondary border-border-light'
                       )
                     : cn(
-                        die.isMax ? 'bg-green-100 border border-green-400 text-green-800' :
-                        die.isMin ? 'bg-red-100 border border-red-400 text-red-800' :
+                        die.isMax ? 'bg-success-100 border border-success-400 text-success-800' :
+                        die.isMin ? 'bg-danger-100 border border-danger-400 text-danger-800' :
                         'bg-surface-alt dark:bg-neutral-800 text-text-secondary border border-border-light'
                       )
                 )}
@@ -484,8 +484,8 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
             <span className="text-text-muted text-xs">=</span>
             <span className={cn(
               'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold',
-              roll.isCrit && 'bg-green-100 border border-green-400 text-green-800',
-              roll.isCritFail && 'bg-red-100 border border-red-400 text-red-800',
+              roll.isCrit && 'bg-success-100 border border-success-400 text-success-800',
+              roll.isCritFail && 'bg-danger-100 border border-danger-400 text-danger-800',
               !roll.isCrit && !roll.isCritFail && 'bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-700/50 text-primary-700 dark:text-primary-300'
             )}>
               {roll.total}
@@ -498,8 +498,8 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
       {roll.critMessage && (
         <div className={cn(
           'mt-2 inline-block px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide text-white',
-          roll.isCrit && 'bg-gradient-to-r from-green-500 to-teal-500',
-          roll.isCritFail && 'bg-gradient-to-r from-red-500 to-red-600',
+          roll.isCrit && 'bg-gradient-to-r from-success-500 to-success-600',
+          roll.isCritFail && 'bg-gradient-to-r from-danger-500 to-danger-600',
         )}>
           {roll.isCrit ? 'Natural 20!' : roll.isCritFail ? 'Natural 1!' : ''}
         </div>

@@ -8,7 +8,7 @@ import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
 import { IconButton, Checkbox } from '@/components/ui';
-import { NumberStepper } from '@/components/creator/number-stepper';
+import { ValueStepper } from '@/components/shared';
 import type { PowerPart } from '@/hooks';
 import type { SelectedPart } from './power-creator-types';
 
@@ -168,7 +168,7 @@ export function PowerPartCard({
                         TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
                       </span>
                     </div>
-                    <NumberStepper
+                    <ValueStepper
                       value={selectedPart.op_1_lvl}
                       onChange={(v) => onUpdate({ op_1_lvl: v })}
                       label="Level:"
@@ -192,7 +192,7 @@ export function PowerPartCard({
                         TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
                       </span>
                     </div>
-                    <NumberStepper
+                    <ValueStepper
                       value={selectedPart.op_2_lvl}
                       onChange={(v) => onUpdate({ op_2_lvl: v })}
                       label="Level:"
@@ -216,7 +216,7 @@ export function PowerPartCard({
                         TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
                       </span>
                     </div>
-                    <NumberStepper
+                    <ValueStepper
                       value={selectedPart.op_3_lvl}
                       onChange={(v) => onUpdate({ op_3_lvl: v })}
                       label="Level:"

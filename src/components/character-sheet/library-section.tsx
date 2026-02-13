@@ -860,7 +860,7 @@ export function LibrarySection({
                         onCurrencyChange?.(newValue);
                       }
                     }}
-                    className="w-20 px-2 py-1 text-sm font-bold text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-600/50 rounded focus:ring-2 focus:ring-amber-500 bg-white dark:bg-surface"
+                    className="w-20 px-2 py-1 text-sm font-bold text-warning-600 dark:text-warning-400 border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-white dark:bg-surface"
                     title="Use +5, -10, or a number"
                   />
                   <span className="text-sm font-medium text-text-muted">Currency</span>
@@ -907,7 +907,7 @@ export function LibrarySection({
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
                     const columns: ColumnValue[] = [
                       { key: 'attack', value: attackDisplay, className: 'font-medium', align: 'center' },
-                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-red-600 font-medium', align: 'center' },
+                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-danger-600 font-medium', align: 'center' },
                       { key: 'range', value: (item as Item & { range?: string }).range || 'Melee', align: 'center' },
                     ];
                     
@@ -981,14 +981,34 @@ export function LibrarySection({
                 <div className="space-y-1">
                   {sortedArmor.map((item, i) => {
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({ ...p, category: 'tag' as const }));
-                    const itemWithCrit = item as Item & { critRange?: string | number };
                     // Get ability requirement from enriched data
                     const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
                     const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
                     
+                    // Calculate damage reduction: use enriched armor value, fall back to property parsing
+                    let damageReduction = item.armor ?? 0;
+                    let critRangeBonus = 0;
+                    if (item.properties) {
+                      for (const prop of item.properties) {
+                        if (!prop) continue;
+                        const propName = typeof prop === 'string' ? prop : prop.name || '';
+                        const op1Lvl = typeof prop === 'object' && 'op_1_lvl' in prop ? Number((prop as Record<string, unknown>).op_1_lvl) || 0 : 0;
+                        if (propName === 'Damage Reduction' && damageReduction === 0) {
+                          damageReduction = 1 + op1Lvl;
+                        }
+                        if (propName === 'Critical Range +1') {
+                          critRangeBonus = 1 + op1Lvl;
+                        }
+                      }
+                    }
+                    // Critical range = base evasion + 10 + bonus (per game rules)
+                    const agility = abilities?.agility ?? 0;
+                    const baseEvasion = 10 + agility;
+                    const critThreshold = critRangeBonus > 0 ? baseEvasion + 10 + critRangeBonus : undefined;
+                    
                     const columns: ColumnValue[] = [
-                      { key: 'dr', value: item.armor !== undefined ? String(item.armor) : '-', className: 'text-blue-600 dark:text-blue-400 font-medium', align: 'center' },
-                      { key: 'crit', value: itemWithCrit.critRange ?? '-', align: 'center' },
+                      { key: 'dr', value: damageReduction > 0 ? String(damageReduction) : '-', className: 'text-primary-600 dark:text-primary-400 font-medium', align: 'center' },
+                      { key: 'crit', value: critThreshold ?? '-', align: 'center' },
                     ];
                     
                     // Build expanded content with requirements

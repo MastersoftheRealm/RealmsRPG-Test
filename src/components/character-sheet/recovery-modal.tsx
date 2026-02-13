@@ -200,8 +200,8 @@ export function RecoveryModal({
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all',
               mode === 'full'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                : 'border-border-light hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/20'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                : 'border-border-light hover:border-primary-300 hover:bg-primary-50/50 dark:hover:bg-primary-900/20'
             )}
           >
             <Moon className="w-5 h-5" />
@@ -212,8 +212,8 @@ export function RecoveryModal({
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all',
               mode === 'partial'
-                ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                : 'border-border-light hover:border-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-900/20'
+                ? 'border-warning-500 bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300'
+                : 'border-border-light hover:border-warning-300 hover:bg-warning-50/50 dark:hover:bg-warning-900/20'
             )}
           >
             <Clock className="w-5 h-5" />
@@ -223,30 +223,30 @@ export function RecoveryModal({
         
         {/* Full Recovery Info */}
         {mode === 'full' && (
-          <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700/50">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
+          <div className="space-y-4 p-4 bg-primary-50 dark:bg-primary-900/30 rounded-lg border border-primary-200 dark:border-primary-700/50">
+            <p className="text-sm text-primary-800 dark:text-primary-300">
               A full recovery restores all resources to maximum and resets all ability uses.
             </p>
             
             <div className="grid grid-cols-2 gap-4">
               {/* HP Recovery */}
               <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
-                <Heart className="w-6 h-6 text-green-600 dark:text-green-400" />
+                <Heart className="w-6 h-6 text-success-600 dark:text-success-400" />
                 <div>
                   <div className="text-xs text-text-muted">Health</div>
                   <div className="font-bold">
-                    {currentHealth} → <span className="text-green-600 dark:text-green-400">{maxHealth}</span>
+                    {currentHealth} → <span className="text-success-600 dark:text-success-400">{maxHealth}</span>
                   </div>
                 </div>
               </div>
               
               {/* EN Recovery */}
               <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
-                <Zap className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+                <Zap className="w-6 h-6 text-info-500 dark:text-info-400" />
                 <div>
                   <div className="text-xs text-text-muted">Energy</div>
                   <div className="font-bold">
-                    {currentEnergy} → <span className="text-green-600 dark:text-green-400">{maxEnergy}</span>
+                    {currentEnergy} → <span className="text-success-600 dark:text-success-400">{maxEnergy}</span>
                   </div>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export function RecoveryModal({
             
             {/* Feat/Trait Reset Info */}
             {(fullFeatsCount > 0 || fullTraitsCount > 0 || partialFeatsCount > 0 || partialTraitsCount > 0) && (
-              <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+              <div className="flex items-center gap-2 text-sm text-info-700 dark:text-info-300">
                 <RotateCcw className="w-4 h-4" />
                 <span>
                   Resets {fullFeatsCount + partialFeatsCount + fullTraitsCount + partialTraitsCount} ability uses
@@ -280,8 +280,8 @@ export function RecoveryModal({
                     className={cn(
                       'flex-1 py-2 px-4 rounded-lg border-2 font-medium transition-all',
                       hours === h
-                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                        : 'border-border-light hover:border-amber-300 dark:hover:border-amber-600/50 dark:hover:bg-amber-900/20'
+                        ? 'border-warning-500 bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300'
+                        : 'border-border-light hover:border-warning-300 dark:hover:border-warning-600/50 dark:hover:bg-warning-900/20'
                     )}
                   >
                     {h} hours
@@ -332,11 +332,11 @@ export function RecoveryModal({
             {allocationMode === 'manual' && (
               <div className="space-y-3 p-4 bg-surface-alt rounded-lg">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
+                  <span className="flex items-center gap-1 text-success-600 dark:text-success-400 font-medium">
                     <Heart className="w-4 h-4" />
                     HP: {hpQuarters}/{totalQuarters}
                   </span>
-                  <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
+                  <span className="flex items-center gap-1 text-info-600 dark:text-info-400 font-medium">
                     EN: {totalQuarters - hpQuarters}/{totalQuarters}
                     <Zap className="w-4 h-4" />
                   </span>
@@ -366,19 +366,19 @@ export function RecoveryModal({
             )}
             
             {/* Preview */}
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/30 rounded-lg border border-amber-200 dark:border-amber-700/50">
-              <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-3">Recovery Preview</h4>
+            <div className="p-4 bg-warning-50 dark:bg-warning-900/30 rounded-lg border border-warning-200 dark:border-warning-700/50">
+              <h4 className="text-sm font-semibold text-warning-800 dark:text-warning-300 mb-3">Recovery Preview</h4>
               
               <div className="grid grid-cols-2 gap-4">
                 {/* HP Recovery */}
                 <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
-                  <Heart className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  <Heart className="w-6 h-6 text-success-600 dark:text-success-400" />
                   <div>
                     <div className="text-xs text-text-muted">Health</div>
                     <div className="font-bold">
-                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-green-600 dark:text-green-400' : 'text-text-muted')}>{newHealth}</span>
+                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted')}>{newHealth}</span>
                     </div>
-                    <div className="text-xs text-green-600 dark:text-green-400">
+                    <div className="text-xs text-success-600 dark:text-success-400">
                       +{hpRestored} HP ({currentAllocation.hp}/{totalQuarters} quarters)
                     </div>
                   </div>
@@ -386,13 +386,13 @@ export function RecoveryModal({
                 
                 {/* EN Recovery */}
                 <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
-                  <Zap className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+                  <Zap className="w-6 h-6 text-info-500 dark:text-info-400" />
                   <div>
                     <div className="text-xs text-text-muted">Energy</div>
                     <div className="font-bold">
-                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-green-600 dark:text-green-400' : 'text-text-muted')}>{newEnergy}</span>
+                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted')}>{newEnergy}</span>
                     </div>
-                    <div className="text-xs text-green-600 dark:text-green-400">
+                    <div className="text-xs text-success-600 dark:text-success-400">
                       +{enRestored} EN ({currentAllocation.en}/{totalQuarters} quarters)
                     </div>
                   </div>
@@ -401,7 +401,7 @@ export function RecoveryModal({
               
               {/* Feat/Trait Reset Info */}
               {(partialFeatsCount > 0 || partialTraitsCount > 0) && (
-                <div className="flex items-center gap-2 mt-3 text-sm text-amber-700 dark:text-amber-300">
+                <div className="flex items-center gap-2 mt-3 text-sm text-warning-700 dark:text-warning-300">
                   <RotateCcw className="w-4 h-4" />
                   <span>
                     Resets {partialFeatsCount + partialTraitsCount} partial-recovery ability uses
@@ -410,7 +410,7 @@ export function RecoveryModal({
               )}
               
               {allocationMode === 'automatic' && (
-                <p className="mt-3 text-xs text-amber-700 dark:text-amber-300 italic">
+                <p className="mt-3 text-xs text-warning-700 dark:text-warning-300 italic">
                   Automatic mode optimizes allocation for maximum total recovery.
                 </p>
               )}
@@ -426,7 +426,7 @@ export function RecoveryModal({
           <Button 
             variant="primary" 
             onClick={handleConfirm}
-            className={cn(mode === 'full' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-600 hover:bg-amber-700')}
+            className={cn(mode === 'full' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-warning-600 hover:bg-warning-700')}
           >
             {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
           </Button>

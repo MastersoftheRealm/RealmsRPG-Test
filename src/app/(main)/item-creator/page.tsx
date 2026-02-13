@@ -21,7 +21,7 @@ import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
-import { NumberStepper } from '@/components/creator/number-stepper';
+import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
 import { useAdmin } from '@/hooks';
@@ -225,7 +225,7 @@ function PropertyCard({
                     </span>
                   )}
                 </div>
-                <NumberStepper
+                <ValueStepper
                   value={selectedProperty.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label="Level:"
@@ -1200,7 +1200,7 @@ function ItemCreatorContent() {
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-text-secondary">Range:</span>
                     <span className="font-medium text-amber-600 min-w-[80px]">{rangeDisplay}</span>
-                    <NumberStepper
+                    <ValueStepper
                       value={rangeLevel}
                       onChange={setRangeLevel}
                       min={0}
@@ -1221,7 +1221,7 @@ function ItemCreatorContent() {
             <div className="bg-surface rounded-xl shadow-md p-6">
               <h3 className="text-lg font-bold text-text-primary mb-4">Base Damage</h3>
               <div className="flex flex-wrap items-center gap-4">
-                <NumberStepper
+                <ValueStepper
                   value={damage.amount}
                   onChange={(v) => setDamage((d) => ({ ...d, amount: v }))}
                   label="Dice:"
@@ -1267,7 +1267,7 @@ function ItemCreatorContent() {
                   <label className="block text-sm font-medium text-text-secondary mb-2">
                     Damage Reduction
                   </label>
-                  <NumberStepper
+                  <ValueStepper
                     value={damageReduction}
                     onChange={setDamageReduction}
                     min={0}
@@ -1282,7 +1282,7 @@ function ItemCreatorContent() {
                   <label className="block text-sm font-medium text-text-secondary mb-2">
                     Agility Reduction
                   </label>
-                  <NumberStepper
+                  <ValueStepper
                     value={agilityReduction}
                     onChange={setAgilityReduction}
                     min={0}
@@ -1297,7 +1297,7 @@ function ItemCreatorContent() {
                   <label className="block text-sm font-medium text-text-secondary mb-2">
                     Critical Range Increase
                   </label>
-                  <NumberStepper
+                  <ValueStepper
                     value={criticalRangeIncrease}
                     onChange={setCriticalRangeIncrease}
                     min={0}
@@ -1317,7 +1317,7 @@ function ItemCreatorContent() {
               <div className="bg-surface rounded-xl shadow-md p-6">
                 <h3 className="text-lg font-bold text-text-primary mb-4">Shield Block (Damage Reduction)</h3>
                 <div className="flex flex-wrap items-center gap-4">
-                  <NumberStepper
+                  <ValueStepper
                     value={shieldDR.amount}
                     onChange={(v) => setShieldDR((d) => ({ ...d, amount: v }))}
                     label="Dice:"
@@ -1359,7 +1359,7 @@ function ItemCreatorContent() {
                 {hasShieldDamage && (
                   <>
                     <div className="flex flex-wrap items-center gap-4">
-                      <NumberStepper
+                      <ValueStepper
                         value={shieldDamage.amount}
                         onChange={(v) => setShieldDamage((d) => ({ ...d, amount: v }))}
                         label="Dice:"
@@ -1426,7 +1426,7 @@ function ItemCreatorContent() {
               {abilityRequirement && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-text-secondary">Level:</span>
-                  <NumberStepper
+                  <ValueStepper
                     value={abilityRequirement.level}
                     onChange={(v) => setAbilityRequirement(prev => prev ? { ...prev, level: v } : null)}
                     min={1}

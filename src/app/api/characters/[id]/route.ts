@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
+import { validateJson, characterUpdateSchema } from '@/lib/api-validation';
+import { standardLimiter } from '@/lib/rate-limit';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import type { Character, CharacterVisibility } from '@/types';
 
@@ -44,112 +46,141 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user } = await getSession();
-  const { id } = await params;
-  if (!id?.trim()) {
-    return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
-  }
+  try {
+    const { user } = await getSession();
+    const { id } = await params;
+    if (!id?.trim()) {
+      return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
+    }
 
-  const row = await prisma.character.findFirst({
-    where: { id: id.trim() },
-  });
-
-  if (!row) {
-    return NextResponse.json(null, { status: 404 });
-  }
-
-  const isOwner = user?.uid === row.userId;
-  if (isOwner) {
-    return NextResponse.json(rowToCharacter(row));
-  }
-
-  const visibility = ((row.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';
-  if (visibility === 'public') {
-    const libraryForView = await getOwnerLibraryForView(row.userId);
-    return NextResponse.json({ character: rowToCharacter(row), libraryForView });
-  }
-
-  if (visibility === 'campaign' && user?.uid) {
-    const campaigns = await prisma.campaign.findMany({
-      select: { id: true, ownerId: true, memberIds: true, characters: true },
+    const row = await prisma.character.findFirst({
+      where: { id: id.trim() },
     });
-    const userCampaigns = campaigns.filter(
-      (c) => c.ownerId === user.uid || (c.memberIds as string[])?.includes(user.uid)
-    );
-    const inCampaign = userCampaigns.some((c) => {
-      const list = (c.characters as Array<{ userId: string; characterId: string }>) || [];
-      return list.some((cc) => cc.userId === row.userId && cc.characterId === row.id);
-    });
-    if (inCampaign) {
+
+    if (!row) {
+      return NextResponse.json(null, { status: 404 });
+    }
+
+    const isOwner = user?.uid === row.userId;
+    if (isOwner) {
+      return NextResponse.json(rowToCharacter(row));
+    }
+
+    const visibility = ((row.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';
+    if (visibility === 'public') {
       const libraryForView = await getOwnerLibraryForView(row.userId);
       return NextResponse.json({ character: rowToCharacter(row), libraryForView });
     }
-  }
 
-  return NextResponse.json({ error: 'Character not found or not visible' }, { status: 403 });
+    if (visibility === 'campaign' && user?.uid) {
+      const campaigns = await prisma.campaign.findMany({
+        select: { id: true, ownerId: true, memberIds: true, characters: true },
+      });
+      const userCampaigns = campaigns.filter(
+        (c) => c.ownerId === user.uid || (c.memberIds as string[])?.includes(user.uid)
+      );
+      const inCampaign = userCampaigns.some((c) => {
+        const list = (c.characters as Array<{ userId: string; characterId: string }>) || [];
+        return list.some((cc) => cc.userId === row.userId && cc.characterId === row.id);
+      });
+      if (inCampaign) {
+        const libraryForView = await getOwnerLibraryForView(row.userId);
+        return NextResponse.json({ character: rowToCharacter(row), libraryForView });
+      }
+    }
+
+    return NextResponse.json({ error: 'Character not found or not visible' }, { status: 403 });
+  } catch (err) {
+    console.error('[API Error] GET /api/characters/[id]:', err);
+    return NextResponse.json({ error: 'Failed to load character' }, { status: 500 });
+  }
 }
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, error } = await getSession();
-  if (error || !user?.uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
+    const { success } = standardLimiter.check(`char-patch:${ip}`);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    }
+
+    const { user, error } = await getSession();
+    if (error || !user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    if (!id?.trim()) {
+      return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
+    }
+
+    const validation = await validateJson(request, characterUpdateSchema);
+    if (!validation.success) return validation.error;
+    const data = validation.data as Partial<Character>;
+    const cleanedData = prepareForSave(data);
+
+    const existing = await prisma.character.findFirst({
+      where: { id: id.trim(), userId: user.uid },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+    }
+
+    const currentData = existing.data as Record<string, unknown>;
+    const mergedData = { ...currentData, ...cleanedData } as Record<string, unknown>;
+
+    await prisma.character.update({
+      where: { id: id.trim() },
+      data: { data: mergedData as object },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[API Error] PATCH /api/characters/[id]:', err);
+    return NextResponse.json({ error: 'Failed to update character' }, { status: 500 });
   }
-
-  const { id } = await params;
-  if (!id?.trim()) {
-    return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
-  }
-
-  const data = (await request.json()) as Partial<Character>;
-  const cleanedData = prepareForSave(data);
-
-  const existing = await prisma.character.findFirst({
-    where: { id: id.trim(), userId: user.uid },
-  });
-
-  if (!existing) {
-    return NextResponse.json({ error: 'Character not found' }, { status: 404 });
-  }
-
-  const currentData = existing.data as Record<string, unknown>;
-  const mergedData = { ...currentData, ...cleanedData } as Record<string, unknown>;
-
-  await prisma.character.update({
-    where: { id: id.trim() },
-    data: { data: mergedData as object },
-  });
-
-  return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { user, error } = await getSession();
-  if (error || !user?.uid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const ip = _request.headers.get('x-forwarded-for') ?? 'unknown';
+    const { success } = standardLimiter.check(`char-del:${ip}`);
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    }
+
+    const { user, error } = await getSession();
+    if (error || !user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    if (!id?.trim()) {
+      return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
+    }
+
+    const existing = await prisma.character.findFirst({
+      where: { id: id.trim(), userId: user.uid },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+    }
+
+    await prisma.character.delete({
+      where: { id: id.trim() },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[API Error] DELETE /api/characters/[id]:', err);
+    return NextResponse.json({ error: 'Failed to delete character' }, { status: 500 });
   }
-
-  const { id } = await params;
-  if (!id?.trim()) {
-    return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
-  }
-
-  const existing = await prisma.character.findFirst({
-    where: { id: id.trim(), userId: user.uid },
-  });
-
-  if (!existing) {
-    return NextResponse.json({ error: 'Character not found' }, { status: 404 });
-  }
-
-  await prisma.character.delete({
-    where: { id: id.trim() },
-  });
-
-  return NextResponse.json({ ok: true });
 }

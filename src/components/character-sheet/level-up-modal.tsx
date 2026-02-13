@@ -175,7 +175,7 @@ export function LevelUpModal({
         {/* Gains Grid */}
         <div className="grid grid-cols-2 gap-3">
           <GainCard
-            icon={<Heart className="w-5 h-5 text-red-500" />}
+            icon={<Heart className="w-5 h-5 text-danger-500" />}
             label="Health & Energy"
             value={`+${gains.healthEnergy}`}
             description="Hit points"
@@ -187,7 +187,7 @@ export function LevelUpModal({
             description="For powers/techniques"
           />
           <GainCard
-            icon={<Shield className="w-5 h-5 text-blue-500" />}
+            icon={<Shield className="w-5 h-5 text-primary-500" />}
             label="Skill Points"
             value={`+${gains.skillPoints}`}
             description="For skills"

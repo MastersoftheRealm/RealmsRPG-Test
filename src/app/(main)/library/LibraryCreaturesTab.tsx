@@ -12,7 +12,7 @@ import { Plus, Users } from 'lucide-react';
 import {
   CreatureStatBlock,
   SearchInput,
-  ColumnHeaders,
+  ListHeader,
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
@@ -92,7 +92,7 @@ export function LibraryCreaturesTab({ source, onDelete }: LibraryCreaturesTabPro
         />
       </div>
 
-      <ColumnHeaders
+      <ListHeader
         columns={[
           { key: 'name', label: 'Name', width: '2fr' },
           { key: 'level', label: 'Level', width: '1fr' },

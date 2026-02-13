@@ -4,7 +4,7 @@
  * Tool for creating custom martial techniques using the technique parts system.
  * 
  * Features:
- * - Select technique parts from RTDB database
+ * - Select technique parts from Codex API (Prisma/Supabase)
  * - Configure option levels for each part
  * - Calculate energy and training point costs
  * - Save to user's library (Prisma)
@@ -22,7 +22,7 @@ import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
-import { NumberStepper } from '@/components/creator/number-stepper';
+import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
   calculateTechniqueCosts,
@@ -253,7 +253,7 @@ function PartCard({
                         TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
                       </span>
                     </div>
-                    <NumberStepper
+                    <ValueStepper
                       value={selectedPart.op_1_lvl}
                       onChange={(v) => onUpdate({ op_1_lvl: v })}
                       label="Level:"
@@ -277,7 +277,7 @@ function PartCard({
                         TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
                       </span>
                     </div>
-                    <NumberStepper
+                    <ValueStepper
                       value={selectedPart.op_2_lvl}
                       onChange={(v) => onUpdate({ op_2_lvl: v })}
                       label="Level:"
@@ -301,7 +301,7 @@ function PartCard({
                         TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
                       </span>
                     </div>
-                    <NumberStepper
+                    <ValueStepper
                       value={selectedPart.op_3_lvl}
                       onChange={(v) => onUpdate({ op_3_lvl: v })}
                       label="Level:"
@@ -957,7 +957,7 @@ function TechniqueCreatorContent() {
               Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.
             </p>
             <div className="flex flex-wrap items-center gap-4">
-              <NumberStepper
+              <ValueStepper
                 value={damage.amount}
                 onChange={(v) => setDamage((d) => ({ ...d, amount: v }))}
                 label="Dice:"

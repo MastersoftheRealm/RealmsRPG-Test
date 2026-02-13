@@ -101,7 +101,7 @@ export function HealthEnergyAllocator({
         <div className="flex items-center gap-4 px-4 py-3">
           {/* Health Points - Green colors, show total prominently */}
           <div className="flex-1 flex items-center gap-2">
-            <span className="text-lg font-bold text-green-600 dark:text-green-400 min-w-[60px]">{maxHp} HP</span>
+            <span className="text-lg font-bold text-success-600 dark:text-success-400 min-w-[60px]">{maxHp} HP</span>
             <ValueStepper
               value={hpBonus}
               onChange={onHpChange}
@@ -123,7 +123,7 @@ export function HealthEnergyAllocator({
           
           {/* Energy Points - Blue colors, show total prominently */}
           <div className="flex-1 flex items-center gap-2">
-            <span className="text-lg font-bold text-blue-600 dark:text-blue-400 min-w-[60px]">{maxEnergy} EN</span>
+            <span className="text-lg font-bold text-info-600 dark:text-info-400 min-w-[60px]">{maxEnergy} EN</span>
             <ValueStepper
               value={energyBonus}
               onChange={onEnergyChange}
@@ -174,7 +174,7 @@ export function HealthEnergyAllocator({
       <div className="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2">
         {/* HP Allocator - Show total prominently, points secondary */}
         <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-green-600 dark:text-green-400 min-w-[70px]">{maxHp} HP</span>
+          <span className="text-xl font-bold text-success-600 dark:text-success-400 min-w-[70px]">{maxHp} HP</span>
           <ValueStepper
             value={hpBonus}
             onChange={onHpChange}
@@ -192,7 +192,7 @@ export function HealthEnergyAllocator({
 
         {/* Energy Allocator - Show total prominently, points secondary */}
         <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-blue-600 dark:text-blue-400 min-w-[70px]">{maxEnergy} EN</span>
+          <span className="text-xl font-bold text-info-600 dark:text-info-400 min-w-[70px]">{maxEnergy} EN</span>
           <ValueStepper
             value={energyBonus}
             onChange={onEnergyChange}

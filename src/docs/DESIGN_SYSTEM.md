@@ -64,6 +64,34 @@ Semantic colors for success, danger, warning, and info states.
 | Warning | #f59e0b | #d97706 | #fef3c7 | - |
 | Info | #3b82f6 | #2563eb | #dbeafe | - |
 
+### Game-Specific Colors
+Colors for health, energy, power, and martial concepts.
+
+| Concept | Text Token | Background Token | Border Token |
+|---------|-----------|------------------|-------------|
+| Health | `text-success-600` | `bg-success-50` | `border-success-*` |
+| Energy | `text-info-600` | `bg-info-50` | `border-info-*` |
+| Power (archetype) | `text-power-text` | `bg-power-light` | `border-power-border` |
+| Martial (archetype) | `text-martial-text` | `bg-martial-light` | `border-martial-border` |
+
+### Color Migration Guide (2026-02-13 Audit)
+
+**Do NOT use** raw Tailwind color classes in shared or feature components. Use design tokens instead.
+
+| Hardcoded Class | Replace With | Semantic Meaning |
+|----------------|-------------|------------------|
+| `blue-*` | `primary-*` | Primary actions, links, editable indicators |
+| `green-*` | `success-*` | Positive values, health, equipped items |
+| `red-*` | `danger-*` | Negative values, errors, delete actions |
+| `amber-*` | `warning-*` | Warnings, costs, unsaved state |
+| `blue-*` (energy) | `info-*` | Energy-related, informational |
+| `purple-*` / `violet-*` | `power-*` or keep `violet-*` | Power archetype theme |
+| `red-*` (martial) | `martial-*` | Martial archetype theme |
+| `orange-*` (TP costs) | `tp-*` tokens | Training point costs |
+
+> **Exception:** Auth pages (`/login`, `/register`) intentionally use `gray-*` for dark theme.
+> **Exception:** `violet-*` is acceptable for power-archetype styling where no semantic token exists.
+
 ### Category Colors
 Used for chips, badges, and content type indicators.
 
@@ -501,14 +529,36 @@ src/
 
 ---
 
+## Additional Shared Components
+
+These components are used across multiple pages and should be imported rather than reimplemented.
+
+| Component | Import | Purpose |
+|-----------|--------|---------|
+| `ErrorBoundary` | `@/components/shared/error-boundary` | Catches rendering errors, shows retry UI |
+| `EditSectionToggle` | `@/components/shared/edit-section-toggle` | Color-coded pencil icon (normal/has-points/over-budget) |
+| `SelectionToggle` | `@/components/shared/selection-toggle` | + → ✓ toggle for adding items in modals |
+| `EquipToggle` | `@/components/shared/equip-toggle` | Equipment equipped/unequipped toggle |
+| `InnateToggle` | `@/components/shared/innate-toggle` | Innate power toggle |
+| `HealthEnergyAllocator` | `@/components/creator/health-energy-allocator` | HP/EN point allocation with stepper |
+| `CreatorSummaryPanel` | `@/components/creator/creator-summary-panel` | Cost/point summary in creators |
+| `RecoveryModal` | `@/components/character-sheet/recovery-modal` | Full/partial recovery dialog |
+| `RollLog` | `@/components/character-sheet/roll-log` | Dice roll history display |
+| `SheetActionToolbar` | `@/components/character-sheet/sheet-action-toolbar` | Floating action toolbar on character sheet |
+| `TabSummarySection` | `@/components/shared/tab-summary-section` | Color-coded summary bar for tabs |
+| `PoweredMartialSlider` | `@/components/shared/powered-martial-slider` | Power/martial proficiency allocation slider |
+
 ## Best Practices
 
-1. **Use semantic tokens** instead of hardcoded colors
+1. **Use semantic tokens** instead of hardcoded colors (see Color Migration Guide above)
 2. **Import from `@/components/ui`** for all shared components
 3. **Use CSS utility classes** from globals.css for consistent styling
 4. **Prefer Lucide icons** over inline SVGs
 5. **Use the design system colors** from the constants file for dynamic styling
 6. **Follow the component patterns** established in this guide
+7. **Wrap `React.memo`** around list item components (GridListRow, SkillRow already wrapped)
+8. **Use `ErrorBoundary`** around sections that may fail independently
+9. **Use `apiFetch`** from `@/lib/api-client` instead of raw `fetch` in services
 
 ---
 

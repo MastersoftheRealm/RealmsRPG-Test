@@ -4,7 +4,7 @@
  * Tool for creating custom powers using the power parts system.
  * 
  * Features:
- * - Select power parts from RTDB database
+ * - Select power parts from Codex API (Prisma/Supabase)
  * - Configure option levels for each part
  * - Calculate energy and training point costs
  * - Save to user's library (Prisma)
@@ -22,7 +22,7 @@ import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
-import { NumberStepper } from '@/components/creator/number-stepper';
+import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
   calculatePowerCosts,
@@ -794,7 +794,7 @@ function PowerCreatorContent() {
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Range</h3>
             <div className="flex flex-wrap items-center gap-4">
-              <NumberStepper
+              <ValueStepper
                 value={range.steps}
                 onChange={(v) => setRange((r) => ({ ...r, steps: v }))}
                 label="Range:"
@@ -824,7 +824,7 @@ function PowerCreatorContent() {
               </select>
               {area.type !== 'none' && (
                 <>
-                  <NumberStepper
+                  <ValueStepper
                     value={area.level}
                     onChange={(v) => setArea((a) => ({ ...a, level: v }))}
                     label="Level:"
@@ -1005,7 +1005,7 @@ function PowerCreatorContent() {
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Damage (Optional)</h3>
             <div className="flex flex-wrap items-center gap-4">
-              <NumberStepper
+              <ValueStepper
                 value={damage.amount}
                 onChange={(v) => setDamage((d) => ({ ...d, amount: v }))}
                 label="Dice:"

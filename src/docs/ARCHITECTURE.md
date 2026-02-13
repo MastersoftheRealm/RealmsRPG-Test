@@ -107,7 +107,7 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 | `src/types/items.ts` | UserItem, SavedDamage |
 | `src/types/abilities.ts` | Abilities, Defenses |
 | `src/types/skills.ts` | Skill, SubSkill |
-| `src/hooks/use-rtdb.ts` | PowerPart, TechniquePart, ItemProperty (legacy filename; uses Codex internally) |
+| `src/hooks/use-rtdb.ts` | PowerPart, TechniquePart, ItemProperty, CreatureFeat (legacy filename — originally "RTDB" for Firebase Realtime DB, now fetches from Codex API via React Query; rename candidate for a future cleanup pass) |
 
 ---
 

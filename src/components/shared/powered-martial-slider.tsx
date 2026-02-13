@@ -104,7 +104,7 @@ export function PoweredMartialSlider({
               compact ? 'text-[10px]' : 'text-xs'
             )}>Martial</span>
             <span className={cn(
-              'font-bold text-red-600',
+              'font-bold text-martial-dark',
               compact ? 'text-sm' : 'text-lg'
             )}>{maxPoints - sliderValue}</span>
           </div>
@@ -114,7 +114,7 @@ export function PoweredMartialSlider({
       {/* Custom Slider */}
       <div className="relative py-2">
         <div className={cn(
-          'absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-violet-500 to-red-500',
+          'absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-power-dark to-martial-dark',
           compact ? 'h-1.5' : 'h-2'
         )} />
         <input

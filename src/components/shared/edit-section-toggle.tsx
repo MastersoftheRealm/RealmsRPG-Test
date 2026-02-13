@@ -33,14 +33,14 @@ interface EditSectionToggleProps {
 
 const STATE_COLORS: Record<EditState, { icon: string; glow?: string }> = {
   'normal': {
-    icon: 'text-blue-500 hover:text-blue-600',
+    icon: 'text-primary-500 hover:text-primary-600',
   },
   'has-points': {
-    icon: 'text-green-500 hover:text-green-600',
+    icon: 'text-success-600 hover:text-success-700',
     glow: 'drop-shadow-[0_0_3px_rgba(34,197,94,0.5)]',
   },
   'over-budget': {
-    icon: 'text-red-500 hover:text-red-600',
+    icon: 'text-danger-600 hover:text-danger-700',
     glow: 'drop-shadow-[0_0_3px_rgba(239,68,68,0.5)]',
   },
 };

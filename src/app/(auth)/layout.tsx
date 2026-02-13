@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Auth Layout
  * ============
  * Branded layout for authentication pages matching vanilla design
@@ -41,7 +41,7 @@ export default function AuthLayout({
       </div>
 
       {/* Main content - side by side on desktop */}
-      <main className="relative z-20 flex-1 flex items-center justify-center px-4 py-12">
+      <main id="main-content" className="relative z-20 flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           {/* Brand Section */}
           <div className="flex-1 text-center lg:text-left">

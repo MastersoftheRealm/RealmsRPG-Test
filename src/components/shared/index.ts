@@ -26,7 +26,6 @@ export { EditSectionToggle, getEditState, type EditState } from './edit-section-
 // Item display components
 export { ItemCard } from './item-card';
 export { ItemList } from './item-list';
-export { ItemSelectionModal } from './item-selection-modal';
 
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';
@@ -77,7 +76,6 @@ export {
   SearchInput,
   SortHeader,
   FilterSection,
-  ColumnHeaders,
   EmptyState as ListEmptyState,
   LoadingState,
   ErrorDisplay,
@@ -86,7 +84,6 @@ export type {
   SearchInputProps, 
   SortHeaderProps, 
   FilterSectionProps,
-  ColumnHeaderProps,
   EmptyStateProps,
   ErrorDisplayProps,
 } from './list-components';

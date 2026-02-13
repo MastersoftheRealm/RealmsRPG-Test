@@ -30,7 +30,6 @@
   --color-primary-light: #1a6aa8;
   --color-primary-accent: #4584b6;
   --color-primary-foreground: #f9f9f9;
-  --color-on-primary: #f9f9f9;
 
   /* ---------------------------------------------------------------------------
      ACCENT / GOLD COLORS (Warm accent for highlights)
@@ -49,11 +48,8 @@
   
   /* Accent semantic aliases */
   --color-accent-gold: #c79956;
-  --color-accent-bronze: #d99735;
   --color-accent-chip: #fef8f0;
   --color-accent-light: #fdf0dc;
-  --color-accent-medium: #f5d094;
-  --color-accent-dark: #b3863c;
 
   /* ---------------------------------------------------------------------------
      SECONDARY / UTILITY COLORS (Cool blue for utilities)
@@ -102,10 +98,8 @@
   --color-surface: #ffffff;
   --color-surface-alt: #f9f9f9;
   --color-surface-secondary: #f6f6f6;
-  --color-surface-dark: #302e33;
   --color-background: #f6f6f6;
   --color-card: #ffffff;
-  --color-card-foreground: #091d2d;
 
   /* ---------------------------------------------------------------------------
      STATUS COLORS (Success, Danger, Warning, Info)
@@ -277,6 +271,12 @@
    BASE STYLES
    ============================================================================= */
 @layer base {
+  /* -----------------------------------------------------------------------
+     Legacy :root aliases — kept for backward compatibility with components
+     that reference var(--background), var(--surface), etc. directly.
+     Canonical tokens are defined in @theme above (--color-*).
+     TODO: Migrate all usages to Tailwind v4 @theme tokens and remove these.
+     ----------------------------------------------------------------------- */
   :root {
     --background: #f6f6f6;
     --foreground: #091d2d;
@@ -288,16 +288,12 @@
     --muted-foreground: #707070;
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
-    /* Light theme surface/background tokens */
     --surface: #ffffff;
     --surface-alt: #f9f9f9;
     --surface-secondary: #f6f6f6;
-    --background: #f6f6f6;
     --text-primary: #091d2d;
     --text-secondary: #41464a;
     --text-muted: #707070;
-    --border-color: #707070;
-    --border-light-color: #dad9d9;
   }
 
   .dark {
@@ -602,19 +598,6 @@
     @apply bg-surface rounded-xl border border-border-light shadow-sm;
   }
   
-  .card-padded {
-    @apply bg-surface rounded-xl border border-border-light shadow-sm p-6;
-  }
-  
-  .card-interactive {
-    @apply bg-surface rounded-xl border border-border-light shadow-sm
-           transition-all duration-200 cursor-pointer
-           hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5;
-  }
-  
-  .card-selected {
-    @apply border-primary-600 bg-primary-50 shadow-md ring-2 ring-primary-200;
-  }
 
   /* ---------------------------------------------------------------------------
      CHIP / BADGE COMPONENTS

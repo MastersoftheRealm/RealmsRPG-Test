@@ -209,8 +209,8 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                     key={i}
                     className={cn(
                       'flex flex-col items-center rounded p-1',
-                      r === lastRoll.dieType ? 'bg-green-200 dark:bg-green-900/40' :
-                      r === 1 ? 'bg-red-200 dark:bg-red-900/40' : 'bg-surface-alt'
+                      r === lastRoll.dieType ? 'bg-success-200 dark:bg-success-900/40' :
+                      r === 1 ? 'bg-danger-200 dark:bg-danger-900/40' : 'bg-surface-alt'
                     )}
                   >
                     <DieResultDisplay value={r} dieType={lastRoll.dieType} />
@@ -219,7 +219,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                 {lastRoll.modifier !== 0 && (
                   <span className={cn(
                     'px-2 py-0.5',
-                    lastRoll.modifier > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    lastRoll.modifier > 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'
                   )}>
                     {formatModifier(lastRoll.modifier)}
                   </span>
@@ -235,7 +235,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
             <span className="text-sm text-text-secondary">Recent Rolls</span>
             <button
               onClick={clearHistory}
-              className="p-1 text-text-muted hover:text-red-500 transition-colors"
+              className="p-1 text-text-muted hover:text-danger-500 transition-colors"
               title="Clear history"
             >
               <Trash2 className="w-4 h-4" />

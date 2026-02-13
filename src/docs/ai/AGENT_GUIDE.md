@@ -94,7 +94,7 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 
 - **GridListRow** — Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator
 - **SkillRow** — skills-section, skills-step, creature-creator
-- **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, number-stepper, encounter-tracker
+- **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker
 - **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow) — unique base-skill selector UX
 
@@ -105,7 +105,8 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 | Tasks | `src/docs/ai/AI_TASK_QUEUE.md` |
 | Changelog | `src/docs/ai/AI_CHANGELOG.md` |
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
-| Game rules audit | `src/docs/GAME_RULES_AUDIT.md` — code vs. rulebook mismatches |
+| Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
+| Codebase audit | `src/docs/ai/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
 
 ## Creating New Tasks
 

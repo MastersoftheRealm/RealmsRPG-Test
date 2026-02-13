@@ -22,16 +22,15 @@ import {
 } from '@/components/shared';
 import { 
   FilterSection, 
-  ChipSelect, 
-  SelectFilter 
+  ChipSelect,
 } from '@/components/codex';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
 import type { ArchetypeCategory } from '@/types';
 
-// Grid columns for feat display (Name, Level, Category, Ability, Uses, Add)
-const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 40px';
+// Grid columns for feat display (Name, Category, Ability, Uses, Add)
+const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
 
 interface SelectedFeat {
   id: string;
@@ -43,6 +42,7 @@ interface SelectedFeat {
 interface FeatFilters {
   search: string;
   categories: string[];
+  abilityFilter: string[];
   /** Either archetype feats or character feats (no "all" in creator) */
   featType: 'archetype' | 'character';
   hideUnqualified: boolean;
@@ -59,6 +59,7 @@ export function FeatsStep() {
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
     categories: [],
+    abilityFilter: [],
     featType: 'archetype', // Either/or: picking archetype or character feats
     hideUnqualified: true,
     sortCol: 'name',
@@ -105,6 +106,18 @@ export function FeatsStep() {
     const cats = new Set<string>();
     feats.forEach((f: Feat) => f.category && cats.add(f.category));
     return Array.from(cats).sort();
+  }, [feats]);
+
+  // Get unique abilities for filter dropdown
+  const abilityOptions = useMemo(() => {
+    if (!feats) return [];
+    const abils = new Set<string>();
+    feats.forEach((f: Feat) => {
+      if (!f.ability) return;
+      if (Array.isArray(f.ability)) f.ability.forEach(a => abils.add(a));
+      else abils.add(f.ability);
+    });
+    return Array.from(abils).sort();
   }, [feats]);
 
   // Check if character meets feat requirements
@@ -177,6 +190,13 @@ export function FeatsStep() {
       // Category filter (multi-select)
       if (filters.categories.length > 0 && !filters.categories.includes(feat.category)) {
         return false;
+      }
+      
+      // Ability filter (multi-select)
+      if (filters.abilityFilter.length > 0) {
+        if (!feat.ability) return false;
+        const featAbilities = Array.isArray(feat.ability) ? feat.ability : [feat.ability];
+        if (!featAbilities.some(a => filters.abilityFilter.includes(a))) return false;
       }
       
       // Hide unqualified filter (auto-filter based on character stats)
@@ -304,7 +324,6 @@ export function FeatsStep() {
         description={feat.description}
         gridColumns={FEAT_GRID_COLUMNS}
         columns={[
-          { key: 'Level', value: feat.lvl_req ?? '-' },
           { key: 'Category', value: feat.category || '-' },
           { key: 'Ability', value: feat.ability || '-' },
           { key: 'Uses', value: feat.uses_per_rec ? `${feat.uses_per_rec}/${feat.rec_period || 'rest'}` : '-' },
@@ -462,9 +481,26 @@ export function FeatsStep() {
         />
       </div>
 
+      {/* Feat Type Toggle */}
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          type="button"
+          onClick={() => setFilters(f => ({ ...f, featType: f.featType === 'archetype' ? 'character' : 'archetype' }))}
+          className={cn(
+            'px-4 py-2 rounded-lg border text-sm font-semibold transition-colors',
+            filters.featType === 'archetype'
+              ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 dark:border-amber-600 text-amber-800 dark:text-amber-200'
+              : 'bg-blue-100 dark:bg-blue-900/40 border-blue-400 dark:border-blue-600 text-blue-800 dark:text-blue-200'
+          )}
+        >
+          {filters.featType === 'archetype' ? 'Showing Archetype Feats' : 'Showing Character Feats'}
+        </button>
+        <span className="text-xs text-text-muted">Click to switch</span>
+      </div>
+
       {/* Filters Panel - Codex Style */}
       <FilterSection>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Category Filter */}
           <ChipSelect
             label="Category"
@@ -475,16 +511,14 @@ export function FeatsStep() {
             onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
           />
 
-          {/* Feat Type: either/or (archetype or character) */}
-          <SelectFilter
-            label="Showing"
-            value={filters.featType}
-            options={[
-              { value: 'archetype', label: 'Archetype feats' },
-              { value: 'character', label: 'Character feats' },
-            ]}
-            onChange={(v) => setFilters(f => ({ ...f, featType: (v || 'archetype') as 'archetype' | 'character' }))}
-            placeholder="Archetype feats"
+          {/* Ability Filter */}
+          <ChipSelect
+            label="Ability"
+            placeholder="All abilities"
+            options={abilityOptions.map(a => ({ value: a, label: a }))}
+            selectedValues={filters.abilityFilter}
+            onSelect={(v) => setFilters(f => ({ ...f, abilityFilter: [...f.abilityFilter, v] }))}
+            onRemove={(v) => setFilters(f => ({ ...f, abilityFilter: f.abilityFilter.filter(a => a !== v) }))}
           />
 
           {/* Qualification Filter */}
@@ -493,6 +527,7 @@ export function FeatsStep() {
               Qualification
             </label>
             <button
+              type="button"
               onClick={() => setFilters(f => ({ ...f, hideUnqualified: !f.hideUnqualified }))}
               className={cn(
                 'w-full px-3 py-2 rounded-lg border text-sm font-medium transition-colors text-left',
@@ -514,7 +549,6 @@ export function FeatsStep() {
       <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light rounded-t-lg text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300"
            style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}>
         <SortHeader label="NAME" col="name" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
-        <SortHeader label="LEVEL" col="lvl_req" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <SortHeader label="ABILITY" col="ability" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
         <span className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">USES</span>

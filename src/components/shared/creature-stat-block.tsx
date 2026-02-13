@@ -173,7 +173,7 @@ function DefenseRow({ defenses }: { defenses: CreatureDefenses }) {
       {entries.map((defense) => {
         const value = defenses[defense] ?? 0;
         return (
-          <span key={defense} className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+          <span key={defense} className="px-2 py-0.5 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded">
             {getDefenseAbbrev(defense)} {formatModifier(value)}
           </span>
         );
@@ -262,7 +262,7 @@ export function CreatureStatBlock({
                 <span className="font-medium">Lv {creature.level}</span>
               )}
               <span className="flex items-center gap-1">
-                <Heart className="w-4 h-4 text-red-400" />
+                <Heart className="w-4 h-4 text-danger-400" />
                 {hp}
               </span>
               {ep > 0 && (
@@ -375,7 +375,7 @@ export function CreatureStatBlock({
               )}
               {creature.feats && creature.feats.length > 0 && (
                 <div className="text-xs">
-                  <span className="font-semibold text-blue-700 dark:text-blue-300">Feats: </span>
+                  <span className="font-semibold text-primary-700 dark:text-primary-300">Feats: </span>
                   <span className="text-text-secondary">
                     {creature.feats.map(f => f.name).join(', ')}
                   </span>
@@ -421,7 +421,7 @@ export function CreatureStatBlock({
                   variant="ghost"
                   size="sm"
                   onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30"
+                  className="text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30"
                 >
                   <Trash2 className="w-4 h-4" />
                   Delete

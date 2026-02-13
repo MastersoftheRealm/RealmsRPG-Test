@@ -11,21 +11,9 @@ import { useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { ItemList, ItemSelectionModal } from '@/components/shared';
+import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { Button, IconButton } from '@/components/ui';
-import { transformPower, transformTechnique } from '@/lib/item-transformers';
 import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, type PowerPart, type TechniquePart } from '@/hooks';
-import type { DisplayItem, SortOption } from '@/types';
-
-const POWER_SORTS: SortOption[] = [
-  { id: 'name', label: 'Name', field: 'name', type: 'string' },
-  { id: 'cost', label: 'Energy', field: 'cost', type: 'number' },
-];
-
-const TECHNIQUE_SORTS: SortOption[] = [
-  { id: 'name', label: 'Name', field: 'name', type: 'string' },
-  { id: 'cost', label: 'TP', field: 'cost', type: 'number' },
-];
 
 export function PowersStep() {
   const { draft, updateDraft, nextStep, prevStep } = useCharacterCreatorStore();
@@ -51,45 +39,47 @@ export function PowersStep() {
     [selectedTechniques]
   );
   
-  // Transform user powers to display items
-  const availablePowers = useMemo((): DisplayItem[] => {
+  // Transform user powers to SelectableItems for UnifiedSelectionModal
+  const availablePowers = useMemo((): SelectableItem[] => {
     return userPowers.map(power => {
       const firstDamage = power.damage?.[0];
-      return transformPower({
+      const damageStr = firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined;
+      return {
         id: power.docId,
         name: power.name,
         description: power.description,
-        parts: power.parts?.map(p => String(p.name || p.id)) || [],
-        damage: firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined,
-      });
+        columns: damageStr ? [{ key: 'damage', value: damageStr }] : undefined,
+        chips: power.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+      };
     });
   }, [userPowers]);
   
-  // Transform user techniques to display items
-  const availableTechniques = useMemo((): DisplayItem[] => {
+  // Transform user techniques to SelectableItems for UnifiedSelectionModal
+  const availableTechniques = useMemo((): SelectableItem[] => {
     return userTechniques.map(tech => {
       const firstDamage = tech.damage?.[0];
-      return transformTechnique({
+      const damageStr = firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined;
+      return {
         id: tech.docId,
         name: tech.name,
         description: tech.description,
-        parts: tech.parts?.map(p => String(p.name || p.id)) || [],
-        damage: firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined,
-      });
+        columns: damageStr ? [{ key: 'damage', value: damageStr }] : undefined,
+        chips: tech.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+      };
     });
   }, [userTechniques]);
   
   // Display items for selected powers/techniques
-  const selectedPowerItems = useMemo((): DisplayItem[] => {
+  const selectedPowerItems = useMemo((): SelectableItem[] => {
     return availablePowers.filter(p => selectedPowerIds.has(p.id));
   }, [availablePowers, selectedPowerIds]);
   
-  const selectedTechniqueItems = useMemo((): DisplayItem[] => {
+  const selectedTechniqueItems = useMemo((): SelectableItem[] => {
     return availableTechniques.filter(t => selectedTechniqueIds.has(t.id));
   }, [availableTechniques, selectedTechniqueIds]);
   
   // Handle power selection - include full parts data for TP calculation
-  const handlePowerSelect = useCallback((items: DisplayItem[]) => {
+  const handlePowerSelect = useCallback((items: SelectableItem[]) => {
     const powers = items.map(item => {
       // Find the full user power to get parts data
       const userPower = userPowers.find(p => p.docId === item.id);
@@ -123,7 +113,7 @@ export function PowersStep() {
   }, [updateDraft, userPowers, powerParts]);
   
   // Handle technique selection - include full parts data for TP calculation
-  const handleTechniqueSelect = useCallback((items: DisplayItem[]) => {
+  const handleTechniqueSelect = useCallback((items: SelectableItem[]) => {
     const techniques = items.map(item => {
       // Find the full user technique to get parts data
       const userTech = userTechniques.find(t => t.docId === item.id);
@@ -249,9 +239,9 @@ export function PowersStep() {
                   <div className="flex items-center gap-3">
                     <Wand2 className="w-4 h-4 text-primary" />
                     <span className="font-medium text-foreground">{power.name}</span>
-                    {power.cost !== undefined && (
+                    {power.columns?.[0] && (
                       <span className="text-sm text-muted-foreground">
-                        {power.cost} {power.costLabel}
+                        {power.columns[0].value}
                       </span>
                     )}
                   </div>
@@ -286,8 +276,8 @@ export function PowersStep() {
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <Swords className="w-5 h-5 text-orange-500" />
+              <div className="w-10 h-10 rounded-lg bg-martial-light flex items-center justify-center">
+                <Swords className="w-5 h-5 text-martial-dark" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-foreground">Techniques</h2>
@@ -299,7 +289,7 @@ export function PowersStep() {
             <Button
               onClick={() => setShowTechniqueModal(true)}
               disabled={userTechniques.length === 0}
-              className="bg-orange-500 hover:bg-orange-600"
+              className="bg-martial-dark hover:bg-martial-text"
             >
               <Plus className="w-4 h-4" />
               Add Techniques
@@ -314,11 +304,11 @@ export function PowersStep() {
                   className="flex items-center justify-between p-3 rounded-lg border border-border bg-card"
                 >
                   <div className="flex items-center gap-3">
-                    <Swords className="w-4 h-4 text-orange-500" />
+                    <Swords className="w-4 h-4 text-martial-dark" />
                     <span className="font-medium text-foreground">{tech.name}</span>
-                    {tech.cost !== undefined && (
+                    {tech.columns?.[0] && (
                       <span className="text-sm text-muted-foreground">
-                        {tech.cost} {tech.costLabel}
+                        {tech.columns[0].value}
                       </span>
                     )}
                   </div>
@@ -364,7 +354,7 @@ export function PowersStep() {
       </div>
       
       {/* Power Selection Modal */}
-      <ItemSelectionModal
+      <UnifiedSelectionModal
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
         onConfirm={handlePowerSelect}
@@ -372,13 +362,13 @@ export function PowersStep() {
         title="Select Powers"
         description="Choose powers from your library for your character to know."
         initialSelectedIds={selectedPowerIds}
-        sortOptions={POWER_SORTS}
         searchPlaceholder="Search powers..."
-        loading={powersLoading}
+        itemLabel="power"
+        isLoading={powersLoading}
       />
       
       {/* Technique Selection Modal */}
-      <ItemSelectionModal
+      <UnifiedSelectionModal
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
         onConfirm={handleTechniqueSelect}
@@ -386,9 +376,9 @@ export function PowersStep() {
         title="Select Techniques"
         description="Choose techniques from your library for your character to know."
         initialSelectedIds={selectedTechniqueIds}
-        sortOptions={TECHNIQUE_SORTS}
         searchPlaceholder="Search techniques..."
-        loading={techniquesLoading}
+        itemLabel="technique"
+        isLoading={techniquesLoading}
       />
     </div>
   );

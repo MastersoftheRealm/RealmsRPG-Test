@@ -12,9 +12,10 @@
 
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
-import Cropper from 'react-easy-crop';
+import { useState, useCallback, useRef, lazy, Suspense } from 'react';
 import type { Area, Point } from 'react-easy-crop';
+
+const Cropper = lazy(() => import('react-easy-crop'));
 import { cn } from '@/lib/utils';
 import { Modal } from '@/components/ui';
 import { Button, Alert } from '@/components/ui';
@@ -273,22 +274,24 @@ export function ImageUploadModal({
         ) : (
           /* ============ CROP EDITOR ============ */
           <>
-            {/* Crop area */}
+            {/* Crop area (lazy-loaded) */}
             <div className="relative w-full h-[400px] bg-black/90 rounded-xl overflow-hidden">
-              <Cropper
-                image={imageSrc}
-                crop={crop}
-                zoom={zoom}
-                aspect={effectiveAspect}
-                cropShape={cropShape}
-                onCropChange={setCrop}
-                onCropComplete={onCropComplete}
-                onZoomChange={setZoom}
-                showGrid={false}
-                style={{
-                  containerStyle: { borderRadius: '0.75rem' },
-                }}
-              />
+              <Suspense fallback={<div className="flex items-center justify-center h-full text-text-muted">Loading editor...</div>}>
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={effectiveAspect}
+                  cropShape={cropShape}
+                  onCropChange={setCrop}
+                  onCropComplete={onCropComplete}
+                  onZoomChange={setZoom}
+                  showGrid={false}
+                  style={{
+                    containerStyle: { borderRadius: '0.75rem' },
+                  }}
+                />
+              </Suspense>
             </div>
 
             {/* Zoom slider */}

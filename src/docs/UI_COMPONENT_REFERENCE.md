@@ -205,10 +205,6 @@ Modal usage notes: any chip/list/collapsible can be used inside a modal; no moda
 - Props: `isOpen`, `onClose`, `onConfirm`, `itemName`, `itemType`
 - Pattern: Displays warning message with item name, requires confirmation
 
-**ItemSelectionModal** - Modal for selecting items from a list. File: [src/components/shared/item-selection-modal.tsx](src/components/shared/item-selection-modal.tsx#L1)
-- Props: `isOpen`, `onClose`, `onSelect`, `items`, `selectedItems?`, `title`
-- Pattern: Displays searchable/filterable list with selection toggles
-
 **UnifiedSelectionModal** - Generic selection modal using GridListRow. File: [src/components/shared/unified-selection-modal.tsx](src/components/shared/unified-selection-modal.tsx#L1)
 - Props: `isOpen`, `onClose`, `title`, `items`, `onSelect`, `renderItem`, `searchFilter`
 - Pattern: Highly configurable for any selection scenario (skills, feats, powers, etc.)
@@ -986,7 +982,7 @@ Based on the comprehensive audit, here are key patterns and recommendations:
 
 4. **Modal Patterns**
    - **Issue:** Multiple modal patterns with inconsistent APIs:
-     - Generic modals (DeleteConfirmModal, ItemSelectionModal, UnifiedSelectionModal)
+     - Generic modals (DeleteConfirmModal, UnifiedSelectionModal)
      - Domain-specific modals (AddFeatModal, SpeciesModal, AddLibraryItemModal)
      - Creator modals (LoadFromLibraryModal)
    - **Recommendation:**

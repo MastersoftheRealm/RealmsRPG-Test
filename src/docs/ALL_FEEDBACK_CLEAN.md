@@ -136,7 +136,7 @@ Notes:
 ### 18) Encounters System (Major Redesign)
 - **Rename:** "Encounter Tracker" → "Encounters" (hub page).
 - **Encounters hub:** List view of saved encounters; filter, search, sort; create new (combat, skill, or mixed); click to open.
-- **Persist:** Save encounters to Firestore by ID; replace local storage. Save/return to sessions (turns, AP, HP tracked).
+- **Persist:** Save encounters to Supabase/Prisma by ID; replace local storage. Save/return to sessions (turns, AP, HP tracked).
 - **Combat Tracker:** Designate current encounter tracker as combat-specific; tied to encounter ID.
 - **Skill Encounter page:** Add characters; track skill rolls; successes vs failures; required successes/failures; DS-based resolution; reference GAME_RULES.md (DS = 10 + ½ Party Level, Required Successes = # Characters + 1).
 - **Mixed Encounter page:** Combine combat + skill functionality; reuse components from both.
@@ -187,10 +187,10 @@ Notes:
 - [x] Unify stepper styles across site (less stark colors). (TASK-071)
 - [ ] Archetype prof slider: hide unless pencil clicked; show simple Power/Martial values otherwise. (TASK-101)
 - [ ] Add creatures from library to encounter tracker (auto HP/EN, quantity). (TASK-102)
-- [ ] Encounters hub: rename to Encounters, list/create/filter/search/sort. (TASK-103)
-- [ ] Persist encounters to Firestore; save/return to sessions. (TASK-104)
-- [ ] Designate combat tracker; create skill encounter page; create mixed encounter page. (TASK-105, TASK-106, TASK-107)
-- [ ] Campaign integration: add characters from campaigns to encounters. (TASK-108)
+- [x] Encounters hub: rename to Encounters, list/create/filter/search/sort. (TASK-103)
+- [x] Persist encounters to Supabase/Prisma; save/return to sessions. (TASK-104)
+- [x] Designate combat tracker; create skill encounter page; create mixed encounter page. (TASK-105, TASK-106, TASK-107)
+- [x] Campaign integration: add characters from campaigns to encounters. (TASK-108)
 - [x] Navbar: move Campaigns to right of RM Tools, left of About. (TASK-153)
 - [x] Admin Codex: display "-" for feat level 0 in list. (TASK-154)
 - [x] Admin Codex: fix list refresh after delete; unify UI with Codex tabs. (TASK-155)
@@ -199,12 +199,12 @@ Notes:
 - [x] Create centralized codex schema reference doc for AI. (TASK-158)
 - [ ] Admin Codex: reduce input lag in edit mode. (TASK-159 — deferred)
 - [x] Admin Codex: array fields use dropdowns (skills, etc.), not raw IDs. (TASK-160)
-- [ ] Campaign–Encounter: attach campaign to encounter; "Add all Characters" button. (TASK-161)
-- [ ] Encounter combatants: fix HP/EN loading when combatant tied to user character. (TASK-162)
-- [ ] Encounter roll log: add RM roll log (personal + campaign tabs), same UI as character sheet. (TASK-163)
-- [ ] Roll log consistency: styles, date display ("unavailable" fix), tabs across encounter/campaign/sheet. (TASK-164)
-- [ ] Roll log real-time: Supabase Realtime for campaign rolls sync. (TASK-165)
-- [ ] Health/Energy real-time: sync current HP/EN between encounters and characters. (TASK-166)
+- [x] Campaign–Encounter: attach campaign to encounter; "Add all Characters" button. (TASK-161)
+- [x] Encounter combatants: fix HP/EN loading when combatant tied to user character. (TASK-162)
+- [x] Encounter roll log: add RM roll log (personal + campaign tabs), same UI as character sheet. (TASK-163)
+- [x] Roll log consistency: styles, date display ("unavailable" fix), tabs across encounter/campaign/sheet. (TASK-164)
+- [x] Roll log real-time: Supabase Realtime for campaign rolls sync. (TASK-165)
+- [x] Health/Energy real-time: sync current HP/EN between encounters and characters. (TASK-166)
 - [ ] Character visibility: public (link share, view-only); campaign (RM + members view); private→campaign on join. (TASK-167)
 - [ ] Character-derived content visibility: powers/techniques/items in private library visible (view-only) when viewing char. (TASK-168)
 
@@ -675,3 +675,17 @@ Notes
 - Priority: High  
 - Feedback: Creator feats either/or (archetype or character). "Showing all feats" not "Show all feats". Ability sort in creator. Selected feat chips expandable with description. Add power/technique modals align with add-feat and library (headers, collapsed views, add on right, shared styles). Feats tab: uses as steppers; remove redundant X/X after name; widen name column, uses column right.  
 - Expected: Implemented 2026-02-13.
+
+**Raw Feedback Log — 2/13/2026 (session batch 3)**  
+- Date: 2026-02-13  
+- Context: Dark theme, feat creator, sub-skills, species skill, modals, armaments  
+- Priority: High  
+- Feedback:
+  1. Dark theme text: many dark theme font colors are too dark on backgrounds. Example: home page feature cards text on neutral-300.
+  2. Archetype feats shown twice in dropdown → change to toggle button "Showing Archetype" / "Showing Character" feats.
+  3. Sub-skills (e.g., Tinker) should count as proficient for feat requirements. Proficiency check failing despite sub-skill being added.
+  4. Remove Level header from feat list in character creator (unnecessary since filtered to available feats). Make Ability a real filter, not just a sort header.
+  5. Add technique/power modals should match character sheet column display (Action, Damage, Area for powers; Action, Weapon for techniques).
+  6. Species with 0 species skills: finalize validation using wrong max skill points (missing extra skill point from species skill "0" = Any).
+  7. Armor/weapons: critical range showing raw bonus instead of threshold, armor DR fallback from properties needed.
+- Expected: All items implemented 2026-02-13.

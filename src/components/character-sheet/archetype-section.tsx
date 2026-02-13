@@ -448,9 +448,9 @@ export function ArchetypeSection({
   
   // Three-state color for proficiency points
   const getProfPointsColorClass = () => {
-    if (remainingProfPoints > 0) return 'bg-green-100 text-green-700'; // Has points
-    if (remainingProfPoints < 0) return 'bg-red-100 text-red-700'; // Over budget
-    return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'; // Perfect
+    if (remainingProfPoints > 0) return 'bg-success-100 text-success-700'; // Has points
+    if (remainingProfPoints < 0) return 'bg-danger-100 text-danger-700'; // Over budget
+    return 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'; // Perfect
   };
   
   // Calculate Power Potency: 10 + pow_prof + pow_abil value
@@ -568,15 +568,15 @@ export function ArchetypeSection({
           )}
           {martialProf > 0 && (
             <div className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20',
+              'flex items-center gap-2 px-4 py-2 rounded-lg bg-martial-light dark:bg-martial-light',
               powerProf === 0 && 'flex-1'
             )}>
               <span className={cn(
-                'font-semibold text-red-600 dark:text-red-300',
+                'font-semibold text-martial-text dark:text-martial-border',
                 powerProf === 0 ? 'text-base' : 'text-xs'
               )}>Martial Prof.</span>
               <span className={cn(
-                'font-bold text-red-700 dark:text-red-200',
+                'font-bold text-martial-dark dark:text-martial-border',
                 powerProf === 0 ? 'text-lg' : 'text-sm'
               )}>{martialProf}</span>
             </div>
@@ -586,7 +586,7 @@ export function ArchetypeSection({
       
       {/* Mixed Archetype Milestone Choices */}
       {archetypeType === 'mixed' && milestoneLevels.length > 0 && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-purple-50 border border-amber-200 rounded-lg">
+        <div className="mb-4 p-3 bg-gradient-to-r from-warning-50 to-power-light border border-warning-200 rounded-lg">
           <SectionHeader title="Milestone Choices" className="mb-2" />
           <div className="flex flex-wrap gap-2">
             {milestoneLevels.map((milestoneLevel) => {
@@ -613,8 +613,8 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'feat'
-                            ? 'bg-red-500 text-white'
-                            : 'bg-red-100 text-red-600 hover:bg-red-200'
+                            ? 'bg-martial-dark text-white'
+                            : 'bg-martial-light text-martial-text hover:bg-martial-border/30'
                         )}
                         title="Gain +1 Bonus Archetype Feat"
                       >
@@ -627,7 +627,7 @@ export function ArchetypeSection({
                       currentChoice === 'innate'
                         ? 'bg-violet-100 text-violet-700'
                         : currentChoice === 'feat'
-                          ? 'bg-red-100 text-red-700'
+                          ? 'bg-martial-light text-martial-dark'
                           : 'bg-surface text-text-muted italic'
                     )}>
                       {currentChoice === 'innate' ? '✨ Innate' : 
@@ -648,9 +648,9 @@ export function ArchetypeSection({
       {(powerProf > 0 || martialProf > 0) && (
         <div className="flex gap-3 mb-4">
           {martialProf > 0 && (
-            <div className="flex-1 bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-red-700 dark:text-red-300">Martial Potency</span>
-              <span className="text-lg font-bold text-red-800" title="10 + Martial Prof + Martial Ability">
+            <div className="flex-1 bg-martial-light dark:bg-martial-light rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-sm font-medium text-martial-text dark:text-martial-border">Martial Potency</span>
+              <span className="text-lg font-bold text-martial-dark" title="10 + Martial Prof + Martial Ability">
                 {martialPotency}
               </span>
             </div>

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
@@ -13,14 +13,14 @@ import { CONDITION_OPTIONS } from './encounter-tracker-constants';
 import type { CombatantCardProps } from './encounter-tracker-types';
 
 function getHealthBarColor(current: number, max: number): string {
-  if (max <= 0) return 'bg-red-500';
+  if (max <= 0) return 'bg-danger-500';
   const pct = (current / max) * 100;
-  if (pct > 50) return 'bg-green-500';
-  if (pct > 25) return 'bg-amber-500';
-  return 'bg-red-700';
+  if (pct > 50) return 'bg-success-500';
+  if (pct > 25) return 'bg-warning-500';
+  return 'bg-danger-700';
 }
 
-export function CombatantCard({
+export const CombatantCard = memo(function CombatantCard({
   combatant,
   isCurrentTurn,
   isDragOver,
@@ -553,4 +553,4 @@ export function CombatantCard({
       </div>
     </div>
   );
-}
+});

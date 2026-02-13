@@ -415,7 +415,7 @@ export function SkillsAllocationPage({
                   >
                     −
                   </button>
-                  <span className="text-sm font-bold min-w-[36px] text-center text-blue-600 dark:text-blue-400">
+                  <span className="text-sm font-bold min-w-[36px] text-center text-primary-600 dark:text-primary-400">
                     {formatBonus(totalBonus)}
                   </span>
                   <button
@@ -428,7 +428,7 @@ export function SkillsAllocationPage({
                   </button>
                 </div>
                 {current > 0 && (
-                  <span className="text-[9px] text-blue-600 dark:text-blue-400 font-medium mt-0.5">
+                  <span className="text-[9px] text-primary-600 dark:text-primary-400 font-medium mt-0.5">
                     +{current} ({current * 2}sp)
                   </span>
                 )}

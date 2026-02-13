@@ -1,12 +1,40 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // No custom headers needed - Firebase Auth popup handles COOP/COEP automatically
-  //
-  // serverExternalPackages: firebase-admin should be external (not bundled).
-  // Next.js 16 defaults to Turbopack which hashes externals -> ERR_MODULE_NOT_FOUND on Firebase.
-  // Must use "next build --webpack" (see package.json "build" script).
-  serverExternalPackages: ['firebase-admin'],
+  // Security headers for all responses
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

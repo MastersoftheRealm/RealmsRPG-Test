@@ -29,6 +29,11 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
 
+/** Roll initiative: d20 + acuity bonus */
+function rollInitiative(acuity: number): number {
+  return Math.floor(Math.random() * 20) + 1 + acuity;
+}
+
 interface PageParams {
   params: Promise<{ id: string }>;
 }
@@ -160,10 +165,10 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     enabled: isInitialized && !!encounter,
   });
 
-  // New combatant form state
-  const [newCombatant, setNewCombatant] = useState({
+  // New combatant form state — auto-roll initiative with default acuity
+  const [newCombatant, setNewCombatant] = useState(() => ({
     name: '',
-    initiative: 0,
+    initiative: rollInitiative(0),
     acuity: 0,
     maxHealth: 20,
     maxEnergy: 10,
@@ -173,7 +178,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     isAlly: true,
     isSurprised: false,
     quantity: 1,
-  });
+  }));
 
   // Drag-and-drop state
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -259,7 +264,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
       });
     }
     setEncounter(prev => prev ? { ...prev, combatants: [...prev.combatants, ...newCombatants] } : prev);
-    setNewCombatant({ name: '', initiative: 0, acuity: 0, maxHealth: 20, maxEnergy: 10, armor: 0, evasion: 10, combatantType: 'ally', isAlly: true, isSurprised: false, quantity: 1 });
+    setNewCombatant({ name: '', initiative: rollInitiative(0), acuity: 0, maxHealth: 20, maxEnergy: 10, armor: 0, evasion: 10, combatantType: 'ally', isAlly: true, isSurprised: false, quantity: 1 });
   };
 
   const addCombatantsFromModal = (combatants: TrackedCombatant[]) => {
@@ -293,11 +298,12 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
         .map((r) => {
           const d = r.data;
           const abilities = d.abilities || {};
+          const acuity = abilities.acuity ?? 0;
           return {
             id: generateId(),
             name: r.charMeta.characterName,
-            initiative: 0,
-            acuity: abilities.acuity ?? 0,
+            initiative: rollInitiative(acuity),
+            acuity,
             maxHealth: d.health?.max ?? 20,
             currentHealth: (d as Record<string, unknown>).currentHealth as number ?? d.health?.current ?? d.health?.max ?? 20,
             maxEnergy: d.energy?.max ?? 10,

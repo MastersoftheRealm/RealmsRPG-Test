@@ -85,8 +85,8 @@ export function ListHeader({
   return (
     <div
       className={cn(
-        'hidden lg:grid gap-2 px-4 py-2 bg-blue-50 dark:bg-primary-900/30 rounded-lg mb-2 mx-1',
-        'text-xs font-semibold text-blue-700 dark:text-primary-300 uppercase tracking-wide',
+        'hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg mb-2 mx-1',
+        'text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide',
         className
       )}
       style={{ gridTemplateColumns: finalGridTemplate }}
@@ -114,9 +114,9 @@ export function ListHeader({
             key={column.key}
             onClick={() => handleColumnClick(column)}
             className={cn(
-              'flex items-center gap-1 transition-colors hover:text-blue-800 dark:hover:text-primary-200',
+              'flex items-center gap-1 transition-colors hover:text-primary-800 dark:hover:text-primary-200',
               alignStyles[column.align || 'left'],
-              isActive && 'text-blue-800 dark:text-primary-200',
+              isActive && 'text-primary-800 dark:text-primary-200',
               column.className
             )}
           >

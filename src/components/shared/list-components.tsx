@@ -105,49 +105,6 @@ export function FilterSection({
 }
 
 // =============================================================================
-// Column Headers (for table-like lists)
-// =============================================================================
-
-export interface ColumnHeaderProps {
-  columns: { key: string; label: string; width?: string }[];
-  sortState: SortState;
-  onSort: (col: string) => void;
-  className?: string;
-  /** Grid template columns CSS override */
-  gridColumns?: string;
-}
-
-export function ColumnHeaders({ 
-  columns, 
-  sortState, 
-  onSort,
-  className,
-  gridColumns,
-}: ColumnHeaderProps) {
-  return (
-    <div 
-      className={cn(
-        'hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light rounded-t-lg font-medium text-sm text-text-secondary dark:text-primary-200',
-        className
-      )}
-      style={{ 
-        gridTemplateColumns: gridColumns || columns.map(c => c.width || '1fr').join(' ') 
-      }}
-    >
-      {columns.map(col => (
-        <SortHeader
-          key={col.key}
-          label={col.label.toUpperCase()}
-          col={col.key}
-          sortState={sortState}
-          onSort={onSort}
-        />
-      ))}
-    </div>
-  );
-}
-
-// =============================================================================
 // Empty State - Re-export from ui/ for backward compatibility
 // =============================================================================
 

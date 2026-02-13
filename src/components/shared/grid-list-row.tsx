@@ -18,7 +18,7 @@
  * - Accessible and responsive
  */
 
-import { useState, ReactNode } from 'react';
+import { useState, memo, ReactNode } from 'react';
 import { Edit, Copy, Zap, Check, Plus, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, IconButton } from '@/components/ui';
@@ -149,14 +149,14 @@ const BADGE_COLORS = {
   blue: 'bg-info-100 dark:bg-info-900/40 text-info-700 dark:text-info-400',
   purple: 'bg-power-light dark:bg-power-900/30 text-power-text dark:text-power-300',
   green: 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-400',
-  amber: 'bg-tp-light dark:bg-amber-900/30 text-tp-text dark:text-amber-400',
+  amber: 'bg-tp-light dark:bg-warning-900/30 text-tp-text dark:text-warning-400',
   gray: 'bg-surface-alt text-text-secondary',
   red: 'bg-danger-100 dark:bg-danger-900/40 text-danger-700 dark:text-danger-400',
 };
 
 const CHIP_STYLES = {
   default: 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-800/50 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-800/40',
-  cost: 'bg-tp-light dark:bg-amber-900/30 border-tp-border text-tp-text hover:bg-tp-light/80 dark:hover:bg-amber-800/30',
+  cost: 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text hover:bg-tp-light/80 dark:hover:bg-warning-800/30',
   tag: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-800/40',
   warning: 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-800/50 text-danger-700 dark:text-danger-400 hover:bg-danger-100 dark:hover:bg-danger-800/40',
   success: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-800/40',
@@ -168,7 +168,7 @@ const CHIP_STYLES = {
 // Component
 // =============================================================================
 
-export function GridListRow({
+export const GridListRow = memo(function GridListRow({
   id,
   name,
   description,
@@ -245,7 +245,7 @@ export function GridListRow({
     // Selection state
     isSelected && 'bg-primary-50 border-l-4 border-l-primary-500',
     // Equipped state (green styling)
-    equipped && !isSelected && 'border-green-300 dark:border-green-600/50 bg-green-50 dark:bg-green-900/30',
+    equipped && !isSelected && 'border-success-300 dark:border-success-600/50 bg-success-50 dark:bg-success-900/30',
     // Innate state (purple styling)
     innate && !isSelected && !equipped && 'border-violet-300 dark:border-violet-600/50 bg-violet-50 dark:bg-violet-900/30',
     // Default border
@@ -293,7 +293,7 @@ export function GridListRow({
             <span className="truncate">{name}</span>
             {/* Equipped indicator */}
             {equipped && (
-              <span className="text-green-600 flex-shrink-0">✓</span>
+              <span className="text-success-600 flex-shrink-0">✓</span>
             )}
             {/* Innate indicator */}
             {innate && (
@@ -665,6 +665,8 @@ export function GridListRow({
       )}
     </div>
   );
-}
+});
+
+GridListRow.displayName = 'GridListRow';
 
 export default GridListRow;

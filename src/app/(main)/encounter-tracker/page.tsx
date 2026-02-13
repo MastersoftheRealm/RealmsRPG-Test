@@ -20,6 +20,11 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
 
+/** Roll initiative: d20 + acuity bonus */
+function rollInitiative(acuity: number): number {
+  return Math.floor(Math.random() * 20) + 1 + acuity;
+}
+
 function EncounterTrackerContent() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [encounter, setEncounter] = useState<EncounterState>({
@@ -55,9 +60,9 @@ function EncounterTrackerContent() {
     }
   }, [encounter, isLoaded]);
 
-  const [newCombatant, setNewCombatant] = useState({
+  const [newCombatant, setNewCombatant] = useState(() => ({
     name: '',
-    initiative: 0,
+    initiative: rollInitiative(0),
     acuity: 0,
     maxHealth: 20,
     maxEnergy: 10,
@@ -67,7 +72,7 @@ function EncounterTrackerContent() {
     isAlly: true, // For backwards compatibility
     isSurprised: false,
     quantity: 1,
-  });
+  }));
 
   // Drag-and-drop state
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -206,7 +211,7 @@ function EncounterTrackerContent() {
     
     setNewCombatant({
       name: '',
-      initiative: 0,
+      initiative: rollInitiative(0),
       acuity: 0,
       maxHealth: 20,
       maxEnergy: 10,
