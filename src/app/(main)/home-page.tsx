@@ -1,8 +1,8 @@
 /**
- * Home Page
- * ==========
+ * Home Page Content
+ * =================
  * Landing page with hero banner, feature cards, reviews, and CTAs.
- * Uses the (main) layout for shared Header/Footer.
+ * Not a route — imported by app/page.tsx for the root "/" URL.
  */
 
 'use client';
@@ -115,7 +115,7 @@ function HomeContent() {
         {/* Reviews Section */}
         <div className="flex-1 py-2 pl-24 flex items-center justify-center">
           <div className="flex items-center gap-6 w-full max-w-[781px]">
-            <button 
+            <button
               type="button"
               onClick={handlePrevReview}
               className="p-2 hover:opacity-70 transition-opacity flex-shrink-0"
@@ -130,7 +130,7 @@ function HomeContent() {
                 suppressHydrationWarning
               />
             </button>
-            
+
             <div className="flex-1 text-left">
               <h2 className="font-nunito font-semibold text-3xl text-title mb-6">
                 Reviews
@@ -147,8 +147,8 @@ function HomeContent() {
                 </div>
               </div>
             </div>
-            
-            <button 
+
+            <button
               type="button"
               onClick={handleNextReview}
               className="p-2 hover:opacity-70 transition-opacity flex-shrink-0"
@@ -231,7 +231,7 @@ function FeatureCard({
       className="flex-1 max-w-[286px] group block transition-transform hover:-translate-y-1"
     >
       <div className="flex items-center gap-2 mb-3">
-        {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:group-hover:text-primary-300 transition-colors">{icon}</span>}
+        {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:text-primary-300 transition-colors">{icon}</span>}
         <h3 className="font-display font-normal text-xl text-neutral-800 dark:text-neutral-100 uppercase group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
           {title}
         </h3>

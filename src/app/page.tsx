@@ -1,10 +1,10 @@
 /**
  * Root route "/" — wraps home content with (main) layout so Header/Footer apply.
- * Next.js expects a page at app/page for the root URL; content lives in (main)/page.tsx.
+ * Content lives in (main)/home-page.tsx (non-route) to avoid duplicate route / Vercel manifest issues.
  */
 
 import MainLayout from './(main)/layout';
-import HomePage from './(main)/page';
+import HomePage from './(main)/home-page';
 
 export default function RootPage() {
   return (
