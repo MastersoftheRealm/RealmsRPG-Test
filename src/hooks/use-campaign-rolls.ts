@@ -21,6 +21,7 @@ export function useCampaignRolls(campaignId: string | undefined) {
     queryFn: () => getCampaignRolls(campaignId!),
     enabled: !!campaignId,
     refetchInterval: false,
+    refetchOnWindowFocus: true,
   });
 
   useEffect(() => {

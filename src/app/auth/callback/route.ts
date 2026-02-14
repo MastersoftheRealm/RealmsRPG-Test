@@ -32,13 +32,11 @@ export async function GET(request: Request) {
     if (!error && data.user) {
       const u = data.user;
       const email = u.email ?? '';
-      const displayName = (u.user_metadata?.full_name ?? u.user_metadata?.name ?? email.split('@')[0]) as string;
-      const username = displayName.toLowerCase().replace(/\s+/g, '_').substring(0, 24) || `user_${u.id.slice(0, 8)}`;
       await createUserProfileAction({
         uid: u.id,
         email,
-        username,
-        displayName,
+        username: undefined,
+        displayName: undefined,
       });
       const redirectTo = next.startsWith('/') ? next : `/${next}`;
       return NextResponse.redirect(getRedirectUrl(request, redirectTo));

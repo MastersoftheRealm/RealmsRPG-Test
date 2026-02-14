@@ -7,6 +7,7 @@
 // Auth
 export { useAuth, useAuthStore } from './use-auth';
 export { useAdmin } from './use-admin';
+export { useProfile } from './use-profile';
 
 // Campaigns
 export {

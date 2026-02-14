@@ -648,11 +648,16 @@ export function LibrarySection({
                           onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                           compact
                           expandedContent={
-                            power.range ? (
-                              <div className="text-xs text-text-muted">
-                                <span className="font-medium">Range:</span> {power.range}
-                              </div>
-                            ) : undefined
+                            <>
+                              {power.description && (
+                                <p className="text-sm text-text-muted italic whitespace-pre-wrap mb-2">{power.description}</p>
+                              )}
+                              {power.range && (
+                                <div className="text-xs text-text-muted">
+                                  <span className="font-medium">Range:</span> {power.range}
+                                </div>
+                              )}
+                            </>
                           }
                         />
                       );
@@ -735,11 +740,16 @@ export function LibrarySection({
                           onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                           compact
                           expandedContent={
-                            power.range ? (
-                              <div className="text-xs text-text-muted">
-                                <span className="font-medium">Range:</span> {power.range}
-                              </div>
-                            ) : undefined
+                            <>
+                              {power.description && (
+                                <p className="text-sm text-text-muted italic whitespace-pre-wrap mb-2">{power.description}</p>
+                              )}
+                              {power.range && (
+                                <div className="text-xs text-text-muted">
+                                  <span className="font-medium">Range:</span> {power.range}
+                                </div>
+                              )}
+                            </>
                           }
                         />
                       );
@@ -798,16 +808,23 @@ export function LibrarySection({
                       <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
                     ) : null;
                     
-                    const extraInfo = (tech.range || tech.damage) ? (
-                      <div className="flex flex-wrap gap-3 text-xs text-text-muted">
-                        {tech.range && (
-                          <span><span className="font-medium">Range:</span> {tech.range}</span>
+                    const extraInfo = (
+                      <>
+                        {tech.description && (
+                          <p className="text-sm text-text-muted italic whitespace-pre-wrap mb-2">{tech.description}</p>
                         )}
-                        {tech.damage && (
-                          <span><span className="font-medium">Damage:</span> {tech.damage}</span>
+                        {(tech.range || tech.damage) && (
+                          <div className="flex flex-wrap gap-3 text-xs text-text-muted">
+                            {tech.range && (
+                              <span><span className="font-medium">Range:</span> {tech.range}</span>
+                            )}
+                            {tech.damage && (
+                              <span><span className="font-medium">Damage:</span> {tech.damage}</span>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    ) : undefined;
+                      </>
+                    );
                     
                     return (
                       <GridListRow
@@ -927,7 +944,7 @@ export function LibrarySection({
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
-                        rightSlot={rollContext && (
+                        rightSlot={rollContext?.canRoll !== false && rollContext && (
                           <div className="flex items-center gap-1">
                             <RollButton
                               value={attackBonus}

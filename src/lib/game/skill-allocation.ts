@@ -217,19 +217,19 @@ export function calculateSimpleSkillPointsSpent(
 ): number {
   let spent = 0;
   for (const [skillId, value] of Object.entries(allocations)) {
-    if (value <= 0) continue;
+    if (value < 0) continue;
     const meta = skillMeta.get(skillId) || { isSubSkill: false };
     const isSpecies = speciesSkillIds.has(skillId);
 
     if (isSpecies) {
       spent += Math.max(0, value - 1);
     } else if (meta.isSubSkill) {
-      spent += 1; // proficiency + 1 value
+      spent += 1; // proficiency (value 0 or 1+)
       for (let v = 2; v <= value; v++) {
         spent += getSkillValueIncreaseCost(v - 1, true);
       }
     } else {
-      spent += 1; // proficiency
+      spent += 1; // proficiency (value 0 or 1+)
       for (let v = 1; v < value; v++) {
         spent += getSkillValueIncreaseCost(v, false);
       }

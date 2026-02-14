@@ -252,7 +252,7 @@ export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
               chipsLabel="Properties & Proficiencies"
               totalCost={item.tp}
               costLabel="TP"
-              badges={[{ label: 'Mine', color: 'green' }]}
+              badges={undefined}
               onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
               onDuplicate={() => duplicateItem.mutate(item.id)}

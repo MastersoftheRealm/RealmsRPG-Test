@@ -23,29 +23,46 @@ export async function signOutAction() {
   redirect('/login');
 }
 
+/** Generate a unique default username like Player123456 (no private info). */
+async function generateDefaultUsername(): Promise<string> {
+  const maxAttempts = 20;
+  for (let i = 0; i < maxAttempts; i++) {
+    const num = Math.floor(100000 + Math.random() * 900000);
+    const username = `Player${num}`;
+    const existing = await prisma.userProfile.findFirst({
+      where: { username: username.toLowerCase() },
+    });
+    if (!existing) return username.toLowerCase();
+  }
+  return `Player${Date.now().toString(36)}`;
+}
+
 /**
  * Create or update user profile in Prisma.
+ * Username: pass to set explicitly, or omit for auto-generated "Player123456" (no email/name for privacy).
  */
 export async function createUserProfileAction(data: {
   uid: string;
   email: string;
-  username: string;
+  username?: string;
   displayName?: string;
 }) {
   try {
-    const normalized = data.username.toLowerCase().trim();
+    let username = data.username?.trim();
+    if (!username) username = await generateDefaultUsername();
+    const normalized = username.toLowerCase();
     await prisma.$transaction([
       prisma.userProfile.upsert({
         where: { id: data.uid },
         create: {
           id: data.uid,
           email: data.email,
-          displayName: data.displayName || data.username,
+          displayName: data.displayName ?? null,
           username: normalized,
         },
         update: {
           email: data.email,
-          displayName: data.displayName || data.username,
+          displayName: data.displayName ?? undefined,
           username: normalized,
         },
       }),

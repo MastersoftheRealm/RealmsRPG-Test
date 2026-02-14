@@ -8,7 +8,7 @@
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
-import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage } from '@/lib/calculators';
+import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange } from '@/lib/calculators';
 
 // =============================================================================
 // Types for Enriched Data
@@ -327,6 +327,7 @@ export function enrichItems(
         damage: libraryItem.damage,
         armorValue: libraryItem.armorValue,
         properties: propertyNames,
+        range: itemType === 'weapon' ? formatRange((libraryItem.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]) : undefined,
         // Armor-specific fields
         critRange: libraryItem.criticalRangeIncrease,
         agilityReduction: libraryItem.agilityReduction,

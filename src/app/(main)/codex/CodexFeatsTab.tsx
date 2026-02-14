@@ -25,6 +25,7 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { Input } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import { formatAbilityList } from '@/lib/utils';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 
@@ -88,9 +89,7 @@ function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<stri
         { key: 'Category', value: feat.category || '-' },
         {
           key: 'Ability',
-          value: Array.isArray(feat.ability)
-            ? feat.ability.join(', ')
-            : (feat.ability || '-'),
+          value: formatAbilityList(feat.ability),
         },
         { key: 'Recovery', value: feat.rec_period || '-' },
         { key: 'Uses', value: feat.uses_per_rec || '-' },

@@ -98,7 +98,10 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const listRef = React.useRef<HTMLDivElement>(null);
 
-  const displayRolls = mode === 'campaign' && campaignId ? campaignRolls : rolls;
+  // New rolls at bottom: personal rolls are oldest-first; campaign API returns newest-first so reverse
+  const displayRolls = mode === 'campaign' && campaignId
+    ? [...campaignRolls].reverse()
+    : rolls;
   const isCampaignMode = mode === 'campaign' && campaignId;
   
   // Subscribe to roll events to auto-open the log (personal mode only)
@@ -110,10 +113,10 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
     return unsubscribe;
   }, [subscribeToRolls, campaignId]);
   
-  // Scroll to top when new roll added (newest first)
+  // Scroll to bottom when new roll added (newest at bottom)
   React.useEffect(() => {
     if (isOpen && listRef.current) {
-      listRef.current.scrollTop = 0;
+      listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [displayRolls.length, isOpen]);
   

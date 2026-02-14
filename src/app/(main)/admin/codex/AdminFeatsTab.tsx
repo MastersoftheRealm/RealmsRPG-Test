@@ -26,6 +26,7 @@ import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Plus, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
+import { formatAbilityList } from '@/lib/utils';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 
@@ -429,7 +430,7 @@ export function AdminFeatsTab() {
                 columns={[
                   { key: 'Req. Level', value: (feat.lvl_req === 0 || feat.lvl_req == null) ? '-' : String(feat.lvl_req) },
                   { key: 'Category', value: feat.category || '-' },
-                  { key: 'Ability', value: Array.isArray(feat.ability) ? feat.ability.join(', ') : (feat.ability || '-') },
+                  { key: 'Ability', value: formatAbilityList(feat.ability) },
                   { key: 'Recovery', value: feat.rec_period || '-' },
                   { key: 'Uses', value: (feat.uses_per_rec === 0 || feat.uses_per_rec == null) ? '-' : String(feat.uses_per_rec) },
                 ]}

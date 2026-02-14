@@ -53,3 +53,16 @@ export function formatDamageDisplay(
   
   return '';
 }
+
+/**
+ * Format feat ability (sorting) for list display: "Strength, Intelligence" etc.
+ * Handles array, comma-separated string, or concatenated names (e.g. "StrengthIntelligence" → "Strength, Intelligence").
+ */
+export function formatAbilityList(ability: string | string[] | null | undefined): string {
+  if (ability == null || ability === '') return '-';
+  if (Array.isArray(ability)) return ability.filter(Boolean).join(', ') || '-';
+  const s = String(ability).trim();
+  if (!s) return '-';
+  if (s.includes(',')) return s.split(',').map((a: string) => a.trim()).filter(Boolean).join(', ');
+  return s.replace(/([a-z])([A-Z])/g, '$1, $2');
+}

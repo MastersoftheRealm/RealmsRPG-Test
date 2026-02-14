@@ -182,7 +182,7 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
               chipsLabel="Parts & Proficiencies"
               totalCost={tech.tp}
               costLabel="TP"
-              badges={[{ label: 'Mine', color: 'green' }]}
+              badges={undefined}
               onEdit={() => window.open(`/technique-creator?edit=${tech.id}`, '_blank')}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
               onDuplicate={() => duplicateTechnique.mutate(tech.id)}

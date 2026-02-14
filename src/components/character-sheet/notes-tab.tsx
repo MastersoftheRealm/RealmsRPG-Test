@@ -293,8 +293,8 @@ export function NotesTab({
               variant="primary"
               size="sm"
               onClick={handleRollFallDamage}
-              disabled={!rollContext}
-              title={rollContext ? 'Click to roll' : 'Roll log not available'}
+              disabled={!rollContext || rollContext.canRoll === false}
+              title={rollContext?.canRoll === false ? "Can't roll for another user's character" : rollContext ? 'Click to roll' : 'Roll log not available'}
             >
               {fallDice}
             </Button>

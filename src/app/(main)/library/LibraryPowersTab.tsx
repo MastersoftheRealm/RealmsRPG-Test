@@ -206,7 +206,7 @@ export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={power.tp}
               costLabel="TP"
-              badges={power.itemSource === 'public' ? [{ label: 'Public', color: 'blue' }] : [{ label: 'Mine', color: 'green' }]}
+              badges={power.itemSource === 'public' ? [{ label: 'Public', color: 'blue' }] : undefined}
               onEdit={power.itemSource === 'my' ? () => window.open(`/power-creator?edit=${power.id}`, '_blank') : undefined}
               onDelete={power.itemSource === 'my' ? () => onDelete({ id: power.id, name: power.name } as DisplayItem) : undefined}
               onDuplicate={power.itemSource === 'my' ? () => duplicatePower.mutate(power.id) : undefined}

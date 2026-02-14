@@ -689,3 +689,17 @@ Notes
   6. Species with 0 species skills: finalize validation using wrong max skill points (missing extra skill point from species skill "0" = Any).
   7. Armor/weapons: critical range showing raw bonus instead of threshold, armor DR fallback from properties needed.
 - Expected: All items implemented 2026-02-13.
+
+**Raw Feedback Log — 2/14/2026 (session batch)**  
+- Date: 2026-02-14  
+- Context: Library, feats, skills, ranged weapons, part chips, roll log, character sheet  
+- Priority: High  
+- Feedback:
+  1. Remove the "mine" tags from items in your personal library — it's implied they're yours because you have them in the "My Library" tab.
+  2. Feats have abilities tied to them used to sort them; abilities can be sorted and displayed as a list in codex lists, e.g. "Strength, Intelligence" etc, instead of "StrengthIntelligence" etc. This is how it should be displayed in lists.
+  3. Skills discrepancy between character creator and character sheet: character sheet loaded skills as all having +1 to the skill values AND proficiency. Proficiency costs a skill point regardless of a skill value increase. Character creator adds skills as having skill values of 1, instead of 0 — they should be added as proficient but skill value of 0, not 1. Don't remove a skill you add in character creator when you hit - at 0; instead just don't let you decrease skill stepper skill values below 0.
+  4. The range for my ranged weapon I made didn't save, and/or doesn't display in my character sheet as having the range that it has — it just loads as melee. It seems to be accounting for the range by using acuity as the attack bonus, but not accounting for it regardless.
+  5. The part chips in the powers/techniques should be expandable to show what that part is, what the options are, and what each of their increase levels are. Also all powers and techniques and items etc need to show their descriptions in their expanded views; some are missing these traits.
+  6. When viewing a character sheet that's not your own, don't allow rolling for them/as them if it's not your character.
+  7. Rolls between different roll log locations don't seem to be updating in realtime; you need to refresh to see the updated rolls.
+- Expected: Mine badges removed in My Library; feat abilities as comma-separated list; creator adds skills with value 0 (proficient), stepper doesn't remove at 0; weapon range derived and displayed on sheet; part chips expandable with options/levels; descriptions in expanded views; no rolling when viewing others' characters; roll log realtime across locations.

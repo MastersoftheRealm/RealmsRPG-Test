@@ -541,7 +541,7 @@ export function FinalizeStep() {
         
         // Convert each skill allocation to array format
         Object.entries(skillsRecord).forEach(([skillId, points]) => {
-          if (points > 0) {
+          if (points >= 0) {
             const skillData = codexSkills?.find((s: { id: string; name: string }) => s.id === skillId || s.name === skillId);
             const baseSkill = skillData?.base_skill_id !== undefined
               ? (codexSkills?.find((s: { id: string }) => s.id === String(skillData?.base_skill_id)) as { name?: string })?.name

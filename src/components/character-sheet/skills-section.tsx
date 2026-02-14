@@ -362,7 +362,7 @@ export function SkillsSection({
                     ? () => onRemoveSkill(skill.id) 
                     : undefined
                   }
-                  showRollButton={!showEditControls}
+                  showRollButton={!showEditControls && rollContext?.canRoll !== false}
                   onRoll={() => rollContext?.rollSkill?.(skill.name, bonus, skill.ability ? ABILITY_ABBR[skill.ability.toLowerCase()] : undefined)}
                   isSpeciesSkill={isFromSpecies}
                   variant="table"

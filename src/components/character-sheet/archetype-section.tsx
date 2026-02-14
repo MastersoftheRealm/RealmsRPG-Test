@@ -90,21 +90,29 @@ function AttackBonusesTable({
             <tr key={key}>
               <td className="py-1 font-medium text-text-secondary capitalize">⚔️ {key}</td>
               <td className="text-center py-1">
-                <RollButton
-                  value={martialBonuses[key].prof}
-                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, martialBonuses[key].prof)}
-                  size="sm"
-                  title={`Roll ${key} (proficient)`}
-                />
+                {onRollBonus ? (
+                  <RollButton
+                    value={martialBonuses[key].prof}
+                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, martialBonuses[key].prof)}
+                    size="sm"
+                    title={`Roll ${key} (proficient)`}
+                  />
+                ) : (
+                  <span className="text-sm font-medium text-text-muted">{martialBonuses[key].prof >= 0 ? '+' : ''}{martialBonuses[key].prof}</span>
+                )}
               </td>
               <td className="text-center py-1">
-                <RollButton
-                  value={martialBonuses[key].unprof}
-                  variant="unproficient"
-                  onClick={() => onRollBonus?.(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, martialBonuses[key].unprof)}
-                  size="sm"
-                  title={`Roll ${key} (unproficient)`}
-                />
+                {onRollBonus ? (
+                  <RollButton
+                    value={martialBonuses[key].unprof}
+                    variant="unproficient"
+                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, martialBonuses[key].unprof)}
+                    size="sm"
+                    title={`Roll ${key} (unproficient)`}
+                  />
+                ) : (
+                  <span className="text-sm font-medium text-text-muted">{martialBonuses[key].unprof >= 0 ? '+' : ''}{martialBonuses[key].unprof}</span>
+                )}
               </td>
             </tr>
           ))}
@@ -116,12 +124,16 @@ function AttackBonusesTable({
         <div className="mt-3 pt-3 border-t border-border-light">
           <div className="flex items-center justify-between">
             <span className="font-medium text-text-secondary">✨ Power Attack ({powAbilDisplayName})</span>
-            <RollButton
-              value={powerBonus.prof}
-              onClick={() => onRollBonus?.(`Power Attack [${powAbilDisplayName}]`, powerBonus.prof)}
-              size="sm"
-              title={`Roll power attack - ${powAbilDisplayName}`}
-            />
+            {onRollBonus ? (
+              <RollButton
+                value={powerBonus.prof}
+                onClick={() => onRollBonus(`Power Attack [${powAbilDisplayName}]`, powerBonus.prof)}
+                size="sm"
+                title={`Roll power attack - ${powAbilDisplayName}`}
+              />
+            ) : (
+              <span className="text-sm font-medium text-text-muted">{powerBonus.prof >= 0 ? '+' : ''}{powerBonus.prof}</span>
+            )}
           </div>
         </div>
       )}
@@ -254,23 +266,31 @@ function WeaponsSection({
                   )}
                 </td>
                 <td className="text-center py-2">
-                  <RollButton
-                    value={attackBonus}
-                    onClick={() => onRollAttack?.(weapon.name || 'Attack', attackBonus)}
-                    size="sm"
-                    title={`Roll attack with ${weapon.name}`}
-                  />
+                  {onRollAttack ? (
+                    <RollButton
+                      value={attackBonus}
+                      onClick={() => onRollAttack(weapon.name || 'Attack', attackBonus)}
+                      size="sm"
+                      title={`Roll attack with ${weapon.name}`}
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-text-muted">{attackBonus >= 0 ? '+' : ''}{attackBonus}</span>
+                  )}
                 </td>
                 <td className="text-center py-2">
                   <div className="flex flex-col items-center gap-0.5">
-                    <RollButton
-                      value={0}
-                      displayValue={damageDice}
-                      variant="danger"
-                      onClick={() => onRollDamage?.(damageStr, attackBonus)}
-                      size="sm"
-                      title={`Roll ${damageStr} damage`}
-                    />
+                    {onRollDamage ? (
+                      <RollButton
+                        value={0}
+                        displayValue={damageDice}
+                        variant="danger"
+                        onClick={() => onRollDamage(damageStr, attackBonus)}
+                        size="sm"
+                        title={`Roll ${damageStr} damage`}
+                      />
+                    ) : (
+                      <span className="text-sm font-medium text-text-muted">{damageDice}</span>
+                    )}
                     {damageType && (
                       <span className="text-[10px] text-text-muted">{damageType}</span>
                     )}
@@ -291,24 +311,32 @@ function WeaponsSection({
               )}
             </td>
             <td className="text-center py-2">
-              <RollButton
-                value={unarmedAttackBonus}
-                variant={hasProwess ? 'primary' : 'unproficient'}
-                onClick={() => onRollAttack?.('Unarmed Prowess', unarmedAttackBonus)}
-                size="sm"
-                title={`Roll unarmed attack (${hasProwess ? 'proficient' : 'unproficient'})`}
-              />
+              {onRollAttack ? (
+                <RollButton
+                  value={unarmedAttackBonus}
+                  variant={hasProwess ? 'primary' : 'unproficient'}
+                  onClick={() => onRollAttack('Unarmed Prowess', unarmedAttackBonus)}
+                  size="sm"
+                  title={`Roll unarmed attack (${hasProwess ? 'proficient' : 'unproficient'})`}
+                />
+              ) : (
+                <span className="text-sm font-medium text-text-muted">{unarmedAttackBonus >= 0 ? '+' : ''}{unarmedAttackBonus}</span>
+              )}
             </td>
             <td className="text-center py-2">
               <div className="flex flex-col items-center gap-0.5">
-                <RollButton
-                  value={0}
-                  displayValue={unarmedDamageDisplay}
-                  variant={hasProwess ? 'danger' : 'unproficient'}
-                  onClick={() => onRollDamage?.(`${unarmedDamageDisplay} Bludgeoning`, unarmedAttackBonus)}
-                  size="sm"
-                  title="Roll unarmed damage"
-                />
+                {onRollDamage ? (
+                  <RollButton
+                    value={0}
+                    displayValue={unarmedDamageDisplay}
+                    variant={hasProwess ? 'danger' : 'unproficient'}
+                    onClick={() => onRollDamage(`${unarmedDamageDisplay} Bludgeoning`, unarmedAttackBonus)}
+                    size="sm"
+                    title="Roll unarmed damage"
+                  />
+                ) : (
+                  <span className="text-sm font-medium text-text-muted">{unarmedDamageDisplay}</span>
+                )}
                 <span className="text-[10px] text-text-muted">Bludgeoning</span>
               </div>
             </td>
@@ -674,7 +702,7 @@ export function ArchetypeSection({
           martialProf={martialProf}
           powerProf={powerProf}
           powerAbility={character.pow_abil}
-          onRollBonus={handleRollBonus}
+          onRollBonus={rollContext?.canRoll !== false ? handleRollBonus : undefined}
         />
       )}
 
@@ -683,8 +711,8 @@ export function ArchetypeSection({
         character={character}
         martialProf={martialProf}
         unarmedProwess={unarmedProwess}
-        onRollAttack={handleRollBonus}
-        onRollDamage={handleRollDamage}
+        onRollAttack={rollContext?.canRoll !== false ? handleRollBonus : undefined}
+        onRollDamage={rollContext?.canRoll !== false ? handleRollDamage : undefined}
         enrichedWeapons={enrichedWeapons}
       />
 

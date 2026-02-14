@@ -179,25 +179,20 @@ export function SkillsAllocationPage({
 
       if (delta > 0) {
         const cost = current === 0 && !isSpecies
-          ? 1 // proficiency
+          ? 1 // proficiency (value 0 → 0 still costs 1 for first add; value 0 → 1 costs getSkillValueIncreaseCost(0, ...))
           : getSkillValueIncreaseCost(current, isSubSkill);
         if (remainingPoints < cost) return;
 
         if (current === 0 && !isSpecies) {
-          onAllocationsChange({ ...allocations, [skillId]: 1 });
+          onAllocationsChange({ ...allocations, [skillId]: 1 }); // first increase: proficiency already spent, so value 1
         } else {
           onAllocationsChange({ ...allocations, [skillId]: current + 1 });
         }
       } else {
         if (isSpecies && current <= 1) return;
-        if (current <= 0) return;
+        if (current <= 0) return; // don't decrease below 0; don't remove skill when at 0
         const newVal = current - 1;
-        if (newVal === 0) {
-          const { [skillId]: _, ...rest } = allocations;
-          onAllocationsChange(rest);
-        } else {
-          onAllocationsChange({ ...allocations, [skillId]: newVal });
-        }
+        onAllocationsChange({ ...allocations, [skillId]: newVal }); // keep skill in list at 0, don't remove
       }
     },
     [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange]
@@ -216,7 +211,7 @@ export function SkillsAllocationPage({
     (skills: Skill[]) => {
       const next = { ...allocations };
       skills.forEach((s: Skill) => {
-        if (!(s.id in next)) next[s.id] = 1; // Auto proficient when adding
+        if (!(s.id in next)) next[s.id] = 0; // Auto proficient, skill value 0 (proficiency costs 1 pt)
       });
       onAllocationsChange(next);
       setAddSkillModalOpen(false);
@@ -229,9 +224,9 @@ export function SkillsAllocationPage({
       const next = { ...allocations };
       skills.forEach((s: Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }) => {
         if (s.autoAddBaseSkill && !(s.autoAddBaseSkill.id in next)) {
-          next[s.autoAddBaseSkill.id] = 1; // Auto proficient
+          next[s.autoAddBaseSkill.id] = 0; // Auto proficient, value 0
         }
-        if (!(s.id in next)) next[s.id] = 1; // Auto proficient when adding sub-skill
+        if (!(s.id in next)) next[s.id] = 0; // Auto proficient when adding sub-skill, value 0
       });
       onAllocationsChange(next);
       setAddSubSkillModalOpen(false);

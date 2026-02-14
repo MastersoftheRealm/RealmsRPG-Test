@@ -282,14 +282,14 @@ export function AbilitiesSection({
                     title={canIncrease ? `Cost: ${cost} point${cost > 1 ? 's' : ''}` : `Max at level ${level}`}
                   />
                 </div>
-              ) : (
+              ) : rollContext?.canRoll !== false ? (
                 <RollButton
                   value={value}
                   onClick={() => rollContext?.rollAbility?.(ability, value)}
                   size="lg"
                   title={`Roll ${info.name}`}
                 />
-              )}
+              ) : null}
               
               {/* Cost indicator in edit mode - only show if next point costs 2 */}
               {showEditControls && value >= 3 && canIncrease && (
@@ -348,7 +348,7 @@ export function AbilitiesSection({
                       title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max at level ${level}`}
                     />
                   </div>
-                ) : (
+                ) : rollContext?.canRoll !== false ? (
                   <RollButton
                     value={defenseBonus}
                     variant="primary"
@@ -356,7 +356,7 @@ export function AbilitiesSection({
                     size="sm"
                     title={`Roll ${defenseInfo.name}`}
                   />
-                )}
+                ) : null}
                 
                 {/* Defense skill allocation indicator */}
                 {showEditControls && defenseValue > 0 && (

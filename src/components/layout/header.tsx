@@ -11,7 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth, useAdmin } from '@/hooks';
+import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
 
 const navLinks = [
@@ -49,6 +49,7 @@ export function Header() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { profile } = useProfile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle login click - store current path for redirect after login
@@ -114,7 +115,7 @@ export function Header() {
               <div className="relative group">
                 <button type="button" aria-label="Account menu" className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
-                    {user.displayName?.charAt(0).toUpperCase() ?? user.email?.charAt(0).toUpperCase() ?? '?'}
+                    {profile?.username?.charAt(0).toUpperCase() ?? '?'}
                   </div>
                 </button>
                 {/* Hover bridge: invisible pseudo-element to prevent dropdown from closing */}

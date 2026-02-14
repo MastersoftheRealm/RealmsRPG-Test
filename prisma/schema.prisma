@@ -16,12 +16,22 @@ datasource db {
 // User & Profile
 // =============================================================================
 
+enum UserRole {
+  new_player
+  playtester
+  developer
+  admin
+
+  @@schema("users")
+}
+
 model UserProfile {
   id                  String    @id @default(uuid())
   email               String?
   displayName         String?   @map("display_name")
   username            String?   @unique
   photoUrl            String?   @map("photo_url")
+  role                UserRole  @default(new_player)
   lastUsernameChange  DateTime? @map("last_username_change")
   createdAt           DateTime  @default(now()) @map("created_at")
   updatedAt           DateTime  @updatedAt @map("updated_at")

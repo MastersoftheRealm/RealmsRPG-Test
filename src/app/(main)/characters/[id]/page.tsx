@@ -1253,7 +1253,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }
   
   return (
-    <RollProvider campaignContext={campaignContext}>
+    <RollProvider campaignContext={campaignContext} canRoll={isOwner}>
       <div className="min-h-screen bg-background pb-8">
         {/* Floating Action Toolbar */}
         <SheetActionToolbar

@@ -52,15 +52,15 @@ function RegisterContent() {
       const { data: authData, error: err } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: { data: { full_name: data.displayName, display_name: data.displayName } },
       });
       if (err) throw err;
       if (authData.user) {
+        const chosenUsername = data.username?.trim();
         await createUserProfileAction({
           uid: authData.user.id,
           email: data.email,
-          username: data.displayName,
-          displayName: data.displayName,
+          username: chosenUsername || undefined,
+          displayName: undefined,
         });
       }
       sessionStorage.removeItem('loginRedirect');
@@ -108,12 +108,12 @@ function RegisterContent() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <FormInput
-          label="Display Name"
+          label="Username (optional)"
           type="text"
-          placeholder="Choose a display name"
-          autoComplete="name"
-          error={errors.displayName?.message}
-          {...register('displayName')}
+          placeholder="Leave blank for random e.g. Player123456"
+          autoComplete="username"
+          error={errors.username?.message}
+          {...register('username')}
         />
 
         <FormInput

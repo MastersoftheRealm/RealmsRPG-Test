@@ -43,6 +43,8 @@ interface RollContextValue {
   rolls: RollEntry[];
   /** When set, roll log can switch to campaign mode */
   campaignContext?: CampaignRollContext | null;
+  /** When false (e.g. viewing another user's character), rolling is disabled and roll UI should be hidden */
+  canRoll: boolean;
   
   // Roll functions
   rollAbility: (abilityName: string, bonus: number) => void;
@@ -91,11 +93,14 @@ export function RollProvider({
   children, 
   maxHistory = 50,
   campaignContext,
+  canRoll = true,
 }: { 
   children: React.ReactNode;
   maxHistory?: number;
   /** When set, rolls are also written to campaign roll log */
   campaignContext?: CampaignRollContext;
+  /** When false, roll functions are no-ops and roll UI should be hidden (e.g. viewing another user's character) */
+  canRoll?: boolean;
 }) {
   const [rolls, setRolls] = useState<RollEntry[]>(() => {
     // Hydrate from localStorage on mount
@@ -111,11 +116,10 @@ export function RollProvider({
     return [];
   });
   
-  // Persist to localStorage whenever rolls change
+  // Persist to localStorage whenever rolls change (keep last N, oldest-first)
   useEffect(() => {
     try {
-      // Only persist the last MAX_PERSISTED_ROLLS
-      const toStore = rolls.slice(0, MAX_PERSISTED_ROLLS);
+      const toStore = rolls.slice(-MAX_PERSISTED_ROLLS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
     } catch { /* ignore storage errors */ }
   }, [rolls]);
@@ -124,7 +128,8 @@ export function RollProvider({
   const subscribersRef = React.useRef<Set<(roll: RollEntry) => void>>(new Set());
 
   const addRoll = useCallback((roll: RollEntry) => {
-    setRolls(prev => [roll, ...prev].slice(0, maxHistory));
+    if (!canRoll) return;
+    setRolls(prev => [...prev, roll].slice(-maxHistory));
     // Notify all subscribers
     subscribersRef.current.forEach(callback => callback(roll));
     // If in campaign context, also write to campaign roll log
@@ -138,7 +143,7 @@ export function RollProvider({
         }).catch((err) => console.error('Failed to add campaign roll:', err));
       });
     }
-  }, [maxHistory, campaignContext]);
+  }, [maxHistory, campaignContext, canRoll]);
 
   const clearHistory = useCallback(() => {
     setRolls([]);
@@ -158,6 +163,7 @@ export function RollProvider({
     title: string,
     bonus: number
   ) => {
+    if (!canRoll) return;
     const roll = rollDie('d20');
     const isCrit = roll === 20;
     const isCritFail = roll === 1;
@@ -189,7 +195,7 @@ export function RollProvider({
 
     addRoll(newRoll);
     return newRoll;
-  }, [addRoll]);
+  }, [addRoll, canRoll]);
 
   // Roll an ability roll (Realms uses "Roll" not "Check" or "Save")
   const rollAbility = useCallback((abilityName: string, bonus: number) => {
@@ -215,6 +221,7 @@ export function RollProvider({
 
   // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")
   const rollDamage = useCallback((damageStr: string, bonus: number = 0) => {
+    if (!canRoll) return;
     // Validate input is a string
     if (typeof damageStr !== 'string') {
       console.warn('rollDamage called with non-string:', damageStr);
@@ -258,7 +265,7 @@ export function RollProvider({
     };
 
     addRoll(newRoll);
-  }, [addRoll]);
+  }, [addRoll, canRoll]);
 
   // Roll custom dice
   const rollCustom = useCallback((
@@ -267,6 +274,7 @@ export function RollProvider({
     count: number, 
     modifier: number
   ) => {
+    if (!canRoll) return;
     const diceResults: DieResult[] = [];
     let total = modifier;
     const max = DIE_MAX[dieType];
@@ -298,11 +306,12 @@ export function RollProvider({
     };
 
     addRoll(newRoll);
-  }, [addRoll]);
+  }, [addRoll, canRoll]);
 
   const value: RollContextValue = {
     rolls,
     campaignContext: campaignContext ?? null,
+    canRoll,
     rollAbility,
     rollDefense,
     rollSkill,
