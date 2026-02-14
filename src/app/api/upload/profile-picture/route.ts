@@ -46,6 +46,18 @@ export async function POST(request: NextRequest) {
 
   try {
     const supabase = await createClient();
+
+    // Delete any existing profile picture before upload (removes old files when updating)
+    const { data: existing } = await supabase.storage.from(BUCKET).list('', { limit: 100 });
+    if (existing?.length) {
+      const toRemove = existing
+        .filter((f) => f.name?.startsWith(`${user.uid}.`))
+        .map((f) => f.name);
+      if (toRemove.length) {
+        await supabase.storage.from(BUCKET).remove(toRemove);
+      }
+    }
+
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
       .upload(path, file, { upsert: true, contentType: file.type });

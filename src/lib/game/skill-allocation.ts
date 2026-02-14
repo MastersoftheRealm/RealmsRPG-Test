@@ -229,9 +229,10 @@ export function calculateSimpleSkillPointsSpent(
         spent += getSkillValueIncreaseCost(v - 1, true);
       }
     } else {
-      spent += 1; // proficiency (value 0 or 1+)
-      for (let v = 1; v < value; v++) {
-        spent += getSkillValueIncreaseCost(v, false);
+      // Base skill: 1 pt proficiency + 1 pt per value (value 0 = proficient only)
+      spent += 1; // proficiency
+      for (let v = 1; v <= value; v++) {
+        spent += getSkillValueIncreaseCost(v - 1, false);
       }
     }
   }

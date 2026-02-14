@@ -207,6 +207,12 @@ const CAROUSEL_CONTENT_MIN_H = 'min-h-[420px]';
 const FADE_DURATION_MS = 180;
 
 const CENTER_INDEX = 3; // d4 in order: d10, d12, d20, d4, d6, d8, d10
+const NUM_DICE = DICE_IMAGES.length;
+
+/** Indices of dice to show: selected at center (position 3), 3 left, 3 right. Wraps circularly. */
+function getVisibleDiceIndices(selectedIndex: number): number[] {
+  return Array.from({ length: NUM_DICE }, (_, i) => (selectedIndex - 3 + i + NUM_DICE * 2) % NUM_DICE);
+}
 
 export default function AboutPage() {
   const [currentSlide, setCurrentSlide] = useState(CENTER_INDEX); // Start on d4 (center)
@@ -221,14 +227,16 @@ export default function AboutPage() {
   };
 
   const goPrev = () => {
-    const next = currentSlide === 0 ? CAROUSEL_SLIDES.length - 1 : currentSlide - 1;
+    const next = (currentSlide - 1 + NUM_DICE) % NUM_DICE;
     goToSlide(next);
   };
 
   const goNext = () => {
-    const next = currentSlide === CAROUSEL_SLIDES.length - 1 ? 0 : currentSlide + 1;
+    const next = (currentSlide + 1) % NUM_DICE;
     goToSlide(next);
   };
+
+  const visibleIndices = getVisibleDiceIndices(currentSlide);
 
   // Phase 1: fade out current content. Phase 2: swap slide, then fade in new content.
   const [isFadingIn, setIsFadingIn] = useState(false);
@@ -289,7 +297,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Dice carousel - selected die always center; no brackets; cycle wraps (leftmost moves right) */}
+        {/* Dice carousel - selected die always center; 3 on each side; arrows cycle selection */}
         <div className="relative flex items-center justify-center py-6 px-14 overflow-hidden w-full">
           <button
             onClick={goPrev}
@@ -300,23 +308,19 @@ export default function AboutPage() {
           </button>
 
           <div className="flex items-center justify-center w-full overflow-hidden">
-            <div
-              className="flex items-center justify-center gap-1 md:gap-2 transition-transform duration-500 ease-out"
-              style={{
-                transform: `translateX(calc(50% - 28px - ${currentSlide * 52}px))`,
-              }}
-            >
-              {DICE_IMAGES.map((dice, index) => {
-                const distance = Math.abs(index - currentSlide);
-                const isSelected = currentSlide === index;
+            <div className="flex items-center justify-center gap-1 md:gap-2">
+              {visibleIndices.map((diceIndex, displayPos) => {
+                const dice = DICE_IMAGES[diceIndex];
+                const distance = Math.abs(displayPos - 3); // 3 = center
+                const isSelected = displayPos === 3;
                 const scale = isSelected ? 1.2 : Math.max(0.55, 1 - distance * 0.18);
                 const opacity = isSelected ? 1 : Math.max(0.4, 1 - distance * 0.22);
                 const zIndex = isSelected ? 20 : 10 - distance;
 
                 return (
                   <button
-                    key={`${dice.alt}-${index}`}
-                    onClick={() => goToSlide(index)}
+                    key={`${dice.alt}-${diceIndex}-${displayPos}`}
+                    onClick={() => goToSlide(diceIndex)}
                     className={cn(
                       'flex-shrink-0 transition-all duration-300 ease-out rounded-xl p-2',
                       'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background',

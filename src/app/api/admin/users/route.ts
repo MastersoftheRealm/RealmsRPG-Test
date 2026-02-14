@@ -3,6 +3,7 @@
  * ===============
  * List users (id, username, role only — never email/displayName).
  * Only admins (ADMIN_UIDS env) can access.
+ * Users in ADMIN_UIDS are shown as role 'admin' (set via env, cannot be altered).
  */
 
 import { NextResponse } from 'next/server';
@@ -28,11 +29,14 @@ export async function GET() {
       orderBy: { username: 'asc' },
     });
 
+    const adminUidCheck = await Promise.all(
+      profiles.map(async (p) => ({ ...p, isAdminUid: await isAdmin(p.id) }))
+    );
     return NextResponse.json(
-      profiles.map((p) => ({
+      adminUidCheck.map(({ isAdminUid, ...p }) => ({
         id: p.id,
         username: p.username ?? '',
-        role: p.role,
+        role: isAdminUid ? ('admin' as const) : p.role,
       }))
     );
   } catch (err) {

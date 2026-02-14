@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterUpdateSchema } from '@/lib/api-validation';
@@ -172,6 +173,22 @@ export async function DELETE(
 
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+    }
+
+    // Remove portrait from storage before deleting character
+    try {
+      const supabase = await createClient();
+      const { data: files } = await supabase.storage.from('portraits').list(user.uid);
+      if (files?.length) {
+        const toRemove = files
+          .filter((f) => f.name?.startsWith(`${id.trim()}.`))
+          .map((f) => `${user.uid}/${f.name}`);
+        if (toRemove.length) {
+          await supabase.storage.from('portraits').remove(toRemove);
+        }
+      }
+    } catch (storageErr) {
+      console.warn('[API] Could not delete portrait from storage:', storageErr);
     }
 
     await prisma.character.delete({

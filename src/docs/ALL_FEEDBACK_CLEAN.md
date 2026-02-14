@@ -703,3 +703,10 @@ Notes
   6. When viewing a character sheet that's not your own, don't allow rolling for them/as them if it's not your character.
   7. Rolls between different roll log locations don't seem to be updating in realtime; you need to refresh to see the updated rolls.
 - Expected: Mine badges removed in My Library; feat abilities as comma-separated list; creator adds skills with value 0 (proficient), stepper doesn't remove at 0; weapon range derived and displayed on sheet; part chips expandable with options/levels; descriptions in expanded views; no rolling when viewing others' characters; roll log realtime across locations.
+
+**Raw Feedback Log — 2/14/2026 (session batch)**  
+- Date: 2026-02-14  
+- Context: Character/portrait deletion, user management, About page dice, character creator skills  
+- Priority: High  
+- Feedback: (1) Character/picture Deletion: Delete old portrait from database when character updates one, same with profile picture. Remove portraits from storage when character is deleted. (2) User management: Users who have uids and are admins shown as "Admin" with inability to alter that role instead of dropdown. (3) About page: Selected dice icon should be middle icon, 3 dice on each side; arrows cycle selection (e.g. d10 d12 d20 [d4] d6 d8 d10 → right → d12 d20 d4 [d6] d8 d10 d10). (4) Character creator skills: Add skill as proficient (blue dot) + skill value 0, costs 1 pt. Increase value costs 1 pt each. Decrease to 0 doesn't remove proficiency for base skills. Sub-skills: add as proficient with value 1 (1 pt total); decrease to 0 removes proficiency. Formula: proficient base skills + sum of all skill values = spent skill points.  
+- Expected: Implemented 2026-02-14.

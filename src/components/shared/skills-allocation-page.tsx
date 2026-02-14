@@ -168,6 +168,15 @@ export function SkillsAllocationPage({
       .map((s: Skill) => ({ id: s.id, name: s.name, prof: (allocations[s.id] ?? 0) > 0 }));
   }, [allSkills, existingSkillIds, allocations]);
 
+  const handleRemoveSkill = useCallback(
+    (skillId: string) => {
+      if (speciesSkillIds.has(skillId)) return;
+      const { [skillId]: _, ...rest } = allocations;
+      onAllocationsChange(rest);
+    },
+    [allocations, speciesSkillIds, onAllocationsChange]
+  );
+
   const handleAllocate = useCallback(
     (skillId: string, delta: number) => {
       const skill = allSkills.find((s: Skill) => s.id === skillId);
@@ -178,33 +187,22 @@ export function SkillsAllocationPage({
       const isSpecies = speciesSkillIds.has(skillId);
 
       if (delta > 0) {
-        const cost = current === 0 && !isSpecies
-          ? 1 // proficiency (value 0 → 0 still costs 1 for first add; value 0 → 1 costs getSkillValueIncreaseCost(0, ...))
-          : getSkillValueIncreaseCost(current, isSubSkill);
+        const cost = getSkillValueIncreaseCost(current, isSubSkill);
         if (remainingPoints < cost) return;
-
-        if (current === 0 && !isSpecies) {
-          onAllocationsChange({ ...allocations, [skillId]: 1 }); // first increase: proficiency already spent, so value 1
-        } else {
-          onAllocationsChange({ ...allocations, [skillId]: current + 1 });
-        }
+        onAllocationsChange({ ...allocations, [skillId]: current + 1 });
       } else {
         if (isSpecies && current <= 1) return;
-        if (current <= 0) return; // don't decrease below 0; don't remove skill when at 0
+        if (current <= 0) return;
         const newVal = current - 1;
-        onAllocationsChange({ ...allocations, [skillId]: newVal }); // keep skill in list at 0, don't remove
+        if (isSubSkill && newVal === 0) {
+          // Sub-skill at 0 = unproficient; remove it
+          handleRemoveSkill(skillId);
+        } else {
+          onAllocationsChange({ ...allocations, [skillId]: newVal });
+        }
       }
     },
-    [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange]
-  );
-
-  const handleRemoveSkill = useCallback(
-    (skillId: string) => {
-      if (speciesSkillIds.has(skillId)) return;
-      const { [skillId]: _, ...rest } = allocations;
-      onAllocationsChange(rest);
-    },
-    [allocations, speciesSkillIds, onAllocationsChange]
+    [allocations, allSkills, speciesSkillIds, remainingPoints, onAllocationsChange, handleRemoveSkill]
   );
 
   const handleAddSkills = useCallback(
@@ -224,9 +222,9 @@ export function SkillsAllocationPage({
       const next = { ...allocations };
       skills.forEach((s: Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }) => {
         if (s.autoAddBaseSkill && !(s.autoAddBaseSkill.id in next)) {
-          next[s.autoAddBaseSkill.id] = 0; // Auto proficient, value 0
+          next[s.autoAddBaseSkill.id] = 0; // Base skill: proficient, value 0
         }
-        if (!(s.id in next)) next[s.id] = 0; // Auto proficient when adding sub-skill, value 0
+        if (!(s.id in next)) next[s.id] = 1; // Sub-skill: proficient + 1 value (free with proficiency)
       });
       onAllocationsChange(next);
       setAddSubSkillModalOpen(false);
@@ -344,7 +342,8 @@ export function SkillsAllocationPage({
                 const value = Math.max(0, allocations[skill.id] ?? 0);
                 const isSpeciesSkill = speciesSkillIds.has(skill.id);
                 const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
-                const proficient = effectiveValue > 0;
+                // Base skills: in list = proficient (value can be 0). Sub-skills: value >= 1 = proficient
+                const proficient = isSubSkill ? value >= 1 : true;
                 const bonus = isSubSkill
                   ? getSubSkillBonus(skill, effectiveValue, baseValue, baseProficient, proficient)
                   : getSkillBonus(skill, effectiveValue, proficient);

@@ -123,7 +123,7 @@ export default function AdminUsersPage() {
                   <td className="py-3 px-4 text-text-secondary">{ROLE_LABELS[u.role]}</td>
                   <td className="py-3 px-4">
                     {u.role === 'admin' ? (
-                      <span className="text-text-muted text-xs">Set via env only</span>
+                      <span className="text-text-muted">Admin</span>
                     ) : (
                       <select
                         value={u.role}
