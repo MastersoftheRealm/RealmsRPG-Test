@@ -21,7 +21,7 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { useUserPowers, usePowerParts, useDuplicatePower, usePublicLibrary, useAddPublicToLibrary } from '@/hooks';
-import { Button } from '@/components/ui';
+import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -44,6 +44,7 @@ interface LibraryPowersTabProps {
 }
 
 export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
+  const { showToast } = useToast();
   const { data: powers = [], isLoading: loadingUser, error } = useUserPowers();
   const { data: publicItems = [], isLoading: loadingPublic } = usePublicLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
@@ -209,8 +210,8 @@ export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
               badges={power.itemSource === 'public' ? [{ label: 'Public', color: 'blue' }] : undefined}
               onEdit={power.itemSource === 'my' ? () => window.open(`/power-creator?edit=${power.id}`, '_blank') : undefined}
               onDelete={power.itemSource === 'my' ? () => onDelete({ id: power.id, name: power.name } as DisplayItem) : undefined}
-              onDuplicate={power.itemSource === 'my' ? () => duplicatePower.mutate(power.id) : undefined}
-              onAddToLibrary={power.itemSource === 'public' ? () => addPublic.mutate(power.raw) : undefined}
+              onDuplicate={power.itemSource === 'my' ? () => duplicatePower.mutate(power.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') }) : undefined}
+              onAddToLibrary={power.itemSource === 'public' ? () => addPublic.mutate(power.raw, { onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error') }) : undefined}
             />
           ))
         )}

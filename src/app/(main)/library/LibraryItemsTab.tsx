@@ -26,7 +26,7 @@ import {
   formatRange as formatItemRange,
 } from '@/lib/calculators/item-calc';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
-import { Button } from '@/components/ui';
+import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
@@ -96,6 +96,14 @@ interface LibraryItemsTabProps {
 }
 
 export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const { data: items, isLoading, error } = useUserItems();
+  const { data: propertiesDb = [] } = useItemProperties();
+  const duplicateItem = useDuplicateItem();
+  const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
+
   if (source !== 'my') {
     return (
       <div className="py-12 text-center text-text-secondary">
@@ -106,12 +114,6 @@ export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
       </div>
     );
   }
-  const router = useRouter();
-  const { data: items, isLoading, error } = useUserItems();
-  const { data: propertiesDb = [] } = useItemProperties();
-  const duplicateItem = useDuplicateItem();
-  const [search, setSearch] = useState('');
-  const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
     if (!items) return [];
@@ -255,7 +257,7 @@ export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
               badges={undefined}
               onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
               onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-              onDuplicate={() => duplicateItem.mutate(item.id)}
+              onDuplicate={() => duplicateItem.mutate(item.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
             />
           ))
         )}

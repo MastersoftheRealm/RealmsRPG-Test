@@ -19,7 +19,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { useUserCreatures, useDuplicateCreature } from '@/hooks';
-import { Button } from '@/components/ui';
+import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -30,6 +30,12 @@ interface LibraryCreaturesTabProps {
 }
 
 export function LibraryCreaturesTab({ source, onDelete }: LibraryCreaturesTabProps) {
+  const { showToast } = useToast();
+  const { data: creatures, isLoading, error } = useUserCreatures();
+  const duplicateCreature = useDuplicateCreature();
+  const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
+
   if (source !== 'my') {
     return (
       <div className="py-12 text-center text-text-secondary">
@@ -40,10 +46,6 @@ export function LibraryCreaturesTab({ source, onDelete }: LibraryCreaturesTabPro
       </div>
     );
   }
-  const { data: creatures, isLoading, error } = useUserCreatures();
-  const duplicateCreature = useDuplicateCreature();
-  const [search, setSearch] = useState('');
-  const { sortState, handleSort, sortItems } = useSort('name');
 
   const filteredCreatures = useMemo(() => {
     if (!creatures) return [];
@@ -140,7 +142,7 @@ export function LibraryCreaturesTab({ source, onDelete }: LibraryCreaturesTabPro
               }}
               onEdit={() => window.open(`/creature-creator?edit=${creature.docId}`, '_blank')}
               onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
-              onDuplicate={() => duplicateCreature.mutate(creature.docId)}
+              onDuplicate={() => duplicateCreature.mutate(creature.docId, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
             />
           ))}
         </div>

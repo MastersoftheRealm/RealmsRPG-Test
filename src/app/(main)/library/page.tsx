@@ -12,7 +12,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
-import { PageContainer, PageHeader, TabNavigation, Button } from '@/components/ui';
+import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
 import { DeleteConfirmModal, SourceFilter, type SourceFilterValue } from '@/components/shared';
 import {
   useUserPowers,
@@ -56,6 +56,7 @@ export default function LibraryPage() {
 }
 
 function LibraryContent() {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabId>('powers');
   const [source, setSource] = useState<SourceFilterValue>('my');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem } | null>(null);
@@ -103,6 +104,7 @@ function LibraryContent() {
       setDeleteConfirm(null);
     } catch (error) {
       console.error('Failed to delete:', error);
+      showToast((error as Error)?.message ?? 'Failed to delete item', 'error');
     }
   };
 

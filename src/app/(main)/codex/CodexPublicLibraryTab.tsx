@@ -17,7 +17,7 @@ import {
   LoginPromptModal,
   type ChipData,
 } from '@/components/shared';
-import { TabNavigation } from '@/components/ui';
+import { TabNavigation, useToast } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import {
   usePublicLibrary,
@@ -79,6 +79,7 @@ export function CodexPublicLibraryTab() {
 
 function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) {
   const { user } = useAuthStore();
+  const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
   const addMutation = useAddPublicToLibrary('powers');
@@ -176,7 +177,9 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
                   onLoginRequired();
                   return;
                 }
-                addMutation.mutate(p.raw);
+                addMutation.mutate(p.raw, {
+                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
+                });
               }}
             />
           ))
@@ -188,6 +191,7 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
 
 function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void }) {
   const { user } = useAuthStore();
+  const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('techniques');
   const { data: partsDb = [] } = useTechniqueParts();
   const addMutation = useAddPublicToLibrary('techniques');
@@ -278,7 +282,9 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
                   onLoginRequired();
                   return;
                 }
-                addMutation.mutate(t.raw);
+                addMutation.mutate(t.raw, {
+                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
+                });
               }}
             />
           ))
@@ -290,6 +296,7 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
 
 function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
   const { user } = useAuthStore();
+  const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const addMutation = useAddPublicToLibrary('items');
@@ -384,7 +391,9 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
                   onLoginRequired();
                   return;
                 }
-                addMutation.mutate(i.raw);
+                addMutation.mutate(i.raw, {
+                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
+                });
               }}
             />
           ))
@@ -396,6 +405,7 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
 
 function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void }) {
   const { user } = useAuthStore();
+  const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('creatures');
   const addMutation = useAddPublicToLibrary('creatures');
   const [search, setSearch] = useState('');
@@ -457,7 +467,9 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
                   onLoginRequired();
                   return;
                 }
-                addMutation.mutate(c.raw);
+                addMutation.mutate(c.raw, {
+                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
+                });
               }}
             />
           ))

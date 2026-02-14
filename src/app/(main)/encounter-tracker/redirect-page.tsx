@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PageContainer, Button, Alert } from '@/components/ui';
+import { PageContainer, Button, Alert, useToast } from '@/components/ui';
 import { LoadingState } from '@/components/ui';
 import { STORAGE_KEY } from './encounter-tracker-constants';
 import { useCreateEncounter } from '@/hooks';
@@ -17,6 +17,7 @@ import type { EncounterState } from './encounter-tracker-types';
 
 export function EncounterTrackerRedirect() {
   const router = useRouter();
+  const { showToast } = useToast();
   const createEncounter = useCreateEncounter();
   const [hasLocalData, setHasLocalData] = useState(false);
   const [localEncounter, setLocalEncounter] = useState<EncounterState | null>(null);
@@ -61,6 +62,7 @@ export function EncounterTrackerRedirect() {
       router.replace(`/encounters/${id}/combat`);
     } catch (err) {
       console.error('Failed to import encounter:', err);
+      showToast((err as Error)?.message ?? 'Failed to import encounter', 'error');
       router.replace('/encounters');
     }
   };

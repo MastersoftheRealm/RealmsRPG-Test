@@ -193,6 +193,28 @@ See `ADMIN_SETUP.md` for current implementation.
 
 ---
 
+## Troubleshooting
+
+### "column user_profiles.role does not exist"
+
+After adding user roles, the database must have the `role` column on `user_profiles`. If you see this error (e.g. when changing username, loading profile, or using "Add to my library"):
+
+1. **Apply pending Prisma migrations** (recommended):
+   ```bash
+   npx prisma migrate deploy
+   ```
+   This uses `DIRECT_URL` and applies the `20260214000000_add_user_role` migration, which adds `users.UserRole` and `user_profiles.role` with default `'new_player'`. Existing rows get the default automatically.
+
+2. **Or run the SQL manually** (e.g. in Supabase SQL Editor):
+   ```sql
+   CREATE TYPE "users"."UserRole" AS ENUM ('new_player', 'playtester', 'developer', 'admin');
+   ALTER TABLE "users"."user_profiles" ADD COLUMN IF NOT EXISTS "role" "users"."UserRole" NOT NULL DEFAULT 'new_player';
+   ```
+
+Until this migration is applied, any code that reads or writes `UserProfile` (username change, profile load, admin users list, add-to-library) will fail.
+
+---
+
 ## Migration Note
 
 If migrating from Firebase, the old docs (`DEPLOYMENT_SECRETS.md`, `ADMIN_SDK_SECRETS_SETUP.md`, `SECRETS_SETUP.md`) were previously archived and have since been removed as part of codebase cleanup.

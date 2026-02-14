@@ -31,6 +31,7 @@ import {
   Input,
   TabNavigation,
   SearchInput,
+  useToast,
 } from '@/components/ui';
 import { DeleteConfirmModal } from '@/components/shared';
 import { useEncounters, useCreateEncounter, useDeleteEncounter } from '@/hooks';
@@ -88,6 +89,7 @@ export default function EncountersPage() {
 
 function EncountersContent() {
   const router = useRouter();
+  const { showToast } = useToast();
   const { data: encounters = [], isLoading, error } = useEncounters();
   const createEncounter = useCreateEncounter();
   const deleteEncounterMutation = useDeleteEncounter();
@@ -133,18 +135,27 @@ function EncountersContent() {
   const completedCount = encounters.filter((e) => e.status === 'completed').length;
 
   const handleCreate = async (name: string, type: EncounterType, description?: string) => {
-    const data = createDefaultEncounter(type, name, description);
-    const id = await createEncounter.mutateAsync(data);
-    setCreateModalOpen(false);
-    // Navigate to the new encounter
-    const typePath = type;
-    router.push(`/encounters/${id}/${typePath}`);
+    try {
+      const data = createDefaultEncounter(type, name, description);
+      const id = await createEncounter.mutateAsync(data);
+      setCreateModalOpen(false);
+      const typePath = type;
+      router.push(`/encounters/${id}/${typePath}`);
+    } catch (err) {
+      console.error('Failed to create encounter:', err);
+      showToast((err as Error)?.message ?? 'Failed to create encounter', 'error');
+    }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await deleteEncounterMutation.mutateAsync(deleteTarget.id);
-    setDeleteTarget(null);
+    try {
+      await deleteEncounterMutation.mutateAsync(deleteTarget.id);
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error('Failed to delete encounter:', err);
+      showToast((err as Error)?.message ?? 'Failed to delete encounter', 'error');
+    }
   };
 
   const handleOpen = (encounter: EncounterSummary) => {

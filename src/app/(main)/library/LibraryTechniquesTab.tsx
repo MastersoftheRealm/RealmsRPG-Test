@@ -21,7 +21,7 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { useUserTechniques, useTechniqueParts, useDuplicateTechnique, usePublicLibrary, useAddPublicToLibrary } from '@/hooks';
-import { Button } from '@/components/ui';
+import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
@@ -42,6 +42,13 @@ interface LibraryTechniquesTabProps {
 }
 
 export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabProps) {
+  const { showToast } = useToast();
+  const { data: techniques, isLoading, error } = useUserTechniques();
+  const { data: partsDb = [] } = useTechniqueParts();
+  const duplicateTechnique = useDuplicateTechnique();
+  const [search, setSearch] = useState('');
+  const { sortState, handleSort, sortItems } = useSort('name');
+
   if (source !== 'my') {
     return (
       <div className="py-12 text-center text-text-secondary">
@@ -52,11 +59,6 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
       </div>
     );
   }
-  const { data: techniques, isLoading, error } = useUserTechniques();
-  const { data: partsDb = [] } = useTechniqueParts();
-  const duplicateTechnique = useDuplicateTechnique();
-  const [search, setSearch] = useState('');
-  const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
     if (!techniques) return [];
@@ -185,7 +187,7 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
               badges={undefined}
               onEdit={() => window.open(`/technique-creator?edit=${tech.id}`, '_blank')}
               onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() => duplicateTechnique.mutate(tech.id)}
+              onDuplicate={() => duplicateTechnique.mutate(tech.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
             />
           ))
         )}
