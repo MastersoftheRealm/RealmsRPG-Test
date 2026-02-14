@@ -2,7 +2,7 @@
  * Supabase Session Refresh
  * =========================
  * Refreshes auth session for Server Components.
- * Call from middleware.ts — required for Supabase Auth SSR.
+ * Call from proxy.ts (Next.js 16) — required for Supabase Auth SSR.
  */
 
 import { createServerClient } from '@supabase/ssr';
