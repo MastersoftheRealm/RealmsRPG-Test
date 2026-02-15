@@ -107,7 +107,11 @@ export async function POST(
     });
     return NextResponse.json({ id: created.id });
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error('[API Error] POST /api/public/[type]:', err);
-    return NextResponse.json({ error: 'Failed to save item' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to save item', details: message },
+      { status: 500 }
+    );
   }
 }

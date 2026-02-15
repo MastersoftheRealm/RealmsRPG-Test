@@ -468,7 +468,7 @@ function PowerCreatorContent() {
     executeSave();
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setName('');
     setDescription('');
     setSelectedParts([]);
@@ -493,11 +493,13 @@ function PowerCreatorContent() {
     } catch (e) {
       console.error('Failed to clear power creator cache:', e);
     }
-  };
+  }, []);
 
   // Load a power from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoadPower = useCallback((power: any) => {
+    // Reset all state first to avoid corruption from any existing edits
+    handleReset();
     // Set name and description
     setName(power.name || '');
     setDescription(power.description || '');
@@ -623,7 +625,7 @@ function PowerCreatorContent() {
     
     setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
     setTimeout(() => setSaveMessage(null), 2000);
-  }, [powerParts]);
+  }, [powerParts, handleReset]);
 
   // Load power for editing from URL parameter (?edit=<id>)
   useEffect(() => {

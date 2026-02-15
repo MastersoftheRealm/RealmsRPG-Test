@@ -2,6 +2,15 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-14 | agent | Session: Creature creator expand on enable, creator load reset + audit | files: collapsible-section.tsx, creature-creator/page.tsx, power-creator/page.tsx, technique-creator/page.tsx, item-creator/page.tsx | Summary:
+  - Creature: Powers, Techniques, Armaments CollapsibleSections now defaultExpanded={true} so they open immediately when enabled.
+  - Power/Technique/Item creators: Load handlers now call handleReset() first to clear all state before loading, preventing corruption from existing edits.
+  - Technique load: Added restoration of actionType and isReaction (actionTypeSelection, reaction).
+  - Item load: Added armorValue fallback for damageReduction when loading armor.
+  - Wrapped handleReset in useCallback in all three creators for stable references.
+  - Creature load: Full setCreature(loadedCreature) replacement — no merge; audit confirmed no reset needed.
+  - build passes
+
 - 2026-02-14 | agent | Session: Owner feedback — Library badges, feat abilities, skills, range, roll UI, roll log | files: LibraryPowersTab, LibraryTechniquesTab, LibraryItemsTab, CodexFeatsTab, feats-step, AdminFeatsTab, string.ts (formatAbilityList), skills-allocation-page, skill-allocation (calculateSimpleSkillPointsSpent), finalize-step, data-enrichment (formatRange for weapons), library-section (expandedContent descriptions, range column, roll canRoll), roll-context (canRoll), characters/[id]/page (RollProvider canRoll), abilities-section, skills-section, archetype-section, notes-tab, use-campaign-rolls (refetchOnWindowFocus), ALL_FEEDBACK_CLEAN.md | Summary:
   - Removed "Mine" badges from My Library tabs (Powers, Techniques, Items) — ownership implied by My Library tab.
   - Feat abilities: formatAbilityList() in string.ts; display as "Strength, Intelligence" in Codex, Creator feats step, Admin Feats (array join or camelCase split).

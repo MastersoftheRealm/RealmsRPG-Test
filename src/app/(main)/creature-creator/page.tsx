@@ -911,7 +911,7 @@ function CreatureCreatorContent() {
             enabled={creature.enablePowers}
             onEnabledChange={(enabled) => updateCreature({ enablePowers: enabled })}
             itemCount={creature.powers.length}
-            defaultExpanded={creature.powers.length > 0}
+            defaultExpanded={true}
           >
             {creature.powers.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No powers added</p>
@@ -949,7 +949,7 @@ function CreatureCreatorContent() {
             enabled={creature.enableTechniques}
             onEnabledChange={(enabled) => updateCreature({ enableTechniques: enabled })}
             itemCount={creature.techniques.length}
-            defaultExpanded={creature.techniques.length > 0}
+            defaultExpanded={true}
           >
             {creature.techniques.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No techniques added</p>
@@ -987,7 +987,7 @@ function CreatureCreatorContent() {
             enabled={creature.enableArmaments}
             onEnabledChange={(enabled) => updateCreature({ enableArmaments: enabled })}
             itemCount={creature.armaments.length}
-            defaultExpanded={creature.armaments.length > 0}
+            defaultExpanded={true}
           >
             {creature.armaments.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No armaments added</p>
@@ -1081,7 +1081,7 @@ function CreatureCreatorContent() {
         maxSelections={10}
         itemLabel="power"
         searchPlaceholder="Search powers..."
-        columns={[{ key: 'EN', label: 'EN', sortable: true }, { key: 'Action', label: 'Action', sortable: true }, { key: 'Range', label: 'Range', sortable: true }]}
+        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'EN', label: 'EN', sortable: true }, { key: 'Action', label: 'ACTION', sortable: true }, { key: 'Range', label: 'RANGE', sortable: true }]}
         gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"
         size="xl"
       />
@@ -1099,7 +1099,7 @@ function CreatureCreatorContent() {
         maxSelections={10}
         itemLabel="technique"
         searchPlaceholder="Search techniques..."
-        columns={[{ key: 'EN', label: 'EN', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Action', label: 'Action', sortable: true }]}
+        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'EN', label: 'EN', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Action', label: 'ACTION', sortable: true }]}
         gridColumns="1.5fr 0.5fr 0.5fr 0.8fr"
         size="xl"
       />
@@ -1117,7 +1117,7 @@ function CreatureCreatorContent() {
         maxSelections={10}
         itemLabel="feat"
         searchPlaceholder="Search feats..."
-        columns={[{ key: 'Points', label: 'Pts', sortable: true }]}
+        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Points', label: 'FEAT POINTS', sortable: true }]}
         gridColumns="1.5fr 0.6fr"
         size="xl"
       />
@@ -1135,7 +1135,7 @@ function CreatureCreatorContent() {
         maxSelections={10}
         itemLabel="armament"
         searchPlaceholder="Search items..."
-        columns={[{ key: 'Type', label: 'Type', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Cost', label: 'Cost', sortable: true }]}
+        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Type', label: 'TYPE', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Cost', label: 'COST', sortable: true }]}
         gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
         size="xl"
       />

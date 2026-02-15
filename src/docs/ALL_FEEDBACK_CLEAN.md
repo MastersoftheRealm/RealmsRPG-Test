@@ -710,3 +710,10 @@ Notes
 - Priority: High  
 - Feedback: (1) Character/picture Deletion: Delete old portrait from database when character updates one, same with profile picture. Remove portraits from storage when character is deleted. (2) User management: Users who have uids and are admins shown as "Admin" with inability to alter that role instead of dropdown. (3) About page: Selected dice icon should be middle icon, 3 dice on each side; arrows cycle selection (e.g. d10 d12 d20 [d4] d6 d8 d10 → right → d12 d20 d4 [d6] d8 d10 d10). (4) Character creator skills: Add skill as proficient (blue dot) + skill value 0, costs 1 pt. Increase value costs 1 pt each. Decrease to 0 doesn't remove proficiency for base skills. Sub-skills: add as proficient with value 1 (1 pt total); decrease to 0 removes proficiency. Formula: proficient base skills + sum of all skill values = spent skill points.  
 - Expected: Implemented 2026-02-14.
+
+**Raw Feedback Log — 2/14/2026 (creator expand + load audit)**  
+- Date: 2026-02-14  
+- Context: Creature creator, Power/Technique/Item creators  
+- Priority: High  
+- Feedback: (1) When enabling powers, armaments, techniques in the creature creator, auto-open the list (expanded) instead of collapsed — you enabled it to add something. (2) Audit load option/functionality in creators. Loading must update all UI, option levels, added parts/properties to exactly match the saved item: range, damage dice, action type, armament type, description, properties, option levels, etc. Any existing UI state must be completely cleared/reset before load to avoid corruption. Applies to armaments, powers, techniques, and creatures.  
+- Expected: Implemented 2026-02-14. Creature sections expand when enabled. All creators reset before load; technique load restores actionType/isReaction; item load supports armorValue fallback; creature load does full replace (no merge).

@@ -195,10 +195,10 @@ export function displayItemToSelectableItem(item: DisplayItem, columns?: string[
       cols.push({ key: s.label, value: s.value ?? '-' });
     });
   } else if (item.cost != null) {
-    cols.push({ key: 'Points', value: `${item.cost}${item.costLabel || ''}` });
+    cols.push({ key: 'Points', value: String(item.cost) });
   }
   const badges = item.badges?.map(b => ({ label: b.label, color: 'gray' as const })) ?? [];
-  return {
+  const base: SelectableItem = {
     id: item.id,
     name: item.name,
     description: item.description,
@@ -206,4 +206,8 @@ export function displayItemToSelectableItem(item: DisplayItem, columns?: string[
     badges: badges.length > 0 ? badges : undefined,
     data: item,
   };
+  if (item.cost != null && (columns == null || columns.length === 0)) {
+    (base as SelectableItem & { Points?: number }).Points = typeof item.cost === 'number' ? item.cost : parseInt(String(item.cost), 10) || 0;
+  }
+  return base;
 }

@@ -884,7 +884,7 @@ function ItemCreatorContent() {
     executeSave();
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setName('');
     setDescription('');
     setArmamentType('Weapon');
@@ -906,11 +906,13 @@ function ItemCreatorContent() {
     } catch (e) {
       console.error('Failed to clear item creator cache:', e);
     }
-  };
+  }, []);
 
   // Load an item from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoadItem = useCallback((item: any) => {
+    // Reset all state first to avoid corruption from any existing edits
+    handleReset();
     // Set basic fields
     setName(item.name || '');
     setDescription(item.description || '');
@@ -976,7 +978,7 @@ function ItemCreatorContent() {
     
     // Load armor-specific fields
     if (loadedType === 'Armor') {
-      setDamageReduction(item.damageReduction || 0);
+      setDamageReduction(item.damageReduction ?? item.armorValue ?? 0);
       setAgilityReduction(item.agilityReduction || 0);
       setCriticalRangeIncrease(item.criticalRangeIncrease || 0);
       if (item.abilityRequirement) {
@@ -1010,7 +1012,7 @@ function ItemCreatorContent() {
     
     // Close modal
     setShowLoadModal(false);
-  }, [itemProperties]);
+  }, [itemProperties, handleReset]);
 
   if (isLoading) {
     return (

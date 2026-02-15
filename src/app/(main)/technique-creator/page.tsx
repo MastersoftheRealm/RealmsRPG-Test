@@ -626,7 +626,7 @@ function TechniqueCreatorContent() {
     executeSave();
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setName('');
     setDescription('');
     setSelectedParts([]);
@@ -641,11 +641,13 @@ function TechniqueCreatorContent() {
     } catch (e) {
       console.error('Failed to clear technique creator cache:', e);
     }
-  };
+  }, []);
 
   // Load a technique from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoadTechnique = useCallback((technique: any) => {
+    // Reset all state first to avoid corruption from any existing edits
+    handleReset();
     // Set name and description
     setName(technique.name || '');
     setDescription(technique.description || '');
@@ -681,6 +683,10 @@ function TechniqueCreatorContent() {
     }
     setSelectedParts(loadedParts);
     
+    // Load action type and reaction
+    setActionType(technique.actionTypeSelection || technique.actionType || 'basic');
+    setIsReaction(technique.reaction ?? false);
+    
     // Load weapon
     if (technique.weapon) {
       const weaponMatch = allWeaponOptions.find(
@@ -705,7 +711,7 @@ function TechniqueCreatorContent() {
     
     setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
     setTimeout(() => setSaveMessage(null), 2000);
-  }, [techniqueParts, allWeaponOptions]);
+  }, [techniqueParts, allWeaponOptions, handleReset]);
 
   // Load technique for editing from URL parameter (?edit=<id>)
   useEffect(() => {

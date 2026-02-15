@@ -80,8 +80,9 @@ export async function saveToPublicLibrary(
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? 'Save to public library failed');
+    const err = (await res.json().catch(() => ({ error: res.statusText }))) as { error?: string; details?: string };
+    const msg = err.details ? `${err.error ?? 'Save failed'}: ${err.details}` : (err.error ?? 'Save to public library failed');
+    throw new Error(msg);
   }
   const result = (await res.json()) as { id: string };
   return result.id;

@@ -260,7 +260,7 @@ export function UnifiedSelectionModal({
           </FilterSection>
         )}
         
-        {/* Column Headers (if columns defined) */}
+        {/* Column Headers (if columns defined) — must match row grid for alignment */}
         {columns.length > 0 && (
           <div 
             className="hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wider rounded-t-lg"
@@ -284,7 +284,7 @@ export function UnifiedSelectionModal({
         )}
         
         {/* Items List */}
-        <div className="flex-1 overflow-y-auto border border-border-light rounded-lg">
+        <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0 border border-border-light rounded-lg">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Spinner size="md" />
@@ -299,13 +299,13 @@ export function UnifiedSelectionModal({
               )}
             </div>
           ) : (
-            <div className="space-y-2 p-2">
+            <div className="space-y-2 p-2 min-w-0">
               {filteredItems.map(item => {
                 const isSelected = selectedIds.has(item.id);
                 
                 return (
-                  <div key={item.id} className="flex items-center gap-2">
-                    <div className="flex-1">
+                  <div key={item.id} className="flex items-center gap-2 min-w-0">
+                    <div className="flex-1 min-w-0">
                       <GridListRow
                         id={item.id}
                         name={item.name}
