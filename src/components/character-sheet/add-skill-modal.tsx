@@ -20,6 +20,7 @@ import { GridListRow, ListHeader } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
+import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
 interface AddSkillModalProps {
   isOpen: boolean;
@@ -233,19 +234,23 @@ export function AddSkillModal({
 
           {!loading && !error && sortedSkills.length > 0 && (
             <div className="space-y-2 mt-2">
-              {sortedSkills.map((skill: Skill & { ability: string }) => (
-                <GridListRow
-                  key={skill.id}
-                  id={skill.id}
-                  name={skill.name}
-                  description={skill.description}
-                  badges={formatAbilityBadges(skill.ability)}
-                  selectable
-                  isSelected={selectedSkills.some(s => s.id === skill.id)}
-                  onSelect={() => toggleSkill(skill)}
-                  compact
-                />
-              ))}
+              {sortedSkills.map((skill: Skill & { ability: string }) => {
+                const extraSections = getSkillExtraDescriptionDetailSections(skill);
+                return (
+                  <GridListRow
+                    key={skill.id}
+                    id={skill.id}
+                    name={skill.name}
+                    description={skill.description}
+                    detailSections={extraSections.length > 0 ? extraSections : undefined}
+                    badges={formatAbilityBadges(skill.ability)}
+                    selectable
+                    isSelected={selectedSkills.some(s => s.id === skill.id)}
+                    onSelect={() => toggleSkill(skill)}
+                    compact
+                  />
+                );
+              })}
             </div>
           )}
         </div>

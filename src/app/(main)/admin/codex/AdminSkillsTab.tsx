@@ -26,7 +26,7 @@ interface SkillFilters {
   search: string;
   abilities: string[];
   baseSkill: string;
-  subSkillMode: 'all' | 'only' | 'hide';
+  subSkillMode: '' | 'only' | 'hide';
 }
 
 export function AdminSkillsTab() {
@@ -37,15 +37,36 @@ export function AdminSkillsTab() {
     search: '',
     abilities: [],
     baseSkill: '',
-    subSkillMode: 'all',
+    subSkillMode: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; ability: string; base_skill_id?: number } | null>(null);
+  const [editing, setEditing] = useState<{
+    id: string;
+    name: string;
+    description: string;
+    ability: string;
+    base_skill_id?: number;
+    success_desc?: string;
+    failure_desc?: string;
+    ds_calc?: string;
+    craft_success_desc?: string;
+    craft_failure_desc?: string;
+  } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: '', description: '', abilities: [] as string[], baseSkillName: '' });
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    abilities: [] as string[],
+    baseSkillName: '',
+    success_desc: '',
+    failure_desc: '',
+    ds_calc: '',
+    craft_success_desc: '',
+    craft_failure_desc: '',
+  });
 
   const ABILITY_OPTIONS = useMemo(
     () => ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a })),
@@ -142,11 +163,21 @@ export function AdminSkillsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', abilities: [], baseSkillName: '' });
+    setForm({
+      name: '',
+      description: '',
+      abilities: [],
+      baseSkillName: '',
+      success_desc: '',
+      failure_desc: '',
+      ds_calc: '',
+      craft_success_desc: '',
+      craft_failure_desc: '',
+    });
     setModalOpen(true);
   };
 
-  const openEdit = (s: { id: string; name: string; description: string; ability: string; base_skill_id?: number }) => {
+  const openEdit = (s: Skill) => {
     setEditing(s);
     // Resolve base skill name from id (including 0 meaning "Any")
     let baseSkillName = '';
@@ -167,6 +198,11 @@ export function AdminSkillsTab() {
       description: s.description || '',
       abilities: abilityArr,
       baseSkillName,
+      success_desc: s.success_desc ?? '',
+      failure_desc: s.failure_desc ?? '',
+      ds_calc: s.ds_calc ?? '',
+      craft_success_desc: s.craft_success_desc ?? '',
+      craft_failure_desc: s.craft_failure_desc ?? '',
     });
     setModalOpen(true);
   };
@@ -206,6 +242,11 @@ export function AdminSkillsTab() {
             ? form.abilities[0]
             : form.abilities,
       base_skill_id,
+      success_desc: form.success_desc.trim() || undefined,
+      failure_desc: form.failure_desc.trim() || undefined,
+      ds_calc: form.ds_calc.trim() || undefined,
+      craft_success_desc: form.craft_success_desc.trim() || undefined,
+      craft_failure_desc: form.craft_failure_desc.trim() || undefined,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `skill_${Date.now()}`;
@@ -291,12 +332,11 @@ export function AdminSkillsTab() {
             label="Skill Type"
             value={filters.subSkillMode}
             options={[
-              { value: 'all', label: 'All' },
               { value: 'only', label: 'Only Sub-Skills' },
               { value: 'hide', label: 'Hide Sub-Skills' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, subSkillMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="Skill type"
+            onChange={(v) => setFilters(f => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))}
+            placeholder="All skills"
           />
         </div>
       </FilterSection>
@@ -337,7 +377,9 @@ export function AdminSkillsTab() {
                       s.base_skill_id === 0
                         ? 'Any'
                         : s.base_skill_id !== undefined
-                          ? (skillIdToName.get(String(s.base_skill_id)) || '-')
+                          ? (skillIdToName.get(String(s.base_skill_id)) ??
+                              (skills as Skill[]).find((sk) => String(sk.id) === String(s.base_skill_id))?.name ??
+                              '-')
                           : '-',
                   },
                 ]}
@@ -404,6 +446,26 @@ export function AdminSkillsTab() {
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
             <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Skill description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Success outcome description</label>
+            <textarea value={form.success_desc} onChange={(e) => setForm((f) => ({ ...f, success_desc: e.target.value }))} placeholder="What happens on successes (expandable chip)" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Failure outcome description</label>
+            <textarea value={form.failure_desc} onChange={(e) => setForm((f) => ({ ...f, failure_desc: e.target.value }))} placeholder="What happens on failures (expandable chip)" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty score (DS) guidance</label>
+            <textarea value={form.ds_calc} onChange={(e) => setForm((f) => ({ ...f, ds_calc: e.target.value }))} placeholder="RM guidance for DS calculation (expandable chip)" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Craft success description (Craft sub-skills)</label>
+            <textarea value={form.craft_success_desc} onChange={(e) => setForm((f) => ({ ...f, craft_success_desc: e.target.value }))} placeholder="Crafting success results" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Craft failure description (Craft sub-skills)</label>
+            <textarea value={form.craft_failure_desc} onChange={(e) => setForm((f) => ({ ...f, craft_failure_desc: e.target.value }))} placeholder="Crafting failure results" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>

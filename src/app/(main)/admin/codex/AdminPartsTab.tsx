@@ -11,8 +11,9 @@ import {
   SortHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { SelectFilter, FilterSection } from '@/components/codex';
+import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useParts, type Part } from '@/hooks';
+import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
@@ -35,7 +36,7 @@ interface PartFilters {
   search: string;
   categoryFilter: string;
   typeFilter: 'all' | 'power' | 'technique';
-  mechanicMode: 'all' | 'only' | 'hide';
+  mechanicMode: '' | 'only' | 'hide';
 }
 
 export function AdminPartsTab() {
@@ -46,13 +47,15 @@ export function AdminPartsTab() {
     search: '',
     categoryFilter: '',
     typeFilter: 'all',
-    mechanicMode: 'all',
+    mechanicMode: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number; mechanic?: boolean; percentage?: boolean; duration?: boolean; op_1_desc?: string; op_1_en?: number; op_1_tp?: number; op_2_desc?: string; op_2_en?: number; op_2_tp?: number; op_3_desc?: string; op_3_en?: number; op_3_tp?: number } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number; mechanic?: boolean; percentage?: boolean; duration?: boolean; defense?: string[]; op_1_desc?: string; op_1_en?: number; op_1_tp?: number; op_2_desc?: string; op_2_en?: number; op_2_tp?: number; op_3_desc?: string; op_3_en?: number; op_3_tp?: number } | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const DEFENSES = useMemo(() => ABILITIES_AND_DEFENSES.slice(6), []);
 
   const [form, setForm] = useState({
     name: '',
@@ -64,6 +67,7 @@ export function AdminPartsTab() {
     mechanic: false,
     percentage: false,
     duration: false,
+    defense: [] as string[],
     op_1_desc: '',
     op_1_en: 0,
     op_1_tp: 0,
@@ -123,6 +127,7 @@ export function AdminPartsTab() {
       mechanic: false,
       percentage: false,
       duration: false,
+      defense: [],
       op_1_desc: '',
       op_1_en: 0,
       op_1_tp: 0,
@@ -136,7 +141,7 @@ export function AdminPartsTab() {
     setModalOpen(true);
   };
 
-  const openEdit = (p: { id: string; name: string; description: string; category: string; type: string; base_en: number; base_tp: number; mechanic?: boolean; percentage?: boolean; duration?: boolean; op_1_desc?: string; op_1_en?: number; op_1_tp?: number; op_2_desc?: string; op_2_en?: number; op_2_tp?: number; op_3_desc?: string; op_3_en?: number; op_3_tp?: number }) => {
+  const openEdit = (p: Part & { defense?: string[] }) => {
     setEditing(p);
     setForm({
       name: p.name,
@@ -148,6 +153,7 @@ export function AdminPartsTab() {
       mechanic: Boolean((p as any).mechanic),
       percentage: Boolean((p as any).percentage),
       duration: Boolean((p as any).duration),
+      defense: Array.isArray(p.defense) ? [...p.defense] : [],
       op_1_desc: (p as any).op_1_desc || '',
       op_1_en: (p as any).op_1_en ?? 0,
       op_1_tp: (p as any).op_1_tp ?? 0,
@@ -180,6 +186,7 @@ export function AdminPartsTab() {
       mechanic: form.mechanic,
       percentage: form.percentage,
       duration: form.duration,
+      defense: form.defense.length > 0 ? form.defense : undefined,
       op_1_desc: form.op_1_desc.trim() || undefined,
       op_1_en: form.op_1_desc.trim() ? form.op_1_en || 0 : 0,
       op_1_tp: form.op_1_desc.trim() ? form.op_1_tp || 0 : 0,
@@ -273,12 +280,11 @@ export function AdminPartsTab() {
             label="Mechanics"
             value={filters.mechanicMode}
             options={[
-              { value: 'all', label: 'All Parts' },
               { value: 'only', label: 'Only Mechanics' },
               { value: 'hide', label: 'Hide Mechanics' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="Hide Mechanics"
+            onChange={(v) => setFilters(f => ({ ...f, mechanicMode: (v || '') as '' | 'only' | 'hide' }))}
+            placeholder="All parts"
           />
         </div>
       </FilterSection>
@@ -479,6 +485,17 @@ export function AdminPartsTab() {
               />
               <span className="text-sm text-text-secondary">Affects Duration</span>
             </label>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Targeted defenses (optional)</label>
+            <ChipSelect
+              label=""
+              placeholder="Choose defenses this part targets"
+              options={DEFENSES.map((d) => ({ value: d, label: d }))}
+              selectedValues={form.defense}
+              onSelect={(v) => setForm((f) => ({ ...f, defense: [...f.defense, v] }))}
+              onRemove={(v) => setForm((f) => ({ ...f, defense: f.defense.filter((x) => x !== v) }))}
+            />
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">

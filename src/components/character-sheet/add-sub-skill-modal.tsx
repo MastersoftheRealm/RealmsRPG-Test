@@ -21,6 +21,7 @@ import { SelectionToggle, ListHeader } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
+import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
 interface CharacterSkill {
   id?: string;
@@ -34,6 +35,47 @@ interface AddSubSkillModalProps {
   characterSkills: CharacterSkill[];
   existingSkillNames: string[];
   onAdd: (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => void;
+}
+
+/** Expandable chips for skill extra descriptions (Success Outcomes, DS Calculation, etc.) */
+function SkillExtraChipsSection({
+  label,
+  chips,
+}: {
+  label: string;
+  chips: Array<{ name: string; description?: string; category?: string }>;
+}) {
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  return (
+    <div className="pl-7 space-y-2">
+      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">{label}</h4>
+      <div className="flex flex-wrap gap-2">
+        {chips.map((chip) => {
+          const isExpanded = expandedKey === chip.name;
+          const isExpandable = !!chip.description;
+          return (
+            <button
+              key={chip.name}
+              type="button"
+              onClick={() => setExpandedKey(isExpandable ? (isExpanded ? null : chip.name) : null)}
+              className={cn(
+                'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border px-3 py-1.5',
+                isExpandable ? 'cursor-pointer border-primary-200 bg-primary-50/50 hover:bg-primary-50' : 'cursor-default border-border-light bg-surface-alt',
+                isExpanded ? 'w-full ring-2 ring-offset-1 ring-primary-500' : ''
+              )}
+            >
+              <span>{chip.name}</span>
+              {isExpanded && chip.description && (
+                <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed">
+                  {chip.description}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function ExpandableSubSkillRow({
@@ -117,6 +159,11 @@ function ExpandableSubSkillRow({
               {skill.description}
             </div>
           )}
+          {getSkillExtraDescriptionDetailSections(skill)
+            .filter((s) => s.chips.length > 0)
+            .map((section) => (
+              <SkillExtraChipsSection key={section.label} label={section.label} chips={section.chips} />
+            ))}
         </div>
       )}
       

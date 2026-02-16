@@ -141,11 +141,12 @@ export function AdminCreatureFeatsTab() {
 
       <div
         className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: '1.5fr 0.6fr 0.6fr 40px' }}
+        style={{ gridTemplateColumns: '1.5fr 0.5fr 0.5fr 0.5fr 40px' }}
       >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="POINTS" col="points" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="REQ. LEVEL" col="lvl_req" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="PTS" col="points" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="FEAT LVL" col="feat_lvl" sortState={sortState} onSort={handleSort} />
+        <SortHeader label="REQ. LVL" col="lvl_req" sortState={sortState} onSort={handleSort} />
       </div>
 
       {isLoading ? (
@@ -166,10 +167,11 @@ export function AdminCreatureFeatsTab() {
                 id={f.id}
                 name={f.name}
                 description={f.description || ''}
-                gridColumns="1.5fr 0.6fr 0.6fr 40px"
+                gridColumns="1.5fr 0.5fr 0.5fr 0.5fr 40px"
                 columns={[
-                  { key: 'Points', value: String(f.points ?? '-') },
-                  { key: 'Req. Level', value: f.lvl_req != null && f.lvl_req > 0 ? String(f.lvl_req) : '-' },
+                  { key: 'Pts', value: String(f.points ?? '-') },
+                  { key: 'Feat Lvl', value: f.feat_lvl != null && f.feat_lvl > 0 ? String(f.feat_lvl) : '-' },
+                  { key: 'Req. Lvl', value: f.lvl_req != null && f.lvl_req > 0 ? String(f.lvl_req) : '-' },
                 ]}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">

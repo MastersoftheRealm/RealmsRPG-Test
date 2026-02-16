@@ -14,6 +14,7 @@ export { ProficienciesTab } from './proficiencies-tab';
 export { DiceRoller, type DieRoll } from './dice-roller';
 export { RollLog, RollEntryCard, type RollEntry, type RollType, type DieType, type DieResult } from './roll-log';
 export { RollProvider, useRolls, useRollsOptional } from './roll-context';
+export { CharacterSheetProvider, useCharacterSheet, useCharacterSheetOptional } from './character-sheet-context';
 export { AddLibraryItemModal } from './add-library-item-modal';
 export { AddFeatModal } from './add-feat-modal';
 export { AddSkillModal } from './add-skill-modal';

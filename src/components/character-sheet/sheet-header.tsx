@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/shared';
+import { useCharacterSheetOptional } from './character-sheet-context';
 import type { Character } from '@/types';
 
 interface CalculatedStats {
@@ -414,9 +415,9 @@ function HealthBar({
 }
 
 export function SheetHeader({
-  character,
+  character: characterProp,
   calculatedStats,
-  isEditMode = false,
+  isEditMode: isEditModeProp = false,
   onHealthChange,
   onEnergyChange,
   onHealthPointsChange,
@@ -432,6 +433,9 @@ export function SheetHeader({
   innateThreshold = 0,
   innatePools = 0,
 }: SheetHeaderProps) {
+  const ctx = useCharacterSheetOptional();
+  const character = (ctx?.character ?? characterProp) as Character;
+  const isEditMode = ctx?.isEditMode ?? isEditModeProp;
   const currentHealth = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
   

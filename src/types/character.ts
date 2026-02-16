@@ -242,6 +242,7 @@ export interface CharacterSummary {
   archetypeName?: string;
   ancestryName?: string;
   status?: CharacterStatus;
+  visibility?: CharacterVisibility;
   updatedAt?: Date | string;
 }
 

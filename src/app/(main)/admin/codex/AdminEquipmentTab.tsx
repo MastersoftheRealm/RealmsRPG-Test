@@ -331,17 +331,22 @@ export function AdminEquipmentTab() {
               <Input
                 type="number"
                 min={0}
+                step={0.01}
                 value={form.currency}
-                onChange={(e) => setForm((f) => ({ ...f, currency: parseInt(e.target.value, 10) || 0 }))}
+                onChange={(e) => setForm((f) => ({ ...f, currency: parseFloat(e.target.value) || 0 }))}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Rarity</label>
-              <Input
+              <select
                 value={form.rarity}
                 onChange={(e) => setForm((f) => ({ ...f, rarity: e.target.value }))}
-                placeholder="e.g. Common"
-              />
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              >
+                {['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ascended'].map((r) => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

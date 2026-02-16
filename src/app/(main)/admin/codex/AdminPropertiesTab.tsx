@@ -386,10 +386,9 @@ export function AdminPropertiesTab() {
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
               <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary">
-                <option value="general">General</option>
-                <option value="weapon">Weapon</option>
-                <option value="armor">Armor</option>
-                <option value="shield">Shield</option>
+                <option value="Armor">Armor</option>
+                <option value="Shield">Shield</option>
+                <option value="Weapon">Weapon</option>
               </select>
             </div>
             <label className="flex items-center gap-2 mt-6">

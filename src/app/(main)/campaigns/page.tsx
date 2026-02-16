@@ -29,6 +29,7 @@ import {
   EmptyState,
   LoadingState,
   Alert,
+  Modal,
   useToast,
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -314,7 +315,7 @@ function JoinCampaignTab({
   isLoading,
   onSuccess,
 }: {
-  characters: Array<{ id: string; name: string; level: number; portrait?: string; archetypeName?: string; ancestryName?: string }>;
+  characters: Array<{ id: string; name: string; level: number; portrait?: string; archetypeName?: string; ancestryName?: string; visibility?: string }>;
   isLoading: boolean;
   onSuccess: () => void;
 }) {
@@ -324,17 +325,14 @@ function JoinCampaignTab({
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [visibilityConfirmOpen, setVisibilityConfirmOpen] = useState(false);
 
   const selectedCharacter = characters.find((c) => c.id === selectedCharacterId);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (!selectedCharacter) {
-      setError('Please select a character');
-      return;
-    }
+  const performJoin = async () => {
+    if (!selectedCharacter) return;
     setSubmitting(true);
+    setError(null);
     try {
       const archetypeType = String(selectedCharacter.archetypeName ?? '').toLowerCase().replace(/\s+/g, '-');
       const result = await joinCampaignAction({
@@ -350,6 +348,7 @@ function JoinCampaignTab({
         if (result.visibilityUpdated) {
           showToast('Character visibility was set to Campaign so the Realm Master and players can view it.', 'success');
         }
+        setVisibilityConfirmOpen(false);
         onSuccess();
       } else {
         setError(result.error || 'Failed to join campaign');
@@ -359,6 +358,20 @@ function JoinCampaignTab({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!selectedCharacter) {
+      setError('Please select a character');
+      return;
+    }
+    if (selectedCharacter.visibility === 'private') {
+      setVisibilityConfirmOpen(true);
+      return;
+    }
+    await performJoin();
   };
 
   if (isLoading) {
@@ -452,6 +465,26 @@ function JoinCampaignTab({
       >
         Join Campaign
       </Button>
+
+      {visibilityConfirmOpen && selectedCharacter && (
+        <Modal
+          isOpen
+          onClose={() => setVisibilityConfirmOpen(false)}
+          title="Character visibility will change"
+        >
+          <p className="text-text-secondary mb-4">
+            <strong>{selectedCharacter.name}</strong> is private. Joining this campaign will set its visibility to <strong>Campaign</strong> so the Realm Master and other players can view it (read-only). You can change this later in the character&apos;s Notes tab.
+          </p>
+          <div className="flex gap-3 justify-end">
+            <Button variant="ghost" onClick={() => setVisibilityConfirmOpen(false)} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button onClick={() => performJoin()} disabled={submitting} isLoading={submitting}>
+              Join campaign
+            </Button>
+          </div>
+        </Modal>
+      )}
     </form>
   );
 }

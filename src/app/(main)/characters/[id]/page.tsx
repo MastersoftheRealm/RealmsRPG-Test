@@ -22,6 +22,7 @@ import {
   RollLog,
   RollProvider,
   SheetActionToolbar,
+  CharacterSheetProvider,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat, Feat } from '@/types';
@@ -1252,9 +1253,23 @@ export default function CharacterSheetPage({ params }: PageParams) {
     );
   }
   
+  const sheetContextValue = useMemo(
+    () => ({
+      character,
+      setCharacter,
+      isEditMode: effectiveEditMode,
+      isOwner,
+      setAddModalType,
+      setFeatModalType,
+      setSkillModalType,
+    }),
+    [character, effectiveEditMode, isOwner, setAddModalType, setFeatModalType, setSkillModalType]
+  );
+
   return (
     <RollProvider campaignContext={campaignContext} canRoll={isOwner}>
-      <div className="min-h-screen bg-background pb-8">
+      <CharacterSheetProvider value={sheetContextValue}>
+        <div className="min-h-screen bg-background pb-8">
         {/* Floating Action Toolbar */}
         <SheetActionToolbar
           isEditMode={isEditMode}
@@ -1448,39 +1463,36 @@ export default function CharacterSheetPage({ params }: PageParams) {
             </div>
           </>
         )}
-      </div>
-      
-      {/* Fixed Roll Log */}
-      <RollLog />
-
-      {/* Modals */}
-      <CharacterSheetModals
-        addModalType={addModalType}
-        setAddModalType={setAddModalType}
-        featModalType={featModalType}
-        setFeatModalType={setFeatModalType}
-        skillModalType={skillModalType}
-        setSkillModalType={setSkillModalType}
-        featToRemove={featToRemove}
-        setFeatToRemove={setFeatToRemove}
-        showLevelUpModal={showLevelUpModal}
-        setShowLevelUpModal={setShowLevelUpModal}
-        showRecoveryModal={showRecoveryModal}
-        setShowRecoveryModal={setShowRecoveryModal}
-        character={character}
-        calculatedStats={calculatedStats}
-        existingIds={existingIds}
-        skills={skills}
-        traitsDb={traitsDb}
-        onModalAdd={handleModalAdd}
-        onAddFeats={handleAddFeats}
-        onAddSkills={handleAddSkills}
-        onConfirmRemoveFeat={handleConfirmRemoveFeat}
-        onLevelUp={handleLevelUp}
-        onFullRecovery={handleFullRecovery}
-        onPartialRecovery={handlePartialRecovery}
-      />
-    </div>
+        </div>
+        <RollLog />
+        <CharacterSheetModals
+          addModalType={addModalType}
+          setAddModalType={setAddModalType}
+          featModalType={featModalType}
+          setFeatModalType={setFeatModalType}
+          skillModalType={skillModalType}
+          setSkillModalType={setSkillModalType}
+          featToRemove={featToRemove}
+          setFeatToRemove={setFeatToRemove}
+          showLevelUpModal={showLevelUpModal}
+          setShowLevelUpModal={setShowLevelUpModal}
+          showRecoveryModal={showRecoveryModal}
+          setShowRecoveryModal={setShowRecoveryModal}
+          character={character}
+          calculatedStats={calculatedStats}
+          existingIds={existingIds}
+          skills={skills}
+          traitsDb={traitsDb}
+          onModalAdd={handleModalAdd}
+          onAddFeats={handleAddFeats}
+          onAddSkills={handleAddSkills}
+          onConfirmRemoveFeat={handleConfirmRemoveFeat}
+          onLevelUp={handleLevelUp}
+          onFullRecovery={handleFullRecovery}
+          onPartialRecovery={handlePartialRecovery}
+        />
+        </div>
+      </CharacterSheetProvider>
     </RollProvider>
   );
 }

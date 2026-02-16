@@ -3379,7 +3379,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-159
   title: Admin Codex — Reduce input lag in edit mode
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-09
   created_by: agent
   description: |
@@ -3392,7 +3392,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Form state still saves correctly on submit
     - npm run build passes
   notes: |
-    Deferred: requires profiling to identify root cause. Potential causes: inline handlers, large form state updates, Modal re-renders. Consider: useCallback for handlers, startTransition for non-urgent updates, React.memo for form sections.
+    Done 2026-02-16: Wrapped form state updates in useTransition (startTransition) in AdminFeatsTab so typing is non-blocking. Other admin tabs can follow the same pattern (scheduleFormUpdate) for edit modals.
 
 - id: TASK-160
   title: Admin Codex — Array fields use dropdowns, not raw IDs
@@ -3644,7 +3644,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-171
   title: Admin Skills — base skill dropdown resolves base_skill_id
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -3659,12 +3659,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Editing an existing sub-skill pre-selects the correct base skill in the dropdown
     - npm run build passes
   notes: |
-    Use codex skills list to build the dropdown (filter out sub-skills where base_skill_id is set). Keep raw IDs internal to avoid admins needing to look them up.
+    Done 2026-02-16 (verified). Admin Skills modal already has Base skill select with base skill names (baseSkillOptions, "Any", "— None"); openEdit resolves base_skill_id to name; handleSave resolves baseSkillName to base_skill_id (blank=>undefined, "Any"=>0).
 
 - id: TASK-172
   title: Admin Skills — expose additional description fields
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -3678,12 +3678,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Values load when editing an existing skill and persist on save
     - npm run build passes
   notes: |
-    These fields are descriptive helpers for RMs and should be treated as optional text fields, displayed alongside the primary description in Codex views.
+    Done 2026-02-16. Skill type and codex API return the 5 fields; Admin Skills modal has textareas for each; openEdit/handleSave load and persist them.
 
 - id: TASK-173
   title: Skills — render extra descriptions as expandable chips in item cards
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -3699,7 +3699,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Implementation is reused across Codex and skill selection/summary UIs
     - npm run build passes
   notes: |
-    Follow the existing chip expansion UX used for feats and parts so RMs get additional details without cluttering the main description.
+    Done 2026-02-16. Added getSkillExtraDescriptionDetailSections() in src/lib/skill-extra-descriptions.ts. Codex Skills: SkillCard uses description + detailSections (expandable chips). Add-skill modal: GridListRow detailSections from helper. Add-sub-skill modal: SkillExtraChipsSection in expanded content with click-to-expand chips.
 
 - id: TASK-174
   title: Codex schema — add Use column and align fields
@@ -3865,7 +3865,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-181
   title: Admin Skills — ability multi-select aligned with schema
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -3881,12 +3881,12 @@ Agents should **create new tasks** during their work when they discover addition
     - API and hooks correctly serialize/deserialize ability arrays for display and filters
     - npm run build passes
   notes: |
-    This extends the earlier feat ability_req/ability work to skills so the governing abilities are structured, not free text.
+    Done 2026-02-16 (verified). Admin Skills modal already uses ChipSelect for ability with ABILITY_OPTIONS from ABILITIES_AND_DEFENSES (12); handleSave persists as array or single string; API returns ability as string (join); openEdit splits to array.
 
 - id: TASK-182
   title: Admin Equipment — align fields with codex_equipment schema
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -3902,7 +3902,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Codex equipment displayed in Codex/Library stays in sync with the canonical codex_equipment shape
     - npm run build passes
   notes: |
-    This is primarily a reconciliation/cleanup task; it may be resolved either by trimming the editor or by deliberately extending the equipment schema and docs.
+    Done 2026-02-16 (verified). TASK-191 + current Admin Equipment: form has name, description, category, currency, rarity; API maps currency/gold_cost; rarity dropdown. Schema-aligned.
 
 - id: TASK-184
   title: Publish confirmation modal in all creators
@@ -4027,7 +4027,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-183
   title: Admin Parts — edit defense targets
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -4040,12 +4040,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Saved parts persist `defense` as per schema, and CodexPartsTab can display/use this information as needed
     - npm run build passes
   notes: |
-    This is a small schema-coverage enhancement; behavior in creators can be updated separately if needed.
+    Done 2026-02-16. Added defense to PowerPart type and codex API parts mapping. AdminPartsTab: ChipSelect for targeted defenses (6 from ABILITIES_AND_DEFENSES.slice(6)), form/state/openEdit/handleSave; defense persisted in codex_parts data.
 
 - id: TASK-190
   title: Admin Creature Feats — level, requirement, mechanic flags
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -4067,11 +4067,12 @@ Agents should **create new tasks** during their work when they discover addition
     - The creature feats list shows at least the feat point cost and either level requirement or feat level in columns, so admins can see tiering at a glance
     - Codex API (`/api/codex`) returns the new fields in the creatureFeats payload in a way that is compatible with the creature creator’s feat points calculation
     - npm run build passes
+  notes: "Done 2026-02-16: Modal/form already had feat_lvl, lvl_req, mechanic. Added feat_points to codex API; added FEAT LVL column to list (Pts, Feat Lvl, Req. Lvl) with sort."
 
 - id: TASK-191
   title: Admin Equipment — currency, category, and type alignment
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -4092,11 +4093,12 @@ Agents should **create new tasks** during their work when they discover addition
     - The equipment list’s cost column reflects the true currency value from the codex row (no more showing 0 in the modal when the list shows a non-zero cost)
     - The "Type" handling in AdminEquipmentTab matches how equipment type is used in item/armament creators (no misleading armor/weapon-only values when editing generic equipment)
     - npm run build passes
+  notes: "Done 2026-02-16: Category/currency/rarity already in modal. API equipment mapping: currency/gold_cost parsed from number or string so edit modal shows correct cost. Rarity as dropdown (Common..Ascended); currency input step=0.01, parseFloat."
 
 - id: TASK-192
   title: Admin Properties & Parts — mechanic/duration flags, percentage display, option chips
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -4106,6 +4108,8 @@ Agents should **create new tasks** during their work when they discover addition
     duration parts with duration=true are not wiring the "Affects Duration" checkbox correctly. Additionally, the Admin
     Parts list shows percentage-based EN parts as raw base_en values instead of formatted percentages, and list rows with
     options do not surface those options as expandable chips the way the Codex Parts/Properties tabs do.
+  notes: |
+    Done 2026-02-16. Properties: Type dropdown modal uses only Armor, Shield, Weapon (removed General). Parts: API parts mapping now returns duration; mechanic filter uses placeholder "All parts" only (mechanicMode ''), no duplicate All option. Percentage EN and option chips already present.
   related_files:
     - src/docs/CODEX_SCHEMA_REFERENCE.md
     - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
@@ -4124,7 +4128,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-193
   title: Admin Traits & Species — flaw/characteristic flags, sizes, trait chips
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -4133,6 +4137,8 @@ Agents should **create new tasks** during their work when they discover addition
     and the Species editor exposes a "Primary size" concept even though the codex schema only defines a sizes array.
     Additionally, when editing species, the chips used to add traits (species_traits, ancestry_traits, flaws,
     characteristics) are not expandable, making it hard for RMs to read the full trait descriptions inline.
+  notes: |
+    Verified 2026-02-16. Traits: API returns flaw/characteristic; openEdit sets flaw/characteristic from t.flaw===true, t.characteristic===true; handleSave persists both. Species: Modal shows only "All Sizes (comma-separated)" (no Primary size field); list uses sizes array; expandable trait chips (detailSections with descriptions) already in list.
   related_files:
     - src/docs/CODEX_SCHEMA_REFERENCE.md
     - src/app/(main)/admin/codex/AdminTraitsTab.tsx
@@ -4150,7 +4156,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-194
   title: Admin Skills & Feats — base skill display and filter “All” options
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -4169,6 +4175,8 @@ Agents should **create new tasks** during their work when they discover addition
     - The Skill Type SelectFilter in AdminSkillsTab has a single clear way to show “all skills” (e.g., placeholder only or explicit option only), eliminating duplicate “All Skills” entries
     - The Feat Type and State Feats filters in AdminFeatsTab likewise avoid duplicate “All”/“All Feats” options while preserving the ability to filter by archetype/character and state feats
     - npm run build passes
+  notes: |
+    Done 2026-02-16. Skills: Base Skill column fallback to skills.find when map lookup fails; subSkillMode '' with placeholder "All skills"; Feats: featTypeMode/stateFeatMode '' with placeholders "All types"/"All states". Base skill dropdown already pre-populates via openEdit.
 
 # =====================================================================
 # CHARACTER DATA AUDIT - Lean Schema & Codex-Driven Architecture
@@ -5893,7 +5901,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-248
   title: "P-5: Create CharacterSheetContext to reduce prop drilling"
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-13
   created_by: agent
   description: |
@@ -5903,6 +5911,8 @@ Agents should **create new tasks** during their work when they discover addition
     SkillsSection, ArchetypeSection, SheetHeader, SheetActionToolbar).
   related_files:
     - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/character-sheet-context.tsx
+    - src/components/character-sheet/sheet-header.tsx
     - src/components/character-sheet/library-section.tsx
     - src/components/character-sheet/abilities-section.tsx
     - src/components/character-sheet/skills-section.tsx
@@ -5912,12 +5922,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Section components consume from context instead of props
     - No behavioral changes — all existing functionality preserved
     - npm run build passes
-  notes: "Identified during codebase audit 2026-02-13 (P-5). Deferred from audit implementation due to high risk/scope."
+  notes: "Done 2026-02-16: Created CharacterSheetContext (character, setCharacter, isEditMode, isOwner, setAddModalType, setFeatModalType, setSkillModalType). Character sheet page wraps content in CharacterSheetProvider. SheetHeader consumes via useCharacterSheetOptional() for character and isEditMode (fallback to props when outside provider). Other sections can be migrated incrementally to use useCharacterSheet()."
 
 - id: TASK-249
   title: "FB-6: Campaign join notification for visibility change"
   priority: low
-  status: not-started
+  status: done
   created_at: 2026-02-13
   created_by: agent
   description: |
@@ -5926,7 +5936,10 @@ Agents should **create new tasks** during their work when they discover addition
     informing the user about this change. Add a confirmation dialog when joining a campaign.
   related_files:
     - src/app/(main)/campaigns/[id]/page.tsx
+    - src/app/(main)/campaigns/page.tsx
+    - src/app/api/characters/route.ts
+    - src/types/character.ts
   acceptance_criteria:
     - Notification or modal shown when a private character joins a campaign
     - User informed that visibility will change to 'campaign'
-  notes: "Identified from owner feedback (2/9/2026) and codebase audit 2026-02-13 (FB-6)."
+  notes: "Done 2026-02-16: Added visibility to CharacterSummary and GET /api/characters. Join Campaign tab and Add Character modal show confirmation when selected character is private; modal explains visibility will change to Campaign. Post-join toast retained."

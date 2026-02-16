@@ -56,6 +56,7 @@ export async function GET() {
           || ((d.archetype as { type?: string })?.type?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
         ancestryName: (d.ancestry as { name?: string })?.name || (d.species as string),
         status: d.status as CharacterSummary['status'],
+        visibility: (d.visibility as CharacterSummary['visibility']) ?? 'private',
         updatedAt: r.updatedAt ?? undefined,
       };
     });

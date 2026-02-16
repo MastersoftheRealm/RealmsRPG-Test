@@ -33,6 +33,8 @@ export interface PowerPart {
   duration?: boolean;
   percentage?: boolean;
   mechanic?: boolean;
+  /** Targeted defenses (subset of the 6 canonical defenses). */
+  defense?: string[];
 }
 
 export interface TechniquePart {
@@ -101,6 +103,11 @@ export interface Skill {
   description: string;
   ability: string;
   base_skill_id?: number;
+  success_desc?: string;
+  failure_desc?: string;
+  ds_calc?: string;
+  craft_success_desc?: string;
+  craft_failure_desc?: string;
 }
 
 export interface Species {

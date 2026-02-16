@@ -74,6 +74,11 @@ export async function GET() {
       description: (d.description as string) || '',
       ability,
       base_skill_id: !isNaN(baseSkillId as number) ? baseSkillId : undefined,
+      success_desc: (d.success_desc as string) || undefined,
+      failure_desc: (d.failure_desc as string) || undefined,
+      ds_calc: (d.ds_calc as string) || undefined,
+      craft_success_desc: (d.craft_success_desc as string) || undefined,
+      craft_failure_desc: (d.craft_failure_desc as string) || undefined,
     };
   });
 
@@ -151,7 +156,9 @@ export async function GET() {
       op_3_tp: parseFloat(d.op_3_tp as string) || 0,
       percentage: d.percentage === true || d.percentage === 'true',
       mechanic: d.mechanic === true || d.mechanic === 'true',
+      duration: d.duration === true || d.duration === 'true',
       base_stam: parseFloat(d.base_stam as string) || 0,
+      defense: toStrArray(d.defense),
     };
   });
 
@@ -180,6 +187,9 @@ export async function GET() {
 
   const codexEquipment = equipment.map((r) => {
     const d = r.data as Record<string, unknown>;
+    const currencyNum = typeof d.currency === 'number' ? d.currency : parseFloat(String(d.currency ?? ''));
+    const goldNum = typeof d.gold_cost === 'number' ? d.gold_cost : parseFloat(String(d.gold_cost ?? ''));
+    const cost = !Number.isNaN(currencyNum) && currencyNum > 0 ? currencyNum : !Number.isNaN(goldNum) ? goldNum : 0;
     return {
       id: r.id,
       name: (d.name as string) || '',
@@ -188,12 +198,12 @@ export async function GET() {
       category: d.category as string | undefined,
       description: (d.description as string) || '',
       damage: d.damage as string | undefined,
-      armor_value: d.armor_value != null ? parseInt(d.armor_value as string) : undefined,
-      gold_cost: parseFloat(d.gold_cost as string) || 0,
-      currency: parseFloat(d.currency as string) || parseFloat(d.gold_cost as string) || 0,
+      armor_value: d.armor_value != null ? parseInt(String(d.armor_value)) : undefined,
+      gold_cost: cost,
+      currency: cost,
       properties: toStrArray(d.properties),
       rarity: d.rarity as string | undefined,
-      weight: d.weight != null ? parseFloat(d.weight as string) : undefined,
+      weight: d.weight != null ? parseFloat(String(d.weight)) : undefined,
     };
   });
 
@@ -201,11 +211,13 @@ export async function GET() {
 
   const codexCreatureFeats = creatureFeats.map((r) => {
     const d = r.data as Record<string, unknown>;
+    const pointsVal = Number(d.points ?? d.feat_points ?? d.cost ?? 0);
     return {
       id: r.id,
       name: (d.name as string) || '',
       description: (d.description as string) || '',
-      points: Number(d.points ?? d.feat_points ?? d.cost ?? 0),
+      points: pointsVal,
+      feat_points: pointsVal,
       feat_lvl: d.feat_lvl != null ? Number(d.feat_lvl) : undefined,
       lvl_req: d.lvl_req != null ? Number(d.lvl_req) : undefined,
       mechanic: d.mechanic === true || d.mechanic === 'true',

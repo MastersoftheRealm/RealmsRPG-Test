@@ -21,6 +21,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { useCodexSkills, type Skill } from '@/hooks';
+import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
 const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
 
@@ -35,16 +36,11 @@ function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<
   const isSubSkill = skill.base_skill_id !== undefined;
   const baseSkillName = isSubSkill ? (skillIdToName.get(String(skill.base_skill_id)) || '-') : '-';
 
-  const expandedContent = skill.description ? (
-    <div>
-      <p className="text-text-secondary text-sm mb-2 p-3 bg-surface-alt rounded-lg">{skill.description}</p>
-      {isSubSkill && (
-        <p className="text-sm text-primary-600">
-          Sub-skill of: <strong>{baseSkillName}</strong>
-        </p>
-      )}
-    </div>
-  ) : undefined;
+  const descriptionParts: string[] = [];
+  if (skill.description?.trim()) descriptionParts.push(skill.description.trim());
+  if (isSubSkill) descriptionParts.push(`Sub-skill of: ${baseSkillName}`);
+  const description = descriptionParts.length > 0 ? descriptionParts.join('\n\n') : undefined;
+  const detailSections = getSkillExtraDescriptionDetailSections(skill);
 
   const displayName = isSubSkill ? `↳ ${skill.name}` : skill.name;
 
@@ -52,13 +48,13 @@ function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<
     <GridListRow
       id={skill.id}
       name={displayName}
-      description={!skill.description ? undefined : undefined}
+      description={description}
       gridColumns={SKILL_GRID_COLUMNS}
       columns={[
         { key: 'Ability', value: skill.ability || '-', highlight: false },
         { key: 'Base Skill', value: baseSkillName, highlight: isSubSkill },
       ]}
-      expandedContent={expandedContent}
+      detailSections={detailSections.length > 0 ? detailSections : undefined}
     />
   );
 }

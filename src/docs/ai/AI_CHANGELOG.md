@@ -2,6 +2,37 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-16 | agent | Session: TASK-173 (Skills extra descriptions as expandable chips) | files: src/lib/skill-extra-descriptions.ts, src/app/(main)/codex/CodexSkillsTab.tsx, src/components/character-sheet/add-skill-modal.tsx, add-sub-skill-modal.tsx, src/docs/ai/AI_TASK_QUEUE.md | Summary:
+  - TASK-173: Shared helper getSkillExtraDescriptionDetailSections(skill) returns detailSections for success_desc, failure_desc, ds_calc, craft_success_desc, craft_failure_desc. Codex Skills tab uses description + detailSections (expandable chips). Add-skill modal passes detailSections to GridListRow. Add-sub-skill modal shows SkillExtraChipsSection in expanded content with click-to-expand chips.
+  - build passes
+
+- 2026-02-16 | agent | Session: TASK-172, TASK-171, TASK-181, TASK-182 (Admin Skills/Equipment) | files: src/app/(main)/admin/codex/AdminSkillsTab.tsx, src/app/api/codex/route.ts, src/hooks/use-rtdb.ts, src/docs/ai/AI_TASK_QUEUE.md | Summary:
+  - TASK-172: Admin Skills — added success_desc, failure_desc, ds_calc, craft_success_desc, craft_failure_desc to Skill type, codex API, Admin Skills modal (textareas), openEdit/handleSave.
+  - TASK-171, TASK-181: Verified done — base skill dropdown by name and ability multi-select (12 abilities/defenses) already implemented.
+  - TASK-182: Verified done — Admin Equipment has category, currency, rarity (TASK-191 + current form).
+  - build passes
+
+- 2026-02-16 | agent | Session: TASK-192, TASK-193 (Admin Properties/Parts/Traits/Species) | files: src/app/(main)/admin/codex/AdminPropertiesTab.tsx, AdminPartsTab.tsx, src/app/api/codex/route.ts, src/docs/ai/AI_TASK_QUEUE.md | Summary:
+  - TASK-192: Admin Properties — Type dropdown in modal uses only Armor, Shield, Weapon (removed General). Admin Parts — API parts mapping now returns duration; Mechanics filter uses placeholder "All parts" only (mechanicMode ''), no duplicate All option. Percentage EN and option chips already present.
+  - TASK-193: Verified Traits (flaw/characteristic load/save from API and modal) and Species (sizes-only UI, no Primary size field, expandable trait chips in list).
+  - build passes
+
+- 2026-02-16 | agent | Session: TASK-194, TASK-183 (Admin Skills/Feats/Parts) | files: src/app/(main)/admin/codex/AdminSkillsTab.tsx, AdminFeatsTab.tsx, AdminPartsTab.tsx, src/app/api/codex/route.ts, src/hooks/use-rtdb.ts, src/docs/ai/AI_TASK_QUEUE.md | Summary:
+  - TASK-194: Admin Skills — Base Skill column fallback to skills.find when map lookup fails; Skill Type filter uses placeholder "All skills" only (subSkillMode ''), options Only Sub-Skills/Hide Sub-Skills. Admin Feats — Feat Type and State Feats use placeholders "All types"/"All states" only (featTypeMode/stateFeatMode ''), removed duplicate All options.
+  - TASK-183: Admin Parts — defense multi-select (ChipSelect) with 6 canonical defenses; PowerPart.defense and API parts mapping; form/state/openEdit/handleSave persist defense.
+  - build passes
+
+- 2026-02-16 | agent | Session: Continue — TASK-190, TASK-191 (Admin Codex) | files: src/app/api/codex/route.ts, src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx, src/app/(main)/admin/codex/AdminEquipmentTab.tsx, src/docs/ai/AI_TASK_QUEUE.md | Summary:
+  - TASK-190: Admin Creature Feats — API now returns feat_points; list has FEAT LVL column (Pts, Feat Lvl, Req. Lvl) with sort. Modal already had feat_lvl, lvl_req, mechanic.
+  - TASK-191: Admin Equipment — API equipment mapping parses currency/gold_cost from number or string so edit modal shows correct cost; Rarity as dropdown (Common..Ascended); currency input step=0.01, parseFloat. Category/currency/rarity already in modal.
+  - build passes
+
+- 2026-02-16 | agent | Session: Deferred tasks — TASK-249, TASK-159, TASK-248 | files: src/types/character.ts, src/app/api/characters/route.ts, src/app/(main)/campaigns/page.tsx, src/app/(main)/campaigns/[id]/page.tsx, src/app/(main)/admin/codex/AdminFeatsTab.tsx, src/components/character-sheet/character-sheet-context.tsx, src/components/character-sheet/sheet-header.tsx, src/components/character-sheet/index.ts, src/app/(main)/characters/[id]/page.tsx, src/docs/ai/AI_TASK_QUEUE.md | Summary:
+  - TASK-249 (FB-6): Campaign join notification for visibility change. Added visibility to CharacterSummary and GET /api/characters. Join Campaign tab and Add Character modal show a confirmation when the selected character is private; modal explains visibility will change to Campaign. Post-join toast retained.
+  - TASK-159: Admin Codex input lag. Wrapped form state updates in useTransition (startTransition) in AdminFeatsTab so typing is non-blocking; scheduleFormUpdate used for all modal form fields. Other admin tabs can follow the same pattern.
+  - TASK-248 (P-5): CharacterSheetContext. Created CharacterSheetContext (character, setCharacter, isEditMode, isOwner, setAddModalType, setFeatModalType, setSkillModalType). Character sheet page wraps content in CharacterSheetProvider. SheetHeader consumes via useCharacterSheetOptional() for character and isEditMode (fallback to props when outside provider). Other sections can be migrated incrementally.
+  - build passes
+
 - 2026-02-14 | agent | Session: Creature creator expand on enable, creator load reset + audit | files: collapsible-section.tsx, creature-creator/page.tsx, power-creator/page.tsx, technique-creator/page.tsx, item-creator/page.tsx | Summary:
   - Creature: Powers, Techniques, Armaments CollapsibleSections now defaultExpanded={true} so they open immediately when enabled.
   - Power/Technique/Item creators: Load handlers now call handleReset() first to clear all state before loading, preventing corruption from existing edits.

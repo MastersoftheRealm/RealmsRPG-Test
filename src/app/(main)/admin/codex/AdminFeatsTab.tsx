@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition, useCallback } from 'react';
 import {
   ChipSelect,
   AbilityRequirementFilter,
@@ -38,8 +38,8 @@ interface FeatFilters {
   abilities: string[];
   tags: string[];
   tagMode: 'any' | 'all';
-  featTypeMode: 'all' | 'archetype' | 'character';
-  stateFeatMode: 'all' | 'only' | 'hide';
+  featTypeMode: '' | 'archetype' | 'character';
+  stateFeatMode: '' | 'only' | 'hide';
 }
 
 export function AdminFeatsTab() {
@@ -60,8 +60,8 @@ export function AdminFeatsTab() {
     abilities: [],
     tags: [],
     tagMode: 'all',
-    featTypeMode: 'all',
-    stateFeatMode: 'all',
+    featTypeMode: '',
+    stateFeatMode: '',
   });
 
   const filterOptions = useMemo(() => {
@@ -164,6 +164,10 @@ export function AdminFeatsTab() {
   const ABILITY_OPTIONS = ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a }));
 
   const [form, setForm] = useState(formDefaults);
+  const [, startTransition] = useTransition();
+  const scheduleFormUpdate = useCallback((updater: React.SetStateAction<typeof formDefaults>) => {
+    startTransition(() => setForm(updater));
+  }, []);
 
   // Map skill ID -> name for display
   const skillIdToName = useMemo(() => {
@@ -355,23 +359,21 @@ export function AdminFeatsTab() {
             label="Feat Type"
             value={filters.featTypeMode}
             options={[
-              { value: 'all', label: 'All types' },
               { value: 'archetype', label: 'Archetype feats' },
               { value: 'character', label: 'Character feats' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, featTypeMode: v as 'all' | 'archetype' | 'character' }))}
-            placeholder="Feat type"
+            onChange={(v) => setFilters(f => ({ ...f, featTypeMode: (v || '') as '' | 'archetype' | 'character' }))}
+            placeholder="All types"
           />
           <SelectFilter
             label="State Feats"
             value={filters.stateFeatMode}
             options={[
-              { value: 'all', label: 'All states' },
               { value: 'only', label: 'Only state feats' },
               { value: 'hide', label: 'Hide state feats' },
             ]}
-            onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))}
-            placeholder="State filter"
+            onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: (v || '') as '' | 'only' | 'hide' }))}
+            placeholder="All states"
           />
         </div>
       </FilterSection>
@@ -499,7 +501,7 @@ export function AdminFeatsTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input
               value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              onChange={(e) => scheduleFormUpdate((f) => ({ ...f, name: e.target.value }))}
               placeholder="Feat name"
             />
           </div>
@@ -507,7 +509,7 @@ export function AdminFeatsTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
             <textarea
               value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              onChange={(e) => scheduleFormUpdate((f) => ({ ...f, description: e.target.value }))}
               placeholder="Feat description"
               className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary"
               rows={3}
@@ -517,7 +519,7 @@ export function AdminFeatsTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">Requirement Description (req_desc)</label>
             <Input
               value={form.req_desc}
-              onChange={(e) => setForm((f) => ({ ...f, req_desc: e.target.value }))}
+              onChange={(e) => scheduleFormUpdate((f) => ({ ...f, req_desc: e.target.value }))}
               placeholder="Human-readable requirement text"
             />
           </div>
@@ -526,7 +528,7 @@ export function AdminFeatsTab() {
               <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
               <Input
                 value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, category: e.target.value }))}
                 placeholder="e.g. Combat"
               />
             </div>
@@ -534,7 +536,7 @@ export function AdminFeatsTab() {
               <label className="block text-sm font-medium text-text-secondary mb-1">Feat Category Required (feat_cat_req)</label>
               <Input
                 value={form.feat_cat_req}
-                onChange={(e) => setForm((f) => ({ ...f, feat_cat_req: e.target.value }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_cat_req: e.target.value }))}
                 placeholder="e.g. Defense"
               />
             </div>
@@ -544,7 +546,7 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.lvl_req}
-                onChange={(e) => setForm((f) => ({ ...f, lvl_req: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, lvl_req: parseInt(e.target.value) || 0 }))}
               />
             </div>
             <div>
@@ -553,7 +555,7 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.feat_lvl}
-                onChange={(e) => setForm((f) => ({ ...f, feat_lvl: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_lvl: parseInt(e.target.value) || 0 }))}
                 placeholder="0 = no level"
               />
             </div>
@@ -564,8 +566,8 @@ export function AdminFeatsTab() {
               placeholder="Choose ability/defense"
               options={ABILITY_OPTIONS}
               selectedValues={form.ability}
-              onSelect={(v) => setForm((f) => ({ ...f, ability: [...f.ability, v] }))}
-              onRemove={(v) => setForm((f) => ({ ...f, ability: f.ability.filter(a => a !== v) }))}
+              onSelect={(v) => scheduleFormUpdate((f) => ({ ...f, ability: [...f.ability, v] }))}
+              onRemove={(v) => scheduleFormUpdate((f) => ({ ...f, ability: f.ability.filter(a => a !== v) }))}
             />
           </div>
           <div>
@@ -578,7 +580,7 @@ export function AdminFeatsTab() {
                     onChange={(e) => {
                       const next = [...form.ability_req];
                       next[i] = e.target.value;
-                      setForm((f) => ({ ...f, ability_req: next }));
+                      scheduleFormUpdate((f) => ({ ...f, ability_req: next }));
                     }}
                     className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
                   >
@@ -596,13 +598,13 @@ export function AdminFeatsTab() {
                     onChange={(e) => {
                       const next = [...form.abil_req_val];
                       next[i] = parseInt(e.target.value) || 0;
-                      setForm((f) => ({ ...f, abil_req_val: next }));
+                      scheduleFormUpdate((f) => ({ ...f, abil_req_val: next }));
                     }}
                     className="w-20"
                     placeholder="Min"
                   />
                   <IconButton variant="ghost" size="sm" onClick={() => {
-                    setForm((f) => ({
+                    scheduleFormUpdate((f) => ({
                       ...f,
                       ability_req: f.ability_req.filter((_, j) => j !== i),
                       abil_req_val: f.abil_req_val.filter((_, j) => j !== i),
@@ -615,7 +617,7 @@ export function AdminFeatsTab() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setForm((f) => ({
+                onClick={() => scheduleFormUpdate((f) => ({
                   ...f,
                   ability_req: [...f.ability_req, ABILITIES_AND_DEFENSES[0]],
                   abil_req_val: [...f.abil_req_val, 0],
@@ -636,7 +638,7 @@ export function AdminFeatsTab() {
                     onChange={(e) => {
                       const next = [...form.skill_req];
                       next[i] = e.target.value;
-                      setForm((f) => ({ ...f, skill_req: next }));
+                      scheduleFormUpdate((f) => ({ ...f, skill_req: next }));
                     }}
                     className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
                   >
@@ -654,13 +656,13 @@ export function AdminFeatsTab() {
                     onChange={(e) => {
                       const next = [...form.skill_req_val];
                       next[i] = parseInt(e.target.value) || 0;
-                      setForm((f) => ({ ...f, skill_req_val: next }));
+                      scheduleFormUpdate((f) => ({ ...f, skill_req_val: next }));
                     }}
                     className="w-20"
                     placeholder="Min"
                   />
                   <IconButton variant="ghost" size="sm" onClick={() => {
-                    setForm((f) => ({
+                    scheduleFormUpdate((f) => ({
                       ...f,
                       skill_req: f.skill_req.filter((_, j) => j !== i),
                       skill_req_val: f.skill_req_val.filter((_, j) => j !== i),
@@ -675,7 +677,7 @@ export function AdminFeatsTab() {
                 size="sm"
                 onClick={() => {
                   const firstSkill = (skills as Skill[])[0];
-                  setForm((f) => ({
+                  scheduleFormUpdate((f) => ({
                     ...f,
                     skill_req: [...f.skill_req, firstSkill ? String(firstSkill.id) : ''],
                     skill_req_val: [...f.skill_req_val, 0],
@@ -694,14 +696,14 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.uses_per_rec}
-                onChange={(e) => setForm((f) => ({ ...f, uses_per_rec: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, uses_per_rec: parseInt(e.target.value) || 0 }))}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Recovery Period</label>
               <select
                 value={form.rec_period}
-                onChange={(e) => setForm((f) => ({ ...f, rec_period: e.target.value }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, rec_period: e.target.value }))}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
               >
                 <option value="">—</option>
@@ -717,7 +719,7 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.pow_abil_req}
-                onChange={(e) => setForm((f) => ({ ...f, pow_abil_req: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_abil_req: parseInt(e.target.value) || 0 }))}
               />
             </div>
             <div>
@@ -726,7 +728,7 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.mart_abil_req}
-                onChange={(e) => setForm((f) => ({ ...f, mart_abil_req: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_abil_req: parseInt(e.target.value) || 0 }))}
               />
             </div>
             <div>
@@ -735,7 +737,7 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.pow_prof_req}
-                onChange={(e) => setForm((f) => ({ ...f, pow_prof_req: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_prof_req: parseInt(e.target.value) || 0 }))}
               />
             </div>
             <div>
@@ -744,7 +746,7 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.mart_prof_req}
-                onChange={(e) => setForm((f) => ({ ...f, mart_prof_req: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_prof_req: parseInt(e.target.value) || 0 }))}
               />
             </div>
             <div>
@@ -753,7 +755,7 @@ export function AdminFeatsTab() {
                 type="number"
                 min={0}
                 value={form.speed_req}
-                onChange={(e) => setForm((f) => ({ ...f, speed_req: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, speed_req: parseInt(e.target.value) || 0 }))}
               />
             </div>
           </div>
@@ -762,7 +764,7 @@ export function AdminFeatsTab() {
             <Input
               value={form.tags.join(', ')}
               onChange={(e) =>
-                setForm((f) => ({
+                scheduleFormUpdate((f) => ({
                   ...f,
                   tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean),
                 }))
@@ -775,7 +777,7 @@ export function AdminFeatsTab() {
               <input
                 type="checkbox"
                 checked={form.char_feat}
-                onChange={(e) => setForm((f) => ({ ...f, char_feat: e.target.checked }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, char_feat: e.target.checked }))}
               />
               <span className="text-sm text-text-secondary">Character Feat</span>
             </label>
@@ -783,7 +785,7 @@ export function AdminFeatsTab() {
               <input
                 type="checkbox"
                 checked={form.state_feat}
-                onChange={(e) => setForm((f) => ({ ...f, state_feat: e.target.checked }))}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, state_feat: e.target.checked }))}
               />
               <span className="text-sm text-text-secondary">State Feat</span>
             </label>
