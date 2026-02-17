@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Modal, Chip, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useCodexSkills, resolveSkillIdsToNames } from '@/hooks';
@@ -111,6 +111,11 @@ export function SpeciesModal({
   const { data: allSkills } = useCodexSkills();
   // State for showing skill description
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+
+  // Clear skill description when viewing a different species (avoid carrying over from previous)
+  useEffect(() => {
+    setSelectedSkill(null);
+  }, [species?.id]);
 
   // Resolve all trait categories
   const resolvedTraits = useMemo(() => {

@@ -717,3 +717,13 @@ Notes
 - Priority: High  
 - Feedback: (1) When enabling powers, armaments, techniques in the creature creator, auto-open the list (expanded) instead of collapsed — you enabled it to add something. (2) Audit load option/functionality in creators. Loading must update all UI, option levels, added parts/properties to exactly match the saved item: range, damage dice, action type, armament type, description, properties, option levels, etc. Any existing UI state must be completely cleared/reset before load to avoid corruption. Applies to armaments, powers, techniques, and creatures.  
 - Expected: Implemented 2026-02-14. Creature sections expand when enabled. All creators reset before load; technique load restores actionType/isReaction; item load supports armorValue fallback; creature load does full replace (no merge).
+
+**Raw Feedback Log — 2/17/2026 (Species skill description + step check mark)**  
+- Date: 2026-02-17  
+- Context: Character creator — Species step, step tabs  
+- Priority: Low  
+- Feedback:  
+  (1) Bug — Skill description carrying over: Make a new character → Select "2. Species" → Click a Species → Under "Species Skills" click a skill to show description → Click off that Species and click a different Species. Observed: Skill description from the first Species stays open on the second. Expected: Skill description should close when clicking off of a Species.  
+  (2) Bug — Character creation Step missing check mark: Make a new character → Choose and confirm Archetype → Select and pick a Species → Click the "3. Ancestry" tab. Observed: Users can complete but not "confirm" a Step so it doesn't get a check mark. Expected: Step should warn the user if they have made a selection but not confirmed it.  
+  (Note: Seeming did not impact character creation. BLOCKED: Users can not view completed Character sheets. 2/17/2026)  
+- Expected: (1) Clear skill description when switching species in modal. (2) When navigating to another step via tab with unconfirmed selection, show warning and offer to mark complete and go.

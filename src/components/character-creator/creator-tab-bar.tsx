@@ -24,8 +24,27 @@ const STEP_LABELS: Record<CreatorStep, string> = {
 };
 
 export function CreatorTabBar() {
-  const { currentStep, completedSteps, setStep, canNavigateToStep, resetCreator } = useCharacterCreatorStore();
+  const { currentStep, completedSteps, setStep, canNavigateToStep, markStepComplete, hasUnconfirmedSelection, resetCreator } = useCharacterCreatorStore();
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [pendingStep, setPendingStep] = useState<CreatorStep | null>(null);
+
+  const handleTabClick = (step: CreatorStep) => {
+    if (step === currentStep) return;
+    if (!canNavigateToStep(step)) return;
+    if (hasUnconfirmedSelection(currentStep)) {
+      setPendingStep(step);
+      return;
+    }
+    setStep(step);
+  };
+
+  const handleConfirmUnconfirmed = () => {
+    if (pendingStep !== null) {
+      markStepComplete(currentStep);
+      setStep(pendingStep);
+      setPendingStep(null);
+    }
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-1 p-2 bg-surface-alt rounded-lg mb-4">
@@ -37,7 +56,7 @@ export function CreatorTabBar() {
         return (
           <button
             key={step}
-            onClick={() => setStep(step)}
+            onClick={() => handleTabClick(step)}
             disabled={!canNavigate}
             className={cn(
               'px-3 py-2 rounded-lg text-sm font-medium transition-all',
@@ -71,6 +90,16 @@ export function CreatorTabBar() {
         description="Are you sure you want to restart? All progress for this character will be lost."
         confirmLabel="Restart"
         confirmVariant="danger"
+      />
+
+      <ConfirmActionModal
+        isOpen={pendingStep !== null}
+        onClose={() => setPendingStep(null)}
+        onConfirm={handleConfirmUnconfirmed}
+        title="Step not confirmed"
+        description={`You've made a selection on this step but haven't clicked Continue. Mark this step complete and go to ${pendingStep !== null ? STEP_LABELS[pendingStep] : ''}?`}
+        confirmLabel="Mark complete & go"
+        confirmVariant="primary"
       />
     </div>
   );
