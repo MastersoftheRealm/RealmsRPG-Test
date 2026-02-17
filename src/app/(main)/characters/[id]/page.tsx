@@ -1224,6 +1224,23 @@ export default function CharacterSheetPage({ params }: PageParams) {
     });
   }, [character, codexSkills, characterSpeciesSkills]);
   
+  // Sheet context for CharacterSheetProvider. Must be before any early return so hook count is stable (React #310).
+  const sheetContextValue = useMemo(
+    () =>
+      character
+        ? {
+            character,
+            setCharacter,
+            isEditMode: effectiveEditMode,
+            isOwner,
+            setAddModalType,
+            setFeatModalType,
+            setSkillModalType,
+          }
+        : null,
+    [character, effectiveEditMode, isOwner, setAddModalType, setFeatModalType, setSkillModalType]
+  );
+  
   // Note: No auth redirect — this page supports public/campaign character viewing.
   // The API enforces visibility rules; owners get edit controls via `isOwner`.
   
@@ -1252,23 +1269,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
       </div>
     );
   }
-  
-  const sheetContextValue = useMemo(
-    () => ({
-      character,
-      setCharacter,
-      isEditMode: effectiveEditMode,
-      isOwner,
-      setAddModalType,
-      setFeatModalType,
-      setSkillModalType,
-    }),
-    [character, effectiveEditMode, isOwner, setAddModalType, setFeatModalType, setSkillModalType]
-  );
 
   return (
     <RollProvider campaignContext={campaignContext} canRoll={isOwner}>
-      <CharacterSheetProvider value={sheetContextValue}>
+      <CharacterSheetProvider value={sheetContextValue!}>
         <div className="min-h-screen bg-background pb-8">
         {/* Floating Action Toolbar */}
         <SheetActionToolbar
