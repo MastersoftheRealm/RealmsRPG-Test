@@ -726,4 +726,20 @@ Notes
   (1) Bug — Skill description carrying over: Make a new character → Select "2. Species" → Click a Species → Under "Species Skills" click a skill to show description → Click off that Species and click a different Species. Observed: Skill description from the first Species stays open on the second. Expected: Skill description should close when clicking off of a Species.  
   (2) Bug — Character creation Step missing check mark: Make a new character → Choose and confirm Archetype → Select and pick a Species → Click the "3. Ancestry" tab. Observed: Users can complete but not "confirm" a Step so it doesn't get a check mark. Expected: Step should warn the user if they have made a selection but not confirmed it.  
   (Note: Seeming did not impact character creation. BLOCKED: Users can not view completed Character sheets. 2/17/2026)  
-- Expected: (1) Clear skill description when switching species in modal. (2) When navigating to another step via tab with unconfirmed selection, show warning and offer to mark complete and go.
+- Expected: (1) Clear skill description when switching species in modal. (2) When navigating to another step via tab with unconfirmed selection, show warning and offer to mark complete and go.  
+- Implemented 2026-02-17: (1) species-modal.tsx — clear selectedSkill when isOpen becomes false and when species?.id changes. (2) creator-tab-bar.tsx — handleContinueAnyway now calls markStepComplete(currentStep) so the step gets a check mark when user clicks "Continue anyway". TASK-250, TASK-251.
+
+**Raw Feedback Log — 2/17/2026 (Add power/technique modals + Finalize abilities)**  
+- Date: 2026-02-17  
+- Context: Character creator, Creature creator, Finalize step  
+- Priority: High  
+- Feedback: (1) The select/add powers and select/add technique modals in the character creator are not unified in UI/styles/format with other add power/technique modals; they're missing the layout of column headers, collapsed item headers, etc. This is likely an issue in the creature creator too. (2) Finalize Step: Abilities shouldn't ever be abbreviated to less than 3 letters; the current finalize step makes them all one letter. Show 3-letter abbreviations at least, but prefer full text: "Strength", "Vitality", etc.  
+- Expected: (1) Character creator and creature creator add power/technique modals match character sheet add-library-item modal: same column headers (e.g. NAME, ACTION, DAMAGE, AREA for powers; NAME, WEAPON, PARTS for techniques), collapsed/expandable row layout, list header bar. (2) Finalize step abilities display as full names (Strength, Vitality, …) or at minimum 3-letter abbreviations, not single letters.
+- Implemented 2026-02-17: (1) TASK-252 — Character creator powers-step: columns + gridColumns for power (Action, Damage, Area) and technique (Weapon, Parts); creature creator transformers stats and modal columns/gridColumns aligned; (2) TASK-253 — ABILITY_DISPLAY_NAMES in constants; finalize-step uses full ability names.
+
+**Raw Feedback Log — Character creator allocate skills tab (species value 0, bonuses, ability choice)**  
+- Date: 2026-02-17  
+- Context: Character creator — Allocate skills tab  
+- Priority: High  
+- Feedback: (1) Species skills are added as proficient with skill value 0, not 1 — I've given feedback about this before. (2) Skill bonuses seem inaccurate; reference GAME_RULES for skills/subskill bonus calculations. (3) Skills with multiple ability options (e.g. Craft) should let me choose which ability the skill uses; default should be the highest value ability at that point, but I need to be able to select. (4) Unity between skill calculations in character sheet, creature creator, and character creator.  
+- Expected: Species skills = proficient + value 0; bonus formulas per GAME_RULES (proficient base = ability + value, sub-skill = ability + base value + sub value; unproficient = ½ ability round up or ×2 if negative); multi-ability skills have ability selector, default highest; same formulas everywhere.

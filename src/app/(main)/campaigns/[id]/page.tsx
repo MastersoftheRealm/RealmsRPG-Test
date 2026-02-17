@@ -411,6 +411,7 @@ function CampaignDetailContent() {
       {/* Delete Confirm */}
       {deleteConfirm && (
         <DeleteConfirmModal
+          isOpen={true}
           itemName={campaign.name}
           itemType="campaign"
           deleteContext="campaigns"

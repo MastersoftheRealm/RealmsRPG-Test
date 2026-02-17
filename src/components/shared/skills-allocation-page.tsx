@@ -22,6 +22,8 @@ import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
   calculateSkillPointsForEntity,
+  getLinkedAbilityKeys,
+  getHighestLinkedAbilityKey,
 } from '@/lib/game/formulas';
 import {
   getTotalSkillPoints,
@@ -33,8 +35,7 @@ import { formatBonus } from '@/lib/utils';
 import { SkillRow } from '@/components/shared';
 import { Button, Spinner, Alert } from '@/components/ui';
 import { PointStatus } from '@/components/shared';
-import { AddSkillModal } from '@/components/character-sheet/add-skill-modal';
-import { AddSubSkillModal } from '@/components/character-sheet/add-sub-skill-modal';
+import { AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { Abilities, DefenseSkills } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 
@@ -75,6 +76,10 @@ export interface SkillsAllocationPageProps {
   onDefenseChange: (defense: DefenseSkills) => void;
   /** Optional: ability-derived defense bonuses for cap check */
   abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>>;
+  /** Optional: chosen ability per skill (for multi-ability skills). Key = skill ID (base skill for sub-skills). */
+  skillAbilities?: Record<string, string>;
+  /** Optional: callback when user changes chosen ability for a skill */
+  onSkillAbilityChange?: (skillId: string, abilityKey: string) => void;
   /** Optional footer (e.g. Back/Continue buttons) */
   footer?: React.ReactNode;
   /** Optional className */
@@ -92,6 +97,8 @@ export function SkillsAllocationPage({
   onAllocationsChange,
   onDefenseChange,
   abilityDefenseBonuses = {},
+  skillAbilities = {},
+  onSkillAbilityChange,
   footer,
   className,
 }: SkillsAllocationPageProps) {
@@ -191,7 +198,7 @@ export function SkillsAllocationPage({
         if (remainingPoints < cost) return;
         onAllocationsChange({ ...allocations, [skillId]: current + 1 });
       } else {
-        if (isSpecies && current <= 1) return;
+        if (isSpecies && current <= 0) return;
         if (current <= 0) return;
         const newVal = current - 1;
         if (isSubSkill && newVal === 0) {
@@ -249,21 +256,22 @@ export function SkillsAllocationPage({
   );
 
   const getSkillBonus = useCallback(
-    (skill: Skill, value: number, isProficient: boolean) => {
-      return calculateSkillBonusWithProficiency(skill.ability, value, abilities, isProficient);
+    (skill: Skill, value: number, isProficient: boolean, chosenAbilityKey?: string) => {
+      return calculateSkillBonusWithProficiency(skill.ability, value, abilities, isProficient, chosenAbilityKey);
     },
     [abilities]
   );
 
   const getSubSkillBonus = useCallback(
-    (skill: Skill, subValue: number, baseValue: number, baseProficient: boolean, isProficient: boolean) => {
+    (skill: Skill, subValue: number, baseValue: number, baseProficient: boolean, isProficient: boolean, chosenAbilityKey?: string) => {
       return calculateSubSkillBonusWithProficiency(
         skill.ability,
         subValue,
         baseValue,
         baseProficient,
         abilities,
-        isProficient
+        isProficient,
+        chosenAbilityKey
       );
     },
     [abilities]
@@ -338,19 +346,23 @@ export function SkillsAllocationPage({
                   ? allSkills.find((s: Skill) => String(s.id) === String(skill.base_skill_id))
                   : null;
                 const baseValue = baseSkill ? (allocations[baseSkill.id] ?? 0) : 0;
-                const baseProficient = baseValue > 0 || (baseSkill && speciesSkillIds.has(baseSkill.id));
+                const baseProficient = baseSkill && (speciesSkillIds.has(baseSkill.id) || (allocations[baseSkill.id] ?? -1) >= 0);
                 const value = Math.max(0, allocations[skill.id] ?? 0);
                 const isSpeciesSkill = speciesSkillIds.has(skill.id);
-                const effectiveValue = isSpeciesSkill ? Math.max(1, value) : value;
-                // Base skills: in list = proficient (value can be 0). Sub-skills: value >= 1 = proficient
-                const proficient = isSubSkill ? value >= 1 : true;
+                const effectiveValue = value; // Species can have value 0 (proficient, 0 value)
+                // Base skills: value >= 0 means proficient. Sub-skills: value >= 1 = proficient
+                const proficient = isSubSkill ? value >= 1 : (value >= 0);
+                // Chosen ability: for sub-skills use base skill's choice (same ability for base + sub)
+                const skillForAbility = baseSkill ?? skill;
+                const linkedKeys = getLinkedAbilityKeys(skillForAbility.ability);
+                const chosenAbilityKey = skillAbilities[skillForAbility.id] ?? getHighestLinkedAbilityKey(skillForAbility.ability, abilities) ?? linkedKeys[0];
                 const bonus = isSubSkill
-                  ? getSubSkillBonus(skill, effectiveValue, baseValue, baseProficient, proficient)
-                  : getSkillBonus(skill, effectiveValue, proficient);
-                const skillAbility = skill.ability?.split(',')[0]?.trim() || 'strength';
+                  ? getSubSkillBonus(skill, effectiveValue, baseValue, baseProficient, proficient, chosenAbilityKey)
+                  : getSkillBonus(skill, effectiveValue, proficient, chosenAbilityKey);
                 const canInc = isSubSkill
                   ? baseProficient && remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, true))
                   : remainingPoints >= (effectiveValue === 0 ? 1 : getSkillValueIncreaseCost(effectiveValue, false));
+                const hasMultipleAbilities = linkedKeys.length > 1;
                 return (
                   <SkillRow
                     key={skill.id}
@@ -362,10 +374,12 @@ export function SkillsAllocationPage({
                     canToggleProficiency={false}
                     value={effectiveValue}
                     bonus={bonus}
-                    ability={skillAbility}
+                    ability={chosenAbilityKey}
+                    availableAbilities={hasMultipleAbilities ? linkedKeys as string[] : undefined}
+                    onAbilityChange={hasMultipleAbilities && onSkillAbilityChange ? (key) => onSkillAbilityChange(skillForAbility.id, key) : undefined}
                     isEditing={true}
                     onValueChange={(d) => handleAllocate(skill.id, d)}
-                    minValue={isSpeciesSkill ? 1 : 0}
+                    minValue={isSpeciesSkill ? 0 : 0}
                     canIncrease={canInc}
                     isSpeciesSkill={isSpeciesSkill}
                     onRemove={isSpeciesSkill ? undefined : () => handleRemoveSkill(skill.id)}

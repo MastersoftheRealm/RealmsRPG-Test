@@ -107,6 +107,28 @@ Used for chips, badges, and content type indicators.
 
 ---
 
+## Modal, Error, and Loading Patterns (TASK-240)
+
+Standard patterns for consistent UX across the app.
+
+### Modals
+- **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom).
+- **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/shared`; both compose base Modal and accept `isOpen`.
+- **Selection:** Use `UnifiedSelectionModal` for add-feat, add-power, add-technique, etc.
+
+### Error display
+- **Persistent errors** (form validation, failed load, permission): Use `<Alert variant="danger">` (or `warning`/`info`). Keep in layout until user dismisses or fixes.
+- **Transient feedback** (save success, copy link): Use Toast (e.g. `showToast(message, 'success')`). Auto-dismiss.
+- **List/page empty error state:** Use `ErrorDisplay` from `@/components/shared/list-components` for full-message + subMessage, or Alert for inline.
+
+### Loading states
+- **Page-level** (data fetch for whole page): Use `<LoadingState message="Loading…" size="lg" />` from `@/components/ui/spinner`.
+- **Lists/tabs** (table or list loading): Use `LoadingState` or skeleton placeholders.
+- **Inline** (button, small area): Use `<Spinner size="sm" />` from `@/components/ui/spinner`.
+- **Suspense fallbacks:** Use `<LoadingState />` or `<Spinner />` instead of raw "Loading..." text.
+
+---
+
 ## Component Classes
 
 ### Page Layout

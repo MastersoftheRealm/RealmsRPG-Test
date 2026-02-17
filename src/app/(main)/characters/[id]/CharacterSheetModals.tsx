@@ -8,12 +8,10 @@ import type { Character, CharacterPower, CharacterTechnique, Item } from '@/type
 import {
   AddLibraryItemModal,
   AddFeatModal,
-  AddSkillModal,
-  AddSubSkillModal,
   LevelUpModal,
   RecoveryModal,
 } from '@/components/character-sheet';
-import { DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal, AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { CharacterSheetStats } from './character-sheet-utils';
 
 export type AddModalType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null;
@@ -113,6 +111,7 @@ export function CharacterSheetModals({
 
       {featToRemove && (
         <DeleteConfirmModal
+          isOpen={true}
           itemName={featToRemove.name}
           itemType="feat"
           deleteContext="character"

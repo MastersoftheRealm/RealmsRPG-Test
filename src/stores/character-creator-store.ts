@@ -53,8 +53,6 @@ interface CharacterCreatorState {
   prevStep: () => void;
   markStepComplete: (step: CreatorStep) => void;
   canNavigateToStep: (step: CreatorStep) => boolean;
-  /** True if step has draft data that would allow "Continue" but step was not confirmed (not in completedSteps). Used to warn when navigating away via tab. */
-  hasUnconfirmedSelection: (step: CreatorStep) => boolean;
   
   // Draft updates
   updateDraft: (updates: Partial<CharacterDraft>) => void;
@@ -131,21 +129,6 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         
         // All other steps are always accessible
         return true;
-      },
-      
-      hasUnconfirmedSelection: (step) => {
-        const { draft, completedSteps } = get();
-        if (completedSteps.includes(step)) return false;
-        switch (step) {
-          case 'archetype':
-            return Boolean(draft.archetype?.type);
-          case 'species':
-            return Boolean(draft.ancestry?.id);
-          case 'ancestry':
-            return Boolean(draft.ancestry?.id && (draft.ancestry?.selectedTraits?.length ?? 0) >= 1);
-          default:
-            return false;
-        }
       },
       
       updateDraft: (updates) => {

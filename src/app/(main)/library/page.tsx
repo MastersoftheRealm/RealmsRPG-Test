@@ -150,6 +150,7 @@ function LibraryContent() {
 
       {deleteConfirm && (
         <DeleteConfirmModal
+          isOpen={true}
           itemName={deleteConfirm.item.name}
           itemType={deleteConfirm.type.slice(0, -1)}
           isDeleting={isDeleting}

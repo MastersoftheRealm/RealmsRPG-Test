@@ -250,6 +250,8 @@ export interface CharacterSummary {
 export interface CharacterDraft extends Partial<Character> {
   step?: number;
   isComplete?: boolean;
+  /** For multi-ability skills (e.g. Craft): skillId -> chosen ability key */
+  skillAbilities?: Record<string, string>;
 }
 
 // =============================================================================

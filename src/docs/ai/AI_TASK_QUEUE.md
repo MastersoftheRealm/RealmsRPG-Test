@@ -3704,7 +3704,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-174
   title: Codex schema — add Use column and align fields
   priority: medium
-  status: in-progress
+  status: done
   created_at: 2026-02-11
   created_by: owner
   description: |
@@ -3718,7 +3718,7 @@ Agents should **create new tasks** during their work when they discover addition
     - Narrative skill fields and feat requirement fields clearly distinguish validation logic vs display/reference text
     - npm run build passes
   notes: |
-    Partially implemented 2026-02-11: Feats, skills, species, traits, parts, properties, items, and creature feats updated with Use column and aligned fields. Further refinements can follow as schema evolves.
+    Done 2026-02-17: CODEX_SCHEMA_REFERENCE already has Use column for all codex entities (Feats, Skills, Species, Traits, Parts, Properties, Equipment, Archetypes, Creature Feats) with concrete descriptions. Field lists aligned with owner spec.
 
 - id: TASK-175
   title: Codex skills — remove invalid trained_only field
@@ -5694,7 +5694,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-240
   title: "Audit Phase 2 — Standardize modal/error/loading patterns"
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-13
   created_by: agent
   description: |
@@ -5707,6 +5707,8 @@ Agents should **create new tasks** during their work when they discover addition
     - All modals use base Modal component with consistent API
     - Error display standardized (Alert for persistent, Toast for transient)
     - Loading states standardized per context
+  notes: |
+    Done 2026-02-17. Audit: ConfirmActionModal, DeleteConfirmModal, LoginPromptModal, ImageUploadModal already use base Modal. DeleteConfirmModal now accepts isOpen (required) and passes it to Modal; all 6 call sites updated. DESIGN_SYSTEM.md: added "Modal, Error, and Loading Patterns" (when to use Modal, Alert vs Toast, LoadingState/Spinner/Suspense). Replaced ad-hoc "Loading..." Suspense fallbacks in campaigns/page and technique-creator with LoadingState. npx tsc --noEmit passes; full build blocked by Prisma EPERM lock on this machine.
 
 - id: TASK-241
   title: "Audit Phase 1 — Add Zod input validation to API routes"
@@ -5943,3 +5945,68 @@ Agents should **create new tasks** during their work when they discover addition
     - Notification or modal shown when a private character joins a campaign
     - User informed that visibility will change to 'campaign'
   notes: "Done 2026-02-16: Added visibility to CharacterSummary and GET /api/characters. Join Campaign tab and Add Character modal show confirmation when selected character is private; modal explains visibility will change to Campaign. Post-join toast retained."
+
+- id: TASK-250
+  title: "Character creator — Species modal skill description clear when switching species"
+  priority: low
+  status: done
+  created_at: 2026-02-17
+  created_by: agent
+  description: |
+    Bug from 2/17 feedback: When user clicks a species, opens skill description in the modal, then clicks off and selects a different species, the first species' skill description stayed open. Skill description should close when switching species or when the modal closes.
+  related_files:
+    - src/components/character-creator/species-modal.tsx
+  acceptance_criteria:
+    - When species changes (or modal closes), selected skill description is cleared so it does not carry over to the next view
+    - npm run build passes
+  notes: "Done 2026-02-17: Added useEffect to clear selectedSkill when isOpen becomes false; existing effect already cleared on species?.id change. Both effects in species-modal.tsx."
+
+- id: TASK-251
+  title: "Character creator — Step check mark when navigating away with 'Continue anyway'"
+  priority: low
+  status: done
+  created_at: 2026-02-17
+  created_by: agent
+  description: |
+    Bug from 2/17 feedback: When user has made a selection on a step but not confirmed, then navigates to another step via tab, the warning modal offers 'Continue anyway' but the step did not get a check mark. Step should show complete when user chooses to continue anyway.
+  related_files:
+    - src/components/character-creator/creator-tab-bar.tsx
+  acceptance_criteria:
+    - When user clicks 'Continue anyway' in the step-warning modal, current step is marked complete so the tab shows a check mark
+    - npm run build passes
+  notes: "Done 2026-02-17: handleContinueAnyway now calls markStepComplete(currentStep) before setStep(pendingStep) in creator-tab-bar.tsx."
+
+- id: TASK-252
+  title: "Unify add power/technique modals — character creator and creature creator"
+  priority: high
+  status: done
+  created_at: 2026-02-17
+  created_by: agent
+  description: |
+    Character creator and creature creator add power/technique modals are not unified with character sheet add-library-item modal: missing column headers (NAME, ACTION, DAMAGE, AREA for powers; NAME, WEAPON, PARTS for techniques), same collapsed/expandable row layout, and list header bar. Align with add-library-item-modal layout and grid columns.
+  related_files:
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/components/character-sheet/add-library-item-modal.tsx
+  acceptance_criteria:
+    - Character creator add power modal has ListHeader + column headers (NAME, ACTION, DAMAGE, AREA) and GridListRow with same grid; technique modal (NAME, WEAPON, PARTS)
+    - Creature creator add power/technique modals use same column set and layout as character sheet
+    - npm run build passes
+  notes: "Done 2026-02-17: powers-step.tsx — added POWER_MODAL_COLUMNS/POWER_GRID_COLUMNS and TECHNIQUE_MODAL_COLUMNS/TECHNIQUE_GRID_COLUMNS; availablePowers/availableTechniques now build columns (Action, Damage, Area / Weapon, Parts); passed columns and gridColumns to both UnifiedSelectionModals. creature-creator/transformers — power stats now Action, Damage, Area; technique stats Weapon, Parts. creature-creator/page — power/technique SelectableItems use ['Action','Damage','Area'] and ['Weapon','Parts']; modal columns/gridColumns aligned with add-library-item."
+
+- id: TASK-253
+  title: "Finalize step — display ability names as full text (min 3-letter)"
+  priority: medium
+  status: done
+  created_at: 2026-02-17
+  created_by: agent
+  description: |
+    Finalize step currently shows abilities as single letters (e.g. S, V). Abilities should not be abbreviated to less than 3 letters; prefer full text ("Strength", "Vitality", etc.).
+  related_files:
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/lib/game/constants.ts
+  acceptance_criteria:
+    - Abilities in finalize summary show as full names (Strength, Vitality, Agility, Acuity, Intelligence, Charisma) or at minimum 3-letter abbreviations
+    - npm run build passes
+  notes: "Done 2026-02-17: Added ABILITY_DISPLAY_NAMES to lib/game/constants.ts (lowercase key → full name). finalize-step imports it and uses ABILITY_DISPLAY_NAMES[ability] ?? ability for ability label instead of ability.charAt(0).toUpperCase()."

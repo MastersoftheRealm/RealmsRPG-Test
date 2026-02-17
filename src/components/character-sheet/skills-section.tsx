@@ -20,6 +20,7 @@ import { useRollsOptional } from './roll-context';
 import { PointStatus, EditSectionToggle, getEditState, SkillRow } from '@/components/shared';
 import { ABILITY_ABBR } from '@/lib/constants/skills';
 import { Button } from '@/components/ui';
+import { calculateSkillBonusWithProficiency, calculateSubSkillBonusWithProficiency } from '@/lib/game/formulas';
 import type { Abilities } from '@/types';
 
 // Game rule: skill values are capped at 3
@@ -212,47 +213,29 @@ export function SkillsSection({
   }, [skills]);
   
   const remaining = totalSkillPoints !== undefined ? totalSkillPoints - totalSpent : undefined;
-  
-  // Calculate bonus for a skill - matches vanilla site logic
+
+  // Single source of truth: use shared formulas (GAME_RULES) — same as character creator and creature creator
   const getSkillBonus = (skill: Skill): number => {
-    const abilityKey = (skill.ability || 'strength').toLowerCase() as keyof Abilities;
-    const abilityValue = abilities[abilityKey] ?? 0;
-    const skillValue = skill.skill_val || 0;
-    
-    // Helper: calculate unproficient bonus
-    // If ability is negative, double it; otherwise divide by 2 (rounded down)
-    const unprofBonus = (aVal: number): number => {
-      return aVal < 0 ? aVal * 2 : Math.floor(aVal / 2);
-    };
-    
+    const linkedAbilities = skill.ability || 'strength';
+    const skillValue = skill.skill_val ?? 0;
+    const isProficient = skill.prof ?? false;
     if (skill.baseSkill) {
-      // Sub-skill logic
-      const parent = skills.find(s => s.name === skill.baseSkill);
-      const baseSkillVal = parent?.skill_val || 0;
-      const baseSkillProf = parent?.prof || false;
-      
-      if (!baseSkillProf) {
-        // Base skill not proficient: use unproficient calculation
-        return unprofBonus(abilityValue) + baseSkillVal;
-      } else if (skill.prof) {
-        // Both proficient: ability + skill_val + baseSkillVal
-        return abilityValue + skillValue + baseSkillVal;
-      } else {
-        // Base proficient, sub-skill not: ability + baseSkillVal
-        return abilityValue + baseSkillVal;
-      }
-    } else {
-      // Base skill logic
-      if (skill.prof) {
-        // Proficient: ability + skill_val
-        return abilityValue + skillValue;
-      } else {
-        // Unproficient: unprofBonus(ability)
-        return unprofBonus(abilityValue);
-      }
+      const parent = skills.find((s) => s.name === skill.baseSkill);
+      const baseSkillVal = parent?.skill_val ?? 0;
+      const baseSkillProf = parent?.prof ?? false;
+      return calculateSubSkillBonusWithProficiency(
+        linkedAbilities,
+        skillValue,
+        baseSkillVal,
+        baseSkillProf,
+        abilities,
+        isProficient,
+        skill.ability
+      );
     }
+    return calculateSkillBonusWithProficiency(linkedAbilities, skillValue, abilities, isProficient, skill.ability);
   };
-  
+
   // Note: PointStatus component handles color states automatically
   
   // Calculate edit state for pencil icon color

@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
 
 interface DeleteConfirmModalProps {
+  /** Whether the modal is visible */
+  isOpen: boolean;
   /** Name of the item being deleted */
   itemName: string;
   /** Type label for display (e.g., "power", "technique", "item", "feat") */
@@ -27,6 +29,7 @@ interface DeleteConfirmModalProps {
 }
 
 export function DeleteConfirmModal({
+  isOpen,
   itemName,
   itemType,
   deleteContext = 'library',
@@ -36,7 +39,7 @@ export function DeleteConfirmModal({
 }: DeleteConfirmModalProps) {
   return (
     <Modal
-      isOpen={true}
+      isOpen={isOpen}
       onClose={onClose}
       size="sm"
       showCloseButton={false}

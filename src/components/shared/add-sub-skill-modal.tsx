@@ -1,13 +1,13 @@
 /**
  * Add Sub-Skill Modal
  * ===================
- * Modal for adding sub-skills from Codex
+ * Shared modal for adding sub-skills from Codex.
+ * Used by: character sheet, character creator (SkillsAllocationPage).
  * Features:
  * - Shows ALL sub-skills (not just for proficient base skills)
  * - If base skill is not in character's list, auto-adds it unproficiently
  * - Matches Codex skills page design
  * - Expandable skill rows with descriptions
- * - Fully rounded edges
  * - Uses ID-based base_skill lookups (base_skill_id = 0 means "any base skill")
  */
 
@@ -23,16 +23,16 @@ import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
-interface CharacterSkill {
+export interface CharacterSkillForSubModal {
   id?: string;
   name: string;
   prof?: boolean;
 }
 
-interface AddSubSkillModalProps {
+export interface AddSubSkillModalProps {
   isOpen: boolean;
   onClose: () => void;
-  characterSkills: CharacterSkill[];
+  characterSkills: CharacterSkillForSubModal[];
   existingSkillNames: string[];
   onAdd: (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => void;
 }
@@ -100,28 +100,26 @@ function ExpandableSubSkillRow({
   allBaseSkills: Array<{ id: string; name: string }>;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // Format abilities for display
   const abilities = skill.ability?.split(',').map(a => a.trim()).filter(Boolean) || [];
-  
+
   return (
     <div className={cn(
       'border rounded-lg transition-colors hover:border-primary-200',
       isSelected ? 'border-primary-400 bg-primary-50' : 'border-border-light'
     )}>
       {/* Header Row - Entire row is clickable to expand */}
-      <div 
+      <div
         className="flex items-center gap-3 p-3 cursor-pointer hover:bg-surface-alt/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {/* Skill Name */}
         <div className="flex-1">
           <span className="font-medium text-text-primary">{skill.name}</span>
-          {/* Show base skill info */}
           <span className="ml-2 text-sm text-text-muted">
             ({isAnyBaseSkill ? 'Any Base' : `Base: ${baseSkillName}`})
           </span>
-          {/* Warning if base skill will be auto-added */}
           {!hasBaseSkill && !isAnyBaseSkill && (
             <span className="ml-2 text-xs text-warning-600 dark:text-warning-400 flex items-center gap-1 inline-flex">
               <AlertCircle className="w-3 h-3" />
@@ -129,11 +127,11 @@ function ExpandableSubSkillRow({
             </span>
           )}
         </div>
-        
+
         {/* Abilities */}
         <div className="flex gap-1">
           {abilities.map(ability => (
-            <span 
+            <span
               key={ability}
               className="px-2 py-0.5 text-xs font-medium rounded bg-surface-alt text-text-secondary capitalize"
             >
@@ -141,7 +139,7 @@ function ExpandableSubSkillRow({
             </span>
           ))}
         </div>
-        
+
         {/* Selection Toggle */}
         <SelectionToggle
           isSelected={isSelected}
@@ -150,7 +148,7 @@ function ExpandableSubSkillRow({
           label={isSelected ? 'Remove skill' : 'Add skill'}
         />
       </div>
-      
+
       {/* Expanded Content */}
       {isExpanded && (
         <div className="px-3 pb-3 pt-0 space-y-2">
@@ -166,7 +164,7 @@ function ExpandableSubSkillRow({
             ))}
         </div>
       )}
-      
+
       {/* Base skill selector for "any base skill" sub-skills */}
       {isAnyBaseSkill && isSelected && onBaseSkillSelect && (
         <div className="mx-3 mb-3 p-3 bg-primary-50 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-600/50 rounded-lg">
@@ -200,10 +198,8 @@ export function AddSubSkillModal({
   const [baseSkillFilter, setBaseSkillFilter] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
   const { sortState, handleSort, sortItems } = useSort('name');
-  // Track which base skill is selected for "any base skill" sub-skills
   const [anyBaseSkillSelections, setAnyBaseSkillSelections] = useState<Record<string, string>>({});
 
-  // Build a map of skill ID to skill for lookups
   const skillById = useMemo(() => {
     return allSkills.reduce((acc: Record<string, Skill>, skill: Skill) => {
       acc[skill.id] = skill;
@@ -211,7 +207,6 @@ export function AddSubSkillModal({
     }, {} as Record<string, Skill>);
   }, [allSkills]);
 
-  // Get all base skills (no base_skill_id)
   const allBaseSkills = useMemo(() => {
     return allSkills
       .filter((s: Skill) => s.base_skill_id === undefined)
@@ -219,13 +214,11 @@ export function AddSubSkillModal({
       .sort((a: { id: string; name: string }, b: { id: string; name: string }) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
   }, [allSkills]);
 
-  // Get character's existing skill names (lowercase for comparison)
-  const existingSkillNamesLower = useMemo(() => 
+  const existingSkillNamesLower = useMemo(() =>
     new Set(existingSkillNames.map(n => String(n ?? '').toLowerCase())),
     [existingSkillNames]
   );
 
-  // Check if character has a base skill (by name or ID)
   const hasBaseSkill = useCallback((baseSkillId: string | number) => {
     const baseSkill = skillById[String(baseSkillId)];
     if (!baseSkill) return false;
@@ -234,12 +227,10 @@ export function AddSubSkillModal({
     );
   }, [characterSkills, skillById]);
 
-  // Get ALL sub-skills (not just for proficient base skills)
   const allSubSkills = useMemo(() => {
     return allSkills.filter((skill: Skill) => skill.base_skill_id !== undefined);
   }, [allSkills]);
 
-  // Get unique base skill options for filter
   const baseSkillOptions = useMemo(() => {
     const baseSkillIds = new Set<string>();
     allSubSkills.forEach((skill: Skill) => {
@@ -254,7 +245,6 @@ export function AddSubSkillModal({
       .sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
   }, [allSubSkills, skillById]);
 
-  // Reset selection when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedSkills([]);
@@ -265,39 +255,34 @@ export function AddSubSkillModal({
     }
   }, [isOpen]);
 
-  // Filter sub-skills
   const filteredSkills = useMemo(() => {
     return allSubSkills.filter((skill: Skill) => {
       const nameLower = String(skill.name ?? '').toLowerCase();
-      // Exclude already owned skills
       if (existingSkillNamesLower.has(nameLower)) return false;
-      
-      // Search filter
+
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
         const baseSkillName = baseSkill?.name || '';
-        if (!nameLower.includes(query) && 
+        if (!nameLower.includes(query) &&
             !skill.description?.toLowerCase().includes(query) &&
             !baseSkillName.toLowerCase().includes(query)) {
           return false;
         }
       }
-      
-      // Ability filter
+
       if (abilityFilter) {
         const skillAbilities = skill.ability?.split(',').map(a => a.trim().toLowerCase()) || [];
         if (!skillAbilities.includes(abilityFilter.toLowerCase())) {
           return false;
         }
       }
-      
-      // Base skill filter
+
       if (baseSkillFilter) {
-        if (skill.base_skill_id === 0) return false; // "Any base" doesn't match specific filter
+        if (skill.base_skill_id === 0) return false;
         if (String(skill.base_skill_id) !== baseSkillFilter) return false;
       }
-      
+
       return true;
     });
   }, [allSubSkills, existingSkillNamesLower, searchQuery, abilityFilter, baseSkillFilter, skillById]);
@@ -327,33 +312,29 @@ export function AddSubSkillModal({
 
   const handleConfirm = () => {
     if (selectedSkills.length === 0) return;
-    
-    // Attach selected base skill ID for "any base skill" sub-skills
-    // And include any base skills that need to be auto-added
+
     const skillsWithBase = selectedSkills.map(skill => {
       const isAnyBase = skill.base_skill_id === 0;
-      const baseSkillId = isAnyBase 
-        ? anyBaseSkillSelections[skill.id] 
+      const baseSkillId = isAnyBase
+        ? anyBaseSkillSelections[skill.id]
         : String(skill.base_skill_id);
-      
-      // Check if we need to auto-add the base skill
+
       const needsBaseSkill = baseSkillId && !hasBaseSkill(baseSkillId);
       const autoAddBaseSkill = needsBaseSkill ? skillById[baseSkillId] : undefined;
-      
+
       return {
         ...skill,
         selectedBaseSkillId: isAnyBase ? anyBaseSkillSelections[skill.id] : undefined,
         autoAddBaseSkill,
       };
     });
-    
+
     onAdd(skillsWithBase);
     onClose();
   };
 
   const error = fetchError?.message || null;
 
-  // Custom header for Modal
   const modalHeader = (
     <div className="flex items-center justify-between px-5 py-4 border-b border-border-light bg-gradient-to-r from-primary-50 to-surface">
       <div>
@@ -373,7 +354,6 @@ export function AddSubSkillModal({
     </div>
   );
 
-  // Custom footer for Modal
   const modalFooter = (
     <div className="flex items-center justify-between px-5 py-4 border-t border-border-light bg-surface-alt">
       {selectedSkills.length > 0 ? (
@@ -411,14 +391,13 @@ export function AddSubSkillModal({
       className="max-h-[85vh]"
     >
 
-        {/* Search & Filters */}
         <div className="px-5 py-4 border-b border-border-light bg-surface-alt space-y-3">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Search sub-skills by name, description, or base skill..."
           />
-          
+
           <div className="flex flex-wrap gap-3 items-center">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-text-secondary">Ability:</label>
@@ -433,7 +412,7 @@ export function AddSubSkillModal({
                 ))}
               </select>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-text-secondary">Base Skill:</label>
               <select
@@ -450,7 +429,6 @@ export function AddSubSkillModal({
           </div>
         </div>
 
-        {/* Column Headers — ListHeader with sort */}
         <div className="px-5">
           <ListHeader
             columns={[
@@ -465,7 +443,6 @@ export function AddSubSkillModal({
           />
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
           {loading && (
             <div className="text-center py-8">
@@ -492,10 +469,10 @@ export function AddSubSkillModal({
                 const isAnyBaseSkill = skill.base_skill_id === 0;
                 const baseSkill = skill.base_skill_id ? skillById[String(skill.base_skill_id)] : null;
                 const baseSkillName = isAnyBaseSkill ? 'Any' : (baseSkill?.name || 'Unknown');
-                const characterHasBase = !isAnyBaseSkill && skill.base_skill_id 
-                  ? hasBaseSkill(skill.base_skill_id) 
+                const characterHasBase = !isAnyBaseSkill && skill.base_skill_id
+                  ? hasBaseSkill(skill.base_skill_id)
                   : true;
-                
+
                 return (
                   <ExpandableSubSkillRow
                     key={skill.id}

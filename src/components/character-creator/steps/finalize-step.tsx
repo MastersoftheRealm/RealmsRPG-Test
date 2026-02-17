@@ -9,26 +9,20 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { useAuth, useCodexSkills, useSpecies, type Species } from '@/hooks';
+import { useAuth, useCodexSkills, useSpecies } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
 import type { Character } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
+import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
-import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
+import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
 import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
 
 // Health-Energy pool for new characters (18 at level 1, +2 per level)
 const BASE_HE_POOL = 18;
-
-interface ValidationIssue {
-  emoji: string;
-  message: string;
-  severity: 'error' | 'warning';
-}
 
 function ValidationModal({ 
   isOpen, 
@@ -339,168 +333,15 @@ export function FinalizeStep() {
   const [showValidation, setShowValidation] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  // Calculate validation issues
-  const validationIssues = useMemo(() => {
-    const issues: ValidationIssue[] = [];
-    const level = draft.level || 1;
-    
-    // 1. Name validation
-    if (!draft.name?.trim()) {
-      issues.push({
-        emoji: '📝',
-        message: "Your hero needs a name! Give them something legendary.",
-        severity: 'error'
-      });
-    }
-    
-    // 2. Archetype validation
-    if (!draft.archetype?.type) {
-      issues.push({
-        emoji: '🎭',
-        message: "You haven't selected an archetype yet! Head back to the Archetype tab.",
-        severity: 'error'
-      });
-    }
-    
-    // 3. Species validation
-    if (!draft.ancestry?.id) {
-      issues.push({
-        emoji: '🌟',
-        message: "You need to choose your species! Head to the Species tab.",
-        severity: 'error'
-      });
-    }
-    
-    // 4. Ability points - Simple sum like vanilla site (7 - sum of all values)
-    const maxAbilityPoints = calculateAbilityPoints(level);
-    const usedAbilityPoints = draft.abilities 
-      ? Object.values(draft.abilities).reduce((sum, val) => sum + (val || 0), 0)
-      : 0;
-    const remainingAbilityPoints = maxAbilityPoints - usedAbilityPoints;
-    
-    if (remainingAbilityPoints > 0) {
-      issues.push({
-        emoji: '⚡',
-        message: `You still have ${remainingAbilityPoints} ability point${remainingAbilityPoints === 1 ? '' : 's'} to spend!`,
-        severity: 'warning'
-      });
-    } else if (remainingAbilityPoints < 0) {
-      issues.push({
-        emoji: '⚡',
-        message: `You've overspent ability points by ${Math.abs(remainingAbilityPoints)}!`,
-        severity: 'error'
-      });
-    }
-    
-    // 5. Skill points (characters: 3/level; proper cost model for proficiency + values + defenses)
-    const species = draft.ancestry?.id
-      ? allSpecies.find((s: Species) => s.id === draft.ancestry?.id)
-      : allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase());
-    const speciesSkillIds = new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
-    // Species skill "0" = "Any" grants 1 extra skill point (matches skills-step logic)
-    const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
-    const maxSkillPoints = calculateSkillPointsForEntity(level, 'character') + extraSkillPoints;
-    const skillMeta = new Map<string, { isSubSkill: boolean }>();
-    (codexSkills || []).forEach((s: { id: string; base_skill_id?: number }) => {
-      skillMeta.set(s.id, { isSubSkill: s.base_skill_id !== undefined });
-    });
-    const totalUsedSkillPoints = calculateSimpleSkillPointsSpent(
-      draft.skills || {},
-      speciesSkillIds,
-      skillMeta,
-      draft.defenseVals || draft.defenseSkills
-    );
-    const remainingSkillPoints = maxSkillPoints - totalUsedSkillPoints;
-    
-    if (remainingSkillPoints > 0) {
-      issues.push({
-        emoji: '📚',
-        message: `You have ${remainingSkillPoints} skill point${remainingSkillPoints === 1 ? '' : 's'} left to spend!`,
-        severity: 'warning'
-      });
-    } else if (remainingSkillPoints < 0) {
-      issues.push({
-        emoji: '📚',
-        message: `You've overspent skill points by ${Math.abs(remainingSkillPoints)}!`,
-        severity: 'error'
-      });
-    }
-    
-    // 6. Health/Energy points - base HE pool is 18 at level 1 (+2 per level)
-    const hePool = BASE_HE_POOL + (level - 1) * 2;
-    
-    // Now using bonus values directly (not absolute)
-    const healthAllocation = draft.healthPoints || 0;
-    const energyAllocation = draft.energyPoints || 0;
-    const usedHEPoints = healthAllocation + energyAllocation;
-    const remainingHEPoints = hePool - usedHEPoints;
-    
-    if (remainingHEPoints > 0) {
-      issues.push({
-        emoji: '❤️',
-        message: `You have ${remainingHEPoints} Health-Energy point${remainingHEPoints === 1 ? '' : 's'} to allocate!`,
-        severity: 'warning'
-      });
-    }
-    
-    // 7. Training points - calculate from equipment and powers
-    const highestAbility = draft.abilities 
-      ? Math.max(...Object.values(draft.abilities).filter(v => typeof v === 'number'))
-      : 0;
-    const trainingPoints = calculateTrainingPoints(level, highestAbility);
-    const equipmentTP = draft.trainingPointsSpent || 0;
-    const remainingTP = trainingPoints - equipmentTP;
-    
-    if (remainingTP < 0) {
-      issues.push({
-        emoji: '🎯',
-        message: `You've overspent training points by ${Math.abs(remainingTP)}!`,
-        severity: 'error'
-      });
-    }
-    
-    // 8. Currency - calculate from equipment costs
-    const baseCurrency = 200;
-    const spentCurrency = (draft.equipment?.items || []).reduce((sum, item) => sum + (item.cost || 0), 0);
-    if (spentCurrency > baseCurrency) {
-      issues.push({
-        emoji: '💰',
-        message: `You've overspent currency by ${spentCurrency - baseCurrency}c!`,
-        severity: 'error'
-      });
-    }
-    
-    // 9. Archetype feats - stored in draft.feats with type: 'archetype'
-    const archetypeType = draft.archetype?.type;
-    const allFeats = draft.feats || [];
-    const archetypeFeats = allFeats.filter(f => f.type === 'archetype');
-    const characterFeats = allFeats.filter(f => f.type === 'character');
-    
-    let expectedArchetypeFeatCount = 0;
-    if (archetypeType === 'power') expectedArchetypeFeatCount = 1;
-    else if (archetypeType === 'powered-martial') expectedArchetypeFeatCount = 2;
-    else if (archetypeType === 'martial') expectedArchetypeFeatCount = 3;
-    
-    if (archetypeFeats.length < expectedArchetypeFeatCount) {
-      const diff = expectedArchetypeFeatCount - archetypeFeats.length;
-      issues.push({
-        emoji: '💪',
-        message: `You need to select ${diff} more archetype feat${diff === 1 ? '' : 's'}!`,
-        severity: 'warning'
-      });
-    }
-    
-    // 10. Character feat
-    if (characterFeats.length < 1) {
-      issues.push({
-        emoji: '🌠',
-        message: "You need to select a character feat!",
-        severity: 'warning'
-      });
-    }
-    
-    return issues;
-  }, [draft, codexSkills, allSpecies]);
+  // Validation from shared lib (same messages as tab-bar "things left to do" modal)
+  const validationIssues = useMemo(
+    () =>
+      getAllValidationIssues(draft, {
+        allSpecies,
+        codexSkills: codexSkills ?? null,
+      }),
+    [draft, allSpecies, codexSkills]
+  );
   
   const handleValidateAndSave = () => {
     setShowValidation(true);
@@ -736,7 +577,7 @@ export function FinalizeStep() {
                       'bg-surface-alt text-text-secondary'
                     )}
                   >
-                    {ability.charAt(0).toUpperCase()}: {value >= 0 ? `+${value}` : value}
+                    {ABILITY_DISPLAY_NAMES[ability] ?? ability}: {value >= 0 ? `+${value}` : value}
                   </span>
                 );
               })}

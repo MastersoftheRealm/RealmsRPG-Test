@@ -1050,7 +1050,7 @@ function TechniqueCreatorContent() {
 export default function TechniqueCreatorPage() {
   return (
     <div className="min-h-screen bg-background py-8 px-4">
-      <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+      <Suspense fallback={<div className="flex items-center justify-center py-12"><LoadingState message="Loading..." /></div>}>
         <TechniqueCreatorContent />
       </Suspense>
     </div>

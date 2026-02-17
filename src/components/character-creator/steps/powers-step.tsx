@@ -15,6 +15,27 @@ import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/
 import { Button, IconButton } from '@/components/ui';
 import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, type PowerPart, type TechniquePart } from '@/hooks';
 
+/** Capitalize first letter of each word for display */
+function capitalize(s: string | undefined): string {
+  if (!s) return '-';
+  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const POWER_MODAL_COLUMNS = [
+  { key: 'name', label: 'NAME', sortable: true },
+  { key: 'Action', label: 'ACTION', sortable: false },
+  { key: 'Damage', label: 'DAMAGE', sortable: false },
+  { key: 'Area', label: 'AREA', sortable: false },
+];
+const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.8fr 0.7fr';
+
+const TECHNIQUE_MODAL_COLUMNS = [
+  { key: 'name', label: 'NAME', sortable: true },
+  { key: 'Weapon', label: 'WEAPON', sortable: false },
+  { key: 'Parts', label: 'PARTS', sortable: false },
+];
+const TECHNIQUE_GRID_COLUMNS = '1.4fr 0.8fr 0.8fr';
+
 export function PowersStep() {
   const { draft, updateDraft, nextStep, prevStep } = useCharacterCreatorStore();
   const [showPowerModal, setShowPowerModal] = useState(false);
@@ -39,34 +60,39 @@ export function PowersStep() {
     [selectedTechniques]
   );
   
-  // Transform user powers to SelectableItems for UnifiedSelectionModal
+  // Transform user powers to SelectableItems — match add-library-item layout (Action, Damage, Area)
   const availablePowers = useMemo((): SelectableItem[] => {
     return userPowers.map(power => {
-      const firstDamage = power.damage?.[0];
-      const damageStr = firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined;
+      const damageStr = power.damage?.length
+        ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
+        : '-';
+      const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
       return {
         id: power.docId,
         name: power.name,
         description: power.description,
-        columns: damageStr ? [{ key: 'damage', value: damageStr }] : undefined,
+        columns: [
+          { key: 'Action', value: capitalize(power.actionType), align: 'center' as const },
+          { key: 'Damage', value: damageStr, align: 'center' as const },
+          { key: 'Area', value: areaStr, align: 'center' as const },
+        ],
         chips: power.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
       };
     });
   }, [userPowers]);
-  
-  // Transform user techniques to SelectableItems for UnifiedSelectionModal
+
+  // Transform user techniques to SelectableItems — match add-library-item layout (Weapon, Parts)
   const availableTechniques = useMemo((): SelectableItem[] => {
-    return userTechniques.map(tech => {
-      const firstDamage = tech.damage?.[0];
-      const damageStr = firstDamage ? `${firstDamage.amount}d${firstDamage.size}${firstDamage.type ? ` ${firstDamage.type}` : ''}` : undefined;
-      return {
-        id: tech.docId,
-        name: tech.name,
-        description: tech.description,
-        columns: damageStr ? [{ key: 'damage', value: damageStr }] : undefined,
-        chips: tech.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
-      };
-    });
+    return userTechniques.map(tech => ({
+      id: tech.docId,
+      name: tech.name,
+      description: tech.description,
+      columns: [
+        { key: 'Weapon', value: tech.weapon?.name || '-', align: 'center' as const },
+        { key: 'Parts', value: String(tech.parts?.length ?? '-'), align: 'center' as const },
+      ],
+      chips: tech.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+    }));
   }, [userTechniques]);
   
   // Display items for selected powers/techniques
@@ -353,7 +379,7 @@ export function PowersStep() {
         </Button>
       </div>
       
-      {/* Power Selection Modal */}
+      {/* Power Selection Modal — same column headers/layout as character sheet add-library-item */}
       <UnifiedSelectionModal
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
@@ -365,9 +391,11 @@ export function PowersStep() {
         searchPlaceholder="Search powers..."
         itemLabel="power"
         isLoading={powersLoading}
+        columns={POWER_MODAL_COLUMNS}
+        gridColumns={POWER_GRID_COLUMNS}
       />
-      
-      {/* Technique Selection Modal */}
+
+      {/* Technique Selection Modal — same column headers/layout as character sheet add-library-item */}
       <UnifiedSelectionModal
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
@@ -379,6 +407,8 @@ export function PowersStep() {
         searchPlaceholder="Search techniques..."
         itemLabel="technique"
         isLoading={techniquesLoading}
+        columns={TECHNIQUE_MODAL_COLUMNS}
+        gridColumns={TECHNIQUE_GRID_COLUMNS}
       />
     </div>
   );

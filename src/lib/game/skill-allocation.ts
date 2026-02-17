@@ -119,14 +119,14 @@ export function canIncreaseSkillValue(
 
 /**
  * Can we decrease this skill's value?
- * - Species skills: can decrease value but not below 0 (0 = unproficient, which species can't do)
+ * - Species skills: can decrease value but not below 0 (0 = proficient with 0 value)
  */
 export function canDecreaseSkillValue(
   currentValue: number,
   isSpeciesSkill: boolean
 ): boolean {
   if (currentValue <= 0) return false;
-  if (isSpeciesSkill) return currentValue > 1; // Can't go to 0 (would lose proficiency)
+  if (isSpeciesSkill) return currentValue > 0; // Can decrease to 0 (proficient, value 0)
   return true;
 }
 
@@ -173,8 +173,8 @@ export function calculateSkillPointsSpent(
 
     const isSpecies = speciesSkillIds.has(skill.id);
     if (isSpecies) {
-      // Species: only pay for value above 1 (proficiency is free)
-      spent += Math.max(0, value - 1);
+      // Species: proficiency free; only pay for value above 0
+      spent += Math.max(0, value);
       continue;
     }
 
@@ -222,7 +222,8 @@ export function calculateSimpleSkillPointsSpent(
     const isSpecies = speciesSkillIds.has(skillId);
 
     if (isSpecies) {
-      spent += Math.max(0, value - 1);
+      // Species: proficiency free; only pay for value above 0
+      spent += Math.max(0, value);
     } else if (meta.isSubSkill) {
       spent += 1; // proficiency (value 0 or 1+)
       for (let v = 2; v <= value; v++) {

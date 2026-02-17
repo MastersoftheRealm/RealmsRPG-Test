@@ -51,7 +51,7 @@ const TABS = [
 export default function CampaignsPage() {
   return (
     <ProtectedRoute>
-      <Suspense fallback={<div className="min-h-[400px] flex items-center justify-center"><div className="animate-pulse text-text-muted">Loading...</div></div>}>
+      <Suspense fallback={<div className="min-h-[400px] flex items-center justify-center"><LoadingState message="Loading..." /></div>}>
         <CampaignsContent />
       </Suspense>
     </ProtectedRoute>

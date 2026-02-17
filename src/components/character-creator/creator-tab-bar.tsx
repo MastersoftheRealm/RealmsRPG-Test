@@ -1,15 +1,21 @@
 /**
  * Creator Tab Bar
  * ===============
- * Navigation tabs for character creation wizard
+ * Navigation tabs for character creation wizard.
+ * Moving to another step = treat as Continue (mark current complete and go),
+ * unless the current step has missing requirements — then show what's missing
+ * and offer "Continue anyway" / "Stay".
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useCharacterCreatorStore, STEP_ORDER, type CreatorStep } from '@/stores/character-creator-store';
+import { useSpecies, useCodexSkills } from '@/hooks';
+import { getValidationIssuesForStep, type ValidationIssue } from '@/lib/character-creator-validation';
 import { ConfirmActionModal } from '@/components/shared';
+import { Modal, Button } from '@/components/ui';
 
 const STEP_LABELS: Record<CreatorStep, string> = {
   archetype: '1. Archetype',
@@ -24,21 +30,34 @@ const STEP_LABELS: Record<CreatorStep, string> = {
 };
 
 export function CreatorTabBar() {
-  const { currentStep, completedSteps, setStep, canNavigateToStep, markStepComplete, hasUnconfirmedSelection, resetCreator } = useCharacterCreatorStore();
+  const { draft, currentStep, completedSteps, setStep, canNavigateToStep, markStepComplete, resetCreator } = useCharacterCreatorStore();
+  const { data: allSpecies = [] } = useSpecies();
+  const { data: codexSkills } = useCodexSkills();
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [pendingStep, setPendingStep] = useState<CreatorStep | null>(null);
+
+  const context = useMemo(
+    () => ({ allSpecies, codexSkills: codexSkills ?? null }),
+    [allSpecies, codexSkills]
+  );
+  const currentStepIssues = useMemo<ValidationIssue[]>(
+    () => getValidationIssuesForStep(currentStep, draft, context),
+    [currentStep, draft, context]
+  );
 
   const handleTabClick = (step: CreatorStep) => {
     if (step === currentStep) return;
     if (!canNavigateToStep(step)) return;
-    if (hasUnconfirmedSelection(currentStep)) {
+
+    if (currentStepIssues.length > 0) {
       setPendingStep(step);
       return;
     }
+    markStepComplete(currentStep);
     setStep(step);
   };
 
-  const handleConfirmUnconfirmed = () => {
+  const handleContinueAnyway = () => {
     if (pendingStep !== null) {
       markStepComplete(currentStep);
       setStep(pendingStep);
@@ -92,15 +111,44 @@ export function CreatorTabBar() {
         confirmVariant="danger"
       />
 
-      <ConfirmActionModal
+      <Modal
         isOpen={pendingStep !== null}
         onClose={() => setPendingStep(null)}
-        onConfirm={handleConfirmUnconfirmed}
-        title="Step not confirmed"
-        description={`You've made a selection on this step but haven't clicked Continue. Mark this step complete and go to ${pendingStep !== null ? STEP_LABELS[pendingStep] : ''}?`}
-        confirmLabel="Mark complete & go"
-        confirmVariant="primary"
-      />
+        size="lg"
+        title={`${STEP_LABELS[currentStep]} — things left to do`}
+        showCloseButton={true}
+        contentClassName="p-4 overflow-y-auto max-h-[50vh]"
+        footer={
+          <div className="p-4 border-t border-border-light flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setPendingStep(null)}>
+              Stay & fix
+            </Button>
+            <Button variant="primary" onClick={handleContinueAnyway}>
+              Continue anyway
+            </Button>
+          </div>
+        }
+      >
+        {pendingStep !== null && (
+          <div className="space-y-3">
+            <p className="text-text-secondary text-sm mb-3">
+              You’re about to go to {STEP_LABELS[pendingStep]}. This step still has:
+            </p>
+            {currentStepIssues.map((issue, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'p-3 rounded-lg flex gap-3',
+                  issue.severity === 'error' ? 'bg-red-50 dark:bg-red-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
+                )}
+              >
+                <span className="text-xl flex-shrink-0">{issue.emoji}</span>
+                <p className="text-text-secondary">{issue.message}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

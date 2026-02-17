@@ -37,16 +37,26 @@ export function SkillsStep() {
   const level = draft.level || 1;
 
   // Species skill id "0" = "Any" (extra skill point), not a fixed skill — don't set allocations['0']
+  // Species skills are proficient with skill value 0 (not 1); only set if not already present
   const allocationsWithSpecies = useMemo(() => {
     const next = { ...allocations };
     speciesSkillIds.forEach((id) => {
       if (id === '0') return; // Any = extra point only
-      if (!(id in next) || next[id] < 1) next[id] = 1;
+      if (!(id in next)) next[id] = 0; // Species = proficient + value 0
     });
     return next;
   }, [allocations, speciesSkillIds]);
 
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
+
+  const mergedSkillAbilities = draft.skillAbilities ?? {};
+
+  const handleSkillAbilityChange = useCallback(
+    (skillId: string, abilityKey: string) => {
+      updateDraft({ skillAbilities: { ...(draft.skillAbilities ?? {}), [skillId]: abilityKey } });
+    },
+    [draft.skillAbilities, updateDraft]
+  );
 
   const handleAllocationsChange = useCallback(
     (newAllocations: Record<string, number>) => {
@@ -97,6 +107,8 @@ export function SkillsStep() {
       onAllocationsChange={handleAllocationsChange}
       onDefenseChange={handleDefenseChange}
       abilityDefenseBonuses={abilityDefenseBonuses}
+      skillAbilities={mergedSkillAbilities}
+      onSkillAbilityChange={handleSkillAbilityChange}
       footer={footer}
     />
   );

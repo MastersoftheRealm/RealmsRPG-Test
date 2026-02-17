@@ -280,6 +280,7 @@ function EncountersContent() {
       {/* Delete Confirm Modal */}
       {deleteTarget && (
         <DeleteConfirmModal
+          isOpen={true}
           itemName={deleteTarget.name}
           itemType="encounter"
           deleteContext="encounters"

@@ -129,6 +129,7 @@ function CharactersContent() {
 
       {deleteTarget && (
         <DeleteConfirmModal
+          isOpen={true}
           itemName={deleteTarget.name}
           itemType="character"
           deleteContext="account"

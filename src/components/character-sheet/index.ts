@@ -17,8 +17,6 @@ export { RollProvider, useRolls, useRollsOptional } from './roll-context';
 export { CharacterSheetProvider, useCharacterSheet, useCharacterSheetOptional } from './character-sheet-context';
 export { AddLibraryItemModal } from './add-library-item-modal';
 export { AddFeatModal } from './add-feat-modal';
-export { AddSkillModal } from './add-skill-modal';
-export { AddSubSkillModal } from './add-sub-skill-modal';
 export { LevelUpModal } from './level-up-modal';
 export { RecoveryModal } from './recovery-modal';
 export { SheetActionToolbar } from './sheet-action-toolbar';

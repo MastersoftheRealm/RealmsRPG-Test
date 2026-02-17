@@ -74,14 +74,10 @@ export function transformUserPowerToDisplayItem(
   const damageStr = formatPowerDamage(power.damage);
 
   const stats: ItemStat[] = [
-    { label: 'EN', value: display.energy },
     { label: 'Action', value: display.actionType },
-    { label: 'Range', value: display.range },
+    { label: 'Damage', value: damageStr || '-' },
+    { label: 'Area', value: display.area && display.area !== '-' ? display.area : '-' },
   ];
-
-  if (display.area && display.area !== '-') {
-    stats.push({ label: 'Area', value: display.area });
-  }
 
   return {
     id: power.docId,
@@ -131,14 +127,9 @@ export function transformUserTechniqueToDisplayItem(
   );
 
   const stats: ItemStat[] = [
-    { label: 'EN', value: display.energy },
-    { label: 'TP', value: display.tp },
-    { label: 'Action', value: display.actionType },
+    { label: 'Weapon', value: display.weaponName || '-' },
+    { label: 'Parts', value: String(technique.parts?.length ?? 0) },
   ];
-
-  if (display.weaponName) {
-    stats.push({ label: 'Weapon', value: display.weaponName });
-  }
 
   return {
     id: technique.docId,

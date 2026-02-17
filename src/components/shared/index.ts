@@ -71,6 +71,12 @@ export type { SkillRowProps } from './skill-row';
 export { SkillsAllocationPage } from './skills-allocation-page';
 export type { SkillsAllocationPageProps } from './skills-allocation-page';
 
+// Add Skill / Add Sub-Skill modals — shared by character sheet and character creator
+export { AddSkillModal } from './add-skill-modal';
+export type { AddSkillModalProps } from './add-skill-modal';
+export { AddSubSkillModal } from './add-sub-skill-modal';
+export type { AddSubSkillModalProps, CharacterSkillForSubModal } from './add-sub-skill-modal';
+
 // List components (shared between Codex and Library)
 export {
   SearchInput,

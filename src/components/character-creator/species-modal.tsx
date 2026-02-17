@@ -112,10 +112,14 @@ export function SpeciesModal({
   // State for showing skill description
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
-  // Clear skill description when viewing a different species (avoid carrying over from previous)
+  // Clear skill description when viewing a different species or when modal closes (avoid carrying over)
   useEffect(() => {
     setSelectedSkill(null);
   }, [species?.id]);
+
+  useEffect(() => {
+    if (!isOpen) setSelectedSkill(null);
+  }, [isOpen]);
 
   // Resolve all trait categories
   const resolvedTraits = useMemo(() => {

@@ -2,6 +2,23 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-17 | agent | Session: TASK-240 modal/error/loading standardization | files: src/components/shared/delete-confirm-modal.tsx, src/app/(main)/library/page.tsx, campaigns/[id]/page.tsx, encounters/page.tsx, characters/page.tsx, characters/[id]/CharacterSheetModals.tsx, campaigns/page.tsx, technique-creator/page.tsx, src/docs/DESIGN_SYSTEM.md, AI_TASK_QUEUE.md | Summary:
+  - DeleteConfirmModal: added required isOpen prop and pass-through to Modal; updated all 6 call sites to pass isOpen={true}.
+  - DESIGN_SYSTEM.md: added "Modal, Error, and Loading Patterns" (modals use base Modal + isOpen; Alert for persistent errors, Toast for transient; LoadingState page/list, Spinner inline, LoadingState in Suspense fallbacks).
+  - campaigns/page and technique-creator: Suspense fallbacks use LoadingState instead of raw "Loading..." text.
+  - tsc --noEmit passes.
+
+- 2026-02-17 | agent | Session: Add power/technique modal unification + Finalize abilities (TASK-252, TASK-253) | files: src/components/character-creator/steps/powers-step.tsx, finalize-step.tsx, src/app/(main)/creature-creator/page.tsx, transformers.ts, src/lib/game/constants.ts, src/docs/ai/AI_TASK_QUEUE.md, ALL_FEEDBACK_CLEAN.md | Summary:
+  - TASK-252: Character creator add power/technique modals now use same column headers and layout as character sheet add-library-item (NAME, ACTION, DAMAGE, AREA for powers; NAME, WEAPON, PARTS for techniques); grid columns 1.4fr 0.8fr 0.8fr 0.7fr / 1.4fr 0.8fr 0.8fr. Creature creator power/technique transformers stats updated to Action, Damage, Area and Weapon, Parts; modals use same columns and gridColumns.
+  - TASK-253: Finalize step abilities display as full names (Strength, Vitality, etc.) via ABILITY_DISPLAY_NAMES in lib/game/constants.ts.
+  - build passes
+
+- 2026-02-17 | agent | Session: Unfinished tasks + 2/17 feedback (TASK-174, TASK-250, TASK-251) | files: src/components/character-creator/species-modal.tsx, creator-tab-bar.tsx, src/docs/ai/AI_TASK_QUEUE.md, AI_CHANGELOG.md | Summary:
+  - TASK-174: Marked done — CODEX_SCHEMA_REFERENCE already has Use column for all codex entities with concrete descriptions.
+  - TASK-250 (2/17 feedback): Species modal — clear skill description when modal closes (useEffect on isOpen) so it does not carry over when reopening or switching species.
+  - TASK-251 (2/17 feedback): Creator tab bar — when user clicks "Continue anyway" in step-warning modal, mark current step complete so the tab shows a check mark (markStepComplete(currentStep) in handleContinueAnyway).
+  - build passes
+
 - 2026-02-16 | agent | Session: TASK-173 (Skills extra descriptions as expandable chips) | files: src/lib/skill-extra-descriptions.ts, src/app/(main)/codex/CodexSkillsTab.tsx, src/components/character-sheet/add-skill-modal.tsx, add-sub-skill-modal.tsx, src/docs/ai/AI_TASK_QUEUE.md | Summary:
   - TASK-173: Shared helper getSkillExtraDescriptionDetailSections(skill) returns detailSections for success_desc, failure_desc, ds_calc, craft_success_desc, craft_failure_desc. Codex Skills tab uses description + detailSections (expandable chips). Add-skill modal passes detailSections to GridListRow. Add-sub-skill modal shows SkillExtraChipsSection in expanded content with click-to-expand chips.
   - build passes

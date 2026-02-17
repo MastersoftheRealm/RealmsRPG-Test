@@ -1,11 +1,12 @@
 /**
  * Add Skill Modal
  * ===============
- * Modal for adding base skills from Codex
+ * Shared modal for adding base skills from Codex.
+ * Used by: character sheet, character creator (SkillsAllocationPage).
  * Features:
  * - Matches Codex skills page design
  * - Ability filter (dropdown)
- * - Uses GridListRow for consistent UI (Phase 3: Modal Unification)
+ * - Uses GridListRow for consistent UI
  * - Fully rounded edges
  * - Header with title and skill count
  */
@@ -13,16 +14,15 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
 import { Spinner, SearchInput, IconButton, Alert, Button, Modal } from '@/components/ui';
 import { GridListRow, ListHeader } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
+import { X } from 'lucide-react';
 
-interface AddSkillModalProps {
+export interface AddSkillModalProps {
   isOpen: boolean;
   onClose: () => void;
   existingSkillNames: string[];
@@ -69,21 +69,21 @@ export function AddSkillModal({
   // Filter skills
   const filteredSkills = useMemo(() => {
     const existingLower = existingSkillNames.map(n => n.toLowerCase());
-    
+
     return skills.filter((skill: Skill) => {
       const nameLower = String(skill.name ?? '').toLowerCase();
       // Exclude already owned skills
       if (existingLower.includes(nameLower)) return false;
-      
+
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        if (!nameLower.includes(query) && 
+        if (!nameLower.includes(query) &&
             !skill.description?.toLowerCase().includes(query)) {
           return false;
         }
       }
-      
+
       // Ability filter
       if (abilityFilter) {
         const skillAbilities = skill.ability?.split(',').map(a => a.trim().toLowerCase()) || [];
@@ -91,7 +91,7 @@ export function AddSkillModal({
           return false;
         }
       }
-      
+
       return true;
     });
   }, [skills, existingSkillNames, searchQuery, abilityFilter]);
@@ -180,7 +180,7 @@ export function AddSkillModal({
             onChange={setSearchQuery}
             placeholder="Search skills by name or description..."
           />
-          
+
           <div className="flex gap-3 items-center">
             <label className="text-sm font-medium text-text-secondary">Filter by Ability:</label>
             <select

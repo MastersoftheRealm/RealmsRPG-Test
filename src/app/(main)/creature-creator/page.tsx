@@ -132,11 +132,11 @@ function CreatureCreatorContent() {
 
   // Convert to SelectableItem for UnifiedSelectionModal (GridListRow list style)
   const powerSelectableItems = useMemo(() => 
-    powerDisplayItems.map((p: DisplayItem) => displayItemToSelectableItem(p, ['EN', 'Action', 'Range'])),
+    powerDisplayItems.map((p: DisplayItem) => displayItemToSelectableItem(p, ['Action', 'Damage', 'Area'])),
     [powerDisplayItems]
   );
   const techniqueSelectableItems = useMemo(() => 
-    techniqueDisplayItems.map((t: DisplayItem) => displayItemToSelectableItem(t, ['EN', 'TP', 'Action'])),
+    techniqueDisplayItems.map((t: DisplayItem) => displayItemToSelectableItem(t, ['Weapon', 'Parts'])),
     [techniqueDisplayItems]
   );
   const featSelectableItems = useMemo(() => 
@@ -1081,8 +1081,8 @@ function CreatureCreatorContent() {
         maxSelections={10}
         itemLabel="power"
         searchPlaceholder="Search powers..."
-        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'EN', label: 'EN', sortable: true }, { key: 'Action', label: 'ACTION', sortable: true }, { key: 'Range', label: 'RANGE', sortable: true }]}
-        gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"
+        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Action', label: 'ACTION', sortable: false }, { key: 'Damage', label: 'DAMAGE', sortable: false }, { key: 'Area', label: 'AREA', sortable: false }]}
+        gridColumns="1.4fr 0.8fr 0.8fr 0.7fr"
         size="xl"
       />
       <UnifiedSelectionModal
@@ -1099,8 +1099,8 @@ function CreatureCreatorContent() {
         maxSelections={10}
         itemLabel="technique"
         searchPlaceholder="Search techniques..."
-        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'EN', label: 'EN', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Action', label: 'ACTION', sortable: true }]}
-        gridColumns="1.5fr 0.5fr 0.5fr 0.8fr"
+        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Weapon', label: 'WEAPON', sortable: false }, { key: 'Parts', label: 'PARTS', sortable: false }]}
+        gridColumns="1.4fr 0.8fr 0.8fr"
         size="xl"
       />
       <UnifiedSelectionModal

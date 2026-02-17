@@ -6,8 +6,10 @@ Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consiste
 
 | Pattern | Status | Where used |
 |---------|--------|------------|
-| GridListRow | ✅ | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator |
+| GridListRow | ✅ | Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal (shared), equipment-step, feats-tab, library-section, creature-creator |
 | SkillRow | ✅ | skills-section, skills-step, creature-creator |
+| Skill bonus formulas | ✅ | `formulas.ts`: calculateSkillBonusWithProficiency, calculateSubSkillBonusWithProficiency — used by character sheet, character creator, creature creator |
+| AddSkillModal / AddSubSkillModal | ✅ | In `components/shared`; used by character sheet (CharacterSheetModals), character creator (SkillsAllocationPage) |
 | ValueStepper | ✅ | abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker |
 | SectionHeader | ✅ | feats-tab, proficiencies-tab, notes-tab, archetype-section |
 | RollButton | ✅ | abilities-section, skills-section, archetype-section, library-section |

@@ -559,30 +559,72 @@ const ABILITY_MAP: Record<string, keyof Abilities> = {
 };
 
 /**
+ * Normalize linked abilities to an array of ability keys (keyof Abilities).
+ * Exported for UI (e.g. ability selector for multi-ability skills).
+ */
+export function getLinkedAbilityKeys(linkedAbilities: string | string[] | undefined): (keyof Abilities)[] {
+  if (!linkedAbilities) return [];
+  const arr = Array.isArray(linkedAbilities)
+    ? linkedAbilities
+    : linkedAbilities.split(',').map((a) => a.trim());
+  return arr
+    .map((a) => ABILITY_MAP[a.toLowerCase()])
+    .filter((key): key is keyof Abilities => !!key);
+}
+
+/**
  * Get the highest ability modifier from a list of linked abilities.
  */
 export function getHighestLinkedAbility(
   linkedAbilities: string | string[] | undefined,
   abilities: Abilities
 ): number {
-  if (!linkedAbilities) return 0;
-  
-  const abilityArray = Array.isArray(linkedAbilities) 
-    ? linkedAbilities 
-    : linkedAbilities.split(',').map(a => a.trim());
-  
-  if (abilityArray.length === 0) return 0;
-  
+  const keys = getLinkedAbilityKeys(linkedAbilities);
+  if (keys.length === 0) return 0;
   let max = -Infinity;
-  for (const ability of abilityArray) {
-    const key = ABILITY_MAP[ability.toLowerCase()];
-    if (key && abilities[key] !== undefined) {
-      const value = abilities[key];
-      if (value > max) max = value;
+  for (const key of keys) {
+    const value = abilities[key];
+    if (value !== undefined && value > max) max = value;
+  }
+  return max === -Infinity ? 0 : max;
+}
+
+/**
+ * Get the ability key with the highest value for linked abilities (for default ability selection).
+ */
+export function getHighestLinkedAbilityKey(
+  linkedAbilities: string | string[] | undefined,
+  abilities: Abilities
+): keyof Abilities | undefined {
+  const keys = getLinkedAbilityKeys(linkedAbilities);
+  if (keys.length === 0) return undefined;
+  let best: keyof Abilities | undefined;
+  let max = -Infinity;
+  for (const key of keys) {
+    const value = abilities[key];
+    if (value !== undefined && value > max) {
+      max = value;
+      best = key;
     }
   }
-  
-  return max === -Infinity ? 0 : max;
+  return best;
+}
+
+/**
+ * Get ability modifier for a skill: use chosen key if provided and valid, else highest.
+ */
+export function getLinkedAbilityMod(
+  linkedAbilities: string | string[] | undefined,
+  abilities: Abilities,
+  chosenAbilityKey?: string
+): number {
+  const keys = getLinkedAbilityKeys(linkedAbilities);
+  if (keys.length === 0) return 0;
+  if (chosenAbilityKey && keys.includes(chosenAbilityKey as keyof Abilities)) {
+    const v = abilities[chosenAbilityKey as keyof Abilities];
+    return v ?? 0;
+  }
+  return getHighestLinkedAbility(linkedAbilities, abilities);
 }
 
 /**
@@ -599,15 +641,17 @@ export function calculateSkillBonus(
 
 /**
  * Calculate total skill bonus including proficiency.
+ * @param chosenAbilityKey - If skill has multiple abilities, use this one; else use highest.
  */
 export function calculateSkillBonusWithProficiency(
   linkedAbilities: string | string[] | undefined,
   skillValue: number,
   abilities: Abilities,
-  isProficient: boolean = false
+  isProficient: boolean = false,
+  chosenAbilityKey?: string
 ): number {
-  const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
-  
+  const abilityMod = getLinkedAbilityMod(linkedAbilities, abilities, chosenAbilityKey);
+
   if (isProficient) {
     return abilityMod + skillValue;
   } else {
@@ -618,6 +662,7 @@ export function calculateSkillBonusWithProficiency(
 
 /**
  * Calculate sub-skill bonus.
+ * @param chosenAbilityKey - If skill has multiple abilities, use this one; else use highest.
  */
 export function calculateSubSkillBonusWithProficiency(
   linkedAbilities: string | string[] | undefined,
@@ -625,9 +670,10 @@ export function calculateSubSkillBonusWithProficiency(
   baseSkillValue: number,
   baseSkillProficient: boolean,
   abilities: Abilities,
-  isProficient: boolean
+  isProficient: boolean,
+  chosenAbilityKey?: string
 ): number {
-  const abilityMod = getHighestLinkedAbility(linkedAbilities, abilities);
+  const abilityMod = getLinkedAbilityMod(linkedAbilities, abilities, chosenAbilityKey);
   const unprofBonus = (a: number) => (a < 0 ? a * 2 : Math.ceil(a / 2));
 
   if (!baseSkillProficient) {
