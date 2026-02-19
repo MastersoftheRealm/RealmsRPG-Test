@@ -1182,7 +1182,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
         merged.push({
           id: codexSkill.id,
           name: codexSkill.name ?? ssId,
-          skill_val: 1,
+          skill_val: 0, // Species skills: proficient with value 0 (per feedback / GAME_RULES)
           prof: true,
           ability: abilities[0] ?? 'strength',
           availableAbilities: abilities.length ? abilities : ['strength'],

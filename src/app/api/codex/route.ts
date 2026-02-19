@@ -91,11 +91,21 @@ export async function GET() {
     return [];
   };
 
+  // Normalize adulthood_lifespan: DB may store number (e.g. 3) or [adult, max]
+  const toAdulthoodLifespan = (val: unknown): number[] | undefined => {
+    if (val == null) return undefined;
+    if (Array.isArray(val)) return val.length ? (val as number[]) : undefined;
+    if (typeof val === 'number' && !Number.isNaN(val)) return [val, val];
+    return undefined;
+  };
+
   const codexSpecies = species.map((r) => {
     const d = r.data as Record<string, unknown>;
     let sizes: string[] = [];
     if (typeof d.sizes === 'string') sizes = d.sizes.split(',').map((s: string) => s.trim());
     else if (Array.isArray(d.sizes)) sizes = d.sizes;
+    const ave_height = (d.ave_height as number | undefined) ?? (d.ave_hgt_cm as number | undefined);
+    const ave_weight = (d.ave_weight as number | undefined) ?? (d.ave_wgt_kg as number | undefined);
     return {
       id: r.id,
       name: (d.name as string) || '',
@@ -112,9 +122,9 @@ export async function GET() {
       skills: speciesArr(d.skills, d.skill_ids, d.skillIds),
       languages: toStrArray(d.languages),
       ability_bonuses: d.ability_bonuses as Record<string, number> | undefined,
-      ave_height: d.ave_height as number | undefined,
-      ave_weight: d.ave_weight as number | undefined,
-      adulthood_lifespan: d.adulthood_lifespan as number[] | undefined,
+      ave_height: ave_height != null && !Number.isNaN(Number(ave_height)) ? Number(ave_height) : undefined,
+      ave_weight: ave_weight != null && !Number.isNaN(Number(ave_weight)) ? Number(ave_weight) : undefined,
+      adulthood_lifespan: toAdulthoodLifespan(d.adulthood_lifespan),
     };
   });
 

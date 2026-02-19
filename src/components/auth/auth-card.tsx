@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AuthCard Component
  * ===================
  * Card wrapper for auth forms
@@ -27,7 +27,7 @@ export function AuthCard({ children, title, subtitle, className }: AuthCardProps
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-white mb-2">{title}</h1>
         {subtitle ? (
-          <p className="text-gray-400">{subtitle}</p>
+          <p className="text-gray-300">{subtitle}</p>
         ) : null}
       </div>
       {children}

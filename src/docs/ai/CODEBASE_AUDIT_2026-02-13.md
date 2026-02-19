@@ -10,11 +10,11 @@
 The codebase is well-structured overall with good architectural decisions (Prisma, React Query, component composition). The audit uncovered **98 actionable findings** across 9 categories, of which **~75 have been resolved** across five implementation passes. Key status:
 
 1. **Security** (fully resolved): ~~Admin UID exposure~~ ✅, ~~security headers~~ ✅, ~~auth race condition~~ ✅, ~~Zod validation~~ ✅, ~~rate limiting~~ ✅, ~~file upload magic bytes~~ ✅, ~~API error handling (all routes)~~ ✅, ~~Content-Type validation~~ ✅, ~~payload size limits~~ ✅, ~~error message leak prevention~~ ✅
-2. **UI/UX Consistency** (mostly resolved): ~~21 components migrated to design tokens~~ ✅, ~~dead CSS vars removed~~ ✅, ~~skip-to-content link~~ ✅, ~~header ARIA labels~~ ✅, ~~home page duplicate header~~ ✅, ~~login checkbox styling~~ ✅ — remaining: UX-3/4/5 standardization (TASK-240)
+2. **UI/UX Consistency** (fully resolved): ~~21 components migrated to design tokens~~ ✅, ~~dead CSS vars removed~~ ✅, ~~skip-to-content link~~ ✅, ~~header ARIA labels~~ ✅, ~~home page duplicate header~~ ✅, ~~login checkbox styling~~ ✅, ~~UX-3/4/5 standardization (TASK-240)~~ ✅
 3. **Dead Code** (fully resolved): ~~Legacy hooks/services removed~~ ✅, ~~empty dirs removed~~ ✅, ~~ItemSelectionModal removed~~ ✅, ~~item-transformers.ts removed~~ ✅, ~~NumberStepper removed~~ ✅, ~~deprecated Button variants removed~~ ✅, ~~stale RTDB comments fixed~~ ✅, ~~unused CSS classes removed~~ ✅, ~~ColumnHeaders removed~~ ✅, ~~api-handler.ts removed~~ ✅, ~~functions/ dir (Firebase) removed~~ ✅, ~~archived_docs/ removed~~ ✅, ~~stale scripts removed~~ ✅, ~~redundant docs removed~~ ✅
 4. **Performance** (mostly resolved): ~~React.memo on all 4 list components~~ ✅, ~~ErrorBoundary~~ ✅, ~~loading/error routes~~ ✅, ~~lazy-load react-easy-crop~~ ✅ — deferred: P-5 CharacterSheetContext (large refactor)
 5. **Duplicate Code** (fully resolved): ~~apiFetch extracted~~ ✅, ~~ItemSelectionModal removed~~ ✅, ~~fetchCodex deduped~~ ✅, ~~delete/duplicate factories~~ ✅, ~~ListHeader/ColumnHeaders consolidated~~ ✅, ~~SizeCategory naming fixed~~ ✅
-6. **Owner Feedback** (mostly resolved): ~~FB-1 name edit~~ ✅, ~~FB-5 label~~ ✅, ~~FB-8 Firestore refs~~ ✅, ~~FB-2 skill auto-save~~ ✅, ~~FB-4 initiative auto-roll~~ ✅, ~~FB-3 public char view~~ ✅, ~~FB-7 library visibility~~ ✅ — remaining: FB-6 campaign join notification
+6. **Owner Feedback** (fully resolved): ~~FB-1 name edit~~ ✅, ~~FB-5 label~~ ✅, ~~FB-8 Firestore refs~~ ✅, ~~FB-2 skill auto-save~~ ✅, ~~FB-4 initiative auto-roll~~ ✅, ~~FB-3 public char view~~ ✅, ~~FB-7 library visibility~~ ✅, ~~FB-6 campaign join notification (TASK-249)~~ ✅
 
 ---
 

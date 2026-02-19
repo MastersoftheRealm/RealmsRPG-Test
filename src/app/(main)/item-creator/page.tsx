@@ -195,7 +195,7 @@ function PropertyCard({
                   onUpdate({ property: newProp, op_1_lvl: 0 });
                 }
               }}
-              className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
+              className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
             >
               {selectableProperties.map((p, idx) => (
                 <option key={p.id} value={idx}>
@@ -210,17 +210,17 @@ function PropertyCard({
 
           {/* Option Level */}
           {hasOption && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-amber-800">Option</span>
+                  <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">Option</span>
                   {property.op_1_tp && (
                     <span className="text-sm font-medium text-tp">
                       TP +{formatCost(property.op_1_tp)}/level
                     </span>
                   )}
                   {property.op_1_c && (
-                    <span className="text-sm font-medium text-amber-600">
+                    <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
                       C +{formatCost(property.op_1_c)}/level
                     </span>
                   )}
@@ -1235,7 +1235,7 @@ function ItemCreatorContent() {
                   <select
                     value={damage.size}
                     onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                    className="px-3 py-2 border border-border-light rounded-lg"
+                    className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                   >
                     {DIE_SIZES.map((size) => (
                       <option key={size} value={size}>
@@ -1247,7 +1247,7 @@ function ItemCreatorContent() {
                 <select
                   value={damage.type}
                   onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                  className="px-3 py-2 border border-border-light rounded-lg"
+                  className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
                   {WEAPON_DAMAGE_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -1331,7 +1331,7 @@ function ItemCreatorContent() {
                     <select
                       value={shieldDR.size}
                       onChange={(e) => setShieldDR((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                      className="px-3 py-2 border border-border-light rounded-lg"
+                      className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                     >
                       {DIE_SIZES.map((size) => (
                         <option key={size} value={size}>
@@ -1373,7 +1373,7 @@ function ItemCreatorContent() {
                         <select
                           value={shieldDamage.size}
                           onChange={(e) => setShieldDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                          className="px-3 py-2 border border-border-light rounded-lg"
+                          className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                         >
                           {DIE_SIZES.map((size) => (
                             <option key={size} value={size}>
@@ -1415,7 +1415,7 @@ function ItemCreatorContent() {
                       }
                     }
                   }}
-                  className="w-full px-3 py-2 border border-border-light rounded-lg"
+                  className="w-full px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
                   <option value="">None</option>
                   {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (

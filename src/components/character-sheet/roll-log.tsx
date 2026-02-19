@@ -421,7 +421,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
             <span className="font-semibold text-sm text-primary-dark dark:text-primary-200 truncate block">{roll.title}</span>
           </div>
         </div>
-        <span className="text-[10px] text-text-muted dark:text-neutral-400 flex-shrink-0 ml-1" title={timestampStr}>
+        <span className="text-[10px] text-text-secondary flex-shrink-0 ml-1" title={timestampStr}>
           {timestampStr}
         </span>
       </div>

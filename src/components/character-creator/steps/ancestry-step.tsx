@@ -196,7 +196,7 @@ export function AncestryStep() {
           </p>
         )}
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
           <div>
             <span className="block text-xs text-text-muted uppercase">Size</span>
             <span className="font-bold text-text-primary capitalize">{sizesDisplay}</span>
@@ -205,18 +205,30 @@ export function AncestryStep() {
             <span className="block text-xs text-text-muted uppercase">Type</span>
             <span className="font-bold text-text-primary capitalize">{selectedSpecies.type || 'Humanoid'}</span>
           </div>
-          {selectedSpecies.ave_height && (
-            <div>
-              <span className="block text-xs text-text-muted uppercase">Avg Height</span>
-              <span className="font-bold text-text-primary">{selectedSpecies.ave_height} cm</span>
-            </div>
-          )}
-          {selectedSpecies.ave_weight && (
-            <div>
-              <span className="block text-xs text-text-muted uppercase">Avg Weight</span>
-              <span className="font-bold text-text-primary">{selectedSpecies.ave_weight} kg</span>
-            </div>
-          )}
+          <div>
+            <span className="block text-xs text-text-muted uppercase">Avg Height</span>
+            <span className="font-bold text-text-primary">
+              {selectedSpecies.ave_height != null && Number(selectedSpecies.ave_height) > 0 ? `${selectedSpecies.ave_height} cm` : '—'}
+            </span>
+          </div>
+          <div>
+            <span className="block text-xs text-text-muted uppercase">Avg Weight</span>
+            <span className="font-bold text-text-primary">
+              {selectedSpecies.ave_weight != null && Number(selectedSpecies.ave_weight) > 0 ? `${selectedSpecies.ave_weight} kg` : '—'}
+            </span>
+          </div>
+          <div>
+            <span className="block text-xs text-text-muted uppercase">Adulthood</span>
+            <span className="font-bold text-text-primary">
+              {selectedSpecies.adulthood_lifespan?.[0] != null ? `${selectedSpecies.adulthood_lifespan[0]} yr` : '—'}
+            </span>
+          </div>
+          <div>
+            <span className="block text-xs text-text-muted uppercase">Lifespan (max)</span>
+            <span className="font-bold text-text-primary">
+              {selectedSpecies.adulthood_lifespan?.[1] != null ? `${selectedSpecies.adulthood_lifespan[1]} yr` : '—'}
+            </span>
+          </div>
         </div>
         
         {/* Skills and Languages */}

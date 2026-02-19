@@ -107,7 +107,7 @@ export function PowerPartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -132,7 +132,7 @@ export function PowerPartCard({
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>

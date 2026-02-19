@@ -2,6 +2,43 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-18 | agent | Session: Species height/weight/lifespan + Skill admin abilities-only (TASK-256, TASK-257) | files: src/app/api/codex/route.ts, ancestry-step.tsx, CodexSpeciesTab.tsx, AdminSkillsTab.tsx, ALL_FEEDBACK_CLEAN.md, AI_TASK_QUEUE.md | Summary:
+  - TASK-256: Codex API now maps ave_hgt_cm/ave_wgt_kg to ave_height/ave_weight in species response; adulthood_lifespan normalized from number or number[]. Ancestry tab species summary shows Size, Type, Avg Height, Avg Weight, Adulthood, Lifespan (max) in a 6-column grid (— when missing). CodexSpeciesTab expanded section shows Adulthood and Lifespan (max) when present.
+  - TASK-257: Admin Skills edit modal uses only the six abilities (not defenses) for governing ability; placeholder changed to "Choose governing ability".
+  - Logged 2/18 feedback to ALL_FEEDBACK_CLEAN; added TASK-258 (Traits tab + Advanced), TASK-259 (codex unification), TASK-260 (property option labels), TASK-261 (equipment category dropdown).
+  - build passes
+
+- 2026-02-18 | agent | Session: Implement unimplemented from audits/feedback | files: CODEBASE_AUDIT_2026-02-13.md, UNIMPLEMENTED_AUDIT_2026-02-16.md | Summary:
+  - Audited all sources: ALL_FEEDBACK_CLEAN "Feedback not yet implemented", UNIMPLEMENTED_AUDIT_2026-02-16, CODEBASE_AUDIT_2026-02-13, AI_TASK_QUEUE. Only TASK-255 (accessibility) remains not-started and is assigned to another agent.
+  - No code changes required: TASK-159, 167, 168, 171, 172, 173, 174, 240, 249 and all other audit/feedback items are already done in the queue.
+  - Doc updates: CODEBASE_AUDIT executive summary — UI/UX and Owner Feedback marked fully resolved (TASK-240, FB-6 done). UNIMPLEMENTED_AUDIT — added "Status as of 2026-02-18" noting all listed tasks completed; only TASK-255 open (other agent).
+
+- 2026-02-18 | agent | Session: Feedback audit + "Feedback not yet implemented" section | files: src/docs/ALL_FEEDBACK_CLEAN.md, src/docs/ai/UNIMPLEMENTED_AUDIT_2026-02-16.md | Summary:
+  - Added "Feedback not yet implemented" section to ALL_FEEDBACK_CLEAN.md (after High-Level Action Items): table of truly open items, last audited date, usage notes. Only TASK-255 (accessibility audit) listed; noted as handled by other agent.
+  - Synced curated §17 and High-Level checklist with AI_TASK_QUEUE: TASK-159, 167, 168, 171, 172, 173 marked done; TASK-255 left as ⏳ with "(other agent)".
+  - UNIMPLEMENTED_AUDIT_2026-02-16.md now points to ALL_FEEDBACK_CLEAN § Feedback not yet implemented as current source of truth.
+
+- 2026-02-18 | agent | Session: Feedback audit — 2/17 allocate skills (species value 0, formulas, ability choice) | files: src/app/(main)/characters/[id]/page.tsx, src/components/character-sheet/skills-section.tsx, src/docs/ALL_FEEDBACK_CLEAN.md | Summary:
+  - Audited ALL_FEEDBACK_CLEAN.md for feedback given but not implemented; prioritized 2/17 "Character creator allocate skills tab" (high priority).
+  - Species skills: character sheet merge of species skills now uses skill_val: 0 (was 1). Creator already used 0. Base skill gaining proficiency in sheet now explicitly set to skill_val: 0.
+  - Verified: bonus formulas in formulas.ts match GAME_RULES; multi-ability skill selector already present (skillAbilities, onSkillAbilityChange); same formulas used across sheet/creator; creature creator uses calculateSkillBonusWithProficiency.
+  - Documented implementation in raw feedback entry. Build passes.
+
+- 2026-02-18 | agent | Session: TASK-255 Accessibility audit — color contrast WCAG 2.1 AA | files: src/app/globals.css, src/components/auth/auth-card.tsx, form-input.tsx, password-input.tsx, src/app/(auth)/login/page.tsx, register/page.tsx, forgot-password/page.tsx, forgot-username/page.tsx, src/components/shared/item-card.tsx, creator-summary-panel.tsx, roll-log.tsx, src/docs/ACCESSIBILITY_AUDIT_2026-02-18.md, AI_TASK_QUEUE.md | Summary:
+  - Auth: text-gray-400 → text-gray-300 for WCAG AA on dark bg; form-input/password-input helper/placeholder/icon → gray-300.
+  - globals.css: dark --text-muted 6e7681 → 8b949e (passes 4.5:1 on #161b22).
+  - item-card, creator-summary-panel: opacity-70 → text-text-secondary/text-text-muted.
+  - roll-log: timestamp uses text-text-secondary for consistent contrast.
+  - ACCESSIBILITY_AUDIT_2026-02-18.md documents changes and residual items.
+  - build passes
+
+- 2026-02-18 | agent | Session: TASK-254 Creator contrast + dropdown dark mode | files: src/app/(main)/technique-creator/page.tsx, item-creator/page.tsx, power-creator/page.tsx, PowerPartCard.tsx, ALL_FEEDBACK_CLEAN.md, AI_TASK_QUEUE.md | Summary:
+  - Technique PartCard: Added dark mode variants to option boxes (bg-red-50 dark:bg-red-900/20, text-red-800 dark:text-red-300, text-red-600 dark:text-red-400); all selects use text-text-primary bg-surface.
+  - Item PropertyCard: Added dark mode variants to option box (bg-amber-50 dark:bg-amber-900/20, text-amber-800 dark:text-amber-300, text-amber-600 dark:text-amber-400); all selects use text-text-primary bg-surface.
+  - Power creator: PowerPartCard and page selects use text-text-primary bg-surface.
+  - Created TASK-255: Full accessibility audit for WCAG 2.1 AA color contrast (4.5:1 small, 3:1 large text).
+  - build passes
+
 - 2026-02-17 | agent | Session: TASK-240 modal/error/loading standardization | files: src/components/shared/delete-confirm-modal.tsx, src/app/(main)/library/page.tsx, campaigns/[id]/page.tsx, encounters/page.tsx, characters/page.tsx, characters/[id]/CharacterSheetModals.tsx, campaigns/page.tsx, technique-creator/page.tsx, src/docs/DESIGN_SYSTEM.md, AI_TASK_QUEUE.md | Summary:
   - DeleteConfirmModal: added required isOpen prop and pass-through to Modal; updated all 6 call sites to pass isOpen={true}.
   - DESIGN_SYSTEM.md: added "Modal, Error, and Loading Patterns" (modals use base Modal + isOpen; Alert for persistent errors, Toast for transient; LoadingState page/list, Spinner inline, LoadingState in Suspense fallbacks).

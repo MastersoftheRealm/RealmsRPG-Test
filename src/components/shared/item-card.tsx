@@ -125,7 +125,7 @@ export const ItemCard = memo(function ItemCard({
             <div className="flex items-center gap-3 text-sm text-text-secondary">
               {item.stats.slice(0, 3).map((stat, i) => (
                 <span key={i} className="whitespace-nowrap">
-                  <span className="text-xs opacity-70">{stat.label}:</span>{' '}
+                  <span className="text-xs text-text-secondary">{stat.label}:</span>{' '}
                   <span className="font-medium text-text-primary">{stat.value}</span>
                 </span>
               ))}

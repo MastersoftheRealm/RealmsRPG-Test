@@ -128,8 +128,8 @@ export function SkillsSection({
     } else {
       // Base skill logic
       if (!skill.prof && !isFromSpecies) {
-        // Not proficient: make proficient first (don't increase value)
-        onSkillChange(skill.id, { prof: true });
+        // Not proficient: make proficient first; value stays 0 (per GAME_RULES)
+        onSkillChange(skill.id, { prof: true, skill_val: 0 });
       } else {
         // Already proficient or species skill: increase skill_val (capped at MAX_SKILL_VALUE)
         if (skill.skill_val >= MAX_SKILL_VALUE) return;

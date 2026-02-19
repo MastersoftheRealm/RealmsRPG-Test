@@ -56,7 +56,7 @@ export default function ForgotUsernamePage() {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
                   <input
                     type="email"
                     id="email"
@@ -91,7 +91,7 @@ export default function ForgotUsernamePage() {
               <p className="text-gray-600">
                 If an account exists with that email address, we&apos;ve sent your username to it.
               </p>
-              <p className="text-sm text-gray-500 mt-4">
+              <p className="text-sm text-gray-300 mt-4">
                 Don&apos;t see it? Check your spam folder.
               </p>
             </div>
@@ -105,13 +105,13 @@ export default function ForgotUsernamePage() {
               <ArrowLeft className="w-5 h-5" />
               Back to Login
             </Link>
-            <div className="text-gray-500">
+            <div className="text-gray-300">
               Need to reset your password?{' '}
               <Link href="/forgot-password" className="text-primary-600 hover:text-primary-700 font-medium">
                 Reset Password
               </Link>
             </div>
-            <div className="text-gray-500">
+            <div className="text-gray-300">
               Don&apos;t have an account?{' '}
               <Link href="/register" className="text-primary-600 hover:text-primary-700 font-medium">
                 Sign Up
@@ -120,7 +120,7 @@ export default function ForgotUsernamePage() {
           </div>
         </div>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-300 mt-6">
           Remember your credentials?{' '}
           <Link href="/login" className="text-primary-600 hover:text-primary-700">
             Sign in here

@@ -6010,3 +6010,113 @@ Agents should **create new tasks** during their work when they discover addition
     - Abilities in finalize summary show as full names (Strength, Vitality, Agility, Acuity, Intelligence, Charisma) or at minimum 3-letter abbreviations
     - npm run build passes
   notes: "Done 2026-02-17: Added ABILITY_DISPLAY_NAMES to lib/game/constants.ts (lowercase key → full name). finalize-step imports it and uses ABILITY_DISPLAY_NAMES[ability] ?? ability for ability label instead of ability.charAt(0).toUpperCase()."
+
+- id: TASK-254
+  title: Creators — description/option contrast + dropdown dark mode
+  priority: low
+  status: done
+  created_at: 2026-02-18
+  created_by: agent
+  description: |
+    Technique and Armament creators: description text and option boxes had poor contrast (light blue on white, no dark mode). Dropdown menus across all 3 creators needed explicit text-text-primary bg-surface for proper theming.
+  related_files:
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/power-creator/PowerPartCard.tsx
+  acceptance_criteria:
+    - Technique PartCard option boxes have dark mode variants (bg-red-50 dark:bg-red-900/20, text-red-800 dark:text-red-300)
+    - Item PropertyCard option box has dark mode variants (bg-amber-50 dark:bg-amber-900/20, text-amber-800 dark:text-amber-300)
+    - All creator selects use text-text-primary bg-surface
+    - npm run build passes
+  notes: "Done 2026-02-18: Added dark mode variants to option boxes in technique/item creators; added text-text-primary bg-surface to all select elements across power/technique/item creators."
+
+- id: TASK-255
+  title: Accessibility audit — color contrast WCAG 2.1 AA
+  priority: high
+  status: done
+  created_at: 2026-02-18
+  created_by: agent
+  description: |
+    Full accessibility audit for color contrast to meet WCAG 2.1 (AA) requirements: 4.5:1 for small text, 3:1 for large text. Prevents potential lawsuits. User Impact: Serious. Guidelines: WCAG 2.1 (AA), WCAG 2.0 (AA), WCAG 2.2 (AA). Use axe DevTools or similar to identify and fix violations.
+  related_files:
+    - src/app/globals.css
+    - src/components/auth/
+    - src/components/shared/item-card.tsx
+    - src/components/creator/creator-summary-panel.tsx
+    - src/components/character-sheet/roll-log.tsx
+    - src/docs/ACCESSIBILITY_AUDIT_2026-02-18.md
+  acceptance_criteria:
+    - Run axe-core color-contrast rule (or equivalent) across key pages
+    - All text elements meet 4.5:1 (small) or 3:1 (large text) contrast ratio
+    - Document any residual issues and remediation plan
+    - npm run build passes
+  notes: "Done 2026-02-18: Auth text-gray-400 → gray-300; dark --text-muted 6e7681 → 8b949e; item-card/creator-summary-panel opacity-70 → semantic tokens; roll-log timestamp → text-text-secondary. ACCESSIBILITY_AUDIT_2026-02-18.md documents changes."
+
+- id: TASK-256
+  title: Species height/weight/lifespan — API mapping and display everywhere
+  priority: high
+  status: done
+  created_at: 2026-02-18
+  created_by: agent
+  description: |
+    Codex API and UI: (1) API must map DB fields ave_hgt_cm, ave_wgt_kg to ave_height, ave_weight in response; support adulthood_lifespan as number or number[]. (2) Character creator Ancestry tab species summary must show height, weight, lifespan, adulthood with size/type/skills/languages. (3) Codex species tab (public and admin) must show these in expanded/summary views. Use common species display logic where possible.
+  related_files:
+    - src/app/api/codex/route.ts
+    - src/components/character-creator/steps/ancestry-step.tsx
+    - src/app/(main)/codex/CodexSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+  acceptance_criteria:
+    - Codex API returns ave_height, ave_weight from ave_hgt_cm/ave_wgt_kg when present; adulthood_lifespan normalized to [adult, max] or single value displayed
+    - Ancestry tab species summary shows Size, Type, Avg Height, Avg Weight, Adulthood, Lifespan (when present), Skills, Languages
+    - Codex species cards show height, weight, adulthood, lifespan in expanded section
+    - npm run build passes
+  notes: "Done 2026-02-18: API maps ave_hgt_cm/ave_wgt_kg to ave_height/ave_weight, adulthood_lifespan number|array; ancestry step summary shows all six (Size, Type, Avg Height, Avg Weight, Adulthood, Lifespan); CodexSpeciesTab expanded section shows adulthood/lifespan."
+
+- id: TASK-257
+  title: Skill admin — governing ability is abilities-only (not defenses)
+  priority: medium
+  status: done
+  created_at: 2026-02-18
+  created_by: agent
+  description: |
+    Admin Codex Skills edit: the "Ability" field should offer only the six abilities (Strength, Vitality, Agility, Acuity, Intelligence, Charisma), not the six defenses. Skills are governed by abilities only. Update placeholder to "Choose governing ability".
+  related_files:
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/lib/game/constants.ts
+  acceptance_criteria:
+    - Skill edit modal ability dropdown shows only 6 abilities
+    - Placeholder says "Choose governing ability"
+    - npm run build passes
+  notes: "Done 2026-02-18: ABILITY_OPTIONS_SKILLS uses first 6 of ABILITIES_AND_DEFENSES; placeholder updated to 'Choose governing ability'."
+
+- id: TASK-258
+  title: Public codex — add Traits tab and Advanced tabs toggle
+  priority: high
+  status: not-started
+  created_at: 2026-02-18
+  description: |
+    Add Traits tab to public codex matching admin codex design (no edit/delete). Hide power/technique parts, armament properties, creature feats, and traits by default; "Advanced" control reveals those tabs. UX should be clear and consistent with rest of codex.
+
+- id: TASK-259
+  title: Public vs admin codex unification — layouts, chips, descriptions
+  priority: high
+  status: not-started
+  created_at: 2026-02-18
+  description: |
+    Audit and unify public codex with admin codex: same layouts, components, styles. Parts/properties options as expandable chips with IP/TP/c/EN costs and description. Ensure descriptions show for parts and properties (including when options exist). Column headers aligned with collapsed cards; remove inline styles in favor of shared components.
+
+- id: TASK-260
+  title: Edit property — option cost labels (IP/TP/c) and larger description field
+  priority: medium
+  status: not-started
+  created_at: 2026-02-18
+  description: |
+    Property edit modal: add clear labels for which field is IP, TP, c for option costs. Make description field bigger.
+
+- id: TASK-261
+  title: Edit equipment — category dropdown with add-new and existing list
+  priority: medium
+  status: not-started
+  created_at: 2026-02-18
+  description: |
+    Equipment edit: category as dropdown listing all categories already used by equipment, with ability to type/add a new category. Reuse components where possible.

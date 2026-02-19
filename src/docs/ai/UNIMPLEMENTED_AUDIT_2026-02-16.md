@@ -1,5 +1,9 @@
 # Un-Implemented Feedback & Audit Work — 2026-02-16
 
+**Superseded for current list:** See **`ALL_FEEDBACK_CLEAN.md` → "Feedback not yet implemented"** (audited 2026-02-18). That section is the single source of truth for what remains not implemented; this file is kept for historical audit context.
+
+**Status as of 2026-02-18:** All tasks and items listed in this audit have been completed (TASK-159, 167, 168, 171, 172, 173, 174, 240, 249, etc. are done in AI_TASK_QUEUE). The only open item is TASK-255 (accessibility audit), which is assigned to another agent and listed in ALL_FEEDBACK_CLEAN.md.
+
 **Purpose:** Single list of all un-implemented feedback, task-queue items, and site-audit follow-ups. Newer feedback and audits are treated as more accurate than older.
 
 **Sources:** `ALL_FEEDBACK_CLEAN.md`, `AI_TASK_QUEUE.md`, `CODEBASE_AUDIT_2026-02-13.md`, raw feedback log.

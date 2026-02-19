@@ -170,7 +170,7 @@ function RegisterContent() {
 
       <div className="my-6 flex items-center gap-4">
         <div className="flex-1 h-px bg-gray-600" />
-        <span className="text-gray-400 text-sm">or</span>
+        <span className="text-gray-300 text-sm">or</span>
         <div className="flex-1 h-px bg-gray-600" />
       </div>
 
@@ -183,7 +183,7 @@ function RegisterContent() {
         <SocialButton provider="apple" onClick={handleAppleSignIn} disabled={isLoading} />
       </div>
 
-      <p className="mt-6 text-center text-gray-400">
+      <p className="mt-6 text-center text-gray-300">
         Already have an account?{' '}
         <Link href="/login" className="text-primary-400 hover:text-primary-300 transition-colors font-medium">
           Sign in

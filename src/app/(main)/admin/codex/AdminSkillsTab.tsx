@@ -14,6 +14,9 @@ import { Modal, Button, Input } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
+
+/** Skills are governed by abilities only (not defenses). */
+const ABILITY_OPTIONS_SKILLS = ABILITIES_AND_DEFENSES.slice(0, 6);
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
@@ -69,7 +72,7 @@ export function AdminSkillsTab() {
   });
 
   const ABILITY_OPTIONS = useMemo(
-    () => ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a })),
+    () => ABILITY_OPTIONS_SKILLS.map(a => ({ value: a, label: a })),
     [],
   );
 
@@ -471,7 +474,7 @@ export function AdminSkillsTab() {
             <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>
             <ChipSelect
               label=""
-              placeholder="Choose governing ability/defense"
+              placeholder="Choose governing ability"
               options={ABILITY_OPTIONS}
               selectedValues={form.abilities}
               onSelect={(v) => setForm((f) => ({ ...f, abilities: [...f.abilities, v] }))}

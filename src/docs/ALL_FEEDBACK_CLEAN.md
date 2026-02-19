@@ -1,6 +1,6 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-02-13
+Last updated: 2026-02-18
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -70,6 +70,10 @@ Notes:
 - Remove "# items" counts and ensure list header spacing equals item spacing.
 - All modals: uniform rounded corners (overflow-hidden on modal container). Remove "Add" column header; ListHeader with hasSelectionColumn provides empty slot. Header bar: shorter than modal width, rounded edges, ascending/descending sort.
 
+### 6b) Creator Contrast & Accessibility
+- Technique and Armament creators: description and option boxes must use semantic tokens (text-text-primary) and dark mode variants — match Power Creator. Dropdown menus across all 3 creators must have explicit text-text-primary bg-surface. ✅ TASK-254
+- Full accessibility audit: Elements must meet WCAG 2.1 AA contrast (4.5:1 small text, 3:1 large text). Use axe DevTools to identify and fix violations. ✅ TASK-255 (not-started; handled by other agent)
+
 ### 7) Bugs / Behavior to Prioritize
 - Login redirect: return user to the page that initiated login.
 - Character creator: persist skill allocations automatically when switching tabs.
@@ -125,13 +129,15 @@ Notes:
 - Feat ability: Use dropdown of 6 Abilities + 6 Defenses; allow multi-select. ✅ TASK-156
 - Feat fields: All feat fields must be editable (req_desc, ability_req/abil_req_val pairs, skill_req/skill_req_val, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags, char_feat, state_feat). ✅ TASK-157
 - Array fields: Use dropdowns to select by name (e.g. species skills, feat skill_req), not "ids separated by commas". ✅ TASK-160
-- Input lag: Typing in edit mode should feel responsive. ⏸ TASK-159 (deferred; needs profiling)
+- Input lag: Typing in edit mode should feel responsive. ✅ TASK-159 (done: useTransition in Admin Feats)
 - Centralized schema doc: Create reference for all codex entity fields (name, type, description) for AI/engineer use. ✅ TASK-158
  - Feat prerequisites: `prereq_text` is not a real feat attribute and should not appear in schema docs, types, or Admin editors. Use `req_desc` only. ✅ TASK-169
  - Other Admin tabs: Admin Skills, Parts, Properties, and Equipment tabs should use the same search, filters, sort headers, and GridListRow layout as their Codex counterparts, with only edit/delete controls added. ✅ TASK-170
- - Skill base skill selector: Admin Skills edit modal should use a dropdown of base skill names for the `base_skill` relationship instead of requesting a numeric ID; the UI selects by name and the code resolves/stores the corresponding `base_skill_id` internally. ⏳ TASK-171
- - Skill additional descriptions: Admin Skills edit modal must expose all skill narrative fields for editing — `success_desc`, `failure_desc`, `ds_calc`, `craft_success_desc`, `craft_failure_desc` — matching the codex schema. ⏳ TASK-172
- - Skill chips: Extra skill descriptions (success/failure outcomes, DS guidance, craft success/failure details) should render as expandable chips on skill item cards across the site (Codex, add skill modals, add sub-skill modals, etc.), appended after the main description. ⏳ TASK-173
+ - Skill base skill selector: Admin Skills edit modal should use a dropdown of base skill names for the `base_skill` relationship instead of requesting a numeric ID; the UI selects by name and the code resolves/stores the corresponding `base_skill_id` internally. ✅ TASK-171
+ - Skill additional descriptions: Admin Skills edit modal must expose all skill narrative fields for editing — `success_desc`, `failure_desc`, `ds_calc`, `craft_success_desc`, `craft_failure_desc` — matching the codex schema. ✅ TASK-172
+ - Skill chips: Extra skill descriptions (success/failure outcomes, DS guidance, craft success/failure details) should render as expandable chips on skill item cards across the site (Codex, add skill modals, add sub-skill modals, etc.), appended after the main description. ✅ TASK-173
+ - Species height/weight/lifespan: Codex API maps ave_hgt_cm/ave_wgt_kg to ave_height/ave_weight; adulthood_lifespan as number or [adult, max]. Ancestry tab and Codex species cards show Avg Height, Avg Weight, Adulthood, Lifespan (max). ✅ TASK-256
+ - Skill governing ability: Admin Skills edit uses only the six abilities (not defenses); placeholder "Choose governing ability". ✅ TASK-257
 
 ### 18) Encounters System (Major Redesign)
 - **Rename:** "Encounter Tracker" → "Encounters" (hub page).
@@ -197,7 +203,7 @@ Notes:
 - [x] Feat editing: ability dropdown (6 abilities + 6 defenses, multi-select). (TASK-156)
 - [x] Feat editing: add all missing editable fields. (TASK-157)
 - [x] Create centralized codex schema reference doc for AI. (TASK-158)
-- [ ] Admin Codex: reduce input lag in edit mode. (TASK-159 — deferred)
+- [x] Admin Codex: reduce input lag in edit mode. (TASK-159 — done: useTransition in Admin Feats; other tabs can follow)
 - [x] Admin Codex: array fields use dropdowns (skills, etc.), not raw IDs. (TASK-160)
 - [x] Campaign–Encounter: attach campaign to encounter; "Add all Characters" button. (TASK-161)
 - [x] Encounter combatants: fix HP/EN loading when combatant tied to user character. (TASK-162)
@@ -205,8 +211,27 @@ Notes:
 - [x] Roll log consistency: styles, date display ("unavailable" fix), tabs across encounter/campaign/sheet. (TASK-164)
 - [x] Roll log real-time: Supabase Realtime for campaign rolls sync. (TASK-165)
 - [x] Health/Energy real-time: sync current HP/EN between encounters and characters. (TASK-166)
-- [ ] Character visibility: public (link share, view-only); campaign (RM + members view); private→campaign on join. (TASK-167)
-- [ ] Character-derived content visibility: powers/techniques/items in private library visible (view-only) when viewing char. (TASK-168)
+- [x] Character visibility: public (link share, view-only); campaign (RM + members view); private→campaign on join. (TASK-167)
+- [x] Character-derived content visibility: powers/techniques/items in private library visible (view-only) when viewing char. (TASK-168)
+
+---
+
+## Feedback not yet implemented
+
+**Last audited:** 2026-02-18. Cross-checked with `AI_TASK_QUEUE.md`. Newer feedback takes priority over older.
+
+Items below are the only feedback/tasks that remain **not implemented** (or explicitly deferred / assigned elsewhere). Everything else in the curated sections and High-Level list above is done unless marked here.
+
+| Item | Source | Status / Notes |
+|------|--------|----------------|
+| **Full accessibility audit (WCAG 2.1 AA)** | §6b curated; 2/18 raw | **TASK-255** (not-started). Color contrast 4.5:1 small text, 3:1 large text. *Handled by another agent; do not duplicate.* |
+| *(None else)* | — | All other curated items and High-Level action items have a corresponding **done** or **cancelled** task, or were implemented directly and noted in the raw log. |
+
+**How to use this section**
+
+- When new raw feedback is added, re-check whether it creates new work; if yes, add a row above and/or create a task in `AI_TASK_QUEUE.md`.
+- When a task is completed, remove it from this table (or mark as done in the Notes column) and ensure the curated/High-Level sections reflect completion.
+- For deferred or “other agent” work, keep the row with a short note so agents don’t re-open it.
 
 ---
 
@@ -737,9 +762,25 @@ Notes
 - Expected: (1) Character creator and creature creator add power/technique modals match character sheet add-library-item modal: same column headers (e.g. NAME, ACTION, DAMAGE, AREA for powers; NAME, WEAPON, PARTS for techniques), collapsed/expandable row layout, list header bar. (2) Finalize step abilities display as full names (Strength, Vitality, …) or at minimum 3-letter abbreviations, not single letters.
 - Implemented 2026-02-17: (1) TASK-252 — Character creator powers-step: columns + gridColumns for power (Action, Damage, Area) and technique (Weapon, Parts); creature creator transformers stats and modal columns/gridColumns aligned; (2) TASK-253 — ABILITY_DISPLAY_NAMES in constants; finalize-step uses full ability names.
 
+**Raw Feedback Log — Creators description/dropdown contrast + accessibility audit**  
+- Date: 2026-02-18  
+- Context: Creators (Technique, Armament), add Part/Property  
+- Priority: Low (contrast), Serious (accessibility)  
+- Feedback: Steps: Creators → Techniques or Armaments → Add a Technique Part or Property. Observed: The description can not be easily read as the text is light blue on white. Expected: Description should change for Dark-mode like on the Power Creator. Issue is effecting Dropdown menus as well for all 3 Creators. In addition we need to do an accessibility audit to prevent from lawsuits: Elements must meet minimum color contrast ratio thresholds (WCAG 2.1 AA - 4.5:1 small text, 3:1 large text). Rule ID: color-contrast, User Impact: Serious, Guidelines: WCAG 2.1 (AA), WCAG 2.0 (AA), WCAG 2.2 (AA).  
+- Expected: (1) Description text uses semantic tokens (text-text-primary) that adapt to dark mode like Power Creator. (2) Dropdown menus across Power/Technique/Armament creators meet WCAG AA contrast. (3) Full accessibility audit for color contrast across site.  
+- Extracted to: TASK-254 (implement), TASK-255 (accessibility audit)
+
 **Raw Feedback Log — Character creator allocate skills tab (species value 0, bonuses, ability choice)**  
 - Date: 2026-02-17  
 - Context: Character creator — Allocate skills tab  
 - Priority: High  
 - Feedback: (1) Species skills are added as proficient with skill value 0, not 1 — I've given feedback about this before. (2) Skill bonuses seem inaccurate; reference GAME_RULES for skills/subskill bonus calculations. (3) Skills with multiple ability options (e.g. Craft) should let me choose which ability the skill uses; default should be the highest value ability at that point, but I need to be able to select. (4) Unity between skill calculations in character sheet, creature creator, and character creator.  
-- Expected: Species skills = proficient + value 0; bonus formulas per GAME_RULES (proficient base = ability + value, sub-skill = ability + base value + sub value; unproficient = ½ ability round up or ×2 if negative); multi-ability skills have ability selector, default highest; same formulas everywhere.
+- Expected: Species skills = proficient + value 0; bonus formulas per GAME_RULES (proficient base = ability + value, sub-skill = ability + base value + sub value; unproficient = ½ ability round up or ×2 if negative); multi-ability skills have ability selector, default highest; same formulas everywhere.  
+- Implemented 2026-02-18: (1) Character sheet merge of species skills now uses skill_val: 0 (was 1). Character creator already set species skills to 0. (2) formulas.ts already matches GAME_RULES. (3) Ability selector for multi-ability skills already present (skillAbilities, onSkillAbilityChange in skills-step and SkillsAllocationPage). (4) Same formulas used in formulas.ts across sheet/creator; creature creator uses calculateSkillBonusWithProficiency. Base skill gaining proficiency in sheet now explicitly set to skill_val: 0.
+
+**Raw Feedback Log — 2/18/2026 (Species height/weight/lifespan, codex unification, skill ability, public codex)**  
+- Date: 2026-02-18  
+- Context: Character creator Ancestry tab, Codex (admin + public), species editor, skill admin, equipment/property editors  
+- Priority: High  
+- Feedback: (1) Character creator Ancestry tab: height, weight, lifespan, adulthood should be in the species summary with size, type, skills, languages; they are missing. (2) Age/height/weight numbers are missing in many forms (codex, character creator). (3) Codex editor: ensure average height/weight and sometimes lifespan (max age) and adulthood are present; example species in Supabase uses ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (e.g. 3). (4) Use common styles and load/display logic for species across the site. (5) Skill edit admin: "governing ability/defense" should be abilities only, not defenses, for skills. (6) Sync codex species display with admin style (expandable cards); include languages, age, weight/height. (7) Add "Traits" tab to public codex, mimicking admin codex (no edit/delete). (8) Public codex: hide some tabs by default; "Advanced" reveals power/technique parts, armament properties, creature feats, traits. (9) Audit public vs admin codex: use same layouts/components/styles; options in parts/properties should be expandable chips with IP/TP/c/EN costs and description; parts/properties missing descriptions in public codex. (10) Edit property: option costs need labels for IP/TP/c; description field bigger. (11) Edit equipment: category dropdown with list of existing categories + add new. (12) Column headers aligned with collapsed item cards across codexes/admin/library; remove inline styles in favor of reusable components. (13) Armament properties not always showing descriptions in codex when they have options (shows only options).
+- Expected: Species summary everywhere includes height, weight, lifespan, adulthood; API maps ave_hgt_cm/ave_wgt_kg and adulthood_lifespan; skill admin uses abilities-only; public codex has Traits tab and Advanced toggle; unified codex display and chip styles; property/equipment editor improvements; column/component consistency.

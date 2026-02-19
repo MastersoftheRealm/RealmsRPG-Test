@@ -75,11 +75,17 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            {species.ave_height && (
+            {species.ave_height != null && Number(species.ave_height) > 0 && (
               <div><span className="font-medium">Avg Height:</span> {species.ave_height} cm</div>
             )}
-            {species.ave_weight && (
+            {species.ave_weight != null && Number(species.ave_weight) > 0 && (
               <div><span className="font-medium">Avg Weight:</span> {species.ave_weight} kg</div>
+            )}
+            {species.adulthood_lifespan?.[0] != null && (
+              <div><span className="font-medium">Adulthood:</span> {species.adulthood_lifespan[0]} yr</div>
+            )}
+            {species.adulthood_lifespan?.[1] != null && (
+              <div><span className="font-medium">Lifespan (max):</span> {species.adulthood_lifespan[1]} yr</div>
             )}
             {species.languages?.length > 0 && (
               <div><span className="font-medium">Languages:</span> {species.languages.join(', ')}</div>

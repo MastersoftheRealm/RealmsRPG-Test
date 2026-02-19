@@ -776,7 +776,7 @@ function PowerCreatorContent() {
               <select
                 value={actionType}
                 onChange={(e) => setActionType(e.target.value)}
-                className="px-4 py-2 border border-border-light rounded-lg"
+                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
               >
                 {ACTION_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -816,7 +816,7 @@ function PowerCreatorContent() {
               <select
                 value={area.type}
                 onChange={(e) => setArea((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
-                className="px-4 py-2 border border-border-light rounded-lg"
+                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
               >
                 {AREA_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -868,7 +868,7 @@ function PowerCreatorContent() {
                     setDuration((d) => ({ ...d, type: newType, value: newValue }));
                   }
                 }}
-                className="px-4 py-2 border border-border-light rounded-lg"
+                className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
               >
                 {DURATION_TYPES.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -895,7 +895,7 @@ function PowerCreatorContent() {
                       setDuration((d) => ({ ...d, value: newValue }));
                     }
                   }}
-                  className="px-4 py-2 border border-border-light rounded-lg"
+                  className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
                   {DURATION_VALUES[duration.type].map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -936,7 +936,7 @@ function PowerCreatorContent() {
                     <select
                       value={duration.sustain || 0}
                       onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
-                      className="px-2 py-1 border border-border-light rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-2 py-1 border border-border-light rounded text-sm text-text-primary bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={isShortDuration}
                     >
                       <option value={0}>None</option>
@@ -1019,7 +1019,7 @@ function PowerCreatorContent() {
                 <select
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                  className="px-3 py-2 border border-border-light rounded-lg"
+                  className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
                   {DIE_SIZES.map((size) => (
                     <option key={size} value={size}>

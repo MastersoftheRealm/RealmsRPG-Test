@@ -187,7 +187,7 @@ function PartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -214,7 +214,7 @@ function PartCard({
                     });
                   }
                 }}
-                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm"
+                className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
@@ -231,7 +231,7 @@ function PartCard({
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
-              Base Energy: <strong className="text-red-600">{formatCost(part.base_en || 0)}</strong>
+              Base Energy: <strong className="text-red-600 dark:text-red-400">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
               Base TP: <strong className="text-tp">{formatCost(part.base_tp || 0)}</strong>
@@ -242,11 +242,11 @@ function PartCard({
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
             <div className="space-y-3 pt-2 border-t border-border-light">
               {hasOption(1) && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-red-800">Option 1</span>
-                      <span className="text-sm font-medium text-red-600">
+                      <span className="text-sm font-semibold text-red-800 dark:text-red-300">Option 1</span>
+                      <span className="text-sm font-medium text-red-600 dark:text-red-400">
                         EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp">
@@ -266,11 +266,11 @@ function PartCard({
               )}
 
               {hasOption(2) && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-red-800">Option 2</span>
-                      <span className="text-sm font-medium text-red-600">
+                      <span className="text-sm font-semibold text-red-800 dark:text-red-300">Option 2</span>
+                      <span className="text-sm font-medium text-red-600 dark:text-red-400">
                         EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp">
@@ -290,11 +290,11 @@ function PartCard({
               )}
 
               {hasOption(3) && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-red-800">Option 3</span>
-                      <span className="text-sm font-medium text-red-600">
+                      <span className="text-sm font-semibold text-red-800 dark:text-red-300">Option 3</span>
+                      <span className="text-sm font-medium text-red-600 dark:text-red-400">
                         EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                       </span>
                       <span className="text-sm font-medium text-tp">
@@ -870,7 +870,7 @@ function TechniqueCreatorContent() {
                     const selected = allWeaponOptions.find(w => String(w.id) === selectedId);
                     if (selected) setWeapon(selected);
                   }}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
                   {/* Default options */}
                   <optgroup label="General">
@@ -901,7 +901,7 @@ function TechniqueCreatorContent() {
                 <select
                   value={actionType}
                   onChange={(e) => setActionType(e.target.value)}
-                  className="w-full px-4 py-2 border border-border-light rounded-lg"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
                   {ACTION_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -975,7 +975,7 @@ function TechniqueCreatorContent() {
                 <select
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                  className="px-3 py-2 border border-border-light rounded-lg"
+                  className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
                   {DIE_SIZES.map((size) => (
                     <option key={size} value={size}>

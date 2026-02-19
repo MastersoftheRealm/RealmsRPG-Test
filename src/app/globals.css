@@ -313,7 +313,7 @@
     --surface-secondary: #0d1117;
     --text-primary: #e6edf3;
     --text-secondary: #8b949e;
-    --text-muted: #6e7681;
+    --text-muted: #8b949e; /* WCAG AA: 6e7681 failed 4.5:1 on #161b22; 8b949e passes ~4.6:1 */
     /* Tailwind theme color overrides for dark mode */
     --color-surface: #161b22;
     --color-surface-alt: #21262d;
@@ -321,7 +321,7 @@
     --color-background: #0d1117;
     --color-text-primary: #e6edf3;
     --color-text-secondary: #8b949e;
-    --color-text-muted: #6e7681;
+    --color-text-muted: #8b949e; /* WCAG AA contrast on dark surfaces */
     --color-border: #30363d;
     --color-border-light: #21262d;
     --color-neutral-50: #21262d;

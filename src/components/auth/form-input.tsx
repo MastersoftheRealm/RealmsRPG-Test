@@ -1,4 +1,4 @@
-﻿/**
+/**
  * FormInput Component
  * ====================
  * Reusable form input with error handling
@@ -34,7 +34,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           id={inputId}
           className={cn(
             'w-full px-4 py-3 rounded-lg border bg-gray-800/50 text-white',
-            'placeholder:text-gray-400',
+            'placeholder:text-gray-300',
             'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
             'transition-colors duration-200',
             error
@@ -48,7 +48,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           <p className="text-sm text-red-400">{error}</p>
         )}
         {helperText && !error && (
-          <p className="text-sm text-gray-400">{helperText}</p>
+          <p className="text-sm text-gray-300">{helperText}</p>
         )}
       </div>
     );

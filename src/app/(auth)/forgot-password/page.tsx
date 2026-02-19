@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
             We have sent password reset instructions to your email address. 
             Please check your inbox and follow the link to reset your password.
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-300">
             Did not receive the email? Check your spam folder or{' '}
             <Button
               variant="link"
@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-gray-400">
+      <p className="mt-6 text-center text-gray-300">
         Remember your password?{' '}
         <Link 
           href="/login"

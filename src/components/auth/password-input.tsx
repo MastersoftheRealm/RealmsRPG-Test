@@ -1,4 +1,4 @@
-﻿/**
+/**
  * PasswordInput Component
  * ========================
  * Password input with show/hide toggle
@@ -37,7 +37,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             type={showPassword ? 'text' : 'password'}
             className={cn(
               'w-full px-4 py-3 pr-12 rounded-lg border bg-gray-800/50 text-white',
-              'placeholder:text-gray-400',
+              'placeholder:text-gray-300',
               'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
               'transition-colors duration-200',
               error
@@ -50,7 +50,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white transition-colors"
             tabIndex={-1}
           >
             {showPassword ? (

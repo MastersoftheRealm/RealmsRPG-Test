@@ -239,7 +239,7 @@ export function CreatorSummaryPanel({
               <span className="font-bold">
                 {item.remaining}
                 {typeof item.total === 'number' && (
-                  <span className="text-xs opacity-70 ml-1">/ {item.total}</span>
+                  <span className="text-xs text-text-muted ml-1">/ {item.total}</span>
                 )}
               </span>
             </div>
