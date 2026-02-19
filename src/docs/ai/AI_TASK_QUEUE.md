@@ -6092,31 +6092,35 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-258
   title: Public codex — add Traits tab and Advanced tabs toggle
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-18
   description: |
     Add Traits tab to public codex matching admin codex design (no edit/delete). Hide power/technique parts, armament properties, creature feats, and traits by default; "Advanced" control reveals those tabs. UX should be clear and consistent with rest of codex.
+  notes: "Done 2026-02-18: CodexTraitsTab and CodexCreatureFeatsTab added (read-only). Codex page: main tabs Feats/Skills/Species/Equipment/Public Library; Advanced button toggles Parts/Properties/Creature Feats/Traits."
 
 - id: TASK-259
   title: Public vs admin codex unification — layouts, chips, descriptions
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-18
   description: |
     Audit and unify public codex with admin codex: same layouts, components, styles. Parts/properties options as expandable chips with IP/TP/c/EN costs and description. Ensure descriptions show for parts and properties (including when options exist). Column headers aligned with collapsed cards; remove inline styles in favor of shared components.
+  notes: "Done 2026-02-18: CodexPartsTab and CodexPropertiesTab use detailSections with expandable option chips (EN/TP for parts, IP/TP/c for properties); description always shown in expanded view; header rows use dark mode variant."
 
 - id: TASK-260
   title: Edit property — option cost labels (IP/TP/c) and larger description field
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-18
   description: |
     Property edit modal: add clear labels for which field is IP, TP, c for option costs. Make description field bigger.
+  notes: "Done 2026-02-18: Description min-h 140px, rows 5; option section has labeled 'Option description' textarea and three labeled inputs: IP (Item Points), TP (Training Points), c (Cost multiplier)."
 
 - id: TASK-261
   title: Edit equipment — category dropdown with add-new and existing list
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-18
   description: |
     Equipment edit: category as dropdown listing all categories already used by equipment, with ability to type/add a new category. Reuse components where possible.
+  notes: "Done 2026-02-18: Category is a select with — None —, all existing equipment categories, and 'Add new category...'; when Add new is selected, text input appears to type new category; categoryIsNew state keeps UX correct on edit."

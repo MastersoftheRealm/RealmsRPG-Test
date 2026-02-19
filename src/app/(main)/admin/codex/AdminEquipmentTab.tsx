@@ -60,6 +60,7 @@ export function AdminEquipmentTab() {
     currency: 0,
     rarity: 'Common',
   });
+  const [categoryIsNew, setCategoryIsNew] = useState(false);
 
   const filterOptions = useMemo(() => {
     if (!equipment) return { categories: [] as string[], rarities: [] as string[] };
@@ -105,18 +106,22 @@ export function AdminEquipmentTab() {
   const openAdd = () => {
     setEditing(null);
     setForm({ name: '', description: '', category: '', currency: 0, rarity: 'Common' });
+    setCategoryIsNew(false);
     setModalOpen(true);
   };
 
   const openEdit = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
     setEditing(e);
+    const cat = e.category || '';
     setForm({
       name: e.name,
       description: e.description || '',
-      category: e.category || '',
+      category: cat,
       currency: e.currency ?? e.gold_cost ?? 0,
       rarity: e.rarity || 'Common',
     });
+    const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
+    setCategoryIsNew(cat !== '' && !existingCats.has(cat));
     setModalOpen(true);
   };
 
@@ -318,13 +323,31 @@ export function AdminEquipmentTab() {
             />
           </div>
           <div className="grid grid-cols-3 gap-4">
-            <div>
+            <div className="col-span-1">
               <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-              <Input
-                value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                placeholder="e.g. Consumable, Tool"
-              />
+              <select
+                value={categoryIsNew ? '__new__' : (form.category || '')}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCategoryIsNew(v === '__new__');
+                  setForm((f) => ({ ...f, category: v === '__new__' ? '' : v }));
+                }}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              >
+                <option value="">— None —</option>
+                {filterOptions.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+                <option value="__new__">Add new category...</option>
+              </select>
+              {categoryIsNew && (
+                <Input
+                  value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  placeholder="Type new category"
+                  className="mt-2"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Currency Cost</label>

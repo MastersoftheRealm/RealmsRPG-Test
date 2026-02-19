@@ -2,6 +2,13 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-18 | agent | Session: TASK-258–261 (Public codex Traits/Advanced, unification, property labels, equipment category) | files: src/app/(main)/codex/page.tsx, CodexTraitsTab.tsx, CodexCreatureFeatsTab.tsx, CodexPartsTab.tsx, CodexPropertiesTab.tsx, AdminPropertiesTab.tsx, AdminEquipmentTab.tsx, AI_TASK_QUEUE.md | Summary:
+  - TASK-258: Added CodexTraitsTab and CodexCreatureFeatsTab (read-only). Public codex: main tabs Feats/Skills/Species/Equipment/Public Library; Advanced button toggles Parts, Properties, Creature Feats, Traits.
+  - TASK-259: Codex Parts/Properties use detailSections with expandable option chips (EN/TP for parts, IP/TP/c for properties); description always in expanded view; header rows use dark variant.
+  - TASK-260: Property edit modal: description field larger (min-h 140px, 5 rows); option costs labeled "IP (Item Points)", "TP (Training Points)", "c (Cost multiplier)"; option description as textarea.
+  - TASK-261: Equipment edit: category dropdown with — None —, existing categories from equipment, and "Add new category..."; when Add new selected, text input to type new category.
+  - build passes
+
 - 2026-02-18 | agent | Session: Species height/weight/lifespan + Skill admin abilities-only (TASK-256, TASK-257) | files: src/app/api/codex/route.ts, ancestry-step.tsx, CodexSpeciesTab.tsx, AdminSkillsTab.tsx, ALL_FEEDBACK_CLEAN.md, AI_TASK_QUEUE.md | Summary:
   - TASK-256: Codex API now maps ave_hgt_cm/ave_wgt_kg to ave_height/ave_weight in species response; adulthood_lifespan normalized from number or number[]. Ancestry tab species summary shows Size, Type, Avg Height, Avg Weight, Adulthood, Lifespan (max) in a 6-column grid (— when missing). CodexSpeciesTab expanded section shows Adulthood and Lifespan (max) when present.
   - TASK-257: Admin Skills edit modal uses only the six abilities (not defenses) for governing ability; placeholder changed to "Choose governing ability".

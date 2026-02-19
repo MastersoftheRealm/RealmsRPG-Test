@@ -380,7 +380,7 @@ export function AdminPropertiesTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Property description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Property description" className="w-full min-h-[140px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={5} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -432,41 +432,55 @@ export function AdminPropertiesTab() {
               />
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold text-text-secondary">Option 1</h4>
               <span className="text-xs text-text-muted">Leave blank if this property has no options</span>
             </div>
-            <div className="grid grid-cols-4 gap-3 items-center">
-              <Input
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Option description</label>
+              <textarea
                 value={form.op_1_desc}
                 onChange={(e) => setForm((f) => ({ ...f, op_1_desc: e.target.value }))}
-                placeholder="Option description"
+                placeholder="What this option does"
+                className="w-full min-h-[72px] px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                rows={2}
               />
-              <Input
-                type="number"
-                min={0}
-                step={0.5}
-                value={form.op_1_ip}
-                onChange={(e) => setForm((f) => ({ ...f, op_1_ip: parseFloat(e.target.value) || 0 }))}
-                placeholder="IP"
-              />
-              <Input
-                type="number"
-                min={0}
-                step={0.5}
-                value={form.op_1_tp}
-                onChange={(e) => setForm((f) => ({ ...f, op_1_tp: parseFloat(e.target.value) || 0 }))}
-                placeholder="TP"
-              />
-              <Input
-                type="number"
-                min={0}
-                step={0.5}
-                value={form.op_1_c}
-                onChange={(e) => setForm((f) => ({ ...f, op_1_c: parseFloat(e.target.value) || 0 }))}
-                placeholder="Cost ×"
-              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">IP (Item Points)</label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_1_ip}
+                  onChange={(e) => setForm((f) => ({ ...f, op_1_ip: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">TP (Training Points)</label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_1_tp}
+                  onChange={(e) => setForm((f) => ({ ...f, op_1_tp: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">c (Cost multiplier)</label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={form.op_1_c}
+                  onChange={(e) => setForm((f) => ({ ...f, op_1_c: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0"
+                />
+              </div>
             </div>
           </div>
         </div>

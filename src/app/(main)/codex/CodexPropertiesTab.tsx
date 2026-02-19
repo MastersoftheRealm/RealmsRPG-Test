@@ -33,24 +33,27 @@ function PropertyCard({ property }: { property: ItemProperty }) {
   const tp = property.base_tp ?? property.tp_cost ?? 0;
   const cost = property.base_c ?? property.gold_cost ?? 0;
 
-  const optionContent = property.op_1_desc ? (
-    <div className="mt-3 p-2 bg-surface-alt rounded text-sm">
-      <strong>Option:</strong> {property.op_1_desc}
-      {(property.op_1_ip !== undefined || property.op_1_tp !== undefined || property.op_1_c !== undefined) && (
-        <span className="text-text-muted ml-2">
-          ({property.op_1_ip !== undefined && property.op_1_ip !== 0 && `+${property.op_1_ip} IP`}
-          {property.op_1_tp !== undefined && property.op_1_tp !== 0 && ` +${property.op_1_tp} TP`}
-          {property.op_1_c !== undefined && property.op_1_c !== 0 && ` ×${property.op_1_c}`})
-        </span>
-      )}
-    </div>
-  ) : undefined;
+  const optionChips: Array<{ name: string; description?: string; category: 'cost' | 'default' }> = [];
+  if (property.op_1_desc) {
+    const parts: string[] = [];
+    if (property.op_1_ip !== undefined && property.op_1_ip !== 0) parts.push(`+${property.op_1_ip} IP`);
+    if (property.op_1_tp !== undefined && property.op_1_tp !== 0) parts.push(`+${property.op_1_tp} TP`);
+    if (property.op_1_c !== undefined && property.op_1_c !== 0) parts.push(`×${property.op_1_c}`);
+    optionChips.push({
+      name: parts.length ? `Option (${parts.join(', ')})` : 'Option',
+      description: property.op_1_desc,
+      category: 'cost',
+    });
+  }
+
+  const detailSections: Array<{ label: string; chips: Array<{ name: string; description?: string; category: 'cost' | 'default' }> }> =
+    optionChips.length > 0 ? [{ label: 'Options', chips: optionChips }] : [];
 
   return (
     <GridListRow
       id={property.id}
       name={property.name}
-      description={property.description}
+      description={property.description || ''}
       gridColumns={PROPERTY_GRID_COLUMNS}
       columns={[
         { key: 'Type', value: property.type || 'General' },
@@ -58,7 +61,7 @@ function PropertyCard({ property }: { property: ItemProperty }) {
         { key: 'TP', value: tp > 0 ? tp : '-', className: 'text-tp' },
         { key: 'Cost', value: cost > 0 ? `×${cost}` : '-', highlight: true },
       ]}
-      expandedContent={optionContent}
+      detailSections={detailSections.length > 0 ? detailSections : undefined}
     />
   );
 }
@@ -121,7 +124,7 @@ export function CodexPropertiesTab() {
       </FilterSection>
 
       <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300"
         style={{ gridTemplateColumns: PROPERTY_GRID_COLUMNS }}
       >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />

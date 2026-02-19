@@ -53,66 +53,55 @@ function PartCard({ part }: { part: Part }) {
   if (part.mechanic) typeChips.push({ name: 'Mechanic', category: 'default' });
   if (part.percentage) typeChips.push({ name: 'Percentage Cost', category: 'archetype' });
 
+  const optionChips: ChipData[] = [];
+  if (part.op_1_desc) {
+    const enStr = part.op_1_en !== undefined && part.op_1_en !== 0 ? formatEnergyCost(part.op_1_en, part.percentage) : null;
+    const tpStr = part.op_1_tp !== undefined && part.op_1_tp !== 0 ? String(part.op_1_tp) : null;
+    const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
+    optionChips.push({
+      name: costParts.length ? `Option 1 (${costParts.join(', ')})` : 'Option 1',
+      description: part.op_1_desc,
+      category: 'cost',
+    });
+  }
+  if (part.op_2_desc) {
+    const enStr = part.op_2_en !== undefined && part.op_2_en !== 0 ? formatEnergyCost(part.op_2_en, part.percentage) : null;
+    const tpStr = part.op_2_tp !== undefined && part.op_2_tp !== 0 ? String(part.op_2_tp) : null;
+    const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
+    optionChips.push({
+      name: costParts.length ? `Option 2 (${costParts.join(', ')})` : 'Option 2',
+      description: part.op_2_desc,
+      category: 'cost',
+    });
+  }
+  if (part.op_3_desc) {
+    const enStr = part.op_3_en !== undefined && part.op_3_en !== 0 ? formatEnergyCost(part.op_3_en, part.percentage) : null;
+    const tpStr = part.op_3_tp !== undefined && part.op_3_tp !== 0 ? String(part.op_3_tp) : null;
+    const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
+    optionChips.push({
+      name: costParts.length ? `Option 3 (${costParts.join(', ')})` : 'Option 3',
+      description: part.op_3_desc,
+      category: 'cost',
+    });
+  }
+
   const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [
     { label: 'Type', chips: typeChips, hideLabelIfSingle: true },
+    ...(optionChips.length > 0 ? [{ label: 'Options', chips: optionChips }] : []),
   ];
-
-  const hasOptions = part.op_1_desc || part.op_2_desc || part.op_3_desc;
-  const optionsContent = hasOptions ? (
-    <div className="space-y-4">
-      <div className="space-y-3">
-        <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Type</h4>
-        <div className="flex flex-wrap gap-2">
-          {typeChips.map((chip, i) => (
-            <span
-              key={i}
-              className={cn('inline-flex items-center rounded-xl border px-3 py-1.5 text-sm font-medium', CHIP_SECTION_STYLES[chip.category || 'default'])}
-            >
-              {chip.name}
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="space-y-2 text-sm">
-        <div className="font-medium text-text-secondary">Options</div>
-        {part.op_1_desc && (
-          <div className="pl-4 text-text-muted">
-            1. {part.op_1_desc}
-            {part.op_1_en !== undefined && part.op_1_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_1_en, part.percentage)})`}
-            {part.op_1_tp !== undefined && part.op_1_tp !== 0 && ` (TP: ${part.op_1_tp})`}
-          </div>
-        )}
-        {part.op_2_desc && (
-          <div className="pl-4 text-text-muted">
-            2. {part.op_2_desc}
-            {part.op_2_en !== undefined && part.op_2_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_2_en, part.percentage)})`}
-            {part.op_2_tp !== undefined && part.op_2_tp !== 0 && ` (TP: ${part.op_2_tp})`}
-          </div>
-        )}
-        {part.op_3_desc && (
-          <div className="pl-4 text-text-muted">
-            3. {part.op_3_desc}
-            {part.op_3_en !== undefined && part.op_3_en !== 0 && ` (Energy: ${formatEnergyCost(part.op_3_en, part.percentage)})`}
-            {part.op_3_tp !== undefined && part.op_3_tp !== 0 && ` (TP: ${part.op_3_tp})`}
-          </div>
-        )}
-      </div>
-    </div>
-  ) : undefined;
 
   return (
     <GridListRow
       id={part.id}
       name={part.name}
-      description={part.description}
+      description={part.description || ''}
       gridColumns={PART_GRID_COLUMNS}
       columns={[
         { key: 'Category', value: part.category || '-' },
         { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-blue-600' },
         { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-tp' },
       ]}
-      detailSections={hasOptions ? undefined : detailSections}
-      expandedContent={optionsContent}
+      detailSections={detailSections}
     />
   );
 }
@@ -211,7 +200,7 @@ export function CodexPartsTab() {
       </FilterSection>
 
       <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
+        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300"
         style={{ gridTemplateColumns: PART_GRID_COLUMNS }}
       >
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
