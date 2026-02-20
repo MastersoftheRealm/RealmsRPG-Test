@@ -173,16 +173,26 @@ See `ADMIN_SETUP.md` for current implementation.
 ### Step 3: Deploy
 
 1. **Deployments** → **Redeploy** (or push to `main` to trigger auto-deploy).
-2. After build, visit your Vercel URL (e.g. `realms-rpg-next.vercel.app`).
+2. After build, visit your Vercel URL (e.g. `realms-rpg-next.vercel.app`) or your custom domain (e.g. **realmsrpg.com**).
 3. Test: sign in, create a character, upload a portrait.
 
-### Step 4: Auth redirect (if needed)
+### Step 4: Custom domain (e.g. realmsrpg.com)
+
+1. **Vercel:** Project → Settings → Domains → Add `realmsrpg.com` (and `www.realmsrpg.com` if desired). Follow Vercel’s DNS instructions (A/CNAME records).
+2. After the domain is verified, traffic to realmsrpg.com will serve the same app. No code changes required; auth redirects use the request host (including x-forwarded-host).
+
+### Step 5: Auth redirect URLs
 
 1. **Supabase** → Authentication → URL Configuration:
-   - **Site URL:** `http://localhost:3000` (local) or your Vercel URL (prod)
-   - **Redirect URLs:** Add `http://localhost:3000/auth/callback`, `http://localhost:3000/auth/confirm` (local); and `https://your-app.vercel.app/auth/callback`, `https://your-app.vercel.app/auth/confirm` (prod)
+   - **Site URL:** For production use your live URL, e.g. `https://realmsrpg.com` (or your Vercel URL before custom domain).
+   - **Redirect URLs:** Add all origins where the app runs:
+     - Local: `http://localhost:3000/auth/callback`, `http://localhost:3000/auth/confirm`
+     - Production (Vercel): `https://your-app.vercel.app/auth/callback`, `https://your-app.vercel.app/auth/confirm`
+     - Production (custom domain): `https://realmsrpg.com/auth/callback`, `https://realmsrpg.com/auth/confirm` (and `https://www.realmsrpg.com/...` if you use www)
    - If Redirect URLs are missing, Supabase may redirect to Site URL with `?code=...`; the app will redirect to `/auth/callback` as a fallback.
-2. **Google OAuth:** Add your Vercel URL to authorized redirect URIs in Google Cloud Console.
+2. **Google OAuth (if used):** In Google Cloud Console → APIs & Services → Credentials → your OAuth client → Authorized redirect URIs, add:
+   - `https://realmsrpg.com/auth/callback` (and `https://www.realmsrpg.com/auth/callback` if you use www)
+   - Your Vercel URL redirect if you still use it.
 
 ---
 
