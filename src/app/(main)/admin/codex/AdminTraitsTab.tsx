@@ -254,6 +254,7 @@ export function AdminTraitsTab() {
                 min={0}
                 value={form.uses_per_rec}
                 onChange={(e) => setForm((f) => ({ ...f, uses_per_rec: e.target.value }))}
+                placeholder="No value"
               />
             </div>
             <div>

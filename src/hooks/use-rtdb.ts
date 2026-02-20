@@ -91,10 +91,18 @@ export interface Feat {
   skill_req_val: number[];
   lvl_req: number;
   uses_per_rec: number;
-  mart_abil_req?: string;
+  mart_abil_req?: number | string;
   char_feat: boolean;
   state_feat: boolean;
   rec_period?: string;
+  /** Level of the feat itself (e.g. Bloodlust II = 2). Omitted when not set. */
+  feat_lvl?: number;
+  req_desc?: string;
+  feat_cat_req?: string;
+  pow_abil_req?: number;
+  pow_prof_req?: number;
+  mart_prof_req?: number;
+  speed_req?: number;
 }
 
 export interface Skill {

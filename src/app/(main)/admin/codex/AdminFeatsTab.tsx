@@ -148,14 +148,14 @@ export function AdminFeatsTab() {
     skill_req: [] as string[],
     skill_req_val: [] as number[],
     feat_cat_req: '',
-    pow_abil_req: 0,
-    mart_abil_req: 0,
-    pow_prof_req: 0,
-    mart_prof_req: 0,
-    speed_req: 0,
-    feat_lvl: 0,
-    lvl_req: 0,
-    uses_per_rec: 0,
+    pow_abil_req: undefined as number | undefined,
+    mart_abil_req: undefined as number | undefined,
+    pow_prof_req: undefined as number | undefined,
+    mart_prof_req: undefined as number | undefined,
+    speed_req: undefined as number | undefined,
+    feat_lvl: undefined as number | undefined,
+    lvl_req: undefined as number | undefined,
+    uses_per_rec: undefined as number | undefined,
     rec_period: '',
     char_feat: false,
     state_feat: false,
@@ -184,12 +184,15 @@ export function AdminFeatsTab() {
     setModalOpen(true);
   };
 
+  const toOptNum = (v: unknown): number | undefined => {
+    if (v == null || v === '') return undefined;
+    const n = Number(v);
+    return Number.isNaN(n) ? undefined : n;
+  };
   const openEdit = (feat: Feat) => {
     setEditing(feat);
     const ext = feat as unknown as Record<string, unknown>;
     const abilityArr = Array.isArray(feat.ability) ? feat.ability : (feat.ability ? [String(feat.ability)] : []);
-    const martAbil = ext.mart_abil_req;
-    const martAbilNum = typeof martAbil === 'number' ? martAbil : (typeof martAbil === 'string' && martAbil ? parseInt(martAbil, 10) : 0);
     setForm({
       name: feat.name,
       description: feat.description || '',
@@ -202,14 +205,14 @@ export function AdminFeatsTab() {
       skill_req: feat.skill_req || [],
       skill_req_val: feat.skill_req_val || [],
       feat_cat_req: String(ext.feat_cat_req || ''),
-      pow_abil_req: Number(ext.pow_abil_req) || 0,
-      mart_abil_req: martAbilNum || 0,
-      pow_prof_req: Number(ext.pow_prof_req) || 0,
-      mart_prof_req: Number(ext.mart_prof_req) || 0,
-      speed_req: Number(ext.speed_req) || 0,
-      feat_lvl: Number(ext.feat_lvl) || 0,
-      lvl_req: feat.lvl_req ?? 0,
-      uses_per_rec: feat.uses_per_rec ?? 0,
+      pow_abil_req: toOptNum(ext.pow_abil_req),
+      mart_abil_req: toOptNum(ext.mart_abil_req),
+      pow_prof_req: toOptNum(ext.pow_prof_req),
+      mart_prof_req: toOptNum(ext.mart_prof_req),
+      speed_req: toOptNum(ext.speed_req),
+      feat_lvl: toOptNum(ext.feat_lvl),
+      lvl_req: toOptNum(feat.lvl_req),
+      uses_per_rec: toOptNum(feat.uses_per_rec),
       rec_period: feat.rec_period || '',
       char_feat: feat.char_feat ?? false,
       state_feat: feat.state_feat ?? false,
@@ -238,14 +241,14 @@ export function AdminFeatsTab() {
       skill_req: form.skill_req,
       skill_req_val: form.skill_req_val,
       feat_cat_req: form.feat_cat_req.trim() || undefined,
-      pow_abil_req: form.pow_abil_req || undefined,
-      mart_abil_req: form.mart_abil_req || undefined,
-      pow_prof_req: form.pow_prof_req || undefined,
-      mart_prof_req: form.mart_prof_req || undefined,
-      speed_req: form.speed_req || undefined,
-      feat_lvl: form.feat_lvl || undefined,
-      lvl_req: form.lvl_req,
-      uses_per_rec: form.uses_per_rec,
+      pow_abil_req: form.pow_abil_req ?? undefined,
+      mart_abil_req: form.mart_abil_req ?? undefined,
+      pow_prof_req: form.pow_prof_req ?? undefined,
+      mart_prof_req: form.mart_prof_req ?? undefined,
+      speed_req: form.speed_req ?? undefined,
+      feat_lvl: form.feat_lvl ?? undefined,
+      lvl_req: form.lvl_req ?? undefined,
+      uses_per_rec: form.uses_per_rec ?? undefined,
       rec_period: form.rec_period.trim() || undefined,
       char_feat: form.char_feat,
       state_feat: form.state_feat,
@@ -545,8 +548,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.lvl_req}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, lvl_req: parseInt(e.target.value) || 0 }))}
+                value={form.lvl_req ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, lvl_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -554,9 +558,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.feat_lvl}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_lvl: parseInt(e.target.value) || 0 }))}
-                placeholder="0 = no level"
+                value={form.feat_lvl ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_lvl: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
           </div>
@@ -594,10 +598,11 @@ export function AdminFeatsTab() {
                   <Input
                     type="number"
                     min={0}
-                    value={form.abil_req_val[i] ?? 0}
+                    value={form.abil_req_val[i] ?? ''}
                     onChange={(e) => {
                       const next = [...form.abil_req_val];
-                      next[i] = parseInt(e.target.value) || 0;
+                      const v = e.target.value;
+                      next[i] = v === '' ? 0 : parseInt(v, 10) || 0;
                       scheduleFormUpdate((f) => ({ ...f, abil_req_val: next }));
                     }}
                     className="w-20"
@@ -695,8 +700,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.uses_per_rec}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, uses_per_rec: parseInt(e.target.value) || 0 }))}
+                value={form.uses_per_rec ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, uses_per_rec: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -718,8 +724,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.pow_abil_req}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_abil_req: parseInt(e.target.value) || 0 }))}
+                value={form.pow_abil_req ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_abil_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -727,8 +734,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.mart_abil_req}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_abil_req: parseInt(e.target.value) || 0 }))}
+                value={form.mart_abil_req ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_abil_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -736,8 +744,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.pow_prof_req}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_prof_req: parseInt(e.target.value) || 0 }))}
+                value={form.pow_prof_req ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, pow_prof_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -745,8 +754,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.mart_prof_req}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_prof_req: parseInt(e.target.value) || 0 }))}
+                value={form.mart_prof_req ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, mart_prof_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -754,8 +764,9 @@ export function AdminFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.speed_req}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, speed_req: parseInt(e.target.value) || 0 }))}
+                value={form.speed_req ?? ''}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, speed_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
           </div>

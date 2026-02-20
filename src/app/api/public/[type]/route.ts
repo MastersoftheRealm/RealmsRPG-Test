@@ -41,7 +41,17 @@ export async function GET(
     }
 
     const delegate = getDelegate(type as PublicType);
-    const rows = await delegate.findMany();
+    let rows: Array<{ id: string; data: unknown }>;
+    try {
+      rows = await delegate.findMany();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('does not exist') || (err as { code?: string })?.code === 'P2021') {
+        console.warn('[API] Public library table not found for type:', type, msg);
+        return NextResponse.json([]);
+      }
+      throw err;
+    }
 
     const items = rows.map((r) => {
       const d = r.data as Record<string, unknown>;

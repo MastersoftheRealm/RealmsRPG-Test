@@ -29,12 +29,19 @@ export function AdminCreatureFeatsTab() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    description: string;
+    points: number | undefined;
+    feat_lvl: number | undefined;
+    lvl_req: number | undefined;
+    mechanic: boolean;
+  }>({
     name: '',
     description: '',
-    points: 0,
-    feat_lvl: 0,
-    lvl_req: 0,
+    points: undefined,
+    feat_lvl: undefined,
+    lvl_req: undefined,
     mechanic: false,
   });
 
@@ -49,18 +56,23 @@ export function AdminCreatureFeatsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', points: 0, feat_lvl: 0, lvl_req: 0, mechanic: false });
+    setForm({ name: '', description: '', points: undefined, feat_lvl: undefined, lvl_req: undefined, mechanic: false });
     setModalOpen(true);
   };
 
+  const toOptNum = (v: unknown): number | undefined => {
+    if (v == null || v === '') return undefined;
+    const n = Number(v);
+    return Number.isNaN(n) ? undefined : n;
+  };
   const openEdit = (f: CreatureFeat) => {
     setEditing(f);
     setForm({
       name: f.name,
       description: f.description || '',
-      points: f.points ?? 0,
-      feat_lvl: f.feat_lvl ?? 0,
-      lvl_req: f.lvl_req ?? 0,
+      points: toOptNum(f.points),
+      feat_lvl: toOptNum(f.feat_lvl),
+      lvl_req: toOptNum(f.lvl_req),
       mechanic: f.mechanic === true,
     });
     setModalOpen(true);
@@ -79,10 +91,10 @@ export function AdminCreatureFeatsTab() {
       name: form.name.trim(),
       description: form.description.trim(),
       // Store both points and feat_points for compatibility with existing data/CSV
-      points: form.points,
-      feat_points: form.points,
-      feat_lvl: form.feat_lvl || 0,
-      lvl_req: form.lvl_req || 0,
+      points: form.points ?? undefined,
+      feat_points: form.points ?? undefined,
+      feat_lvl: form.feat_lvl ?? undefined,
+      lvl_req: form.lvl_req ?? undefined,
       mechanic: form.mechanic,
     };
 
@@ -249,8 +261,9 @@ export function AdminCreatureFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.points}
-                onChange={(e) => setForm((f) => ({ ...f, points: parseInt(e.target.value, 10) || 0 }))}
+                value={form.points ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, points: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -258,8 +271,9 @@ export function AdminCreatureFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.feat_lvl}
-                onChange={(e) => setForm((f) => ({ ...f, feat_lvl: parseInt(e.target.value, 10) || 0 }))}
+                value={form.feat_lvl ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, feat_lvl: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
             <div>
@@ -267,8 +281,9 @@ export function AdminCreatureFeatsTab() {
               <Input
                 type="number"
                 min={0}
-                value={form.lvl_req}
-                onChange={(e) => setForm((f) => ({ ...f, lvl_req: parseInt(e.target.value, 10) || 0 }))}
+                value={form.lvl_req ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, lvl_req: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
+                placeholder="No value"
               />
             </div>
           </div>

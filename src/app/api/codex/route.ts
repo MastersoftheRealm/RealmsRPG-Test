@@ -37,6 +37,9 @@ export async function GET() {
 
   const codexFeats = feats.map((r) => {
     const d = r.data as Record<string, unknown>;
+    const lvlReq = d.lvl_req != null ? Number(d.lvl_req) : undefined;
+    const usesPerRec = d.uses_per_rec != null ? Number(d.uses_per_rec) : undefined;
+    const featLvl = d.feat_lvl != null ? Number(d.feat_lvl) : undefined;
     return {
       id: r.id,
       name: (d.name as string) || '',
@@ -48,12 +51,18 @@ export async function GET() {
       tags: toStrArray(d.tags),
       skill_req: toStrArray(d.skill_req),
       skill_req_val: toNumArray(d.skill_req_val),
-      lvl_req: parseInt(d.lvl_req as string) || 0,
-      uses_per_rec: parseInt(d.uses_per_rec as string) || 0,
-      mart_abil_req: d.mart_abil_req as string | undefined,
+      lvl_req: lvlReq ?? 0,
+      uses_per_rec: usesPerRec ?? 0,
+      mart_abil_req: d.mart_abil_req != null ? Number(d.mart_abil_req) : undefined,
       char_feat: Boolean(d.char_feat),
       state_feat: Boolean(d.state_feat),
       rec_period: d.rec_period as string | undefined,
+      req_desc: (d.req_desc as string) || undefined,
+      feat_cat_req: (d.feat_cat_req as string) || undefined,
+      pow_abil_req: d.pow_abil_req != null ? Number(d.pow_abil_req) : undefined,
+      pow_prof_req: d.pow_prof_req != null ? Number(d.pow_prof_req) : undefined,
+      speed_req: d.speed_req != null ? Number(d.speed_req) : undefined,
+      feat_lvl: featLvl,
     };
   });
 
