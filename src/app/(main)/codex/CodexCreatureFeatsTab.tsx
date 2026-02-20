@@ -10,7 +10,7 @@
 import { useState, useMemo } from 'react';
 import {
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
@@ -20,6 +20,13 @@ import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 
 const CREATURE_FEAT_GRID_COLUMNS = '1.5fr 0.5fr 0.5fr 0.5fr 40px';
+const CREATURE_FEAT_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'points', label: 'PTS' },
+  { key: 'feat_lvl', label: 'FEAT LVL' },
+  { key: 'lvl_req', label: 'REQ. LVL' },
+  { key: '_actions', label: '', sortable: false as const },
+];
 
 export function CodexCreatureFeatsTab() {
   const { data: creatureFeats, isLoading, error } = useCreatureFeats();
@@ -47,15 +54,12 @@ export function CodexCreatureFeatsTab() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search creature feats..." />
       </div>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300"
-        style={{ gridTemplateColumns: CREATURE_FEAT_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="PTS" col="points" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="FEAT LVL" col="feat_lvl" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="REQ. LVL" col="lvl_req" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={CREATURE_FEAT_COLUMNS}
+        gridColumns={CREATURE_FEAT_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />

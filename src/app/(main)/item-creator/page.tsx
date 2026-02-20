@@ -17,10 +17,10 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useItemProperties, useUserItems, useAdmin, useCreatorSave, type ItemProperty } from '@/hooks';
+import { useItemProperties, useAdmin, useCreatorSave, useCreatorLoad, type ItemProperty, type UserItem } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar } from '@/components/creator';
+import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
@@ -366,7 +366,7 @@ function ItemCreatorContent() {
   const [armamentType, setArmamentType] = useState<ArmamentType>('Weapon');
   const [selectedProperties, setSelectedProperties] = useState<SelectedProperty[]>([]);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 1, size: 4, type: 'slashing' });
-  const [showLoadModal, setShowLoadModal] = useState(false);
+  const load = useCreatorLoad('items');
   const [isTwoHanded, setIsTwoHanded] = useState(false);
   const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
   
@@ -385,13 +385,6 @@ function ItemCreatorContent() {
 
   // Fetch item properties
   const { data: itemProperties = [], isLoading, error } = useItemProperties();
-
-  // Fetch user's saved items (only if user is logged in)
-  const { 
-    data: userItems = [], 
-    isLoading: loadingUserItems, 
-    error: userItemsError 
-  } = useUserItems();
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -491,10 +484,10 @@ function ItemCreatorContent() {
 
   // Load item for editing from URL parameter
   useEffect(() => {
-    if (!editItemId || !userItems.length || !itemProperties.length || isInitialized) return;
+    if (!editItemId || !load.items.length || !itemProperties.length || isInitialized) return;
     
     // Find the item to edit
-    const itemToEdit = userItems.find(item => item.docId === editItemId || item.id === editItemId);
+    const itemToEdit = (load.items as UserItem[]).find(item => item.docId === editItemId || item.id === editItemId);
     if (!itemToEdit) {
       console.warn(`Item with ID ${editItemId} not found in library`);
       setIsInitialized(true);
@@ -573,7 +566,7 @@ function ItemCreatorContent() {
     localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
     
     setIsInitialized(true);
-  }, [editItemId, userItems, itemProperties, isInitialized]);
+  }, [editItemId, load.items, itemProperties, isInitialized]);
 
   // Range display string
   const rangeDisplay = useMemo(() => {
@@ -952,8 +945,8 @@ function ItemCreatorContent() {
     }
     
     // Close modal
-    setShowLoadModal(false);
-  }, [itemProperties, handleReset]);
+    load.closeLoadModal();
+  }, [itemProperties, handleReset, load]);
 
   if (isLoading) {
     return (
@@ -974,42 +967,111 @@ function ItemCreatorContent() {
   }
 
   return (
-    <PageContainer size="xl">
-      <PageHeader
-        icon={<Sword className="w-8 h-8 text-amber-600" />}
-        title="Armament Creator"
-        description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
-        actions={
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
+    <CreatorLayout
+      icon={<Sword className="w-8 h-8 text-amber-600" />}
+      title="Armament Creator"
+      description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
+      actions={
+        <CreatorSaveToolbar
+          saveTarget={save.saveTarget}
+          onSaveTargetChange={save.setSaveTarget}
+          onSave={handleSave}
+          onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
+          onReset={handleReset}
+          saving={save.saving}
+          saveDisabled={!name.trim()}
+          showPublicPrivate={isAdmin}
+          user={user}
+        />
+      }
+      sidebar={
+        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
+          <CreatorSummaryPanel
+            title="Item Summary"
+            badge={{
+              label: rarity,
+              className: RARITY_COLORS[rarity] || RARITY_COLORS.Common,
+            }}
+            costStats={[
+              { label: 'Currency Cost', value: currencyCost, icon: <Coins className="w-6 h-6" />, color: 'currency' },
+              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            ]}
+            statRows={[
+              { label: 'Type', value: armamentType },
+              { label: 'Item Points', value: `${formatCost(costs.totalIP)} IP` },
+              ...(armamentType === 'Weapon'
+                ? [
+                    { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
+                    { label: 'Range', value: rangeDisplay },
+                  ]
+                : []),
+              ...(armamentType === 'Armor' ? [
+                { label: 'Damage Reduction', value: String(damageReduction) },
+                ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-red-600' }] : []),
+              ] : []),
+              ...(armamentType === 'Shield'
+                ? [
+                    { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
+                    { label: 'Shield Block', value: `${shieldDR.amount}d${shieldDR.size}` },
+                    ...(hasShieldDamage
+                      ? [{ label: 'Shield Damage', value: `${shieldDamage.amount}d${shieldDamage.size}` }]
+                      : []),
+                  ]
+                : []),
+              ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
+            ]}
+            breakdowns={selectedProperties.length > 0 ? [
+              { 
+                title: 'Properties', 
+                items: selectedProperties.map(sp => ({
+                  label: sp.property.name,
+                  detail: sp.op_1_lvl > 0 ? `Lvl ${sp.op_1_lvl}` : undefined,
+                }))
+              }
+            ] : undefined}
+          >
+            {save.saveMessage && (
+              <Alert 
+                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
+              >
+                {save.saveMessage.text}
+              </Alert>
+            )}
+          </CreatorSummaryPanel>
+          <RarityReferenceTable currentIP={costs.totalIP} />
+        </div>
+      }
+      modals={
+        <>
+          <LoadFromLibraryModal
+            isOpen={load.showLoadModal}
+            onClose={load.closeLoadModal}
+            onSelect={handleLoadItem}
+            items={load.items}
+            isLoading={load.isLoading}
+            error={load.error}
+            itemType="item"
+            title="Load Armament from Library"
           />
-        }
-        className="mb-6"
-      />
-
-      {/* Load from Library Modal */}
-      <LoadFromLibraryModal
-        isOpen={showLoadModal}
-        onClose={() => setShowLoadModal(false)}
-        onSelect={handleLoadItem}
-        items={userItems}
-        isLoading={loadingUserItems}
-        error={userItemsError}
-        itemType="item"
-        title="Load Armament from Library"
-      />
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Editor */}
-        <div className="lg:col-span-2 space-y-6">
+          <LoginPromptModal
+            isOpen={showLoginPrompt}
+            onClose={() => setShowLoginPrompt(false)}
+            returnPath="/item-creator"
+            contentType="armament"
+          />
+          <ConfirmActionModal
+            isOpen={save.showPublishConfirm}
+            onClose={() => save.setShowPublishConfirm(false)}
+            onConfirm={() => save.confirmPublish()}
+            title={save.publishConfirmTitle}
+            description={save.publishConfirmDescription?.(name.trim()) ?? ''}
+            confirmLabel="Publish"
+            icon="publish"
+          />
+        </>
+      }
+    >
+      {/* Main Editor */}
           {/* Name & Type */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="space-y-4">
@@ -1381,88 +1443,7 @@ function ItemCreatorContent() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Sidebar - Cost Summary (sticky to match creature creator) */}
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
-          <CreatorSummaryPanel
-            title="Item Summary"
-            badge={{
-              label: rarity,
-              className: RARITY_COLORS[rarity] || RARITY_COLORS.Common,
-            }}
-            costStats={[
-              { label: 'Currency Cost', value: currencyCost, icon: <Coins className="w-6 h-6" />, color: 'currency' },
-              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
-            ]}
-            statRows={[
-              { label: 'Type', value: armamentType },
-              { label: 'Item Points', value: `${formatCost(costs.totalIP)} IP` },
-              ...(armamentType === 'Weapon'
-                ? [
-                    { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
-                    { label: 'Range', value: rangeDisplay },
-                  ]
-                : []),
-              ...(armamentType === 'Armor' ? [
-                { label: 'Damage Reduction', value: String(damageReduction) },
-                ...(agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${agilityReduction}`, valueColor: 'text-red-600' }] : []),
-              ] : []),
-              ...(armamentType === 'Shield'
-                ? [
-                    { label: 'Handedness', value: isTwoHanded ? 'Two-Handed' : 'One-Handed' },
-                    { label: 'Shield Block', value: `${shieldDR.amount}d${shieldDR.size}` },
-                    ...(hasShieldDamage
-                      ? [{ label: 'Shield Damage', value: `${shieldDamage.amount}d${shieldDamage.size}` }]
-                      : []),
-                  ]
-                : []),
-              ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
-            ]}
-            breakdowns={selectedProperties.length > 0 ? [
-              { 
-                title: 'Properties', 
-                items: selectedProperties.map(sp => ({
-                  label: sp.property.name,
-                  detail: sp.op_1_lvl > 0 ? `Lvl ${sp.op_1_lvl}` : undefined,
-                }))
-              }
-            ] : undefined}
-          >
-            {/* Save Message */}
-            {save.saveMessage && (
-              <Alert 
-                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
-              >
-                {save.saveMessage.text}
-              </Alert>
-            )}
-          </CreatorSummaryPanel>
-          
-          {/* Rarity Reference Table */}
-          <RarityReferenceTable currentIP={costs.totalIP} />
-        </div>
-      </div>
-
-      {/* Login Prompt Modal */}
-      <LoginPromptModal
-        isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
-        returnPath="/item-creator"
-        contentType="armament"
-      />
-
-      {/* Publish Confirmation Modal */}
-      <ConfirmActionModal
-        isOpen={save.showPublishConfirm}
-        onClose={() => save.setShowPublishConfirm(false)}
-        onConfirm={() => save.confirmPublish()}
-        title={save.publishConfirmTitle}
-        description={save.publishConfirmDescription?.(name.trim()) ?? ''}
-        confirmLabel="Publish"
-        icon="publish"
-      />
-    </PageContainer>
+    </CreatorLayout>
   );
 }
 

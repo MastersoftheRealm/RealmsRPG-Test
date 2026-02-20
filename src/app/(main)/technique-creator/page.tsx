@@ -16,11 +16,11 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTechniqueParts, useUserTechniques, useUserItems, useAdmin, useCreatorSave, type TechniquePart } from '@/hooks';
+import { useTechniqueParts, useUserItems, useAdmin, useCreatorSave, useCreatorLoad, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar } from '@/components/creator';
+import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
@@ -357,13 +357,12 @@ function TechniqueCreatorContent() {
   const [isReaction, setIsReaction] = useState(false);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
   const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
-  const [showLoadModal, setShowLoadModal] = useState(false);
+  const load = useCreatorLoad('techniques');
 
   // Fetch technique parts
   const { data: techniqueParts = [], isLoading, error } = useTechniqueParts();
   
   // Fetch user's saved techniques for loading (only if user is logged in)
-  const { data: userTechniques, isLoading: loadingUserTechniques, error: userTechniquesError } = useUserTechniques();
 
   // Fetch user's saved items (weapons)
   const { data: userItems = [] } = useUserItems();
@@ -678,11 +677,11 @@ function TechniqueCreatorContent() {
 
   // Load technique for editing from URL parameter (?edit=<id>)
   useEffect(() => {
-    if (!editTechniqueId || !userTechniques || userTechniques.length === 0 || techniqueParts.length === 0 || isInitialized) return;
+    if (!editTechniqueId || !load.items || load.items.length === 0 || techniqueParts.length === 0 || isInitialized) return;
     
     // Find the technique to edit by docId or id
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const techniqueToEdit = (userTechniques as any[]).find(
+    const techniqueToEdit = (load.items as any[]).find(
       (t: { docId?: string; id?: string }) => t.docId === editTechniqueId || t.id === editTechniqueId
     );
     if (!techniqueToEdit) {
@@ -697,7 +696,7 @@ function TechniqueCreatorContent() {
     // Clear localStorage cache when loading for edit
     localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
     setIsInitialized(true);
-  }, [editTechniqueId, userTechniques, techniqueParts, isInitialized, handleLoadTechnique]);
+  }, [editTechniqueId, load.items, techniqueParts, isInitialized, handleLoadTechnique]);
 
   if (isLoading) {
     return (
@@ -718,44 +717,81 @@ function TechniqueCreatorContent() {
   }
 
   return (
-    <PageContainer size="xl">
-      <PageHeader
-        icon={<Swords className="w-8 h-8 text-red-600" />}
-        title="Technique Creator"
-        description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
-        actions={
-          <>
-            <CreatorSaveToolbar
-              saveTarget={save.saveTarget}
-              onSaveTargetChange={save.setSaveTarget}
-              onSave={handleSave}
-              onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
-              onReset={handleReset}
-              saving={save.saving}
-              saveDisabled={!name.trim()}
-              showPublicPrivate={isAdmin}
-              user={user}
-            />
-          </>
-        }
-        className="mb-6"
-      />
-
-      {/* Load from Library Modal */}
-      <LoadFromLibraryModal
-        isOpen={showLoadModal}
-        onClose={() => setShowLoadModal(false)}
-        onSelect={handleLoadTechnique}
-        items={userTechniques}
-        isLoading={loadingUserTechniques}
-        error={userTechniquesError}
-        itemType="technique"
-        title="Load Technique from Library"
-      />
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Editor */}
-        <div className="lg:col-span-2 space-y-6">
+    <CreatorLayout
+      icon={<Swords className="w-8 h-8 text-red-600" />}
+      title="Technique Creator"
+      description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
+      actions={
+        <CreatorSaveToolbar
+          saveTarget={save.saveTarget}
+          onSaveTargetChange={save.setSaveTarget}
+          onSave={handleSave}
+          onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
+          onReset={handleReset}
+          saving={save.saving}
+          saveDisabled={!name.trim()}
+          showPublicPrivate={isAdmin}
+          user={user}
+        />
+      }
+      sidebar={
+        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
+          <CreatorSummaryPanel
+            title="Technique Summary"
+            costStats={[
+              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'health' },
+              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            ]}
+            statRows={[
+              { label: 'Action', value: actionTypeDisplay },
+              { label: 'Weapon', value: weapon.name },
+              ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
+            ]}
+            breakdowns={costs.tpSources.length > 0 ? [
+              { title: 'TP Breakdown', items: costs.tpSources }
+            ] : undefined}
+          >
+            {save.saveMessage && (
+              <Alert 
+                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
+              >
+                {save.saveMessage.text}
+              </Alert>
+            )}
+          </CreatorSummaryPanel>
+        </div>
+      }
+      modals={
+        <>
+          <LoadFromLibraryModal
+            isOpen={load.showLoadModal}
+            onClose={load.closeLoadModal}
+            onSelect={handleLoadTechnique}
+            items={load.items}
+            isLoading={load.isLoading}
+            error={load.error}
+            itemType="technique"
+            title="Load Technique from Library"
+          />
+          <LoginPromptModal
+            isOpen={showLoginPrompt}
+            onClose={() => setShowLoginPrompt(false)}
+            returnPath="/technique-creator"
+            contentType="technique"
+          />
+          <ConfirmActionModal
+            isOpen={save.showPublishConfirm}
+            onClose={() => save.setShowPublishConfirm(false)}
+            onConfirm={() => save.confirmPublish()}
+            title={save.publishConfirmTitle}
+            description={save.publishConfirmDescription?.(name.trim()) ?? ''}
+            confirmLabel="Publish"
+            icon="publish"
+          />
+        </>
+      }
+    >
+      {/* Main Editor */}
           {/* Name & Description */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="space-y-4">
@@ -920,56 +956,7 @@ function TechniqueCreatorContent() {
               </p>
             )}
           </div>
-        </div>
-
-        {/* Sidebar - Cost Summary (sticky to match creature creator) */}
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
-          <CreatorSummaryPanel
-            title="Technique Summary"
-            costStats={[
-              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'health' },
-              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
-            ]}
-            statRows={[
-              { label: 'Action', value: actionTypeDisplay },
-              { label: 'Weapon', value: weapon.name },
-              ...(damageDisplay ? [{ label: 'Damage', value: damageDisplay }] : []),
-            ]}
-            breakdowns={costs.tpSources.length > 0 ? [
-              { title: 'TP Breakdown', items: costs.tpSources }
-            ] : undefined}
-          >
-            {/* Save Message */}
-            {save.saveMessage && (
-              <Alert 
-                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
-              >
-                {save.saveMessage.text}
-              </Alert>
-            )}
-          </CreatorSummaryPanel>
-        </div>
-      </div>
-
-      {/* Login Prompt Modal */}
-      <LoginPromptModal
-        isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
-        returnPath="/technique-creator"
-        contentType="technique"
-      />
-
-      {/* Publish Confirmation Modal */}
-      <ConfirmActionModal
-        isOpen={save.showPublishConfirm}
-        onClose={() => save.setShowPublishConfirm(false)}
-        onConfirm={() => save.confirmPublish()}
-        title={save.publishConfirmTitle}
-        description={save.publishConfirmDescription?.(name.trim()) ?? ''}
-        confirmLabel="Publish"
-        icon="publish"
-      />
-    </PageContainer>
+    </CreatorLayout>
   );
 }
 

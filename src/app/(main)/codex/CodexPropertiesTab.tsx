@@ -13,7 +13,7 @@ import {
 } from '@/components/codex';
 import {
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
@@ -22,6 +22,14 @@ import { useSort } from '@/hooks/use-sort';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 
 const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
+const PROPERTY_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'type', label: 'TYPE' },
+  { key: 'ip', label: 'ITEM PTS' },
+  { key: 'tp', label: 'TP' },
+  { key: 'cost', label: 'COST MULT' },
+  { key: '_actions', label: '', sortable: false as const },
+];
 
 interface PropertyFilters {
   search: string;
@@ -123,16 +131,12 @@ export function CodexPropertiesTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300"
-        style={{ gridTemplateColumns: PROPERTY_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="ITEM PTS" col="ip" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="TP" col="tp" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="COST MULT" col="cost" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={PROPERTY_COLUMNS}
+        gridColumns={PROPERTY_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

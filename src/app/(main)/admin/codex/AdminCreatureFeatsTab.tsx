@@ -8,7 +8,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-  SortHeader,
+  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
@@ -151,15 +151,18 @@ export function AdminCreatureFeatsTab() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search creature feats..." />
       </div>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: '1.5fr 0.5fr 0.5fr 0.5fr 40px' }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="PTS" col="points" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="FEAT LVL" col="feat_lvl" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="REQ. LVL" col="lvl_req" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'points', label: 'PTS' },
+          { key: 'feat_lvl', label: 'FEAT LVL' },
+          { key: 'lvl_req', label: 'REQ. LVL' },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns="1.5fr 0.5fr 0.5fr 0.5fr 40px"
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />

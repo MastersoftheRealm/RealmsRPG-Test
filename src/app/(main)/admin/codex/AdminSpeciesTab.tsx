@@ -9,7 +9,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-  SortHeader,
+  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
@@ -265,14 +265,17 @@ export function AdminSpeciesTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: '1.5fr 1fr 0.8fr 40px' }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="SIZES" col="sizes" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'type', label: 'TYPE' },
+          { key: 'sizes', label: 'SIZES' },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns="1.5fr 1fr 0.8fr 40px"
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />

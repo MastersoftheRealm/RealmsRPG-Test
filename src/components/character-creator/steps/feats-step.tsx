@@ -17,7 +17,7 @@ import { Spinner, Button } from '@/components/ui';
 import { 
   GridListRow, 
   SearchInput, 
-  SortHeader, 
+  ListHeader,
   type ChipData 
 } from '@/components/shared';
 import { 
@@ -32,6 +32,13 @@ import type { ArchetypeCategory } from '@/types';
 
 // Grid columns for feat display (Name, Category, Ability, Uses, Add)
 const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+const FEAT_HEADER_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'category', label: 'CATEGORY' },
+  { key: 'ability', label: 'ABILITY' },
+  { key: 'uses_per_rec', label: 'USES', sortable: false as const },
+  { key: '_actions', label: '', sortable: false as const },
+];
 
 interface SelectedFeat {
   id: string;
@@ -547,14 +554,12 @@ export function FeatsStep() {
       </FilterSection>
 
       {/* Column Headers */}
-      <div className="hidden lg:grid gap-4 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light rounded-t-lg text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300"
-           style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}>
-        <SortHeader label="NAME" col="name" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
-        <SortHeader label="CATEGORY" col="category" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
-        <SortHeader label="ABILITY" col="ability" sortState={{ col: filters.sortCol, dir: filters.sortDir }} onSort={handleSort} />
-        <span className="flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary">USES</span>
-        <span></span>
-      </div>
+      <ListHeader
+        columns={FEAT_HEADER_COLUMNS}
+        gridColumns={FEAT_GRID_COLUMNS}
+        sortState={{ col: filters.sortCol, dir: filters.sortDir }}
+        onSort={handleSort}
+      />
 
       {/* Single unified feats list - both archetype and character feats combined */}
       <div className="mb-8 mt-4">

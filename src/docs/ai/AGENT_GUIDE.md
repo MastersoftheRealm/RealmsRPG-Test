@@ -32,7 +32,7 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 |----------|----------|-------|
 | UI primitives | `src/components/ui/` | Button, IconButton, Input, Select, Checkbox, Textarea, Modal, Chip, etc. |
 | Shared patterns | `src/components/shared/` | GridListRow, SkillRow, ValueStepper, RollButton, PointStatus, SectionHeader |
-| List utilities | `src/components/shared/list-components.tsx` | SearchInput, SortHeader, FilterSection, ResultsCount, EmptyState, LoadingState |
+| List utilities | `src/components/shared/list-components.tsx` | SearchInput, FilterSection, ResultsCount, EmptyState, LoadingState. **List headers:** use `ListHeader` from `src/components/shared/list-header.tsx` for all sortable list views (single source of truth; Option B). SortHeader/SortHeaderRow in list-components are legacy and unused in list views. |
 | Character sheet | `src/components/character-sheet/` | library-section, abilities-section, skills-section, feats-tab, modals |
 | Creators | `src/components/creator/` | ability-score-editor, health-energy-allocator, creator-summary-panel |
 | Filters | `src/components/shared/filters/` | TagFilter, CheckboxFilter, SelectFilter, AbilityRequirementFilter |
@@ -46,6 +46,10 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 | Base-skill selector (add sub-skill) | **SelectionToggle** | Unique UX; not GridListRow |
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
+
+**List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see UI_COMPONENT_REFERENCE for details.
+
+**List modal layout (add-X, load, selection):** Use a consistent structure so modals match Codex/Library: (1) Header (title + close), (2) Search bar (`SearchInput`), (3) optional **FilterSection** for filters, (4) **ListHeader** (sortable), (5) scrollable list in a bordered container (`border border-border-light rounded-lg`) with **GridListRow** or selectable rows, (6) footer (selection count + Cancel + primary action). Use **EmptyState** and **LoadingState** (from `@/components/ui` or shared list-components) for empty and loading; avoid ad-hoc Spinner/divs. For search + sort state, **useModalListState** (`@/hooks/use-modal-list-state`) returns `search`, `setSearch`, `filteredItems`, `sortedItems`, `sortState`, `handleSort`, `reset` — use in load/add-X modals to reduce duplication. See `MODAL_UNIFICATION_AUDIT_2026-02-20.md`.
 
 See `UI_COMPONENT_REFERENCE.md` for full component details.
 
@@ -62,6 +66,8 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Codex API | `src/app/api/codex/` |
 | **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |
 | Architecture | `src/docs/ARCHITECTURE.md` |
+| **Character/creature math** | `src/lib/formulas.ts`, `src/lib/calculations.ts`, `src/lib/skill-allocation.ts` — all ability, defense, skill, and derived stats |
+| **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
 
 ## Hooks & Services
 
@@ -100,6 +106,8 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 
 ## Creator load logic (avoid duplication)
 
+**CREATOR_LOAD_RULES** — Single reference for “mechanic vs list” when loading saved content into creators. See table below for per-type helpers.
+
 When loading a saved item/power/technique into a creator, follow this **three-step pattern** so mechanic-driven UI and the user-selectable list stay in sync:
 
 1. **Reset state** — Clear all creator state (or call the creator’s reset handler).
@@ -116,6 +124,27 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 
 **Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
 
+**Load modal state and data:** Use `useCreatorLoad('powers' | 'techniques' | 'items')` from `@/hooks` for load-modal visibility and library items. Returns `showLoadModal`, `setShowLoadModal`, `openLoadModal`, `closeLoadModal`, `items`, `isLoading`, `error`. Type-specific `handleLoad*` (reset → restore mechanics → restore filtered list) stays in each creator.
+
+## Creator layout
+
+All four creators (power, technique, item, creature) use **CreatorLayout** from `@/components/creator` for consistent structure.
+
+- **Props:** `icon`, `title`, `description`, `actions`, `children` (main editor), `sidebar`, `modals`, `size`, `headerClassName`
+- **Structure:** `PageContainer` → `PageHeader` → optional modals → grid (`lg:grid-cols-3`) with main (`lg:col-span-2 space-y-6`) and sidebar.
+- **Usage:** Main content in `children`, summary panel in `sidebar`, Load/Login/Publish (and selection) modals in `modals`. Actions use `CreatorSaveToolbar`.
+
+## Allocation UI consistency
+
+Ability, defense, skill, and health/energy allocation should use shared components everywhere:
+
+- **Ability / defense editing:** `AbilityScoreEditor` (creators, character sheet) or `AbilitiesSection` (sheet) — both use `PointStatus`, `DecrementButton`, `IncrementButton` from `@/components/shared`.
+- **Skill point allocation:** `SkillsAllocationPage` (character/creature creator) or skills section with `PointStatus` (character sheet).
+- **Health/Energy pool:** `HealthEnergyAllocator` (creators, character sheet) with `ValueStepper`; use `enableHoldRepeat` only for pool allocation, not for ability/defense steppers.
+- **Powered-martial proficiency:** `PoweredMartialSlider` from `@/components/shared` in creature creator and character sheet (ArchetypeSection) when both power and martial proficiency are present.
+
+Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.
+
 ## Recording Progress
 
 | What | Where |
@@ -126,6 +155,7 @@ When loading a saved item/power/technique into a creator, follow this **three-st
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
 | Codebase audit | `src/docs/ai/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
 | Unification audit | `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
+| **Modal unification audit** | `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
 
 ## Creating New Tasks
 

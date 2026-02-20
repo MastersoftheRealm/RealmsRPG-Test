@@ -16,11 +16,11 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePowerParts, useUserPowers, useAdmin, useCreatorSave, type PowerPart } from '@/hooks';
+import { usePowerParts, useAdmin, useCreatorSave, useCreatorLoad, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
-import { CreatorSaveToolbar } from '@/components/creator';
-import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
+import { CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
+import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
@@ -110,13 +110,10 @@ function PowerCreatorContent() {
     endsOnActivation: false,
     sustain: 0,
   });
-  const [showLoadModal, setShowLoadModal] = useState(false);
+  const load = useCreatorLoad('powers');
 
   // Fetch power parts
   const { data: powerParts = [], isLoading, error } = usePowerParts();
-  
-  // Fetch user's saved powers for loading (only if user is logged in)
-  const { data: userPowers, isLoading: loadingUserPowers, error: userPowersError } = useUserPowers();
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -602,11 +599,11 @@ function PowerCreatorContent() {
 
   // Load power for editing from URL parameter (?edit=<id>)
   useEffect(() => {
-    if (!editPowerId || !userPowers || userPowers.length === 0 || powerParts.length === 0 || isInitialized) return;
+    if (!editPowerId || !load.items || load.items.length === 0 || powerParts.length === 0 || isInitialized) return;
     
     // Find the power to edit by docId or id
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const powerToEdit = (userPowers as any[]).find(
+    const powerToEdit = (load.items as any[]).find(
       (p: { docId?: string; id?: string }) => p.docId === editPowerId || p.id === editPowerId
     );
     if (!powerToEdit) {
@@ -621,7 +618,7 @@ function PowerCreatorContent() {
     // Clear localStorage cache when loading for edit
     localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
     setIsInitialized(true);
-  }, [editPowerId, userPowers, powerParts, isInitialized, handleLoadPower]);
+  }, [editPowerId, load.items, powerParts, isInitialized, handleLoadPower]);
 
   if (isLoading) {
     return (
@@ -642,42 +639,82 @@ function PowerCreatorContent() {
   }
 
   return (
-    <PageContainer size="xl">
-      <PageHeader
-        icon={<Wand2 className="w-8 h-8 text-primary-600" />}
-        title="Power Creator"
-        description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
-        actions={
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
+    <CreatorLayout
+      icon={<Wand2 className="w-8 h-8 text-primary-600" />}
+      title="Power Creator"
+      description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
+      actions={
+        <CreatorSaveToolbar
+          saveTarget={save.saveTarget}
+          onSaveTargetChange={save.setSaveTarget}
+          onSave={handleSave}
+          onLoad={() => (user ? load.openLoadModal() : setShowLoginPrompt(true))}
+          onReset={handleReset}
+          saving={save.saving}
+          saveDisabled={!name.trim()}
+          showPublicPrivate={isAdmin}
+          user={user}
+        />
+      }
+      sidebar={
+        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
+          <CreatorSummaryPanel
+            title="Power Summary"
+            costStats={[
+              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
+              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            ]}
+            statRows={[
+              { label: 'Action', value: actionTypeDisplay },
+              { label: 'Range', value: rangeDisplay },
+              { label: 'Area', value: areaDisplay },
+              { label: 'Duration', value: durationDisplay },
+            ]}
+            breakdowns={costs.tpSources.length > 0 ? [
+              { title: 'TP Breakdown', items: costs.tpSources }
+            ] : undefined}
+          >
+            {save.saveMessage && (
+              <Alert 
+                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
+              >
+                {save.saveMessage.text}
+              </Alert>
+            )}
+          </CreatorSummaryPanel>
+        </div>
+      }
+      modals={
+        <>
+          <LoadFromLibraryModal
+            isOpen={load.showLoadModal}
+            onClose={load.closeLoadModal}
+            onSelect={handleLoadPower}
+            items={load.items}
+            isLoading={load.isLoading}
+            error={load.error}
+            itemType="power"
+            title="Load Power from Library"
           />
-        }
-        className="mb-6"
-      />
-
-      {/* Load from Library Modal */}
-      <LoadFromLibraryModal
-        isOpen={showLoadModal}
-        onClose={() => setShowLoadModal(false)}
-        onSelect={handleLoadPower}
-        items={userPowers}
-        isLoading={loadingUserPowers}
-        error={userPowersError}
-        itemType="power"
-        title="Load Power from Library"
-      />
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Editor */}
-        <div className="lg:col-span-2 space-y-6">
+          <LoginPromptModal
+            isOpen={showLoginPrompt}
+            onClose={() => setShowLoginPrompt(false)}
+            returnPath="/power-creator"
+            contentType="power"
+          />
+          <ConfirmActionModal
+            isOpen={save.showPublishConfirm}
+            onClose={() => save.setShowPublishConfirm(false)}
+            onConfirm={() => save.confirmPublish()}
+            title={save.publishConfirmTitle}
+            description={save.publishConfirmDescription?.(name.trim()) ?? ''}
+            confirmLabel="Publish"
+            icon="publish"
+          />
+        </>
+      }
+    >
+      {/* Main Editor */}
           {/* Name & Description */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="space-y-4">
@@ -991,57 +1028,7 @@ function PowerCreatorContent() {
               </p>
             )}
           </div>
-        </div>
-
-        {/* Sidebar - Cost Summary (sticky to match creature creator) */}
-        <div className="self-start sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-6">
-          <CreatorSummaryPanel
-            title="Power Summary"
-            costStats={[
-              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-              { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
-            ]}
-            statRows={[
-              { label: 'Action', value: actionTypeDisplay },
-              { label: 'Range', value: rangeDisplay },
-              { label: 'Area', value: areaDisplay },
-              { label: 'Duration', value: durationDisplay },
-            ]}
-            breakdowns={costs.tpSources.length > 0 ? [
-              { title: 'TP Breakdown', items: costs.tpSources }
-            ] : undefined}
-          >
-            {/* Save Message */}
-            {save.saveMessage && (
-              <Alert 
-                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
-              >
-                {save.saveMessage.text}
-              </Alert>
-            )}
-          </CreatorSummaryPanel>
-        </div>
-      </div>
-
-      {/* Login Prompt Modal */}
-      <LoginPromptModal
-        isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
-        returnPath="/power-creator"
-        contentType="power"
-      />
-
-      {/* Publish Confirmation Modal */}
-      <ConfirmActionModal
-        isOpen={save.showPublishConfirm}
-        onClose={() => save.setShowPublishConfirm(false)}
-        onConfirm={() => save.confirmPublish()}
-        title={save.publishConfirmTitle}
-        description={save.publishConfirmDescription?.(name.trim()) ?? ''}
-        confirmLabel="Publish"
-        icon="publish"
-      />
-    </PageContainer>
+    </CreatorLayout>
   );
 }
 

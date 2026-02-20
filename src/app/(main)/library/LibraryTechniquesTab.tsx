@@ -12,7 +12,7 @@ import { Plus, Swords } from 'lucide-react';
 import {
   GridListRow,
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
@@ -26,14 +26,14 @@ import type { DisplayItem } from '@/types';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
-
-const TECHNIQUE_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'energy', label: 'Energy' },
+const TECHNIQUE_HEADER_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'energy', label: 'ENERGY' },
   { key: 'tp', label: 'TP' },
-  { key: 'action', label: 'Action' },
-  { key: 'weapon', label: 'Weapon' },
-  { key: 'damage', label: 'Damage' },
+  { key: 'action', label: 'ACTION' },
+  { key: 'weapon', label: 'WEAPON' },
+  { key: 'damage', label: 'DAMAGE' },
+  { key: '_actions', label: '', sortable: false as const },
 ];
 
 interface LibraryTechniquesTabProps {
@@ -145,20 +145,12 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
         />
       </div>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: TECHNIQUE_GRID_COLUMNS }}
-      >
-        {TECHNIQUE_COLUMNS.map(col => (
-          <SortHeader
-            key={col.key}
-            label={col.label.toUpperCase()}
-            col={col.key}
-            sortState={sortState}
-            onSort={handleSort}
-          />
-        ))}
-      </div>
+      <ListHeader
+        columns={TECHNIQUE_HEADER_COLUMNS}
+        gridColumns={TECHNIQUE_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

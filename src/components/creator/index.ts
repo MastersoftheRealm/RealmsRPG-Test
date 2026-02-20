@@ -19,4 +19,5 @@ export { ArchetypeSelector, type ArchetypeSelectorProps, type ArchetypeType } fr
 export { CollapsibleSection, type CollapsibleSectionProps } from './collapsible-section';
 export { CreatorSummaryPanel, type CreatorSummaryPanelProps } from './creator-summary-panel';
 export { CreatorSaveToolbar, type CreatorSaveToolbarProps } from './CreatorSaveToolbar';
+export { CreatorLayout, type CreatorLayoutProps } from './CreatorLayout';
 

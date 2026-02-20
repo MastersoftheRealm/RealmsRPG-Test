@@ -7,12 +7,10 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
 import { X, FileText, Zap, Sword, Shield } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { SearchInput, IconButton, Alert, Modal, Spinner } from '@/components/ui';
+import { SearchInput, IconButton, Alert, Modal, LoadingState, EmptyState } from '@/components/ui';
 import { GridListRow, ListHeader } from '@/components/shared';
-import { useSort } from '@/hooks/use-sort';
+import { useModalListState } from '@/hooks/use-modal-list-state';
 
 export type LibraryItemType = 'power' | 'technique' | 'item' | 'creature';
 
@@ -67,28 +65,14 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
   itemType,
   title,
 }: LoadFromLibraryModalProps<T>) {
-  const [search, setSearch] = useState('');
-  const { sortState, handleSort, sortItems } = useSort('name');
-  
   const config = TYPE_CONFIG[itemType];
   const displayTitle = title || `Load ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}`;
 
-  const filteredItems = useMemo(() => {
-    if (!items) return [];
-    if (!search.trim()) return items;
-    
-    const searchLower = search.toLowerCase();
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchLower) ||
-        item.description?.toLowerCase().includes(searchLower)
-    );
-  }, [items, search]);
-
-  const sortedItems = useMemo(
-    () => sortItems(filteredItems),
-    [filteredItems, sortItems]
-  );
+  const { search, setSearch, sortedItems, sortState, handleSort } = useModalListState({
+    items: items ?? [],
+    searchFields: ['name', 'description'],
+    initialSortKey: 'name',
+  });
 
   const handleSelect = (item: T) => {
     onSelect(item);
@@ -137,19 +121,16 @@ export function LoadFromLibraryModal<T extends LibraryItem>({
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="md" />
-          </div>
+          <LoadingState message="Loading..." size="md" padding="md" />
         ) : error ? (
           <Alert variant="danger" className="mx-4">
             Error loading library: {error.message}
           </Alert>
         ) : sortedItems.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-text-muted">
-              {items?.length === 0 ? config.emptyText : 'No matching items found.'}
-            </p>
-          </div>
+          <EmptyState
+            title={items?.length === 0 ? config.emptyText : 'No matching items found.'}
+            size="sm"
+          />
         ) : (
           <>
             <ListHeader

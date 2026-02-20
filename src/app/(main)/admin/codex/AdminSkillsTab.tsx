@@ -8,7 +8,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-  SortHeader,
+  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
@@ -344,14 +344,17 @@ export function AdminSkillsTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: SKILL_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'ability', label: 'ABILITIES' },
+          { key: 'base_skill', label: 'BASE SKILL' },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns={SKILL_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />

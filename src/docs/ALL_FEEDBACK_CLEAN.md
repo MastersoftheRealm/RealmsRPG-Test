@@ -40,6 +40,7 @@ Notes:
 ### 1) Architecture & Unification
 - Consolidate duplicate components and logic across the project (character sheet, creators, library, codex).
 - Create and enforce shared list/header/modal patterns (sortable headers, consistent spacing, rounded modal edges).
+- **Modals with lists:** Unify add-X modals (add feat/skill/library item), load modals (Load from Library, Load Creature), and selection modals — same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. See `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md` and TASK-264.
 - Find and remove true dead code.
 
 ### 2) Creators (Power / Technique / Armament / Creature)
@@ -792,3 +793,11 @@ Notes
 - Feedback: (1) Feats are stored with feat_lvl (e.g. "feat_lvl": 2 for Adapt II); feat level is not being displayed in admin page—loaded as 0 in edit mode. (2) In the codex, if a value doesn't exist in the edit modal for any editing modal, simply display "no value", not "0". (3) Codex public library tab: "Failed to load public armaments"; dev terminal shows GET /api/public/items 500 — "The table codex.public_items does not exist in the current database."  
 - Expected: (1) Admin feat edit shows actual feat_lvl from feat data. (2) Optional numeric fields in codex edit modals show empty/placeholder "No value" when value is missing, not "0". (3) Public armaments (items) load; table codex.public_items exists or API handles missing table without 500.  
 - Implemented 2026-02-20: (1) Codex API now returns feat_lvl, req_desc, feat_cat_req, pow_abil_req, pow_prof_req, speed_req for feats; Admin Feats edit modal loads and displays feat_lvl correctly. (2) Admin Feats and Admin Creature Feats modals: optional numeric fields use number | undefined, display value ?? '' with placeholder "No value"; Admin Traits uses_per_rec placeholder "No value". (3) New migration 20260220000000_public_library_codex_schema creates codex.public_powers/techniques/items/creatures; GET /api/public/[type] catches P2021/missing table and returns [] so UI shows empty list instead of error.
+
+**Raw Feedback Log — 2/20/2026 (Modal unification audit)**
+- Date: 2026-02-20
+- Context: Unification audit — modals with lists (add-X, load, selection)
+- Priority: High
+- Feedback: During the instruction for the original audit I neglected to mention the need to also audit the unification of MODALS whether they are add X modals (add powers to creatures, characters, etc) load modals, etc (modals with lists within them!) I want to make sure the logic, styles, etc is unified between them, most of which are likely possible to have integrated with codex and library styles, components, etc etc. Much of the logic is possible to synchronize and clean up.
+- Expected: Single audit of list modals; unified logic, styles, and patterns; alignment with Codex/Library; recommendations and tasks for implementation.
+- Created: MODAL_UNIFICATION_AUDIT_2026-02-20.md; TASK-264 added to AI_TASK_QUEUE.

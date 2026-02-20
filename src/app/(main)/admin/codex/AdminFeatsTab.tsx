@@ -12,7 +12,7 @@ import {
 import {
   SectionHeader,
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
@@ -29,6 +29,15 @@ import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatAbilityList } from '@/lib/utils';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
+const ADMIN_FEAT_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'lvl_req', label: 'REQ. LEVEL' },
+  { key: 'category', label: 'CATEGORY' },
+  { key: 'ability', label: 'ABILITY' },
+  { key: 'rec_period', label: 'RECOVERY' },
+  { key: 'uses_per_rec', label: 'USES' },
+  { key: '_actions', label: '', sortable: false as const },
+];
 
 interface FeatFilters {
   search: string;
@@ -381,17 +390,12 @@ export function AdminFeatsTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="REQ. LEVEL" col="lvl_req" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="ABILITY" col="ability" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="RECOVERY" col="rec_period" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="USES" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={ADMIN_FEAT_COLUMNS}
+        gridColumns={FEAT_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

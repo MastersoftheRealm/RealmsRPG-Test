@@ -1,6 +1,6 @@
 # Unification Status — Verified State
 
-Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consistent UI across Library, Codex, Character Sheet, Creators.
+Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consistent UI across Library, Codex, Character Sheet, Creators. List/sort headers use **Option B** (full migration to ListHeader; single source of truth). See `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md` for full audit and compliance table.
 
 ## Unified (Verified)
 
@@ -16,6 +16,7 @@ Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consiste
 | PointStatus | ✅ | abilities-section, skills-section, ability-score-editor |
 | PageContainer/PageHeader | ✅ | All main pages, creators, static pages |
 | SearchInput | ✅ | All modals, Codex, Library |
+| ListHeader (Option B) | ✅ | All Codex/Library/Admin list views, feats-step, UnifiedSelectionModal; single source of truth for sortable list headers |
 | Design tokens | ✅ | Most components use `bg-surface`, `text-text-primary`, `border-border-light`, etc. |
 
 ## Exceptions (Intentional)
@@ -24,6 +25,11 @@ Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consiste
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow); unique base-skill selector UX.
 - **Footer** — `bg-neutral-400` (intentional).
 - **RollButton gradients** — Uses neutral tokens for metallic effect (intentional).
+
+## Modal unification (TASK-264, complete)
+
+- **List modals** use EmptyState, LoadingState, ListHeader, GridListRow; AddFeat/AddSkill use FilterSection; search/filter bar padding standardized. LoadCreatureModal refactored to list pattern. **useModalListState** hook used in LoadFromLibraryModal and LoadCreatureModal.
+- **Add-X modals as UnifiedSelectionModal:** AddFeatModal, AddSkillModal, and AddLibraryItemModal are implemented as thin wrappers that build SelectableItem[] and render UnifiedSelectionModal (single implementation, aligned with Codex/Library). See `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md`.
 
 ## Known Gaps
 

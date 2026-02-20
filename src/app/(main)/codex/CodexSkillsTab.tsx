@@ -14,7 +14,7 @@ import {
 } from '@/components/codex';
 import {
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
@@ -24,6 +24,12 @@ import { useCodexSkills, type Skill } from '@/hooks';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
 const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
+const SKILL_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'ability', label: 'ABILITIES' },
+  { key: 'base_skill', label: 'BASE SKILL' },
+  { key: '_actions', label: '', sortable: false as const },
+];
 
 interface SkillFilters {
   search: string;
@@ -195,14 +201,12 @@ export function CodexSkillsTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: SKILL_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="ABILITIES" col="ability" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="BASE SKILL" col="base_skill" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={SKILL_COLUMNS}
+        gridColumns={SKILL_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

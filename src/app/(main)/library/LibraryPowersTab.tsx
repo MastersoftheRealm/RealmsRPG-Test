@@ -12,7 +12,7 @@ import { Plus, Wand2 } from 'lucide-react';
 import {
   GridListRow,
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
@@ -27,15 +27,15 @@ import type { PowerDocument } from '@/lib/calculators/power-calc';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
-
-const POWER_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'energy', label: 'Energy' },
-  { key: 'action', label: 'Action' },
-  { key: 'duration', label: 'Duration' },
-  { key: 'range', label: 'Range' },
-  { key: 'area', label: 'Area' },
-  { key: 'damage', label: 'Damage' },
+const POWER_HEADER_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'energy', label: 'ENERGY' },
+  { key: 'action', label: 'ACTION' },
+  { key: 'duration', label: 'DURATION' },
+  { key: 'range', label: 'RANGE' },
+  { key: 'area', label: 'AREA' },
+  { key: 'damage', label: 'DAMAGE' },
+  { key: '_actions', label: '', sortable: false as const },
 ];
 
 interface LibraryPowersTabProps {
@@ -167,20 +167,12 @@ export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
         />
       </div>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: POWER_GRID_COLUMNS }}
-      >
-        {POWER_COLUMNS.map(col => (
-          <SortHeader
-            key={col.key}
-            label={col.label.toUpperCase()}
-            col={col.key}
-            sortState={sortState}
-            onSort={handleSort}
-          />
-        ))}
-      </div>
+      <ListHeader
+        columns={POWER_HEADER_COLUMNS}
+        gridColumns={POWER_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

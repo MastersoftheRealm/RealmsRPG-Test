@@ -2,6 +2,34 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-20 | agent | Session: Deferred/optional — Add-X as UnifiedSelectionModal, CREATOR_LOAD_RULES, SelectableItem.detailSections | files: add-feat-modal.tsx, add-skill-modal.tsx, add-library-item-modal.tsx, unified-selection-modal.tsx, AGENT_GUIDE.md, MODAL_UNIFICATION_AUDIT_2026-02-20.md, UNIFICATION_STATUS.md, AI_CHANGELOG.md | Summary:
+  - AddFeatModal, AddSkillModal, AddLibraryItemModal refactored to **UnifiedSelectionModal wrappers**: each builds SelectableItem[] from data (codex/library), passes columns, filterContent, onConfirm that maps selected back to Feat[]/Skill[]/CharacterPower[]|etc. Single list-modal implementation for all add-X flows.
+  - SelectableItem extended with **detailSections** (labeled chip sections); UnifiedSelectionModal passes detailSections to GridListRow for feat/skill detail.
+  - AGENT_GUIDE: **CREATOR_LOAD_RULES** named as single reference for mechanic-vs-list load pattern. Modal audit summary table and UNIFICATION_STATUS updated for Add-X completion.
+  - npm run build passes.
+
+- 2026-02-20 | agent | Session: Modal unification (TASK-264) — EmptyState/LoadingState, FilterSection, LoadCreatureModal, useModalListState | files: unified-selection-modal.tsx, LoadFromLibraryModal.tsx, add-feat-modal.tsx, add-library-item-modal.tsx, add-skill-modal.tsx, LoadCreatureModal.tsx, use-modal-list-state.ts, hooks/index.ts, AGENT_GUIDE.md, MODAL_UNIFICATION_AUDIT_2026-02-20.md, AI_TASK_QUEUE.md | Summary:
+  - Phase 1: All list modals use EmptyState and LoadingState (UnifiedSelectionModal, LoadFromLibraryModal, AddFeatModal, AddLibraryItemModal, AddSkillModal). AddLibraryItemModal double ListHeader wrapper removed; list-modal layout documented in AGENT_GUIDE.
+  - Phase 2: AddFeatModal and AddSkillModal use FilterSection for filters; search/filter bar padding standardized (px-4 py-3 border-border-light bg-surface-alt). AddLibraryItemModal search bar aligned.
+  - Phase 3: LoadCreatureModal refactored to ListHeader + GridListRow + SearchInput + EmptyState/LoadingState; useModalListState hook added and used in LoadFromLibraryModal and LoadCreatureModal.
+  - TASK-264 marked done. npm run build passes.
+
+- 2026-02-20 | agent | Session: Phase 3 unification — ListHeader migration, useCreatorLoad | files: list-header usage across Codex/Admin/Library/PublicLibrary/feats-step/unified-selection-modal, src/hooks/use-creator-load.ts, power-creator, technique-creator, item-creator, AI_TASK_QUEUE.md, AGENT_GUIDE.md, AI_CHANGELOG.md | Summary:
+  - TASK-262: All SortHeaderRow+SortHeader list views migrated to ListHeader (columns, gridColumns, sortState, onSort). Single header component for Codex, Admin, Library, CodexPublicLibraryTab, feats-step, UnifiedSelectionModal (hasSelectionColumn). Same visual result.
+  - TASK-263: useCreatorLoad(type) hook added; power, technique, item creators use it for load modal state and library data. handleLoad* and mechanic-filtering remain per-creator per AGENT_GUIDE.
+  - AGENT_GUIDE: useCreatorLoad documented in Creator load logic. npm run build passes.
+
+- 2026-02-20 | agent | Session: CreatorLayout migration — all four creators use CreatorLayout | files: src/app/(main)/power-creator/page.tsx, technique-creator/page.tsx, item-creator/page.tsx, creature-creator/page.tsx, AGENT_GUIDE.md, AI_CHANGELOG.md | Summary:
+  - Power, technique, item, and creature creators refactored to use CreatorLayout (icon, title, description, actions, children, sidebar, modals). Loading/error states still use PageContainer only where applicable.
+  - Removed duplicate PageHeader/grid/sidebar/modals markup; single layout component enforces structure. AGENT_GUIDE "Creator layout" updated: no longer optional; all four creators use it.
+  - npm run build passes.
+
+- 2026-02-20 | agent | Session: Phase 2 unification — CreatorLayout, allocation UI doc, PoweredMartialSlider | files: src/components/creator/CreatorLayout.tsx, creator/index.ts, src/docs/ai/AGENT_GUIDE.md, AI_CHANGELOG.md | Summary:
+  - CreatorLayout: shared layout component (PageContainer, PageHeader, grid main+sidebar, modals); size prop uses ContainerSize from UI; exported from creator index. Optional migration for power/technique/item/creature creators.
+  - AGENT_GUIDE: "Creator layout (optional)" and "Allocation UI consistency" sections — use CreatorLayout for creators; use AbilityScoreEditor/AbilitiesSection, PointStatus, HealthEnergyAllocator, PoweredMartialSlider; design tokens; enableHoldRepeat only for pool allocation.
+  - Allocation UI audit: shared components already used; PoweredMartialSlider already in ArchetypeSection when powered-martial. No code changes beyond CreatorLayout type fix (size: ContainerSize).
+  - npm run build passes.
+
 - 2026-02-20 | agent | Session: Phase 1 unification — CreatorSaveToolbar, useCreatorSave, SortHeaderRow, mechanic load doc | files: src/hooks/use-creator-save.ts, src/components/creator/CreatorSaveToolbar.tsx, src/components/shared/list-components.tsx, power-creator/page.tsx, technique-creator/page.tsx, item-creator/page.tsx, creature-creator/page.tsx, AGENT_GUIDE.md, list-components (SortHeaderRow), CodexFeatsTab.tsx, power-calc.ts, hooks/index.ts, creator/index.ts, shared/index.ts | Summary:
   - useCreatorSave hook: single source for saveMessage, saveTarget, saving, handleSave, showPublishConfirm, confirmPublish; used by all four creators.
   - CreatorSaveToolbar: unified Private/Public toggle, Load, Reset, Save; power, technique, item, creature creators refactored to use it.

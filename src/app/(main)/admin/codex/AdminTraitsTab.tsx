@@ -4,15 +4,23 @@ import { useState } from 'react';
 import {
   SectionHeader,
   SearchInput,
+  ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-  SortHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
+
+const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 40px';
+const ADMIN_TRAIT_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'uses_per_rec', label: 'USES' },
+  { key: 'rec_period', label: 'RECOVERY' },
+  { key: '_actions', label: '', sortable: false as const },
+];
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, X } from 'lucide-react';
@@ -140,14 +148,12 @@ export function AdminTraitsTab() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search traits..." />
       </div>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: '1.5fr 0.6fr 0.6fr 40px' }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="USES" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="RECOVERY" col="rec_period" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={ADMIN_TRAIT_COLUMNS}
+        gridColumns={ADMIN_TRAIT_GRID}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />

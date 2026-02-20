@@ -36,7 +36,7 @@ import {
   calculateSkillPointsForEntity,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
-import { Button, Input, Select, PageContainer, PageHeader, Textarea, Alert } from '@/components/ui';
+import { Button, Input, Select, Textarea, Alert } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_SIZES, CONDITIONS } from '@/lib/game/creator-constants';
@@ -47,6 +47,7 @@ import {
   CollapsibleSection,
   CreatorSummaryPanel,
   CreatorSaveToolbar,
+  CreatorLayout,
   type ArchetypeType,
 } from '@/components/creator';
 import type { AbilityName } from '@/types';
@@ -463,29 +464,185 @@ function CreatureCreatorContent() {
   };
 
   return (
-    <PageContainer size="xl">
-      <PageHeader
-        icon={<Skull className="w-8 h-8 text-primary-600" />}
-        title="Creature Creator"
-        description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
-        actions={
-          <CreatorSaveToolbar
-            saveTarget={save.saveTarget}
-            onSaveTargetChange={save.setSaveTarget}
-            onSave={handleSave}
-            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
-            onReset={handleReset}
-            saving={save.saving}
-            saveDisabled={!creature.name.trim()}
-            showPublicPrivate={isAdmin}
-            user={user}
+    <CreatorLayout
+      icon={<Skull className="w-8 h-8 text-primary-600" />}
+      title="Creature Creator"
+      description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
+      actions={
+        <CreatorSaveToolbar
+          saveTarget={save.saveTarget}
+          onSaveTargetChange={save.setSaveTarget}
+          onSave={handleSave}
+          onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
+          onReset={handleReset}
+          saving={save.saving}
+          saveDisabled={!creature.name.trim()}
+          showPublicPrivate={isAdmin}
+          user={user}
+        />
+      }
+      sidebar={
+        <div className="self-start sticky top-24 space-y-6">
+          <CreatorSummaryPanel
+            title="Creature Summary"
+            badge={creature.name ? { label: creature.name, className: 'bg-primary-100 text-primary-700' } : undefined}
+            resourceBoxes={[
+              { label: 'Ability Pts', value: stats.abilityRemaining, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
+              { label: 'Skill Pts', value: stats.skillRemaining, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
+              { label: 'Feat Pts', value: stats.featRemaining, variant: stats.featRemaining < 0 ? 'danger' : stats.featRemaining === 0 ? 'success' : 'warning' },
+              { label: 'Training Pts', value: stats.trainingPoints, variant: stats.trainingPoints < 0 ? 'danger' : 'warning' },
+              { label: 'Currency', value: stats.currency, variant: stats.currency < 0 ? 'danger' : 'warning' },
+            ]}
+            quickStats={[
+              { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health' },
+              { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy' },
+              { label: 'SPD', value: stats.speed, color: 'bg-surface-alt' },
+              { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt' },
+              { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt' },
+            ]}
+            statRows={[
+              { label: 'Abilities', value: (['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
+                const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
+                const v = creature.abilities[k];
+                return `${abbr} ${v >= 0 ? '+' : ''}${v}`;
+              }).join(', ') },
+              { label: 'Archetype', value: creature.archetypeType.charAt(0).toUpperCase() + creature.archetypeType.slice(1) },
+              { label: 'Level', value: creature.level },
+              { label: 'Type', value: creature.type },
+              { label: 'Size', value: creature.size.charAt(0).toUpperCase() + creature.size.slice(1) },
+            ]}
+            lineItems={[
+              { label: 'Skills', items: creature.skills.map((s: CreatureSkill) => `${s.name} ${getSkillBonus(s.name, s.value, s.proficient) >= 0 ? '+' : ''}${getSkillBonus(s.name, s.value, s.proficient)}`) },
+              { label: 'Resistances', items: creature.resistances },
+              { label: 'Immunities', items: creature.immunities },
+              { label: 'Weaknesses', items: creature.weaknesses },
+              { label: 'Senses', items: creature.senses },
+              { label: 'Movement', items: creature.movementTypes },
+              { label: 'Languages', items: creature.languages },
+            ]}
+          >
+            {save.saveMessage && (
+              <Alert variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}>
+                {save.saveMessage.text}
+              </Alert>
+            )}
+          </CreatorSummaryPanel>
+        </div>
+      }
+      modals={
+        <>
+          <UnifiedSelectionModal
+            isOpen={showPowerModal}
+            onClose={() => setShowPowerModal(false)}
+            onConfirm={(selected) => {
+              const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
+              const powers = items.map(displayItemToCreaturePower);
+              setCreature(prev => ({ ...prev, powers: [...prev.powers, ...powers] }));
+            }}
+            items={powerSelectableItems}
+            title="Select Powers"
+            description="Choose powers from your library to add to this creature"
+            maxSelections={10}
+            itemLabel="power"
+            searchPlaceholder="Search powers..."
+            columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Action', label: 'ACTION', sortable: false }, { key: 'Damage', label: 'DAMAGE', sortable: false }, { key: 'Area', label: 'AREA', sortable: false }]}
+            gridColumns="1.4fr 0.8fr 0.8fr 0.7fr"
+            size="xl"
           />
-        }
-        className="mb-6"
-      />
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+          <UnifiedSelectionModal
+            isOpen={showTechniqueModal}
+            onClose={() => setShowTechniqueModal(false)}
+            onConfirm={(selected) => {
+              const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
+              const techniques = items.map(displayItemToCreatureTechnique);
+              setCreature(prev => ({ ...prev, techniques: [...prev.techniques, ...techniques] }));
+            }}
+            items={techniqueSelectableItems}
+            title="Select Techniques"
+            description="Choose techniques from your library to add to this creature"
+            maxSelections={10}
+            itemLabel="technique"
+            searchPlaceholder="Search techniques..."
+            columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Weapon', label: 'WEAPON', sortable: false }, { key: 'Parts', label: 'PARTS', sortable: false }]}
+            gridColumns="1.4fr 0.8fr 0.8fr"
+            size="xl"
+          />
+          <UnifiedSelectionModal
+            isOpen={showFeatModal}
+            onClose={() => setShowFeatModal(false)}
+            onConfirm={(selected) => {
+              const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
+              const feats = items.map(displayItemToCreatureFeat);
+              setCreature(prev => ({ ...prev, feats: [...prev.feats, ...feats] }));
+            }}
+            items={featSelectableItems}
+            title="Select Feats"
+            description="Choose creature feats to add"
+            maxSelections={10}
+            itemLabel="feat"
+            searchPlaceholder="Search feats..."
+            columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Points', label: 'FEAT POINTS', sortable: true }]}
+            gridColumns="1.5fr 0.6fr"
+            size="xl"
+          />
+          <UnifiedSelectionModal
+            isOpen={showArmamentModal}
+            onClose={() => setShowArmamentModal(false)}
+            onConfirm={(selected) => {
+              const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
+              const armaments = items.map(displayItemToCreatureArmament);
+              setCreature(prev => ({ ...prev, armaments: [...prev.armaments, ...armaments] }));
+            }}
+            items={armamentSelectableItems}
+            title="Select Armaments"
+            description="Choose items from your library to equip on this creature"
+            maxSelections={10}
+            itemLabel="armament"
+            searchPlaceholder="Search items..."
+            columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Type', label: 'TYPE', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Cost', label: 'COST', sortable: true }]}
+            gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
+            size="xl"
+          />
+          <LoadCreatureModal
+            isOpen={showLoadModal}
+            onClose={() => setShowLoadModal(false)}
+            onSelect={(loadedCreature) => setCreature(loadedCreature)}
+          />
+          <LoginPromptModal
+            isOpen={showLoginPrompt}
+            onClose={() => setShowLoginPrompt(false)}
+            returnPath="/creature-creator"
+            contentType="creature"
+          />
+          <ConfirmActionModal
+            isOpen={showResetConfirm}
+            onClose={() => setShowResetConfirm(false)}
+            onConfirm={() => {
+              setCreature(initialState);
+              try {
+                localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
+              } catch (e) {
+                console.error('Failed to clear creature creator cache:', e);
+              }
+              setShowResetConfirm(false);
+            }}
+            title="Restart Creature"
+            description="Are you sure you want to reset all creature data? This will clear all fields and cannot be undone."
+            confirmLabel="Reset"
+            confirmVariant="danger"
+          />
+          <ConfirmActionModal
+            isOpen={save.showPublishConfirm}
+            onClose={() => save.setShowPublishConfirm(false)}
+            onConfirm={() => save.confirmPublish()}
+            title={save.publishConfirmTitle}
+            description={save.publishConfirmDescription?.(creature.name.trim()) ?? ''}
+            confirmLabel="Publish"
+            icon="publish"
+          />
+        </>
+      }
+    >
           {/* Basic Info - name, description, level, type, size (matches other creators) */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold text-text-primary mb-4">Basic Information</h3>
@@ -953,174 +1110,7 @@ function CreatureCreatorContent() {
               Add Armament
             </Button>
           </CollapsibleSection>
-        </div>
-
-        {/* Creature Summary Sidebar - resource boxes at top, summary points, line items (D&D stat block style) */}
-        <div className="self-start sticky top-24 space-y-6">
-          <CreatorSummaryPanel
-            title="Creature Summary"
-            badge={creature.name ? { label: creature.name, className: 'bg-primary-100 text-primary-700' } : undefined}
-            resourceBoxes={[
-              { label: 'Ability Pts', value: stats.abilityRemaining, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
-              { label: 'Skill Pts', value: stats.skillRemaining, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
-              { label: 'Feat Pts', value: stats.featRemaining, variant: stats.featRemaining < 0 ? 'danger' : stats.featRemaining === 0 ? 'success' : 'warning' },
-              { label: 'Training Pts', value: stats.trainingPoints, variant: stats.trainingPoints < 0 ? 'danger' : 'warning' },
-              { label: 'Currency', value: stats.currency, variant: stats.currency < 0 ? 'danger' : 'warning' },
-            ]}
-            quickStats={[
-              { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health' },
-              { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy' },
-              { label: 'SPD', value: stats.speed, color: 'bg-surface-alt' },
-              { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt' },
-              { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt' },
-            ]}
-            statRows={[
-              { label: 'Abilities', value: (['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
-                const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
-                const v = creature.abilities[k];
-                return `${abbr} ${v >= 0 ? '+' : ''}${v}`;
-              }).join(', ') },
-              { label: 'Archetype', value: creature.archetypeType.charAt(0).toUpperCase() + creature.archetypeType.slice(1) },
-              { label: 'Level', value: creature.level },
-              { label: 'Type', value: creature.type },
-              { label: 'Size', value: creature.size.charAt(0).toUpperCase() + creature.size.slice(1) },
-            ]}
-            lineItems={[
-              { label: 'Skills', items: creature.skills.map((s: CreatureSkill) => `${s.name} ${getSkillBonus(s.name, s.value, s.proficient) >= 0 ? '+' : ''}${getSkillBonus(s.name, s.value, s.proficient)}`) },
-              { label: 'Resistances', items: creature.resistances },
-              { label: 'Immunities', items: creature.immunities },
-              { label: 'Weaknesses', items: creature.weaknesses },
-              { label: 'Senses', items: creature.senses },
-              { label: 'Movement', items: creature.movementTypes },
-              { label: 'Languages', items: creature.languages },
-            ]}
-          >
-            {save.saveMessage && (
-              <Alert variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}>
-                {save.saveMessage.text}
-              </Alert>
-            )}
-          </CreatorSummaryPanel>
-        </div>
-      </div>
-
-      {/* Modals - UnifiedSelectionModal with GridListRow (matches character sheet/codex list style) */}
-      <UnifiedSelectionModal
-        isOpen={showPowerModal}
-        onClose={() => setShowPowerModal(false)}
-        onConfirm={(selected) => {
-          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
-          const powers = items.map(displayItemToCreaturePower);
-          setCreature(prev => ({ ...prev, powers: [...prev.powers, ...powers] }));
-        }}
-        items={powerSelectableItems}
-        title="Select Powers"
-        description="Choose powers from your library to add to this creature"
-        maxSelections={10}
-        itemLabel="power"
-        searchPlaceholder="Search powers..."
-        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Action', label: 'ACTION', sortable: false }, { key: 'Damage', label: 'DAMAGE', sortable: false }, { key: 'Area', label: 'AREA', sortable: false }]}
-        gridColumns="1.4fr 0.8fr 0.8fr 0.7fr"
-        size="xl"
-      />
-      <UnifiedSelectionModal
-        isOpen={showTechniqueModal}
-        onClose={() => setShowTechniqueModal(false)}
-        onConfirm={(selected) => {
-          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
-          const techniques = items.map(displayItemToCreatureTechnique);
-          setCreature(prev => ({ ...prev, techniques: [...prev.techniques, ...techniques] }));
-        }}
-        items={techniqueSelectableItems}
-        title="Select Techniques"
-        description="Choose techniques from your library to add to this creature"
-        maxSelections={10}
-        itemLabel="technique"
-        searchPlaceholder="Search techniques..."
-        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Weapon', label: 'WEAPON', sortable: false }, { key: 'Parts', label: 'PARTS', sortable: false }]}
-        gridColumns="1.4fr 0.8fr 0.8fr"
-        size="xl"
-      />
-      <UnifiedSelectionModal
-        isOpen={showFeatModal}
-        onClose={() => setShowFeatModal(false)}
-        onConfirm={(selected) => {
-          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
-          const feats = items.map(displayItemToCreatureFeat);
-          setCreature(prev => ({ ...prev, feats: [...prev.feats, ...feats] }));
-        }}
-        items={featSelectableItems}
-        title="Select Feats"
-        description="Choose creature feats to add"
-        maxSelections={10}
-        itemLabel="feat"
-        searchPlaceholder="Search feats..."
-        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Points', label: 'FEAT POINTS', sortable: true }]}
-        gridColumns="1.5fr 0.6fr"
-        size="xl"
-      />
-      <UnifiedSelectionModal
-        isOpen={showArmamentModal}
-        onClose={() => setShowArmamentModal(false)}
-        onConfirm={(selected) => {
-          const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
-          const armaments = items.map(displayItemToCreatureArmament);
-          setCreature(prev => ({ ...prev, armaments: [...prev.armaments, ...armaments] }));
-        }}
-        items={armamentSelectableItems}
-        title="Select Armaments"
-        description="Choose items from your library to equip on this creature"
-        maxSelections={10}
-        itemLabel="armament"
-        searchPlaceholder="Search items..."
-        columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Type', label: 'TYPE', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Cost', label: 'COST', sortable: true }]}
-        gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
-        size="xl"
-      />
-      <LoadCreatureModal
-        isOpen={showLoadModal}
-        onClose={() => setShowLoadModal(false)}
-        onSelect={(loadedCreature) => setCreature(loadedCreature)}
-      />
-
-      {/* Login Prompt Modal */}
-      <LoginPromptModal
-        isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
-        returnPath="/creature-creator"
-        contentType="creature"
-      />
-
-      {/* Reset Confirmation Modal */}
-      <ConfirmActionModal
-        isOpen={showResetConfirm}
-        onClose={() => setShowResetConfirm(false)}
-        onConfirm={() => {
-          setCreature(initialState);
-          try {
-            localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
-          } catch (e) {
-            console.error('Failed to clear creature creator cache:', e);
-          }
-          setShowResetConfirm(false);
-        }}
-        title="Restart Creature"
-        description="Are you sure you want to reset all creature data? This will clear all fields and cannot be undone."
-        confirmLabel="Reset"
-        confirmVariant="danger"
-      />
-
-      {/* Publish Confirmation Modal */}
-      <ConfirmActionModal
-        isOpen={save.showPublishConfirm}
-        onClose={() => save.setShowPublishConfirm(false)}
-        onConfirm={() => save.confirmPublish()}
-        title={save.publishConfirmTitle}
-        description={save.publishConfirmDescription?.(creature.name.trim()) ?? ''}
-        confirmLabel="Publish"
-        icon="publish"
-      />
-    </PageContainer>
+    </CreatorLayout>
   );
 }
 

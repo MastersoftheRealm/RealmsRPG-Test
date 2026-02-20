@@ -8,8 +8,16 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-  SortHeader,
+  ListHeader,
 } from '@/components/shared';
+
+const ADMIN_PART_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'category', label: 'CATEGORY' },
+  { key: '_en', label: 'ENERGY', sortable: false as const },
+  { key: '_tp', label: 'TP', sortable: false as const },
+  { key: '_actions', label: '', sortable: false as const },
+];
 import { Modal, Button, Input } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useParts, type Part } from '@/hooks';
@@ -289,15 +297,12 @@ export function AdminPartsTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: PART_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
-        <span>ENERGY</span>
-        <span>TP</span>
-      </div>
+      <ListHeader
+        columns={ADMIN_PART_COLUMNS}
+        gridColumns={PART_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />

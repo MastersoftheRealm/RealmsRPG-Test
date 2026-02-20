@@ -13,7 +13,7 @@ import { Plus, Shield } from 'lucide-react';
 import {
   GridListRow,
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
@@ -31,15 +31,15 @@ import type { DisplayItem } from '@/types';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
-
-const ARMAMENT_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'type', label: 'Type' },
-  { key: 'rarity', label: 'Rarity' },
-  { key: 'currency', label: 'Currency' },
+const ARMAMENT_HEADER_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'type', label: 'TYPE' },
+  { key: 'rarity', label: 'RARITY' },
+  { key: 'currency', label: 'CURRENCY' },
   { key: 'tp', label: 'TP' },
-  { key: 'range', label: 'Range' },
-  { key: 'damage', label: 'Damage' },
+  { key: 'range', label: 'RANGE' },
+  { key: 'damage', label: 'DAMAGE' },
+  { key: '_actions', label: '', sortable: false as const },
 ];
 
 function formatDamageValue(damage: unknown): string {
@@ -214,20 +214,12 @@ export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
         />
       </div>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: ARMAMENT_GRID_COLUMNS }}
-      >
-        {ARMAMENT_COLUMNS.map(col => (
-          <SortHeader
-            key={col.key}
-            label={col.label.toUpperCase()}
-            col={col.key}
-            sortState={sortState}
-            onSort={handleSort}
-          />
-        ))}
-      </div>
+      <ListHeader
+        columns={ARMAMENT_HEADER_COLUMNS}
+        gridColumns={ARMAMENT_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

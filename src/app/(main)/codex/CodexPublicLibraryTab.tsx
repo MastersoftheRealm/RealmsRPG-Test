@@ -11,6 +11,7 @@ import { Wand2, Swords, Shield, Users } from 'lucide-react';
 import {
   GridListRow,
   SearchInput,
+  ListHeader,
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
@@ -84,7 +85,7 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
   const { data: partsDb = [] } = usePowerParts();
   const addMutation = useAddPublicToLibrary('powers');
   const [search, setSearch] = useState('');
-  const { sortItems } = useSort('name');
+  const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
     return items.map((p: Record<string, unknown>) => {
@@ -143,11 +144,21 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search powers..." />
       </div>
-      <div className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300" style={{ gridTemplateColumns: POWER_GRID }}>
-        {['Name', 'Energy', 'Action', 'Duration', 'Range', 'Area', 'Damage'].map(l => (
-          <span key={l}>{l.toUpperCase()}</span>
-        ))}
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'energy', label: 'ENERGY', sortable: false as const },
+          { key: 'action', label: 'ACTION', sortable: false as const },
+          { key: 'duration', label: 'DURATION', sortable: false as const },
+          { key: 'range', label: 'RANGE', sortable: false as const },
+          { key: 'area', label: 'AREA', sortable: false as const },
+          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns={POWER_GRID}
+        sortState={sortState}
+        onSort={handleSort}
+      />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
           <div className="py-12 text-center text-text-muted">No powers match your search.</div>
@@ -196,7 +207,7 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
   const { data: partsDb = [] } = useTechniqueParts();
   const addMutation = useAddPublicToLibrary('techniques');
   const [search, setSearch] = useState('');
-  const { sortItems } = useSort('name');
+  const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
     return items.map((t: Record<string, unknown>) => {
@@ -249,11 +260,20 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search techniques..." />
       </div>
-      <div className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300" style={{ gridTemplateColumns: TECHNIQUE_GRID }}>
-        {['Name', 'Energy', 'TP', 'Action', 'Weapon', 'Damage'].map(l => (
-          <span key={l}>{l.toUpperCase()}</span>
-        ))}
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'energy', label: 'ENERGY', sortable: false as const },
+          { key: 'tp', label: 'TP', sortable: false as const },
+          { key: 'action', label: 'ACTION', sortable: false as const },
+          { key: 'weapon', label: 'WEAPON', sortable: false as const },
+          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns={TECHNIQUE_GRID}
+        sortState={sortState}
+        onSort={handleSort}
+      />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
           <div className="py-12 text-center text-text-muted">No techniques match your search.</div>
@@ -301,7 +321,7 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
   const { data: propertiesDb = [] } = useItemProperties();
   const addMutation = useAddPublicToLibrary('items');
   const [search, setSearch] = useState('');
-  const { sortItems } = useSort('name');
+  const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
     return items.map((item: Record<string, unknown>) => {
@@ -357,11 +377,21 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search armaments..." />
       </div>
-      <div className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300" style={{ gridTemplateColumns: ITEM_GRID }}>
-        {['Name', 'Type', 'Rarity', 'Currency', 'TP', 'Range', 'Damage'].map(l => (
-          <span key={l}>{l.toUpperCase()}</span>
-        ))}
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'type', label: 'TYPE', sortable: false as const },
+          { key: 'rarity', label: 'RARITY', sortable: false as const },
+          { key: 'currency', label: 'CURRENCY', sortable: false as const },
+          { key: 'tp', label: 'TP', sortable: false as const },
+          { key: 'range', label: 'RANGE', sortable: false as const },
+          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns={ITEM_GRID}
+        sortState={sortState}
+        onSort={handleSort}
+      />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
           <div className="py-12 text-center text-text-muted">No armaments match your search.</div>
@@ -409,7 +439,7 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
   const { data: items = [], isLoading, error } = usePublicLibrary('creatures');
   const addMutation = useAddPublicToLibrary('creatures');
   const [search, setSearch] = useState('');
-  const { sortItems } = useSort('name');
+  const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
     return items.map((c: Record<string, unknown>) => ({
@@ -441,11 +471,17 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search creatures..." />
       </div>
-      <div className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300" style={{ gridTemplateColumns: CREATURE_GRID }}>
-        {['Name', 'Level', 'Type'].map(l => (
-          <span key={l}>{l.toUpperCase()}</span>
-        ))}
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'level', label: 'LEVEL', sortable: false as const },
+          { key: 'type', label: 'TYPE', sortable: false as const },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns={CREATURE_GRID}
+        sortState={sortState}
+        onSort={handleSort}
+      />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
           <div className="py-12 text-center text-text-muted">No creatures match your search.</div>

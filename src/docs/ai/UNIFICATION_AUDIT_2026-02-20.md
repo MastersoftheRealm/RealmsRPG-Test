@@ -125,11 +125,13 @@ The codebase already has strong unification in several areas (e.g. `ValueStepper
 - **Option A (minimal):** Define a shared **header row wrapper** class or component used by every list view that uses SortHeader, e.g. `SortHeaderRow`, with the same classes as ListHeader’s container: `hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg mb-2 mx-1 text-xs font-semibold ...`. Each tab passes children (SortHeader buttons). This gives one visual style for all sortable list headers.
 - **Option B (deeper):** Migrate all list views to use **ListHeader** with a `columns` array (and optional `gridColumns`). Then there is only one header component; Codex/Admin/Library just pass column defs. Larger refactor but single source of truth.
 
+**Implemented: Option B.** All list views now use **ListHeader** with column arrays; SortHeader/SortHeaderRow are no longer used in list views. ListHeader is the single source of truth. See UNIFICATION_STATUS.md and AGENT_GUIDE (List headers).
+
 ### 2.2 Sort Logic
 
 **Current state:** `useSort(initialCol)` in `src/hooks/use-sort.ts` is the single source of truth. Returns `sortState`, `handleSort`, `sortItems`. Used across Library, Codex, Admin, modals. No duplication.
 
-**Recommendation:** Keep as is. When adding new list views, always use `useSort` and pass `handleSort` to ListHeader or SortHeader.
+**Recommendation:** Keep as is. When adding new list views, always use `useSort` and pass `handleSort` to ListHeader.
 
 ### 2.3 List Views: GridListRow, ItemCard, ItemList
 
@@ -279,21 +281,17 @@ The codebase already has strong unification in several areas (e.g. `ValueStepper
 3. **Document “mechanic vs list” load rule**  
    One short section in AGENT_GUIDE or a small `CREATOR_LOAD.md` that lists the three-step load pattern and points to `filterSavedItemPropertiesForList`, power EXCLUDED_PART, technique `!matchedPart.mechanic`.
 
-### Phase 2 — Consistency and polish
+### Phase 2 — Consistency and polish ✅ (complete)
 
-4. **CreatorLayout**  
-   Optional shared layout component for creators (header + main + sidebar + modals) to avoid layout drift.
-5. **Allocation UI audit**  
-   One pass: same alignment, spacing, and PointStatus/ValueStepper usage in character sheet, character creator, creature creator for abilities, defenses, skills, HP/EN.
-6. **PoweredMartialSlider in character sheet**  
-   Use the same component in character sheet edit for powered-martial so allocation UX matches creature creator.
+4. **CreatorLayout** — Done. Shared layout component added; all four creators (power, technique, item, creature) refactored to use it (header + main + sidebar + modals).
+5. **Allocation UI audit** — Done. AGENT_GUIDE documents shared components (AbilityScoreEditor, PointStatus, HealthEnergyAllocator, PoweredMartialSlider); alignment/usage verified.
+6. **PoweredMartialSlider in character sheet** — Done. Already used in ArchetypeSection when powered-martial.
 
-### Phase 3 — Deeper unification (optional)
+### Phase 3 — Deeper unification (complete)
 
-7. **Single list header component**  
-   Migrate all SortHeader-based views to ListHeader with column arrays so there is only one header component.
+7. **Single list header component** — Done. All list views use ListHeader with column arrays (Codex, Admin, Library, CodexPublicLibraryTab, feats-step, UnifiedSelectionModal). Single header component.
 8. **Shared creator load helper**  
-   If beneficial, add a thin `useCreatorLoad(type, options)` that encapsulates “fetch library, open modal, onSelect → filter mechanics + restore state” and leaves type-specific mapping to callers.
+   Done. useCreatorLoad('powers' | 'techniques' | 'items') encapsulates modal state and library data; power, technique, item creators use it. Type-specific handleLoad* and mechanic-filtering remain in each creator.
 
 ---
 
@@ -301,14 +299,36 @@ The codebase already has strong unification in several areas (e.g. `ValueStepper
 
 | Area | Current state | Unification opportunity |
 |------|----------------|--------------------------|
-| Creator save/load | Duplicated in 4 creators | CreatorSaveToolbar + useCreatorSave; document load pattern |
-| Creator layout | Similar but not shared | Optional CreatorLayout |
-| List headers | ListHeader + SortHeader, row style varies | Shared header row style or single ListHeader everywhere |
+| Creator save/load | ✅ CreatorSaveToolbar + useCreatorSave; load pattern + useCreatorLoad documented | Done |
+| Creator layout | ✅ CreatorLayout used by all four creators | Done |
+| List headers | ✅ ListHeader only (Option B); single source of truth | Done |
 | Sort | useSort everywhere | Keep |
-| List rows | GridListRow / ItemCard / ItemList | Keep; align action buttons and chips |
-| Ability/skill/defense/HP-EN | Shared components | Audit alignment and variants |
+| List rows | GridListRow / ItemCard / ItemList | Keep; action set documented in AGENT_GUIDE / UI_COMPONENT_REFERENCE |
+| Ability/skill/defense/HP-EN | ✅ Shared components; alignment documented in AGENT_GUIDE | Done |
 | Steppers, SectionHeader | Shared | Keep; document usage |
-| Calculations | formulas, calculations, skill-allocation, calculators | Keep; no inline formulas |
+| Calculations | formulas, calculations, skill-allocation, calculators | Keep; no inline formulas; sources documented in AGENT_GUIDE |
 | Enrichment & API | Centralized | Keep |
+
+### Unification audit compliance (by section)
+
+| Section | Recommendation | Status |
+|---------|----------------|--------|
+| 1.1 | CreatorLayout; CollapsibleSection for optional blocks | Done (CreatorLayout in all four; CollapsibleSection in creature-creator; power uses PowerAdvancedMechanics) |
+| 1.2 | Mechanic vs list rule; chips/formatters | Done (AGENT_GUIDE; useCreatorLoad; calculators) |
+| 1.3–1.5 | useCreatorSave, CreatorSaveToolbar, LoadFromLibraryModal, showPublicPrivate | Done |
+| 1.6 | derive*Display for creator preview | Done (creators use same calculators/display) |
+| 1.7 | Spot-check raw colors in creators | Done (semantic use only: energy/rarity/status; tokens elsewhere) |
+| 2.1 | Single list header | Done — **Option B**: ListHeader everywhere |
+| 2.2 | useSort | Keep |
+| 2.3 | Action buttons / list item actions | Done (documented in AGENT_GUIDE) |
+| 2.4 | SectionHeader; GridListRow expand/collapse | Keep; in use |
+| 2.5–2.6 | Empty/Loading/Filters; header tokens | Keep; ListHeader is single source (2.6 moot) |
+| 3.x | Allocation UI, PoweredMartialSlider, one-pass alignment | Done (AGENT_GUIDE Allocation UI; doc-only for layout tweaks) |
+| 4.x | ValueStepper enableHoldRepeat, SectionHeader, IconButton, design tokens, PageHeader | Done (documented; creators use CreatorLayout/PageHeader) |
+| 5.1 | Document math/calculators in AGENT_GUIDE | Done (Key Files: formulas.ts, calculations.ts, skill-allocation.ts, lib/calculators) |
+| 5.2–5.4 | Enrichment, API, security | Keep |
+| 6 Phases 1–3 | Save toolbar, header row, load rule, CreatorLayout, allocation audit, ListHeader, useCreatorLoad | Done |
+
+**Related audit:** Modals that contain lists (add-X, load, selection) are covered in a separate **Modal Unification Audit**: `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md`. That audit inventories list modals, compares layout/filter/empty/loading patterns, and recommends unifying logic and styles with Codex/Library (EmptyState/LoadingState, FilterSection, optional useModalListState, LoadCreatureModal refactor). See TASK-264.
 
 This audit should be used to create or update tasks in `AI_TASK_QUEUE.md` and to guide future PRs so that new code uses the same patterns and centralized sources of truth described above.

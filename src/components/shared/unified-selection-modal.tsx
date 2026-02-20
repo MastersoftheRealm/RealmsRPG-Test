@@ -18,13 +18,15 @@
 import { useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Modal, Button, IconButton, Spinner } from '@/components/ui';
+import { Modal, Button, IconButton } from '@/components/ui';
 import { 
   GridListRow, 
   SearchInput, 
-  SortHeader, 
+  ListHeader,
   FilterSection,
   QuantitySelector,
+  ListEmptyState as EmptyState,
+  LoadingState,
   type ColumnValue,
   type ChipData,
 } from '@/components/shared';
@@ -43,13 +45,15 @@ export interface SelectableItem {
   columns?: ColumnValue[];
   /** Chips/tags to show when expanded */
   chips?: ChipData[];
+  /** Labeled chip sections (Type, Requirements, etc.); overrides chips when set */
+  detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
   /** Badges to display */
   badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
   /** Whether this item is disabled (e.g., doesn't meet requirements) */
   disabled?: boolean;
   /** Warning message if disabled or has requirements */
   warningMessage?: string;
-  /** Any extra data attached to the item */
+  /** Any extra data attached to the item (e.g. raw Feat, Skill for onConfirm) */
   data?: unknown;
 }
 
@@ -262,42 +266,29 @@ export function UnifiedSelectionModal({
         
         {/* Column Headers (if columns defined) — must match row grid for alignment */}
         {columns.length > 0 && (
-          <div 
-            className="hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 border-b border-border-light text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wider rounded-t-lg"
-            style={gridColumns ? { gridTemplateColumns: `${gridColumns} 2.5rem` } : undefined}
-          >
-            {columns.map(col => (
-              col.sortable !== false ? (
-                <SortHeader
-                  key={col.key}
-                  label={col.label}
-                  col={col.key}
-                  sortState={sortState}
-                  onSort={handleSort}
-                />
-              ) : (
-                <span key={col.key}>{col.label}</span>
-              )
-            ))}
-            <span className="text-center" aria-hidden="true">{'\u00A0'}</span>
-          </div>
+          <ListHeader
+            columns={columns.map(col => ({
+              key: col.key,
+              label: col.label,
+              sortable: col.sortable !== false,
+            }))}
+            gridColumns={gridColumns}
+            sortState={sortState}
+            onSort={handleSort}
+            hasSelectionColumn
+          />
         )}
         
         {/* Items List */}
         <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0 border border-border-light rounded-lg">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Spinner size="md" />
-            </div>
+            <LoadingState message="Loading..." size="md" padding="md" />
           ) : filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-text-muted">
-              <p className="text-lg font-medium">
-                {emptyMessage || `No ${itemLabel}s found`}
-              </p>
-              {emptySubMessage && (
-                <p className="text-sm mt-1">{emptySubMessage}</p>
-              )}
-            </div>
+            <EmptyState
+              title={emptyMessage || `No ${itemLabel}s found`}
+              description={emptySubMessage}
+              size="sm"
+            />
           ) : (
             <div className="space-y-2 p-2 min-w-0">
               {filteredItems.map(item => {
@@ -312,6 +303,7 @@ export function UnifiedSelectionModal({
                         description={item.description}
                         columns={item.columns}
                         chips={item.chips}
+                        detailSections={item.detailSections}
                         badges={item.badges}
                         gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
                         selectable

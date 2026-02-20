@@ -15,11 +15,19 @@ import {
 } from '@/components/codex';
 import {
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
 } from '@/components/shared';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
+
+const SPECIES_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr';
+const SPECIES_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'type', label: 'TYPE' },
+  { key: 'sizes', label: 'SIZES' },
+  { key: '_desc', label: 'DESCRIPTION', sortable: false as const },
+];
 import { useSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
 
 interface SpeciesFilters {
@@ -274,12 +282,12 @@ export function CodexSpeciesTab() {
         </div>
       </FilterSection>
 
-      <div className="hidden lg:grid grid-cols-4 gap-4 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700">
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="SIZES" col="sizes" sortState={sortState} onSort={handleSort} />
-        <span>DESCRIPTION</span>
-      </div>
+      <ListHeader
+        columns={SPECIES_COLUMNS}
+        gridColumns={SPECIES_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

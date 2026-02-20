@@ -14,7 +14,7 @@ import {
 } from '@/components/codex';
 import {
   SearchInput,
-  SortHeader,
+  ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
@@ -24,6 +24,13 @@ import { useSort } from '@/hooks/use-sort';
 import { useParts } from '@/hooks';
 
 const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+const PART_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'category', label: 'CATEGORY' },
+  { key: 'energy', label: 'ENERGY', sortable: false as const },
+  { key: 'tp', label: 'TP', sortable: false as const },
+  { key: '_actions', label: '', sortable: false as const },
+];
 
 const CHIP_SECTION_STYLES: Record<string, string> = {
   default: 'bg-primary-50 border-primary-200 text-primary-700',
@@ -199,15 +206,12 @@ export function CodexPartsTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700 dark:text-primary-300"
-        style={{ gridTemplateColumns: PART_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
-        <span>ENERGY</span>
-        <span>TP</span>
-      </div>
+      <ListHeader
+        columns={PART_COLUMNS}
+        gridColumns={PART_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

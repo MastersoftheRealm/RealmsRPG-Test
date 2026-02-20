@@ -8,7 +8,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-  SortHeader,
+  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { SelectFilter, FilterSection } from '@/components/codex';
@@ -218,15 +218,18 @@ export function AdminEquipmentTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: EQUIPMENT_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="COST" col="cost" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="RARITY" col="rarity" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'category', label: 'CATEGORY' },
+          { key: 'cost', label: 'COST' },
+          { key: 'rarity', label: 'RARITY' },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns={EQUIPMENT_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />

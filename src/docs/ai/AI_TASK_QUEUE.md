@@ -6124,3 +6124,65 @@ Agents should **create new tasks** during their work when they discover addition
   description: |
     Equipment edit: category as dropdown listing all categories already used by equipment, with ability to type/add a new category. Reuse components where possible.
   notes: "Done 2026-02-18: Category is a select with — None —, all existing equipment categories, and 'Add new category...'; when Add new is selected, text input appears to type new category; categoryIsNew state keeps UX correct on edit."
+
+# Phase 3 Unification (from UNIFICATION_AUDIT_2026-02-20)
+
+- id: TASK-262
+  title: Single list header component — migrate SortHeader views to ListHeader
+  priority: low
+  status: done
+  created_at: 2026-02-20
+  created_by: agent
+  description: |
+    Phase 3 unification: Migrate all SortHeader-based list views to use ListHeader with column arrays so there is a single header component. SortHeaderRow already unifies styling; this task is the deeper option (one component, column defs per view).
+  related_files:
+    - src/components/shared/list-components.tsx
+    - src/components/shared/list-header.tsx
+    - Library/Codex/Admin tabs, feats-step, unified-selection-modal
+  acceptance_criteria:
+    - All list views use ListHeader (or document why SortHeaderRow remains for a given view).
+    - Same visual result; npm run build passes.
+  notes: "Done 2026-02-20: All SortHeaderRow+SortHeader usages replaced with ListHeader (columns, gridColumns, sortState, onSort). Codex tabs, Admin tabs, Library tabs, CodexPublicLibraryTab, feats-step, unified-selection-modal (hasSelectionColumn). SortHeader/SortHeaderRow retained in list-components for any one-off use; ListHeader is the single source for sortable list headers. npm run build passes."
+
+- id: TASK-263
+  title: Shared creator load helper — useCreatorLoad(type, options)
+  priority: low
+  status: done
+  created_at: 2026-02-20
+  created_by: agent
+  description: |
+    Phase 3 unification: Add a thin useCreatorLoad(type, options) that encapsulates "fetch library, open modal, onSelect → filter mechanics + restore state" and leaves type-specific mapping to callers. Reduces copy-paste in handleLoadPower / handleLoadTechnique / handleLoadItem.
+  related_files:
+    - src/hooks/use-creator-load.ts
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+  acceptance_criteria:
+    - Hook (or equivalent) used by power, technique, item creators where beneficial; mechanic-filtering rule still documented in AGENT_GUIDE.
+    - npm run build passes.
+  notes: "Done 2026-02-20: useCreatorLoad(type) added in use-creator-load.ts. Returns showLoadModal, setShowLoadModal, openLoadModal, closeLoadModal, items, isLoading, error. Power, technique, and item creators refactored to use it. Type-specific handleLoad* and mechanic-filtering remain in each creator per AGENT_GUIDE. npm run build passes."
+
+- id: TASK-264
+  title: Modal unification — implement audit recommendations (list modals)
+  priority: medium
+  status: done
+  created_at: 2026-02-20
+  created_by: agent
+  description: |
+    Implement recommendations from MODAL_UNIFICATION_AUDIT_2026-02-20.md. Unify logic, styles, and patterns across add-X modals, load modals, and selection modals; align with Codex/Library. Phases: (1) Use EmptyState/LoadingState in list modals; fix AddLibraryItemModal ListHeader wrapper; document list-modal shell in AGENT_GUIDE. (2) Use FilterSection in AddFeatModal/AddSkillModal; standardize padding/borders. (3) Refactor LoadCreatureModal to ListHeader+GridListRow+search; consider useModalListState and Add-X as UnifiedSelectionModal config.
+  related_files:
+    - src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/creator/LoadFromLibraryModal.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/shared/add-skill-modal.tsx
+    - src/app/(main)/creature-creator/LoadCreatureModal.tsx
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/hooks/use-modal-list-state.ts
+  acceptance_criteria:
+    - Phase 1: List modals use EmptyState/LoadingState where applicable; AddLibraryItemModal does not double-style ListHeader; AGENT_GUIDE documents list-modal layout pattern.
+    - Phase 2: AddFeatModal and AddSkillModal use FilterSection (or shared filter pattern); padding/border pattern consistent across list modals.
+    - Phase 3 (optional): LoadCreatureModal uses ListHeader+GridListRow+search; shared useModalListState or Add-X via UnifiedSelectionModal where feasible.
+    - npm run build passes.
+  notes: "Done 2026-02-20: Phase 1 — UnifiedSelectionModal, LoadFromLibraryModal, AddFeatModal, AddLibraryItemModal, AddSkillModal use EmptyState/LoadingState; AddLibraryItemModal ListHeader wrapper removed; AGENT_GUIDE list modal layout added. Phase 2 — AddFeatModal and AddSkillModal use FilterSection; padding standardized (px-4 py-3 border-border-light bg-surface-alt). Phase 3 — LoadCreatureModal refactored to ListHeader+GridListRow+SearchInput+EmptyState/LoadingState. useModalListState hook added; used in LoadFromLibraryModal and LoadCreatureModal. npm run build passes."

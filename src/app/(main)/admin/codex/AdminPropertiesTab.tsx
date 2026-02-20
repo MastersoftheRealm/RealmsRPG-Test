@@ -8,7 +8,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-  SortHeader,
+  ListHeader,
 } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { SelectFilter, FilterSection } from '@/components/codex';
@@ -233,16 +233,19 @@ export function AdminPropertiesTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: PROPERTY_GRID_COLUMNS }}
-      >
-        <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="TYPE" col="type" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="ITEM PTS" col="ip" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="TP" col="tp" sortState={sortState} onSort={handleSort} />
-        <SortHeader label="COST MULT" col="cost" sortState={sortState} onSort={handleSort} />
-      </div>
+      <ListHeader
+        columns={[
+          { key: 'name', label: 'NAME' },
+          { key: 'type', label: 'TYPE' },
+          { key: 'ip', label: 'ITEM PTS' },
+          { key: 'tp', label: 'TP' },
+          { key: 'cost', label: 'COST MULT' },
+          { key: '_actions', label: '', sortable: false as const },
+        ]}
+        gridColumns={PROPERTY_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
 
       {isLoading ? (
         <LoadingState />
