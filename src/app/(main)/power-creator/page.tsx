@@ -14,12 +14,12 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Wand2, Zap, Target, Info, FolderOpen } from 'lucide-react';
-import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
+import { Plus, Wand2, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePowerParts, useUserPowers, useAdmin, type PowerPart } from '@/hooks';
+import { usePowerParts, useUserPowers, useAdmin, useCreatorSave, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
+import { CreatorSaveToolbar } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { ValueStepper } from '@/components/shared';
@@ -110,11 +110,7 @@ function PowerCreatorContent() {
     endsOnActivation: false,
     sustain: 0,
   });
-  const [saving, setSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
 
   // Fetch power parts
   const { data: powerParts = [], isLoading, error } = usePowerParts();
@@ -355,52 +351,42 @@ function PowerCreatorContent() {
     );
   }, []);
 
-  const executeSave = async () => {
-    setSaving(true);
-    setSaveMessage(null);
-
-    try {
-      // Format parts for saving (combine regular, advanced, and mechanic parts)
-      const partsToSave = [
-        // User-selected non-mechanic parts from the main editor
-        ...selectedParts.map((sp) => ({
-          id: Number(sp.part.id),
-          name: sp.part.name,
-          op_1_lvl: sp.op_1_lvl,
-          op_2_lvl: sp.op_2_lvl,
-          op_3_lvl: sp.op_3_lvl,
-          applyDuration: sp.applyDuration,
-        })),
-        // Explicit advanced mechanic parts from the Advanced section
-        ...selectedAdvancedParts.map((ap) => ({
-          id: Number(ap.part.id),
-          name: ap.part.name,
-          op_1_lvl: ap.op_1_lvl,
-          op_2_lvl: ap.op_2_lvl,
-          op_3_lvl: ap.op_3_lvl,
-          applyDuration: ap.applyDuration,
-          isAdvanced: true, // Flag for identifying advanced mechanics
-        })),
-        // Auto-generated mechanic parts derived from action, damage, range, area, duration
-        // These are needed so that TP/EN costs can be re-derived outside the creator
-        ...mechanicParts.map((mp) => ({
-          id: mp.id,
-          name: mp.name,
-          op_1_lvl: mp.op_1_lvl,
-          op_2_lvl: mp.op_2_lvl,
-          op_3_lvl: mp.op_3_lvl,
-          applyDuration: mp.applyDuration,
-          isMechanic: true,
-        })),
-      ];
-
-      // Format damage
-      const damageToSave =
-        damage.type !== 'none' && damage.amount > 0
-          ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
-          : [];
-
-      const powerData = {
+  const getPayload = useCallback(() => {
+    const partsToSave = [
+      ...selectedParts.map((sp) => ({
+        id: Number(sp.part.id),
+        name: sp.part.name,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+        applyDuration: sp.applyDuration,
+      })),
+      ...selectedAdvancedParts.map((ap) => ({
+        id: Number(ap.part.id),
+        name: ap.part.name,
+        op_1_lvl: ap.op_1_lvl,
+        op_2_lvl: ap.op_2_lvl,
+        op_3_lvl: ap.op_3_lvl,
+        applyDuration: ap.applyDuration,
+        isAdvanced: true,
+      })),
+      ...mechanicParts.map((mp) => ({
+        id: mp.id,
+        name: mp.name,
+        op_1_lvl: mp.op_1_lvl,
+        op_2_lvl: mp.op_2_lvl,
+        op_3_lvl: mp.op_3_lvl,
+        applyDuration: mp.applyDuration,
+        isMechanic: true,
+      })),
+    ];
+    const damageToSave =
+      damage.type !== 'none' && damage.amount > 0
+        ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
+        : [];
+    return {
+      name: name.trim(),
+      data: {
         name: name.trim(),
         description: description.trim(),
         parts: partsToSave,
@@ -410,67 +396,47 @@ function PowerCreatorContent() {
         range,
         area,
         duration,
-        updatedAt: new Date(),
-      };
+      },
+    };
+  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, damage, actionType, isReaction, range, area, duration]);
 
-      if (saveTarget === 'public') {
-        await saveToPublicLibrary('powers', { ...powerData, createdAt: new Date().toISOString() });
-        setSaveMessage({ type: 'success', text: 'Power saved to public library!' });
-      } else {
-        const existing = await findLibraryItemByName('powers', name.trim());
-        await saveToLibrary('powers', { ...powerData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-        setSaveMessage({ type: 'success', text: 'Power saved successfully!' });
-      }
-      
-      // Reset form after short delay
-      setTimeout(() => {
-        setName('');
-        setDescription('');
-        setSelectedParts([]);
-        setSelectedAdvancedParts([]);
-        setActionType('basic');
-        setIsReaction(false);
-        setDamage({ amount: 0, size: 6, type: 'none' });
-        setRange({ steps: 0 });
-        setArea({ type: 'none', level: 1, applyDuration: false });
-        setDuration({
-          type: 'instant',
-          value: 1,
-          applyDuration: false,
-          focus: false,
-          noHarm: false,
-          endsOnActivation: false,
-          sustain: 0,
-        });
-        setSaveMessage(null);
-      }, 2000);
-    } catch (err) {
-      console.error('Error saving power:', err);
-      setSaveMessage({
-        type: 'error',
-        text: `Failed to save: ${(err as Error).message}`,
+  const save = useCreatorSave({
+    type: 'powers',
+    getPayload,
+    requirePublishConfirm: true,
+    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmDescription: (n) => `Are you sure you wish to publish this power "${n}" to the public library? All users will be able to see and use it.`,
+    successMessage: 'Power saved successfully!',
+    publicSuccessMessage: 'Power saved to public library!',
+    onSaveSuccess: () => {
+      setName('');
+      setDescription('');
+      setSelectedParts([]);
+      setSelectedAdvancedParts([]);
+      setActionType('basic');
+      setIsReaction(false);
+      setDamage({ amount: 0, size: 6, type: 'none' });
+      setRange({ steps: 0 });
+      setArea({ type: 'none', level: 1, applyDuration: false });
+      setDuration({
+        type: 'instant',
+        value: 1,
+        applyDuration: false,
+        focus: false,
+        noHarm: false,
+        endsOnActivation: false,
+        sustain: 0,
       });
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+  });
 
-  const handleSave = async () => {
-    if (!name.trim()) {
-      setSaveMessage({ type: 'error', text: 'Please enter a power name' });
-      return;
-    }
+  const handleSave = useCallback(async () => {
     if (!user) {
       setShowLoginPrompt(true);
       return;
     }
-    // Show confirmation for public library saves
-    if (saveTarget === 'public') {
-      setShowPublishConfirm(true);
-      return;
-    }
-    executeSave();
-  };
+    await save.handleSave();
+  }, [user, save]);
 
   const handleReset = useCallback(() => {
     setName('');
@@ -491,14 +457,14 @@ function PowerCreatorContent() {
       endsOnActivation: false,
       sustain: 0,
     });
-    setSaveMessage(null);
+    save.setSaveMessage(null);
     // Clear localStorage cache
     try {
       localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
     } catch (e) {
       console.error('Failed to clear power creator cache:', e);
     }
-  }, []);
+  }, [save]);
 
   // Load a power from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -630,9 +596,9 @@ function PowerCreatorContent() {
       });
     }
     
-    setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
-    setTimeout(() => setSaveMessage(null), 2000);
-  }, [powerParts, handleReset]);
+    save.setSaveMessage({ type: 'success', text: 'Power loaded successfully!' });
+    setTimeout(() => save.setSaveMessage(null), 2000);
+  }, [powerParts, handleReset, save]);
 
   // Load power for editing from URL parameter (?edit=<id>)
   useEffect(() => {
@@ -682,53 +648,17 @@ function PowerCreatorContent() {
         title="Power Creator"
         description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
         actions={
-          <>
-            {isAdmin && (
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('private')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  My library
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('public')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  Public library
-                </button>
-              </div>
-            )}
-            <Button
-              variant="secondary"
-              onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-              title={user ? "Load from library" : "Log in to load from library"}
-            >
-              <FolderOpen className="w-5 h-5" />
-              Load
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={handleReset}
-            >
-              Reset
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving || !name.trim()}
-              isLoading={saving}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          </>
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
+            onReset={handleReset}
+            saving={save.saving}
+            saveDisabled={!name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
         }
         className="mb-6"
       />
@@ -1082,11 +1012,11 @@ function PowerCreatorContent() {
             ] : undefined}
           >
             {/* Save Message */}
-            {saveMessage && (
+            {save.saveMessage && (
               <Alert 
-                variant={saveMessage.type === 'success' ? 'success' : 'danger'}
+                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
               >
-                {saveMessage.text}
+                {save.saveMessage.text}
               </Alert>
             )}
           </CreatorSummaryPanel>
@@ -1103,14 +1033,11 @@ function PowerCreatorContent() {
 
       {/* Publish Confirmation Modal */}
       <ConfirmActionModal
-        isOpen={showPublishConfirm}
-        onClose={() => setShowPublishConfirm(false)}
-        onConfirm={() => {
-          setShowPublishConfirm(false);
-          executeSave();
-        }}
-        title="Publish to Public Library"
-        description={`Are you sure you wish to publish this power "${name.trim()}" to the public library? All users will be able to see and use it.`}
+        isOpen={save.showPublishConfirm}
+        onClose={() => save.setShowPublishConfirm(false)}
+        onConfirm={() => save.confirmPublish()}
+        title={save.publishConfirmTitle}
+        description={save.publishConfirmDescription?.(name.trim()) ?? ''}
         confirmLabel="Publish"
         icon="publish"
       />

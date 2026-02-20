@@ -86,6 +86,8 @@ export {
   deriveItemDisplay,
   formatProficiencyChip,
   isGeneralProperty,
+  isMechanicProperty,
+  filterSavedItemPropertiesForList,
   type ItemPropertyPayload,
   type ItemCostResult,
   type RarityResult,

@@ -7,6 +7,8 @@
 // Auth
 export { useAuth, useAuthStore } from './use-auth';
 export { useAdmin } from './use-admin';
+export { useCreatorSave } from './use-creator-save';
+export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
 export { useProfile } from './use-profile';
 
 // Campaigns

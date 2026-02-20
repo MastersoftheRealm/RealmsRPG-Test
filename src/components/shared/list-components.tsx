@@ -9,7 +9,7 @@
  * NOTE: SearchInput is re-exported from ui/search-input.tsx for backward compatibility
  */
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ChevronDown, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +23,34 @@ export interface SearchInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+}
+
+// =============================================================================
+// Sort Header Row — Unified container for sortable list headers
+// =============================================================================
+// Use this wrapper so all list views (Codex, Library, Admin, modals) share the
+// same header row styling as ListHeader: background, padding, dark mode.
+// Pass gridTemplateColumns to match your GridListRow columns.
+
+export interface SortHeaderRowProps {
+  children: ReactNode;
+  /** Grid template columns CSS (e.g. '1fr 0.8fr 0.8fr') — should match list rows */
+  gridTemplateColumns?: string;
+  className?: string;
+}
+
+const SORT_HEADER_ROW_CLASS =
+  'hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg mb-2 mx-1 text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide';
+
+export function SortHeaderRow({ children, gridTemplateColumns, className }: SortHeaderRowProps) {
+  return (
+    <div
+      className={cn(SORT_HEADER_ROW_CLASS, className)}
+      style={gridTemplateColumns ? { gridTemplateColumns } : undefined}
+    >
+      {children}
+    </div>
+  );
 }
 
 // =============================================================================
@@ -54,8 +82,8 @@ export function SortHeader({
     <button
       onClick={() => onSort(col)}
       className={cn(
-        'flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wide text-text-secondary hover:text-text-primary transition-colors',
-        isActive && 'text-primary-600',
+        'flex items-center gap-1 text-left text-text-secondary hover:text-primary-800 dark:hover:text-primary-200 transition-colors',
+        isActive && 'text-primary-800 dark:text-primary-200',
         className
       )}
     >

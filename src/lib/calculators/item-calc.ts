@@ -107,6 +107,40 @@ export function isGeneralProperty(prop: ItemPropertyPayload | ItemProperty): boo
 }
 
 /**
+ * Check if a property is mechanic-only (handled by dedicated UI, not the "add property" list).
+ * Use when loading saved items: only non-mechanic properties should go into the selectable list
+ * to avoid duplicating them (they already appear in damage, DR, range, etc.).
+ */
+export function isMechanicProperty(prop: ItemPropertyPayload | ItemProperty | { mechanic?: boolean }): boolean {
+  if (!prop || typeof prop !== 'object') return false;
+  return (prop as ItemProperty).mechanic === true;
+}
+
+/**
+ * Filter saved item properties to only those that belong in the user-selectable list.
+ * Excludes mechanic properties so they are not duplicated on load (mechanic state is
+ * restored from dedicated fields: damage, damageReduction, rangeLevel, etc.).
+ * Reuse this pattern in creators: when loading, restore "list" items from saved data
+ * only for non-mechanic entries; mechanic entries are restored from their dedicated UI state.
+ */
+export function filterSavedItemPropertiesForList(
+  savedProperties: Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
+  propertiesDb: ItemProperty[]
+): Array<{ property: ItemProperty; op_1_lvl: number }> {
+  const result: Array<{ property: ItemProperty; op_1_lvl: number }> = [];
+  for (const saved of savedProperties || []) {
+    const match = findByIdOrName(propertiesDb, { id: saved.id, name: saved.name });
+    if (match && !isMechanicProperty(match)) {
+      result.push({
+        property: match,
+        op_1_lvl: saved.op_1_lvl ?? 0,
+      });
+    }
+  }
+  return result;
+}
+
+/**
  * Compute number of damage dice splits needed.
  */
 export function computeSplits(diceAmt: number, dieSize: number): number {

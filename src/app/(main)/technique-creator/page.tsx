@@ -14,14 +14,13 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info, FolderOpen } from 'lucide-react';
-import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
+import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTechniqueParts, useUserTechniques, useUserItems, useAdmin, type TechniquePart } from '@/hooks';
+import { useTechniqueParts, useUserTechniques, useUserItems, useAdmin, useCreatorSave, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer, PageHeader } from '@/components/ui';
-import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
+import { LoadFromLibraryModal, CreatorSaveToolbar } from '@/components/creator';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
@@ -358,11 +357,7 @@ function TechniqueCreatorContent() {
   const [isReaction, setIsReaction] = useState(false);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
   const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
-  const [saving, setSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
 
   // Fetch technique parts
   const { data: techniqueParts = [], isLoading, error } = useTechniqueParts();
@@ -537,40 +532,27 @@ function TechniqueCreatorContent() {
     );
   }, []);
 
-  const executeSave = async () => {
-    setSaving(true);
-    setSaveMessage(null);
-
-    try {
-      // Format parts for saving
-      // Include both user-selected parts and auto-generated mechanic parts
-      // so that TP/EN costs can be correctly recomputed outside the creator.
-      const partsToSave = [
-        // Explicit technique parts chosen in the UI
-        ...selectedParts.map((sp) => ({
-          id: Number(sp.part.id),
-          name: sp.part.name,
-          op_1_lvl: sp.op_1_lvl,
-          op_2_lvl: sp.op_2_lvl,
-          op_3_lvl: sp.op_3_lvl,
-        })),
-        // Mechanic parts derived from action type, weapon, and damage
-        ...mechanicParts.map((mp) => ({
-          id: mp.id,
-          name: mp.name,
-          op_1_lvl: mp.op_1_lvl,
-          op_2_lvl: mp.op_2_lvl,
-          op_3_lvl: mp.op_3_lvl,
-        })),
-      ];
-
-      // Format damage
-      const damageToSave =
-        damage.amount > 0
-          ? [{ amount: damage.amount, size: damage.size }]
-          : [];
-
-      const techniqueData = {
+  const getPayload = useCallback(() => {
+    const partsToSave = [
+      ...selectedParts.map((sp) => ({
+        id: Number(sp.part.id),
+        name: sp.part.name,
+        op_1_lvl: sp.op_1_lvl,
+        op_2_lvl: sp.op_2_lvl,
+        op_3_lvl: sp.op_3_lvl,
+      })),
+      ...mechanicParts.map((mp) => ({
+        id: mp.id,
+        name: mp.name,
+        op_1_lvl: mp.op_1_lvl,
+        op_2_lvl: mp.op_2_lvl,
+        op_3_lvl: mp.op_3_lvl,
+      })),
+    ];
+    const damageToSave = damage.amount > 0 ? [{ amount: damage.amount, size: damage.size }] : [];
+    return {
+      name: name.trim(),
+      data: {
         name: name.trim(),
         description: description.trim(),
         parts: partsToSave,
@@ -578,53 +560,34 @@ function TechniqueCreatorContent() {
         weapon: Number(weapon.id) > 0 ? weapon : null,
         actionType,
         isReaction,
-        updatedAt: new Date(),
-      };
+      },
+    };
+  }, [name, description, selectedParts, mechanicParts, damage, weapon, actionType, isReaction]);
 
-      if (saveTarget === 'public') {
-        await saveToPublicLibrary('techniques', { ...techniqueData, createdAt: new Date().toISOString() });
-        setSaveMessage({ type: 'success', text: 'Technique saved to public library!' });
-      } else {
-        const existing = await findLibraryItemByName('techniques', name.trim());
-        await saveToLibrary('techniques', { ...techniqueData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-        setSaveMessage({ type: 'success', text: 'Technique saved successfully!' });
-      }
-      
-      // Reset form after short delay
-      setTimeout(() => {
-        setName('');
-        setDescription('');
-        setSelectedParts([]);
-        setDamage({ amount: 0, size: 6, type: 'none' });
-        setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
-        setSaveMessage(null);
-      }, 2000);
-    } catch (err) {
-      console.error('Error saving technique:', err);
-      setSaveMessage({
-        type: 'error',
-        text: `Failed to save: ${(err as Error).message}`,
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+  const save = useCreatorSave({
+    type: 'techniques',
+    getPayload,
+    requirePublishConfirm: true,
+    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmDescription: (n) => `Are you sure you wish to publish this technique "${n}" to the public library? All users will be able to see and use it.`,
+    successMessage: 'Technique saved successfully!',
+    publicSuccessMessage: 'Technique saved to public library!',
+    onSaveSuccess: () => {
+      setName('');
+      setDescription('');
+      setSelectedParts([]);
+      setDamage({ amount: 0, size: 6, type: 'none' });
+      setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
+    },
+  });
 
-  const handleSave = async () => {
-    if (!name.trim()) {
-      setSaveMessage({ type: 'error', text: 'Please enter a technique name' });
-      return;
-    }
+  const handleSave = useCallback(async () => {
     if (!user) {
       setShowLoginPrompt(true);
       return;
     }
-    if (saveTarget === 'public') {
-      setShowPublishConfirm(true);
-      return;
-    }
-    executeSave();
-  };
+    await save.handleSave();
+  }, [user, save]);
 
   const handleReset = useCallback(() => {
     setName('');
@@ -634,14 +597,14 @@ function TechniqueCreatorContent() {
     setIsReaction(false);
     setDamage({ amount: 0, size: 6, type: 'none' });
     setWeapon(DEFAULT_WEAPON_OPTIONS[0]);
-    setSaveMessage(null);
+    save.setSaveMessage(null);
     // Clear localStorage cache
     try {
       localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
     } catch (e) {
       console.error('Failed to clear technique creator cache:', e);
     }
-  }, []);
+  }, [save]);
 
   // Load a technique from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -709,9 +672,9 @@ function TechniqueCreatorContent() {
       setDamage({ amount: 0, size: 6, type: 'none' });
     }
     
-    setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
-    setTimeout(() => setSaveMessage(null), 2000);
-  }, [techniqueParts, allWeaponOptions, handleReset]);
+    save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
+    setTimeout(() => save.setSaveMessage(null), 2000);
+  }, [techniqueParts, allWeaponOptions, handleReset, save]);
 
   // Load technique for editing from URL parameter (?edit=<id>)
   useEffect(() => {
@@ -762,51 +725,17 @@ function TechniqueCreatorContent() {
         description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
         actions={
           <>
-            {isAdmin && (
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('private')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  My library
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('public')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  Public library
-                </button>
-              </div>
-            )}
-            <Button
-              variant="secondary"
-              onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-              title={user ? "Load from library" : "Log in to load from library"}
-            >
-              <FolderOpen className="w-5 h-5" />
-              Load
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={handleReset}
-            >
-              Reset
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving || !name.trim()}
-              isLoading={saving}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
+            <CreatorSaveToolbar
+              saveTarget={save.saveTarget}
+              onSaveTargetChange={save.setSaveTarget}
+              onSave={handleSave}
+              onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
+              onReset={handleReset}
+              saving={save.saving}
+              saveDisabled={!name.trim()}
+              showPublicPrivate={isAdmin}
+              user={user}
+            />
           </>
         }
         className="mb-6"
@@ -1011,11 +940,11 @@ function TechniqueCreatorContent() {
             ] : undefined}
           >
             {/* Save Message */}
-            {saveMessage && (
+            {save.saveMessage && (
               <Alert 
-                variant={saveMessage.type === 'success' ? 'success' : 'danger'}
+                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
               >
-                {saveMessage.text}
+                {save.saveMessage.text}
               </Alert>
             )}
           </CreatorSummaryPanel>
@@ -1032,14 +961,11 @@ function TechniqueCreatorContent() {
 
       {/* Publish Confirmation Modal */}
       <ConfirmActionModal
-        isOpen={showPublishConfirm}
-        onClose={() => setShowPublishConfirm(false)}
-        onConfirm={() => {
-          setShowPublishConfirm(false);
-          executeSave();
-        }}
-        title="Publish to Public Library"
-        description={`Are you sure you wish to publish this technique "${name.trim()}" to the public library? All users will be able to see and use it.`}
+        isOpen={save.showPublishConfirm}
+        onClose={() => save.setShowPublishConfirm(false)}
+        onConfirm={() => save.confirmPublish()}
+        title={save.publishConfirmTitle}
+        description={save.publishConfirmDescription?.(name.trim()) ?? ''}
         confirmLabel="Publish"
         icon="publish"
       />

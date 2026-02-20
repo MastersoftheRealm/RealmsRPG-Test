@@ -81,6 +81,7 @@ export type { AddSubSkillModalProps, CharacterSkillForSubModal } from './add-sub
 export {
   SearchInput,
   SortHeader,
+  SortHeaderRow,
   FilterSection,
   EmptyState as ListEmptyState,
   LoadingState,
@@ -89,6 +90,7 @@ export {
 export type { 
   SearchInputProps, 
   SortHeaderProps, 
+  SortHeaderRowProps,
   FilterSectionProps,
   EmptyStateProps,
   ErrorDisplayProps,

@@ -8,11 +8,10 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import { cn } from '@/lib/utils';
 import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
-import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, useCreatorSave, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
 import {
   transformUserPowerToDisplayItem,
   transformUserTechniqueToDisplayItem,
@@ -38,7 +37,7 @@ import {
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
 import { Button, Input, Select, PageContainer, PageHeader, Textarea, Alert } from '@/components/ui';
-import { Skull, FolderOpen } from 'lucide-react';
+import { Skull } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_SIZES, CONDITIONS } from '@/lib/game/creator-constants';
 import {
@@ -47,6 +46,7 @@ import {
   ArchetypeSelector,
   CollapsibleSection,
   CreatorSummaryPanel,
+  CreatorSaveToolbar,
   type ArchetypeType,
 } from '@/components/creator';
 import type { AbilityName } from '@/types';
@@ -94,15 +94,11 @@ function CreatureCreatorContent() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [creature, setCreature] = useState<CreatureState>(initialState);
-  const [saving, setSaving] = useState(false);
-  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [showFeatModal, setShowFeatModal] = useState(false);
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
   
   // Transform user library data to DisplayItem[] for modals
@@ -395,50 +391,28 @@ function CreatureCreatorContent() {
     };
   }, [creature, featPointsMap]);
 
-  // Save creature to user library (Prisma)
-  const executeSave = async () => {
-    setSaving(true);
-    setSaveMessage(null);
-    try {
-      const creatureData = {
-        ...creature,
-        updatedAt: new Date().toISOString(),
-      };
+  const getPayload = useCallback(() => ({
+    name: creature.name.trim(),
+    data: { ...creature },
+  }), [creature]);
 
-      if (saveTarget === 'public') {
-        await saveToPublicLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() });
-        setSaveMessage({ type: 'success', text: 'Creature saved to public library!' });
-      } else {
-        const existing = await findLibraryItemByName('creatures', creature.name.trim());
-        await saveToLibrary('creatures', { ...creatureData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-        setSaveMessage({ type: 'success', text: 'Creature saved!' });
-      }
-    } catch (err) {
-      console.error('Error saving creature:', err);
-      setSaveMessage({
-        type: 'error',
-        text: 'Failed to save creature. Please try again.',
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+  const save = useCreatorSave({
+    type: 'creatures',
+    getPayload,
+    requirePublishConfirm: true,
+    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmDescription: (n) => `Are you sure you wish to publish this creature "${n}" to the public library? All users will be able to see and use it.`,
+    successMessage: 'Creature saved!',
+    publicSuccessMessage: 'Creature saved to public library!',
+  });
 
-  const handleSave = async () => {
-    if (!creature.name.trim()) {
-      setSaveMessage({ type: 'error', text: 'Please enter a creature name.' });
-      return;
-    }
+  const handleSave = useCallback(async () => {
     if (!user) {
       setShowLoginPrompt(true);
       return;
     }
-    if (saveTarget === 'public') {
-      setShowPublishConfirm(true);
-      return;
-    }
-    executeSave();
-  };
+    await save.handleSave();
+  }, [user, save]);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -495,53 +469,17 @@ function CreatureCreatorContent() {
         title="Creature Creator"
         description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
         actions={
-          <>
-            {isAdmin && (
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('private')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  My library
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('public')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  Public library
-                </button>
-              </div>
-            )}
-            <Button
-              variant="secondary"
-              onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-              title={user ? "Load from library" : "Log in to load from library"}
-            >
-              <FolderOpen className="w-5 h-5" />
-              Load
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={handleReset}
-            >
-              Reset
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              isLoading={saving}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          </>
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
+            onReset={handleReset}
+            saving={save.saving}
+            saveDisabled={!creature.name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
         }
         className="mb-6"
       />
@@ -1057,9 +995,9 @@ function CreatureCreatorContent() {
               { label: 'Languages', items: creature.languages },
             ]}
           >
-            {saveMessage && (
-              <Alert variant={saveMessage.type === 'success' ? 'success' : 'danger'}>
-                {saveMessage.text}
+            {save.saveMessage && (
+              <Alert variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}>
+                {save.saveMessage.text}
               </Alert>
             )}
           </CreatorSummaryPanel>
@@ -1174,14 +1112,11 @@ function CreatureCreatorContent() {
 
       {/* Publish Confirmation Modal */}
       <ConfirmActionModal
-        isOpen={showPublishConfirm}
-        onClose={() => setShowPublishConfirm(false)}
-        onConfirm={() => {
-          setShowPublishConfirm(false);
-          executeSave();
-        }}
-        title="Publish to Public Library"
-        description={`Are you sure you wish to publish this creature "${creature.name.trim()}" to the public library? All users will be able to see and use it.`}
+        isOpen={save.showPublishConfirm}
+        onClose={() => save.setShowPublishConfirm(false)}
+        onConfirm={() => save.confirmPublish()}
+        title={save.publishConfirmTitle}
+        description={save.publishConfirmDescription?.(creature.name.trim()) ?? ''}
         confirmLabel="Publish"
         icon="publish"
       />

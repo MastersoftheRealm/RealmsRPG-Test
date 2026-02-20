@@ -15,21 +15,21 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins, FolderOpen } from 'lucide-react';
+import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useItemProperties, useUserItems, type ItemProperty } from '@/hooks';
+import { useItemProperties, useUserItems, useAdmin, useCreatorSave, type ItemProperty } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
-import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
+import { LoadFromLibraryModal, CreatorSaveToolbar } from '@/components/creator';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
-import { useAdmin } from '@/hooks';
-import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
 import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
   isGeneralProperty,
+  isMechanicProperty,
+  filterSavedItemPropertiesForList,
   type ItemPropertyPayload,
   type ItemDamage,
 } from '@/lib/calculators';
@@ -366,11 +366,7 @@ function ItemCreatorContent() {
   const [armamentType, setArmamentType] = useState<ArmamentType>('Weapon');
   const [selectedProperties, setSelectedProperties] = useState<SelectedProperty[]>([]);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 1, size: 4, type: 'slashing' });
-  const [saving, setSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [isTwoHanded, setIsTwoHanded] = useState(false);
   const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
   
@@ -741,9 +737,8 @@ function ItemCreatorContent() {
     const selectableProps = itemProperties.filter((p: ItemProperty) => {
       // Exclude general properties
       if (isGeneralProperty(p)) return false;
-      // Exclude mechanic properties; these are handled automatically by the UI logic
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((p as any).mechanic) return false;
+      // Exclude mechanic properties; these are handled by dedicated UI (damage, DR, range, etc.)
+      if (isMechanicProperty(p)) return false;
       // Include properties that match the armament type or have no type specified
       const propType = (p.type || '').toLowerCase();
       if (!propType || propType === 'general') return true;
@@ -775,114 +770,72 @@ function ItemCreatorContent() {
     );
   }, []);
 
-  const executeSave = async () => {
-    setSaving(true);
-    setSaveMessage(null);
+  const getPayload = useCallback(() => {
+    const propertiesToSave = propertiesPayload.map((pp) => ({
+      id: pp.id,
+      name: pp.name,
+      op_1_lvl: pp.op_1_lvl,
+    }));
+    const damageToSave: ItemDamage[] =
+      armamentType === 'Weapon' && damage.type !== 'none' && damage.amount > 0
+        ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
+        : [];
+    const itemData = {
+      name: name.trim(),
+      description: description.trim(),
+      type: armamentType.toLowerCase(),
+      properties: propertiesToSave,
+      damage: damageToSave,
+      costs,
+      rarity,
+      ...(armamentType === 'Weapon' && {
+        isTwoHanded,
+        rangeLevel,
+        abilityRequirement: abilityRequirement
+          ? { id: abilityRequirement.id, name: abilityRequirement.name, level: abilityRequirement.level }
+          : null,
+      }),
+      ...(armamentType === 'Armor' && {
+        damageReduction,
+        agilityReduction,
+        criticalRangeIncrease,
+        abilityRequirement: abilityRequirement
+          ? { id: abilityRequirement.id, name: abilityRequirement.name, level: abilityRequirement.level }
+          : null,
+      }),
+      ...(armamentType === 'Shield' && {
+        isTwoHanded,
+        shieldDR: { amount: shieldDR.amount, size: shieldDR.size },
+        hasShieldDamage,
+        shieldDamage: hasShieldDamage ? { amount: shieldDamage.amount, size: shieldDamage.size } : null,
+      }),
+    };
+    return { name: name.trim(), data: itemData };
+  }, [name, description, armamentType, propertiesPayload, damage, costs, rarity, isTwoHanded, rangeLevel, abilityRequirement, damageReduction, agilityReduction, criticalRangeIncrease, shieldDR, hasShieldDamage, shieldDamage]);
 
-    try {
-      // Format ALL properties for saving (including auto-generated ones from propertiesPayload)
-      // This fixes a critical bug where auto-generated properties (Weapon Damage, Two-Handed,
-      // Range, Armor Base, Shield Amount, etc.) were not being saved, causing cost mismatches
-      // when viewing items outside the creator.
-      const propertiesToSave = propertiesPayload.map((pp) => ({
-        id: pp.id,
-        name: pp.name,
-        op_1_lvl: pp.op_1_lvl,
-      }));
+  const save = useCreatorSave({
+    type: 'items',
+    getPayload,
+    requirePublishConfirm: true,
+    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmDescription: (n) => `Are you sure you wish to publish this ${armamentType.toLowerCase()} "${n}" to the public library? All users will be able to see and use it.`,
+    successMessage: 'Item saved successfully!',
+    publicSuccessMessage: 'Item saved to public library!',
+    onSaveSuccess: () => {
+      setName('');
+      setDescription('');
+      setSelectedProperties([]);
+      setDamage({ amount: 1, size: 6, type: 'slashing' });
+    },
+  });
 
-      // Format damage
-      const damageToSave: ItemDamage[] =
-        armamentType === 'Weapon' && damage.type !== 'none' && damage.amount > 0
-          ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
-          : [];
-
-      // Prepare item data - include ALL configuration fields
-      const itemData = {
-        name: name.trim(),
-        description: description.trim(),
-        type: armamentType.toLowerCase(),
-        properties: propertiesToSave,
-        damage: damageToSave,
-        costs: costs,
-        rarity: rarity,
-        updatedAt: new Date(),
-        // Weapon-specific fields
-        ...(armamentType === 'Weapon' && {
-          isTwoHanded,
-          rangeLevel,
-          abilityRequirement: abilityRequirement
-            ? {
-                id: abilityRequirement.id,
-                name: abilityRequirement.name,
-                level: abilityRequirement.level,
-              }
-            : null,
-        }),
-        // Armor-specific fields
-        ...(armamentType === 'Armor' && {
-          damageReduction,
-          agilityReduction,
-          criticalRangeIncrease,
-          abilityRequirement: abilityRequirement
-            ? {
-                id: abilityRequirement.id,
-                name: abilityRequirement.name,
-                level: abilityRequirement.level,
-              }
-            : null,
-        }),
-        // Shield-specific fields
-        ...(armamentType === 'Shield' && {
-          isTwoHanded,
-          shieldDR: { amount: shieldDR.amount, size: shieldDR.size },
-          hasShieldDamage,
-          shieldDamage: hasShieldDamage ? { amount: shieldDamage.amount, size: shieldDamage.size } : null,
-        }),
-      };
-
-      if (saveTarget === 'public') {
-        await saveToPublicLibrary('items', { ...itemData, createdAt: new Date().toISOString() });
-        setSaveMessage({ type: 'success', text: 'Item saved to public library!' });
-      } else {
-        const existing = await findLibraryItemByName('items', name.trim());
-        await saveToLibrary('items', { ...itemData, createdAt: new Date().toISOString() }, existing ? { existingId: existing.id } : undefined);
-        setSaveMessage({ type: 'success', text: 'Item saved successfully!' });
-      }
-      
-      // Reset form after short delay
-      setTimeout(() => {
-        setName('');
-        setDescription('');
-        setSelectedProperties([]);
-        setDamage({ amount: 1, size: 6, type: 'slashing' });
-        setSaveMessage(null);
-      }, 2000);
-    } catch (err) {
-      console.error('Error saving item:', err);
-      setSaveMessage({
-        type: 'error',
-        text: `Failed to save: ${(err as Error).message}`,
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!name.trim()) {
-      setSaveMessage({ type: 'error', text: 'Please enter an item name' });
-      return;
-    }
+  const handleSave = useCallback(async () => {
     if (!user) {
       setShowLoginPrompt(true);
       return;
     }
-    if (saveTarget === 'public') {
-      setShowPublishConfirm(true);
-      return;
-    }
-    executeSave();
-  };
+    await save.handleSave();
+  }, [user, save]);
 
   const handleReset = useCallback(() => {
     setName('');
@@ -899,14 +852,14 @@ function ItemCreatorContent() {
     setHasShieldDamage(false);
     setShieldDamage({ amount: 1, size: 4 });
     setAbilityRequirement(null);
-    setSaveMessage(null);
+    save.setSaveMessage(null);
     // Clear localStorage cache
     try {
       localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
     } catch (e) {
       console.error('Failed to clear item creator cache:', e);
     }
-  }, []);
+  }, [save]);
 
   // Load an item from the library
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -926,24 +879,12 @@ function ItemCreatorContent() {
     const loadedType = typeMap[item.type?.toLowerCase()] || 'Weapon';
     setArmamentType(loadedType);
     
-    // Load properties - match by id or name
+    // Load properties - only non-mechanic ones go in the list (mechanic are in damage, DR, etc.)
     if (item.properties && Array.isArray(item.properties) && itemProperties.length > 0) {
-      const loadedProperties: SelectedProperty[] = [];
-      
-      for (const prop of item.properties) {
-        // Find matching property from database
-        const matchingProp = itemProperties.find(
-          (p: ItemProperty) => p.id === String(prop.id) || p.name === prop.name
-        );
-        
-        if (matchingProp) {
-          loadedProperties.push({
-            property: matchingProp,
-            op_1_lvl: prop.op_1_lvl || 0,
-          });
-        }
-      }
-      
+      const loadedProperties = filterSavedItemPropertiesForList(
+        item.properties as Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
+        itemProperties
+      );
       setSelectedProperties(loadedProperties);
     } else {
       setSelectedProperties([]);
@@ -1039,53 +980,17 @@ function ItemCreatorContent() {
         title="Armament Creator"
         description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
         actions={
-          <>
-            {isAdmin && (
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('private')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'private' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  My library
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSaveTarget('public')}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium transition-colors',
-                    saveTarget === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
-                  )}
-                >
-                  Public library
-                </button>
-              </div>
-            )}
-            <Button
-              variant="secondary"
-              onClick={() => user ? setShowLoadModal(true) : setShowLoginPrompt(true)}
-              title={user ? "Load from library" : "Log in to load from library"}
-            >
-              <FolderOpen className="w-5 h-5" />
-              Load
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={handleReset}
-            >
-              Reset
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving || !name.trim()}
-              isLoading={saving}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          </>
+          <CreatorSaveToolbar
+            saveTarget={save.saveTarget}
+            onSaveTargetChange={save.setSaveTarget}
+            onSave={handleSave}
+            onLoad={() => (user ? setShowLoadModal(true) : setShowLoginPrompt(true))}
+            onReset={handleReset}
+            saving={save.saving}
+            saveDisabled={!name.trim()}
+            showPublicPrivate={isAdmin}
+            user={user}
+          />
         }
         className="mb-6"
       />
@@ -1525,11 +1430,11 @@ function ItemCreatorContent() {
             ] : undefined}
           >
             {/* Save Message */}
-            {saveMessage && (
+            {save.saveMessage && (
               <Alert 
-                variant={saveMessage.type === 'success' ? 'success' : 'danger'}
+                variant={save.saveMessage.type === 'success' ? 'success' : 'danger'}
               >
-                {saveMessage.text}
+                {save.saveMessage.text}
               </Alert>
             )}
           </CreatorSummaryPanel>
@@ -1549,14 +1454,11 @@ function ItemCreatorContent() {
 
       {/* Publish Confirmation Modal */}
       <ConfirmActionModal
-        isOpen={showPublishConfirm}
-        onClose={() => setShowPublishConfirm(false)}
-        onConfirm={() => {
-          setShowPublishConfirm(false);
-          executeSave();
-        }}
-        title="Publish to Public Library"
-        description={`Are you sure you wish to publish this ${armamentType.toLowerCase()} "${name.trim()}" to the public library? All users will be able to see and use it.`}
+        isOpen={save.showPublishConfirm}
+        onClose={() => save.setShowPublishConfirm(false)}
+        onConfirm={() => save.confirmPublish()}
+        title={save.publishConfirmTitle}
+        description={save.publishConfirmDescription?.(name.trim()) ?? ''}
         confirmLabel="Publish"
         icon="publish"
       />

@@ -18,6 +18,7 @@ import {
 import {
   SearchInput,
   SortHeader,
+  SortHeaderRow,
   LoadingState,
   ErrorDisplay as ErrorState,
   GridListRow,
@@ -314,17 +315,14 @@ export function CodexFeatsTab() {
         </div>
       </FilterSection>
 
-      <div
-        className="hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light rounded-t-lg font-semibold text-sm text-primary-700"
-        style={{ gridTemplateColumns: FEAT_GRID_COLUMNS }}
-      >
+      <SortHeaderRow gridTemplateColumns={FEAT_GRID_COLUMNS}>
         <SortHeader label="NAME" col="name" sortState={sortState} onSort={handleSort} />
         <SortHeader label="REQ. LEVEL" col="lvl_req" sortState={sortState} onSort={handleSort} />
         <SortHeader label="CATEGORY" col="category" sortState={sortState} onSort={handleSort} />
         <SortHeader label="ABILITY" col="ability" sortState={sortState} onSort={handleSort} />
         <SortHeader label="RECOVERY" col="rec_period" sortState={sortState} onSort={handleSort} />
         <SortHeader label="USES" col="uses_per_rec" sortState={sortState} onSort={handleSort} />
-      </div>
+      </SortHeaderRow>
 
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (

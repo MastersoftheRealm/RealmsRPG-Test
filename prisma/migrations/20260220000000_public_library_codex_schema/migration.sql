@@ -1,6 +1,7 @@
 -- Create public library tables in codex schema (Prisma expects codex.public_*)
--- If the 20260208003835_add_public_library migration created them in public schema,
--- this creates the correct tables in codex so GET /api/public/[type] works.
+-- Ensures codex schema exists, then creates all four tables so POST/GET /api/public/[type] work.
+
+CREATE SCHEMA IF NOT EXISTS codex;
 
 CREATE TABLE IF NOT EXISTS codex.public_powers (
     "id" TEXT NOT NULL,

@@ -98,6 +98,24 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 - **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow) — unique base-skill selector UX
 
+## Creator load logic (avoid duplication)
+
+When loading a saved item/power/technique into a creator, follow this **three-step pattern** so mechanic-driven UI and the user-selectable list stay in sync:
+
+1. **Reset state** — Clear all creator state (or call the creator’s reset handler).
+2. **Restore dedicated UI fields** — Load mechanic-driven fields from saved data (e.g. damage, DR, range, duration, actionType, weapon) into their dedicated state. Do **not** put these into the parts/properties list.
+3. **Restore the list from filtered saved data** — Build the user-selectable parts/properties list from saved data **filtered to non-mechanic entries only**. Mechanic-only entries must not appear in the list or they show twice.
+
+**Reusable helpers (single source of truth):**
+
+| Creator | Helper / rule | Location |
+|---------|----------------|----------|
+| Item/armament | `filterSavedItemPropertiesForList(savedProperties, propertiesDb)` | `@/lib/calculators` — returns only non-mechanic properties for the list. Load damage, DR, range, etc. from item.damage, item.damageReduction, etc. |
+| Power | Exclude `EXCLUDED_PARTS`; add to main list only when `!matchedPart.mechanic` | `handleLoadPower` in power-creator page; mechanic parts go to advanced or are skipped. |
+| Technique | Add to `loadedParts` only when `!matchedPart.mechanic` | `handleLoadTechnique` in technique-creator page. |
+
+**Rule:** Mechanic-only entries (parts/properties driven by dedicated UI) are restored from dedicated state only. Never restore them into the user-selectable list.
+
 ## Recording Progress
 
 | What | Where |
@@ -107,6 +125,7 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
 | Codebase audit | `src/docs/ai/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
+| Unification audit | `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
 
 ## Creating New Tasks
 

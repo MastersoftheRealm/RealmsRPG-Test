@@ -2,6 +2,20 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-20 | agent | Session: Phase 1 unification — CreatorSaveToolbar, useCreatorSave, SortHeaderRow, mechanic load doc | files: src/hooks/use-creator-save.ts, src/components/creator/CreatorSaveToolbar.tsx, src/components/shared/list-components.tsx, power-creator/page.tsx, technique-creator/page.tsx, item-creator/page.tsx, creature-creator/page.tsx, AGENT_GUIDE.md, list-components (SortHeaderRow), CodexFeatsTab.tsx, power-calc.ts, hooks/index.ts, creator/index.ts, shared/index.ts | Summary:
+  - useCreatorSave hook: single source for saveMessage, saveTarget, saving, handleSave, showPublishConfirm, confirmPublish; used by all four creators.
+  - CreatorSaveToolbar: unified Private/Public toggle, Load, Reset, Save; power, technique, item, creature creators refactored to use it.
+  - SortHeaderRow: shared wrapper for sortable list headers (same bg/padding/dark mode as ListHeader); SortHeader active state aligned to primary-800/primary-200; CodexFeatsTab migrated to SortHeaderRow.
+  - AGENT_GUIDE: Creator load logic expanded with three-step pattern and table of helpers (filterSavedItemPropertiesForList, EXCLUDED_PARTS, !matchedPart.mechanic).
+  - Fix: power-calc.ts partId = Number(p.id) for type safety.
+  - npm run build passes.
+
+- 2026-02-20 | agent | Session: Unification audit — shared logic & centralized sources of truth | files: src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md, AI_CHANGELOG.md, AGENT_GUIDE.md | Summary:
+  - Added UNIFICATION_AUDIT_2026-02-20.md: audit of Creators, Libraries, Character/Creature logic, General UI, and background logic for shared/unified/simplified patterns.
+  - Key recommendations: CreatorSaveToolbar + useCreatorSave (eliminate duplicated save state/toolbar in 4 creators); shared header row styling for ListHeader/SortHeader; document mechanic-vs-list load pattern; optional CreatorLayout; allocation UI alignment pass.
+  - AGENT_GUIDE: added reference to UNIFICATION_AUDIT_2026-02-20.md under Recording Progress.
+  - No code changes; audit only.
+
 - 2026-02-18 | agent | Session: TASK-258–261 (Public codex Traits/Advanced, unification, property labels, equipment category) | files: src/app/(main)/codex/page.tsx, CodexTraitsTab.tsx, CodexCreatureFeatsTab.tsx, CodexPartsTab.tsx, CodexPropertiesTab.tsx, AdminPropertiesTab.tsx, AdminEquipmentTab.tsx, AI_TASK_QUEUE.md | Summary:
   - TASK-258: Added CodexTraitsTab and CodexCreatureFeatsTab (read-only). Public codex: main tabs Feats/Skills/Species/Equipment/Public Library; Advanced button toggles Parts, Properties, Creature Feats, Traits.
   - TASK-259: Codex Parts/Properties use detailSections with expandable option chips (EN/TP for parts, IP/TP/c for properties); description always in expanded view; header rows use dark variant.

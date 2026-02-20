@@ -180,7 +180,7 @@ export function computeActionType(
     if (p.part?.id !== undefined) {
       partId = Number(p.part.id);
     } else if (p.id !== undefined) {
-      partId = p.id;
+      partId = Number(p.id);
     } else if (p.part?.name || p.name) {
       const name = p.part?.name || p.name;
       const def = findByIdOrName(partsDb, { name: name! });
