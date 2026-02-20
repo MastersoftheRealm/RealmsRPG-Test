@@ -30,7 +30,7 @@ function formatAbilityBadges(abilityString?: string): Array<{ label: string; col
 function skillToSelectableItem(skill: Skill & { ability?: string }): SelectableItem {
   const extraSections = getSkillExtraDescriptionDetailSections(skill);
   return {
-    id: skill.id,
+    id: String(skill.id),
     name: skill.name ?? '',
     description: skill.description,
     columns: [

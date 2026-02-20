@@ -149,10 +149,10 @@ export function UnifiedSelectionModal({
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { sortState, handleSort, sortItems } = useSort('name');
   
-  // Reset on open
+  // Reset on open — normalize ids to string so Set.has() works (codex may return number ids)
   useEffect(() => {
     if (isOpen) {
-      setSelectedIds(new Set(initialSelectedIds));
+      setSelectedIds(new Set([...initialSelectedIds].map((id) => String(id))));
       setQuantities({});
       setSearchQuery('');
     }
@@ -185,16 +185,17 @@ export function UnifiedSelectionModal({
     return sortItems(result);
   }, [items, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
   
-  // Toggle selection
-  const toggleSelection = useCallback((id: string) => {
+  // Toggle selection — normalize id to string so selection works when codex returns number ids
+  const toggleSelection = useCallback((id: string | number) => {
+    const key = String(id);
     setSelectedIds(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
+      if (newSet.has(key)) {
+        newSet.delete(key);
         // Remove quantity
         setQuantities(q => {
           const newQ = { ...q };
-          delete newQ[id];
+          delete newQ[key];
           return newQ;
         });
       } else {
@@ -202,23 +203,23 @@ export function UnifiedSelectionModal({
         if (maxSelections && newSet.size >= maxSelections) {
           return prev;
         }
-        newSet.add(id);
+        newSet.add(key);
         // Initialize quantity for equipment
         if (showQuantity) {
-          setQuantities(q => ({ ...q, [id]: 1 }));
+          setQuantities(q => ({ ...q, [key]: 1 }));
         }
       }
       return newSet;
     });
   }, [maxSelections, showQuantity]);
   
-  // Handle confirm
+  // Handle confirm — match by string id so codex number ids work
   const handleConfirm = () => {
-    const selected = items.filter(item => selectedIds.has(item.id));
+    const selected = items.filter(item => selectedIds.has(String(item.id)));
     // Attach quantities to items if needed
     if (showQuantity) {
       selected.forEach(item => {
-        (item as SelectableItem & { quantity?: number }).quantity = quantities[item.id] || 1;
+        (item as SelectableItem & { quantity?: number }).quantity = quantities[String(item.id)] || 1;
       });
     }
     onConfirm(selected);
@@ -292,13 +293,14 @@ export function UnifiedSelectionModal({
           ) : (
             <div className="space-y-2 p-2 min-w-0">
               {filteredItems.map(item => {
-                const isSelected = selectedIds.has(item.id);
+                const itemIdStr = String(item.id);
+                const isSelected = selectedIds.has(itemIdStr);
                 
                 return (
-                  <div key={item.id} className="flex items-center gap-2 min-w-0">
+                  <div key={itemIdStr} className="flex items-center gap-2 min-w-0">
                     <div className="flex-1 min-w-0">
                       <GridListRow
-                        id={item.id}
+                        id={itemIdStr}
                         name={item.name}
                         description={item.description}
                         columns={item.columns}
@@ -318,8 +320,8 @@ export function UnifiedSelectionModal({
                     {showQuantity && isSelected && (
                       <div className="flex-shrink-0 px-2">
                         <QuantitySelector
-                          quantity={quantities[item.id] || 1}
-                          onChange={(qty) => setQuantities(q => ({ ...q, [item.id]: qty }))}
+                          quantity={quantities[itemIdStr] || 1}
+                          onChange={(qty) => setQuantities(q => ({ ...q, [itemIdStr]: qty }))}
                         />
                       </div>
                     )}

@@ -131,8 +131,10 @@ export function SkillsAllocationPage({
 
   const { subSkillsByBase, orderedSkills } = useMemo(() => {
     const subsByBase: Record<string, Skill[]> = {};
-    const inList = (id: string) =>
-      (speciesSkillIds.has(id) && id !== '0') || id in allocations;
+    const inList = (id: string | number) => {
+      const key = String(id);
+      return (speciesSkillIds.has(key) && key !== '0') || key in allocations;
+    };
     if (!allSkills.length) return { subSkillsByBase: subsByBase, orderedSkills: [] as Skill[] };
 
     allSkills.forEach((s: Skill) => {
@@ -147,7 +149,8 @@ export function SkillsAllocationPage({
     baseSkills.sort((a: Skill, b: Skill) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
     const result: Skill[] = [];
     baseSkills.forEach((base: Skill) => {
-      const subs = subsByBase[base.id] || [];
+      const baseKey = String(base.id);
+      const subs = subsByBase[baseKey] || [];
       const subsInList = subs.filter((sub: Skill) => inList(sub.id));
       const baseInList = inList(base.id);
       if (!baseInList && subsInList.length === 0) return;
@@ -165,14 +168,14 @@ export function SkillsAllocationPage({
 
   const existingSkillNames = useMemo(() => {
     return allSkills
-      .filter((s: Skill) => existingSkillIds.has(s.id))
+      .filter((s: Skill) => existingSkillIds.has(String(s.id)))
       .map((s: Skill) => s.name);
   }, [allSkills, existingSkillIds]);
 
   const characterSkillsForSubModal = useMemo(() => {
     return allSkills
-      .filter((s: Skill) => s.base_skill_id === undefined && existingSkillIds.has(s.id))
-      .map((s: Skill) => ({ id: s.id, name: s.name, prof: (allocations[s.id] ?? 0) > 0 }));
+      .filter((s: Skill) => s.base_skill_id === undefined && existingSkillIds.has(String(s.id)))
+      .map((s: Skill) => ({ id: s.id, name: s.name, prof: (allocations[String(s.id)] ?? 0) > 0 }));
   }, [allSkills, existingSkillIds, allocations]);
 
   const handleRemoveSkill = useCallback(
@@ -186,7 +189,7 @@ export function SkillsAllocationPage({
 
   const handleAllocate = useCallback(
     (skillId: string, delta: number) => {
-      const skill = allSkills.find((s: Skill) => s.id === skillId);
+      const skill = allSkills.find((s: Skill) => String(s.id) === skillId);
       if (!skill) return;
 
       const current = allocations[skillId] ?? 0;
@@ -216,7 +219,8 @@ export function SkillsAllocationPage({
     (skills: Skill[]) => {
       const next = { ...allocations };
       skills.forEach((s: Skill) => {
-        if (!(s.id in next)) next[s.id] = 0; // Auto proficient, skill value 0 (proficiency costs 1 pt)
+        const key = String(s.id);
+        if (!(key in next)) next[key] = 0; // Auto proficient, skill value 0 (proficiency costs 1 pt)
       });
       onAllocationsChange(next);
       setAddSkillModalOpen(false);
@@ -228,10 +232,12 @@ export function SkillsAllocationPage({
     (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
       const next = { ...allocations };
       skills.forEach((s: Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }) => {
-        if (s.autoAddBaseSkill && !(s.autoAddBaseSkill.id in next)) {
-          next[s.autoAddBaseSkill.id] = 0; // Base skill: proficient, value 0
+        if (s.autoAddBaseSkill) {
+          const baseKey = String(s.autoAddBaseSkill.id);
+          if (!(baseKey in next)) next[baseKey] = 0; // Base skill: proficient, value 0
         }
-        if (!(s.id in next)) next[s.id] = 1; // Sub-skill: proficient + 1 value (free with proficiency)
+        const key = String(s.id);
+        if (!(key in next)) next[key] = 1; // Sub-skill: proficient + 1 value (free with proficiency)
       });
       onAllocationsChange(next);
       setAddSubSkillModalOpen(false);
@@ -345,10 +351,10 @@ export function SkillsAllocationPage({
                 const baseSkill = isSubSkill
                   ? allSkills.find((s: Skill) => String(s.id) === String(skill.base_skill_id))
                   : null;
-                const baseValue = baseSkill ? (allocations[baseSkill.id] ?? 0) : 0;
-                const baseProficient = baseSkill && (speciesSkillIds.has(baseSkill.id) || (allocations[baseSkill.id] ?? -1) >= 0);
-                const value = Math.max(0, allocations[skill.id] ?? 0);
-                const isSpeciesSkill = speciesSkillIds.has(skill.id);
+                const baseValue = baseSkill ? (allocations[String(baseSkill.id)] ?? 0) : 0;
+                const baseProficient = baseSkill && (speciesSkillIds.has(String(baseSkill.id)) || (allocations[String(baseSkill.id)] ?? -1) >= 0);
+                const value = Math.max(0, allocations[String(skill.id)] ?? 0);
+                const isSpeciesSkill = speciesSkillIds.has(String(skill.id));
                 const effectiveValue = value; // Species can have value 0 (proficient, 0 value)
                 // Base skills: value >= 0 means proficient. Sub-skills: value >= 1 = proficient
                 const proficient = isSubSkill ? value >= 1 : (value >= 0);
@@ -365,8 +371,8 @@ export function SkillsAllocationPage({
                 const hasMultipleAbilities = linkedKeys.length > 1;
                 return (
                   <SkillRow
-                    key={skill.id}
-                    id={skill.id}
+                    key={String(skill.id)}
+                    id={String(skill.id)}
                     name={skill.name ?? ''}
                     isSubSkill={isSubSkill}
                     baseSkillName={baseSkill?.name}
@@ -378,11 +384,11 @@ export function SkillsAllocationPage({
                     availableAbilities={hasMultipleAbilities ? linkedKeys as string[] : undefined}
                     onAbilityChange={hasMultipleAbilities && onSkillAbilityChange ? (key) => onSkillAbilityChange(skillForAbility.id, key) : undefined}
                     isEditing={true}
-                    onValueChange={(d) => handleAllocate(skill.id, d)}
+                    onValueChange={(d) => handleAllocate(String(skill.id), d)}
                     minValue={isSpeciesSkill ? 0 : 0}
                     canIncrease={canInc}
                     isSpeciesSkill={isSpeciesSkill}
-                    onRemove={isSpeciesSkill ? undefined : () => handleRemoveSkill(skill.id)}
+                    onRemove={isSpeciesSkill ? undefined : () => handleRemoveSkill(String(skill.id))}
                     variant="table"
                   />
                 );

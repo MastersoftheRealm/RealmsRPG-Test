@@ -72,7 +72,7 @@ function featToSelectableItem(
   if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
 
   return {
-    id: feat.id,
+    id: String(feat.id),
     name: feat.name ?? '',
     description: feat.description || (feat as FeatModal).effect,
     columns: [

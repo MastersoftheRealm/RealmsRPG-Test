@@ -149,9 +149,9 @@ export function AddLibraryItemModal({
 
   const items: SelectableItem[] = useMemo(() => {
     return rawItems
-      .filter((item: { id: string }) => !existingIds.has(item.id))
+      .filter((item: { id: string }) => !existingIds.has(String(item.id)))
       .map((item: UserPower | UserTechnique | UserItem | EqItem) => ({
-        id: item.id,
+        id: String(item.id),
         name: String(item.name ?? ''),
         description: String((item as UserPower | UserTechnique | UserItem).description ?? '') || 'No description available.',
         columns: getItemColumns(item, itemType),
