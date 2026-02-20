@@ -2,6 +2,11 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-20 | agent | Session: Weapon armament load — no duplicate damage/range in property list | files: src/lib/calculators/item-calc.ts, ALL_FEEDBACK_CLEAN.md, AI_CHANGELOG.md | Summary:
+  - When loading a weapon armament, Weapon Damage and Range were appearing in the property list in addition to being restored in the dedicated damage/range UI, duplicating cost. filterSavedItemPropertiesForList already excluded properties with mechanic: true, but the codex may not set that flag.
+  - Added MECHANIC_PROPERTY_IDS in item-calc.ts (Range, Weapon Damage, Split Damage Dice, Two-Handed, DR, Armor/Shield base and shield amount/damage, Critical Range +1, ability requirements). isMechanicProperty() now returns true for these IDs even when mechanic is false in the DB.
+  - Load flow unchanged: damage and range still restored from item.damage and item.rangeLevel; the property list now never includes these mechanic properties, so no duplicate cost or display.
+
 - 2026-02-20 | agent | Session: Deferred/optional — Add-X as UnifiedSelectionModal, CREATOR_LOAD_RULES, SelectableItem.detailSections | files: add-feat-modal.tsx, add-skill-modal.tsx, add-library-item-modal.tsx, unified-selection-modal.tsx, AGENT_GUIDE.md, MODAL_UNIFICATION_AUDIT_2026-02-20.md, UNIFICATION_STATUS.md, AI_CHANGELOG.md | Summary:
   - AddFeatModal, AddSkillModal, AddLibraryItemModal refactored to **UnifiedSelectionModal wrappers**: each builds SelectableItem[] from data (codex/library), passes columns, filterContent, onConfirm that maps selected back to Feat[]/Skill[]/CharacterPower[]|etc. Single list-modal implementation for all add-X flows.
   - SelectableItem extended with **detailSections** (labeled chip sections); UnifiedSelectionModal passes detailSections to GridListRow for feat/skill detail.

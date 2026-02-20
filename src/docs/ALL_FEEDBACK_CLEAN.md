@@ -801,3 +801,11 @@ Notes
 - Feedback: During the instruction for the original audit I neglected to mention the need to also audit the unification of MODALS whether they are add X modals (add powers to creatures, characters, etc) load modals, etc (modals with lists within them!) I want to make sure the logic, styles, etc is unified between them, most of which are likely possible to have integrated with codex and library styles, components, etc etc. Much of the logic is possible to synchronize and clean up.
 - Expected: Single audit of list modals; unified logic, styles, and patterns; alignment with Codex/Library; recommendations and tasks for implementation.
 - Created: MODAL_UNIFICATION_AUDIT_2026-02-20.md; TASK-264 added to AI_TASK_QUEUE.
+
+**Raw Feedback Log — 2/20/2026 (Weapon armament load duplicates damage/range)**
+- Date: 2026-02-20
+- Context: Item creator — Load weapon armament from library
+- Priority: High
+- Feedback: When loading a weapon armament, it loads the weapon damage and range in addition to the normal armament properties. This duplicates these in the UI (they already have dedicated fields) and adds them to the property list, effectively duplicating the costs.
+- Expected: On load, damage and range are restored only from item.damage and item.rangeLevel; Weapon Damage and Range properties are not shown in the add-property list and are not double-counted in cost.
+- Implemented 2026-02-20: filterSavedItemPropertiesForList now excludes properties by a fixed set of mechanic property IDs (Range, Weapon Damage, Split Damage Dice, Two-Handed, DR, Armor Base, Shield Base/Amount/Damage, Critical Range +1, ability requirements) so they never appear in the selectable list on load even if the codex has mechanic: false.

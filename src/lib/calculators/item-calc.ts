@@ -88,6 +88,31 @@ const RARITY_BRACKETS = [
   { name: 'Ascended', low: 100000, ipLow: 16.01, ipHigh: Infinity },
 ] as const;
 
+/** Property IDs that are driven by dedicated UI (damage, range, DR, etc.) and must not appear in the add-property list on load to avoid duplicating cost/display. */
+const MECHANIC_PROPERTY_IDS = new Set<number>([
+  PROPERTY_IDS.DAMAGE_REDUCTION,
+  PROPERTY_IDS.AGILITY_REDUCTION,
+  PROPERTY_IDS.SPLIT_DAMAGE_DICE,
+  PROPERTY_IDS.RANGE,
+  PROPERTY_IDS.TWO_HANDED,
+  PROPERTY_IDS.SHIELD_BASE,
+  PROPERTY_IDS.ARMOR_BASE,
+  PROPERTY_IDS.WEAPON_DAMAGE,
+  PROPERTY_IDS.CRITICAL_RANGE_PLUS_1,
+  PROPERTY_IDS.SHIELD_AMOUNT,
+  PROPERTY_IDS.SHIELD_DAMAGE,
+  // Ability requirements (restored from item.abilityRequirement, not property list)
+  PROPERTY_IDS.ARMOR_STRENGTH_REQUIREMENT,
+  PROPERTY_IDS.ARMOR_AGILITY_REQUIREMENT,
+  PROPERTY_IDS.ARMOR_VITALITY_REQUIREMENT,
+  PROPERTY_IDS.WEAPON_STRENGTH_REQUIREMENT,
+  PROPERTY_IDS.WEAPON_AGILITY_REQUIREMENT,
+  PROPERTY_IDS.WEAPON_VITALITY_REQUIREMENT,
+  PROPERTY_IDS.WEAPON_ACUITY_REQUIREMENT,
+  PROPERTY_IDS.WEAPON_INTELLIGENCE_REQUIREMENT,
+  PROPERTY_IDS.WEAPON_CHARISMA_REQUIREMENT,
+]);
+
 // =============================================================================
 // Helpers
 // =============================================================================
@@ -110,10 +135,18 @@ export function isGeneralProperty(prop: ItemPropertyPayload | ItemProperty): boo
  * Check if a property is mechanic-only (handled by dedicated UI, not the "add property" list).
  * Use when loading saved items: only non-mechanic properties should go into the selectable list
  * to avoid duplicating them (they already appear in damage, DR, range, etc.).
+ * Considers both the codex mechanic flag and a known set of mechanic property IDs (so loading
+ * still works even if the codex has mechanic: false for e.g. Weapon Damage or Range).
  */
-export function isMechanicProperty(prop: ItemPropertyPayload | ItemProperty | { mechanic?: boolean }): boolean {
+export function isMechanicProperty(prop: ItemPropertyPayload | ItemProperty | { mechanic?: boolean; id?: number | string }): boolean {
   if (!prop || typeof prop !== 'object') return false;
-  return (prop as ItemProperty).mechanic === true;
+  if ((prop as ItemProperty).mechanic === true) return true;
+  const id = (prop as ItemPropertyPayload).id ?? (prop as ItemProperty).id;
+  if (id !== undefined && id !== null) {
+    const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+    if (!Number.isNaN(numId) && MECHANIC_PROPERTY_IDS.has(numId)) return true;
+  }
+  return false;
 }
 
 /**
