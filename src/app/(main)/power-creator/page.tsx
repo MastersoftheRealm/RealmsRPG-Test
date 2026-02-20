@@ -104,6 +104,7 @@ function PowerCreatorContent() {
   const [duration, setDuration] = useState<DurationConfig>({
     type: 'instant',
     value: 1,
+    applyDuration: false,
     focus: false,
     noHarm: false,
     endsOnActivation: false,
@@ -143,6 +144,7 @@ function PowerCreatorContent() {
           setDuration(parsed.duration || {
             type: 'instant',
             value: 1,
+            applyDuration: false,
             focus: false,
             noHarm: false,
             endsOnActivation: false,
@@ -254,6 +256,7 @@ function PowerCreatorContent() {
       areaApplyDuration: area.applyDuration,
       durationType: duration.type,
       durationValue: duration.value,
+      durationApplyDuration: duration.applyDuration,
       focus: duration.focus,
       noHarm: duration.noHarm,
       endsOnActivation: duration.endsOnActivation,
@@ -433,6 +436,7 @@ function PowerCreatorContent() {
         setDuration({
           type: 'instant',
           value: 1,
+          applyDuration: false,
           focus: false,
           noHarm: false,
           endsOnActivation: false,
@@ -481,6 +485,7 @@ function PowerCreatorContent() {
     setDuration({
       type: 'instant',
       value: 1,
+      applyDuration: false,
       focus: false,
       noHarm: false,
       endsOnActivation: false,
@@ -607,6 +612,7 @@ function PowerCreatorContent() {
       setDuration({
         type: power.duration.type || 'instant',
         value: power.duration.value || 1,
+        applyDuration: power.duration.applyDuration || false,
         focus: power.duration.focus || false,
         noHarm: power.duration.noHarm || false,
         endsOnActivation: power.duration.endsOnActivation || false,
@@ -616,6 +622,7 @@ function PowerCreatorContent() {
       setDuration({
         type: 'instant',
         value: 1,
+        applyDuration: false,
         focus: false,
         noHarm: false,
         endsOnActivation: false,
@@ -859,6 +866,7 @@ function PowerCreatorContent() {
                     setDuration({
                       type: newType,
                       value: newValue,
+                      applyDuration: false,
                       focus: false,
                       noHarm: false,
                       endsOnActivation: false,
@@ -886,6 +894,7 @@ function PowerCreatorContent() {
                       setDuration({
                         type: duration.type,
                         value: newValue,
+                        applyDuration: duration.applyDuration ?? false,
                         focus: false,
                         noHarm: false,
                         endsOnActivation: false,
@@ -905,7 +914,7 @@ function PowerCreatorContent() {
                 </select>
               )}
             </div>
-            {/* Duration Modifiers - only enabled for durations of 2+ rounds */}
+            {/* Apply Duration + Duration Modifiers - only enabled for durations of 2+ rounds */}
             {(() => {
               const isShortDuration = duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
               return (
@@ -913,6 +922,12 @@ function PowerCreatorContent() {
                   'flex flex-wrap items-center gap-4 pt-3 border-t border-border-light',
                   isShortDuration && 'opacity-50'
                 )}>
+                  <Checkbox
+                    checked={duration.applyDuration || false}
+                    onChange={(e) => setDuration((d) => ({ ...d, applyDuration: e.target.checked }))}
+                    label="Apply Duration"
+                    disabled={isShortDuration}
+                  />
                   <Checkbox
                     checked={duration.focus || false}
                     onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}

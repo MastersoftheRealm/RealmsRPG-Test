@@ -67,7 +67,8 @@ export interface AreaConfig {
 /** Duration configuration (power only) */
 export interface DurationConfig {
   type: 'instant' | 'rounds' | 'minutes' | 'hours' | 'days' | 'permanent';
-  value: number; // number of time units (1-based)
+  value: number; // actual units (e.g. 1, 10, 30 for minutes) or rounds count
+  applyDuration?: boolean;
   focus?: boolean;
   noHarm?: boolean;
   endsOnActivation?: boolean;
@@ -346,7 +347,7 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
 
   // ----- Duration (power only) -----
   if (ctx.duration && ctx.duration.type !== 'instant') {
-    const { type, value, focus, noHarm, endsOnActivation, sustain } = ctx.duration;
+    const { type, value, applyDuration: durationApplyDuration, focus, noHarm, endsOnActivation, sustain } = ctx.duration;
 
     // Duration modifiers
     if (focus) {
@@ -362,23 +363,32 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
       addPart(PART_IDS.DURATION_SUSTAIN || 305, 'Sustain for Duration', Math.max(0, sustain - 1));
     }
 
-    // Duration base type
+    // Duration base type: map UI value to part option index (op_1_lvl)
     const durationInfo = getDurationPartInfo(type);
     if (durationInfo) {
-      // value is 1-based, op_1_lvl calculation varies by type
       let op1 = 0;
       if (type === 'rounds') {
-        // Only add for > 1 round. For 2 rounds: op1=0, 3 rounds: op1=1, etc.
         if (value > 1) {
           op1 = Math.max(0, value - 2);
-          addPart(durationInfo.id, durationInfo.name, op1);
+          addPart(durationInfo.id, durationInfo.name, op1, durationApplyDuration ?? false);
         }
       } else if (type === 'permanent') {
-        addPart(durationInfo.id, durationInfo.name, 0);
-      } else {
-        // minutes, hours, days: value-1 for op1
-        op1 = Math.max(0, value - 1);
-        addPart(durationInfo.id, durationInfo.name, op1);
+        addPart(durationInfo.id, durationInfo.name, 0, durationApplyDuration ?? false);
+      } else if (type === 'minutes') {
+        // UI value is 1, 10, or 30 → part expects op_1_lvl 0, 1, 2 (see deriveDuration [1,10,30][lvl])
+        const minuteIndex = [1, 10, 30].indexOf(value);
+        op1 = minuteIndex >= 0 ? minuteIndex : 0;
+        addPart(durationInfo.id, durationInfo.name, op1, durationApplyDuration ?? false);
+      } else if (type === 'hours') {
+        const hourIndex = [1, 6, 12].indexOf(value);
+        op1 = hourIndex >= 0 ? hourIndex : 0;
+        addPart(durationInfo.id, durationInfo.name, op1, durationApplyDuration ?? false);
+      } else if (type === 'days') {
+        // UI may use 1, 7, 14; part options often 1, 10, 20, 30 - use index by value order
+        const dayValues = [1, 7, 14];
+        const dayIndex = dayValues.indexOf(value);
+        op1 = dayIndex >= 0 ? dayIndex : 0;
+        addPart(durationInfo.id, durationInfo.name, op1, durationApplyDuration ?? false);
       }
     }
   }
@@ -409,6 +419,7 @@ export interface LegacyPowerMechanicContext {
   areaApplyDuration?: boolean;
   durationType?: string;
   durationValue?: number;
+  durationApplyDuration?: boolean;
   focus?: boolean;
   noHarm?: boolean;
   endsOnActivation?: boolean;
@@ -460,6 +471,7 @@ export function buildPowerMechanicParts(ctx: LegacyPowerMechanicContext): Mechan
     duration: ctx.durationType && ctx.durationType !== 'instant' ? {
       type: ctx.durationType as DurationConfig['type'],
       value: ctx.durationValue || 1,
+      applyDuration: ctx.durationApplyDuration,
       focus: ctx.focus,
       noHarm: ctx.noHarm,
       endsOnActivation: ctx.endsOnActivation,
