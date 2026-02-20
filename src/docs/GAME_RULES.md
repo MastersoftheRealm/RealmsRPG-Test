@@ -645,6 +645,20 @@ Using the same Action/Reaction more than once in a turn: -5 per subsequent use (
 | Finesse Weapon | Agility |
 | Thrown Weapon | Strength |
 
+### Unarmed Prowess Damage (Proficient)
+
+When proficient, unarmed prowess uses **Ability + Martial Proficiency** (Attack Bonus) for both attack and damage. Higher prowess levels add damage dice on top of that bonus:
+
+| Prowess Level | Character Level | Damage |
+|---------------|-----------------|--------|
+| Unarmed Prowess I | 1 | Attack Bonus (no dice) |
+| Unarmed Prowess II | 4 | 1d2 + Attack Bonus |
+| Unarmed Prowess III | 8 | 1d4 + Attack Bonus |
+| Unarmed Prowess IV | 12 | 1d6 + Attack Bonus |
+| Unarmed Prowess V | 16 | 1d8 + Attack Bonus |
+
+**Attack Bonus** = Relevant Ability (STR or AGI, whichever is higher) + Martial Proficiency. Unproficient unarmed: half Ability to attack and damage (double if negative); no Martial Proficiency.
+
 ### Critical Hits
 
 - **Standard Critical Range:** +10 over Defense/Evasion

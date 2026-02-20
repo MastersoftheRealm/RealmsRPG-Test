@@ -7,10 +7,11 @@
 
 import { useMemo } from 'react';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
-import { useEquipment } from '@/hooks';
+import { useEquipment, useTechniqueParts } from '@/hooks';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { formatDamageDisplay } from '@/lib/utils';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
@@ -31,7 +32,8 @@ function capitalize(s: string | undefined): string {
 
 function getItemColumns(
   item: UserPower | UserTechnique | UserItem | { id: string; name?: string; description?: string; damage?: unknown; armorValue?: number; properties?: string[] },
-  itemType: ItemType
+  itemType: ItemType,
+  techniqueDisplay?: { energy: number; weaponName: string; tp: number }
 ): ColumnValue[] {
   if (itemType === 'power') {
     const power = item as UserPower;
@@ -43,11 +45,18 @@ function getItemColumns(
       { key: 'Area', value: areaStr, align: 'center' as const },
     ];
   }
+  if (itemType === 'technique' && techniqueDisplay) {
+    return [
+      { key: 'Energy', value: String(techniqueDisplay.energy), align: 'center' as const },
+      { key: 'Weapon', value: techniqueDisplay.weaponName || '-', align: 'center' as const },
+      { key: 'Training Pts', value: String(techniqueDisplay.tp), align: 'center' as const },
+    ];
+  }
   if (itemType === 'technique') {
     const technique = item as UserTechnique;
     return [
       { key: 'Weapon', value: technique.weapon?.name || '-', align: 'center' as const },
-      { key: 'Parts', value: String(technique.parts?.length ?? '-'), align: 'center' as const },
+      { key: 'Training Pts', value: '-', align: 'center' as const },
     ];
   }
   if (itemType === 'weapon') {
@@ -64,7 +73,7 @@ function getItemColumns(
 function getModalGridColumns(itemType: ItemType): string {
   switch (itemType) {
     case 'power': return '1.4fr 0.8fr 0.8fr 0.7fr';
-    case 'technique': return '1.4fr 0.8fr 0.8fr';
+    case 'technique': return '1.4fr 0.7fr 1fr 0.8fr';
     case 'weapon':
     case 'armor': return '1.5fr 1fr';
     case 'equipment': return '1.5fr';
@@ -75,8 +84,8 @@ function getModalGridColumns(itemType: ItemType): string {
 function getListHeaderColumns(itemType: ItemType): { key: string; label: string; sortable?: boolean }[] {
   const base = [{ key: 'name', label: 'Name' }];
   switch (itemType) {
-    case 'power': return [...base, { key: 'level', label: 'Level' }];
-    case 'technique': return [...base, { key: 'level', label: 'Parts' }];
+    case 'power': return [...base, { key: 'Action', label: 'Action' }, { key: 'Damage', label: 'Damage' }, { key: 'Area', label: 'Area' }];
+    case 'technique': return [...base, { key: 'Energy', label: 'Energy' }, { key: 'Weapon', label: 'Weapon' }, { key: 'Training Pts', label: 'Training Pts' }];
     case 'weapon': return [...base, { key: 'damage', label: 'Damage' }];
     case 'armor': return [...base, { key: 'armor', label: 'Armor' }];
     case 'equipment': return base;
@@ -108,6 +117,7 @@ export function AddLibraryItemModal({
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: equipmentLoading } = useEquipment();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
 
   const { rawItems, isLoading } = useMemo(() => {
     switch (itemType) {
@@ -150,14 +160,31 @@ export function AddLibraryItemModal({
   const items: SelectableItem[] = useMemo(() => {
     return rawItems
       .filter((item: { id: string }) => !existingIds.has(String(item.id)))
-      .map((item: UserPower | UserTechnique | UserItem | EqItem) => ({
-        id: String(item.id),
-        name: String(item.name ?? ''),
-        description: String((item as UserPower | UserTechnique | UserItem).description ?? '') || 'No description available.',
-        columns: getItemColumns(item, itemType),
-        data: item,
-      }));
-  }, [rawItems, existingIds, itemType]);
+      .map((item: UserPower | UserTechnique | UserItem | EqItem) => {
+        let techniqueDisplay: { energy: number; weaponName: string; tp: number } | undefined;
+        if (itemType === 'technique') {
+          const t = item as UserTechnique;
+          const display = deriveTechniqueDisplay(
+            {
+              name: t.name,
+              description: t.description,
+              parts: t.parts || [],
+              damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : undefined,
+              weapon: t.weapon,
+            },
+            techniquePartsDb
+          );
+          techniqueDisplay = { energy: display.energy, weaponName: display.weaponName, tp: display.tp };
+        }
+        return {
+          id: String(item.id),
+          name: String(item.name ?? ''),
+          description: String((item as UserPower | UserTechnique | UserItem).description ?? '') || 'No description available.',
+          columns: getItemColumns(item, itemType, techniqueDisplay),
+          data: item,
+        };
+      });
+  }, [rawItems, existingIds, itemType, techniquePartsDb]);
 
   const emptyTitle = items.length === 0 ? `No ${itemType}s available` : 'All already added or no matches';
   const emptyDesc = items.length === 0

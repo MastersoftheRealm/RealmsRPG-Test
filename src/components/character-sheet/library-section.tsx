@@ -376,10 +376,11 @@ const POWER_GRID = '1.4fr 1fr 1fr 0.7fr 0.7fr';
 
 const TECHNIQUE_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.4fr' },
-  { key: 'action', label: 'Action', width: '1fr', align: 'center' },
+  { key: 'energy', label: 'Energy', width: '0.7fr', align: 'center' },
   { key: 'weapon', label: 'Weapon', width: '1fr', align: 'center' },
+  { key: 'tp', label: 'Training Pts', width: '0.8fr', align: 'center' },
 ];
-const TECHNIQUE_GRID = '1.4fr 1fr 1fr';
+const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 
 const WEAPON_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
@@ -796,8 +797,9 @@ export function LibrarySection({
                     const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({ ...p, category: 'tag' as const }));
                     
                     const columns: ColumnValue[] = [
-                      { key: 'action', value: tech.actionType || '-', align: 'center' },
+                      { key: 'energy', value: energyCost, align: 'center' },
                       { key: 'weapon', value: tech.weaponName || '-', highlight: tech.weaponName !== undefined, align: 'center' },
+                      { key: 'tp', value: (tech as { tp?: number }).tp ?? '-', align: 'center' },
                     ];
                     
                     // Energy button in rightmost column - styled like roll button

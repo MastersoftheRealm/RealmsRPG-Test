@@ -817,3 +817,27 @@ Notes
 - Feedback: (1) In the character sheet top header (portrait, evasion, speed, health/energy) add an easy Action Points tracker (default 4) that users can track; when the character is in an encounter, sync current health, energy, and action points between encounter tracker and character sheet using Supabase realtime. (2) Audit actual use of Supabase realtime for synced HP/EN in encounters, AP, and roll log (rolls should be realtime without page refresh). (3) Add a gear icon in the character sheet top right for character sheet settings; move the privacy (visibility) setting from the Notes tab into a settings modal opened by this icon.
 - Expected: AP tracker in header (default 4, stepper); two-way realtime sync of HP/EN/AP when character is in encounter; roll log and character/encounter sync properly using realtime; gear icon opens settings modal with visibility (Private/Campaign/Public); Notes tab no longer shows visibility.
 - Implemented 2026-02-20: AP tracker added to sheet header; character type actionPoints (default 4); syncCharacterResources on combat page syncs health/energy/actionPoints to character API; character page and combat page subscribe to users.characters for realtime; campaign_rolls realtime already in place; CharacterSheetSettingsModal + gear icon in toolbar; visibility moved from Notes tab to settings modal. See AI_CHANGELOG.md.
+
+**Raw Feedback Log — 2/20/2026 (Character portrait upload / RLS)**
+- Date: 2026-02-20
+- Context: Character portrait upload, Supabase Storage
+- Priority: High
+- Feedback: Character portrait isn't loading and errors when uploading. Console: "Portrait upload error: Error: new row violates row-level security policy"; /api/upload/portrait 500; image 400. (Other console messages — slow network, message channel closed, express-utils.js, Adobe extension — are from browser extensions, not the app.)
+- Expected: Portrait upload succeeds; portrait loads on character sheet.
+- Implemented 2026-02-20: Added prisma/supabase-storage-policies.sql with full RLS for portraits bucket (SELECT, INSERT, UPDATE, DELETE) and profile-pictures; API needs UPDATE/DELETE for list+remove+upsert flow. Deployment doc updated to point to this file and to troubleshoot "new row violates row-level security policy" by running the storage policies. User must run the SQL in Supabase Dashboard → SQL Editor. See AI_CHANGELOG.md.
+
+**Raw Feedback Log — 2/20/2026 (Unarmed prowess damage = Attack Bonus + dice)**
+- Date: 2026-02-20
+- Context: Character sheet Weapons, Proficiencies tab, GAME_RULES, equipment step
+- Priority: High
+- Feedback: Unarmed prowess damage when you have proficiency needs to be equal to the full attack bonus with no dice at level 1 of proficiency, not JUST the ability. The table/game rules need to be updated to match the idea that your proficient unarmed prowess uses ability + martial proficiency + dice (from higher proficiency levels), not just ability + dice.
+- Expected: At prowess level 1, damage = full Attack Bonus (Ability + Martial Proficiency), no dice. At prowess II–V, damage = dice + Attack Bonus. UI and docs show "Attack Bonus" (or equivalent) and table reflects Ability + Martial Prof + dice.
+- Implemented 2026-02-20: archetype-section damage display uses unarmedAttackBonus for level 1 (no dice) and dice + unarmedAttackBonus for 2+; proficiencies-tab and equipment-step tables use "Attack Bonus" / "1d2 + Attack Bonus" etc.; GAME_RULES.md updated with "Unarmed Prowess Damage (Proficient)" table; unarmed roll at level 1 uses 0d4 so dice roller receives a valid pattern.
+
+**Raw Feedback Log — 2/20/2026 (Technique/power modals + character creator lists)**
+- Date: 2026-02-20
+- Context: Add technique modal, add power modal, character sheet, creature creator, character creator
+- Priority: High
+- Feedback: Add modal for techniques needs to include the name, energy, weapon (not number of parts) and Training points. Same for how power add modal should be the same across character sheet, creature creator, and character creator. When adding techniques and powers to the character creator, add them to lists just like they'd be displayed in the character sheet using same logic/components etc with column headers, list item logic, etc with the addition of the remove buttons. This is to get it all in compliance of learn it once learn it forever and common ui components.
+- Expected: Technique modal everywhere shows Name, Energy, Weapon, Training Pts (not Parts count). Power add modal identical across sheet, creature creator, character creator. Character creator selected powers/techniques use ListHeader + GridListRow with same columns as character sheet, plus remove buttons.
+- Implemented 2026-02-20: add-library-item-modal techniques use Energy, Weapon, Training Pts (deriveTechniqueDisplay + useTechniqueParts); library-section technique columns Energy, Weapon, TP; enrichTechniques returns tp; creature creator technique modal/transformer and technique list use Energy/Weapon/Training Pts; character creator technique modal and selected lists use same columns; character creator and creature creator selected powers/techniques use ListHeader + GridListRow with remove buttons. See AI_CHANGELOG.md.

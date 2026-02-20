@@ -57,15 +57,15 @@ interface ProficienciesTabProps {
   techniquePartsDb?: CodexPart[];
 }
 
-// Unarmed Prowess constants (matching equipment-step.tsx)
+// Unarmed Prowess constants (matching equipment-step.tsx). Damage = Attack Bonus (Ability + Martial Prof) + dice at level 2+.
 const UNARMED_PROWESS_BASE_TP = 10;
 const UNARMED_PROWESS_UPGRADE_TP = 6;
 const UNARMED_PROWESS_LEVELS = [
-  { level: 1, charLevel: 1, name: 'Unarmed Prowess', damage: 'Ability' },
-  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', damage: '1d2 + Ability' },
-  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', damage: '1d4 + Ability' },
-  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', damage: '1d6 + Ability' },
-  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', damage: '1d8 + Ability' },
+  { level: 1, charLevel: 1, name: 'Unarmed Prowess', damage: 'Attack Bonus' },
+  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', damage: '1d2 + Attack Bonus' },
+  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', damage: '1d4 + Attack Bonus' },
+  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', damage: '1d6 + Attack Bonus' },
+  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', damage: '1d8 + Attack Bonus' },
 ];
 
 // Calculate TP cost for unarmed prowess

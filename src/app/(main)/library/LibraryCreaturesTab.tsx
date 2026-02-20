@@ -36,17 +36,6 @@ export function LibraryCreaturesTab({ source, onDelete }: LibraryCreaturesTabPro
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  if (source !== 'my') {
-    return (
-      <div className="py-12 text-center text-text-secondary">
-        <p className="mb-4">Browse public creatures in the Codex.</p>
-        <Button asChild variant="secondary">
-          <Link href="/codex">Open Codex → Public Library</Link>
-        </Button>
-      </div>
-    );
-  }
-
   const filteredCreatures = useMemo(() => {
     if (!creatures) return [];
 
@@ -61,6 +50,17 @@ export function LibraryCreaturesTab({ source, onDelete }: LibraryCreaturesTabPro
     });
     return sortItems(filtered.map(c => ({ ...c, name: c.name || '', level: c.level ?? 0 })));
   }, [creatures, search, sortItems]);
+
+  if (source !== 'my') {
+    return (
+      <div className="py-12 text-center text-text-secondary">
+        <p className="mb-4">Browse public creatures in the Codex.</p>
+        <Button asChild variant="secondary">
+          <Link href="/codex">Open Codex → Public Library</Link>
+        </Button>
+      </div>
+    );
+  }
 
   if (error) {
     return <ErrorDisplay message="Failed to load creatures" subMessage="Please try again later" />;

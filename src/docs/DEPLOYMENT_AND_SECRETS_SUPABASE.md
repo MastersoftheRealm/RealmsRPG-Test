@@ -55,73 +55,15 @@ The app uses two buckets for image uploads. **Create these in Supabase Dashboard
 
 ### RLS Policies
 
-Enable RLS on each bucket. Add policies so authenticated users can:
+Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`prisma/supabase-storage-policies.sql`** — run that file in Supabase Dashboard → SQL Editor.
 
-- **Read:** Any file (public URLs; or restrict to own path if using private bucket)
-- **Insert/Update:** Only their own path
+- **Read (SELECT):** Public or own path
+- **Insert/Update/Delete:** Only the user’s own path (`portraits`: first folder = `auth.uid()`; `profile-pictures`: filename prefix = `auth.uid()`)
 
-**profile-pictures** — path is `{userId}.{ext}` (flat, no folder). Allow uploads only when the filename (before extension) matches `auth.uid()`:
+**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`prisma/supabase-storage-policies.sql`** in the SQL Editor.
 
-```sql
--- Allow authenticated users to upload their own profile picture (path: userId.ext)
-CREATE POLICY "Users can upload own profile picture"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'profile-pictures' AND name LIKE (auth.uid()::text || '.%'));
-
--- Allow public read
-CREATE POLICY "Profile pictures are publicly readable"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'profile-pictures');
-```
-
-**portraits** — path is `{userId}/{characterId}.{ext}`. The first path segment must match `auth.uid()`:
-
-```sql
--- Allow authenticated users to upload portraits to their folder
-CREATE POLICY "Users can upload own portraits"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'portraits' AND (storage.foldername(name))[1] = auth.uid()::text);
-
--- Allow public read
-CREATE POLICY "Portraits are publicly readable"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'portraits');
-```
-
-**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then add the RLS policies above via SQL Editor or Storage → Policies.
-
-### Copy-paste ready (SQL Editor)
-
-1. Supabase Dashboard → **SQL Editor** → New query  
-2. Paste the block below → click **Run**
-
-```sql
--- Profile pictures: users can upload only their own (path: userId.ext)
-CREATE POLICY "Users can upload own profile picture"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'profile-pictures' AND name LIKE (auth.uid()::text || '.%'));
-
-CREATE POLICY "Profile pictures are publicly readable"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'profile-pictures');
-
--- Portraits: users can upload only to their folder (path: userId/characterId.ext)
-CREATE POLICY "Users can upload own portraits"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'portraits' AND (storage.foldername(name))[1] = auth.uid()::text);
-
-CREATE POLICY "Portraits are publicly readable"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'portraits');
-```
+**Portrait upload fails with "new row violates row-level security policy"?**  
+Run `prisma/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
 
 ---
 

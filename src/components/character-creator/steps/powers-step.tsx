@@ -12,8 +12,10 @@ import Link from 'next/link';
 import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import { GridListRow, ListHeader } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
 import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, type PowerPart, type TechniquePart } from '@/hooks';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 
 /** Capitalize first letter of each word for display */
 function capitalize(s: string | undefined): string {
@@ -31,10 +33,11 @@ const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.8fr 0.7fr';
 
 const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
+  { key: 'Energy', label: 'ENERGY', sortable: false },
   { key: 'Weapon', label: 'WEAPON', sortable: false },
-  { key: 'Parts', label: 'PARTS', sortable: false },
+  { key: 'Training Pts', label: 'TRAINING PTS', sortable: false },
 ];
-const TECHNIQUE_GRID_COLUMNS = '1.4fr 0.8fr 0.8fr';
+const TECHNIQUE_GRID_COLUMNS = '1.4fr 0.7fr 1fr 0.8fr';
 
 export function PowersStep() {
   const { draft, updateDraft, nextStep, prevStep } = useCharacterCreatorStore();
@@ -81,19 +84,32 @@ export function PowersStep() {
     });
   }, [userPowers]);
 
-  // Transform user techniques to SelectableItems — match add-library-item layout (Weapon, Parts)
+  // Transform user techniques to SelectableItems — match add-library-item (Energy, Weapon, Training Pts)
   const availableTechniques = useMemo((): SelectableItem[] => {
-    return userTechniques.map(tech => ({
-      id: tech.docId,
-      name: tech.name,
-      description: tech.description,
-      columns: [
-        { key: 'Weapon', value: tech.weapon?.name || '-', align: 'center' as const },
-        { key: 'Parts', value: String(tech.parts?.length ?? '-'), align: 'center' as const },
-      ],
-      chips: tech.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
-    }));
-  }, [userTechniques]);
+    return userTechniques.map(tech => {
+      const display = deriveTechniqueDisplay(
+        {
+          name: tech.name,
+          description: tech.description,
+          parts: tech.parts || [],
+          damage: Array.isArray(tech.damage) && tech.damage[0] ? tech.damage[0] : undefined,
+          weapon: tech.weapon,
+        },
+        techniqueParts ?? []
+      );
+      return {
+        id: tech.docId,
+        name: tech.name,
+        description: tech.description,
+        columns: [
+          { key: 'Energy', value: String(display.energy), align: 'center' as const },
+          { key: 'Weapon', value: display.weaponName || '-', align: 'center' as const },
+          { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
+        ],
+        chips: tech.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+      };
+    });
+  }, [userTechniques, techniqueParts]);
   
   // Display items for selected powers/techniques
   const selectedPowerItems = useMemo((): SelectableItem[] => {
@@ -256,31 +272,34 @@ export function PowersStep() {
           </div>
           
           {selectedPowerItems.length > 0 ? (
-            <div className="space-y-2">
-              {selectedPowerItems.map(power => (
-                <div 
-                  key={power.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-card"
-                >
-                  <div className="flex items-center gap-3">
-                    <Wand2 className="w-4 h-4 text-primary" />
-                    <span className="font-medium text-foreground">{power.name}</span>
-                    {power.columns?.[0] && (
-                      <span className="text-sm text-muted-foreground">
-                        {power.columns[0].value}
-                      </span>
-                    )}
-                  </div>
-                  <IconButton
-                    variant="danger"
-                    size="sm"
-                    onClick={() => removePower(power.id)}
-                    label="Remove power"
-                  >
-                    <X className="w-4 h-4" />
-                  </IconButton>
-                </div>
-              ))}
+            <div className="border border-border-light rounded-lg overflow-hidden">
+              <ListHeader
+                columns={POWER_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : '0.8fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
+                gridColumns={POWER_GRID_COLUMNS}
+              />
+              <div className="space-y-1">
+                {selectedPowerItems.map(power => (
+                  <GridListRow
+                    key={power.id}
+                    id={power.id}
+                    name={power.name}
+                    description={power.description}
+                    columns={power.columns}
+                    gridColumns={POWER_GRID_COLUMNS}
+                    rightSlot={
+                      <IconButton
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removePower(power.id)}
+                        label="Remove power"
+                      >
+                        <X className="w-4 h-4" />
+                      </IconButton>
+                    }
+                    compact
+                  />
+                ))}
+              </div>
             </div>
           ) : userPowers.length > 0 ? (
             <div className="p-4 rounded-lg border border-dashed border-border text-center text-muted-foreground">
@@ -323,31 +342,34 @@ export function PowersStep() {
           </div>
           
           {selectedTechniqueItems.length > 0 ? (
-            <div className="space-y-2">
-              {selectedTechniqueItems.map(tech => (
-                <div 
-                  key={tech.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-card"
-                >
-                  <div className="flex items-center gap-3">
-                    <Swords className="w-4 h-4 text-martial-dark" />
-                    <span className="font-medium text-foreground">{tech.name}</span>
-                    {tech.columns?.[0] && (
-                      <span className="text-sm text-muted-foreground">
-                        {tech.columns[0].value}
-                      </span>
-                    )}
-                  </div>
-                  <IconButton
-                    variant="danger"
-                    size="sm"
-                    onClick={() => removeTechnique(tech.id)}
-                    label="Remove technique"
-                  >
-                    <X className="w-4 h-4" />
-                  </IconButton>
-                </div>
-              ))}
+            <div className="border border-border-light rounded-lg overflow-hidden">
+              <ListHeader
+                columns={TECHNIQUE_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : key === 'Energy' ? '0.7fr' : key === 'Weapon' ? '1fr' : '0.8fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
+                gridColumns={TECHNIQUE_GRID_COLUMNS}
+              />
+              <div className="space-y-1">
+                {selectedTechniqueItems.map(tech => (
+                  <GridListRow
+                    key={tech.id}
+                    id={tech.id}
+                    name={tech.name}
+                    description={tech.description}
+                    columns={tech.columns}
+                    gridColumns={TECHNIQUE_GRID_COLUMNS}
+                    rightSlot={
+                      <IconButton
+                        variant="danger"
+                        size="sm"
+                        onClick={() => removeTechnique(tech.id)}
+                        label="Remove technique"
+                      >
+                        <X className="w-4 h-4" />
+                      </IconButton>
+                    }
+                    compact
+                  />
+                ))}
+              </div>
             </div>
           ) : userTechniques.length > 0 ? (
             <div className="p-4 rounded-lg border border-dashed border-border text-center text-muted-foreground">

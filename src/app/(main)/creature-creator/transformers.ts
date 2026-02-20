@@ -127,8 +127,9 @@ export function transformUserTechniqueToDisplayItem(
   );
 
   const stats: ItemStat[] = [
+    { label: 'Energy', value: display.energy },
     { label: 'Weapon', value: display.weaponName || '-' },
-    { label: 'Parts', value: String(technique.parts?.length ?? 0) },
+    { label: 'Training Pts', value: display.tp },
   ];
 
   return {

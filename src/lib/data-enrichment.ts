@@ -45,6 +45,7 @@ export interface EnrichedTechnique extends CharacterTechnique {
   // Display fields from library
   description: string;
   cost?: number; // Energy cost of the technique
+  tp?: number; // Training points cost of the technique
   actionType?: string;
   weaponName?: string;
   damageStr?: string;
@@ -256,6 +257,7 @@ export function enrichTechniques(
         libraryItem,
         // Calculated display fields from deriveTechniqueDisplay
         cost: displayData.energy,
+        tp: displayData.tp,
         actionType: displayData.actionType,
         weaponName: displayData.weaponName,
         damageStr: displayData.damageStr,

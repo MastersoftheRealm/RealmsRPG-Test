@@ -141,15 +141,15 @@ function AttackBonusesTable({
   );
 }
 
-// Unarmed Prowess damage table based on prowess level
-// Level 1: ability only (no dice), Level 4/prowess 2: 1d2, Level 8/prowess 3: 1d4, etc.
+// Unarmed Prowess damage: proficient = Ability + Martial Proficiency + dice (dice only at prowess 2+)
+// Level 1: full Attack Bonus (no dice). Level 2+: dice + Attack Bonus.
 const UNARMED_PROWESS_DAMAGE: { level: number; damage: string | null }[] = [
   { level: 0, damage: null },     // Unproficient - half ability, no bonus
-  { level: 1, damage: null },     // Prowess I (Lv 1) - ability only, no dice
-  { level: 2, damage: '1d2' },    // Prowess II (Lv 4)
-  { level: 3, damage: '1d4' },    // Prowess III (Lv 8)
-  { level: 4, damage: '1d6' },    // Prowess IV (Lv 12)
-  { level: 5, damage: '1d8' },    // Prowess V (Lv 16+)
+  { level: 1, damage: null },     // Prowess I — damage = Attack Bonus (no dice)
+  { level: 2, damage: '1d2' },   // Prowess II (Lv 4)
+  { level: 3, damage: '1d4' },   // Prowess III (Lv 8)
+  { level: 4, damage: '1d6' },   // Prowess IV (Lv 12)
+  { level: 5, damage: '1d8' },   // Prowess V (Lv 16+)
 ];
 
 // Weapons Section - displays equipped weapons with attack/damage rolls
@@ -190,12 +190,12 @@ function WeaponsSection({
     ? unarmedAbility + martialProf  // Proficient: full ability + martial prof
     : (unarmedAbility < 0 ? unarmedAbility * 2 : Math.floor(unarmedAbility / 2)); // Unproficient: half ability (double if negative)
   
-  // Calculate unarmed damage based on prowess level
+  // Calculate unarmed damage: proficient = Attack Bonus (ability + martial prof) + dice at prowess 2+
   const prowessData = UNARMED_PROWESS_DAMAGE[unarmedProwess] || UNARMED_PROWESS_DAMAGE[0];
   const unarmedDamageDisplay = hasProwess 
     ? (prowessData.damage 
-        ? `${prowessData.damage} + ${unarmedAbility}` 
-        : String(unarmedAbility)) // Prowess I: ability only
+        ? `${prowessData.damage} + ${unarmedAttackBonus}` 
+        : String(unarmedAttackBonus)) // Prowess I: full Attack Bonus, no dice
     : String(Math.max(1, Math.floor(unarmedAbility / 2)));
 
   return (
@@ -330,7 +330,13 @@ function WeaponsSection({
                     value={0}
                     displayValue={unarmedDamageDisplay}
                     variant={hasProwess ? 'danger' : 'unproficient'}
-                    onClick={() => onRollDamage(`${unarmedDamageDisplay} Bludgeoning`, unarmedAttackBonus)}
+                    onClick={() => {
+                      // Roll expects dice pattern; at prowess 1 damage is Attack Bonus only (no dice)
+                      const rollStr = hasProwess && !prowessData.damage
+                        ? `0d4 Bludgeoning`
+                        : `${unarmedDamageDisplay} Bludgeoning`;
+                      onRollDamage(rollStr, unarmedAttackBonus);
+                    }}
                     size="sm"
                     title="Roll unarmed damage"
                   />

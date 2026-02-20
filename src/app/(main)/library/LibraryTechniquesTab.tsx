@@ -49,17 +49,6 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  if (source !== 'my') {
-    return (
-      <div className="py-12 text-center text-text-secondary">
-        <p className="mb-4">Browse public techniques in the Codex.</p>
-        <Button asChild variant="secondary">
-          <Link href="/codex">Open Codex → Public Library</Link>
-        </Button>
-      </div>
-    );
-  }
-
   const cardData = useMemo(() => {
     if (!techniques) return [];
 
@@ -112,6 +101,17 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
 
     return sortItems(result);
   }, [cardData, search, sortItems]);
+
+  if (source !== 'my') {
+    return (
+      <div className="py-12 text-center text-text-secondary">
+        <p className="mb-4">Browse public techniques in the Codex.</p>
+        <Button asChild variant="secondary">
+          <Link href="/codex">Open Codex → Public Library</Link>
+        </Button>
+      </div>
+    );
+  }
 
   if (error) {
     return <ErrorDisplay message="Failed to load techniques" subMessage="Please try again later" />;

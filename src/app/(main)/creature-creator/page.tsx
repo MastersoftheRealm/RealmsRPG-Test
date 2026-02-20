@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, useCreatorSave, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
 import {
@@ -36,8 +36,8 @@ import {
   calculateSkillPointsForEntity,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
-import { Button, Input, Select, Textarea, Alert } from '@/components/ui';
-import { Skull } from 'lucide-react';
+import { Button, Input, Select, Textarea, Alert, IconButton } from '@/components/ui';
+import { Skull, X } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_SIZES, CONDITIONS } from '@/lib/game/creator-constants';
 import {
@@ -133,7 +133,7 @@ function CreatureCreatorContent() {
     [powerDisplayItems]
   );
   const techniqueSelectableItems = useMemo(() => 
-    techniqueDisplayItems.map((t: DisplayItem) => displayItemToSelectableItem(t, ['Weapon', 'Parts'])),
+    techniqueDisplayItems.map((t: DisplayItem) => displayItemToSelectableItem(t, ['Energy', 'Weapon', 'Training Pts'])),
     [techniqueDisplayItems]
   );
   const featSelectableItems = useMemo(() => 
@@ -563,8 +563,8 @@ function CreatureCreatorContent() {
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
-            columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Weapon', label: 'WEAPON', sortable: false }, { key: 'Parts', label: 'PARTS', sortable: false }]}
-            gridColumns="1.4fr 0.8fr 0.8fr"
+            columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Energy', label: 'ENERGY', sortable: false }, { key: 'Weapon', label: 'WEAPON', sortable: false }, { key: 'Training Pts', label: 'TRAINING PTS', sortable: false }]}
+            gridColumns="1.4fr 0.7fr 1fr 0.8fr"
             size="xl"
           />
           <UnifiedSelectionModal
@@ -1011,21 +1011,45 @@ function CreatureCreatorContent() {
             {creature.powers.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No powers added</p>
             ) : (
-              <div className="space-y-2 mb-4">
-                {creature.powers.map(power => (
-                  <ItemCard
-                    key={power.id}
-                    item={creaturePowerToDisplayItem(power)}
-                    mode="manage"
-                    actions={{
-                      onDelete: () => setCreature(prev => ({
-                        ...prev,
-                        powers: prev.powers.filter((p: { id: string }) => p.id !== power.id)
-                      }))
-                    }}
-                    compact
-                  />
-                ))}
+              <div className="border border-border-light rounded-lg overflow-hidden mb-4">
+                <ListHeader
+                  columns={[
+                    { key: 'name', label: 'Name', width: '1.4fr' },
+                    { key: 'Action', label: 'Action', width: '0.8fr', align: 'center' },
+                    { key: 'Damage', label: 'Damage', width: '0.8fr', align: 'center' },
+                    { key: 'Area', label: 'Area', width: '0.7fr', align: 'center' },
+                  ]}
+                  gridColumns="1.4fr 0.8fr 0.8fr 0.7fr"
+                />
+                <div className="space-y-1">
+                  {creature.powers.map((power: { id: string; name: string; action?: string; damage?: string; area?: string }) => (
+                    <GridListRow
+                      key={power.id}
+                      id={power.id}
+                      name={power.name}
+                      columns={[
+                        { key: 'Action', value: power.action ?? '-', align: 'center' as const },
+                        { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
+                        { key: 'Area', value: power.area ?? '-', align: 'center' as const },
+                      ]}
+                      gridColumns="1.4fr 0.8fr 0.8fr 0.7fr"
+                      rightSlot={
+                        <IconButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setCreature(prev => ({
+                            ...prev,
+                            powers: prev.powers.filter((p: { id: string }) => p.id !== power.id)
+                          }))}
+                          label="Remove power"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      }
+                      compact
+                    />
+                  ))}
+                </div>
               </div>
             )}
             <Button
@@ -1049,21 +1073,45 @@ function CreatureCreatorContent() {
             {creature.techniques.length === 0 ? (
               <p className="text-sm text-text-muted italic mb-4">No techniques added</p>
             ) : (
-              <div className="space-y-2 mb-4">
-                {creature.techniques.map(tech => (
-                  <ItemCard
-                    key={tech.id}
-                    item={creatureTechniqueToDisplayItem(tech)}
-                    mode="manage"
-                    actions={{
-                      onDelete: () => setCreature(prev => ({
-                        ...prev,
-                        techniques: prev.techniques.filter((t: { id: string }) => t.id !== tech.id)
-                      }))
-                    }}
-                    compact
-                  />
-                ))}
+              <div className="border border-border-light rounded-lg overflow-hidden mb-4">
+                <ListHeader
+                  columns={[
+                    { key: 'name', label: 'Name', width: '1.4fr' },
+                    { key: 'Energy', label: 'Energy', width: '0.7fr', align: 'center' },
+                    { key: 'Weapon', label: 'Weapon', width: '1fr', align: 'center' },
+                    { key: 'Training Pts', label: 'Training Pts', width: '0.8fr', align: 'center' },
+                  ]}
+                  gridColumns="1.4fr 0.7fr 1fr 0.8fr"
+                />
+                <div className="space-y-1">
+                  {creature.techniques.map((tech: { id: string; name: string; energy?: number; weapon?: string; tp?: number }) => (
+                    <GridListRow
+                      key={tech.id}
+                      id={tech.id}
+                      name={tech.name}
+                      columns={[
+                        { key: 'Energy', value: tech.energy ?? '-', align: 'center' as const },
+                        { key: 'Weapon', value: tech.weapon ?? '-', align: 'center' as const },
+                        { key: 'Training Pts', value: tech.tp ?? '-', align: 'center' as const },
+                      ]}
+                      gridColumns="1.4fr 0.7fr 1fr 0.8fr"
+                      rightSlot={
+                        <IconButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setCreature(prev => ({
+                            ...prev,
+                            techniques: prev.techniques.filter((t: { id: string }) => t.id !== tech.id)
+                          }))}
+                          label="Remove technique"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      }
+                      compact
+                    />
+                  ))}
+                </div>
               </div>
             )}
             <Button
