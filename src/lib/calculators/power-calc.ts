@@ -7,6 +7,7 @@
 
 import type { PowerPart } from '@/hooks/use-rtdb';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
+import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 
 // Re-export for backwards compatibility
 export { PART_IDS, findByIdOrName };
@@ -16,7 +17,7 @@ export { PART_IDS, findByIdOrName };
 // =============================================================================
 
 export interface PowerPartPayload {
-  id?: number;
+  id?: number | string; // codex may use string ids e.g. "s377"
   name?: string;
   part?: PowerPart;
   op_1_lvl?: number;
@@ -407,7 +408,8 @@ export function deriveArea(
 }
 
 /**
- * Derive duration string from parts
+ * Derive duration string from parts (value + unit with proper pluralization).
+ * Uses shared formatDurationFromTypeAndValue for consistency with character sheet, library, codex.
  */
 export function deriveDuration(
   partsPayload: PowerPartPayload[] = [],
@@ -424,37 +426,37 @@ export function deriveDuration(
     p ? getOptionLevel(p, 1) : 0;
 
   const permanentPart = findPartById(PART_IDS.DURATION_PERMANENT, 'Duration (Permanent)');
-  if (permanentPart) return 'Permanent';
+  if (permanentPart) return formatDurationFromTypeAndValue('permanent', 0);
 
   const roundPart = findPartById(PART_IDS.DURATION_ROUND, 'Duration (Round)');
   if (roundPart) {
     const lvl = getLvl(roundPart);
     const rounds = 2 + lvl;
-    return `${rounds} ${rounds > 1 ? 'rounds' : 'round'}`;
+    return formatDurationFromTypeAndValue('rounds', rounds);
   }
 
   const minutePart = findPartById(PART_IDS.DURATION_MINUTE, 'Duration (Minute)');
   if (minutePart) {
     const lvl = getLvl(minutePart);
-    const minutes = [1, 10, 30][lvl] || 1;
-    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    const minutes = [1, 10, 30][lvl] ?? 1;
+    return formatDurationFromTypeAndValue('minutes', minutes);
   }
 
   const hourPart = findPartById(PART_IDS.DURATION_HOUR, 'Duration (Hour)');
   if (hourPart) {
     const lvl = getLvl(hourPart);
-    const hours = [1, 6, 12][lvl] || 1;
-    return `${hours} hour${hours > 1 ? 's' : ''}`;
+    const hours = [1, 6, 12][lvl] ?? 1;
+    return formatDurationFromTypeAndValue('hours', hours);
   }
 
   const dayPart = findPartById(PART_IDS.DURATION_DAYS, 'Duration (Days)');
   if (dayPart) {
     const lvl = getLvl(dayPart);
-    const days = [1, 10, 20, 30][lvl] || 1;
-    return `${days} day${days > 1 ? 's' : ''}`;
+    const days = [1, 10, 20, 30][lvl] ?? 1;
+    return formatDurationFromTypeAndValue('days', days);
   }
 
-  return '1 round';
+  return formatDurationFromTypeAndValue('rounds', 1);
 }
 
 // =============================================================================
@@ -596,27 +598,11 @@ export function derivePowerDisplay(
   let durationStr: string;
   if (powerDoc.duration && powerDoc.duration.type && powerDoc.duration.type !== 'instant') {
     const durType = powerDoc.duration.type;
-    const durValue = powerDoc.duration.value || 1;
-    if (durType === 'permanent') {
-      durationStr = 'Permanent';
-    } else if (durType === 'round') {
-      durationStr = durValue > 1 ? `${durValue} Rounds` : '1 Round';
-    } else if (durType === 'minute') {
-      durationStr = durValue > 1 ? `${durValue} Minutes` : '1 Minute';
-    } else if (durType === 'hour') {
-      durationStr = durValue > 1 ? `${durValue} Hours` : '1 Hour';
-    } else if (durType === 'day') {
-      durationStr = durValue > 1 ? `${durValue} Days` : '1 Day';
-    } else {
-      durationStr = durType;
-    }
-    // Add focus/sustain modifiers
-    if (powerDoc.duration.focus) {
-      durationStr += ' (Focus)';
-    }
-    if (powerDoc.duration.sustain && powerDoc.duration.sustain > 0) {
-      durationStr += ` (Sustain ${powerDoc.duration.sustain})`;
-    }
+    const durValue = powerDoc.duration.value ?? 1;
+    durationStr = formatDurationWithModifiers(durType, durValue, {
+      focus: powerDoc.duration.focus,
+      sustain: powerDoc.duration.sustain,
+    });
   } else {
     durationStr = deriveDuration(partsPayload, partsDb);
   }

@@ -156,9 +156,16 @@ function formatDuration(duration: string | undefined): string {
   
   // Hours
   const hrMatch = withoutParens.match(/^(\d+)\s*hours?$/);
-  if (hrMatch) return `${hrMatch[1]} HR`;
-  
-  // Capitalize whatever remains
+  if (hrMatch) return hrMatch[1] === '1' ? '1 HR' : `${hrMatch[1]} HRS`;
+
+  // Days
+  const dayMatch = withoutParens.match(/^(\d+)\s*days?$/);
+  if (dayMatch) return dayMatch[1] === '1' ? '1 Day' : `${dayMatch[1]} Days`;
+
+  // Permanent
+  if (withoutParens === 'permanent') return 'Permanent';
+
+  // Capitalize whatever remains (e.g. "1 Minute" → "1 Minute")
   return capitalizeWords(withoutParens);
 }
 

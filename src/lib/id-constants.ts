@@ -287,12 +287,16 @@ export function findByIdOrName<T extends HasIdAndName>(
 ): T | undefined {
   if (!Array.isArray(db) || !ref) return undefined;
 
-  // First try by ID
+  // First try by ID (support numeric and string IDs e.g. "s377")
   if (ref.id !== undefined && ref.id !== null) {
     const byId = db.find((item) => {
-      const itemId = typeof item.id === 'string' ? parseInt(item.id, 10) : item.id;
-      const refId = typeof ref.id === 'string' ? parseInt(ref.id, 10) : ref.id;
-      return itemId === refId;
+      const refStr = String(ref.id);
+      const itemStr = String(item.id);
+      if (refStr === itemStr) return true;
+      const itemNum = typeof item.id === 'string' ? parseInt(item.id, 10) : item.id;
+      const refNum = typeof ref.id === 'string' ? parseInt(ref.id, 10) : ref.id;
+      if (!Number.isNaN(itemNum) && !Number.isNaN(refNum)) return itemNum === refNum;
+      return false;
     });
     if (byId) return byId;
   }

@@ -16,7 +16,7 @@ import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 export type CreatorType = 'power' | 'technique' | 'empowered';
 
 export interface MechanicPartResult {
-  id: number;
+  id: number | string; // codex may use numeric (379) or string ids ("s377")
   name: string;
   op_1_lvl: number;
   op_2_lvl: number;
@@ -162,11 +162,11 @@ function getAreaPartInfo(areaType: string): { id: number; name: string } | null 
   return mapping[areaType] || null;
 }
 
-/** Map duration type to part ID and name */
-function getDurationPartInfo(durationType: string): { id: number; name: string } | null {
-  const mapping: Record<string, { id: number; name: string }> = {
+/** Map duration type to part ID and name. IDs can be numeric (legacy) or codex string (e.g. "s377"). */
+function getDurationPartInfo(durationType: string): { id: number | string; name: string } | null {
+  const mapping: Record<string, { id: number | string; name: string }> = {
     rounds: { id: PART_IDS.DURATION_ROUND, name: 'Duration (Round)' },
-    minutes: { id: PART_IDS.DURATION_MINUTE, name: 'Duration (Minute)' },
+    minutes: { id: 's377', name: 'Duration (Minute)' }, // codex often uses "s377" for Duration (Minute)
     hours: { id: PART_IDS.DURATION_HOUR, name: 'Duration (Hour)' },
     days: { id: PART_IDS.DURATION_DAYS, name: 'Duration (Days)' },
     permanent: { id: PART_IDS.DURATION_PERMANENT, name: 'Duration (Permanent)' },
@@ -234,9 +234,9 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
   const parts: MechanicPartResult[] = [];
   const supportsDuration = creatorType === 'power' || creatorType === 'empowered';
 
-  // Helper to add part if it exists in database
+  // Helper to add part if it exists in database (partId can be number or string e.g. 379 or "s377")
   function addPart(
-    partId: number,
+    partId: number | string,
     partName: string,
     op1 = 0,
     applyDuration = false
@@ -245,7 +245,7 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
     if (!def) def = findByIdOrName(partsDb, { name: partName });
     if (def && def.mechanic) {
       parts.push({
-        id: Number(def.id),
+        id: def.id as number | string,
         name: (def.name as string) || partName,
         op_1_lvl: op1,
         op_2_lvl: 0,
