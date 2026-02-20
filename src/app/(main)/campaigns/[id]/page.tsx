@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ExternalLink,
   Dices,
+  Pencil,
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
 import {
@@ -36,7 +37,7 @@ import {
 import { DeleteConfirmModal } from '@/components/shared';
 import { RollEntryCard } from '@/components/character-sheet';
 import { useCampaign, useCharacters, useInvalidateCampaigns, useAuth, useCampaignRolls } from '@/hooks';
-import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, deleteCampaignAction } from '../actions';
+import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, deleteCampaignAction, updateCampaignAction } from '../actions';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../constants';
 import type { Campaign, CampaignCharacter } from '@/types/campaign';
 
@@ -76,6 +77,11 @@ function CampaignDetailContent() {
   } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [descriptionInput, setDescriptionInput] = useState('');
+  const [updateLoading, setUpdateLoading] = useState(false);
 
   const handleCopyCode = () => {
     if (campaign?.inviteCode) {
@@ -164,6 +170,56 @@ function CampaignDetailContent() {
     }
   };
 
+  const handleSaveName = async () => {
+    if (!campaign || nameInput.trim() === campaign.name) {
+      setEditingName(false);
+      return;
+    }
+    setActionError(null);
+    setUpdateLoading(true);
+    try {
+      const result = await updateCampaignAction(campaignId, { name: nameInput.trim() });
+      if (result.success) {
+        invalidateCampaigns();
+        setEditingName(false);
+      } else {
+        setActionError(result.error || 'Failed to update name');
+      }
+    } catch {
+      setActionError('Failed to update name');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleSaveDescription = async () => {
+    if (!campaign) {
+      setEditingDescription(false);
+      return;
+    }
+    const newDesc = descriptionInput.trim();
+    const currentDesc = campaign.description ?? '';
+    if (newDesc === currentDesc) {
+      setEditingDescription(false);
+      return;
+    }
+    setActionError(null);
+    setUpdateLoading(true);
+    try {
+      const result = await updateCampaignAction(campaignId, { description: newDesc || undefined });
+      if (result.success) {
+        invalidateCampaigns();
+        setEditingDescription(false);
+      } else {
+        setActionError(result.error || 'Failed to update description');
+      }
+    } catch {
+      setActionError('Failed to update description');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <PageContainer size="xl">
@@ -212,19 +268,94 @@ function CampaignDetailContent() {
         </Link>
       </div>
 
-      <PageHeader
-        title={campaign.name}
-        description={campaign.description || undefined}
-        actions={
-          isRealmMaster ? (
-            <div className="flex items-center gap-2">
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            {isRealmMaster && editingName ? (
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onBlur={handleSaveName}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveName();
+                  if (e.key === 'Escape') {
+                    setNameInput(campaign.name);
+                    setEditingName(false);
+                  }
+                }}
+                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500 w-full max-w-md"
+                autoFocus
+                disabled={updateLoading}
+              />
+            ) : (
+              <h1 className="text-2xl md:text-3xl font-bold text-text-primary flex items-center gap-2">
+                {campaign.name}
+                {isRealmMaster && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNameInput(campaign.name);
+                      setEditingName(true);
+                    }}
+                    className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                    title="Edit campaign name"
+                    disabled={updateLoading}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
+              </h1>
+            )}
+            {isRealmMaster && editingDescription ? (
+              <div className="mt-2">
+                <textarea
+                  value={descriptionInput}
+                  onChange={(e) => setDescriptionInput(e.target.value)}
+                  onBlur={handleSaveDescription}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setDescriptionInput(campaign.description ?? '');
+                      setEditingDescription(false);
+                    }
+                  }}
+                  className="mt-2 w-full max-w-xl px-2 py-1 text-text-primary border-2 border-primary-400 rounded-lg focus:ring-2 focus:ring-primary-500 min-h-[80px] bg-surface"
+                  placeholder="Brief description of your campaign..."
+                  autoFocus
+                  disabled={updateLoading}
+                />
+              </div>
+            ) : (
+              (campaign.description || isRealmMaster) && (
+                <p className="mt-2 text-text-secondary flex items-center gap-2">
+                  {campaign.description || (isRealmMaster ? 'No description — click pencil to add one' : '')}
+                  {isRealmMaster && !editingName && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDescriptionInput(campaign.description ?? '');
+                        setEditingDescription(true);
+                      }}
+                      className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                      title="Edit description"
+                      disabled={updateLoading}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  )}
+                </p>
+              )
+            )}
+          </div>
+          {isRealmMaster && (
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button variant="danger" size="sm" onClick={() => setDeleteConfirm(true)}>
                 Delete Campaign
               </Button>
             </div>
-          ) : null
-        }
-      />
+          )}
+        </div>
+      </div>
 
       {actionError && (
         <Alert variant="danger" className="mb-4" onDismiss={() => setActionError(null)}>

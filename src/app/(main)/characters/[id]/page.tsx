@@ -23,8 +23,10 @@ import {
   RollProvider,
   SheetActionToolbar,
   CharacterSheetProvider,
+  CharacterSheetSettingsModal,
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
+import { createClient } from '@/lib/supabase/client';
 import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat, Feat } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { calculateStats } from './character-sheet-utils';
@@ -47,6 +49,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [saving, setSaving] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [addModalType, setAddModalType] = useState<AddModalType>(null);
   const [featModalType, setFeatModalType] = useState<FeatModalType>(null);
   const [skillModalType, setSkillModalType] = useState<SkillModalType>(null);
@@ -155,6 +158,46 @@ export default function CharacterSheetPage({ params }: PageParams) {
 
     loadCharacter();
   }, [id, authLoading]);
+
+  // Realtime: when this character is updated (e.g. from encounter tracker), sync HP/EN/AP to local state
+  useEffect(() => {
+    if (!character?.id) return;
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`character:${character.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'users',
+          table: 'characters',
+          filter: `id=eq.${character.id}`,
+        },
+        (payload: { new: { id: string; data?: Record<string, unknown> } }) => {
+          const data = payload.new?.data;
+          if (!data) return;
+          setCharacter(prev => {
+            if (!prev || prev.id !== payload.new.id) return prev;
+            const updates: Partial<Character> = {};
+            if (typeof data.currentHealth === 'number') updates.currentHealth = data.currentHealth;
+            if (typeof data.currentEnergy === 'number') updates.currentEnergy = data.currentEnergy;
+            if (typeof data.actionPoints === 'number') updates.actionPoints = data.actionPoints;
+            if (data.health && typeof (data.health as { current?: number }).current === 'number') {
+              updates.currentHealth = (data.health as { current: number }).current;
+            }
+            if (data.energy && typeof (data.energy as { current?: number }).current === 'number') {
+              updates.currentEnergy = (data.energy as { current: number }).current;
+            }
+            if (Object.keys(updates).length === 0) return prev;
+            return { ...prev, ...updates };
+          });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [character?.id]);
   
   const isOwner = Boolean(character && user && character.userId === user.uid);
   const effectiveEditMode = isEditMode && isOwner;
@@ -347,6 +390,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setCharacter(prev => prev ? {
       ...prev,
       currentEnergy: value,
+    } : null);
+  }, [character]);
+
+  const handleActionPointsChange = useCallback((value: number) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      actionPoints: Math.max(0, Math.min(10, value)),
     } : null);
   }, [character]);
   
@@ -1284,8 +1335,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
           onToggleEditMode={handleToggleEditMode}
           onRecovery={() => setShowRecoveryModal(true)}
           onLevelUp={() => setShowLevelUpModal(true)}
+          onSettings={isOwner ? () => setShowSettingsModal(true) : undefined}
           canEdit={isOwner}
         />
+
+        {showSettingsModal && character && (
+          <CharacterSheetSettingsModal
+            isOpen={showSettingsModal}
+            onClose={() => setShowSettingsModal(false)}
+            visibility={character.visibility}
+            onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
+            canEdit={isOwner}
+          />
+        )}
         
         {/* Character Sheet Content */}
         <div className="max-w-[1600px] mx-auto px-4 pt-4">
@@ -1297,6 +1359,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 isEditMode={effectiveEditMode}
                 onHealthChange={handleHealthChange}
                 onEnergyChange={handleEnergyChange}
+                onActionPointsChange={handleActionPointsChange}
                 onHealthPointsChange={handleHealthPointsChange}
                 onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}

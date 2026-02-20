@@ -2,6 +2,13 @@
 
 Append-only log. Agents must add an entry for each PR/merge.
 
+- 2026-02-20 | agent | Session: Action Points, realtime sync, character settings modal | files: src/types/character.ts, sheet-header.tsx, characters/[id]/page.tsx, encounters/[id]/combat/page.tsx, sheet-action-toolbar.tsx, character-sheet-settings-modal.tsx, notes-tab.tsx, index (character-sheet) | Summary:
+  - **Action Points (AP):** Default 4 per round; AP tracker added to character sheet header (right column with Health/Energy). ValueStepper 0–10; stored on character as actionPoints; synced with encounter when character is in combat.
+  - **Realtime sync:** Character page subscribes to postgres_changes on users.characters (filter id=eq.{characterId}) so HP/EN/AP updates from the encounter tracker appear on the sheet without refresh. Combat page: syncCharacterResources now syncs health, energy, and actionPoints to character API; realtime handler reads currentHealth/currentEnergy/actionPoints from payload (with fallbacks to health/energy); campaign characters added with ap from character.actionPoints ?? 4; updateAP and updateCombatant sync AP to character for campaign-characters.
+  - **Roll log realtime:** useCampaignRolls already subscribes to campaigns.campaign_rolls; publication in supabase-rls-policies.sql. No change.
+  - **Character settings:** Gear icon added to sheet toolbar (top right); opens CharacterSheetSettingsModal with Character visibility (Private/Campaign/Public). Privacy setting removed from Notes tab and moved into this modal.
+  - npm run build passes.
+
 - 2026-02-20 | agent | Session: Weapon armament load — no duplicate damage/range in property list | files: src/lib/calculators/item-calc.ts, ALL_FEEDBACK_CLEAN.md, AI_CHANGELOG.md | Summary:
   - When loading a weapon armament, Weapon Damage and Range were appearing in the property list in addition to being restored in the dedicated damage/range UI, duplicating cost. filterSavedItemPropertiesForList already excluded properties with mechanic: true, but the codex may not set that flag.
   - Added MECHANIC_PROPERTY_IDS in item-calc.ts (Range, Weapon Damage, Split Damage Dice, Two-Handed, DR, Armor/Shield base and shield amount/damage, Critical Range +1, ability requirements). isMechanicProperty() now returns true for these IDs even when mechanic is false in the DB.

@@ -11,6 +11,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { requireAuth, getSession } from '@/lib/supabase/session';
 import { prisma } from '@/lib/prisma';
+import { isAdmin } from '@/lib/admin';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -147,25 +148,33 @@ const RATE_LIMIT_DAYS = 7;
 
 /**
  * Change the current user's username.
+ * Admins (ADMIN_UIDS) can change their username without blocklist or rate-limit restrictions.
  */
 export async function changeUsernameAction(newUsername: string) {
   try {
     const user = await requireAuth();
     const trimmed = newUsername.trim();
     const normalized = trimmed.toLowerCase();
+    const admin = await isAdmin(user.uid);
 
-    if (trimmed.length < USERNAME_MIN_LEN) {
-      return { success: false, error: `Username must be at least ${USERNAME_MIN_LEN} characters` };
-    }
-    if (trimmed.length > USERNAME_MAX_LEN) {
-      return { success: false, error: `Username must be at most ${USERNAME_MAX_LEN} characters` };
-    }
-    if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
-      return { success: false, error: 'Username can only contain letters, numbers, underscores, and hyphens' };
-    }
+    if (admin) {
+      if (trimmed.length === 0) {
+        return { success: false, error: 'Username cannot be empty' };
+      }
+    } else {
+      if (trimmed.length < USERNAME_MIN_LEN) {
+        return { success: false, error: `Username must be at least ${USERNAME_MIN_LEN} characters` };
+      }
+      if (trimmed.length > USERNAME_MAX_LEN) {
+        return { success: false, error: `Username must be at most ${USERNAME_MAX_LEN} characters` };
+      }
+      if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
+        return { success: false, error: 'Username can only contain letters, numbers, underscores, and hyphens' };
+      }
 
-    const blocked = USERNAME_BLOCKLIST.some((w) => normalized.includes(w));
-    if (blocked) return { success: false, error: 'This username is not allowed' };
+      const blocked = USERNAME_BLOCKLIST.some((w) => normalized.includes(w));
+      if (blocked) return { success: false, error: 'This username is not allowed' };
+    }
 
     const profile = await prisma.userProfile.findUnique({ where: { id: user.uid } });
     const currentUsername = (profile?.username ?? '').toLowerCase();
@@ -173,12 +182,14 @@ export async function changeUsernameAction(newUsername: string) {
       return { success: false, error: 'New username is the same as your current username' };
     }
 
-    const lastChange = profile?.lastUsernameChange;
-    if (lastChange) {
-      const daysSince = (Date.now() - lastChange.getTime()) / (24 * 60 * 60 * 1000);
-      if (daysSince < RATE_LIMIT_DAYS) {
-        const remaining = Math.ceil(RATE_LIMIT_DAYS - daysSince);
-        return { success: false, error: `You can change your username again in ${remaining} day(s)` };
+    if (!admin) {
+      const lastChange = profile?.lastUsernameChange;
+      if (lastChange) {
+        const daysSince = (Date.now() - lastChange.getTime()) / (24 * 60 * 60 * 1000);
+        if (daysSince < RATE_LIMIT_DAYS) {
+          const remaining = Math.ceil(RATE_LIMIT_DAYS - daysSince);
+          return { success: false, error: `You can change your username again in ${remaining} day(s)` };
+        }
       }
     }
 

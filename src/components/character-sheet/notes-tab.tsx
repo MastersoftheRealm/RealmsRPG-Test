@@ -15,7 +15,7 @@
 import { useState, useCallback } from 'react';
 import { Plus, X, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button, IconButton, Textarea, Select } from '@/components/ui';
+import { Button, IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
 import type { Abilities } from '@/types';
@@ -139,12 +139,6 @@ function NoteCard({
   );
 }
 
-const VISIBILITY_OPTIONS: { value: CharacterVisibility; label: string }[] = [
-  { value: 'private', label: 'Private — Only you can view' },
-  { value: 'campaign', label: 'Campaign — Realm Master & campaign members can view' },
-  { value: 'public', label: 'Public — Anyone can view' },
-];
-
 export function NotesTab({
   weight = 70,
   height = 170,
@@ -215,24 +209,7 @@ export function NotesTab({
 
   return (
     <div className="space-y-4">
-      {/* Character Visibility */}
-      <div className="rounded-lg border border-border-light bg-surface-alt p-3">
-        <SectionHeader title="Character Visibility" />
-        <p className="text-xs text-text-muted mb-2">
-          Controls who can view this character sheet. Realm Masters can view campaign members&apos; sheets when set to Campaign or Public.
-        </p>
-        {isEditMode && onVisibilityChange ? (
-          <Select
-            options={VISIBILITY_OPTIONS}
-            value={visibility}
-            onChange={(e) => onVisibilityChange(e.target.value as CharacterVisibility)}
-          />
-        ) : (
-          <p className="text-sm font-medium text-text-primary">
-            {VISIBILITY_OPTIONS.find((o) => o.value === visibility)?.label ?? visibility}
-          </p>
-        )}
-      </div>
+      {/* Character visibility is in Character settings (gear icon in toolbar). */}
 
       {/* Physical Attributes Summary */}
       <TabSummarySection variant="physical">

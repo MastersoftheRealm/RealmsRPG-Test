@@ -13,6 +13,7 @@ import type { AuthUser } from '@/types/auth';
 import { createClient } from '@/lib/supabase/client';
 import { changeUsernameAction, getUserProfileAction, deleteAccountAction } from '@/app/(auth)/actions';
 import { useAuthStore } from '@/stores';
+import { useAdmin } from '@/hooks';
 import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner } from '@/components/ui';
@@ -43,6 +44,7 @@ interface UserProfile {
 function AccountContent() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { isAdmin } = useAdmin();
 
   const canChangeEmailPassword = useMemo(() => hasPasswordProvider(user), [user]);
   const authProviderLabel = useMemo(() => getAuthProviderLabel(user), [user]);
@@ -369,10 +371,12 @@ function AccountContent() {
               value={newUsername}
               onChange={(e) => setNewUsername(e.target.value)}
               placeholder={profile?.username ? `Current: ${profile.username}` : 'Enter new username'}
-              minLength={3}
-              maxLength={24}
-              pattern="[a-zA-Z0-9_-]+"
-              title="Letters, numbers, underscores, and hyphens only"
+              {...(!isAdmin && {
+                minLength: 3,
+                maxLength: 24,
+                pattern: '[a-zA-Z0-9_-]+',
+                title: 'Letters, numbers, underscores, and hyphens only',
+              })}
             />
           </div>
 
@@ -384,7 +388,7 @@ function AccountContent() {
 
           <Button
             type="submit"
-            disabled={usernameChanging || !newUsername.trim() || newUsername.trim().length < 3}
+            disabled={usernameChanging || !newUsername.trim() || (!isAdmin && newUsername.trim().length < 3)}
             isLoading={usernameChanging}
           >
             Update Username

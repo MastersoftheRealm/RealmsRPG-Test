@@ -169,6 +169,8 @@ export interface Character {
   currentHealth?: number;
   /** Current energy (runtime state). Canonical field — replaces energy.current */
   currentEnergy?: number;
+  /** Action points (per round, default 4). Synced with encounter when character is in combat. */
+  actionPoints?: number;
   
   // Combat stats — speedBase/evasionBase are user inputs; speed/evasion/armor are derived
   /** @deprecated Derived from calculateAllStats(). Use calculatedStats.speed instead. */

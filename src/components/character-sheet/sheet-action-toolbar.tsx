@@ -15,7 +15,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Pencil, Check, Heart, ArrowUp, Save, Loader2, AlertCircle } from 'lucide-react';
+import { Pencil, Check, Heart, ArrowUp, Save, Loader2, AlertCircle, Settings } from 'lucide-react';
 
 interface SheetActionToolbarProps {
   isEditMode: boolean;
@@ -26,6 +26,8 @@ interface SheetActionToolbarProps {
   onToggleEditMode: () => void;
   onRecovery: () => void;
   onLevelUp: () => void;
+  /** Open character sheet settings (e.g. visibility). Shown for owners. */
+  onSettings?: () => void;
   /** When false, hide edit/recovery/level-up/save (view-only mode for non-owners). */
   canEdit?: boolean;
 }
@@ -39,6 +41,7 @@ export function SheetActionToolbar({
   onToggleEditMode,
   onRecovery,
   onLevelUp,
+  onSettings,
   canEdit = true,
 }: SheetActionToolbarProps) {
   if (!canEdit) {
@@ -108,6 +111,23 @@ export function SheetActionToolbar({
       >
         <ArrowUp className="w-5 h-5" />
       </button>
+
+      {/* Character settings (visibility, etc.) */}
+      {onSettings && (
+        <button
+          onClick={onSettings}
+          className={cn(
+            'w-11 h-11 rounded-full shadow-lg transition-all duration-200',
+            'flex items-center justify-center',
+            'bg-surface border border-border-light text-text-secondary',
+            'hover:scale-110 hover:text-text-primary hover:bg-surface-alt active:scale-95'
+          )}
+          title="Character settings"
+          aria-label="Character settings"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+      )}
 
       {/* Save State Indicator */}
       <div

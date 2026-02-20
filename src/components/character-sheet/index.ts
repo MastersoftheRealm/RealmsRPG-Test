@@ -20,4 +20,5 @@ export { AddFeatModal } from './add-feat-modal';
 export { LevelUpModal } from './level-up-modal';
 export { RecoveryModal } from './recovery-modal';
 export { SheetActionToolbar } from './sheet-action-toolbar';
+export { CharacterSheetSettingsModal } from './character-sheet-settings-modal';
 export { FeatsTab } from './feats-tab';

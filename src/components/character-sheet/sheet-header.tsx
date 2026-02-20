@@ -39,6 +39,7 @@ interface SheetHeaderProps {
   isEditMode?: boolean;
   onHealthChange?: (value: number) => void;
   onEnergyChange?: (value: number) => void;
+  onActionPointsChange?: (value: number) => void;
   onHealthPointsChange?: (value: number) => void;
   onEnergyPointsChange?: (value: number) => void;
   onPortraitChange?: (file: File) => void | Promise<void>;
@@ -414,12 +415,15 @@ function HealthBar({
   );
 }
 
+const DEFAULT_ACTION_POINTS = 4;
+
 export function SheetHeader({
   character: characterProp,
   calculatedStats,
   isEditMode: isEditModeProp = false,
   onHealthChange,
   onEnergyChange,
+  onActionPointsChange,
   onHealthPointsChange,
   onEnergyPointsChange,
   onPortraitChange,
@@ -438,6 +442,7 @@ export function SheetHeader({
   const isEditMode = ctx?.isEditMode ?? isEditModeProp;
   const currentHealth = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
+  const actionPoints = character.actionPoints ?? DEFAULT_ACTION_POINTS;
   
   // State for editing character name
   const [isEditingName, setIsEditingName] = useState(false);
@@ -686,6 +691,33 @@ export function SheetHeader({
             subLabel={innateThreshold > 0 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}` : undefined}
             showBar
           />
+
+          {/* Action Points (default 4 per round) */}
+          <div className={cn('flex flex-col p-3 rounded-lg border', 'bg-surface-alt border-border-light')}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                Action Points
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-12 text-center text-lg font-bold text-text-primary">{actionPoints}</span>
+              {onActionPointsChange && (
+                <ValueStepper
+                  value={actionPoints}
+                  onChange={onActionPointsChange}
+                  min={0}
+                  max={10}
+                  colorVariant="default"
+                  enableHoldRepeat
+                  size="sm"
+                  variant="compact"
+                  hideValue
+                  decrementTitle="Decrease action points"
+                  incrementTitle="Increase action points"
+                />
+              )}
+            </div>
+          </div>
           
           {/* Health-Energy Pool Allocation (edit mode only) */}
           {isEditMode && onHealthPointsChange && onEnergyPointsChange && (

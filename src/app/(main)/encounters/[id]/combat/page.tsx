@@ -63,23 +63,30 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const { data: campaignsFull = [] } = useCampaignsFull();
   const syncTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  const syncCharacterHealthEnergy = useCallback(
-    (characterId: string, payload: { health: { current: number; max: number }; energy: { current: number; max: number } }) => {
+  const syncCharacterResources = useCallback(
+    (characterId: string, payload: { health?: { current: number; max: number }; energy?: { current: number; max: number }; actionPoints?: number }) => {
       const key = characterId;
       if (syncTimeoutsRef.current[key]) clearTimeout(syncTimeoutsRef.current[key]);
       syncTimeoutsRef.current[key] = setTimeout(async () => {
         delete syncTimeoutsRef.current[key];
         try {
+          const body: Record<string, unknown> = {};
+          if (payload.health) {
+            body.health = { current: payload.health.current, max: payload.health.max };
+            body.currentHealth = payload.health.current;
+          }
+          if (payload.energy) {
+            body.energy = { current: payload.energy.current, max: payload.energy.max };
+            body.currentEnergy = payload.energy.current;
+          }
+          if (payload.actionPoints !== undefined) body.actionPoints = payload.actionPoints;
           await fetch(`/api/characters/${encodeURIComponent(characterId)}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              health: { current: payload.health.current, max: payload.health.max },
-              energy: { current: payload.energy.current, max: payload.energy.max },
-            }),
+            body: JSON.stringify(body),
           });
         } catch (err) {
-          console.error('Failed to sync character HP/EN:', err);
+          console.error('Failed to sync character resources:', err);
         }
       }, 400);
     },
@@ -118,11 +125,17 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           table: 'characters',
           filter,
         },
-        (payload: { new: { id: string; data?: { health?: { current?: number; max?: number }; energy?: { current?: number; max?: number } } } }) => {
+        (payload: { new: { id: string; data?: Record<string, unknown> } }) => {
           const row = payload.new;
           const charId = row.id;
-          const data = row.data;
-          if (!data?.health && !data?.energy) return;
+          const data = row.data as { health?: { current?: number; max?: number }; energy?: { current?: number; max?: number }; currentHealth?: number; currentEnergy?: number; actionPoints?: number } | undefined;
+          if (!data) return;
+          const currentHp = data.currentHealth ?? data.health?.current;
+          const currentEn = data.currentEnergy ?? data.energy?.current;
+          const ap = data.actionPoints;
+          const hasHpEn = currentHp !== undefined || currentEn !== undefined || data.health || data.energy;
+          const hasAp = ap !== undefined;
+          if (!hasHpEn && !hasAp) return;
           setEncounter(prev => {
             if (!prev) return prev;
             const hasMatch = prev.combatants.some(c => (c as TrackedCombatant).sourceId === charId);
@@ -131,13 +144,13 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
               ...prev,
               combatants: prev.combatants.map(c => {
                 if ((c as TrackedCombatant).sourceId !== charId) return c;
-                const health = data.health;
-                const energy = data.energy;
-                return {
-                  ...c,
-                  ...(health && { currentHealth: health.current ?? c.currentHealth, maxHealth: health.max ?? c.maxHealth }),
-                  ...(energy && { currentEnergy: energy.current ?? c.currentEnergy, maxEnergy: energy.max ?? c.maxEnergy }),
-                };
+                const updates: Partial<TrackedCombatant> = { ...c };
+                if (currentHp !== undefined) updates.currentHealth = currentHp;
+                if (data.health?.max !== undefined) updates.maxHealth = data.health.max;
+                if (currentEn !== undefined) updates.currentEnergy = currentEn;
+                if (data.energy?.max !== undefined) updates.maxEnergy = data.energy.max;
+                if (hasAp) updates.ap = ap ?? 4;
+                return { ...c, ...updates };
               }),
             };
           });
@@ -310,7 +323,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
             currentEnergy: (d as Record<string, unknown>).currentEnergy as number ?? d.energy?.current ?? d.energy?.max ?? 10,
             armor: 0,
             evasion: d.evasion ?? 10 + (abilities.agility ?? 0),
-            ap: 4,
+            ap: (d as Record<string, unknown>).actionPoints as number ?? 4,
             conditions: [],
             notes: '',
             combatantType: 'ally' as CombatantType,
@@ -381,11 +394,18 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
       if (!prev) return prev;
       const next = prev.combatants.map(c => c.id === id ? { ...c, ...updates } : c);
       const updated = next.find(c => c.id === id) as TrackedCombatant | undefined;
-      if (updated?.sourceType === 'campaign-character' && updated.sourceUserId === user?.uid && updated.sourceId && (updates.currentHealth !== undefined || updates.currentEnergy !== undefined || updates.maxHealth !== undefined || updates.maxEnergy !== undefined)) {
-        syncCharacterHealthEnergy(updated.sourceId, {
-          health: { current: updated.currentHealth, max: updated.maxHealth },
-          energy: { current: updated.currentEnergy, max: updated.maxEnergy },
-        });
+      if (updated?.sourceType === 'campaign-character' && updated.sourceUserId === user?.uid && updated.sourceId) {
+        const syncHpEn = updates.currentHealth !== undefined || updates.currentEnergy !== undefined || updates.maxHealth !== undefined || updates.maxEnergy !== undefined;
+        const syncAp = updates.ap !== undefined;
+        if (syncHpEn || syncAp) {
+          syncCharacterResources(updated.sourceId, {
+            ...(syncHpEn && {
+              health: { current: updated.currentHealth, max: updated.maxHealth },
+              energy: { current: updated.currentEnergy, max: updated.maxEnergy },
+            }),
+            ...(syncAp && { actionPoints: updated.ap }),
+          });
+        }
       }
       return { ...prev, combatants: next };
     });
@@ -429,7 +449,12 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const updateAP = (id: string, delta: number) => {
     setEncounter(prev => {
       if (!prev) return prev;
-      return { ...prev, combatants: prev.combatants.map(c => c.id !== id ? c : { ...c, ap: Math.max(0, Math.min(10, c.ap + delta)) }) };
+      const next = prev.combatants.map(c => c.id !== id ? c : { ...c, ap: Math.max(0, Math.min(10, c.ap + delta)) });
+      const updated = next.find(c => c.id === id) as TrackedCombatant | undefined;
+      if (updated?.sourceType === 'campaign-character' && updated.sourceUserId === user?.uid && updated.sourceId) {
+        syncCharacterResources(updated.sourceId, { actionPoints: updated.ap });
+      }
+      return { ...prev, combatants: next };
     });
   };
 

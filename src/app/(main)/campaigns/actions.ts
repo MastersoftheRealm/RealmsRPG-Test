@@ -314,6 +314,53 @@ export async function removeCharacterFromCampaignAction(data: {
   }
 }
 
+export async function updateCampaignAction(
+  campaignId: string,
+  data: { name?: string; description?: string }
+) {
+  try {
+    const user = await requireAuth();
+
+    const campaignRow = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+    });
+
+    if (!campaignRow) {
+      return { success: false, error: 'Campaign not found' };
+    }
+
+    if (campaignRow.ownerId !== user.uid) {
+      return { success: false, error: 'Only the Realm Master can update the campaign' };
+    }
+
+    const updates: { name?: string; description?: string | null } = {};
+    if (data.name !== undefined) {
+      const name = data.name.trim();
+      if (name.length < 2) {
+        return { success: false, error: 'Campaign name must be at least 2 characters' };
+      }
+      updates.name = name;
+    }
+    if (data.description !== undefined) {
+      updates.description = data.description.trim() || null;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return { success: true };
+    }
+
+    await prisma.campaign.update({
+      where: { id: campaignId },
+      data: updates,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('Update campaign error:', error);
+    return { success: false, error: 'Failed to update campaign' };
+  }
+}
+
 export async function deleteCampaignAction(campaignId: string) {
   try {
     const user = await requireAuth();
