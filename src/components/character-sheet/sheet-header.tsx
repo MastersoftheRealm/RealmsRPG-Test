@@ -193,17 +193,17 @@ function ResourceInput({
     setInputValue(String(newValue));
   };
   
-  // Color classes based on variant with explicit dark mode alternatives for health/energy
+  // Color classes: light = tinted panel; dark = same surface as UI, subtle colored border (no bright green/blue background)
   const bgColor = colorVariant === 'health' 
-    ? 'bg-success-50 dark:bg-success-950/50 border-success-200 dark:border-success-800/60' 
+    ? 'bg-success-50 dark:bg-surface border-success-200 dark:border-success-800/50' 
     : colorVariant === 'energy'
-      ? 'bg-info-50 dark:bg-info-950/50 border-info-200 dark:border-info-800/60'
+      ? 'bg-info-50 dark:bg-surface border-info-200 dark:border-info-800/50'
       : 'bg-surface-alt dark:bg-surface border-border-light dark:border-border';
   
   const labelColor = colorVariant === 'health'
-    ? 'text-success-700 dark:text-success-300'
+    ? 'text-success-700 dark:text-success-400'
     : colorVariant === 'energy'
-      ? 'text-info-700 dark:text-info-300'
+      ? 'text-info-700 dark:text-info-400'
       : 'text-text-secondary dark:text-text-primary';
   
   // Calculate bar percentage - cap at 100% for display but allow tracking above max
@@ -220,9 +220,9 @@ function ResourceInput({
       : colorVariant === 'energy' ? 'bg-info-500 dark:bg-info-400' : 'bg-primary-500 dark:bg-primary-400';
   
   const inputBorderText = colorVariant === 'health'
-    ? 'border-success-300 dark:border-success-700 text-success-800 dark:text-success-200'
+    ? 'border-success-300 dark:border-success-700/60 text-success-800 dark:text-success-300'
     : colorVariant === 'energy'
-      ? 'border-info-300 dark:border-info-700 text-info-800 dark:text-info-200'
+      ? 'border-info-300 dark:border-info-700/60 text-info-800 dark:text-info-300'
       : 'border-border-light dark:border-border text-text-primary';
   
   return (

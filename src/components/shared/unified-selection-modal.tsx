@@ -110,6 +110,11 @@ export interface UnifiedSelectionModalProps {
   // Quantity support (for equipment)
   showQuantity?: boolean;
   
+  /** Optional extra content in footer (e.g. per-item options for selected items) */
+  footerExtra?: (selectedItems: SelectableItem[]) => ReactNode;
+  /** Optional: disable the confirm button based on selected items (e.g. missing required choices) */
+  confirmDisabled?: (selectedItems: SelectableItem[]) => boolean;
+  
   // Styling
   size?: 'md' | 'lg' | 'xl';
   className?: string;
@@ -140,6 +145,8 @@ export function UnifiedSelectionModal({
   filterContent,
   showFilters = false,
   showQuantity = false,
+  footerExtra,
+  confirmDisabled,
   size = 'lg',
   className,
 }: UnifiedSelectionModalProps) {
@@ -218,9 +225,15 @@ export function UnifiedSelectionModal({
     });
   }, [maxSelections, showQuantity]);
   
+  // Selected items (for footerExtra and confirmDisabled)
+  const selectedItems = useMemo(
+    () => items.filter(item => selectedIds.has(String(item.id))),
+    [items, selectedIds]
+  );
+
   // Handle confirm — match by string id so codex number ids work
   const handleConfirm = () => {
-    const selected = items.filter(item => selectedIds.has(String(item.id)));
+    const selected = selectedItems;
     // Attach quantities to items if needed
     if (showQuantity) {
       selected.forEach(item => {
@@ -230,6 +243,8 @@ export function UnifiedSelectionModal({
     onConfirm(selected);
     onClose();
   };
+
+  const isConfirmDisabled = selectedIds.size === 0 || (confirmDisabled?.(selectedItems) ?? false);
   
   
   const sizeClasses = {
@@ -338,21 +353,24 @@ export function UnifiedSelectionModal({
         </div>
         
         {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-border-light mt-4">
-          <span className="text-sm text-text-muted">
-            {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
-            {maxSelections && ` (max ${maxSelections})`}
-          </span>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={selectedIds.size === 0}
-            >
-              Add Selected {selectedIds.size > 0 && `(${selectedIds.size})`}
-            </Button>
+        <div className="flex flex-col gap-3 pt-4 border-t border-border-light mt-4">
+          {footerExtra?.(selectedItems)}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-text-muted">
+              {selectedIds.size} {itemLabel}{selectedIds.size !== 1 ? 's' : ''} selected
+              {maxSelections && ` (max ${maxSelections})`}
+            </span>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                disabled={isConfirmDisabled}
+              >
+                Add Selected {selectedIds.size > 0 && `(${selectedIds.size})`}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
