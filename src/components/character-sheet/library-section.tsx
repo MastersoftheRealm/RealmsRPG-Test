@@ -1288,8 +1288,9 @@ export function LibrarySection({
                     const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
                     const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
                     
-                    // Calculate damage reduction: use enriched armor value, fall back to property parsing
-                    let damageReduction = item.armor ?? 0;
+                    // Damage reduction: 1 (base) + 1 per op_1_lvl. Use enriched armorValue when present, else derive from properties.
+                    const itemWithArmor = item as { armorValue?: number; armor?: number };
+                    let damageReduction = itemWithArmor.armorValue ?? itemWithArmor.armor ?? 0;
                     let critRangeBonus = 0;
                     if (item.properties) {
                       for (const prop of item.properties) {

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, useRef, DragEvent, use } from 'react';
+import { useState, useCallback, useMemo, useEffect, DragEvent, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,7 @@ import type { Combatant, CombatantCondition, CombatantType, TrackedCombatant } f
 import type { Encounter } from '@/types/encounter';
 import { CombatantCard } from '@/app/(main)/encounter-tracker/CombatantCard';
 import { CONDITION_OPTIONS } from '@/app/(main)/encounter-tracker/encounter-tracker-constants';
-import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull, useAuth } from '@/hooks';
+import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
 import { RollProvider, RollLog } from '@/components/character-sheet';
 import { createClient } from '@/lib/supabase/client';
@@ -59,39 +59,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [addingAllChars, setAddingAllChars] = useState(false);
-  const { user } = useAuth();
   const { data: campaignsFull = [] } = useCampaignsFull();
-  const syncTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-
-  const syncCharacterResources = useCallback(
-    (characterId: string, payload: { health?: { current: number; max: number }; energy?: { current: number; max: number }; actionPoints?: number }) => {
-      const key = characterId;
-      if (syncTimeoutsRef.current[key]) clearTimeout(syncTimeoutsRef.current[key]);
-      syncTimeoutsRef.current[key] = setTimeout(async () => {
-        delete syncTimeoutsRef.current[key];
-        try {
-          const body: Record<string, unknown> = {};
-          if (payload.health) {
-            body.health = { current: payload.health.current, max: payload.health.max };
-            body.currentHealth = payload.health.current;
-          }
-          if (payload.energy) {
-            body.energy = { current: payload.energy.current, max: payload.energy.max };
-            body.currentEnergy = payload.energy.current;
-          }
-          if (payload.actionPoints !== undefined) body.actionPoints = payload.actionPoints;
-          await fetch(`/api/characters/${encodeURIComponent(characterId)}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
-        } catch (err) {
-          console.error('Failed to sync character resources:', err);
-        }
-      }, 400);
-    },
-    []
-  );
 
   // Initialize local state from API
   useEffect(() => {
@@ -395,21 +363,14 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const updateCombatant = (id: string, updates: Partial<Combatant>) => {
     setEncounter(prev => {
       if (!prev) return prev;
-      const next = prev.combatants.map(c => c.id === id ? { ...c, ...updates } : c);
-      const updated = next.find(c => c.id === id) as TrackedCombatant | undefined;
-      if (updated?.sourceType === 'campaign-character' && updated.sourceUserId === user?.uid && updated.sourceId) {
-        const syncHpEn = updates.currentHealth !== undefined || updates.currentEnergy !== undefined || updates.maxHealth !== undefined || updates.maxEnergy !== undefined;
-        const syncAp = updates.ap !== undefined;
-        if (syncHpEn || syncAp) {
-          syncCharacterResources(updated.sourceId, {
-            ...(syncHpEn && {
-              health: { current: updated.currentHealth, max: updated.maxHealth },
-              energy: { current: updated.currentEnergy, max: updated.maxEnergy },
-            }),
-            ...(syncAp && { actionPoints: updated.ap }),
-          });
-        }
-      }
+      const combatant = prev.combatants.find(c => c.id === id) as TrackedCombatant | undefined;
+      const isLinked = combatant?.sourceType === 'campaign-character';
+      // For character-linked combatants, HP/EN/AP are read-only and synced from character sheet only
+      const resourceKeys = ['currentHealth', 'maxHealth', 'currentEnergy', 'maxEnergy', 'ap'] as const;
+      const applied: Partial<Combatant> = isLinked
+        ? Object.fromEntries(Object.entries(updates).filter(([k]) => !resourceKeys.includes(k as typeof resourceKeys[number])))
+        : updates;
+      const next = prev.combatants.map(c => c.id === id ? { ...c, ...applied } : c);
       return { ...prev, combatants: next };
     });
   };
@@ -452,11 +413,11 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const updateAP = (id: string, delta: number) => {
     setEncounter(prev => {
       if (!prev) return prev;
-      const next = prev.combatants.map(c => c.id !== id ? c : { ...c, ap: Math.max(0, Math.min(10, c.ap + delta)) });
-      const updated = next.find(c => c.id === id) as TrackedCombatant | undefined;
-      if (updated?.sourceType === 'campaign-character' && updated.sourceUserId === user?.uid && updated.sourceId) {
-        syncCharacterResources(updated.sourceId, { actionPoints: updated.ap });
-      }
+      const combatant = prev.combatants.find(c => c.id === id) as TrackedCombatant | undefined;
+      if (combatant?.sourceType === 'campaign-character') return prev; // AP synced from character sheet only
+      const next = prev.combatants.map(c =>
+        c.id !== id ? c : { ...c, ap: Math.max(0, Math.min(10, c.ap + delta)) }
+      );
       return { ...prev, combatants: next };
     });
   };

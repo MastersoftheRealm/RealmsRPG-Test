@@ -8,7 +8,7 @@
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
-import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
+import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
 
 // =============================================================================
 // Types for Enriched Data
@@ -363,6 +363,8 @@ export function enrichItems(
       // Shield-specific: block amount and optional damage from properties
       const shieldAmount = itemType === 'shield' ? deriveShieldAmountFromProperties(props) : undefined;
       const shieldDamage = itemType === 'shield' ? deriveShieldDamageFromProperties(props) : undefined;
+      // Armor DR = 1 (base) + op_1_lvl per game rules; derive from properties so display is accurate
+      const derivedArmorValue = itemType === 'armor' ? deriveDamageReductionFromProperties(props) : undefined;
       return {
         id: displayId,
         name: libraryItem.name,
@@ -371,7 +373,7 @@ export function enrichItems(
         equipped,
         quantity,
         damage: libraryItem.damage,
-        armorValue: libraryItem.armorValue,
+        armorValue: derivedArmorValue ?? libraryItem.armorValue,
         properties: propertyNames,
         range: (itemType === 'weapon' || itemType === 'shield') ? formatRange(props) : undefined,
         // Armor-specific fields

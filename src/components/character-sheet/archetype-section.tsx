@@ -490,17 +490,18 @@ function ArmorSection({
             equippedArmor.map((armorItem, idx) => {
               // Extract properties
               const properties = armorItem.properties || [];
-              let damageReduction = armorItem.armor ?? 0; // Check direct armor value first
+              // DR = 1 (base) + 1 per op_1_lvl. Prefer enriched armorValue, else derive from properties.
+              const armorWithVal = armorItem as { armorValue?: number; armor?: number };
+              let damageReduction = armorWithVal.armorValue ?? armorWithVal.armor ?? 0;
               let critRangeBonus = 0;
               const abilityReqs: string[] = [];
-              
+
               properties.forEach(prop => {
                 if (!prop) return;
                 const propName = typeof prop === 'string' ? prop : prop.name || '';
                 const propValue = typeof prop === 'object' && 'value' in prop ? Number(prop.value) : 0;
                 const op1Lvl = Number((typeof prop === 'object' && 'op_1_lvl' in prop ? (prop as any).op_1_lvl : propValue) || 0);
 
-                // Only override damageReduction from property if no direct armor value
                 if (propName === 'Damage Reduction' && damageReduction === 0) {
                   damageReduction = 1 + op1Lvl;
                 }

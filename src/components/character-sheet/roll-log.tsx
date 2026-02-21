@@ -92,11 +92,18 @@ type RollLogMode = 'personal' | 'campaign';
 
 export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   const { rolls, addRoll, clearHistory, subscribeToRolls, campaignContext } = useRolls();
-  const campaignId = campaignContext?.campaignId ?? viewOnlyCampaignId;
-  const { rolls: campaignRolls } = useCampaignRolls(campaignId);
+  // Normalize to string so query key matches campaign page (params.id) and realtime subscription is consistent
+  const rawCampaignId = campaignContext?.campaignId ?? viewOnlyCampaignId;
+  const campaignId = rawCampaignId != null ? String(rawCampaignId) : undefined;
+  const { rolls: campaignRolls, refetch: refetchCampaignRolls } = useCampaignRolls(campaignId);
   const [mode, setMode] = React.useState<RollLogMode>('personal');
   const [isOpen, setIsOpen] = React.useState(false);
   const listRef = React.useRef<HTMLDivElement>(null);
+
+  // When switching to Campaign tab, refetch so in-sheet/encounter log stays in sync with campaign page
+  React.useEffect(() => {
+    if (mode === 'campaign' && campaignId) refetchCampaignRolls();
+  }, [mode, campaignId, refetchCampaignRolls]);
 
   // New rolls at bottom: personal rolls are oldest-first; campaign API returns newest-first so reverse
   const displayRolls = mode === 'campaign' && campaignId
