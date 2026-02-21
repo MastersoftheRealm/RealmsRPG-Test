@@ -375,9 +375,9 @@ export const GridListRow = memo(function GridListRow({
 
         </button>
         
-        {/* Right Slot - use button, roll buttons, etc. (before delete so X is at far right) */}
+        {/* Right Slot - use button, roll buttons, quantity, etc. (before delete so X is at far right) */}
         {rightSlot && (
-          <div className="flex items-center flex-shrink-0 justify-center w-[4rem]" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center flex-shrink-0 justify-center w-[4rem] mr-2 pr-1" onClick={(e) => e.stopPropagation()}>
             {rightSlot}
           </div>
         )}

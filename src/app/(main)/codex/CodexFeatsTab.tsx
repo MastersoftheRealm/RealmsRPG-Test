@@ -33,8 +33,8 @@ const FEAT_COLUMNS = [
   { key: 'lvl_req', label: 'REQ. LEVEL' },
   { key: 'category', label: 'CATEGORY' },
   { key: 'ability', label: 'ABILITY' },
-  { key: 'rec_period', label: 'RECOVERY' },
   { key: 'uses_per_rec', label: 'USES' },
+  { key: 'rec_period', label: 'RECOVERY' },
   { key: '_actions', label: '', sortable: false as const },
 ];
 
@@ -100,8 +100,8 @@ function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<stri
           key: 'Ability',
           value: formatAbilityList(feat.ability),
         },
+        { key: 'Uses', value: (feat.uses_per_rec != null && feat.uses_per_rec > 0) ? String(feat.uses_per_rec) : '-' },
         { key: 'Recovery', value: feat.rec_period || '-' },
-        { key: 'Uses', value: feat.uses_per_rec || '-' },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
     />

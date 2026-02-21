@@ -72,7 +72,7 @@ function featToSelectableItem(
   if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
 
   const usesVal = feat.uses_per_rec ?? (feat as FeatModal).max_uses;
-  const usesDisplay = usesVal === 0 || usesVal === undefined ? '-' : String(usesVal);
+  const usesDisplay = (usesVal === 0 || usesVal === undefined) ? '-' : String(usesVal);
   return {
     id: String(feat.id),
     name: feat.name ?? '',
@@ -279,7 +279,7 @@ export function AddFeatModal({
         columns={[
           { key: 'name', label: 'Name' },
           { key: 'uses_per_rec', label: 'Uses' },
-          { key: 'rec_period', label: 'Rec.' },
+          { key: 'rec_period', label: 'Recovery' },
           { key: 'category', label: 'Category' },
         ]}
         gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"

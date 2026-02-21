@@ -311,7 +311,7 @@ export function UnifiedSelectionModal({
         )}
         
         {/* Items List */}
-        <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0 border border-border-light rounded-lg">
+        <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
           {isLoading ? (
             <LoadingState message="Loading..." size="md" padding="md" />
           ) : filteredItems.length === 0 ? (

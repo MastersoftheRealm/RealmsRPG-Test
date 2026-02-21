@@ -108,17 +108,19 @@ const TRAIT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
   { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
   { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
+  { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
 ];
 
-const TRAIT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem';
+const TRAIT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
 
 const FEAT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
   { key: 'description', label: 'Description', width: '2.5fr', sortable: false },
   { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
+  { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
 ];
 
-const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem';
+const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
 
 // =============================================================================
 // Helper: Truncate description for collapsed view
@@ -363,7 +365,8 @@ export function FeatsTab({
                 </div>
               ) : uses ? (
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : null;
+              ) : '-';
+              const recoveryDisplay = formatRecoveryAbbrev(trait.recoveryPeriod) || '-';
               return (
                 <GridListRow
                   key={`${trait.category}-${index}`}
@@ -374,6 +377,7 @@ export function FeatsTab({
                   columns={[
                     { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
                     { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
                   ]}
                   badges={categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined}
                   uses={uses}
@@ -438,7 +442,8 @@ export function FeatsTab({
                 </div>
               ) : uses ? (
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : null;
+              ) : '-';
+              const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -449,6 +454,7 @@ export function FeatsTab({
                   columns={[
                     { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
                     { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
                   ]}
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
@@ -515,7 +521,8 @@ export function FeatsTab({
                 </div>
               ) : uses ? (
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : null;
+              ) : '-';
+              const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -526,6 +533,7 @@ export function FeatsTab({
                   columns={[
                     { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
                     { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
                   ]}
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
@@ -585,7 +593,8 @@ export function FeatsTab({
                 </div>
               ) : uses ? (
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
-              ) : null;
+              ) : '-';
+              const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -596,6 +605,7 @@ export function FeatsTab({
                   columns={[
                     { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
                     { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
                   ]}
                   badges={[{ label: typeLabel, color: 'blue' }]}
                   uses={uses}

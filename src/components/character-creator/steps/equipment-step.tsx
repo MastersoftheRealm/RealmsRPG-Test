@@ -45,18 +45,19 @@ const WEAPON_LIST_GRID = '1.2fr 0.9fr 0.6fr 0.6fr';
 
 const ARMOR_LIST_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.2fr' },
-  { key: 'armor_value', label: 'DR', width: '0.9fr', align: 'center' },
+  { key: 'armor_value', label: 'Damage Reduction', width: '1fr', align: 'center' },
   { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
   { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
 ];
-const ARMOR_LIST_GRID = '1.2fr 0.9fr 0.6fr 0.6fr';
+const ARMOR_LIST_GRID = '1.2fr 1fr 0.6fr 0.6fr';
 
 const EQUIPMENT_LIST_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1.2fr' },
+  { key: 'category', label: 'Category', width: '0.8fr', align: 'center' },
   { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
   { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
 ];
-const EQUIPMENT_LIST_GRID = '1.2fr 0.6fr 0.6fr';
+const EQUIPMENT_LIST_GRID = '1.2fr 0.8fr 0.6fr 0.6fr';
 
 // Unarmed Prowess constants
 const UNARMED_PROWESS_BASE_TP = 10;
@@ -83,6 +84,7 @@ interface UnifiedEquipmentItem {
   currency: number;
   properties: string[];
   rarity?: string;
+  category?: string; // Equipment category for display
   source: 'library' | 'codex' | 'public'; // Track where item came from
 }
 
@@ -215,11 +217,11 @@ export function EquipmentStep() {
     // Add all equipment from RTDB (weapons, armor, and general equipment)
     if (codexEquipment) {
       for (const item of codexEquipment) {
-        // Use the actual type from RTDB (weapon, armor, or equipment)
+        const equip = item as { category?: string };
         items.push({
           id: item.id,
           name: item.name,
-          type: item.type, // Preserve the actual type from RTDB
+          type: item.type,
           description: item.description || '',
           damage: item.damage,
           armor_value: item.armor_value,
@@ -227,6 +229,7 @@ export function EquipmentStep() {
           currency: item.currency || item.gold_cost || 0,
           properties: item.properties || [],
           rarity: item.rarity,
+          category: equip.category,
           source: 'codex',
         });
       }
@@ -270,6 +273,7 @@ export function EquipmentStep() {
           currency: display.currencyCost,
           properties: display.proficiencies.map(p => p.name),
           rarity: display.rarity,
+          category: (pub.category as string) || (type === 'equipment' ? 'Equipment' : undefined),
           source: 'public',
         });
       }
@@ -314,7 +318,8 @@ export function EquipmentStep() {
     return allEquipment.filter(item => {
       if (item.type !== activeTab) return false;
       if (sourceFilter === 'my' && item.source !== 'library') return false;
-      if (sourceFilter === 'public' && item.source !== 'public') return false;
+      // Public library = public items + codex (codex is a form of public reference)
+      if (sourceFilter === 'public' && item.source !== 'public' && item.source !== 'codex') return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         const name = String(item.name ?? '');
@@ -620,7 +625,7 @@ export function EquipmentStep() {
           </FilterSection>
 
           {/* Equipment List - ListHeader + GridListRow (unified with Library/Codex) */}
-          <div className="border border-border-light rounded-lg overflow-hidden bg-surface mb-8">
+          <div className="overflow-hidden bg-surface mb-8">
             {activeTab === 'weapon' && sortedEquipment.length > 0 && (
               <ListHeader
                 columns={WEAPON_LIST_COLUMNS}
@@ -668,11 +673,8 @@ export function EquipmentStep() {
                   const quantity = getItemQuantity(item.id);
                   const canAfford = cost <= remainingCurrency;
 
-                  // Build badges for display
+                  // No damage/rarity badges — damage (and armor DR) are columns; keep list clean
                   const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
-                  if (item.damage) badges.push({ label: formatDamageDisplay(item.damage), color: 'red' });
-                  if (item.armor_value) badges.push({ label: `+${item.armor_value} DR`, color: 'blue' });
-                  if (item.rarity && item.rarity !== 'Common') badges.push({ label: item.rarity, color: 'amber' });
 
                   // Build property chips
                   const chips: ChipData[] = item.properties.map(prop => ({
@@ -699,7 +701,7 @@ export function EquipmentStep() {
                     />
                   );
 
-                  const sourceValue = item.source === 'library' ? 'Library' : item.source === 'public' ? 'Public' : 'Standard';
+                  const sourceValue = item.source === 'library' ? 'Library' : 'Public';
                   const costColumn = {
                     key: 'gold_cost',
                     value: `${cost}c`,
@@ -754,13 +756,14 @@ export function EquipmentStep() {
                       />
                     );
                   }
+                  const categoryColumn = { key: 'category', value: item.category || (item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : '-'), align: 'center' as const };
                   return (
                     <GridListRow
                       key={item.id}
                       id={item.id}
                       name={item.name}
                       description={item.description}
-                      columns={[costColumn, sourceColumn]}
+                      columns={[categoryColumn, costColumn, sourceColumn]}
                       gridColumns={EQUIPMENT_LIST_GRID}
                       badges={badges}
                       detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
