@@ -15,7 +15,7 @@
  * - Flexible column/chip configuration per item type
  */
 
-import { useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Modal, Button, IconButton } from '@/components/ui';
@@ -148,10 +148,15 @@ export function UnifiedSelectionModal({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const { sortState, handleSort, sortItems } = useSort('name');
-  
-  // Reset on open — normalize ids to string so Set.has() works (codex may return number ids)
+  const prevOpenRef = useRef(false);
+
+  // Reset only when modal first opens (not on every render). When callers omit initialSelectedIds
+  // they get default initialSelectedIds = new Set() which is a new reference each render — that
+  // was causing the effect to run every time and wipe selection after each + click.
   useEffect(() => {
-    if (isOpen) {
+    const justOpened = isOpen && !prevOpenRef.current;
+    prevOpenRef.current = isOpen;
+    if (justOpened) {
       setSelectedIds(new Set([...initialSelectedIds].map((id) => String(id))));
       setQuantities({});
       setSearchQuery('');

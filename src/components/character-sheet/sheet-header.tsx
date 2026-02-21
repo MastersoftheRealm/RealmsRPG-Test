@@ -193,31 +193,37 @@ function ResourceInput({
     setInputValue(String(newValue));
   };
   
-  // Color classes based on variant (softer in dark mode)
+  // Color classes based on variant with explicit dark mode alternatives for health/energy
   const bgColor = colorVariant === 'health' 
-    ? 'bg-danger-50 dark:bg-danger-950/40 border-danger-200 dark:border-danger-900/50' 
+    ? 'bg-success-50 dark:bg-success-950/50 border-success-200 dark:border-success-800/60' 
     : colorVariant === 'energy'
-      ? 'bg-info-50 dark:bg-info-950/40 border-info-200 dark:border-info-900/50'
-      : 'bg-surface-alt border-border-light';
+      ? 'bg-info-50 dark:bg-info-950/50 border-info-200 dark:border-info-800/60'
+      : 'bg-surface-alt dark:bg-surface border-border-light dark:border-border';
   
   const labelColor = colorVariant === 'health'
-    ? 'text-danger-700 dark:text-danger-400'
+    ? 'text-success-700 dark:text-success-300'
     : colorVariant === 'energy'
-      ? 'text-info-700 dark:text-info-400'
-      : 'text-text-secondary';
+      ? 'text-info-700 dark:text-info-300'
+      : 'text-text-secondary dark:text-text-primary';
   
   // Calculate bar percentage - cap at 100% for display but allow tracking above max
   const isAboveMax = current > max;
   const percentage = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
   
-  // Bar color: gold when above max, otherwise normal colors
+  // Bar color: gold when above max, otherwise normal colors; dark mode alternatives
   // Half health = amber/yellow-orange (distinguishable from terminal red)
   // Terminal = deep crimson red
   const barColorClass = isAboveMax 
-    ? 'bg-warning-400' // Gold when above max
+    ? 'bg-warning-400 dark:bg-warning-500'
     : colorVariant === 'health' 
-      ? (percentage > 50 ? 'bg-success-500' : percentage > 25 ? 'bg-warning-500' : 'bg-danger-700')
-      : colorVariant === 'energy' ? 'bg-info-500' : 'bg-primary-500';
+      ? (percentage > 50 ? 'bg-success-500 dark:bg-success-400' : percentage > 25 ? 'bg-warning-500 dark:bg-warning-400' : 'bg-danger-600 dark:bg-danger-500')
+      : colorVariant === 'energy' ? 'bg-info-500 dark:bg-info-400' : 'bg-primary-500 dark:bg-primary-400';
+  
+  const inputBorderText = colorVariant === 'health'
+    ? 'border-success-300 dark:border-success-700 text-success-800 dark:text-success-200'
+    : colorVariant === 'energy'
+      ? 'border-info-300 dark:border-info-700 text-info-800 dark:text-info-200'
+      : 'border-border-light dark:border-border text-text-primary';
   
   return (
     <div className={cn('flex flex-col p-3 rounded-lg border', bgColor)}>
@@ -226,7 +232,7 @@ function ResourceInput({
           {label}
         </span>
         {subLabel && (
-          <span className="text-xs text-text-muted">{subLabel}</span>
+          <span className="text-xs text-text-muted dark:text-text-secondary">{subLabel}</span>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -241,10 +247,8 @@ function ResourceInput({
           onKeyDown={handleKeyDown}
           className={cn(
             'w-12 text-center text-lg font-bold rounded border px-1 py-0.5',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500',
-            colorVariant === 'health' && 'border-danger-300 dark:border-danger-800 text-danger-800 dark:text-danger-300',
-            colorVariant === 'energy' && 'border-info-300 dark:border-info-800 text-info-800 dark:text-info-300',
-            colorVariant === 'default' && 'border-border-light text-text-primary'
+            'focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400',
+            inputBorderText
           )}
         />
         <span className={cn('text-base font-medium', labelColor)}>/ {max}</span>
@@ -264,9 +268,9 @@ function ResourceInput({
           />
         )}
       </div>
-      {/* Inline bar */}
+      {/* Inline bar - dark mode track */}
       {showBar && (
-        <div className="relative h-2 mt-2 bg-surface rounded-full overflow-hidden">
+        <div className="relative h-2 mt-2 bg-surface dark:bg-black/30 rounded-full overflow-hidden">
           <div
             className={cn('absolute inset-y-0 left-0 transition-all duration-300 rounded-full', barColorClass)}
             style={{ width: `${percentage}%` }}
@@ -668,57 +672,61 @@ export function SheetHeader({
           />
         </div>
 
-        {/* Right: Resources - takes about 1/3 of the row */}
-        <div className="lg:w-1/3 min-w-[260px] flex flex-col gap-2">
-          {/* Health with integrated bar */}
-          <ResourceInput
-            label="Health"
-            current={currentHealth}
-            max={calculatedStats.maxHealth}
-            onChange={onHealthChange}
-            colorVariant="health"
-            subLabel={`Terminal: ${calculatedStats.terminal}`}
-            showBar
-          />
-          
-          {/* Energy with integrated bar */}
-          <ResourceInput
-            label="Energy"
-            current={currentEnergy}
-            max={calculatedStats.maxEnergy}
-            onChange={onEnergyChange}
-            colorVariant="energy"
-            subLabel={innateThreshold > 0 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}` : undefined}
-            showBar
-          />
-
-          {/* Action Points (default 4 per round) */}
-          <div className={cn('flex flex-col p-3 rounded-lg border', 'bg-surface-alt border-border-light')}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+        {/* Right: Action Points (left, spans vertically) + Health & Energy (right) */}
+        <div className="lg:w-1/3 min-w-[260px] flex flex-col">
+          <div className="flex flex-row gap-3 items-stretch">
+            {/* Action Points - left column, spans full height of Health+Energy */}
+            <div className={cn(
+              'flex flex-col justify-center p-3 rounded-lg border min-w-[72px]',
+              'bg-surface-alt dark:bg-surface border-border-light dark:border-border'
+            )}>
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary dark:text-text-primary text-center mb-1.5">
                 Action Points
               </span>
+              <div className="flex items-center justify-center">
+                {onActionPointsChange ? (
+                  <ValueStepper
+                    value={actionPoints}
+                    onChange={onActionPointsChange}
+                    min={0}
+                    max={10}
+                    colorVariant="default"
+                    enableHoldRepeat
+                    size="sm"
+                    variant="compact"
+                    hideValue={false}
+                    decrementTitle="Decrease action points"
+                    incrementTitle="Increase action points"
+                  />
+                ) : (
+                  <span className="text-lg font-bold text-text-primary">{actionPoints}</span>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-12 text-center text-lg font-bold text-text-primary">{actionPoints}</span>
-              {onActionPointsChange && (
-                <ValueStepper
-                  value={actionPoints}
-                  onChange={onActionPointsChange}
-                  min={0}
-                  max={10}
-                  colorVariant="default"
-                  enableHoldRepeat
-                  size="sm"
-                  variant="compact"
-                  hideValue
-                  decrementTitle="Decrease action points"
-                  incrementTitle="Increase action points"
-                />
-              )}
+
+            {/* Health & Energy stacked */}
+            <div className="flex flex-col gap-2 flex-1 min-w-0">
+              <ResourceInput
+                label="Health"
+                current={currentHealth}
+                max={calculatedStats.maxHealth}
+                onChange={onHealthChange}
+                colorVariant="health"
+                subLabel={`Terminal: ${calculatedStats.terminal}`}
+                showBar
+              />
+              <ResourceInput
+                label="Energy"
+                current={currentEnergy}
+                max={calculatedStats.maxEnergy}
+                onChange={onEnergyChange}
+                colorVariant="energy"
+                subLabel={innateThreshold > 0 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}` : undefined}
+                showBar
+              />
             </div>
           </div>
-          
+
           {/* Health-Energy Pool Allocation (edit mode only) */}
           {isEditMode && onHealthPointsChange && onEnergyPointsChange && (
             <div className="mt-2">
