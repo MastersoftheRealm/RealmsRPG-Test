@@ -668,17 +668,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
-  // Get existing item IDs for the modal
+  // Get existing item IDs for the modal (skip empty string so we don't filter out library items)
   const existingIds = useMemo(() => {
     if (!character) return new Set<string>();
     const ids = new Set<string>();
-    
-    character.powers?.forEach(p => ids.add(String(p.id || '')));
-    character.techniques?.forEach(t => ids.add(String(t.id || '')));
-    (character.equipment?.weapons as Item[] || []).forEach(w => ids.add(String(w.id || '')));
-    (character.equipment?.armor as Item[] || []).forEach(a => ids.add(String(a.id || '')));
-    (character.equipment?.items as Item[] || []).forEach(e => ids.add(String(e.id || '')));
-    
+    const add = (id: string | number | undefined) => {
+      const s = String(id ?? '');
+      if (s) ids.add(s);
+    };
+    character.powers?.forEach(p => add(p.id));
+    character.techniques?.forEach(t => add(t.id));
+    (character.equipment?.weapons as Item[] || []).forEach(w => add(w.id));
+    (character.equipment?.armor as Item[] || []).forEach(a => add(a.id));
+    (character.equipment?.items as Item[] || []).forEach(e => add(e.id));
     return ids;
   }, [character]);
   

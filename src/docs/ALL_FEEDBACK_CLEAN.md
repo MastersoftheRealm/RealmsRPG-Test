@@ -857,3 +857,10 @@ Notes
 - Feedback: (1) Make the edit mode for public library items more UI/UX friendly like the codex edit modals with helpful editable fields, ability to add/remove/edit parts or properties, their option levels, etc. (2) When a user deletes their account, ensure all data tied to that account is deleted too.
 - Expected: Public Library editor uses structured forms (not raw JSON) with fields and parts/properties lists; account deletion removes characters, library, encounters, campaigns owned, and user removed from campaign membership.
 - Implemented 2026-02-20: PublicPowerEditModal, PublicTechniqueEditModal, PublicItemEditModal, PublicCreatureEditModal with codex-style fields and parts/properties add/remove and option levels; deleteAccountAction now deletes encounters, campaigns owned, and strips user from campaign membership and character lists. See AI_CHANGELOG.md.
+
+**Raw Feedback Log — 2026-02-21 (Cannot add equipment, armaments, techniques to character)**
+- Date: 2026-02-21
+- Context: Character sheet Library tab, character creator (equipment / powers & techniques)
+- Priority: High
+- Feedback: Can't seem to add equipment, armaments, or techniques to my character. Could be a modal problem between the character sheet and creator, or something else.
+- Expected: User can add powers, techniques, weapons, armor, and equipment from the add modals (select items, confirm, and see them on the character). Same in character creator where applicable.

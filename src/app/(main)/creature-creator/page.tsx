@@ -114,14 +114,18 @@ function CreatureCreatorContent() {
   );
   
   const featDisplayItems = useMemo(() => {
-    const selectedIds = new Set(creature.feats.map((f: { id: string }) => f.id));
+    const selectedIds = new Set(
+      creature.feats.map((f: { id: string }) => String(f.id)).filter((id) => id.length > 0)
+    );
     return creatureFeatsData
       .map((f: CreatureFeat) => transformCreatureFeatToDisplayItem(f, selectedIds, MECHANICAL_CREATURE_FEAT_IDS))
       .filter((f: DisplayItem | null): f is DisplayItem => f !== null);
   }, [creatureFeatsData, creature.feats]);
   
   const armamentDisplayItems = useMemo(() => {
-    const selectedIds = new Set(creature.armaments.map((a: { id: string }) => a.id));
+    const selectedIds = new Set(
+      creature.armaments.map((a: { id: string }) => String(a.id)).filter((id) => id.length > 0)
+    );
     return userItems
       .filter((item: UserItem) => !selectedIds.has(item.docId))
       .map((item: UserItem) => transformUserItemToDisplayItem(item, itemPropertiesDb));
@@ -541,7 +545,7 @@ function CreatureCreatorContent() {
             }}
             items={powerSelectableItems}
             title="Select Powers"
-            description="Choose powers from your library to add to this creature"
+            description="Choose powers from your library to add to this creature. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="power"
             searchPlaceholder="Search powers..."
@@ -559,7 +563,7 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            description="Choose techniques from your library to add to this creature"
+            description="Choose techniques from your library to add to this creature. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
@@ -577,7 +581,7 @@ function CreatureCreatorContent() {
             }}
             items={featSelectableItems}
             title="Select Feats"
-            description="Choose creature feats to add"
+            description="Choose creature feats to add. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="feat"
             searchPlaceholder="Search feats..."
@@ -595,7 +599,7 @@ function CreatureCreatorContent() {
             }}
             items={armamentSelectableItems}
             title="Select Armaments"
-            description="Choose items from your library to equip on this creature"
+            description="Choose items from your library to equip on this creature. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="armament"
             searchPlaceholder="Search items..."

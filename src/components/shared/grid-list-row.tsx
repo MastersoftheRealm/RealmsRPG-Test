@@ -233,7 +233,12 @@ export const GridListRow = memo(function GridListRow({
   };
   
   const handleRowClick = () => {
-    // Row click always toggles expansion, selection is handled by SelectionToggle button
+    // When selectable (e.g. add-X modals), row click toggles selection for better discoverability
+    if (selectable && onSelect) {
+      if (!disabled) onSelect();
+      return;
+    }
+    // Otherwise row click toggles expansion
     if (showExpander) {
       setExpanded(!isExpanded);
     }
@@ -276,10 +281,10 @@ export const GridListRow = memo(function GridListRow({
         {/* Clickable Row Content */}
         <button
           onClick={handleRowClick}
-          disabled={disabled && !showExpander}
+          disabled={disabled && (!selectable || !showExpander)}
           className={cn(
             'flex-1 text-left transition-colors',
-            showExpander && (rowHoverClass ?? 'hover:bg-surface-alt'),
+            (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
             compact ? 'px-3 py-2' : 'px-4 py-3',
             disabled && 'cursor-default'
           )}
@@ -415,10 +420,14 @@ export const GridListRow = memo(function GridListRow({
         
         {/* Selection Button (for modals) - uses unified SelectionToggle - positioned on right */}
         {selectable && (
-          <div className={cn(
-            'w-10 flex-shrink-0 flex items-center justify-center',
-            disabled && 'cursor-not-allowed opacity-50'
-          )}>
+          <div
+            className={cn(
+              'w-10 flex-shrink-0 flex items-center justify-center',
+              disabled && 'cursor-not-allowed opacity-50'
+            )}
+            onClick={(e) => e.stopPropagation()}
+            role="presentation"
+          >
             <SelectionToggle
               isSelected={!!isSelected}
               onToggle={() => !disabled && onSelect?.()}

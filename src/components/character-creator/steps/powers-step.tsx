@@ -408,7 +408,7 @@ export function PowersStep() {
         onConfirm={handlePowerSelect}
         items={availablePowers}
         title="Select Powers"
-        description="Choose powers from your library for your character to know."
+        description="Choose powers from your library for your character to know. Click a row (or the + button) to select, then click Add Selected."
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder="Search powers..."
         itemLabel="power"
@@ -424,7 +424,7 @@ export function PowersStep() {
         onConfirm={handleTechniqueSelect}
         items={availableTechniques}
         title="Select Techniques"
-        description="Choose techniques from your library for your character to know."
+        description="Choose techniques from your library for your character to know. Click a row (or the + button) to select, then click Add Selected."
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."
         itemLabel="technique"

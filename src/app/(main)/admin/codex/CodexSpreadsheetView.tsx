@@ -164,7 +164,9 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
     (rowIndex: number) => {
       const row = rows[rowIndex];
       if (!row || typeof row !== 'object') return;
-      const existingIds = new Set(rows.map((r) => String((r as Record<string, unknown>).id ?? '')));
+      const existingIds = new Set(
+        rows.map((r) => String((r as Record<string, unknown>).id ?? '')).filter((id) => id.length > 0)
+      );
       const name = (row as Record<string, unknown>).name;
       const newId = generateNewId(existingIds, typeof name === 'string' ? name : undefined);
       const newRow = { ...(row as Record<string, unknown>), id: newId };

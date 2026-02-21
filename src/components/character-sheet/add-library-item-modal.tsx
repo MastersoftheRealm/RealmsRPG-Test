@@ -261,6 +261,7 @@ export function AddLibraryItemModal({
       isOpen={isOpen}
       onClose={onClose}
       title={getTitle(itemType)}
+      description="Click a row (or the + button) to select, then click Add Selected."
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}
