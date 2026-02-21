@@ -1577,6 +1577,23 @@ export default function CharacterSheetPage({ params }: PageParams) {
               showToast(`Visibility set to ${label}.`, 'success');
               setShowSettingsModal(false);
             }}
+            speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
+            onSpeedDisplayUnitChange={(u) => setCharacter(prev => prev ? { ...prev, speedDisplayUnit: u } : null)}
+            onConfirm={async (updates) => {
+              const next = { ...character, ...updates };
+              setCharacter(prev => prev ? { ...prev, ...updates } : null);
+              const payload = cleanForSave(next);
+              await saveCharacter(id, payload);
+              if (updates.visibility) {
+                const label = updates.visibility === 'public' ? 'Public' : updates.visibility === 'private' ? 'Private' : 'Campaign';
+                showToast(`Visibility set to ${label}.`, 'success');
+              }
+              if (updates.speedDisplayUnit) {
+                const unitLabel = updates.speedDisplayUnit === 'feet' ? 'feet' : updates.speedDisplayUnit === 'meters' ? 'meters' : 'spaces';
+                showToast(`Speed display set to ${unitLabel}.`, 'success');
+              }
+              setShowSettingsModal(false);
+            }}
             canEdit={isOwner}
             isInCampaign={isInCampaign}
           />
@@ -1604,6 +1621,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 evasionBase={character.evasionBase ?? 10}
                 onSpeedBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, speedBase: v } : null)}
                 onEvasionBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, evasionBase: v } : null)}
+                speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
                 innateThreshold={archetypeProgression?.innateThreshold || 0}
                 innatePools={archetypeProgression?.innatePools || 0}
                 onEditArchetype={effectiveEditMode ? () => setShowEditArchetypeModal(true) : undefined}
@@ -1705,6 +1723,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onHeightChange={(v) => setCharacter(prev => prev ? { ...prev, height: v } : null)}
                   visibility={character.visibility}
                   onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
+                  speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
                   onAppearanceChange={(v) => setCharacter(prev => prev ? { ...prev, appearance: v } : null)}
                   onArchetypeDescChange={(v) => setCharacter(prev => prev ? { ...prev, archetypeDesc: v } : null)}
                   onNotesChange={(v) => setCharacter(prev => prev ? { ...prev, notes: v } : null)}

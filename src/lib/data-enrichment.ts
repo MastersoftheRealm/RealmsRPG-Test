@@ -570,6 +570,8 @@ const SAVEABLE_FIELDS = [
   'weight', 'height',
   // Character visibility (who can view sheet)
   'visibility',
+  // Display preferences (speed shown as spaces, feet, or meters)
+  'speedDisplayUnit',
   // Ancestry/Species data (lean: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic })
   'ancestry',
   // Conditions

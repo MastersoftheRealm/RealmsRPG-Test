@@ -315,6 +315,8 @@ interface LibrarySectionProps {
   // Notes tab props
   visibility?: 'private' | 'campaign' | 'public';
   onVisibilityChange?: (value: 'private' | 'campaign' | 'public') => void;
+  /** Speed display unit for movement (Jump, Climb, Swim) in Notes tab */
+  speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
   weight?: number;
   height?: number;
   appearance?: string;
@@ -505,6 +507,7 @@ export function LibrarySection({
   // Notes props
   visibility = 'private',
   onVisibilityChange,
+  speedDisplayUnit = 'spaces',
   weight = 70,
   height = 170,
   appearance = '',
@@ -1489,6 +1492,7 @@ export function LibrarySection({
           <NotesTab
             visibility={visibility}
             onVisibilityChange={onVisibilityChange}
+            speedDisplayUnit={speedDisplayUnit}
             weight={weight}
             height={height}
             appearance={appearance}

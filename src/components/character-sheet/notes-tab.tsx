@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { Button, IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from './roll-context';
 import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
+import { formatSpeedString, type SpeedDisplayUnit } from '@/lib/utils/number';
 import type { Abilities } from '@/types';
 import type { CharacterVisibility } from '@/types';
 
@@ -40,6 +41,8 @@ interface NotesTabProps {
   /** Character visibility: who can view this sheet (private, campaign members, or public) */
   visibility?: CharacterVisibility;
   onVisibilityChange?: (value: CharacterVisibility) => void;
+  /** How to display speed (spaces, feet, or meters) for Jump/Climb/Swim */
+  speedDisplayUnit?: SpeedDisplayUnit;
   onWeightChange?: (value: number) => void;
   onHeightChange?: (value: number) => void;
   onAppearanceChange?: (value: string) => void;
@@ -150,6 +153,7 @@ export function NotesTab({
   isEditMode = false,
   visibility = 'private',
   onVisibilityChange,
+  speedDisplayUnit = 'spaces',
   onWeightChange,
   onHeightChange,
   onAppearanceChange,
@@ -160,6 +164,7 @@ export function NotesTab({
   onDeleteNote,
 }: NotesTabProps) {
   const rollContext = useRollsOptional();
+  const speedUnit = speedDisplayUnit;
   
   // Local state for editing
   const [weightInput, setWeightInput] = useState(weight.toString());
@@ -257,10 +262,10 @@ export function NotesTab({
           </SummaryRow>
           
           <SummaryRow className="text-xs">
-            <SummaryItem label="Jump (H)" value={`${jumpHorizontal} sp`} />
-            <SummaryItem label="Jump (V)" value={`${jumpVertical} sp`} />
-            <SummaryItem label="Climb" value={`${climbSpeed} sp`} />
-            <SummaryItem label="Swim" value={`${swimSpeed} sp`} />
+            <SummaryItem label="Jump (H)" value={formatSpeedString(jumpHorizontal, speedUnit)} />
+            <SummaryItem label="Jump (V)" value={formatSpeedString(jumpVertical, speedUnit)} />
+            <SummaryItem label="Climb" value={formatSpeedString(climbSpeed, speedUnit)} />
+            <SummaryItem label="Swim" value={formatSpeedString(swimSpeed, speedUnit)} />
           </SummaryRow>
           
           {/* Fall Damage */}

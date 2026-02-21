@@ -234,6 +234,7 @@ function CampaignCharacterViewContent() {
                 character={character}
                 calculatedStats={calculatedStats}
                 isEditMode={false}
+                speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
               />
               <AbilitiesSection
                 abilities={character.abilities}
@@ -279,6 +280,7 @@ function CampaignCharacterViewContent() {
                   innatePools={archetypeProgression?.innatePools || 0}
                   currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
                   martialProficiency={character.mart_prof ?? 0}
+                  speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
                   isEditMode={false}
                   onAddPower={() => {}}
                   onRemovePower={() => {}}

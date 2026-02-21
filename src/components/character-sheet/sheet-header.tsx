@@ -16,6 +16,7 @@ import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import Image from 'next/image';
 import { Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { Spinner } from '@/components/ui/spinner';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/shared';
@@ -55,6 +56,8 @@ interface SheetHeaderProps {
   evasionBase?: number;
   onSpeedBaseChange?: (value: number) => void;
   onEvasionBaseChange?: (value: number) => void;
+  /** How to display speed: spaces (default), feet, or meters. Edit is always in spaces. */
+  speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
   // Innate info from archetype progression
   innateThreshold?: number;
   innatePools?: number;
@@ -306,6 +309,7 @@ function getSpeedEvasionPencilState(
 function LargeStatBlock({ 
   label, 
   value, 
+  valueSuffix,
   baseValue,
   defaultBase,
   isEditMode,
@@ -315,6 +319,7 @@ function LargeStatBlock({
 }: { 
   label: string; 
   value: number | string; 
+  valueSuffix?: string;
   baseValue?: number;
   defaultBase?: number;
   isEditMode?: boolean;
@@ -339,7 +344,9 @@ function LargeStatBlock({
           />
         )}
       </div>
-      <span className="text-4xl font-bold text-text-primary mt-1">{value}</span>
+      <span className="text-4xl font-bold text-text-primary mt-1">
+        {value}{valueSuffix ? <span className="text-xl font-semibold text-text-secondary ml-0.5">{valueSuffix}</span> : null}
+      </span>
       
       {showEditControls && (
         <div className="flex items-center gap-1 mt-2">
@@ -443,6 +450,7 @@ export function SheetHeader({
   evasionBase = 10,
   onSpeedBaseChange,
   onEvasionBaseChange,
+  speedDisplayUnit = 'spaces',
   innateThreshold = 0,
   innatePools = 0,
   onEditArchetype,
@@ -499,6 +507,11 @@ export function SheetHeader({
 
   // Get health color for styling
   const healthColor = getHealthColor(currentHealth, calculatedStats.maxHealth);
+
+  // Speed display (spaces → value + unit per settings)
+  const speedDisplay = formatSpeedForDisplay(calculatedStats.speed, speedDisplayUnit);
+  const speedDisplayValue = typeof speedDisplay.value === 'number' && speedDisplay.value % 1 !== 0
+    ? speedDisplay.value.toFixed(1) : String(speedDisplay.value);
 
   // Handle name editing
   const handleNameSubmit = () => {
@@ -678,7 +691,8 @@ export function SheetHeader({
         <div className="flex-1 flex items-center justify-center gap-4">
           <LargeStatBlock 
             label="Speed" 
-            value={calculatedStats.speed}
+            value={speedDisplayValue}
+            valueSuffix={speedDisplay.suffix}
             baseValue={speedBase}
             defaultBase={6}
             isEditMode={isEditMode}

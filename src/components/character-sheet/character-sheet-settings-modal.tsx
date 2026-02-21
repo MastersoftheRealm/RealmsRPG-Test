@@ -2,8 +2,8 @@
  * Character Sheet Settings Modal
  * ===============================
  * Opens from the gear icon in the sheet toolbar.
- * Contains character-level settings (e.g. visibility/privacy).
- * Use Confirm to save visibility so it's clear the setting was saved.
+ * Contains character-level settings (visibility, speed display unit).
+ * Use Confirm to save so it's clear the setting was saved.
  */
 
 'use client';
@@ -18,6 +18,14 @@ const VISIBILITY_OPTIONS: { value: CharacterVisibility; label: string }[] = [
   { value: 'public', label: 'Public — Anyone can view' },
 ];
 
+export type SpeedDisplayUnit = 'spaces' | 'feet' | 'meters';
+
+const SPEED_DISPLAY_OPTIONS: { value: SpeedDisplayUnit; label: string }[] = [
+  { value: 'spaces', label: 'Spaces (sp)' },
+  { value: 'feet', label: 'Feet (ft) — 1 space = 5 ft' },
+  { value: 'meters', label: 'Meters (m) — 1 space = 1.5 m' },
+];
+
 export interface CharacterSheetSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,6 +37,11 @@ export interface CharacterSheetSettingsModalProps {
   canEdit?: boolean;
   /** When true, Private option is disabled (character must leave campaign to set private). */
   isInCampaign?: boolean;
+  /** How to display speed (spaces, feet, or meters). Editing is always in spaces. */
+  speedDisplayUnit?: SpeedDisplayUnit;
+  onSpeedDisplayUnitChange?: (value: SpeedDisplayUnit) => void;
+  /** Called on Confirm to save both visibility and speed display. If provided, overrides onConfirmVisibility for full save. */
+  onConfirm?: (updates: { visibility?: CharacterVisibility; speedDisplayUnit?: SpeedDisplayUnit }) => void | Promise<void>;
 }
 
 export function CharacterSheetSettingsModal({
@@ -39,12 +52,19 @@ export function CharacterSheetSettingsModal({
   onConfirmVisibility,
   canEdit = true,
   isInCampaign = false,
+  speedDisplayUnit = 'spaces',
+  onSpeedDisplayUnitChange,
+  onConfirm,
 }: CharacterSheetSettingsModalProps) {
   const [selectedVisibility, setSelectedVisibility] = useState<CharacterVisibility>(visibility);
+  const [selectedSpeedUnit, setSelectedSpeedUnit] = useState<SpeedDisplayUnit>(speedDisplayUnit);
 
   useEffect(() => {
-    if (isOpen) setSelectedVisibility(visibility);
-  }, [isOpen, visibility]);
+    if (isOpen) {
+      setSelectedVisibility(visibility);
+      setSelectedSpeedUnit(speedDisplayUnit);
+    }
+  }, [isOpen, visibility, speedDisplayUnit]);
 
   const visibilityOptions = VISIBILITY_OPTIONS.map((opt) => ({
     ...opt,
@@ -52,27 +72,55 @@ export function CharacterSheetSettingsModal({
   }));
 
   const handleConfirm = async () => {
-    if (selectedVisibility !== visibility) {
+    const visChanged = selectedVisibility !== visibility;
+    const speedChanged = selectedSpeedUnit !== speedDisplayUnit;
+    if (onConfirm && (visChanged || speedChanged)) {
+      await onConfirm({
+        ...(visChanged ? { visibility: selectedVisibility } : {}),
+        ...(speedChanged ? { speedDisplayUnit: selectedSpeedUnit } : {}),
+      });
+      if (visChanged) onVisibilityChange?.(selectedVisibility);
+      if (speedChanged) onSpeedDisplayUnitChange?.(selectedSpeedUnit);
+      onClose();
+      return;
+    }
+    if (visChanged) {
       onVisibilityChange?.(selectedVisibility);
       await onConfirmVisibility?.(selectedVisibility);
-    } else {
-      onClose();
     }
+    onClose();
   };
 
-  const canSave = canEdit && (onVisibilityChange != null || onConfirmVisibility != null);
-  const hasChanged = selectedVisibility !== visibility;
+  const canSave = canEdit && (onVisibilityChange != null || onConfirmVisibility != null || onConfirm != null);
+  const hasChanged = selectedVisibility !== visibility || selectedSpeedUnit !== speedDisplayUnit;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title="Character settings"
-      description="Adjust who can view this character sheet."
+      description="Adjust visibility and display preferences."
       size="md"
       showCloseButton
     >
       <div className="space-y-4">
+        <div className="rounded-lg border border-border-light bg-surface-alt dark:bg-[#21262d] p-3">
+          <h3 className="text-sm font-semibold text-text-primary mb-1">Speed display</h3>
+          <p className="text-xs text-text-muted mb-2">
+            Speed is always edited in spaces. Choose how it appears on the sheet: spaces, feet (1 sp = 5 ft), or meters (1 sp = 1.5 m).
+          </p>
+          {canEdit && onSpeedDisplayUnitChange ? (
+            <Select
+              options={SPEED_DISPLAY_OPTIONS}
+              value={selectedSpeedUnit}
+              onChange={(e) => setSelectedSpeedUnit(e.target.value as SpeedDisplayUnit)}
+            />
+          ) : (
+            <p className="text-sm font-medium text-text-primary">
+              {SPEED_DISPLAY_OPTIONS.find((o) => o.value === speedDisplayUnit)?.label ?? speedDisplayUnit}
+            </p>
+          )}
+        </div>
         <div className="rounded-lg border border-border-light bg-surface-alt dark:bg-[#21262d] p-3">
           <h3 className="text-sm font-semibold text-text-primary mb-1">Character visibility</h3>
           <p className="text-xs text-text-muted mb-2">
@@ -101,7 +149,7 @@ export function CharacterSheetSettingsModal({
               Cancel
             </Button>
             <Button onClick={handleConfirm}>
-              {hasChanged ? 'Confirm & save visibility' : 'Done'}
+              {hasChanged ? 'Confirm & save' : 'Done'}
             </Button>
           </div>
         )}

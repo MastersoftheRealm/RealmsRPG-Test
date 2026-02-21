@@ -220,7 +220,10 @@ export interface Character {
 
   /** Who can view this character: private (owner only), campaign (owner + campaign members), public */
   visibility?: CharacterVisibility;
-  
+
+  /** How to display speed: spaces (default), feet (1 space = 5 ft), or meters (1 space = 1.5 m). Edit is always in spaces. */
+  speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
+
   // Legacy fields for backward compatibility (vanilla site format)
   /** @deprecated Display-only computed field. Not saved. */
   allTraits?: unknown[];
