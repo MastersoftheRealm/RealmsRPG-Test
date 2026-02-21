@@ -920,3 +920,11 @@ Notes
 - Feedback: List items such as in character library need the same type of information as they have in the library page. Expand a power and see its power parts, their option increase level if any, in expandable chips; same for techniques (expandable chips for parts) and armaments (expandable chips for properties). Look at how the library page handles armaments, powers, and techniques as list items with expandable views, and implement that in both the character library and in the add modals. We can't rely on descriptions alone.  
 - Expected: Character library and add modals show parts/properties as expandable chips with option levels (Lv.X) and TP cost; same structure as Library page (Parts & Proficiencies / Properties & Proficiencies, total TP).  
 - Implemented 2026-02-21: (1) library-section: partsToPartData → chip level from optionLevels (max opt1/2/3); propertiesToPartData includes option levels and TP from codex; all part/property chips use ChipData with name, description, cost, costLabel, level. (2) add-library-item-modal: usePowerParts, useItemProperties; each SelectableItem gets detailSections (Parts or Properties chips), totalCost, costLabel; powers use derivePowerDisplay, techniques use deriveTechniqueDisplay, items use property chips from propertiesDb. (3) UnifiedSelectionModal: SelectableItem supports totalCost/costLabel; GridListRow receives them for expanded view.
+
+**Raw Feedback Log — 2026-02-21 (Portrait in bucket but won’t load on sheet)**
+- Date: 2026-02-21
+- Context: Character sheet portrait; upload succeeds and file appears in Supabase portrait bucket
+- Priority: High
+- Feedback: Still having issues with portraits! I see what I uploaded to my character sheet WAS added to Supabase portrait bucket, but it won't load in on my sheet.
+- Expected: Portrait displays on the character sheet after upload.
+- Implemented 2026-02-21: (1) Added Next.js `images.remotePatterns` for `*.supabase.co` so `next/image` can load Supabase Storage URLs. (2) Documented in DEPLOYMENT_AND_SECRETS_SUPABASE.md: portrait won’t load if the bucket is private — enable **Public bucket** for `portraits` (and `profile-pictures`) in Supabase Dashboard → Storage → bucket → Configuration.

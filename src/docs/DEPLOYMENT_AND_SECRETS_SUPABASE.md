@@ -65,6 +65,10 @@ Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** 
 **Portrait upload fails with "new row violates row-level security policy"?**  
 Run `prisma/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
 
+**Portrait uploads to the bucket but won’t load on the character sheet?**  
+1. **Make the bucket public** — `getPublicUrl()` only works for public buckets. In Supabase Dashboard → **Storage** → select the **portraits** bucket → **Configuration** (or bucket settings) → turn **Public bucket** on. Do the same for **profile-pictures** if profile avatars don’t load.  
+2. **Next.js** — The app allows Supabase Storage in `next.config` via `images.remotePatterns` so `next/image` can load portrait URLs. Restart the dev server or redeploy after changing config.
+
 ---
 
 ## Session Handling

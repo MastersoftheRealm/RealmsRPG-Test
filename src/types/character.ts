@@ -207,6 +207,9 @@ export interface Character {
   // Trait uses tracking (trait name -> currentUses)
   traitUses?: Record<string, number>;
   
+  /** State uses remaining this recovery (max = archetype proficiency; restored on full recovery) */
+  stateUsesCurrent?: number;
+  
   // Training points tracking
   trainingPointsSpent?: number;
   

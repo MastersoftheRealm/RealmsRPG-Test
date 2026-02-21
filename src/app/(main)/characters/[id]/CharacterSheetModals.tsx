@@ -17,7 +17,7 @@ import { DeleteConfirmModal, AddSkillModal, AddSubSkillModal } from '@/component
 import type { CharacterSheetStats } from './character-sheet-utils';
 
 export type AddModalType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null;
-export type FeatModalType = 'archetype' | 'character' | null;
+export type FeatModalType = 'archetype' | 'character' | 'state' | null;
 export type SkillModalType = 'skill' | 'subskill' | null;
 
 interface SkillForModal {
@@ -65,7 +65,7 @@ interface CharacterSheetModalsProps {
   skills: SkillForModal[];
   traitsDb: Array<{ name?: string; uses_per_rec?: number; rec_period?: string }>;
   onModalAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
-  onAddFeats: (feats: Array<{ id: string; name: string; description?: string; effect?: string; max_uses?: number }>, type: 'archetype' | 'character') => void;
+  onAddFeats: (feats: Array<{ id: string; name: string; description?: string; effect?: string; max_uses?: number }>, type: 'archetype' | 'character' | 'state') => void;
   onAddSkills: (skills: Array<{ id: string; name: string; ability?: string; base_skill_id?: number; selectedBaseSkillId?: string }>) => void;
   onConfirmRemoveFeat: () => void;
   onLevelUp: (newLevel: number) => void;

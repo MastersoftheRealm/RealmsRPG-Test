@@ -66,6 +66,7 @@ export interface ColumnHeader {
   key: string;
   label: string;
   sortable?: boolean;
+  align?: 'left' | 'center' | 'right';
 }
 
 /** Filter option definition */
@@ -302,15 +303,17 @@ export function UnifiedSelectionModal({
               key: col.key,
               label: col.label,
               sortable: col.sortable !== false,
+              align: col.align,
             }))}
             gridColumns={gridColumns}
             sortState={sortState}
             onSort={handleSort}
             hasSelectionColumn
+            className="border-0 rounded-none bg-transparent dark:bg-transparent"
           />
         )}
         
-        {/* Items List */}
+        {/* Items List — no outline, no extra padding so columns align with header */}
         <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">
           {isLoading ? (
             <LoadingState message="Loading..." size="md" padding="md" />
@@ -321,7 +324,7 @@ export function UnifiedSelectionModal({
               size="sm"
             />
           ) : (
-            <div className="space-y-2 p-2 min-w-0">
+            <div className="space-y-2 min-w-0">
               {filteredItems.map(item => {
                 const itemIdStr = String(item.id);
                 const isSelected = selectedIds.has(itemIdStr);

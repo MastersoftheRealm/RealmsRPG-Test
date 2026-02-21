@@ -372,7 +372,14 @@ interface LibrarySectionProps {
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
+  onAddStateFeat?: () => void;
   onRemoveFeat?: (featId: string) => void;
+  /** State uses (current/max per recovery; max = proficiency). Restored on full recovery. */
+  stateFeats?: Array<{ id?: string | number; name: string; description?: string; maxUses?: number; currentUses?: number; recovery?: string; type?: 'archetype' | 'character' }>;
+  stateUsesCurrent?: number;
+  stateUsesMax?: number;
+  onStateUsesChange?: (delta: number) => void;
+  onEnterState?: () => void;
   /** Max archetype feats (for overspend indicator and current/max display) */
   maxArchetypeFeats?: number;
   /** Max character feats (for overspend indicator and current/max display) */
@@ -503,7 +510,13 @@ export function LibrarySection({
   onTraitUsesChange,
   onAddArchetypeFeat,
   onAddCharacterFeat,
+  onAddStateFeat,
   onRemoveFeat,
+  stateFeats = [],
+  stateUsesCurrent,
+  stateUsesMax,
+  onStateUsesChange,
+  onEnterState,
   maxArchetypeFeats,
   maxCharacterFeats,
   className,
@@ -1296,6 +1309,11 @@ export function LibrarySection({
             traitUses={traitUses}
             archetypeFeats={archetypeFeats}
             characterFeats={characterFeats}
+            stateFeats={stateFeats}
+            stateUsesCurrent={stateUsesCurrent}
+            stateUsesMax={stateUsesMax}
+            onStateUsesChange={onStateUsesChange}
+            onEnterState={onEnterState}
             isEditMode={isEditMode}
             showEditControls={showLibraryEditControls}
             maxArchetypeFeats={maxArchetypeFeats}
@@ -1304,6 +1322,7 @@ export function LibrarySection({
             onTraitUsesChange={onTraitUsesChange}
             onAddArchetypeFeat={onAddArchetypeFeat}
             onAddCharacterFeat={onAddCharacterFeat}
+            onAddStateFeat={onAddStateFeat}
             onRemoveFeat={onRemoveFeat}
           />
         )}

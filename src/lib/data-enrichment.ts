@@ -513,6 +513,8 @@ const SAVEABLE_FIELDS = [
   'feats', 'archetypeFeats', 'techniques', 'powers', 'traits',
   // Trait uses tracking
   'traitUses',
+  // State uses (per recovery, max = proficiency)
+  'stateUsesCurrent',
   // Unarmed prowess (allocated by player)
   'unarmedProwess',
   // Inventory (names/equipped status only, not full item data)

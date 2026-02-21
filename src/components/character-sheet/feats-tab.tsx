@@ -87,6 +87,11 @@ interface FeatsTabProps {
   archetypeFeats?: FeatData[];
   characterFeats?: FeatData[];
   stateFeats?: FeatData[];
+  /** State uses: current remaining this recovery (max = proficiency); restored on full recovery */
+  stateUsesCurrent?: number;
+  stateUsesMax?: number;
+  onStateUsesChange?: (delta: number) => void;
+  onEnterState?: () => void;
   isEditMode?: boolean;
   /** When true, show add/remove and current/max; when false, hide add/remove (library not in edit) */
   showEditControls?: boolean;
@@ -171,6 +176,10 @@ export function FeatsTab({
   archetypeFeats = [],
   characterFeats = [],
   stateFeats = [],
+  stateUsesCurrent,
+  stateUsesMax = 0,
+  onStateUsesChange,
+  onEnterState,
   isEditMode = false,
   showEditControls = false,
   maxArchetypeFeats,
@@ -560,6 +569,50 @@ export function FeatsTab({
             title="State Feats" 
             onAdd={showEditControls ? onAddStateFeat : undefined}
             addLabel="Add state feat"
+            rightContent={
+              stateUsesMax > 0 ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    {onStateUsesChange ? (
+                      <>
+                        <DecrementButton
+                          onClick={() => onStateUsesChange(-1)}
+                          disabled={(stateUsesCurrent ?? stateUsesMax) <= 0}
+                          size="sm"
+                        />
+                        <span className="min-w-[2.5rem] text-center text-sm font-medium tabular-nums">
+                          {stateUsesCurrent ?? stateUsesMax}/{stateUsesMax}
+                        </span>
+                        <IncrementButton
+                          onClick={() => onStateUsesChange(1)}
+                          disabled={(stateUsesCurrent ?? stateUsesMax) >= stateUsesMax}
+                          size="sm"
+                        />
+                      </>
+                    ) : (
+                      <span className="text-sm font-medium tabular-nums">
+                        {stateUsesCurrent ?? stateUsesMax}/{stateUsesMax}
+                      </span>
+                    )}
+                  </div>
+                  {onEnterState && (
+                    <button
+                      type="button"
+                      onClick={onEnterState}
+                      disabled={(stateUsesCurrent ?? stateUsesMax) <= 0}
+                      className={cn(
+                        'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                        (stateUsesCurrent ?? stateUsesMax) > 0
+                          ? 'bg-primary-600 text-white hover:bg-primary-700'
+                          : 'bg-surface-alt text-text-muted cursor-not-allowed'
+                      )}
+                    >
+                      Enter State
+                    </button>
+                  )}
+                </div>
+              ) : undefined
+            }
           />
           <ListHeader
             columns={FEAT_COLUMNS}

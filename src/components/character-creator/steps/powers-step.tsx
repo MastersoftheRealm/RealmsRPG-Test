@@ -17,7 +17,11 @@ import { Button, IconButton } from '@/components/ui';
 import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, type PowerPart, type TechniquePart } from '@/hooks';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
+import type { ChipData } from '@/components/shared/grid-list-row';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 
 /** Capitalize first letter of each word for display */
 function capitalize(s: string | undefined): string {
@@ -27,17 +31,17 @@ function capitalize(s: string | undefined): string {
 
 const POWER_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
-  { key: 'Action', label: 'ACTION', sortable: false },
-  { key: 'Damage', label: 'DAMAGE', sortable: false },
-  { key: 'Area', label: 'AREA', sortable: false },
+  { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
+  { key: 'Damage', label: 'DAMAGE', sortable: false, align: 'center' as const },
+  { key: 'Area', label: 'AREA', sortable: false, align: 'center' as const },
 ];
 const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.8fr 0.7fr';
 
 const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
-  { key: 'Energy', label: 'ENERGY', sortable: false },
-  { key: 'Weapon', label: 'WEAPON', sortable: false },
-  { key: 'Training Pts', label: 'TRAINING PTS', sortable: false },
+  { key: 'Energy', label: 'ENERGY', sortable: false, align: 'center' as const },
+  { key: 'Weapon', label: 'WEAPON', sortable: false, align: 'center' as const },
+  { key: 'Training Pts', label: 'TRAINING PTS', sortable: false, align: 'center' as const },
 ];
 const TECHNIQUE_GRID_COLUMNS = '1.4fr 0.7fr 1fr 0.8fr';
 
@@ -108,9 +112,27 @@ export function PowersStep() {
     return [...my, ...pub];
   }, [source, userTechniques, normalizedPublicTechniques]);
   
-  // Transform powers to SelectableItems — match add-library-item layout (Action, Damage, Area)
+  // Transform powers to SelectableItems — match add-library-item: columns, detailSections, totalCost for expanded view
   const availablePowers = useMemo((): SelectableItem[] => {
     return powersForList.map((power: UserPower) => {
+      const doc: PowerDocument = {
+        name: String(power.name ?? ''),
+        description: String(power.description ?? ''),
+        parts: Array.isArray(power.parts) ? (power.parts as PowerDocument['parts']) : [],
+        damage: power.damage as PowerDocument['damage'],
+        actionType: power.actionType,
+        isReaction: power.isReaction,
+        range: power.range as PowerDocument['range'],
+        area: power.area as PowerDocument['area'],
+        duration: power.duration as PowerDocument['duration'],
+      };
+      const display = derivePowerDisplay(doc, powerParts ?? []);
+      const partChips: ChipData[] = display.partChips.map((chip) => ({
+        name: chip.text.split(' | TP:')[0].trim(),
+        description: chip.description,
+        cost: chip.finalTP,
+        costLabel: 'TP',
+      }));
       const damageStr = power.damage?.length
         ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
         : '-';
@@ -124,25 +146,31 @@ export function PowersStep() {
           { key: 'Damage', value: damageStr, align: 'center' as const },
           { key: 'Area', value: areaStr, align: 'center' as const },
         ],
-        chips: power.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+        totalCost: display.tp > 0 ? display.tp : undefined,
+        costLabel: display.tp > 0 ? 'TP' : undefined,
         data: power,
       };
     });
-  }, [powersForList]);
+  }, [powersForList, powerParts]);
 
-  // Transform techniques to SelectableItems — match add-library-item (Energy, Weapon, Training Pts)
+  // Transform techniques to SelectableItems — match add-library-item: detailSections, totalCost for expanded view
   const availableTechniques = useMemo((): SelectableItem[] => {
     return techniquesForList.map((tech: UserTechnique) => {
-      const display = deriveTechniqueDisplay(
-        {
-          name: tech.name,
-          description: tech.description,
-          parts: tech.parts || [],
-          damage: Array.isArray(tech.damage) && tech.damage[0] ? tech.damage[0] : undefined,
-          weapon: tech.weapon,
-        },
-        techniqueParts ?? []
-      );
+      const doc: TechniqueDocument = {
+        name: String(tech.name ?? ''),
+        description: String(tech.description ?? ''),
+        parts: Array.isArray(tech.parts) ? (tech.parts as TechniqueDocument['parts']) : [],
+        damage: Array.isArray(tech.damage) && tech.damage[0] ? tech.damage[0] : (tech.damage as TechniqueDocument['damage']),
+        weapon: tech.weapon as TechniqueDocument['weapon'],
+      };
+      const display = deriveTechniqueDisplay(doc, techniqueParts ?? []);
+      const partChips: ChipData[] = display.partChips.map((chip) => ({
+        name: chip.text.split(' | TP:')[0].trim(),
+        description: chip.description,
+        cost: chip.finalTP,
+        costLabel: 'TP',
+      }));
       return {
         id: tech.docId,
         name: tech.name,
@@ -152,7 +180,9 @@ export function PowersStep() {
           { key: 'Weapon', value: display.weaponName || '-', align: 'center' as const },
           { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
         ],
-        chips: tech.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+        totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
+        costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
         data: tech,
       };
     });

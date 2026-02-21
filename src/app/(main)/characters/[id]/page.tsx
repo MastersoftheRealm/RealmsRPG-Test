@@ -12,7 +12,7 @@ import { getCharacter, saveCharacter, type LibraryForView } from '@/services/cha
 import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
-import { calculateArchetypeProgression, calculateSkillPointsForEntity, calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import { calculateArchetypeProgression, calculateSkillPointsForEntity, calculateMaxArchetypeFeats, calculateMaxCharacterFeats, calculateProficiency } from '@/lib/game/formulas';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import {
   SheetHeader,
@@ -628,6 +628,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       });
     }
     
+    const stateUsesMaxRec = calculateProficiency(character.level || 1);
     setCharacter(prev => prev ? {
       ...prev,
       currentHealth: calculatedStats.maxHealth,
@@ -636,6 +637,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       archetypeFeats: resetArchetypeFeats,
       feats: resetCharacterFeats,
       traitUses: { ...(prev.traitUses || {}), ...resetTraitUses },
+      stateUsesCurrent: stateUsesMaxRec,
     } : null);
     
     showToast('Full recovery complete!', 'success');
@@ -978,7 +980,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   // Add feats handler — saves lean: { id, name, currentUses }
   // description/maxUses/recovery derived from codex on display
-  const handleAddFeats = useCallback((feats: { id: string; name: string; description?: string; effect?: string; max_uses?: number }[], type: 'archetype' | 'character') => {
+  // When type is 'state', each feat is added to archetype or character based on codex char_feat
+  const handleAddFeats = useCallback((feats: { id: string; name: string; description?: string; effect?: string; max_uses?: number }[], type: 'archetype' | 'character' | 'state') => {
     if (!character) return;
     const newFeats: CharacterFeat[] = feats.map(f => ({
       id: f.id,
@@ -986,7 +989,21 @@ export default function CharacterSheetPage({ params }: PageParams) {
       currentUses: f.max_uses, // Start at max uses; maxUses itself derived from codex
     }));
     
-    if (type === 'archetype') {
+    if (type === 'state') {
+      const db = featsDb as Array<Feat & { char_feat?: boolean }>;
+      const toArchetype: CharacterFeat[] = [];
+      const toCharacter: CharacterFeat[] = [];
+      newFeats.forEach(f => {
+        const codex = db.find(x => x.id === f.id || String(x.name ?? '').toLowerCase() === String(f.name ?? '').toLowerCase());
+        if (codex?.char_feat) toCharacter.push(f);
+        else toArchetype.push(f);
+      });
+      setCharacter(prev => prev ? {
+        ...prev,
+        archetypeFeats: [...(prev.archetypeFeats || []), ...toArchetype],
+        feats: [...(prev.feats || []), ...toCharacter],
+      } : null);
+    } else if (type === 'archetype') {
       setCharacter(prev => prev ? {
         ...prev,
         archetypeFeats: [...(prev.archetypeFeats || []), ...newFeats]
@@ -998,7 +1015,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       } : null);
     }
     setFeatModalType(null);
-  }, [character]);
+  }, [character, featsDb]);
 
   // Remove feat handler (called after confirmation)
   const handleRemoveFeat = useCallback((featId: string) => {
@@ -1237,6 +1254,84 @@ export default function CharacterSheetPage({ params }: PageParams) {
       };
     });
   }, [character, traitsDb]);
+  
+  // Split feats for display: state feats go only in State Feats section; others stay in Archetype/Character
+  const { archetypeFeatsForDisplay, characterFeatsForDisplay, stateFeatsList } = useMemo(() => {
+    const arch = character?.archetypeFeats || [];
+    const char = character?.feats || [];
+    const db = featsDb as Array<Feat & { state_feat?: boolean }>;
+    const isStateFeat = (feat: CharacterFeat) => {
+      const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+      return !!(codex?.state_feat);
+    };
+    const archNonState = arch.filter(f => !isStateFeat(f));
+    const charNonState = char.filter(f => !isStateFeat(f));
+    const stateFeats: Array<CharacterFeat & { type: 'archetype' | 'character' }> = [
+      ...arch.filter(isStateFeat).map(f => ({ ...f, type: 'archetype' as const })),
+      ...char.filter(isStateFeat).map(f => ({ ...f, type: 'character' as const })),
+    ];
+    return {
+      archetypeFeatsForDisplay: archNonState,
+      characterFeatsForDisplay: charNonState,
+      stateFeatsList: stateFeats,
+    };
+  }, [character?.archetypeFeats, character?.feats, featsDb]);
+  
+  const stateUsesMax = character ? calculateProficiency(character.level || 1) : 0;
+  const stateUsesCurrent = character != null ? (character.stateUsesCurrent ?? stateUsesMax) : 0;
+  
+  const handleStateUsesChange = useCallback((delta: number) => {
+    if (!character || stateUsesMax <= 0) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      const current = prev.stateUsesCurrent ?? stateUsesMax;
+      const next = Math.max(0, Math.min(stateUsesMax, current + delta));
+      return { ...prev, stateUsesCurrent: next };
+    });
+  }, [character, stateUsesMax]);
+  
+  const handleEnterState = useCallback(() => {
+    if (!character || stateUsesMax <= 0) return;
+    const current = character.stateUsesCurrent ?? stateUsesMax;
+    if (current <= 0) return;
+    setCharacter(prev => {
+      if (!prev) return null;
+      const db = featsDb as Array<Feat & { state_feat?: boolean; uses_per_rec?: number }>;
+      const isStateFeat = (feat: CharacterFeat) => {
+        const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+        return !!(codex?.state_feat);
+      };
+      const getMaxUses = (feat: CharacterFeat) => {
+        const codex = db.find(f => f.id === String(feat.id)) ?? db.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+        return feat.maxUses ?? codex?.uses_per_rec ?? 0;
+      };
+      let nextArch = prev.archetypeFeats || [];
+      let nextChar = prev.feats || [];
+      stateFeatsList.forEach(sf => {
+        const maxUses = getMaxUses(sf);
+        if (maxUses <= 0) return;
+        if (sf.type === 'archetype') {
+          nextArch = nextArch.map(f => {
+            if (String(f.id) !== String(sf.id) && f.name !== sf.name) return f;
+            const cur = f.currentUses ?? maxUses;
+            return { ...f, currentUses: Math.max(0, cur - 1) };
+          });
+        } else {
+          nextChar = nextChar.map(f => {
+            if (String(f.id) !== String(sf.id) && f.name !== sf.name) return f;
+            const cur = f.currentUses ?? maxUses;
+            return { ...f, currentUses: Math.max(0, cur - 1) };
+          });
+        }
+      });
+      return {
+        ...prev,
+        stateUsesCurrent: (prev.stateUsesCurrent ?? stateUsesMax) - 1,
+        archetypeFeats: nextArch,
+        feats: nextChar,
+      };
+    });
+  }, [character, stateUsesMax, featsDb, stateFeatsList]);
   
   // Handle modal item add based on type
   const handleModalAdd = useCallback((items: CharacterPower[] | CharacterTechnique[] | Item[]) => {
@@ -1575,13 +1670,19 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   }}
                   // Species traits from Codex (automatically granted to all characters of this species)
                   speciesTraitsFromCodex={characterSpeciesTraits}
-                  archetypeFeats={character.archetypeFeats}
-                  characterFeats={character.feats}
+                  archetypeFeats={archetypeFeatsForDisplay}
+                  characterFeats={characterFeatsForDisplay}
+                  stateFeats={stateFeatsList}
+                  stateUsesCurrent={stateUsesCurrent}
+                  stateUsesMax={stateUsesMax}
+                  onStateUsesChange={handleStateUsesChange}
+                  onEnterState={handleEnterState}
                   maxArchetypeFeats={calculateMaxArchetypeFeats(character.level || 1, (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial')}
                   maxCharacterFeats={calculateMaxCharacterFeats(character.level || 1)}
                   onFeatUsesChange={handleFeatUsesChange}
                   onAddArchetypeFeat={() => setFeatModalType('archetype')}
                   onAddCharacterFeat={() => setFeatModalType('character')}
+                  onAddStateFeat={() => setFeatModalType('state')}
                   onRemoveFeat={handleRequestRemoveFeat}
                   // Traits enrichment props
                   traitsDb={traitsDb}

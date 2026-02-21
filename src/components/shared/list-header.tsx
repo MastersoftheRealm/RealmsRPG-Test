@@ -50,6 +50,8 @@ export interface ListHeaderProps {
   onSort?: (columnKey: string) => void;
   /** Whether the list is in selectable mode (adds space for selection button) */
   hasSelectionColumn?: boolean;
+  /** Fixed width for a right slot (e.g. quantity); uses flex so header grid aligns with row grid */
+  rightSlotWidth?: string;
   /** Additional className */
   className?: string;
 }
@@ -66,13 +68,14 @@ export function ListHeader({
   sortState,
   onSort,
   hasSelectionColumn = false,
+  rightSlotWidth,
   className,
 }: ListHeaderProps) {
   // Build grid template from columns if not provided
   const gridTemplate = gridColumns || columns.map(c => c.width || '1fr').join(' ');
   
-  // Add selection column space if needed
-  const finalGridTemplate = hasSelectionColumn
+  // Add selection column space if needed (only when not using rightSlotWidth)
+  const finalGridTemplate = !rightSlotWidth && hasSelectionColumn
     ? `${gridTemplate} 2.5rem`
     : gridTemplate;
 
@@ -82,15 +85,16 @@ export function ListHeader({
     }
   };
 
-  return (
-    <div
-      className={cn(
-        'hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-surface-alt dark:border dark:border-border rounded-lg mb-2 mx-1',
-        'text-xs font-semibold text-primary-700 dark:text-text-secondary uppercase tracking-wide',
-        className
-      )}
-      style={{ gridTemplateColumns: finalGridTemplate }}
-    >
+  const baseHeaderClasses = cn(
+    'hidden lg:grid gap-2 py-2 bg-primary-50 dark:bg-surface-alt dark:border dark:border-border rounded-lg mb-2',
+    'text-xs font-semibold text-primary-700 dark:text-text-secondary uppercase tracking-wide',
+    !rightSlotWidth && 'px-4 mx-1',
+    rightSlotWidth && 'px-3 min-w-0',
+    className
+  );
+
+  const headerContent = (
+    <>
       {columns.map((column) => {
         const isSortable = column.sortable !== false && onSort;
         const isActive = sortState?.col === column.key;
@@ -131,9 +135,32 @@ export function ListHeader({
       })}
       
       {/* Selection column - no text, just space for the toggle buttons */}
-      {hasSelectionColumn && (
+      {!rightSlotWidth && hasSelectionColumn && (
         <span className="text-center" />
       )}
+    </>
+  );
+
+  if (rightSlotWidth) {
+    return (
+      <div className="hidden lg:flex items-center w-full">
+        <div
+          className={cn(baseHeaderClasses, 'flex-1 min-w-0')}
+          style={{ gridTemplateColumns: gridTemplate }}
+        >
+          {headerContent}
+        </div>
+        <div className="flex-shrink-0" style={{ width: rightSlotWidth }} aria-hidden />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={baseHeaderClasses}
+      style={{ gridTemplateColumns: finalGridTemplate }}
+    >
+      {headerContent}
     </div>
   );
 }

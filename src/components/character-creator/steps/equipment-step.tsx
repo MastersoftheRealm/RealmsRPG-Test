@@ -34,30 +34,32 @@ import { TabNavigation } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check } from 'lucide-react';
 import type { Item } from '@/types';
 
-// List column definitions and grid (unified with Library/Codex)
+// List column definitions and grid (unified with Library/Codex); name column wider for readability
 const WEAPON_LIST_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.2fr' },
+  { key: 'name', label: 'Name', width: '1.8fr' },
   { key: 'damage', label: 'Damage', width: '0.9fr', align: 'center' },
   { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
   { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
 ];
-const WEAPON_LIST_GRID = '1.2fr 0.9fr 0.6fr 0.6fr';
+const WEAPON_LIST_GRID = '1.8fr 0.9fr 0.6fr 0.6fr';
 
 const ARMOR_LIST_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.2fr' },
+  { key: 'name', label: 'Name', width: '1.8fr' },
   { key: 'armor_value', label: 'Damage Reduction', width: '1fr', align: 'center' },
   { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
   { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
 ];
-const ARMOR_LIST_GRID = '1.2fr 1fr 0.6fr 0.6fr';
+const ARMOR_LIST_GRID = '1.8fr 1fr 0.6fr 0.6fr';
 
 const EQUIPMENT_LIST_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.2fr' },
+  { key: 'name', label: 'Name', width: '1.8fr' },
   { key: 'category', label: 'Category', width: '0.8fr', align: 'center' },
   { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
   { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
 ];
-const EQUIPMENT_LIST_GRID = '1.2fr 0.8fr 0.6fr 0.6fr';
+const EQUIPMENT_LIST_GRID = '1.8fr 0.8fr 0.6fr 0.6fr';
+
+const RIGHT_SLOT_WIDTH = '2.5rem';
 
 // Unarmed Prowess constants
 const UNARMED_PROWESS_BASE_TP = 10;
@@ -632,6 +634,7 @@ export function EquipmentStep() {
                 gridColumns={WEAPON_LIST_GRID}
                 sortState={equipmentSort}
                 onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+                rightSlotWidth={RIGHT_SLOT_WIDTH}
               />
             )}
             {activeTab === 'armor' && sortedEquipment.length > 0 && (
@@ -640,6 +643,7 @@ export function EquipmentStep() {
                 gridColumns={ARMOR_LIST_GRID}
                 sortState={equipmentSort}
                 onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+                rightSlotWidth={RIGHT_SLOT_WIDTH}
               />
             )}
             {activeTab === 'equipment' && sortedEquipment.length > 0 && (
@@ -648,9 +652,10 @@ export function EquipmentStep() {
                 gridColumns={EQUIPMENT_LIST_GRID}
                 sortState={equipmentSort}
                 onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+                rightSlotWidth={RIGHT_SLOT_WIDTH}
               />
             )}
-            <div className="space-y-1 max-h-[400px] overflow-y-auto p-1">
+            <div className="space-y-1 max-h-[400px] overflow-y-auto">
               {sortedEquipment.length === 0 ? (
                 <EmptyState
                   size="md"
