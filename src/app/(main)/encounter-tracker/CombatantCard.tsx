@@ -198,11 +198,24 @@ export const CombatantCard = memo(function CombatantCard({
               </h3>
             )}
 
-            {combatant.combatantType === 'companion' && (
-              <span className="px-1.5 py-0.5 text-[10px] bg-companion-light text-companion-text rounded font-medium">
-                Companion
-              </span>
-            )}
+            <select
+              value={combatant.combatantType}
+              onChange={(e) => {
+                const t = e.target.value as 'ally' | 'enemy' | 'companion';
+                onUpdate({ combatantType: t, isAlly: t !== 'enemy' });
+              }}
+              title="Change side"
+              className={cn(
+                'text-[10px] font-medium rounded px-1.5 py-0.5 border cursor-pointer',
+                combatant.combatantType === 'ally' && 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300',
+                combatant.combatantType === 'enemy' && 'bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300',
+                combatant.combatantType === 'companion' && 'bg-companion-light border-companion text-companion-text'
+              )}
+            >
+              <option value="ally">Ally</option>
+              <option value="enemy">Enemy</option>
+              <option value="companion">Companion</option>
+            </select>
             <label className="flex items-center gap-1 cursor-pointer select-none" title="Surprised (goes last in round 1)">
               <input
                 type="checkbox"

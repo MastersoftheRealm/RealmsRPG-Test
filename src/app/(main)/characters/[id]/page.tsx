@@ -236,11 +236,15 @@ export default function CharacterSheetPage({ params }: PageParams) {
             if (typeof data.currentHealth === 'number') updates.currentHealth = data.currentHealth;
             if (typeof data.currentEnergy === 'number') updates.currentEnergy = data.currentEnergy;
             if (typeof data.actionPoints === 'number') updates.actionPoints = data.actionPoints;
-            if (data.health && typeof (data.health as { current?: number }).current === 'number') {
-              updates.currentHealth = (data.health as { current: number }).current;
+            const health = data.health as { current?: number; max?: number } | undefined;
+            const energy = data.energy as { current?: number; max?: number } | undefined;
+            if (health && typeof health.current === 'number') {
+              updates.currentHealth = health.current;
+              if (typeof health.max === 'number') updates.health = { ...prev.health, current: health.current, max: health.max } as Character['health'];
             }
-            if (data.energy && typeof (data.energy as { current?: number }).current === 'number') {
-              updates.currentEnergy = (data.energy as { current: number }).current;
+            if (energy && typeof energy.current === 'number') {
+              updates.currentEnergy = energy.current;
+              if (typeof energy.max === 'number') updates.energy = { ...prev.energy, current: energy.current, max: energy.max } as Character['energy'];
             }
             if (Object.keys(updates).length === 0) return prev;
             return { ...prev, ...updates };

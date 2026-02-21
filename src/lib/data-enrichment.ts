@@ -546,7 +546,7 @@ const SAVEABLE_FIELDS = [
   // Core stats (user-set values only)
   'abilities', 'defenseVals', 'baseAbilities', 'ancestryAbilities',
   'healthPoints', 'energyPoints', 'innateEnergy',
-  'currentHealth', 'currentEnergy',
+  'currentHealth', 'currentEnergy', 'actionPoints',
   'speedBase', 'evasionBase',
   // Skills (user selections)
   'skills',
@@ -627,6 +627,24 @@ export function cleanForSave(data: Character): Partial<Character> {
   }
   if (cleaned.currentEnergy === undefined && data.energy?.current !== undefined) {
     cleaned.currentEnergy = data.energy.current;
+  }
+
+  // Persist health/energy { current, max } for realtime sync to encounter tracker (current + max so encounter gets both)
+  const dataHealth = data.health as { current?: number; max?: number } | undefined;
+  const dataEnergy = data.energy as { current?: number; max?: number } | undefined;
+  const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
+  const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
+  if (typeof healthCurrent === 'number') {
+    cleaned.health = {
+      current: healthCurrent,
+      max: typeof dataHealth?.max === 'number' ? dataHealth.max : (data as Character).health?.max ?? healthCurrent,
+    };
+  }
+  if (typeof energyCurrent === 'number') {
+    cleaned.energy = {
+      current: energyCurrent,
+      max: typeof dataEnergy?.max === 'number' ? dataEnergy.max : (data as Character).energy?.max ?? energyCurrent,
+    };
   }
 
   // Strip ancestry to lean { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }
