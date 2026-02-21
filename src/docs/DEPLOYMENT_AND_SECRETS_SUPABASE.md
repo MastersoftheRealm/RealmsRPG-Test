@@ -171,6 +171,24 @@ Until this migration is applied, any code that reads or writes `UserProfile` (us
 
 ---
 
+### Realtime: "permission denied for schema campaigns" / "permission denied for schema users" (PoolingReplicationError)
+
+If campaign roll log or character **HP/EN/AP** don’t update in real time and you see `PoolingReplicationError` with `insufficient_privilege` / `permission denied for schema campaigns` or `permission denied for schema users`, the Realtime service can’t access those custom schemas when applying RLS. The same fix enables:
+
+- **Campaign roll log** (campaigns.campaign_rolls)
+- **HP, EN, and AP sync** between encounter combat and character sheets (users.characters)
+
+**Fix:** Run the Realtime-related block from **`prisma/supabase-rls-policies.sql`** in Supabase Dashboard → SQL Editor. It must include:
+
+```sql
+GRANT USAGE ON SCHEMA campaigns TO anon, authenticated, service_role, authenticator;
+GRANT USAGE ON SCHEMA users TO anon, authenticated, service_role, authenticator;
+```
+
+(Do **not** grant to a role like `supabase_realtime` unless your project explicitly has that role; it does not exist in standard Supabase projects and will cause "role does not exist" errors.)
+
+---
+
 ## Migration Note
 
 If migrating from Firebase, the old docs (`DEPLOYMENT_SECRETS.md`, `ADMIN_SDK_SECRETS_SETUP.md`, `SECRETS_SETUP.md`) were previously archived and have since been removed as part of codebase cleanup.

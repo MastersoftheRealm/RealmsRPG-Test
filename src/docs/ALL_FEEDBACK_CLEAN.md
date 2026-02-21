@@ -960,3 +960,11 @@ Notes
 - Feedback: Added and uploaded a portrait, nothing displays on my character sheet though. Failed to load resource: the server responded with a status of 400 (). [Included storage logs showing POST/GET to portraits bucket.]
 - Expected: Portrait displays on the sheet after upload.
 - Implemented 2026-02-21: (1) Portrait image in sheet-header now uses unoptimized so the browser loads the Supabase URL directly (avoids 400 from Next.js image optimizer). (2) onError fallback to placeholder so a failed load still shows the placeholder. (3) Deployment doc: 400/403 on portrait usually means the portraits bucket is not public — turn Public bucket on in Storage → portraits → Configuration.
+
+**Raw Feedback Log — 2026-02-21 (Realtime: campaign roll log not updating; permission denied for schema)**  
+- Date: 2026-02-21  
+- Context: Character sheet in campaign; campaign roll log; Supabase Realtime  
+- Priority: High  
+- Feedback: Character Talavas rolled four times on his character sheet while part of a campaign; the campaign roll log didn't update until page refresh. Console/backend showed PoolingReplicationError: permission denied for schema campaigns, permission denied for schema users (realtime.apply_rls / list_changes, insufficient_privilege 42501).  
+- Expected: Campaign roll log (and character/encounter realtime sync) update in real time without refresh.  
+- Disposition: Root cause is Realtime service lacking USAGE on custom schemas (campaigns, users). prisma/supabase-rls-policies.sql updated with GRANT USAGE ON SCHEMA for campaigns and users (anon, authenticated, service_role, authenticator). DEPLOYMENT_AND_SECRETS_SUPABASE.md updated with troubleshooting and optional supabase_realtime grant. Owner must run the updated SQL in Supabase SQL Editor for the fix to take effect.

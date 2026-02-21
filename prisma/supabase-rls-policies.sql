@@ -408,12 +408,26 @@ TO public
 USING (true);
 
 -- =============================================================================
--- REALTIME PUBLICATION (campaign_rolls)
+-- REALTIME PUBLICATION (campaign_rolls, users.characters)
 -- =============================================================================
--- Enable Postgres Changes for campaign_rolls so clients can subscribe via
--- Supabase Realtime. Run once in Supabase SQL Editor.
+-- Enable Postgres Changes so clients can subscribe via Supabase Realtime.
+-- Run once in Supabase SQL Editor.
 -- See: https://supabase.com/docs/guides/realtime/postgres-changes
+--
+-- If you see PoolingReplicationError "permission denied for schema campaigns"
+-- or "permission denied for schema users", the Realtime service (apply_rls/list_changes)
+-- needs USAGE on those schemas. The grants below fix that.
+-- If you already ran this file before and only need the schema fix, run just the
+-- two GRANT USAGE ON SCHEMA lines in Supabase SQL Editor.
+-- Do NOT add role "supabase_realtime" — it does not exist in standard Supabase.
 -- =============================================================================
+
+-- Schema USAGE required for Realtime to apply RLS when broadcasting changes from
+-- custom schemas (otherwise: permission denied for schema campaigns/users).
+-- Enables: campaign roll log + HP/EN/AP sync between encounter combat and character sheets.
+GRANT USAGE ON SCHEMA campaigns TO anon, authenticated, service_role, authenticator;
+GRANT USAGE ON SCHEMA users TO anon, authenticated, service_role, authenticator;
+
 ALTER PUBLICATION supabase_realtime ADD TABLE campaigns.campaign_rolls;
 
 -- Grant SELECT to authenticated so Realtime can authorize changes (private schemas)
