@@ -928,3 +928,35 @@ Notes
 - Feedback: Still having issues with portraits! I see what I uploaded to my character sheet WAS added to Supabase portrait bucket, but it won't load in on my sheet.
 - Expected: Portrait displays on the character sheet after upload.
 - Implemented 2026-02-21: (1) Added Next.js `images.remotePatterns` for `*.supabase.co` so `next/image` can load Supabase Storage URLs. (2) Documented in DEPLOYMENT_AND_SECRETS_SUPABASE.md: portrait won’t load if the bucket is private — enable **Public bucket** for `portraits` (and `profile-pictures`) in Supabase Dashboard → Storage → bucket → Configuration.
+
+**Raw Feedback Log — 2026-02-21 (Column alignment in list views)**
+- Date: 2026-02-21
+- Context: Character library, modals, codex, library, codex edit, library edit — list views site-wide
+- Priority: High
+- Feedback: Columns seem to still be off-centered in the character library; the column item content should be left centered with its above header as much as possible, across the entire website — in modals, codex, library, codex edit, library edit, and so on. This should be a shared functionality/style with unification of components already in place. Likely still an issue globally across all list views.
+- Expected: Column content left-aligned with header; consistent alignment in all list views (Library, Codex, modals, edit views).
+- Implemented 2026-02-21: ListHeader: removed mx-1 so header and row content share same horizontal bounds (px-4); added compact prop so modals (UnifiedSelectionModal) use px-3 to match GridListRow compact rows. SortHeaderRow: removed mx-1 for consistency. GridListRow: explicit text-left on column cells. UnifiedSelectionModal: pass compact to ListHeader.
+
+**Raw Feedback Log — 2026-02-21 (Equip public items; add modals public library)**
+- Date: 2026-02-21
+- Context: Character sheet edit mode; add modals (armor, weapons, powers, techniques)
+- Priority: High
+- Feedback: (1) In edit mode, armor, weapons, powers, techniques from the public library don't let you equip them — only "my library" items. (2) Add modals for armor, techniques, weapons, powers don't show any items when sorting by Public library.
+- Expected: Public library items can be equipped like my library items; add modals show public library content when source is Public library.
+- Implemented 2026-02-21: (1) data-enrichment: enrichItems now uses character's stored id for display so equip/remove handlers match (displayId from charItem.id when present). (2) API public [type]: return id/docId after ...d so row id is always used (stable id for add/enrich/equip). (3) use-public-library: refetchOnMount so add modals get fresh public data. (4) add-library-item-modal: empty state when source=public (message + error when fetch fails); typeLabel for empty title.
+
+**Raw Feedback Log — 2026-02-21 (Profile picture didn't update on admin account)**
+- Date: 2026-02-21
+- Context: My Account profile picture upload
+- Priority: High
+- Feedback: I uploaded a profile picture and it didn't update on my admin account.
+- Expected: Profile picture updates and is visible after upload (e.g. on My Account and anywhere else the avatar is shown).
+- Implemented 2026-02-21: (1) Cache-bust after upload: set photoURL with `?t=Date.now()` so the browser shows the new image instead of the cached old one. (2) When loading profile from API, append `?t=updatedAt` to photoUrl so returning to the page shows the latest image. (3) After upload, call Supabase Auth `updateUser({ data: { avatar_url: url } })` so auth store and any UI using user.photoURL stay in sync.
+
+**Raw Feedback Log — 2026-02-21 (Portrait 400, nothing displays on character sheet)**
+- Date: 2026-02-21
+- Context: Character sheet portrait; upload succeeds, storage logs show object/sign and object/portraits activity
+- Priority: High
+- Feedback: Added and uploaded a portrait, nothing displays on my character sheet though. Failed to load resource: the server responded with a status of 400 (). [Included storage logs showing POST/GET to portraits bucket.]
+- Expected: Portrait displays on the sheet after upload.
+- Implemented 2026-02-21: (1) Portrait image in sheet-header now uses unoptimized so the browser loads the Supabase URL directly (avoids 400 from Next.js image optimizer). (2) onError fallback to placeholder so a failed load still shows the placeholder. (3) Deployment doc: 400/403 on portrait usually means the portraits bucket is not public — turn Public bucket on in Storage → portraits → Configuration.

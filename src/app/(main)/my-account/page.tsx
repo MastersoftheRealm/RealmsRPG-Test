@@ -84,11 +84,15 @@ function AccountContent() {
       try {
         const { profile: p } = await getUserProfileAction();
         if (p) {
+          const rawPhoto = (p.photoUrl as string) ?? undefined;
+          const photoURL = rawPhoto
+            ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt).getTime() : Date.now()}`
+            : (user.photoURL ?? undefined);
           setProfile({
             username: p.username ?? undefined,
             email: p.email ?? user.email ?? undefined,
             createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt) : undefined,
-            photoURL: (p.photoUrl as string) ?? user.photoURL ?? undefined,
+            photoURL,
           });
         } else {
           setProfile({
@@ -126,8 +130,12 @@ function AccountContent() {
       }
 
       const { url } = (await res.json()) as { url: string };
-      setProfile((prev) => (prev ? { ...prev, photoURL: url } : null));
+      // Cache-bust so the browser shows the new image (same path is overwritten in storage)
+      setProfile((prev) => (prev ? { ...prev, photoURL: `${url}?t=${Date.now()}` } : null));
       setPictureMessage({ type: 'success', text: 'Profile picture updated!' });
+      // Sync to Supabase Auth so header and any useAuth() consumer see the new picture
+      const supabase = createClient();
+      await supabase.auth.updateUser({ data: { avatar_url: url } });
     } catch (err) {
       console.error('Profile picture upload error:', err);
       setPictureMessage({ type: 'error', text: 'Failed to upload profile picture' });

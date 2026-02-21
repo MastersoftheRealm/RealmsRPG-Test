@@ -126,9 +126,10 @@ export function AddLibraryItemModal({
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: publicPowers = [], isLoading: publicPowersLoading } = usePublicLibrary('powers');
-  const { data: publicTechniques = [], isLoading: publicTechniquesLoading } = usePublicLibrary('techniques');
-  const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
+  const { data: publicPowers = [], isLoading: publicPowersLoading, isError: publicPowersError } = usePublicLibrary('powers');
+  const { data: publicTechniques = [], isLoading: publicTechniquesLoading, isError: publicTechniquesError } = usePublicLibrary('techniques');
+  const { data: publicItems = [], isLoading: publicItemsLoading, isError: publicItemsError } = usePublicLibrary('items');
+  const publicLibraryError = publicPowersError || publicTechniquesError || publicItemsError;
 
   const { rawItems, isLoading } = useMemo(() => {
     const normalizePublicPower = (p: Record<string, unknown>): UserPower => {
@@ -234,6 +235,7 @@ export function AddLibraryItemModal({
             description: chip.description,
             cost: chip.finalTP,
             costLabel: 'TP',
+            category: chip.finalTP && chip.finalTP > 0 ? ('cost' as const) : ('default' as const),
           }));
           detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
           totalCost = display.tp > 0 ? display.tp : undefined;
@@ -253,6 +255,7 @@ export function AddLibraryItemModal({
             description: chip.description,
             cost: chip.finalTP,
             costLabel: 'TP',
+            category: chip.finalTP && chip.finalTP > 0 ? ('cost' as const) : ('default' as const),
           }));
           detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
           totalCost = typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined;
@@ -264,11 +267,17 @@ export function AddLibraryItemModal({
             const dbProp = itemPropertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase());
             const baseTp = dbProp?.base_tp ?? (dbProp as { tp_cost?: number })?.tp_cost ?? 0;
             const optLevel = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 1;
+            const cost = baseTp * optLevel;
+            const baseDesc = dbProp?.description;
+            const descWithOpt = baseDesc?.trim()
+              ? (optLevel > 1 ? `${baseDesc.trim()}\n\nOption 1: Lv.${optLevel}` : baseDesc.trim())
+              : (optLevel > 1 ? `Option 1: Lv.${optLevel}` : undefined);
             return {
               name: dbProp?.name || propName,
-              description: dbProp?.description,
-              cost: baseTp * optLevel,
+              description: descWithOpt,
+              cost: cost > 0 ? cost : undefined,
               costLabel: 'TP',
+              category: cost > 0 ? ('cost' as const) : ('default' as const),
               level: optLevel > 1 ? optLevel : undefined,
             };
           });
@@ -289,11 +298,20 @@ export function AddLibraryItemModal({
       });
   }, [rawItems, existingIds, itemType, techniquePartsDb, powerPartsDb, itemPropertiesDb]);
 
-  const emptyTitle = items.length === 0 ? `No ${itemType}s available` : 'All already added or no matches';
+  const typeLabel = itemType === 'power' ? 'Powers' : itemType === 'technique' ? 'Techniques' : itemType === 'weapon' ? 'Weapons' : itemType === 'armor' ? 'Armor' : 'Equipment';
+  const emptyTitle = items.length === 0
+    ? (source === 'public'
+      ? `No public ${typeLabel.toLowerCase()} in the community library`
+      : `No ${itemType}s available`)
+    : 'All already added or no matches';
   const emptyDesc = items.length === 0
-    ? (itemType === 'equipment'
-      ? 'Equipment is loaded from the Codex. Add equipment via the Admin Codex if needed.'
-      : `Create some in the ${itemType === 'power' ? 'Power' : itemType === 'technique' ? 'Technique' : 'Item'} Creator first!`)
+    ? (source === 'public' && publicLibraryError
+      ? 'Failed to load public library. Try again later.'
+      : source === 'public'
+        ? 'Public content can be added by admins via Admin → Public Library Editor.'
+        : itemType === 'equipment'
+          ? 'Equipment is loaded from the Codex. Add equipment via the Admin Codex if needed.'
+          : `Create some in the ${itemType === 'power' ? 'Power' : itemType === 'technique' ? 'Technique' : 'Item'} Creator first!`)
     : undefined;
 
   const handleConfirm = (selected: SelectableItem[]) => {

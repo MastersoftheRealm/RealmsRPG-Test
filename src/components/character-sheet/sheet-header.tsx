@@ -534,11 +534,15 @@ export function SheetHeader({
               }
               alt={character.name}
               fill
+              unoptimized
               className={cn(
                 "object-cover transition-opacity",
                 isUploadingPortrait && "opacity-50"
               )}
               sizes="(max-width: 768px) 112px, 144px"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/images/placeholder-portrait.png';
+              }}
             />
             {/* Upload overlay in edit mode */}
             {isEditMode && onPortraitChange && (

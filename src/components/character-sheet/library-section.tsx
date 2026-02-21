@@ -115,6 +115,23 @@ interface CodexProperty {
   tp_cost?: number;
 }
 
+/** Build full chip description: base description + option level line when present (for expandable chip body) */
+function chipDescriptionWithOptionLevels(
+  baseDescription: string | undefined,
+  optionLevels: PartData['optionLevels']
+): string | undefined {
+  const parts: string[] = [];
+  if (baseDescription?.trim()) parts.push(baseDescription.trim());
+  if (optionLevels) {
+    const opts: string[] = [];
+    if ((optionLevels.opt1 ?? 0) > 0) opts.push(`Option 1: Lv.${optionLevels.opt1}`);
+    if ((optionLevels.opt2 ?? 0) > 0) opts.push(`Option 2: Lv.${optionLevels.opt2}`);
+    if ((optionLevels.opt3 ?? 0) > 0) opts.push(`Option 3: Lv.${optionLevels.opt3}`);
+    if (opts.length > 0) parts.push(opts.join('; '));
+  }
+  return parts.length > 0 ? parts.join('\n\n') : undefined;
+}
+
 // =============================================================================
 // Power/Technique Display Formatters
 // =============================================================================
@@ -679,10 +696,10 @@ export function LibrarySection({
                       const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                       const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({
                         name: p.name,
-                        description: p.description,
+                        description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                         cost: p.tpCost,
                         costLabel: 'TP',
-                        category: 'tag' as const,
+                        category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                         level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                       }));
                       const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
@@ -794,10 +811,10 @@ export function LibrarySection({
                       const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                       const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({
                         name: p.name,
-                        description: p.description,
+                        description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                         cost: p.tpCost,
                         costLabel: 'TP',
-                        category: 'tag' as const,
+                        category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                         level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                       }));
                       const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
@@ -905,10 +922,10 @@ export function LibrarySection({
                     const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                     const partChips = partsToPartData(tech.parts, techniquePartsDb).map(p => ({
                       name: p.name,
-                      description: p.description,
+                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,
                       costLabel: 'TP',
-                      category: 'tag' as const,
+                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
                     const techTP = (tech as { tp?: number }).tp;
@@ -1050,10 +1067,10 @@ export function LibrarySection({
                     const attackDisplay = `+${attackBonus} (${abilityAbbr})`;
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
                       name: p.name,
-                      description: p.description,
+                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,
                       costLabel: 'TP',
-                      category: 'tag' as const,
+                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
                     const columns: ColumnValue[] = [
@@ -1133,10 +1150,10 @@ export function LibrarySection({
                   {sortedArmor.map((item, i) => {
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
                       name: p.name,
-                      description: p.description,
+                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,
                       costLabel: 'TP',
-                      category: 'tag' as const,
+                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
                     // Get ability requirement from enriched data
@@ -1233,10 +1250,10 @@ export function LibrarySection({
                   {sortedEquipment.map((item, i) => {
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
                       name: p.name,
-                      description: p.description,
+                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
                       cost: p.tpCost,
                       costLabel: 'TP',
-                      category: 'tag' as const,
+                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
                     

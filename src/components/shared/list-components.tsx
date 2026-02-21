@@ -39,8 +39,9 @@ export interface SortHeaderRowProps {
   className?: string;
 }
 
+// Align with ListHeader/GridListRow: px-4 only (no mx-1) so column content lines up with row content
 const SORT_HEADER_ROW_CLASS =
-  'hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg mb-2 mx-1 text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide';
+  'hidden lg:grid gap-2 px-4 py-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg mb-2 text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wide';
 
 export function SortHeaderRow({ children, gridTemplateColumns, className }: SortHeaderRowProps) {
   return (

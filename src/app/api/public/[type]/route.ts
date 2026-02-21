@@ -56,9 +56,9 @@ export async function GET(
     const items = rows.map((r) => {
       const d = r.data as Record<string, unknown>;
       return {
+        ...d,
         id: r.id,
         docId: r.id,
-        ...d,
         _source: 'public' as const,
       };
     });

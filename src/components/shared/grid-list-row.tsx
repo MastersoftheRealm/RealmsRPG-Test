@@ -337,10 +337,10 @@ export const GridListRow = memo(function GridListRow({
           
           {/* Data columns */}
           {columns.map((col) => (
-            <div 
-              key={col.key} 
+            <div
+              key={col.key}
               className={cn(
-                'text-sm truncate',
+                'text-sm truncate text-left',
                 col.hideOnMobile !== false && 'hidden lg:block',
                 col.highlight ? 'text-primary-600 font-medium' : 'text-text-secondary',
                 col.align === 'center' && 'text-center',
@@ -568,7 +568,7 @@ export const GridListRow = memo(function GridListRow({
                               )}
                             </span>
                             {isChipExpanded && chip.description && (
-                              <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed">
+                              <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed whitespace-pre-line">
                                 {chip.description}
                               </span>
                             )}
@@ -616,7 +616,7 @@ export const GridListRow = memo(function GridListRow({
                             )}
                           </span>
                           {isChipExpanded && chip.description && (
-                            <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed">
+                            <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed whitespace-pre-line">
                               {chip.description}
                             </span>
                           )}

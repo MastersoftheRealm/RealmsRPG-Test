@@ -52,6 +52,8 @@ export interface ListHeaderProps {
   hasSelectionColumn?: boolean;
   /** Fixed width for a right slot (e.g. quantity); uses flex so header grid aligns with row grid */
   rightSlotWidth?: string;
+  /** Compact mode: use px-3 to match GridListRow compact rows (e.g. in modals) */
+  compact?: boolean;
   /** Additional className */
   className?: string;
 }
@@ -69,6 +71,7 @@ export function ListHeader({
   onSort,
   hasSelectionColumn = false,
   rightSlotWidth,
+  compact = false,
   className,
 }: ListHeaderProps) {
   // Build grid template from columns if not provided
@@ -85,10 +88,12 @@ export function ListHeader({
     }
   };
 
+  // Use same horizontal padding as GridListRow so column content aligns with headers site-wide
+  const rowPaddingX = compact ? 'px-3' : 'px-4';
   const baseHeaderClasses = cn(
     'hidden lg:grid gap-2 py-2 bg-primary-50 dark:bg-surface-alt dark:border dark:border-border rounded-lg mb-2',
     'text-xs font-semibold text-primary-700 dark:text-text-secondary uppercase tracking-wide',
-    !rightSlotWidth && 'px-4 mx-1',
+    !rightSlotWidth && rowPaddingX,
     rightSlotWidth && 'px-3 min-w-0',
     className
   );

@@ -326,13 +326,15 @@ export function enrichItems(
     }
     
     if (libraryItem) {
+      // Use character's stored id so equip/remove handlers match (important for public library references)
+      const displayId = typeof charItem === 'object' && charItem.id != null ? String(charItem.id) : libraryItem.id;
       // Convert properties from SavedProperty objects to string names
       const propertyNames = (libraryItem.properties || [])
         .map(p => typeof p === 'string' ? p : p.name)
         .filter((name): name is string => typeof name === 'string');
       
       return {
-        id: libraryItem.id,
+        id: displayId,
         name: libraryItem.name,
         description: libraryItem.description || '',
         type: libraryItem.type || itemType,

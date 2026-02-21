@@ -597,9 +597,9 @@ export function ArchetypeSection({
             />
           </div>
         </>
-      ) : (martialProf > 0 || powerProf > 0 || isEditMode) ? (
+      ) : (martialProf > 0 || powerProf > 0) ? (
         <div className={cn('flex gap-3 mb-4', (martialProf > 0) !== (powerProf > 0) && martialProf + powerProf > 0 && 'flex-1')}>
-          {(powerProf > 0 || isEditMode) && (
+          {powerProf > 0 && (
             <div className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 dark:bg-violet-900/20',
               martialProf === 0 && powerProf > 0 && 'flex-1'
@@ -614,7 +614,7 @@ export function ArchetypeSection({
               )}>{powerProf}</span>
             </div>
           )}
-          {(martialProf > 0 || isEditMode) && (
+          {martialProf > 0 && (
             <div className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg bg-martial-light dark:bg-martial-light',
               powerProf === 0 && martialProf > 0 && 'flex-1'

@@ -21,7 +21,7 @@ interface FeatModal extends Feat {
 interface AddFeatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  featType: 'archetype' | 'character';
+  featType: 'archetype' | 'character' | 'state';
   character: Character;
   existingFeatIds: (string | number)[];
   onAdd: (feats: FeatModal[]) => void;
@@ -198,10 +198,12 @@ export function AddFeatModal({
   const items = useMemo((): SelectableItem[] => {
     return feats
       .filter(feat => {
-        if (featType === 'character' && !feat.char_feat) return false;
-        if (featType === 'archetype' && feat.char_feat) return false;
+        if (featType === 'state') {
+          if (!feat.state_feat) return false;
+        } else if (featType === 'character' && !feat.char_feat) return false;
+        else if (featType === 'archetype' && feat.char_feat) return false;
         if (existingFeatIds.includes(feat.id) || existingFeatIds.includes(feat.name)) return false;
-        if (!showStateFeats && feat.state_feat) return false;
+        if (featType !== 'state' && !showStateFeats && feat.state_feat) return false;
         const { meets } = checkRequirements(feat);
         if (!meets && !showBlocked) return false;
         if (selectedCategory && feat.category !== selectedCategory) return false;
@@ -271,7 +273,7 @@ export function AddFeatModal({
       <UnifiedSelectionModal
         isOpen={isOpen}
         onClose={onClose}
-        title={`Add ${featType === 'archetype' ? 'Archetype' : 'Character'} Feat`}
+        title={`Add ${featType === 'state' ? 'State' : featType === 'archetype' ? 'Archetype' : 'Character'} Feat`}
         description="Select feats to add to your character. Feats are filtered by your level and requirements. Click a row (or the + button) to select, then click Add Selected."
         items={items}
         isLoading={loading}
