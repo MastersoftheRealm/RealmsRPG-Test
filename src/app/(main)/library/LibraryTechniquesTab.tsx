@@ -1,7 +1,7 @@
 /**
  * Library Techniques Tab
  * ======================
- * User's techniques list with search and sort.
+ * User's and/or public techniques with search and sort. Source filter: All / Public / My.
  */
 
 'use client';
@@ -19,6 +19,7 @@ import {
   type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
+import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { useUserTechniques, useTechniqueParts, useDuplicateTechnique, usePublicLibrary, useAddPublicToLibrary } from '@/hooks';
 import { Button, useToast } from '@/components/ui';
@@ -43,38 +44,47 @@ interface LibraryTechniquesTabProps {
 
 export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabProps) {
   const { showToast } = useToast();
-  const { data: techniques, isLoading, error } = useUserTechniques();
+  const { data: techniques = [], isLoading: loadingUser, error } = useUserTechniques();
+  const { data: publicItems = [], isLoading: loadingPublic } = usePublicLibrary('techniques');
   const { data: partsDb = [] } = useTechniqueParts();
   const duplicateTechnique = useDuplicateTechnique();
+  const addPublic = useAddPublicToLibrary('techniques');
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
-    if (!techniques) return [];
+    const rows: Array<{
+      id: string;
+      name: string;
+      description: string;
+      energy: string | number;
+      tp: number | string;
+      action: string;
+      weapon: string;
+      damage: string;
+      parts: ChipData[];
+      itemSource: 'my' | 'public';
+      raw: Record<string, unknown>;
+    }> = [];
 
-    return techniques.map(tech => {
-      const display = deriveTechniqueDisplay(
-        {
-          name: tech.name,
-          description: tech.description,
-          parts: tech.parts || [],
-          damage: tech.damage?.[0],
-          weapon: tech.weapon,
-        },
-        partsDb
-      );
-
-      const damageStr = formatTechniqueDamage(tech.damage?.[0]);
-
+    const toRow = (t: { docId?: string; id?: string; name?: string; description?: string; parts?: unknown[]; damage?: unknown; weapon?: string }, itemSource: 'my' | 'public', raw: Record<string, unknown>) => {
+      const doc: TechniqueDocument = {
+        name: String(t.name ?? ''),
+        description: String(t.description ?? ''),
+        parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
+        damage: Array.isArray(t.damage) ? (t.damage[0] as TechniqueDocument['damage']) : (t.damage as TechniqueDocument['damage']),
+        weapon: t.weapon as TechniqueDocument['weapon'],
+      };
+      const display = deriveTechniqueDisplay(doc, partsDb);
+      const damageStr = formatTechniqueDamage(doc.damage);
       const parts: ChipData[] = display.partChips.map(chip => ({
         name: chip.text.split(' | TP:')[0].replace(/\s*\(Opt\d+ \d+\)/g, '').trim(),
         description: chip.description,
         cost: chip.finalTP,
         costLabel: 'TP',
       }));
-
       return {
-        id: tech.docId,
+        id: String(t.docId ?? t.id ?? ''),
         name: display.name,
         description: display.description,
         energy: display.energy,
@@ -83,13 +93,26 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
         weapon: display.weaponName || '-',
         damage: damageStr,
         parts,
+        itemSource,
+        raw,
       };
-    });
-  }, [techniques, partsDb]);
+    };
+
+    if (source === 'my' || source === 'all') {
+      techniques.forEach(tech => rows.push(toRow(tech as Parameters<typeof toRow>[0], 'my', tech as unknown as Record<string, unknown>)));
+    }
+    if (source === 'public' || source === 'all') {
+      publicItems.forEach((t: Record<string, unknown>) => {
+        rows.push(toRow(t as Parameters<typeof toRow>[0], 'public', t));
+      });
+    }
+    return rows;
+  }, [techniques, publicItems, partsDb, source]);
+
+  const isLoading = ((source === 'my' || source === 'all') && loadingUser) || ((source === 'public' || source === 'all') && loadingPublic);
 
   const filteredData = useMemo(() => {
     let result = cardData;
-
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(t =>
@@ -98,39 +121,28 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
         String(t.weapon ?? '').toLowerCase().includes(searchLower)
       );
     }
-
     return sortItems(result);
   }, [cardData, search, sortItems]);
-
-  if (source !== 'my') {
-    return (
-      <div className="py-12 text-center text-text-secondary">
-        <p className="mb-4">Browse public techniques in the Codex.</p>
-        <Button asChild variant="secondary">
-          <Link href="/codex">Open Codex → Public Library</Link>
-        </Button>
-      </div>
-    );
-  }
 
   if (error) {
     return <ErrorDisplay message="Failed to load techniques" subMessage="Please try again later" />;
   }
 
   if (!isLoading && cardData.length === 0) {
+    const isPublicOnly = source === 'public';
     return (
       <ListEmptyState
         icon={<Swords className="w-8 h-8" />}
-        title="No techniques yet"
-        message="Create your first technique to see it here in your library."
-        action={
+        title={isPublicOnly ? 'No public techniques' : 'No techniques yet'}
+        message={isPublicOnly ? 'Public techniques will appear here when admins add them.' : 'Create your first technique to see it here in your library.'}
+        action={!isPublicOnly ? (
           <Button asChild>
             <Link href="/technique-creator">
               <Plus className="w-4 h-4" />
               Create Technique
             </Link>
           </Button>
-        }
+        ) : undefined}
       />
     );
   }
@@ -160,7 +172,7 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
         ) : (
           filteredData.map(tech => (
             <GridListRow
-              key={tech.id}
+              key={`${tech.itemSource}-${tech.id}`}
               id={tech.id}
               name={tech.name}
               description={tech.description}
@@ -174,12 +186,13 @@ export function LibraryTechniquesTab({ source, onDelete }: LibraryTechniquesTabP
               ]}
               chips={tech.parts}
               chipsLabel="Parts & Proficiencies"
-              totalCost={tech.tp}
+              totalCost={typeof tech.tp === 'number' ? tech.tp : (parseFloat(String(tech.tp)) || undefined)}
               costLabel="TP"
-              badges={undefined}
-              onEdit={() => window.open(`/technique-creator?edit=${tech.id}`, '_blank')}
-              onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}
-              onDuplicate={() => duplicateTechnique.mutate(tech.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
+              badges={tech.itemSource === 'public' ? [{ label: 'Public', color: 'blue' }] : undefined}
+              onEdit={tech.itemSource === 'my' ? () => window.open(`/technique-creator?edit=${tech.id}`, '_blank') : undefined}
+              onDelete={tech.itemSource === 'my' ? () => onDelete({ id: tech.id, name: tech.name } as DisplayItem) : undefined}
+              onDuplicate={tech.itemSource === 'my' ? () => duplicateTechnique.mutate(tech.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') }) : undefined}
+              onAddToLibrary={tech.itemSource === 'public' ? () => addPublic.mutate(tech.raw, { onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error') }) : undefined}
             />
           ))
         )}

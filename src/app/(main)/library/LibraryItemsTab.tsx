@@ -20,12 +20,13 @@ import {
   type ChipData,
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
+import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
   formatRange as formatItemRange,
 } from '@/lib/calculators/item-calc';
-import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
+import { useUserItems, useItemProperties, useDuplicateItem, usePublicLibrary, useAddPublicToLibrary } from '@/hooks';
 import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -98,67 +99,80 @@ interface LibraryItemsTabProps {
 export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
   const router = useRouter();
   const { showToast } = useToast();
-  const { data: items, isLoading, error } = useUserItems();
+  const { data: items = [], isLoading: loadingUser, error } = useUserItems();
+  const { data: publicItems = [], isLoading: loadingPublic } = usePublicLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const duplicateItem = useDuplicateItem();
+  const addPublic = useAddPublicToLibrary('items');
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
-    if (!items) return [];
+    const rows: Array<{
+      id: string;
+      name: string;
+      description: string;
+      type: string;
+      rarity: string;
+      currency: number;
+      tp: number;
+      range: string;
+      damage: string;
+      parts: ChipData[];
+      itemSource: 'my' | 'public';
+      raw: Record<string, unknown>;
+    }> = [];
 
-    return items.map(item => {
-      const costs = calculateItemCosts(item.properties || [], propertiesDb);
+    const processItem = (item: { docId?: string; id?: string; name?: string; description?: string; type?: string; properties?: unknown[]; damage?: unknown }, itemSource: 'my' | 'public', raw: Record<string, unknown>) => {
+      const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
+      const costs = calculateItemCosts(props, propertiesDb);
       const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
-
-      const rangeStr = formatItemRange(item.properties || []);
-
-      const parts: ChipData[] = (item.properties || []).map(prop => {
-        const propId = typeof prop === 'string' ? null : prop.id;
-        const propName = typeof prop === 'string' ? prop : prop.name || '';
-        const optLevel = typeof prop === 'string' ? 1 : prop.op_1_lvl || 1;
-
-        const dbProp = propId
-          ? propertiesDb.find((p: { id: string }) => String(p.id) === String(propId))
-          : propertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === propName.toLowerCase());
-
+      const rangeStr = formatItemRange(props);
+      const parts: ChipData[] = ((item.properties || []) as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>).map((prop) => {
+        const dbProp = propertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === (prop.name || '').toLowerCase());
         const baseTp = dbProp?.base_tp ?? dbProp?.tp_cost ?? 0;
-
+        const optLevel = prop.op_1_lvl ?? 1;
         return {
-          name: dbProp?.name || propName,
+          name: dbProp?.name || prop.name || '',
           description: dbProp?.description || '',
           cost: baseTp * optLevel,
           costLabel: 'TP',
           level: optLevel > 1 ? optLevel : undefined,
         };
       });
-
       const totalTP = parts.reduce((sum, p) => sum + (p.cost || 0), 0);
-
-      const typeLabel = item.type === 'weapon' ? 'Weapon'
-        : item.type === 'armor' ? 'Armor'
-          : 'Equipment';
-
-      const formattedDamage = formatDamageValue(item.damage);
-
+      const typeLabel = item.type === 'weapon' ? 'Weapon' : item.type === 'armor' ? 'Armor' : 'Equipment';
       return {
-        id: item.docId,
-        name: item.name,
-        description: item.description || '',
+        id: String(item.docId ?? item.id ?? ''),
+        name: String(item.name ?? ''),
+        description: String(item.description ?? ''),
         type: typeLabel,
-        rarity: rarity,
+        rarity,
         currency: Math.round(currencyCost),
         tp: Math.round(totalTP),
         range: rangeStr || '-',
-        damage: formattedDamage || '-',
+        damage: formatDamageValue(item.damage) || '-',
         parts,
+        itemSource,
+        raw,
       };
-    });
-  }, [items, propertiesDb]);
+    };
+
+    if (source === 'my' || source === 'all') {
+      (items || []).forEach(item => rows.push(processItem(item as Parameters<typeof processItem>[0], 'my', item as unknown as Record<string, unknown>)));
+    }
+    if (source === 'public' || source === 'all') {
+      publicItems.forEach((item: Record<string, unknown>) => {
+        rows.push(processItem(item as Parameters<typeof processItem>[0], 'public', item));
+      });
+    }
+    return rows;
+  }, [items, publicItems, propertiesDb, source]);
+
+  const isLoading = ((source === 'my' || source === 'all') && loadingUser) || ((source === 'public' || source === 'all') && loadingPublic);
 
   const filteredData = useMemo(() => {
     let result = cardData;
-
     if (search) {
       const searchLower = search.toLowerCase();
       result = result.filter(item =>
@@ -167,39 +181,28 @@ export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
         item.parts.some(p => String(p.name ?? '').toLowerCase().includes(searchLower))
       );
     }
-
     return sortItems(result);
   }, [cardData, search, sortItems]);
-
-  if (source !== 'my') {
-    return (
-      <div className="py-12 text-center text-text-secondary">
-        <p className="mb-4">Browse public armaments in the Codex.</p>
-        <Button asChild variant="secondary">
-          <Link href="/codex">Open Codex → Public Library</Link>
-        </Button>
-      </div>
-    );
-  }
 
   if (error) {
     return <ErrorDisplay message="Failed to load armaments" subMessage="Please try again later" />;
   }
 
   if (!isLoading && cardData.length === 0) {
+    const isPublicOnly = source === 'public';
     return (
       <ListEmptyState
         icon={<Shield className="w-8 h-8" />}
-        title="No armaments yet"
-        message="Create your first weapon, armor, or equipment to see it here."
-        action={
+        title={isPublicOnly ? 'No public armaments' : 'No armaments yet'}
+        message={isPublicOnly ? 'Public armaments will appear here when admins add them.' : 'Create your first weapon, armor, or equipment to see it here.'}
+        action={!isPublicOnly ? (
           <Button asChild>
             <Link href="/item-creator">
               <Plus className="w-4 h-4" />
               Create Armament
             </Link>
           </Button>
-        }
+        ) : undefined}
       />
     );
   }
@@ -229,7 +232,7 @@ export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
         ) : (
           filteredData.map(item => (
             <GridListRow
-              key={item.id}
+              key={`${item.itemSource}-${item.id}`}
               id={item.id}
               name={item.name}
               description={item.description}
@@ -246,10 +249,11 @@ export function LibraryItemsTab({ source, onDelete }: LibraryItemsTabProps) {
               chipsLabel="Properties & Proficiencies"
               totalCost={item.tp}
               costLabel="TP"
-              badges={undefined}
-              onEdit={() => router.push(`/item-creator?edit=${item.id}`)}
-              onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-              onDuplicate={() => duplicateItem.mutate(item.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
+              badges={item.itemSource === 'public' ? [{ label: 'Public', color: 'blue' }] : undefined}
+              onEdit={item.itemSource === 'my' ? () => router.push(`/item-creator?edit=${item.id}`) : undefined}
+              onDelete={item.itemSource === 'my' ? () => onDelete({ id: item.id, name: item.name } as DisplayItem) : undefined}
+              onDuplicate={item.itemSource === 'my' ? () => duplicateItem.mutate(item.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') }) : undefined}
+              onAddToLibrary={item.itemSource === 'public' ? () => addPublic.mutate(item.raw, { onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error') }) : undefined}
             />
           ))
         )}

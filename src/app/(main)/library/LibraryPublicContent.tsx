@@ -1,7 +1,8 @@
 /**
- * Codex Public Library Tab
- * ========================
- * Browse public library items and add to my library. Requires login to add.
+ * Library Public Content
+ * ======================
+ * Public library lists (Powers, Techniques, Armaments, Creatures) for the Library page.
+ * Browse and add to my library. Requires login to add.
  */
 
 'use client';
@@ -15,10 +16,9 @@ import {
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
-  LoginPromptModal,
   type ChipData,
 } from '@/components/shared';
-import { TabNavigation, useToast } from '@/components/ui';
+import { useToast } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import {
   usePublicLibrary,
@@ -35,47 +35,24 @@ import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import { calculateItemCosts, calculateCurrencyCostAndRarity, formatRange as formatItemRange } from '@/lib/calculators/item-calc';
 import { useAuthStore } from '@/stores/auth-store';
 
-type SubTabId = 'powers' | 'techniques' | 'items' | 'creatures';
-
-const SUB_TABS: { id: SubTabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'powers', label: 'Powers', icon: <Wand2 className="w-4 h-4" /> },
-  { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" /> },
-  { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" /> },
-  { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" /> },
-];
+export type LibraryPublicTabId = 'powers' | 'techniques' | 'items' | 'creatures';
 
 const POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 const TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
 const ITEM_GRID = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
 
-export function CodexPublicLibraryTab() {
-  const [subTab, setSubTab] = useState<SubTabId>('powers');
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const { user } = useAuthStore();
+interface LibraryPublicContentProps {
+  activeTab: LibraryPublicTabId;
+  onLoginRequired: () => void;
+}
 
-  return (
-    <div>
-      <p className="text-text-secondary mb-4">
-        Browse community-shared content. Log in to add items to your library.
-      </p>
-
-      <TabNavigation
-        tabs={SUB_TABS.map(t => ({ id: t.id, label: t.label, icon: t.icon }))}
-        activeTab={subTab}
-        onTabChange={(id) => setSubTab(id as SubTabId)}
-        variant="underline"
-        className="mb-6"
-      />
-
-      {subTab === 'powers' && <PublicPowersList onLoginRequired={() => setShowLoginPrompt(true)} />}
-      {subTab === 'techniques' && <PublicTechniquesList onLoginRequired={() => setShowLoginPrompt(true)} />}
-      {subTab === 'items' && <PublicItemsList onLoginRequired={() => setShowLoginPrompt(true)} />}
-      {subTab === 'creatures' && <PublicCreaturesList onLoginRequired={() => setShowLoginPrompt(true)} />}
-
-      <LoginPromptModal isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} returnPath="/codex" />
-    </div>
-  );
+export function LibraryPublicContent({ activeTab, onLoginRequired }: LibraryPublicContentProps) {
+  if (activeTab === 'powers') return <PublicPowersList onLoginRequired={onLoginRequired} />;
+  if (activeTab === 'techniques') return <PublicTechniquesList onLoginRequired={onLoginRequired} />;
+  if (activeTab === 'items') return <PublicItemsList onLoginRequired={onLoginRequired} />;
+  if (activeTab === 'creatures') return <PublicCreaturesList onLoginRequired={onLoginRequired} />;
+  return null;
 }
 
 function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) {

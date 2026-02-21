@@ -2,8 +2,9 @@
  * Codex Page - Full Implementation
  * =================================
  * Complete game reference matching vanilla site functionality.
- * Main tabs: Feats, Skills, Species, Equipment, Public Library.
+ * Main tabs: Feats, Skills, Species, Equipment.
  * Advanced tabs (hidden by default): Power & Technique Parts, Armament Properties, Creature Feats, Traits.
+ * Public library content lives on the Library page (My Library / Public Library switch).
  */
 
 'use client';
@@ -16,15 +17,14 @@ import { CodexSpeciesTab } from './CodexSpeciesTab';
 import { CodexEquipmentTab } from './CodexEquipmentTab';
 import { CodexPropertiesTab } from './CodexPropertiesTab';
 import { CodexPartsTab } from './CodexPartsTab';
-import { CodexPublicLibraryTab } from './CodexPublicLibraryTab';
 import { CodexTraitsTab } from './CodexTraitsTab';
 import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts' | 'public-library' | 'traits' | 'creature_feats';
+type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts' | 'traits' | 'creature_feats';
 
-const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'equipment', 'public-library'];
+const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'equipment'];
 const ADVANCED_TAB_IDS: TabId[] = ['parts', 'properties', 'creature_feats', 'traits'];
 
 const TAB_META: { id: TabId; label: string; labelMobile?: string }[] = [
@@ -32,7 +32,6 @@ const TAB_META: { id: TabId; label: string; labelMobile?: string }[] = [
   { id: 'skills', label: 'Skills' },
   { id: 'species', label: 'Species' },
   { id: 'equipment', label: 'Equipment' },
-  { id: 'public-library', label: 'Public Library', labelMobile: 'Public' },
   { id: 'parts', label: 'Power & Technique Parts', labelMobile: 'Parts' },
   { id: 'properties', label: 'Armament Properties', labelMobile: 'Properties' },
   { id: 'creature_feats', label: 'Creature Feats', labelMobile: 'Creature' },
@@ -101,7 +100,6 @@ export default function CodexPage() {
       {activeTab === 'equipment' && <CodexEquipmentTab />}
       {activeTab === 'properties' && <CodexPropertiesTab />}
       {activeTab === 'parts' && <CodexPartsTab />}
-      {activeTab === 'public-library' && <CodexPublicLibraryTab />}
       {activeTab === 'traits' && <CodexTraitsTab />}
       {activeTab === 'creature_feats' && <CodexCreatureFeatsTab />}
     </PageContainer>

@@ -125,3 +125,40 @@ export async function POST(
     );
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ type: string }> }
+) {
+  try {
+    const { user, error } = await getSession();
+    if (error || !user?.uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!(await isAdmin(user.uid))) {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
+
+    const { type } = await params;
+    if (!VALID_TYPES.includes(type as PublicType)) {
+      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    }
+
+    const url = new URL(_request.url);
+    const id = url.searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    }
+
+    const delegate = getDelegate(type as PublicType) as unknown as { delete: (args: { where: { id: string } }) => Promise<unknown> };
+    await delegate.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[API Error] DELETE /api/public/[type]:', err);
+    return NextResponse.json(
+      { error: 'Failed to delete item', details: message },
+      { status: 500 }
+    );
+  }
+}

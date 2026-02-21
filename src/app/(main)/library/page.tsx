@@ -1,9 +1,9 @@
 /**
  * Library Page
  * =============
- * User's personal library of created powers, techniques, items, and creatures.
- * Uses unified GridListRow component with grid-aligned rows matching Codex style.
- * Styled consistently with the Codex page.
+ * My Library: user's personal library + source filter (All / Public / My).
+ * Public Library: browse community content (Powers, Techniques, Armaments, Creatures) and add to my library.
+ * Page title updates based on which library is shown.
  */
 
 'use client';
@@ -11,9 +11,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { DeleteConfirmModal, SourceFilter, type SourceFilterValue } from '@/components/shared';
+import { DeleteConfirmModal, SourceFilter, LoginPromptModal, type SourceFilterValue } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -23,12 +24,14 @@ import {
   useDeleteTechnique,
   useDeleteItem,
   useDeleteCreature,
+  usePublicLibrary,
 } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { LibraryPowersTab } from './LibraryPowersTab';
 import { LibraryTechniquesTab } from './LibraryTechniquesTab';
 import { LibraryItemsTab } from './LibraryItemsTab';
 import { LibraryCreaturesTab } from './LibraryCreaturesTab';
+import { LibraryPublicContent, type LibraryPublicTabId } from './LibraryPublicContent';
 
 type TabId = 'powers' | 'techniques' | 'items' | 'creatures';
 
@@ -47,6 +50,8 @@ const TABS: Tab[] = [
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
 ];
 
+type LibraryMode = 'my' | 'public';
+
 export default function LibraryPage() {
   return (
     <ProtectedRoute>
@@ -57,27 +62,42 @@ export default function LibraryPage() {
 
 function LibraryContent() {
   const { showToast } = useToast();
+  const [libraryMode, setLibraryMode] = useState<LibraryMode>('my');
   const [activeTab, setActiveTab] = useState<TabId>('powers');
   const [source, setSource] = useState<SourceFilterValue>('my');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem } | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   const { data: powers = [] } = useUserPowers();
   const { data: techniques = [] } = useUserTechniques();
   const { data: items = [] } = useUserItems();
   const { data: creatures = [] } = useUserCreatures();
 
+  const { data: publicPowers = [] } = usePublicLibrary('powers');
+  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
+  const { data: publicItems = [] } = usePublicLibrary('items');
+  const { data: publicCreatures = [] } = usePublicLibrary('creatures');
+
   const deletePower = useDeletePower();
   const deleteTechnique = useDeleteTechnique();
   const deleteItem = useDeleteItem();
   const deleteCreature = useDeleteCreature();
 
-  const counts: Record<TabId, number> = {
+  const myCounts: Record<TabId, number> = {
     powers: powers.length,
     techniques: techniques.length,
     items: items.length,
     creatures: creatures.length,
   };
 
+  const publicCounts: Record<TabId, number> = {
+    powers: publicPowers.length,
+    techniques: publicTechniques.length,
+    items: publicItems.length,
+    creatures: publicCreatures.length,
+  };
+
+  const counts = libraryMode === 'my' ? myCounts : publicCounts;
   const currentTab = TABS.find(t => t.id === activeTab)!;
 
   const isDeleting = deletePower.isPending || deleteTechnique.isPending ||
@@ -115,21 +135,51 @@ function LibraryContent() {
     badge: counts[tab.id].toString(),
   }));
 
+  const isPublic = libraryMode === 'public';
+
   return (
     <PageContainer size="xl">
       <PageHeader
-        title="My Library"
-        description="Your custom powers, techniques, armaments, and creatures"
+        title={isPublic ? 'Public Library' : 'My Library'}
+        description={isPublic ? 'Browse community-shared content. Log in to add items to your library.' : 'Your custom powers, techniques, armaments, and creatures'}
         actions={
-          <Link href={currentTab.createHref}>
-            <Button variant="primary">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">{currentTab.createLabel}</span>
-              <span className="sm:hidden">New</span>
-            </Button>
-          </Link>
+          !isPublic ? (
+            <Link href={currentTab.createHref}>
+              <Button variant="primary">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">{currentTab.createLabel}</span>
+                <span className="sm:hidden">New</span>
+              </Button>
+            </Link>
+          ) : undefined
         }
       />
+
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
+          <button
+            type="button"
+            onClick={() => setLibraryMode('my')}
+            className={cn(
+              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
+              libraryMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+            )}
+          >
+            My Library
+          </button>
+          <button
+            type="button"
+            onClick={() => setLibraryMode('public')}
+            className={cn(
+              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
+              libraryMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+            )}
+          >
+            Public Library
+          </button>
+        </div>
+        {!isPublic && <SourceFilter value={source} onChange={setSource} />}
+      </div>
 
       <TabNavigation
         tabs={tabsWithCounts}
@@ -139,14 +189,19 @@ function LibraryContent() {
         className="mb-6"
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-4">
-        <SourceFilter value={source} onChange={setSource} />
-      </div>
-
-      {activeTab === 'powers' && <LibraryPowersTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
-      {activeTab === 'techniques' && <LibraryTechniquesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
-      {activeTab === 'items' && <LibraryItemsTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
-      {activeTab === 'creatures' && <LibraryCreaturesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
+      {isPublic ? (
+        <LibraryPublicContent
+          activeTab={activeTab as LibraryPublicTabId}
+          onLoginRequired={() => setShowLoginPrompt(true)}
+        />
+      ) : (
+        <>
+          {activeTab === 'powers' && <LibraryPowersTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
+          {activeTab === 'techniques' && <LibraryTechniquesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
+          {activeTab === 'items' && <LibraryItemsTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
+          {activeTab === 'creatures' && <LibraryCreaturesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
+        </>
+      )}
 
       {deleteConfirm && (
         <DeleteConfirmModal
@@ -158,6 +213,8 @@ function LibraryContent() {
           onClose={() => setDeleteConfirm(null)}
         />
       )}
+
+      <LoginPromptModal isOpen={showLoginPrompt} onClose={() => setShowLoginPrompt(false)} returnPath="/library" />
     </PageContainer>
   );
 }
