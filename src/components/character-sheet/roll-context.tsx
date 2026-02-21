@@ -51,7 +51,7 @@ interface RollContextValue {
   rollDefense: (defenseDisplayName: string, bonus: number) => void;
   rollSkill: (skillName: string, bonus: number, abilityAbbr?: string) => void;
   rollAttack: (weaponName: string, attackBonus: number) => void;
-  rollDamage: (damageStr: string, bonus?: number) => void;
+  rollDamage: (damageStr: string, bonus?: number, titleOverride?: string) => void;
   rollCustom: (title: string, dieType: 'd4' | 'd6' | 'd8' | 'd10' | 'd12' | 'd20', count: number, modifier: number) => void;
   
   // History management
@@ -220,7 +220,7 @@ export function RollProvider({
   }, [makeD20Roll]);
 
   // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")
-  const rollDamage = useCallback((damageStr: string, bonus: number = 0) => {
+  const rollDamage = useCallback((damageStr: string, bonus: number = 0, titleOverride?: string) => {
     if (!canRoll) return;
     // Validate input is a string
     if (typeof damageStr !== 'string') {
@@ -252,7 +252,9 @@ export function RollProvider({
       total += value;
     }
 
-    const title = `Damage${dmgType ? ` (${dmgType})` : ''}`;
+    const title = titleOverride ?? (dmgType
+      ? `${dmgType.charAt(0).toUpperCase() + dmgType.slice(1).toLowerCase()} Damage`
+      : 'Damage');
 
     const newRoll: RollEntry = {
       id: generateRollId(),

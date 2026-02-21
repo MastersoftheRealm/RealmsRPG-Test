@@ -53,6 +53,7 @@ Notes:
 - Use shared components for list headers and items (remove counts, make headers sortable).
 - Equip toggles (SelectionToggle) must work outside edit mode and persist state.
 - Display computed weapon attack bonus, damage, crit range, armor DR/requirements consistently.
+- **Character library expanded content:** When expanding items in the character library (powers, techniques, weapons, armor, equipment), show the same full information as on the Library page: description, property/part chips (with TP and expandable descriptions), total cost, range/damage/requirements where applicable. No custom expandedContent that hides chips or details. Implemented 2026-02-21.
 
 ### 4) Skills
 - Replace three separate implementations (character sheet, character creator, creature creator) with a unified `SkillRow`/`SkillList` component with variants.
@@ -90,7 +91,7 @@ Notes:
 - Health/Energy Allocation section should be titled "Health/Energy Allocation" consistently.
 - "Next: 2 Points" label for abilities costing 2 at 4+ (not 3).
 - Auto-capitalize archetype power/martial ability display (e.g., "Charisma" not "charisma").
-- **Roll Log terminology:** Realms uses "Rolls" only — no "Saves" or "Checks". Titles: "Acuity", "Discernment", "Athletics (STR)", weapon name. Skill format: "Skill Name (ABR)".
+- **Roll Log terminology:** Realms uses "Rolls" only — no "Saves" or "Checks". Titles: "Acuity", "Discernment", "Athletics (STR)", weapon name. Skill format: "Skill Name (ABR)". Roll log labels: fall damage → "Fall Damage"; attack rolls → "Strength Attack" / "Acuity Attack" (do not specify prof/unprof); damage rolls → "{Type} Damage" (e.g. "Slashing Damage"), not "Damage (slashing)". Implemented 2026-02-21.
 
 ### 10) Page Layout & Sizing
 - Page content width should be consistent across non-unique pages (codex, library, creators, character sheet).
@@ -895,3 +896,27 @@ Notes
 - Priority: High
 - Feedback: In the modals that correlate with public library/user library, allow switching the source from my library, to public library, to all sources, using the same component used in the library page, same styles, logic, etc., so users can easily add public things to their characters. Question: Should adding a public item to a character copy it to the user's personal library first, then add that version to the character (copy then add)? Or would that use too much Supabase data? Should we only add to personal library when they explicitly do so on the Library page, and otherwise keep the character referencing the public library (no copy)?
 - Expected: (1) Add-X modals support source filter (My library / Public library / All sources) like Library page. (2) Clear, cost-conscious design: either reference public items on the character without copying, or copy-only-when-explicit so DB usage stays low.
+
+**Raw Feedback Log — 2026-02-21 (Character library expand = full library details)**  
+- Date: 2026-02-21  
+- Context: Character sheet → Library tab (Powers, Techniques, Inventory: weapons, armor, equipment)  
+- Priority: High  
+- Feedback: Expanding items in character library: All the information available in the library page should also be available for those same items in the character library. For instance, if you have a weapon in your character library, it should expand to show all the properties chips, all the details, description, and so on, not just the description. Players need to be able to fully reference their added library items completely, whether from public or private library. This goes for all things, powers, techniques, armaments, armor, weapons, shields, etc.  
+- Expected: Expanded rows in character library show description, property/part chips (with TP and expandable chip descriptions), total TP where applicable, range/damage/requirements — same structure as Library page expanded rows.  
+- Implemented 2026-02-21: library-section.tsx — removed custom expandedContent overrides for powers, techniques, weapons, armor; use GridListRow default expanded view (description + chips + requirements + totalCost). Added chipsLabel, totalCost/costLabel, requirements (range for powers; range/damage for techniques; ability req + agility reduction for armor); part/property chips include cost/costLabel for TP display. Equipment already had no override; added chipsLabel "Properties" and cost on property chips.
+
+**Raw Feedback Log — 2026-02-21 (Roll log audit: labels)**  
+- Date: 2026-02-21  
+- Context: Roll log (character sheet, campaign, encounters)  
+- Priority: Medium  
+- Feedback: When rolling fall damage, say "Fall Damage" in the roll log instead of "Damage". For attack rolls, don't specify prof/unprof — just "Strength Attack" or "Acuity Attack" (or whatever ability). For damage rolls, say "Slashing Damage" instead of "Damage (slashing)".  
+- Expected: Roll log titles: fall damage → "Fall Damage"; attack rolls → ability name + " Attack" only; damage rolls → "{Type} Damage".  
+- Implemented 2026-02-21: roll-context.tsx (rollDamage titleOverride, title = "{Type} Damage"); archetype-section.tsx (attack labels "X Attack" only); notes-tab.tsx (rollDamage(..., 'Fall Damage')).
+
+**Raw Feedback Log — 2026-02-21 (List items = Library page info: parts/properties, option levels, expandable chips)**  
+- Date: 2026-02-21  
+- Context: Character library (Library tab on sheet), add modals (Add Power/Technique/Weapon/Armor/Equipment)  
+- Priority: High  
+- Feedback: List items such as in character library need the same type of information as they have in the library page. Expand a power and see its power parts, their option increase level if any, in expandable chips; same for techniques (expandable chips for parts) and armaments (expandable chips for properties). Look at how the library page handles armaments, powers, and techniques as list items with expandable views, and implement that in both the character library and in the add modals. We can't rely on descriptions alone.  
+- Expected: Character library and add modals show parts/properties as expandable chips with option levels (Lv.X) and TP cost; same structure as Library page (Parts & Proficiencies / Properties & Proficiencies, total TP).  
+- Implemented 2026-02-21: (1) library-section: partsToPartData → chip level from optionLevels (max opt1/2/3); propertiesToPartData includes option levels and TP from codex; all part/property chips use ChipData with name, description, cost, costLabel, level. (2) add-library-item-modal: usePowerParts, useItemProperties; each SelectableItem gets detailSections (Parts or Properties chips), totalCost, costLabel; powers use derivePowerDisplay, techniques use deriveTechniqueDisplay, items use property chips from propertiesDb. (3) UnifiedSelectionModal: SelectableItem supports totalCost/costLabel; GridListRow receives them for expanded view.

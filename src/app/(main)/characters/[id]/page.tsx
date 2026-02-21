@@ -942,24 +942,23 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
-  // Equipment quantity change handler (+/-)
-  // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name} without ID
+  // Equipment quantity change handler (+/-). If quantity goes below 1, remove the item.
   const handleEquipmentQuantityChange = useCallback((itemId: string | number, delta: number) => {
     if (!character) return;
     const idStr = String(itemId);
     setCharacter(prev => {
       if (!prev) return null;
-      const items = ((prev.equipment?.items as Item[]) || []).map((item, idx) => {
-        const matches = item.id === itemId || 
-                       String(item.id) === idStr || 
-                       item.name === idStr || 
+      const currentItems = (prev.equipment?.items as Item[]) || [];
+      const items = currentItems.flatMap((item, idx) => {
+        const matches = item.id === itemId ||
+                       String(item.id) === idStr ||
+                       item.name === idStr ||
                        item.name?.toLowerCase() === idStr.toLowerCase() ||
                        (typeof itemId === 'number' && idx === itemId);
-        if (matches) {
-          const newQty = Math.max(1, (item.quantity || 1) + delta);
-          return { ...item, quantity: newQty };
-        }
-        return item;
+        if (!matches) return [item];
+        const newQty = (item.quantity ?? 1) + delta;
+        if (newQty < 1) return []; // remove item
+        return [{ ...item, quantity: newQty }];
       });
       return {
         ...prev,

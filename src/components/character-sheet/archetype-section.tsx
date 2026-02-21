@@ -93,7 +93,7 @@ function AttackBonusesTable({
                 {onRollBonus ? (
                   <RollButton
                     value={martialBonuses[key].prof}
-                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} (Prof.)`, martialBonuses[key].prof)}
+                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} Attack`, martialBonuses[key].prof)}
                     size="sm"
                     title={`Roll ${key} (proficient)`}
                   />
@@ -106,7 +106,7 @@ function AttackBonusesTable({
                   <RollButton
                     value={martialBonuses[key].unprof}
                     variant="unproficient"
-                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} (Unprof.)`, martialBonuses[key].unprof)}
+                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} Attack`, martialBonuses[key].unprof)}
                     size="sm"
                     title={`Roll ${key} (unproficient)`}
                   />
@@ -127,7 +127,7 @@ function AttackBonusesTable({
             {onRollBonus ? (
               <RollButton
                 value={powerBonus.prof}
-                onClick={() => onRollBonus(`Power Attack [${powAbilDisplayName}]`, powerBonus.prof)}
+                onClick={() => onRollBonus(`${powAbilDisplayName} Attack`, powerBonus.prof)}
                 size="sm"
                 title={`Roll power attack - ${powAbilDisplayName}`}
               />
@@ -465,13 +465,16 @@ export function ArchetypeSection({
   
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
+  // Editable max prof points (steppers below slider); when null, use level-derived value
+  const [maxProfOverride, setMaxProfOverride] = useState<number | null>(null);
   
   // Derived state: is the section actually editable right now?
   const showEditControls = isEditMode && isSectionEditing;
   
-  // Calculate proficiency points
+  // Calculate proficiency points (effective max = override or level-based)
   const level = character.level || 1;
-  const totalProfPoints = calculateProficiency(level);
+  const levelBasedMax = calculateProficiency(level);
+  const totalProfPoints = maxProfOverride ?? levelBasedMax;
   const spentProfPoints = martialProf + powerProf;
   const remainingProfPoints = totalProfPoints - spentProfPoints;
   
@@ -576,16 +579,27 @@ export function ArchetypeSection({
               allowZeroEnds
             />
           </div>
-          {/* Proficiency Points Display - three-state coloring */}
-          <div className="mb-4 flex justify-center">
+          {/* Proficiency Points Display - steppers change max only; three-state coloring for pencil */}
+          <div className="mb-4 flex justify-center items-center gap-2">
+            <DecrementButton
+              onClick={() => setMaxProfOverride(prev => Math.max(0, (prev ?? levelBasedMax) - 1))}
+              disabled={totalProfPoints <= 0}
+              size="sm"
+              title="Decrease max prof points"
+            />
             <span className={cn('px-3 py-1 rounded-full text-sm font-medium', getProfPointsColorClass())}>
               {remainingProfPoints} / {totalProfPoints} prof. points
             </span>
+            <IncrementButton
+              onClick={() => setMaxProfOverride(prev => Math.min(12, (prev ?? levelBasedMax) + 1))}
+              size="sm"
+              title="Increase max prof points"
+            />
           </div>
         </>
       ) : (martialProf > 0 || powerProf > 0 || isEditMode) ? (
         <div className={cn('flex gap-3 mb-4', (martialProf > 0) !== (powerProf > 0) && martialProf + powerProf > 0 && 'flex-1')}>
-          {(powerProf > 0 || (isEditMode && onPowerProfChange)) && (
+          {(powerProf > 0 || isEditMode) && (
             <div className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 dark:bg-violet-900/20',
               martialProf === 0 && powerProf > 0 && 'flex-1'
@@ -594,32 +608,13 @@ export function ArchetypeSection({
                 'font-semibold text-violet-600 dark:text-violet-300',
                 martialProf === 0 ? 'text-base' : 'text-xs'
               )}>Power Prof.</span>
-              {isEditMode && onPowerProfChange ? (
-                <div className="flex items-center gap-1">
-                  <DecrementButton
-                    onClick={() => onPowerProfChange(Math.max(0, powerProf - 1))}
-                    disabled={powerProf <= 0}
-                    size="sm"
-                  />
-                  <span className={cn(
-                    'font-bold text-violet-700 dark:text-violet-200 min-w-[1.5rem] text-center',
-                    martialProf === 0 ? 'text-lg' : 'text-sm'
-                  )}>{powerProf}</span>
-                  <IncrementButton
-                    onClick={() => onPowerProfChange(Math.min(6, powerProf + 1))}
-                    size="sm"
-                    title="Override: can exceed normal total"
-                  />
-                </div>
-              ) : (
-                <span className={cn(
-                  'font-bold text-violet-700 dark:text-violet-200',
-                  martialProf === 0 ? 'text-lg' : 'text-sm'
-                )}>{powerProf}</span>
-              )}
+              <span className={cn(
+                'font-bold text-violet-700 dark:text-violet-200',
+                martialProf === 0 ? 'text-lg' : 'text-sm'
+              )}>{powerProf}</span>
             </div>
           )}
-          {(martialProf > 0 || (isEditMode && onMartialProfChange)) && (
+          {(martialProf > 0 || isEditMode) && (
             <div className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg bg-martial-light dark:bg-martial-light',
               powerProf === 0 && martialProf > 0 && 'flex-1'
@@ -628,29 +623,10 @@ export function ArchetypeSection({
                 'font-semibold text-martial-text dark:text-martial-border',
                 powerProf === 0 ? 'text-base' : 'text-xs'
               )}>Martial Prof.</span>
-              {isEditMode && onMartialProfChange ? (
-                <div className="flex items-center gap-1">
-                  <DecrementButton
-                    onClick={() => onMartialProfChange(Math.max(0, martialProf - 1))}
-                    disabled={martialProf <= 0}
-                    size="sm"
-                  />
-                  <span className={cn(
-                    'font-bold text-martial-dark dark:text-martial-border min-w-[1.5rem] text-center',
-                    powerProf === 0 ? 'text-lg' : 'text-sm'
-                  )}>{martialProf}</span>
-                  <IncrementButton
-                    onClick={() => onMartialProfChange(Math.min(6, martialProf + 1))}
-                    size="sm"
-                    title="Override: can exceed normal total"
-                  />
-                </div>
-              ) : (
-                <span className={cn(
-                  'font-bold text-martial-dark dark:text-martial-border',
-                  powerProf === 0 ? 'text-lg' : 'text-sm'
-                )}>{martialProf}</span>
-              )}
+              <span className={cn(
+                'font-bold text-martial-dark dark:text-martial-border',
+                powerProf === 0 ? 'text-lg' : 'text-sm'
+              )}>{martialProf}</span>
             </div>
           )}
         </div>

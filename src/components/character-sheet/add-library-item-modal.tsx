@@ -8,12 +8,15 @@
 
 import { useMemo, useState } from 'react';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
-import { useEquipment, useTechniqueParts, usePublicLibrary } from '@/hooks';
+import { useEquipment, useTechniqueParts, usePowerParts, useItemProperties, usePublicLibrary } from '@/hooks';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import type { ColumnValue } from '@/components/shared/grid-list-row';
+import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import { formatDamageDisplay } from '@/lib/utils';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
@@ -121,6 +124,8 @@ export function AddLibraryItemModal({
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: equipmentLoading } = useEquipment();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: publicPowers = [], isLoading: publicPowersLoading } = usePublicLibrary('powers');
   const { data: publicTechniques = [], isLoading: publicTechniquesLoading } = usePublicLibrary('techniques');
   const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
@@ -206,29 +211,83 @@ export function AddLibraryItemModal({
       .filter((item: { id: string }) => !existingIds.has(String(item.id)))
       .map((item: UserPower | UserTechnique | UserItem | EqItem) => {
         let techniqueDisplay: { energy: number; weaponName: string; tp: number } | undefined;
-        if (itemType === 'technique') {
+        let detailSections: SelectableItem['detailSections'];
+        let totalCost: number | undefined;
+        const costLabel = 'TP';
+
+        if (itemType === 'power') {
+          const p = item as UserPower;
+          const doc: PowerDocument = {
+            name: String(p.name ?? ''),
+            description: String(p.description ?? ''),
+            parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
+            damage: p.damage as PowerDocument['damage'],
+            actionType: p.actionType,
+            isReaction: p.isReaction,
+            range: p.range as PowerDocument['range'],
+            area: p.area as PowerDocument['area'],
+            duration: p.duration as PowerDocument['duration'],
+          };
+          const display = derivePowerDisplay(doc, powerPartsDb);
+          const partChips: ChipData[] = display.partChips.map((chip) => ({
+            name: chip.text.split(' | TP:')[0].trim(),
+            description: chip.description,
+            cost: chip.finalTP,
+            costLabel: 'TP',
+          }));
+          detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
+          totalCost = display.tp > 0 ? display.tp : undefined;
+        } else if (itemType === 'technique') {
           const t = item as UserTechnique;
-          const display = deriveTechniqueDisplay(
-            {
-              name: t.name,
-              description: t.description,
-              parts: t.parts || [],
-              damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : undefined,
-              weapon: t.weapon,
-            },
-            techniquePartsDb
-          );
+          const doc: TechniqueDocument = {
+            name: String(t.name ?? ''),
+            description: String(t.description ?? ''),
+            parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
+            damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : (t.damage as TechniqueDocument['damage']),
+            weapon: t.weapon as TechniqueDocument['weapon'],
+          };
+          const display = deriveTechniqueDisplay(doc, techniquePartsDb);
           techniqueDisplay = { energy: display.energy, weaponName: display.weaponName, tp: display.tp };
+          const partChips: ChipData[] = display.partChips.map((chip) => ({
+            name: chip.text.split(' | TP:')[0].trim(),
+            description: chip.description,
+            cost: chip.finalTP,
+            costLabel: 'TP',
+          }));
+          detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
+          totalCost = typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined;
+        } else if (itemType === 'weapon' || itemType === 'armor' || itemType === 'equipment') {
+          const it = item as UserItem | EqItem;
+          const props = (Array.isArray(it.properties) ? it.properties : []) as Array<{ id?: string | number; name?: string; op_1_lvl?: number }>;
+          const propertyChips: ChipData[] = props.map((prop) => {
+            const propName = typeof prop === 'string' ? prop : (prop?.name ?? '');
+            const dbProp = itemPropertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase());
+            const baseTp = dbProp?.base_tp ?? (dbProp as { tp_cost?: number })?.tp_cost ?? 0;
+            const optLevel = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 1;
+            return {
+              name: dbProp?.name || propName,
+              description: dbProp?.description,
+              cost: baseTp * optLevel,
+              costLabel: 'TP',
+              level: optLevel > 1 ? optLevel : undefined,
+            };
+          });
+          detailSections = propertyChips.length > 0 ? [{ label: 'Properties & Proficiencies', chips: propertyChips }] : undefined;
+          totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
         }
+
         return {
           id: String(item.id),
           name: String(item.name ?? ''),
           description: String((item as UserPower | UserTechnique | UserItem).description ?? '') || 'No description available.',
           columns: getItemColumns(item, itemType, techniqueDisplay),
+          detailSections,
+          totalCost,
+          costLabel: totalCost != null ? costLabel : undefined,
           data: item,
         };
       });
-  }, [rawItems, existingIds, itemType, techniquePartsDb]);
+  }, [rawItems, existingIds, itemType, techniquePartsDb, powerPartsDb, itemPropertiesDb]);
 
   const emptyTitle = items.length === 0 ? `No ${itemType}s available` : 'All already added or no matches';
   const emptyDesc = items.length === 0

@@ -187,7 +187,7 @@ export function NotesTab({
 
   const handleRollFallDamage = useCallback(() => {
     if (rollContext) {
-      rollContext.rollDamage(fallDice);
+      rollContext.rollDamage(fallDice, 0, 'Fall Damage');
     }
   }, [rollContext, fallDice]);
 

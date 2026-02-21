@@ -47,6 +47,10 @@ export interface SelectableItem {
   chips?: ChipData[];
   /** Labeled chip sections (Type, Requirements, etc.); overrides chips when set */
   detailSections?: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+  /** Total cost (TP, etc.) to show in expanded view */
+  totalCost?: number;
+  /** Cost label (e.g. "TP") */
+  costLabel?: string;
   /** Badges to display */
   badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
   /** Whether this item is disabled (e.g., doesn't meet requirements) */
@@ -332,6 +336,8 @@ export function UnifiedSelectionModal({
                         columns={item.columns}
                         chips={item.chips}
                         detailSections={item.detailSections}
+                        totalCost={item.totalCost}
+                        costLabel={item.costLabel}
                         badges={item.badges}
                         gridColumns={gridColumns ? `${gridColumns} 2.5rem` : undefined}
                         selectable
