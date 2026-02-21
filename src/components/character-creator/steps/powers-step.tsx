@@ -349,6 +349,7 @@ export function PowersStep() {
               <ListHeader
                 columns={POWER_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : '0.8fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
                 gridColumns={POWER_GRID_COLUMNS}
+                compact
               />
               <div className="space-y-1">
                 {selectedPowerItems.map(power => (
@@ -419,6 +420,7 @@ export function PowersStep() {
               <ListHeader
                 columns={TECHNIQUE_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : key === 'Energy' ? '0.7fr' : key === 'Weapon' ? '1fr' : '0.8fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
                 gridColumns={TECHNIQUE_GRID_COLUMNS}
+                compact
               />
               <div className="space-y-1">
                 {selectedTechniqueItems.map(tech => (

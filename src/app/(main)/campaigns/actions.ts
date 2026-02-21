@@ -164,20 +164,15 @@ export async function joinCampaignAction(data: {
       data: { characters: characters as object, memberIds: newMemberIds as object },
     });
 
-    // If character was private, set visibility to campaign so RM and members can view it
+    // Set character visibility to campaign so RM and members can view it
     const charData = charRow.data as Record<string, unknown>;
-    const visibility = charData?.visibility as string | undefined;
-    let visibilityUpdated = false;
-    if (visibility === 'private') {
-      const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
-      await prisma.character.update({
-        where: { id: data.characterId },
-        data: { data: merged as object },
-      });
-      visibilityUpdated = true;
-    }
+    const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
+    await prisma.character.update({
+      where: { id: data.characterId },
+      data: { data: merged as object },
+    });
 
-    return { success: true, campaignId, visibilityUpdated };
+    return { success: true, campaignId, visibilityUpdated: true };
   } catch (error) {
     console.error('Join campaign error:', error);
     return { success: false, error: 'Failed to join campaign' };
@@ -253,20 +248,15 @@ export async function addCharacterToCampaignAction(data: {
       data: { characters: characters as object, memberIds: memberIds as object },
     });
 
-    // If character was private, set visibility to campaign so RM and members can view it
+    // Set character visibility to campaign so RM and members can view it
     const charData = charRow.data as Record<string, unknown>;
-    const visibility = charData?.visibility as string | undefined;
-    let visibilityUpdated = false;
-    if (visibility === 'private') {
-      const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
-      await prisma.character.update({
-        where: { id: data.characterId },
-        data: { data: merged as object },
-      });
-      visibilityUpdated = true;
-    }
+    const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
+    await prisma.character.update({
+      where: { id: data.characterId },
+      data: { data: merged as object },
+    });
 
-    return { success: true, visibilityUpdated };
+    return { success: true, visibilityUpdated: true };
   } catch (error) {
     console.error('Add character error:', error);
     return { success: false, error: 'Failed to add character' };

@@ -298,10 +298,10 @@ export const GridListRow = memo(function GridListRow({
             {innate && (
               <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
             )}
-            {/* Uses display (hidden when Uses column shows stepper) */}
+            {/* Uses display (hidden when Uses column shows stepper). Show - when no/zero uses. */}
             {uses && !hideUsesInName && (
               <span className="text-xs text-text-muted flex-shrink-0">
-                ({uses.current}/{uses.max})
+                {uses.max > 0 ? `(${uses.current}/${uses.max})` : '-'}
               </span>
             )}
             {/* Quantity display - editable if onQuantityChange provided */}

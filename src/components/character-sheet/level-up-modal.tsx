@@ -156,12 +156,12 @@ export function LevelUpModal({
         
         {/* Milestones */}
         {milestones.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-yellow-700 font-medium mb-2">
+          <div className="bg-tp-light dark:bg-warning-900/30 border border-tp-border dark:border-warning-800/50 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-tp-text dark:text-warning-200 font-medium mb-2">
               <Star className="w-5 h-5" />
               Milestone Bonuses!
             </div>
-            <ul className="text-sm text-yellow-600 space-y-1">
+            <ul className="text-sm text-tp-text/90 dark:text-warning-300 space-y-1">
               {milestones.map((m, i) => (
                 <li key={i} className="flex items-center gap-2">
                   <Check className="w-4 h-4" />
@@ -231,7 +231,7 @@ interface GainCardProps {
 
 function GainCard({ icon, label, value, description }: GainCardProps) {
   return (
-    <div className="bg-surface-alt rounded-lg p-3 border border-border-light">
+    <div className="bg-surface-alt dark:bg-[#21262d] rounded-lg p-3 border border-border-light dark:border-[#30363d]">
       <div className="flex items-center gap-2 mb-1">
         {icon}
         <span className="text-sm font-medium text-text-secondary">{label}</span>

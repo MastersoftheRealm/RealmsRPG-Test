@@ -64,7 +64,8 @@ export async function GET(
 
     const isOwner = user?.uid === row.userId;
     if (isOwner) {
-      return NextResponse.json(rowToCharacter(row));
+      const character = rowToCharacter(row);
+      return NextResponse.json({ character });
     }
 
     const visibility = ((row.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';

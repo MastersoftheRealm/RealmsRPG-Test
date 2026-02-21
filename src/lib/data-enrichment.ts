@@ -8,7 +8,7 @@
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
-import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange } from '@/lib/calculators';
+import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
 
 // =============================================================================
 // Types for Enriched Data
@@ -87,6 +87,9 @@ export interface EnrichedItem {
     name?: string;
     level?: number;
   };
+  // Shield-specific (block amount and optional damage)
+  shieldAmount?: string;
+  shieldDamage?: string | null;
   // Original library item for reference
   libraryItem?: UserItem;
   // Flag if not found in library
@@ -126,6 +129,28 @@ function findInLibrary<T extends { id: string; name: string }>(
     return library.find(item => String(item.name ?? '').toLowerCase() === searchName);
   }
   
+  return undefined;
+}
+
+/**
+ * Derive ability requirement from item properties when not stored as abilityRequirement.
+ * Handles older saves or items where requirement was only in the properties list.
+ */
+function deriveAbilityRequirementFromProperties(
+  properties: Array<{ id?: number; name?: string; op_1_lvl?: number }>
+): { name: string; level: number } | undefined {
+  for (const p of properties || []) {
+    const name = typeof p === 'string' ? '' : (p.name || '');
+    const op1 = typeof p === 'object' && p != null ? (p.op_1_lvl ?? 0) : 0;
+    const level = 1 + (Number(op1) || 0);
+    if (level < 1) continue;
+    if (name.includes('Strength Requirement')) return { name: 'Strength', level };
+    if (name.includes('Agility Requirement')) return { name: 'Agility', level };
+    if (name.includes('Vitality Requirement')) return { name: 'Vitality', level };
+    if (name.includes('Acuity Requirement')) return { name: 'Acuity', level };
+    if (name.includes('Intelligence Requirement')) return { name: 'Intelligence', level };
+    if (name.includes('Charisma Requirement')) return { name: 'Charisma', level };
+  }
   return undefined;
 }
 
@@ -288,7 +313,7 @@ export function enrichTechniques(
 export interface CodexEquipmentItem {
   id: string;
   name: string;
-  type: 'weapon' | 'armor' | 'equipment';
+  type: 'weapon' | 'armor' | 'equipment' | 'shield';
   subtype?: string;
   category?: string;
   description: string;
@@ -308,7 +333,7 @@ export interface CodexEquipmentItem {
 export function enrichItems(
   characterItems: Array<{ id?: string | number; name?: string; equipped?: boolean; type?: string; quantity?: number }> | undefined,
   userItemLibrary: UserItem[],
-  itemType: 'weapon' | 'armor' | 'equipment',
+  itemType: 'weapon' | 'armor' | 'equipment' | 'shield',
   codexEquipment?: CodexEquipmentItem[],
   publicItemLibrary?: UserItem[]
 ): EnrichedItem[] {
@@ -329,25 +354,32 @@ export function enrichItems(
       // Use character's stored id so equip/remove handlers match (important for public library references)
       const displayId = typeof charItem === 'object' && charItem.id != null ? String(charItem.id) : libraryItem.id;
       // Convert properties from SavedProperty objects to string names
-      const propertyNames = (libraryItem.properties || [])
+      const props = (libraryItem.properties || []) as Array<{ id?: number; name?: string; op_1_lvl?: number }>;
+      const propertyNames = props
         .map(p => typeof p === 'string' ? p : p.name)
         .filter((name): name is string => typeof name === 'string');
-      
+      // Use saved abilityRequirement, or derive from properties (e.g. old items that only stored requirement as property)
+      const abilityRequirement = libraryItem.abilityRequirement ?? deriveAbilityRequirementFromProperties(props);
+      // Shield-specific: block amount and optional damage from properties
+      const shieldAmount = itemType === 'shield' ? deriveShieldAmountFromProperties(props) : undefined;
+      const shieldDamage = itemType === 'shield' ? deriveShieldDamageFromProperties(props) : undefined;
       return {
         id: displayId,
         name: libraryItem.name,
-        description: libraryItem.description || '',
+        description: libraryItem.description ?? '',
         type: libraryItem.type || itemType,
         equipped,
         quantity,
         damage: libraryItem.damage,
         armorValue: libraryItem.armorValue,
         properties: propertyNames,
-        range: itemType === 'weapon' ? formatRange((libraryItem.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]) : undefined,
+        range: (itemType === 'weapon' || itemType === 'shield') ? formatRange(props) : undefined,
         // Armor-specific fields
         critRange: libraryItem.criticalRangeIncrease,
         agilityReduction: libraryItem.agilityReduction,
-        abilityRequirement: libraryItem.abilityRequirement,
+        abilityRequirement,
+        shieldAmount,
+        shieldDamage,
         libraryItem,
       };
     }
@@ -399,6 +431,7 @@ export interface EnrichedCharacterData {
   powers: EnrichedPower[];
   techniques: EnrichedTechnique[];
   weapons: EnrichedItem[];
+  shields: EnrichedItem[];
   armor: EnrichedItem[];
   equipment: EnrichedItem[];
 }
@@ -452,12 +485,15 @@ export function enrichCharacterData(
 ): EnrichedCharacterData {
   // Split items by type
   const weaponItems = userItems.filter(i => i.type === 'weapon');
+  const shieldItems = userItems.filter(i => i.type === 'shield');
   const armorItems = userItems.filter(i => i.type === 'armor');
   const equipmentItems = userItems.filter(i => i.type === 'equipment');
   const codexWeapons = codexEquipment?.filter(i => i.type === 'weapon');
+  const codexShields = codexEquipment?.filter(i => i.type === 'shield');
   const codexArmor = codexEquipment?.filter(i => i.type === 'armor');
   const codexItems = codexEquipment?.filter(i => i.type === 'equipment');
   const publicWeaponItems = publicLibraries?.items?.filter(i => i.type === 'weapon');
+  const publicShieldItems = publicLibraries?.items?.filter(i => i.type === 'shield');
   const publicArmorItems = publicLibraries?.items?.filter(i => i.type === 'armor');
   const publicEquipmentItems = publicLibraries?.items?.filter(i => (i.type || 'equipment') === 'equipment');
 
@@ -470,6 +506,13 @@ export function enrichCharacterData(
       'weapon',
       codexWeapons,
       publicWeaponItems
+    ),
+    shields: enrichItems(
+      toEquipmentArray(character.equipment?.shields),
+      shieldItems,
+      'shield',
+      codexShields,
+      publicShieldItems
     ),
     armor: enrichItems(
       toEquipmentArray(character.equipment?.armor),
@@ -727,6 +770,7 @@ export function cleanForSave(data: Character): Partial<Character> {
   if (cleaned.equipment && typeof cleaned.equipment === 'object') {
     const equip = cleaned.equipment as {
       weapons?: unknown[];
+      shields?: unknown[];
       armor?: unknown[];
       items?: unknown[];
       inventory?: unknown[]; // Remove redundant inventory array
@@ -748,6 +792,9 @@ export function cleanForSave(data: Character): Partial<Character> {
 
     if (Array.isArray(equip.weapons)) {
       equip.weapons = equip.weapons.map(cleanItem).filter(Boolean) as unknown[];
+    }
+    if (Array.isArray(equip.shields)) {
+      equip.shields = equip.shields.map(cleanItem).filter(Boolean) as unknown[];
     }
     if (Array.isArray(equip.armor)) {
       equip.armor = equip.armor.map(cleanItem).filter(Boolean) as unknown[];

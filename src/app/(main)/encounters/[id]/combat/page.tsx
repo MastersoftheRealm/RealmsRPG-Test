@@ -166,7 +166,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     if (encounter?.name && !isEditingName) setNameInput(encounter.name);
   }, [encounter?.name, isEditingName]);
 
-  // Auto-save to API
+  // Auto-save to API (schema includes combatants, round, etc. so PATCH accepts full state)
   const { isSaving, hasUnsavedChanges } = useAutoSave({
     data: encounter,
     onSave: async (data) => {
@@ -176,6 +176,9 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     },
     delay: 1500,
     enabled: isInitialized && !!encounter,
+    onSaveError: (err) => {
+      console.error('Encounter save failed:', err);
+    },
   });
 
   // New combatant form state — auto-roll initiative with default acuity

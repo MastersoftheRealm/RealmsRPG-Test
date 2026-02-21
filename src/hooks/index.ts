@@ -11,6 +11,8 @@ export { useCreatorSave } from './use-creator-save';
 export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
 export { useCreatorLoad } from './use-creator-load';
 export type { CreatorLoadType, UseCreatorLoadReturn } from './use-creator-load';
+export { useLoadModalLibrary } from './use-load-modal-library';
+export type { LoadModalLibraryType, UseLoadModalLibraryReturn } from './use-load-modal-library';
 export { useProfile } from './use-profile';
 
 // Campaigns

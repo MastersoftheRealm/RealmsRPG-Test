@@ -79,17 +79,21 @@ export async function GET(
       const { maxHealth, maxEnergy } = computeMaxHealthEnergy(charData as Record<string, unknown>);
       const health = charData?.health as { max?: number; current?: number } | undefined;
       const energy = charData?.energy as { max?: number; current?: number } | undefined;
+      const currentHp = (charData?.currentHealth as number) ?? health?.current ?? health?.max ?? maxHealth;
+      const currentEn = (charData?.currentEnergy as number) ?? energy?.current ?? energy?.max ?? maxEnergy;
       const character = {
         name: charData?.name ?? 'Unknown',
         abilities,
         health: {
           max: health?.max ?? maxHealth,
-          current: health?.current ?? health?.max ?? maxHealth,
+          current: currentHp,
         },
         energy: {
           max: energy?.max ?? maxEnergy,
-          current: energy?.current ?? energy?.max ?? maxEnergy,
+          current: currentEn,
         },
+        currentHealth: currentHp,
+        currentEnergy: currentEn,
         evasion: (charData?.evasion as number) ?? 10 + abilities.agility,
       };
       return NextResponse.json(character);

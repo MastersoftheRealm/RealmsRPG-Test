@@ -17,10 +17,11 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Shield, Sword, Target, Info, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useItemProperties, useAdmin, useCreatorSave, useCreatorLoad, type ItemProperty, type UserItem } from '@/hooks';
+import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
+import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
@@ -366,7 +367,7 @@ function ItemCreatorContent() {
   const [armamentType, setArmamentType] = useState<ArmamentType>('Weapon');
   const [selectedProperties, setSelectedProperties] = useState<SelectedProperty[]>([]);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 1, size: 4, type: 'slashing' });
-  const load = useCreatorLoad('items');
+  const load = useLoadModalLibrary('item');
   const [isTwoHanded, setIsTwoHanded] = useState(false);
   const [rangeLevel, setRangeLevel] = useState(0); // 0 = melee, 1+ = ranged (8 spaces per level)
   
@@ -484,10 +485,10 @@ function ItemCreatorContent() {
 
   // Load item for editing from URL parameter
   useEffect(() => {
-    if (!editItemId || !load.items.length || !itemProperties.length || isInitialized) return;
-    
-    // Find the item to edit
-    const itemToEdit = (load.items as UserItem[]).find(item => item.docId === editItemId || item.id === editItemId);
+    if (!editItemId || !load.rawItems.length || !itemProperties.length || isInitialized) return;
+    const itemToEdit = (load.rawItems as UserItem[]).find(
+      (item: UserItem) => String(item.docId) === editItemId || String(item.id) === editItemId
+    );
     if (!itemToEdit) {
       console.warn(`Item with ID ${editItemId} not found in library`);
       setIsInitialized(true);
@@ -532,13 +533,16 @@ function ItemCreatorContent() {
       setCriticalRangeIncrease(itemToEdit.criticalRangeIncrease);
     }
     
-    // Restore ability requirement
+    // Restore ability requirement (preserve saved id so dropdown and save work)
     if (itemToEdit.abilityRequirement) {
+      const ar = itemToEdit.abilityRequirement;
       setAbilityRequirement({
-        id: 0, // Will need to find the right property ID
-        name: itemToEdit.abilityRequirement.name || '',
-        level: itemToEdit.abilityRequirement.level || 0,
+        id: typeof ar.id === 'number' ? ar.id : Number(ar.id) || 0,
+        name: ar.name || '',
+        level: ar.level || 0,
       });
+    } else if (itemType === 'Weapon' || itemType === 'Armor') {
+      setAbilityRequirement(null);
     }
     
     // Restore properties
@@ -566,7 +570,7 @@ function ItemCreatorContent() {
     localStorage.removeItem(ITEM_CREATOR_CACHE_KEY);
     
     setIsInitialized(true);
-  }, [editItemId, load.items, itemProperties, isInitialized]);
+  }, [editItemId, load.rawItems, itemProperties, isInitialized]);
 
   // Range display string
   const rangeDisplay = useMemo(() => {
@@ -1046,12 +1050,17 @@ function ItemCreatorContent() {
           <LoadFromLibraryModal
             isOpen={load.showLoadModal}
             onClose={load.closeLoadModal}
-            onSelect={handleLoadItem}
-            items={load.items}
+            selectableItems={load.selectableItems}
+            columns={load.columns}
+            gridColumns={load.gridColumns}
+            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
+            emptyMessage={load.emptyMessage}
+            emptySubMessage={load.emptySubMessage}
+            searchPlaceholder="Search armaments..."
             isLoading={load.isLoading}
             error={load.error}
-            itemType="item"
             title="Load Armament from Library"
+            onSelect={(selected) => handleLoadItem(selected.data)}
           />
           <LoginPromptModal
             isOpen={showLoginPrompt}

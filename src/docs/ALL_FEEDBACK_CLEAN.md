@@ -74,6 +74,8 @@ Notes:
 
 ### 6b) Creator Contrast & Accessibility
 - Technique and Armament creators: description and option boxes must use semantic tokens (text-text-primary) and dark mode variants — match Power Creator. Dropdown menus across all 3 creators must have explicit text-text-primary bg-surface. ✅ TASK-254
+- **Dark mode — cost/TP/currency and advanced mechanics:** Cost stat boxes (Energy, TP, Currency) in CreatorSummaryPanel and advanced mechanics option boxes in Power Creator must use dark-mode-appropriate backgrounds (semantic tokens or .dark overrides). Implemented 2026-02-21: .dark --color-tp-light and --color-tp; PowerAdvancedMechanics option boxes use bg-surface-alt.
+- **Armaments: strength requirements and descriptions:** When loading armaments (weapons, armor) from library or character, description and strength/ability requirements must display when saved. Implemented 2026-02-21: item creator edit load restores abilityRequirement.id from saved item; enrichItems derives abilityRequirement from properties when missing on library item; description preserved with ?? ''.
 - Full accessibility audit: Elements must meet WCAG 2.1 AA contrast (4.5:1 small text, 3:1 large text). Use axe DevTools to identify and fix violations. ✅ TASK-255 (not-started; handled by other agent)
 
 ### 7) Bugs / Behavior to Prioritize
@@ -968,3 +970,24 @@ Notes
 - Feedback: Character Talavas rolled four times on his character sheet while part of a campaign; the campaign roll log didn't update until page refresh. Console/backend showed PoolingReplicationError: permission denied for schema campaigns, permission denied for schema users (realtime.apply_rls / list_changes, insufficient_privilege 42501).  
 - Expected: Campaign roll log (and character/encounter realtime sync) update in real time without refresh.  
 - Disposition: Root cause is Realtime service lacking USAGE on custom schemas (campaigns, users). prisma/supabase-rls-policies.sql updated with GRANT USAGE ON SCHEMA for campaigns and users (anon, authenticated, service_role, authenticator). DEPLOYMENT_AND_SECRETS_SUPABASE.md updated with troubleshooting and optional supabase_realtime grant. Owner must run the updated SQL in Supabase SQL Editor for the fix to take effect.
+
+**Raw Feedback Log — 2026-02-21 (Dark mode: currency cost/training point, advanced mechanics, creators)**
+- Date: 2026-02-21
+- Context: Dark mode; creators (power, technique, item, creature); currency cost/training point boxes; power creator advanced mechanics
+- Priority: Medium
+- Feedback: Dark mode issues: currency cost/training point, advanced mechanics in power creator, all have bright backgrounds still in dark mode. Some other similar things across creators still likely have these too.
+- Expected: Cost stat boxes (Energy, TP, Currency), advanced mechanics option boxes, and any similar creator UI use dark-mode-appropriate backgrounds (semantic tokens or dark variants).
+
+**Raw Feedback Log — 2026-02-21 (Armaments: strength requirements, descriptions sometimes don't load)**
+- Date: 2026-02-21
+- Context: Armaments (weapons, armor, shields); character sheet, library, creators; loading saved items
+- Priority: High
+- Feedback: Armaments sometimes don't load with the saved strength requirements or item descriptions. This may be an issue elsewhere too.
+- Expected: When loading armaments from library or character, description and strength (ability) requirements always display when they were saved; same for other item types where applicable.
+
+**Raw Feedback Log — 2026-02-21 (Encounter save, campaign combatants HP/EN, privacy, health input)**
+- Date: 2026-02-21
+- Context: Encounters (combat), campaign characters in encounters, character privacy, character sheet health/energy
+- Priority: High
+- Feedback: (1) Encounter isn't saving changes after adding campaign tied combatants/characters, stuck on unsaved changes. (2) Added characters in campaign aren't loading their energy and health properly; need to show current and total for both values and sync changes between encounter and character sheet in real time. (3) Characters in campaigns cannot ever set their privacy to private unless they leave the campaign. (4) A character's privacy is set to public but it says private when trying to view the character sheet. (5) In character sheet health we allow steppers to increase beyond the max, but manual input won't allow a value higher than max; allow directly inputting a value higher than max as well.
+- Expected: (1) Encounter PATCH persists combatants and dirty state clears after save. (2) Campaign combatants show current/max HP and EN; realtime sync between encounter and sheet. (3) When character is in a campaign, Private option disabled or blocked until they leave. (4) Public characters viewable by link; fix visibility read/save so public shows correctly. (5) Health/energy manual input accepts values above max like the steppers.

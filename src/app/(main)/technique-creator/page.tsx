@@ -16,11 +16,12 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTechniqueParts, useUserItems, useAdmin, useCreatorSave, useCreatorLoad, type TechniquePart } from '@/hooks';
+import { useTechniqueParts, useUserItems, useAdmin, useCreatorSave, useLoadModalLibrary, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
+import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
@@ -357,7 +358,7 @@ function TechniqueCreatorContent() {
   const [isReaction, setIsReaction] = useState(false);
   const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
   const [weapon, setWeapon] = useState<WeaponConfig>(DEFAULT_WEAPON_OPTIONS[0]);
-  const load = useCreatorLoad('techniques');
+  const load = useLoadModalLibrary('technique');
 
   // Fetch technique parts
   const { data: techniqueParts = [], isLoading, error } = useTechniqueParts();
@@ -677,26 +678,19 @@ function TechniqueCreatorContent() {
 
   // Load technique for editing from URL parameter (?edit=<id>)
   useEffect(() => {
-    if (!editTechniqueId || !load.items || load.items.length === 0 || techniqueParts.length === 0 || isInitialized) return;
-    
-    // Find the technique to edit by docId or id
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const techniqueToEdit = (load.items as any[]).find(
-      (t: { docId?: string; id?: string }) => t.docId === editTechniqueId || t.id === editTechniqueId
+    if (!editTechniqueId || !load.rawItems.length || techniqueParts.length === 0 || isInitialized) return;
+    const techniqueToEdit = load.rawItems.find(
+      (t: { docId?: string; id?: string }) => String(t.docId) === editTechniqueId || String(t.id) === editTechniqueId
     );
     if (!techniqueToEdit) {
       console.warn(`Technique with ID ${editTechniqueId} not found in library`);
       setIsInitialized(true);
       return;
     }
-    
-    // Use the existing handleLoadTechnique callback to populate the form
     handleLoadTechnique(techniqueToEdit);
-    
-    // Clear localStorage cache when loading for edit
     localStorage.removeItem(TECHNIQUE_CREATOR_CACHE_KEY);
     setIsInitialized(true);
-  }, [editTechniqueId, load.items, techniqueParts, isInitialized, handleLoadTechnique]);
+  }, [editTechniqueId, load.rawItems, techniqueParts, isInitialized, handleLoadTechnique]);
 
   if (isLoading) {
     return (
@@ -766,12 +760,17 @@ function TechniqueCreatorContent() {
           <LoadFromLibraryModal
             isOpen={load.showLoadModal}
             onClose={load.closeLoadModal}
-            onSelect={handleLoadTechnique}
-            items={load.items}
+            selectableItems={load.selectableItems}
+            columns={load.columns}
+            gridColumns={load.gridColumns}
+            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
+            emptyMessage={load.emptyMessage}
+            emptySubMessage={load.emptySubMessage}
+            searchPlaceholder="Search techniques..."
             isLoading={load.isLoading}
             error={load.error}
-            itemType="technique"
             title="Load Technique from Library"
+            onSelect={(selected) => handleLoadTechnique(selected.data)}
           />
           <LoginPromptModal
             isOpen={showLoginPrompt}

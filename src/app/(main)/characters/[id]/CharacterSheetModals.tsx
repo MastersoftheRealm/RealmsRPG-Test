@@ -16,7 +16,7 @@ import type { EditArchetypeResult } from '@/components/character-sheet';
 import { DeleteConfirmModal, AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { CharacterSheetStats } from './character-sheet-utils';
 
-export type AddModalType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment' | null;
+export type AddModalType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment' | null;
 export type FeatModalType = 'archetype' | 'character' | 'state' | null;
 export type SkillModalType = 'skill' | 'subskill' | null;
 

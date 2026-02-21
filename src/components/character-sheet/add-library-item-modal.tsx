@@ -13,6 +13,7 @@ import { SourceFilter, type SourceFilterValue } from '@/components/shared/filter
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import { formatDamageDisplay } from '@/lib/utils';
+import { deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
 import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -20,7 +21,7 @@ import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
-type ItemType = 'power' | 'technique' | 'weapon' | 'armor' | 'equipment';
+type ItemType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment';
 
 interface AddLibraryItemModalProps {
   isOpen: boolean;
@@ -72,6 +73,16 @@ function getItemColumns(
     const armor = item as UserItem;
     return armor.armorValue ? [{ key: 'Armor', value: `+${armor.armorValue}`, highlight: true }] : [];
   }
+  if (itemType === 'shield') {
+    const shield = item as UserItem;
+    const props = (shield.properties || []) as Array<{ id?: number; name?: string; op_1_lvl?: number }>;
+    const block = deriveShieldAmountFromProperties(props);
+    const dmg = deriveShieldDamageFromProperties(props) ?? (shield.damage ? formatDamageDisplay(shield.damage) : null);
+    const cols: ColumnValue[] = [];
+    if (block !== '-') cols.push({ key: 'Block', value: block, highlight: true });
+    if (dmg) cols.push({ key: 'Damage', value: dmg, highlight: true });
+    return cols;
+  }
   return [];
 }
 
@@ -80,6 +91,7 @@ function getModalGridColumns(itemType: ItemType): string {
     case 'power': return '1.4fr 0.8fr 0.8fr 0.7fr';
     case 'technique': return '1.4fr 0.7fr 1fr 0.8fr';
     case 'weapon':
+    case 'shield':
     case 'armor': return '1.5fr 1fr';
     case 'equipment': return '1.5fr';
     default: return '1.5fr';
@@ -92,6 +104,7 @@ function getListHeaderColumns(itemType: ItemType): { key: string; label: string;
     case 'power': return [...base, { key: 'Action', label: 'Action' }, { key: 'Damage', label: 'Damage' }, { key: 'Area', label: 'Area' }];
     case 'technique': return [...base, { key: 'Energy', label: 'Energy' }, { key: 'Weapon', label: 'Weapon' }, { key: 'Training Pts', label: 'Training Pts' }];
     case 'weapon': return [...base, { key: 'damage', label: 'Damage' }];
+    case 'shield': return [...base, { key: 'Block', label: 'Block' }, { key: 'Damage', label: 'Damage' }];
     case 'armor': return [...base, { key: 'armor', label: 'Armor' }];
     case 'equipment': return base;
     default: return base;
@@ -103,6 +116,7 @@ function getTitle(itemType: ItemType): string {
     case 'power': return 'Add Power from Library';
     case 'technique': return 'Add Technique from Library';
     case 'weapon': return 'Add Weapon from Library';
+    case 'shield': return 'Add Shield from Library';
     case 'armor': return 'Add Armor from Library';
     case 'equipment': return 'Add Equipment from Library';
     default: return 'Add Item';
@@ -167,6 +181,12 @@ export function AddLibraryItemModal({
       case 'armor': {
         const my = (source === 'my' || source === 'all') ? userItems.filter((i: UserItem) => i.type === 'armor') : [];
         const pub = (source === 'public' || source === 'all') ? (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || '').toString().toLowerCase() === 'armor').map(normalizePublicItem) : [];
+        const merged = [...my, ...pub];
+        return { rawItems: merged, isLoading: (source !== 'public' && itemsLoading) || (source !== 'my' && publicItemsLoading) };
+      }
+      case 'shield': {
+        const my = (source === 'my' || source === 'all') ? userItems.filter((i: UserItem) => i.type === 'shield') : [];
+        const pub = (source === 'public' || source === 'all') ? (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || '').toString().toLowerCase() === 'shield').map(normalizePublicItem) : [];
         const merged = [...my, ...pub];
         return { rawItems: merged, isLoading: (source !== 'public' && itemsLoading) || (source !== 'my' && publicItemsLoading) };
       }
@@ -259,7 +279,7 @@ export function AddLibraryItemModal({
           }));
           detailSections = partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined;
           totalCost = typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined;
-        } else if (itemType === 'weapon' || itemType === 'armor' || itemType === 'equipment') {
+        } else if (itemType === 'weapon' || itemType === 'shield' || itemType === 'armor' || itemType === 'equipment') {
           const it = item as UserItem | EqItem;
           const props = (Array.isArray(it.properties) ? it.properties : []) as Array<{ id?: string | number; name?: string; op_1_lvl?: number }>;
           const propertyChips: ChipData[] = props.map((prop) => {
@@ -298,7 +318,7 @@ export function AddLibraryItemModal({
       });
   }, [rawItems, existingIds, itemType, techniquePartsDb, powerPartsDb, itemPropertiesDb]);
 
-  const typeLabel = itemType === 'power' ? 'Powers' : itemType === 'technique' ? 'Techniques' : itemType === 'weapon' ? 'Weapons' : itemType === 'armor' ? 'Armor' : 'Equipment';
+  const typeLabel = itemType === 'power' ? 'Powers' : itemType === 'technique' ? 'Techniques' : itemType === 'weapon' ? 'Weapons' : itemType === 'shield' ? 'Shields' : itemType === 'armor' ? 'Armor' : 'Equipment';
   const emptyTitle = items.length === 0
     ? (source === 'public'
       ? `No public ${typeLabel.toLowerCase()} in the community library`

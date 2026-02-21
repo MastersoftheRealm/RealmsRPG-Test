@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Equipment Types
  * ================
  * Item and equipment definitions
@@ -102,6 +102,7 @@ export interface CharacterEquipment {
   offHand?: Weapon | Armor | null;
   armor?: Armor | Item[] | null;
   weapons?: Weapon[] | Item[];
+  shields?: Item[];
   items?: Item[];
   accessories?: Item[];
   inventory?: Item[];

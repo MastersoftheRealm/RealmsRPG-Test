@@ -25,6 +25,7 @@ interface ArchetypeSectionProps {
   onUnarmedProwessChange?: (level: number) => void;
   // Enriched equipment (from codex/library) — used instead of raw character.equipment
   enrichedWeapons?: EnrichedItem[];
+  enrichedShields?: EnrichedItem[];
   enrichedArmor?: EnrichedItem[];
   className?: string;
 }
@@ -354,6 +355,107 @@ function WeaponsSection({
   );
 }
 
+// Shields Section - displays equipped shields with block amount, optional damage, and rolls
+function ShieldsSection({
+  character,
+  martialProf,
+  onRollAttack,
+  onRollDamage,
+  enrichedShields,
+}: {
+  character: Character;
+  martialProf: number;
+  onRollAttack?: (name: string, bonus: number) => void;
+  onRollDamage?: (damageStr: string, bonus: number) => void;
+  enrichedShields?: EnrichedItem[];
+}) {
+  const abilities = character.abilities || {};
+  const strBonus = (abilities.strength ?? 0) + martialProf;
+  const agiBonus = (abilities.agility ?? 0) + martialProf;
+
+  const shields = enrichedShields || (character.equipment?.shields || []) as Item[];
+  const equippedShields = shields.filter(s => s.equipped);
+
+  if (equippedShields.length === 0) {
+    return (
+      <div className="bg-surface-alt rounded-lg p-3 mb-4">
+        <SectionHeader title="Shields" className="mb-2" />
+        <p className="text-sm text-text-muted italic text-center py-2">No shield equipped</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-surface-alt rounded-lg p-3 mb-4">
+      <SectionHeader title="Shields" className="mb-2" />
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-xs text-text-muted">
+            <th className="text-left py-1">Name</th>
+            <th className="text-center py-1">Block</th>
+            <th className="text-center py-1">Damage</th>
+            <th className="text-center py-1">Hands</th>
+            <th className="text-center py-1">Rolls</th>
+          </tr>
+        </thead>
+        <tbody>
+          {equippedShields.map((shield, idx) => {
+            const enriched = shield as EnrichedItem & { shieldAmount?: string; shieldDamage?: string | null };
+            const blockStr = enriched.shieldAmount ?? '-';
+            const damageStr = enriched.shieldDamage ?? (shield.damage ? String(shield.damage) : '-');
+            const props = (shield.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name || '');
+            const isTwoHanded = props.some(p => p?.toLowerCase() === 'two-handed');
+            const handedness = isTwoHanded ? 'Two' : 'One';
+            const hasDamage = damageStr !== '-';
+            const attackBonus = strBonus; // Shields used as weapon typically use Strength
+
+            return (
+              <tr key={shield.id || idx} className="border-b border-border-subtle last:border-0 align-top">
+                <td className="py-2 font-medium text-text-secondary">{shield.name}</td>
+                <td className="text-center py-2 font-mono text-primary-600 dark:text-primary-400">{blockStr}</td>
+                <td className="text-center py-2 text-text-muted">{damageStr}</td>
+                <td className="text-center py-2 text-text-muted">{handedness}</td>
+                <td className="text-center py-2">
+                  <div className="flex flex-col items-center gap-1">
+                    {hasDamage && onRollAttack && (
+                      <RollButton
+                        value={attackBonus}
+                        onClick={() => onRollAttack(shield.name || 'Shield bash', attackBonus)}
+                        size="sm"
+                        title={`Roll attack with ${shield.name}`}
+                      />
+                    )}
+                    {hasDamage && onRollDamage && (
+                      <RollButton
+                        value={0}
+                        displayValue={damageStr}
+                        variant="danger"
+                        size="sm"
+                        onClick={() => onRollDamage(damageStr, attackBonus)}
+                        title={`Roll ${damageStr} damage`}
+                      />
+                    )}
+                    {blockStr !== '-' && onRollDamage && (
+                      <RollButton
+                        value={0}
+                        displayValue={blockStr}
+                        variant="primary"
+                        size="sm"
+                        onClick={() => onRollDamage(blockStr + ' Bludgeoning', 0)}
+                        title="Roll shield block amount"
+                      />
+                    )}
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // Armor Section - displays equipped armor with stats
 function ArmorSection({
   character,
@@ -456,6 +558,7 @@ export function ArchetypeSection({
   unarmedProwess,
   onUnarmedProwessChange,
   enrichedWeapons,
+  enrichedShields,
   enrichedArmor,
   className,
 }: ArchetypeSectionProps) {
@@ -734,6 +837,15 @@ export function ArchetypeSection({
         onRollAttack={rollContext?.canRoll !== false ? handleRollBonus : undefined}
         onRollDamage={rollContext?.canRoll !== false ? handleRollDamage : undefined}
         enrichedWeapons={enrichedWeapons}
+      />
+
+      {/* Shields Section */}
+      <ShieldsSection
+        character={character}
+        martialProf={martialProf}
+        onRollAttack={rollContext?.canRoll !== false ? handleRollBonus : undefined}
+        onRollDamage={rollContext?.canRoll !== false ? handleRollDamage : undefined}
+        enrichedShields={enrichedShields}
       />
 
       {/* Armor Section */}

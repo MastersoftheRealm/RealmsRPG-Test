@@ -346,6 +346,9 @@
     --color-martial-light: #241b1b;
     --color-info-light: #0f172a;
     --color-warning-light: #292419;
+    /* TP/currency cost stat boxes in creator summary panel */
+    --color-tp-light: #292419;
+    --color-tp: #f59e0b;
   }
   
   body {

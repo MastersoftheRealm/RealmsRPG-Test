@@ -130,7 +130,7 @@ function AddedAdvancedChip({
           <p className={cn(colors.text, 'text-base leading-relaxed')}>{part.description}</p>
 
           {hasOption(1) && (
-            <div className="bg-white/70 border border-current/20 rounded-lg p-3">
+            <div className="bg-surface-alt border border-border-light rounded-lg p-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 1</span>
@@ -152,7 +152,7 @@ function AddedAdvancedChip({
           )}
 
           {hasOption(2) && (
-            <div className="bg-white/70 border border-current/20 rounded-lg p-3">
+            <div className="bg-surface-alt border border-border-light rounded-lg p-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 2</span>
@@ -174,7 +174,7 @@ function AddedAdvancedChip({
           )}
 
           {hasOption(3) && (
-            <div className="bg-white/70 border border-current/20 rounded-lg p-3">
+            <div className="bg-surface-alt border border-border-light rounded-lg p-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 3</span>

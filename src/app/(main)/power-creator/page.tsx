@@ -16,12 +16,13 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Plus, Wand2, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePowerParts, useAdmin, useCreatorSave, useCreatorLoad, type PowerPart } from '@/hooks';
+import { usePowerParts, useAdmin, useCreatorSave, useLoadModalLibrary, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
+import { SourceFilter } from '@/components/shared/filters/source-filter';
 import { ValueStepper } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
@@ -110,7 +111,7 @@ function PowerCreatorContent() {
     endsOnActivation: false,
     sustain: 0,
   });
-  const load = useCreatorLoad('powers');
+  const load = useLoadModalLibrary('power');
 
   // Fetch power parts
   const { data: powerParts = [], isLoading, error } = usePowerParts();
@@ -599,26 +600,19 @@ function PowerCreatorContent() {
 
   // Load power for editing from URL parameter (?edit=<id>)
   useEffect(() => {
-    if (!editPowerId || !load.items || load.items.length === 0 || powerParts.length === 0 || isInitialized) return;
-    
-    // Find the power to edit by docId or id
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const powerToEdit = (load.items as any[]).find(
-      (p: { docId?: string; id?: string }) => p.docId === editPowerId || p.id === editPowerId
-    );
+    if (!editPowerId || !load.rawItems.length || powerParts.length === 0 || isInitialized) return;
+    const powerToEdit = load.rawItems.find(
+      (p: { docId?: string; id?: string }) => String(p.docId) === editPowerId || String(p.id) === editPowerId
+    ) as Parameters<typeof handleLoadPower>[0] | undefined;
     if (!powerToEdit) {
       console.warn(`Power with ID ${editPowerId} not found in library`);
       setIsInitialized(true);
       return;
     }
-    
-    // Use the existing handleLoadPower callback to populate the form
     handleLoadPower(powerToEdit);
-    
-    // Clear localStorage cache when loading for edit
     localStorage.removeItem(POWER_CREATOR_CACHE_KEY);
     setIsInitialized(true);
-  }, [editPowerId, load.items, powerParts, isInitialized, handleLoadPower]);
+  }, [editPowerId, load.rawItems, powerParts, isInitialized, handleLoadPower]);
 
   if (isLoading) {
     return (
@@ -689,12 +683,17 @@ function PowerCreatorContent() {
           <LoadFromLibraryModal
             isOpen={load.showLoadModal}
             onClose={load.closeLoadModal}
-            onSelect={handleLoadPower}
-            items={load.items}
+            selectableItems={load.selectableItems}
+            columns={load.columns}
+            gridColumns={load.gridColumns}
+            headerExtra={<SourceFilter value={load.source} onChange={load.setSource} />}
+            emptyMessage={load.emptyMessage}
+            emptySubMessage={load.emptySubMessage}
+            searchPlaceholder="Search powers..."
             isLoading={load.isLoading}
             error={load.error}
-            itemType="power"
             title="Load Power from Library"
+            onSelect={(selected) => handleLoadPower(selected.data as Parameters<typeof handleLoadPower>[0])}
           />
           <LoginPromptModal
             isOpen={showLoginPrompt}

@@ -281,6 +281,7 @@ interface LibrarySectionProps {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
+  shields: Item[];
   armor: Item[];
   equipment: Item[];
   currency?: number;
@@ -301,6 +302,9 @@ interface LibrarySectionProps {
   onAddWeapon?: () => void;
   onRemoveWeapon?: (id: string | number) => void;
   onToggleEquipWeapon?: (id: string | number) => void;
+  onAddShield?: () => void;
+  onRemoveShield?: (id: string | number) => void;
+  onToggleEquipShield?: (id: string | number) => void;
   onAddArmor?: () => void;
   onRemoveArmor?: (id: string | number) => void;
   onToggleEquipArmor?: (id: string | number) => void;
@@ -440,6 +444,14 @@ const WEAPON_COLUMNS: ListColumn[] = [
 ];
 const WEAPON_GRID = '1fr 0.7fr 0.8fr 0.6fr';
 
+const SHIELD_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'block', label: 'Block', width: '0.7fr', align: 'center' },
+  { key: 'damage', label: 'Damage', width: '0.8fr', align: 'center' },
+  { key: 'hands', label: 'Hands', width: '0.5fr', align: 'center' },
+];
+const SHIELD_GRID = '1fr 0.7fr 0.8fr 0.5fr';
+
 const ARMOR_COLUMNS: ListColumn[] = [
   { key: '_equip', label: '', width: '2rem', sortable: false as const },
   { key: 'name', label: 'Name', width: '1fr' },
@@ -460,6 +472,7 @@ export function LibrarySection({
   powers,
   techniques,
   weapons,
+  shields = [],
   armor,
   equipment,
   currency = 0,
@@ -479,6 +492,9 @@ export function LibrarySection({
   onAddWeapon,
   onRemoveWeapon,
   onToggleEquipWeapon,
+  onAddShield,
+  onRemoveShield,
+  onToggleEquipShield,
   onAddArmor,
   onRemoveArmor,
   onToggleEquipArmor,
@@ -554,6 +570,7 @@ export function LibrarySection({
   const [powerSort, setPowerSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [techniqueSort, setTechniqueSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [weaponSort, setWeaponSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [shieldSort, setShieldSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [armorSort, setArmorSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
   
@@ -572,6 +589,10 @@ export function LibrarySection({
   const sortedWeapons = useMemo(
     () => sortByColumn(weapons, weaponSort),
     [weapons, weaponSort]
+  );
+  const sortedShields = useMemo(
+    () => sortByColumn(shields, shieldSort),
+    [shields, shieldSort]
   );
   const sortedArmor = useMemo(
     () => sortByColumn(armor, armorSort),
@@ -1124,6 +1145,110 @@ export function LibrarySection({
                 </div>
               ) : (
                 <p className="text-sm text-text-muted italic text-center py-4">No weapons (see Unarmed Prowess in Archetype section)</p>
+              )}
+            </div>
+
+            {/* Shields Section — below weapons, above armor */}
+            <div>
+              <SectionHeader 
+                title="Shields" 
+                onAdd={onAddShield}
+                addLabel="Add shield"
+              />
+              {sortedShields.length > 0 && (
+                <ListHeader
+                  columns={[
+                    BLANK_LEFT,
+                    ...SHIELD_COLUMNS,
+                    BLANK_RIGHT,
+                    ...(showLibraryEditControls ? [BLANK_DELETE] : []),
+                  ]}
+                  gridColumns={['2rem', SHIELD_GRID, '4rem', ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
+                  sortState={shieldSort}
+                  onSort={(col) => setShieldSort(toggleSort(shieldSort, col))}
+                />
+              )}
+              {sortedShields.length > 0 ? (
+                <div className="space-y-1">
+                  {sortedShields.map((item, i) => {
+                    const enriched = item as Item & { shieldAmount?: string; shieldDamage?: string | null };
+                    const shieldBlock = enriched.shieldAmount ?? '-';
+                    const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? formatDamageDisplay(item.damage) : '-');
+                    const props = (item.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name || '');
+                    const isTwoHanded = props.some(p => p?.toLowerCase() === 'two-handed');
+                    const handedness = isTwoHanded ? 'Two' : 'One';
+                    const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
+                      name: p.name,
+                      description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
+                      cost: p.tpCost,
+                      costLabel: 'TP',
+                      category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
+                      level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
+                    }));
+                    const columns: ColumnValue[] = [
+                      { key: 'block', value: shieldBlock, className: 'text-primary-600 dark:text-primary-400 font-medium', align: 'center' },
+                      { key: 'damage', value: shieldDamageStr !== '-' ? shieldDamageStr : '-', className: shieldDamageStr !== '-' ? 'text-danger-600 font-medium' : '', align: 'center' },
+                      { key: 'hands', value: handedness, align: 'center' },
+                    ];
+                    const hasShieldDamage = shieldDamageStr !== '-';
+                    const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities);
+                    return (
+                      <GridListRow
+                        key={item.id || i}
+                        id={String(item.id || i)}
+                        name={item.name}
+                        columns={columns}
+                        gridColumns={SHIELD_GRID}
+                        chips={propertyChips}
+                        chipsLabel="Properties"
+                        description={item.description}
+                        equipped={item.equipped}
+                        leftSlot={onToggleEquipShield && (
+                          <EquipToggle
+                            isEquipped={item.equipped || false}
+                            onToggle={() => onToggleEquipShield(item.id ?? item.name ?? i)}
+                            label={item.equipped ? 'Unequip' : 'Equip'}
+                          />
+                        )}
+                        rightSlot={rollContext?.canRoll !== false && rollContext && (
+                          <div className="flex flex-wrap items-center gap-1 justify-end">
+                            {hasShieldDamage && (
+                              <>
+                                <RollButton
+                                  value={attackBonus}
+                                  onClick={() => rollContext.rollAttack(item.name, attackBonus)}
+                                  size="sm"
+                                  title={`Roll attack (${abilityName})`}
+                                />
+                                <RollButton
+                                  value={0}
+                                  displayValue="💥"
+                                  variant="danger"
+                                  onClick={() => rollContext.rollDamage(typeof item.damage === 'string' ? item.damage : shieldDamageStr)}
+                                  size="sm"
+                                  title="Roll damage"
+                                />
+                              </>
+                            )}
+                            {shieldBlock !== '-' && (
+                              <RollButton
+                                value={0}
+                                displayValue={shieldBlock}
+                                variant="primary"
+                                onClick={() => rollContext.rollDamage(shieldBlock + ' Bludgeoning', 0, 'Shield block')}
+                                size="sm"
+                                title="Roll shield block amount"
+                              />
+                            )}
+                          </div>
+                        )}
+                        onDelete={showLibraryEditControls && onRemoveShield ? () => onRemoveShield(item.id ?? item.name ?? i) : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-text-muted italic text-center py-4">No shields</p>
               )}
             </div>
             

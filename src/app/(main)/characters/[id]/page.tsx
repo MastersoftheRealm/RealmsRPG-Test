@@ -134,6 +134,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
       characterName: character.name,
     };
   }, [campaignsFull, user?.uid, character]);
+
+  const isInCampaign = useMemo(
+    () =>
+      !!character &&
+      campaignsFull.some((c) =>
+        (c.characters || []).some(
+          (cc) => cc.characterId === character.id && cc.userId === character.userId
+        )
+      ),
+    [character, campaignsFull]
+  );
   
   // Enrich character data: use owner's library when viewing another user's character, else current user's library. Public library used as fallback so character-referenced public items display correctly.
   const enrichedData = useMemo(() => {
@@ -725,6 +736,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     character.powers?.forEach(p => add(p.id));
     character.techniques?.forEach(t => add(t.id));
     (character.equipment?.weapons as Item[] || []).forEach(w => add(w.id));
+    (character.equipment?.shields as Item[] || []).forEach(s => add(s.id));
     (character.equipment?.armor as Item[] || []).forEach(a => add(a.id));
     (character.equipment?.items as Item[] || []).forEach(e => add(e.id));
     return ids;
@@ -906,6 +918,58 @@ export default function CharacterSheetPage({ params }: PageParams) {
                          a.name?.toLowerCase() === idStr.toLowerCase() ||
                          (typeof itemId === 'number' && idx === itemId);
           return matches ? { ...a, equipped: !a.equipped } : a;
+        })
+      }
+    } : null);
+  }, [character]);
+
+  // Add shield handler
+  const handleAddShields = useCallback((items: Item[]) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        shields: [...((prev.equipment?.shields as Item[]) || []), ...items]
+      }
+    } : null);
+  }, [character]);
+
+  // Remove shield handler
+  const handleRemoveShield = useCallback((itemId: string | number) => {
+    if (!character) return;
+    const idStr = String(itemId);
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        shields: ((prev.equipment?.shields as Item[]) || []).filter((s, idx) => {
+          const matches = s.id === itemId || 
+                         String(s.id) === idStr || 
+                         s.name === idStr || 
+                         s.name?.toLowerCase() === idStr.toLowerCase() ||
+                         (typeof itemId === 'number' && idx === itemId);
+          return !matches;
+        })
+      }
+    } : null);
+  }, [character]);
+
+  // Toggle equip shield handler
+  const handleToggleEquipShield = useCallback((itemId: string | number) => {
+    if (!character) return;
+    const idStr = String(itemId);
+    setCharacter(prev => prev ? {
+      ...prev,
+      equipment: {
+        ...prev.equipment,
+        shields: ((prev.equipment?.shields as Item[]) || []).map((s, idx) => {
+          const matches = s.id === itemId || 
+                         String(s.id) === idStr || 
+                         s.name === idStr || 
+                         s.name?.toLowerCase() === idStr.toLowerCase() ||
+                         (typeof itemId === 'number' && idx === itemId);
+          return matches ? { ...s, equipped: !s.equipped } : s;
         })
       }
     } : null);
@@ -1350,11 +1414,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
       case 'armor':
         handleAddArmor(items as Item[]);
         break;
+      case 'shield':
+        handleAddShields(items as Item[]);
+        break;
       case 'equipment':
         handleAddEquipment(items as Item[]);
         break;
     }
-  }, [addModalType, handleAddPowers, handleAddTechniques, handleAddWeapons, handleAddArmor, handleAddEquipment]);
+  }, [addModalType, handleAddPowers, handleAddTechniques, handleAddWeapons, handleAddArmor, handleAddShields, handleAddEquipment]);
   
   // Enrich skills with availableAbilities from Codex; merge in species skills if missing
   // Species skills are auto-granted proficiencies—ensure they appear even if not in character.skills
@@ -1498,7 +1565,16 @@ export default function CharacterSheetPage({ params }: PageParams) {
             onClose={() => setShowSettingsModal(false)}
             visibility={character.visibility}
             onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
+            onConfirmVisibility={async (v) => {
+              setCharacter(prev => prev ? { ...prev, visibility: v } : null);
+              const payload = cleanForSave({ ...character, visibility: v });
+              await saveCharacter(id, payload);
+              const label = v === 'public' ? 'Public' : v === 'private' ? 'Private' : 'Campaign';
+              showToast(`Visibility set to ${label}.`, 'success');
+              setShowSettingsModal(false);
+            }}
             canEdit={isOwner}
+            isInCampaign={isInCampaign}
           />
         )}
         
@@ -1572,6 +1648,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   unarmedProwess={character.unarmedProwess}
                   onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
                   enrichedWeapons={enrichedData?.weapons}
+                  enrichedShields={enrichedData?.shields}
                   enrichedArmor={enrichedData?.armor}
                   className="flex-1"
                 />
@@ -1583,6 +1660,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   powers={enrichedData?.powers || character.powers || []}
                   techniques={enrichedData?.techniques || character.techniques || []}
                   weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
+                  shields={(enrichedData?.shields || (character.equipment?.shields || [])) as Item[]}
                   armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
                   equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
                   currency={character.currency}
@@ -1602,6 +1680,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   onAddWeapon={() => setAddModalType('weapon')}
                   onRemoveWeapon={handleRemoveWeapon}
                   onToggleEquipWeapon={handleToggleEquipWeapon}
+                  onAddShield={() => setAddModalType('shield')}
+                  onRemoveShield={handleRemoveShield}
+                  onToggleEquipShield={handleToggleEquipShield}
                   onAddArmor={() => setAddModalType('armor')}
                   onRemoveArmor={handleRemoveArmor}
                   onToggleEquipArmor={handleToggleEquipArmor}

@@ -261,6 +261,7 @@ function CampaignCharacterViewContent() {
                   character={character}
                   isEditMode={false}
                   enrichedWeapons={enrichedData?.weapons}
+                  enrichedShields={enrichedData?.shields}
                   enrichedArmor={enrichedData?.armor}
                   className="flex-1"
                 />
@@ -269,6 +270,7 @@ function CampaignCharacterViewContent() {
                   powers={enrichedData?.powers || character.powers || []}
                   techniques={enrichedData?.techniques || character.techniques || []}
                   weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
+                  shields={(enrichedData?.shields || (character.equipment?.shields || [])) as Item[]}
                   armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
                   equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
                   currency={character.currency}
@@ -288,6 +290,9 @@ function CampaignCharacterViewContent() {
                   onAddWeapon={() => {}}
                   onRemoveWeapon={() => {}}
                   onToggleEquipWeapon={() => {}}
+                  onAddShield={() => {}}
+                  onRemoveShield={() => {}}
+                  onToggleEquipShield={() => {}}
                   onAddArmor={() => {}}
                   onRemoveArmor={() => {}}
                   onToggleEquipArmor={() => {}}

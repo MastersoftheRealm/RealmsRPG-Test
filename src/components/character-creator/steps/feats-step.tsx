@@ -336,7 +336,7 @@ export function FeatsStep() {
           { key: 'Category', value: feat.category || '-' },
           { key: 'Ability', value: formatAbilityList(feat.ability) },
           { key: 'Recovery', value: feat.rec_period || '-' },
-          { key: 'Uses', value: feat.uses_per_rec != null ? String(feat.uses_per_rec) : '-' },
+          { key: 'Uses', value: (feat.uses_per_rec == null || feat.uses_per_rec === 0) ? '-' : String(feat.uses_per_rec) },
         ]}
         detailSections={detailSections.length > 0 ? detailSections : undefined}
         selectable

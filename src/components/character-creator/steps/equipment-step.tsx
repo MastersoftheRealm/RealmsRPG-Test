@@ -59,7 +59,8 @@ const EQUIPMENT_LIST_COLUMNS: ListColumn[] = [
 ];
 const EQUIPMENT_LIST_GRID = '1.8fr 0.8fr 0.6fr 0.6fr';
 
-const RIGHT_SLOT_WIDTH = '2.5rem';
+// Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
+const RIGHT_SLOT_WIDTH = '4.5rem';
 
 // Unarmed Prowess constants
 const UNARMED_PROWESS_BASE_TP = 10;

@@ -48,6 +48,9 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
   if (data && typeof data.character !== 'undefined') {
     return { character: data.character, libraryForView: data.libraryForView };
   }
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    return { character: data as Character };
+  }
   return { character: data as Character };
 }
 

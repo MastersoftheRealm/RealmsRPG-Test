@@ -286,6 +286,40 @@ export function deriveDamageReductionFromProperties(properties: ItemPropertyPayl
   return 1 + (drProp.op_1_lvl || 0);
 }
 
+/** Dice sizes for shield amount display (level % 3 → d4, d6, d8) */
+const SHIELD_DICE_SIZES = [4, 6, 8] as const;
+
+/**
+ * Derive shield block amount (e.g. "1d4") from Shield Amount property.
+ * Item creator formula: level = ((amount*size) - 4) / 2. Reverse: amount = floor(level/3)+1, size = [4,6,8][level%3].
+ */
+export function deriveShieldAmountFromProperties(properties: ItemPropertyPayload[]): string {
+  const prop = (properties || []).find((p) => {
+    if (p.id === PROPERTY_IDS.SHIELD_AMOUNT) return true;
+    return p.name === 'Shield Amount';
+  });
+  if (!prop) return '-';
+  const level = Math.max(0, prop.op_1_lvl ?? 0);
+  const amount = Math.floor(level / 3) + 1;
+  const size = SHIELD_DICE_SIZES[level % 3];
+  return `${amount}d${size}`;
+}
+
+/**
+ * Derive shield damage dice (e.g. "1d4 Bludgeoning") from Shield Damage property, if present.
+ */
+export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload[]): string | null {
+  const prop = (properties || []).find((p) => {
+    if (p.id === PROPERTY_IDS.SHIELD_DAMAGE) return true;
+    return p.name === 'Shield Damage';
+  });
+  if (!prop || (prop.op_1_lvl ?? 0) <= 0) return null;
+  const level = Math.max(0, prop.op_1_lvl ?? 0);
+  const amount = Math.floor(level / 3) + 1;
+  const size = SHIELD_DICE_SIZES[level % 3];
+  return `${amount}d${size} Bludgeoning`;
+}
+
 /**
  * Extract proficiencies (TP sources) from properties.
  */

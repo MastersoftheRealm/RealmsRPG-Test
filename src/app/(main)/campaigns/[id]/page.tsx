@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -62,6 +62,14 @@ function CampaignDetailContent() {
   const { data: characters = [] } = useCharacters();
   const { rolls: campaignRolls = [] } = useCampaignRolls(campaignId);
   const invalidateCampaigns = useInvalidateCampaigns();
+  const rollLogScrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll campaign roll log to bottom when new rolls load
+  useEffect(() => {
+    if (campaignRolls.length > 0 && rollLogScrollRef.current) {
+      rollLogScrollRef.current.scrollTop = rollLogScrollRef.current.scrollHeight;
+    }
+  }, [campaignRolls.length]);
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -462,7 +470,7 @@ function CampaignDetailContent() {
         <p className="text-sm text-text-secondary mb-4">
           Rolls from all characters in this campaign. Updates in real time.
         </p>
-        <div className="max-h-[400px] overflow-y-auto p-2 bg-surface-alt rounded-lg">
+        <div ref={rollLogScrollRef} className="max-h-[400px] overflow-y-auto p-2 bg-surface-alt rounded-lg">
           {campaignRolls.length === 0 ? (
             <p className="text-center text-text-muted italic py-10">
               No campaign rolls yet. Rolls from character sheets will appear here.

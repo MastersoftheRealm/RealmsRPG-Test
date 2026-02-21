@@ -82,6 +82,8 @@ export {
   formatDamage as formatItemDamage,
   formatRange,
   deriveDamageReductionFromProperties,
+  deriveShieldAmountFromProperties,
+  deriveShieldDamageFromProperties,
   extractProficiencies,
   deriveItemDisplay,
   formatProficiencyChip,

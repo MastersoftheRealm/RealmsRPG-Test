@@ -93,6 +93,7 @@ export const characterCreateSchema = z.object({
 export const characterUpdateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   level: z.number().int().min(1).max(20).optional(),
+  visibility: z.enum(['private', 'campaign', 'public']).optional(),
 }).passthrough();
 
 // =============================================================================
@@ -105,10 +106,20 @@ export const encounterCreateSchema = z.object({
   description: z.string().max(5000).optional(),
 }).passthrough();
 
+const combatantSchema = z.record(z.string(), z.unknown());
 export const encounterUpdateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   type: z.enum(['combat', 'skill', 'mixed']).optional(),
   description: z.string().max(5000).optional(),
+  combatants: z.array(combatantSchema).optional(),
+  round: z.number().int().min(0).optional(),
+  currentTurnIndex: z.number().int().optional(),
+  status: z.enum(['preparing', 'active', 'completed']).optional(),
+  isActive: z.boolean().optional(),
+  campaignId: z.string().uuid().optional().nullable(),
+  applySurprise: z.boolean().optional(),
+  skillEncounter: z.record(z.string(), z.unknown()).optional().nullable(),
+  updatedAt: z.string().optional(),
 }).passthrough();
 
 // =============================================================================

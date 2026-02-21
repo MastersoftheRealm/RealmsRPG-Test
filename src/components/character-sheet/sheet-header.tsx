@@ -147,12 +147,12 @@ function ResourceInput({
         setInputValue(String(newValue));
       }
     } else {
-      // Direct value - allow any non-negative value (no upper clamp)
+      // Direct value: allow any non-negative value including above max (e.g. temp HP/over-heal)
       const newValue = parseInt(trimmed, 10);
       if (!isNaN(newValue)) {
-        const clamped = Math.max(0, newValue);
-        onChange(clamped);
-        setInputValue(String(clamped));
+        const value = Math.max(0, newValue);
+        onChange(value);
+        setInputValue(String(value));
       }
     }
     
