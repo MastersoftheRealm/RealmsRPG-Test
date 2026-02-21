@@ -476,7 +476,8 @@ function CampaignDetailContent() {
               No campaign rolls yet. Rolls from character sheets will appear here.
             </p>
           ) : (
-            campaignRolls.map((roll) => (
+            // Oldest at top, newest at bottom (API returns newest-first; reverse to match roll log elsewhere)
+            [...campaignRolls].reverse().map((roll) => (
               <RollEntryCard
                 key={roll.id}
                 roll={roll}

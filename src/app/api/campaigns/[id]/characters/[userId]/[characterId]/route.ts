@@ -81,6 +81,7 @@ export async function GET(
       const energy = charData?.energy as { max?: number; current?: number } | undefined;
       const currentHp = (charData?.currentHealth as number) ?? health?.current ?? health?.max ?? maxHealth;
       const currentEn = (charData?.currentEnergy as number) ?? energy?.current ?? energy?.max ?? maxEnergy;
+      const actionPoints = (charData?.actionPoints as number) ?? 4;
       const character = {
         name: charData?.name ?? 'Unknown',
         abilities,
@@ -94,6 +95,7 @@ export async function GET(
         },
         currentHealth: currentHp,
         currentEnergy: currentEn,
+        actionPoints,
         evasion: (charData?.evasion as number) ?? 10 + abilities.agility,
       };
       return NextResponse.json(character);

@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, DragEvent, use } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, DragEvent, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
   const [nameInput, setNameInput] = useState('');
   const [addingAllChars, setAddingAllChars] = useState(false);
   const { data: campaignsFull = [] } = useCampaignsFull();
+  const refetchedForEncounterIdRef = useRef<string | null>(null);
 
   // Initialize local state from API
   useEffect(() => {
@@ -70,7 +71,89 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
     }
   }, [encounterData, isInitialized]);
 
-  // Realtime: when character HP/EN is updated (e.g. from character sheet), sync to encounter combatants
+  // Refetch character HP/EN/AP from campaign API so cards show current values (fixes stale load and other users' characters where realtime RLS blocks updates)
+  const refetchCharacterResources = useCallback(async () => {
+    if (!encounter?.campaignId || !encounter.combatants?.length) return;
+    const linked = encounter.combatants.filter(
+      (c): c is TrackedCombatant => c.sourceType === 'campaign-character' && !!c.sourceId && !!c.sourceUserId
+    );
+    if (linked.length === 0) return;
+    const results = await Promise.all(
+      linked.map(async (c) => {
+        try {
+          const res = await fetch(
+            `/api/campaigns/${encounter!.campaignId}/characters/${c.sourceUserId}/${c.sourceId}?scope=encounter`
+          );
+          if (!res.ok) return null;
+          return { combatantId: c.id, data: await res.json() };
+        } catch {
+          return null;
+        }
+      })
+    );
+    setEncounter(prev => {
+      if (!prev) return prev;
+      let changed = false;
+      const nextCombatants = prev.combatants.map(c => {
+        const result = results.find(r => r && r.combatantId === c.id);
+        if (!result?.data) return c;
+        const d = result.data as {
+          currentHealth?: number;
+          currentEnergy?: number;
+          actionPoints?: number;
+          health?: { current?: number; max?: number };
+          energy?: { current?: number; max?: number };
+        };
+        const currentHp = d.currentHealth ?? d.health?.current;
+        const currentEn = d.currentEnergy ?? d.energy?.current;
+        const maxHp = d.health?.max;
+        const maxEn = d.energy?.max;
+        const ap = d.actionPoints;
+        if (
+          currentHp === undefined &&
+          currentEn === undefined &&
+          maxHp === undefined &&
+          maxEn === undefined &&
+          ap === undefined
+        ) {
+          return c;
+        }
+        changed = true;
+        return {
+          ...c,
+          ...(currentHp !== undefined && { currentHealth: currentHp }),
+          ...(maxHp !== undefined && { maxHealth: maxHp }),
+          ...(currentEn !== undefined && { currentEnergy: currentEn }),
+          ...(maxEn !== undefined && { maxEnergy: maxEn }),
+          ...(ap !== undefined && { ap }),
+        };
+      });
+      if (!changed) return prev;
+      return { ...prev, combatants: nextCombatants };
+    });
+  }, [encounter]);
+
+  // Refetch on load when we have campaign-character combatants (so card shows current HP/EN/AP, not stale snapshot)
+  useEffect(() => {
+    if (!isInitialized || !encounter?.campaignId || !encounter?.id) return;
+    const hasLinked = encounter.combatants?.some(
+      (c) => (c as TrackedCombatant).sourceType === 'campaign-character' && (c as TrackedCombatant).sourceId
+    );
+    if (!hasLinked) return;
+    // Only refetch once per encounter load so we don't loop (refetch updates state and would retrigger)
+    if (refetchedForEncounterIdRef.current === encounter.id) return;
+    refetchedForEncounterIdRef.current = encounter.id;
+    refetchCharacterResources();
+  }, [isInitialized, encounter?.id, encounter?.campaignId, encounter?.combatants, refetchCharacterResources]);
+
+  // Refetch when window gains focus so returning to the tab shows up-to-date HP/EN/AP (especially for other users' characters)
+  useEffect(() => {
+    const onFocus = () => refetchCharacterResources();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [refetchCharacterResources]);
+
+  // Realtime: when character HP/EN/AP is updated (e.g. from character sheet), sync to encounter combatants (own characters only due to RLS)
   const characterIdsForSync = useMemo(() => {
     if (!encounter?.combatants?.length) return [];
     return encounter.combatants
@@ -93,15 +176,19 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
           table: 'characters',
           filter,
         },
-        (payload: { new: { id: string; data?: Record<string, unknown> } }) => {
+        (payload: { new: { id: string; data?: unknown } }) => {
           const row = payload.new;
           const charId = row.id;
-          const data = row.data as { health?: { current?: number; max?: number }; energy?: { current?: number; max?: number }; currentHealth?: number; currentEnergy?: number; actionPoints?: number } | undefined;
-          if (!data) return;
-          const currentHp = data.currentHealth ?? data.health?.current;
-          const currentEn = data.currentEnergy ?? data.energy?.current;
-          const ap = data.actionPoints;
-          const hasHpEn = currentHp !== undefined || currentEn !== undefined || data.health || data.energy;
+          const raw = row.data;
+          const data = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
+          const health = data.health as { current?: number; max?: number } | undefined;
+          const energy = data.energy as { current?: number; max?: number } | undefined;
+          const currentHp = (data.currentHealth as number) ?? health?.current;
+          const currentEn = (data.currentEnergy as number) ?? energy?.current;
+          const maxHp = health?.max;
+          const maxEn = energy?.max;
+          const ap = data.actionPoints as number | undefined;
+          const hasHpEn = currentHp !== undefined || currentEn !== undefined || maxHp !== undefined || maxEn !== undefined;
           const hasAp = ap !== undefined;
           if (!hasHpEn && !hasAp) return;
           setEncounter(prev => {
@@ -114,9 +201,9 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
                 if ((c as TrackedCombatant).sourceId !== charId) return c;
                 const updates: Partial<TrackedCombatant> = { ...c };
                 if (currentHp !== undefined) updates.currentHealth = currentHp;
-                if (data.health?.max !== undefined) updates.maxHealth = data.health.max;
+                if (maxHp !== undefined) updates.maxHealth = maxHp;
                 if (currentEn !== undefined) updates.currentEnergy = currentEn;
-                if (data.energy?.max !== undefined) updates.maxEnergy = data.energy.max;
+                if (maxEn !== undefined) updates.maxEnergy = maxEn;
                 if (hasAp) updates.ap = ap ?? 4;
                 return { ...c, ...updates };
               }),
