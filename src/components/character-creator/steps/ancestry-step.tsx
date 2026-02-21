@@ -273,8 +273,8 @@ export function AncestryStep() {
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedTraitIds.length === maxAncestryTraits
-                ? 'bg-green-200 text-green-800'
-                : 'bg-amber-200 text-amber-800'
+                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                : 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
             )}>
               {selectedTraitIds.length} / {maxAncestryTraits}
             </span>
@@ -295,7 +295,7 @@ export function AncestryStep() {
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedCharacteristic
-                ? 'bg-green-200 text-green-800'
+                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
                 : 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
             )}>
               {selectedCharacteristic ? '1' : '0'} / 1
@@ -315,7 +315,7 @@ export function AncestryStep() {
             <span className={cn(
               'px-2 py-0.5 rounded-full text-xs font-bold',
               selectedFlaw
-                ? 'bg-red-200 text-red-800'
+                ? 'bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300'
                 : 'bg-surface text-text-secondary'
             )}>
               {selectedFlaw ? '1' : '0'} / 1

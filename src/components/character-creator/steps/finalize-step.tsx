@@ -572,8 +572,8 @@ export function FinalizeStep() {
                       'px-2 py-1 rounded text-sm font-medium',
                       isPowerAbil ? 'bg-power-light text-power-dark' :
                       isMartAbil ? 'bg-martial-light text-martial-dark' :
-                      value > 0 ? 'bg-green-100 text-green-700' :
-                      value < 0 ? 'bg-red-100 text-red-700' :
+                      value > 0 ? 'bg-green-100 text-green-700 dark:bg-success-900/30 dark:text-success-300' :
+                      value < 0 ? 'bg-red-100 text-red-700 dark:bg-danger-900/30 dark:text-danger-300' :
                       'bg-surface-alt text-text-secondary'
                     )}
                   >
@@ -680,7 +680,7 @@ export function FinalizeStep() {
           'mb-6 p-4 rounded-xl',
           validationIssues.some(i => i.severity === 'error') 
             ? 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700/50' 
-            : 'bg-amber-50 border border-amber-200'
+            : 'bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50'
         )}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xl">

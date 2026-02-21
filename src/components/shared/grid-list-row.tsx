@@ -233,28 +233,26 @@ export const GridListRow = memo(function GridListRow({
   };
   
   const handleRowClick = () => {
-    // When selectable (e.g. add-X modals), row click toggles selection for better discoverability
-    if (selectable && onSelect) {
-      if (!disabled) onSelect();
+    // When selectable (add-X modals): row click only expand/collapse so users can read details
+    // before adding; selection is done only via the + button.
+    if (selectable) {
+      if (showExpander) setExpanded(!isExpanded);
       return;
     }
-    // Otherwise row click toggles expansion
     if (showExpander) {
       setExpanded(!isExpanded);
     }
   };
 
-  // Determine row styling based on state
+  // Determine row styling based on state (equipped: no row green/checkmark — toggle is enough)
   const rowStyles = cn(
     'bg-surface transition-all rounded-lg border overflow-hidden',
     // Selection state
     isSelected && 'bg-primary-50 border-l-4 border-l-primary-500',
-    // Equipped state (green styling)
-    equipped && !isSelected && 'border-success-300 dark:border-success-600/50 bg-success-50 dark:bg-success-900/30',
     // Innate state (purple styling)
-    innate && !isSelected && !equipped && 'border-violet-300 dark:border-violet-600/50 bg-violet-50 dark:bg-violet-900/30',
+    innate && !isSelected && 'border-violet-300 dark:border-violet-600/50 bg-violet-50 dark:bg-violet-900/30',
     // Default border
-    !isSelected && !equipped && !innate && 'border-border-light',
+    !isSelected && !innate && 'border-border-light',
     // Disabled state
     disabled && 'opacity-50',
     className
@@ -271,9 +269,9 @@ export const GridListRow = memo(function GridListRow({
     <div className={rowStyles}>
       {/* Main Row */}
       <div className="flex items-center min-h-[44px]">
-        {/* Left Slot - renders before clickable content (e.g., equip toggle, innate toggle) */}
+        {/* Left Slot - fixed width so column content aligns with headers */}
         {leftSlot && (
-          <div className="flex-shrink-0 flex items-center justify-center pl-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex-shrink-0 flex items-center justify-center w-8 min-w-[2rem]" onClick={(e) => e.stopPropagation()}>
             {leftSlot}
           </div>
         )}
@@ -296,10 +294,6 @@ export const GridListRow = memo(function GridListRow({
             useFlex && 'flex-1'
           )}>
             <span className="truncate">{name}</span>
-            {/* Equipped indicator */}
-            {equipped && (
-              <span className="text-success-600 flex-shrink-0">✓</span>
-            )}
             {/* Innate indicator */}
             {innate && (
               <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
@@ -381,9 +375,16 @@ export const GridListRow = memo(function GridListRow({
 
         </button>
         
+        {/* Right Slot - use button, roll buttons, etc. (before delete so X is at far right) */}
+        {rightSlot && (
+          <div className="flex items-center flex-shrink-0 justify-center w-[4rem]" onClick={(e) => e.stopPropagation()}>
+            {rightSlot}
+          </div>
+        )}
+
         {/* Inline Edit pencil - visible in collapsed state for quick editing */}
         {onEdit && (
-          <div className="flex items-center flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center flex-shrink-0 w-9 justify-center" onClick={(e) => e.stopPropagation()}>
             <IconButton
               variant="ghost"
               size="sm"
@@ -396,9 +397,9 @@ export const GridListRow = memo(function GridListRow({
           </div>
         )}
 
-        {/* Delete X - simple red X matching add button style, visible in collapsed state */}
+        {/* Delete X - at far right after use button */}
         {onDelete && (
-          <div className="flex items-center flex-shrink-0 pr-1" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center flex-shrink-0 justify-center w-9 pr-1" onClick={(e) => e.stopPropagation()}>
             <IconButton
               variant="ghost"
               size="sm"
@@ -408,13 +409,6 @@ export const GridListRow = memo(function GridListRow({
             >
               <X className="w-4 h-4" />
             </IconButton>
-          </div>
-        )}
-        
-        {/* Right Slot - renders after clickable content (e.g., roll buttons, use button) */}
-        {rightSlot && (
-          <div className="flex items-center flex-shrink-0 pr-2" onClick={(e) => e.stopPropagation()}>
-            {rightSlot}
           </div>
         )}
         

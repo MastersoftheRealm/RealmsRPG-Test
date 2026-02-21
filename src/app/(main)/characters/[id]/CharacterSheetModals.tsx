@@ -10,7 +10,9 @@ import {
   AddFeatModal,
   LevelUpModal,
   RecoveryModal,
+  EditArchetypeModal,
 } from '@/components/character-sheet';
+import type { EditArchetypeResult } from '@/components/character-sheet';
 import { DeleteConfirmModal, AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { CharacterSheetStats } from './character-sheet-utils';
 
@@ -69,6 +71,9 @@ interface CharacterSheetModalsProps {
   onLevelUp: (newLevel: number) => void;
   onFullRecovery: () => void;
   onPartialRecovery: (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => void;
+  showEditArchetypeModal: boolean;
+  setShowEditArchetypeModal: (v: boolean) => void;
+  onArchetypeSave: (result: EditArchetypeResult) => void;
 }
 
 export function CharacterSheetModals({
@@ -96,9 +101,21 @@ export function CharacterSheetModals({
   onLevelUp,
   onFullRecovery,
   onPartialRecovery,
+  showEditArchetypeModal,
+  setShowEditArchetypeModal,
+  onArchetypeSave,
 }: CharacterSheetModalsProps) {
   return (
     <>
+      {character && (
+        <EditArchetypeModal
+          isOpen={showEditArchetypeModal}
+          onClose={() => setShowEditArchetypeModal(false)}
+          character={character}
+          onSave={onArchetypeSave}
+        />
+      )}
+
       {addModalType && (
         <AddLibraryItemModal
           isOpen={!!addModalType}

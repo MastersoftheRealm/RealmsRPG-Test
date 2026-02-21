@@ -30,12 +30,13 @@ import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusFo
 import { formatAbilityList } from '@/lib/utils';
 import type { ArchetypeCategory } from '@/types';
 
-// Grid columns for feat display (Name, Category, Ability, Uses, Add)
-const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+// Grid columns for feat display (Name, Category, Ability, Recovery, Uses, Add) — match Codex
+const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
 const FEAT_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
   { key: 'ability', label: 'ABILITY' },
+  { key: 'rec_period', label: 'RECOVERY', sortable: false as const },
   { key: 'uses_per_rec', label: 'USES', sortable: false as const },
   { key: '_actions', label: '', sortable: false as const },
 ];
@@ -334,7 +335,8 @@ export function FeatsStep() {
         columns={[
           { key: 'Category', value: feat.category || '-' },
           { key: 'Ability', value: formatAbilityList(feat.ability) },
-          { key: 'Uses', value: feat.uses_per_rec ? `${feat.uses_per_rec}/${feat.rec_period || 'rest'}` : '-' },
+          { key: 'Recovery', value: feat.rec_period || '-' },
+          { key: 'Uses', value: feat.uses_per_rec != null ? String(feat.uses_per_rec) : '-' },
         ]}
         detailSections={detailSections.length > 0 ? detailSections : undefined}
         selectable
@@ -381,8 +383,8 @@ export function FeatsStep() {
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedArchetypeFeats.length === maxArchetypeFeats
-                ? 'bg-green-200 text-green-800'
-                : 'bg-amber-200 text-amber-800'
+                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                : 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
             )}>
               {selectedArchetypeFeats.length} / {maxArchetypeFeats}
             </span>
@@ -436,7 +438,7 @@ export function FeatsStep() {
             <span className={cn(
               'px-3 py-1 rounded-full text-sm font-bold',
               selectedCharacterFeats.length === maxCharacterFeats
-                ? 'bg-green-200 text-green-800'
+                ? 'bg-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300'
                 : 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300'
             )}>
               {selectedCharacterFeats.length} / {maxCharacterFeats}

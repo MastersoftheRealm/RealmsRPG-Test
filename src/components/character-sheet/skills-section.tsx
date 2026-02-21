@@ -43,6 +43,8 @@ interface SkillsSectionProps {
   abilities: Abilities;
   isEditMode?: boolean;
   totalSkillPoints?: number;
+  /** When provided, used for PointStatus and pencil state (includes defense spending). Enables red pencil when overspent. */
+  spentSkillPoints?: number;
   // Species skills are locked and can't have proficiency removed
   speciesSkills?: string[];
   onSkillChange?: (skillId: string, updates: Partial<Skill>) => void;
@@ -61,6 +63,7 @@ export function SkillsSection({
   abilities,
   isEditMode = false,
   totalSkillPoints,
+  spentSkillPoints: spentSkillPointsProp,
   speciesSkills = [],
   onSkillChange,
   onRemoveSkill,
@@ -121,8 +124,7 @@ export function SkillsSection({
         // Make proficient and set skill_val to 1
         onSkillChange(skill.id, { prof: true, skill_val: 1 });
       } else {
-        // Already proficient: increase skill_val (capped at MAX_SKILL_VALUE)
-        if (skill.skill_val >= MAX_SKILL_VALUE) return;
+        // Allow override: can increase past cap (red pencil indicates overspend)
         onSkillChange(skill.id, { skill_val: skill.skill_val + 1 });
       }
     } else {
@@ -131,8 +133,7 @@ export function SkillsSection({
         // Not proficient: make proficient first; value stays 0 (per GAME_RULES)
         onSkillChange(skill.id, { prof: true, skill_val: 0 });
       } else {
-        // Already proficient or species skill: increase skill_val (capped at MAX_SKILL_VALUE)
-        if (skill.skill_val >= MAX_SKILL_VALUE) return;
+        // Already proficient or species skill: allow override past cap (red pencil when overspent)
         onSkillChange(skill.id, { skill_val: skill.skill_val + 1 });
       }
     }
@@ -198,8 +199,8 @@ export function SkillsSection({
     return result;
   }, [baseSkills, subSkillsByParent]);
   
-  // Calculate total skill points spent (excluding species skill proficiency costs)
-  const totalSpent = useMemo(() => {
+  // Calculate total skill points spent on skills only (excluding species skill proficiency costs)
+  const totalSpentFromSkills = useMemo(() => {
     return skills.reduce((sum, skill) => {
       let cost = skill.skill_val || 0;
       // Proficiency costs 1 for base skills, but species skills are free
@@ -211,7 +212,9 @@ export function SkillsSection({
       return sum + cost;
     }, 0);
   }, [skills]);
-  
+
+  // Use page-provided spent (includes defenses) when available for display and pencil state; else skills-only
+  const totalSpent = spentSkillPointsProp ?? totalSpentFromSkills;
   const remaining = totalSkillPoints !== undefined ? totalSkillPoints - totalSpent : undefined;
 
   // Single source of truth: use shared formulas (GAME_RULES) — same as character creator and creature creator
@@ -236,12 +239,11 @@ export function SkillsSection({
     return calculateSkillBonusWithProficiency(linkedAbilities, skillValue, abilities, isProficient, skill.ability);
   };
 
-  // Note: PointStatus component handles color states automatically
-  
-  // Calculate edit state for pencil icon color
-  const skillEditState = totalSkillPoints !== undefined 
-    ? getEditState(totalSpent, totalSkillPoints)
-    : 'normal';
+  // Note: PointStatus component handles color states automatically (including overspent = red)
+
+  // Calculate edit state for pencil icon: red when overspent, green when points remaining
+  const skillEditState =
+    totalSkillPoints !== undefined ? getEditState(totalSpent, totalSkillPoints) : 'normal';
   
   return (
     <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6", className)}>
@@ -340,7 +342,7 @@ export function SkillsSection({
                       handleSkillDecrease(skill);
                     }
                   }}
-                  canIncrease={(remaining === undefined || remaining > 0) && skill.skill_val < MAX_SKILL_VALUE}
+                  canIncrease={true}
                   onRemove={showEditControls && onRemoveSkill 
                     ? () => onRemoveSkill(skill.id) 
                     : undefined

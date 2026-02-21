@@ -1,13 +1,15 @@
 /**
  * Add Library Item Modal — UnifiedSelectionModal wrapper
- * Adds powers, techniques, or items from the user's library to the character sheet.
+ * Adds powers, techniques, or items from the user's library or public library to the character sheet.
+ * Source filter: All sources / Public library / My library (same as Library page). References only — no copy to user library.
  */
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useUserPowers, useUserTechniques, useUserItems } from '@/hooks/use-user-library';
-import { useEquipment, useTechniqueParts } from '@/hooks';
+import { useEquipment, useTechniqueParts, usePublicLibrary } from '@/hooks';
+import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { formatDamageDisplay } from '@/lib/utils';
@@ -113,34 +115,68 @@ export function AddLibraryItemModal({
   existingIds,
   onAdd,
 }: AddLibraryItemModalProps) {
+  const [source, setSource] = useState<SourceFilterValue>('all');
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
   const { data: userItems = [], isLoading: itemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: equipmentLoading } = useEquipment();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: publicPowers = [], isLoading: publicPowersLoading } = usePublicLibrary('powers');
+  const { data: publicTechniques = [], isLoading: publicTechniquesLoading } = usePublicLibrary('techniques');
+  const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
 
   const { rawItems, isLoading } = useMemo(() => {
+    const normalizePublicPower = (p: Record<string, unknown>): UserPower => {
+      const id = String(p.id ?? p.docId ?? '');
+      return { id, docId: id, name: String(p.name ?? ''), description: String(p.description ?? ''), parts: (p.parts ?? []) as UserPower['parts'], actionType: p.actionType, isReaction: !!p.isReaction, range: p.range, area: p.area, duration: p.duration, damage: p.damage } as UserPower;
+    };
+    const normalizePublicTechnique = (t: Record<string, unknown>): UserTechnique => {
+      const id = String(t.id ?? t.docId ?? '');
+      return { id, docId: id, name: String(t.name ?? ''), description: String(t.description ?? ''), parts: (t.parts ?? []) as UserTechnique['parts'], weapon: t.weapon, damage: t.damage } as UserTechnique;
+    };
+    const normalizePublicItem = (i: Record<string, unknown>): UserItem | EqItem => {
+      const id = String(i.id ?? i.docId ?? '');
+      return { id, docId: id, name: String(i.name ?? ''), description: String(i.description ?? ''), type: ((i.type as string) || 'equipment') as UserItem['type'], properties: (i.properties ?? []) as UserItem['properties'], damage: i.damage, armorValue: i.armorValue as number | undefined } as UserItem;
+    };
+
     switch (itemType) {
-      case 'power':
-        return { rawItems: userPowers as (UserPower | UserTechnique | UserItem | EqItem)[], isLoading: powersLoading };
-      case 'technique':
-        return { rawItems: userTechniques as (UserPower | UserTechnique | UserItem | EqItem)[], isLoading: techniquesLoading };
-      case 'weapon':
-        return { rawItems: userItems.filter((i: UserItem) => i.type === 'weapon'), isLoading: itemsLoading };
-      case 'armor':
-        return { rawItems: userItems.filter((i: UserItem) => i.type === 'armor'), isLoading: itemsLoading };
+      case 'power': {
+        const my = (source === 'my' || source === 'all') ? (userPowers as (UserPower | UserTechnique | UserItem | EqItem)[]) : [];
+        const pub = (source === 'public' || source === 'all') ? (publicPowers as Record<string, unknown>[]).map(normalizePublicPower) : [];
+        const merged = [...my, ...pub];
+        return { rawItems: merged, isLoading: (source !== 'public' && powersLoading) || (source !== 'my' && publicPowersLoading) };
+      }
+      case 'technique': {
+        const my = (source === 'my' || source === 'all') ? (userTechniques as (UserPower | UserTechnique | UserItem | EqItem)[]) : [];
+        const pub = (source === 'public' || source === 'all') ? (publicTechniques as Record<string, unknown>[]).map(normalizePublicTechnique) : [];
+        const merged = [...my, ...pub];
+        return { rawItems: merged, isLoading: (source !== 'public' && techniquesLoading) || (source !== 'my' && publicTechniquesLoading) };
+      }
+      case 'weapon': {
+        const my = (source === 'my' || source === 'all') ? userItems.filter((i: UserItem) => i.type === 'weapon') : [];
+        const pub = (source === 'public' || source === 'all') ? (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || '').toString().toLowerCase() === 'weapon').map(normalizePublicItem) : [];
+        const merged = [...my, ...pub];
+        return { rawItems: merged, isLoading: (source !== 'public' && itemsLoading) || (source !== 'my' && publicItemsLoading) };
+      }
+      case 'armor': {
+        const my = (source === 'my' || source === 'all') ? userItems.filter((i: UserItem) => i.type === 'armor') : [];
+        const pub = (source === 'public' || source === 'all') ? (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || '').toString().toLowerCase() === 'armor').map(normalizePublicItem) : [];
+        const merged = [...my, ...pub];
+        return { rawItems: merged, isLoading: (source !== 'public' && itemsLoading) || (source !== 'my' && publicItemsLoading) };
+      }
       case 'equipment': {
         const codexEquip = codexEquipment.filter((e: { type?: string }) => (e.type || 'equipment') === 'equipment');
-        const userEquip = userItems.filter((i: UserItem) => (i.type || '').toLowerCase() === 'equipment');
+        const userEquip = (source === 'my' || source === 'all') ? userItems.filter((i: UserItem) => (i.type || '').toLowerCase() === 'equipment') : [];
+        const publicEquip = (source === 'public' || source === 'all') ? (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || 'equipment').toString().toLowerCase() === 'equipment').map(normalizePublicItem) : [];
         const merged: EqItem[] = [
-          ...codexEquip.map((e: { id: string; name?: string; description?: string; damage?: unknown; armor_value?: number; properties?: string[] }) => ({
+          ...(source === 'my' || source === 'all' ? codexEquip.map((e: { id: string; name?: string; description?: string; damage?: unknown; armor_value?: number; properties?: string[] }) => ({
             id: e.id,
             name: String(e.name ?? ''),
             description: String(e.description ?? ''),
             damage: e.damage,
             armorValue: e.armor_value,
             properties: e.properties ?? [],
-          })),
+          })) : []),
           ...userEquip.map((i: UserItem) => ({
             id: i.id,
             name: String(i.name ?? ''),
@@ -149,13 +185,21 @@ export function AddLibraryItemModal({
             armorValue: i.armorValue,
             properties: (i.properties || []).map((p: { name?: string } | string) => typeof p === 'string' ? p : (p as { name?: string }).name).filter(Boolean) as string[],
           })),
+          ...publicEquip.map((i: UserItem | EqItem) => ({
+            id: i.id,
+            name: String(i.name ?? ''),
+            description: String(i.description ?? ''),
+            damage: (i as UserItem).damage,
+            armorValue: (i as UserItem).armorValue,
+            properties: ((i as UserItem).properties || []).map((p: { name?: string } | string) => typeof p === 'string' ? p : (p as { name?: string }).name).filter(Boolean) as string[],
+          })),
         ];
-        return { rawItems: merged, isLoading: itemsLoading || equipmentLoading };
+        return { rawItems: merged, isLoading: (source !== 'public' && (itemsLoading || equipmentLoading)) || (source !== 'my' && publicItemsLoading) };
       }
       default:
         return { rawItems: [], isLoading: false };
     }
-  }, [itemType, userPowers, userTechniques, userItems, codexEquipment, powersLoading, techniquesLoading, itemsLoading, equipmentLoading]);
+  }, [itemType, source, userPowers, userTechniques, userItems, codexEquipment, publicPowers, publicTechniques, publicItems, powersLoading, techniquesLoading, itemsLoading, equipmentLoading, publicPowersLoading, publicTechniquesLoading, publicItemsLoading]);
 
   const items: SelectableItem[] = useMemo(() => {
     return rawItems
@@ -262,6 +306,7 @@ export function AddLibraryItemModal({
       onClose={onClose}
       title={getTitle(itemType)}
       description="Click a row (or the + button) to select, then click Add Selected."
+      headerExtra={<SourceFilter value={source} onChange={setSource} />}
       items={items}
       isLoading={isLoading}
       onConfirm={handleConfirm}
@@ -270,7 +315,7 @@ export function AddLibraryItemModal({
       itemLabel={itemType}
       emptyMessage={emptyTitle}
       emptySubMessage={emptyDesc}
-      searchPlaceholder={`Search your ${itemType}s...`}
+      searchPlaceholder={`Search ${itemType}s...`}
       showQuantity={itemType === 'equipment'}
       size="lg"
       className="max-h-[60vh]"

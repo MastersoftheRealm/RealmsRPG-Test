@@ -864,3 +864,34 @@ Notes
 - Priority: High
 - Feedback: Can't seem to add equipment, armaments, or techniques to my character. Could be a modal problem between the character sheet and creator, or something else.
 - Expected: User can add powers, techniques, weapons, armor, and equipment from the add modals (select items, confirm, and see them on the character). Same in character creator where applicable.
+
+**Raw Feedback Log — 2026-02-21 (Dark mode audit — bright element backgrounds)**
+- Date: 2026-02-21
+- Context: Character creator, creators (power/technique/item/creature), codex/libraries
+- Priority: Medium
+- Feedback: Dark mode audit: Reset button in character creator is too bright background, finished steps are a too bright white green in character creator, add sub skill button has too bright of a button background. Look for other instances of these bright backgrounds for individual elements that are too bright for dark mode, such as the backgrounds in the creators for things like IP, EN, TP etc, summary items, creature creator components, background for column headers in codex/libraries, etc.
+- Expected: All listed elements use dark-mode-appropriate backgrounds (design tokens with dark variants or explicit dark: classes) so no bright white/green/teal/amber panels or buttons in dark mode.
+- Implemented 2026-02-21: Reset/secondary Button, creator tab bar (finished steps + Restart), Add Sub-Skill button, ListHeader, creator summary panel, equipment/finalize/feats/ancestry steps, creature creator chip/stat panels — dark variants applied.
+
+**Raw Feedback Log — 2026-02-21 (Portrait not loading, save indicator, species/traits on species change)**
+- Date: 2026-02-21
+- Context: Character sheet portrait upload, character sheet toolbar, character creator species/ancestry steps
+- Priority: High
+- Feedback: (1) I keep uploading and cropping my portrait but it doesn't load in my character sheet, no errors appear so I don't know why it won't. (2) Remove the save indicator bubble from the character sheet, we don't need it since we trust the autosave process. (3) If I choose a species, pick traits, then go back and change the species I chose, it still counts it as having selected all the flaws/traits from the previous species or something, seems to be an error.
+- Expected: (1) Portrait displays on the sheet after upload/crop. (2) No save state indicator in the toolbar. (3) Changing species clears previous ancestry trait/flaw/characteristic selections so the new species requires fresh choices.
+- Implemented 2026-02-21: Portrait: added portraitRefreshKey after upload so the header image remounts and uses a cache-bust query param so the new image loads. Save indicator: removed from SheetActionToolbar and related props. Species: setSpecies now resets selectedTraits, selectedFlaw, selectedCharacteristic when species changes so ancestry step does not carry over old selections.
+
+**Raw Feedback Log — 2026-02-21 (Add skill modal abilities + add modals expand vs add)**
+- Date: 2026-02-21
+- Context: Add Skill modal (collapsed row), Add modals (add feat, add skill, add library item)
+- Priority: High
+- Feedback: (1) Add skill modal: In collapsed mode, display abilities as little card things; under Abilities it currently shows the skill name and the ability — format them like the sub skill ability column with a list of abilities attached to the skill in abbreviated form (STR, AGI, etc.). (2) Add modals: Each item in the list needs to be expandable so you know what you're adding (descriptions, properties, parts, etc. as in codex/library). Clicking a collapsed card should not "add" it unless you hit the + part of the card; otherwise it should expand/collapse.
+- Expected: (1) Add skill modal: Abilities column shows abbreviated ability chips (STR, AGI, …); expanded view has Abilities section in same abbreviated list style. (2) Add modals: Row click only expand/collapse; selection only via + button.
+- Implemented 2026-02-21: add-skill-modal: getAbilityAbbrList + buildAbilityDisplay; abilities column shows chips (ReactNode); detailSections include Abilities (abbreviated chips). grid-list-row: when selectable, handleRowClick only toggles expansion, never calls onSelect; selection only via SelectionToggle (+). add-skill description updated to "Expand a row to view details. Use the + button to add."
+
+**Raw Feedback Log — 2026-02-21 (Powers/techniques/armor/weapons modals: source switch + public library, DB usage)**
+- Date: 2026-02-21
+- Context: Character creator, character sheet, creature creator — modals that add powers, techniques, armor, weapons (public library options)
+- Priority: High
+- Feedback: In the modals that correlate with public library/user library, allow switching the source from my library, to public library, to all sources, using the same component used in the library page, same styles, logic, etc., so users can easily add public things to their characters. Question: Should adding a public item to a character copy it to the user's personal library first, then add that version to the character (copy then add)? Or would that use too much Supabase data? Should we only add to personal library when they explicitly do so on the Library page, and otherwise keep the character referencing the public library (no copy)?
+- Expected: (1) Add-X modals support source filter (My library / Public library / All sources) like Library page. (2) Clear, cost-conscious design: either reference public items on the character without copying, or copy-only-when-explicit so DB usage stays low.

@@ -14,7 +14,8 @@
 import { useMemo, useState } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from './roll-context';
-import { RollButton, PointStatus, EditSectionToggle, getEditState, DecrementButton, IncrementButton } from '@/components/shared';
+import { RollButton, PointStatus, EditSectionToggle, DecrementButton, IncrementButton } from '@/components/shared';
+import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 // =============================================================================
@@ -157,10 +158,10 @@ export function AbilitiesSection({
     return spent;
   }, [abilities]);
   
-  // Calculate defense skill points spent (2 per point)
+  // Defense allocation cost: DEFENSE_INCREASE_COST skill points per +1 (core rules: 2)
   const calculatedDefenseSpent = useMemo(() => {
     if (!defenseSkills) return 0;
-    return Object.values(defenseSkills).reduce((sum, val) => sum + ((val || 0) * 2), 0);
+    return Object.values(defenseSkills).reduce((sum, val) => sum + ((val || 0) * DEFENSE_INCREASE_COST), 0);
   }, [defenseSkills]);
   
   const getDefenseValue = (defenseKey: keyof DefenseSkills): number => {
@@ -181,11 +182,20 @@ export function AbilitiesSection({
   const maxAbility = ABILITY_CONSTRAINTS.getMaxAbility(level);
   const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
   
-  // Calculate edit state for pencil icon color
-  const abilityEditState = totalAbilityPoints !== undefined 
-    ? getEditState(spentAbilityPoints ?? calculatedSpentAbilityPoints, totalAbilityPoints)
-    : 'normal';
-  
+  // Calculate edit state for pencil icon: red when over (ability or skill points), green when either has remaining
+  const abilityRemaining = totalAbilityPoints !== undefined
+    ? totalAbilityPoints - (spentAbilityPoints ?? calculatedSpentAbilityPoints)
+    : 0;
+  const skillPointsRemaining = totalSkillPoints !== undefined
+    ? totalSkillPoints - (spentSkillPoints ?? 0)
+    : 0;
+  const abilityEditState =
+    totalAbilityPoints !== undefined || totalSkillPoints !== undefined
+      ? (abilityRemaining < 0 || skillPointsRemaining < 0
+          ? 'over-budget'
+          : (abilityRemaining > 0 || skillPointsRemaining > 0 ? 'has-points' : 'normal'))
+      : 'normal';
+
   return (
     <div className="bg-surface rounded-xl shadow-md p-4 md:p-6 mb-4 relative">
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
@@ -223,14 +233,14 @@ export function AbilitiesSection({
             {totalSkillPoints !== undefined && (
               <PointStatus
                 label="Skill Points (Defenses)"
-                spent={(spentSkillPoints ?? 0) + calculatedDefenseSpent}
+                spent={spentSkillPoints ?? 0}
                 total={totalSkillPoints}
                 variant="inline"
               />
             )}
           </div>
           <div className="text-xs text-text-muted">
-            Max ability: +{maxAbility} | Defense skill: 2sp each (max +{maxDefenseSkill})
+            Max ability: +{maxAbility} | Defense: {DEFENSE_INCREASE_COST}sp per +1 (max +{maxDefenseSkill}, over allowed)
           </div>
         </div>
       )}
@@ -312,8 +322,9 @@ export function AbilitiesSection({
             const defenseValue = getDefenseValue(defenseKey);
             const defenseBonus = getDefenseBonus(ability);
             const defenseScore = getDefenseScore(ability);
-            const canIncreaseDefense = defenseValue < maxDefenseSkill;
             const canDecreaseDefense = defenseValue > 0;
+            // Allow override: can increase even over level cap (red pencil indicates overspend)
+            const atOrOverLevelCap = defenseValue >= maxDefenseSkill;
             
             return (
               <div
@@ -343,9 +354,8 @@ export function AbilitiesSection({
                     </span>
                     <IncrementButton
                       onClick={() => onDefenseChange?.(defenseKey, defenseValue + 1)}
-                      disabled={!canIncreaseDefense}
                       size="sm"
-                      title={canIncreaseDefense ? 'Cost: 2 skill points' : `Max at level ${level}`}
+                      title={atOrOverLevelCap ? `Cost: ${DEFENSE_INCREASE_COST} skill points (over level cap — allowed)` : `Cost: ${DEFENSE_INCREASE_COST} skill points`}
                     />
                   </div>
                 ) : rollContext?.canRoll !== false ? (
@@ -361,7 +371,7 @@ export function AbilitiesSection({
                 {/* Defense skill allocation indicator */}
                 {showEditControls && defenseValue > 0 && (
                   <span className="text-[9px] text-primary-600 dark:text-primary-400 font-medium mt-0.5">
-                    +{defenseValue} ({defenseValue * 2}sp)
+                    +{defenseValue} ({defenseValue * DEFENSE_INCREASE_COST}sp)
                   </span>
                 )}
               </div>

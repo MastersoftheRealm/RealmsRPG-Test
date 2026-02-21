@@ -4,40 +4,33 @@
  * Floating action icons for the character sheet.
  * Positioned top-right, below the main navbar.
  * Replaces the old sticky top bar with compact, unintrusive icons.
- * 
+ *
  * Actions:
  * - Edit/Done toggle (with notification dot for unapplied points)
  * - Recovery modal trigger
  * - Level Up modal trigger
- * - Save state indicator
  */
 
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Pencil, Check, Heart, ArrowUp, Save, Loader2, AlertCircle, Settings } from 'lucide-react';
+import { Pencil, Check, Heart, ArrowUp, Settings } from 'lucide-react';
 
 interface SheetActionToolbarProps {
   isEditMode: boolean;
   hasUnappliedPoints: boolean;
-  hasUnsavedChanges: boolean;
-  isSaving: boolean;
-  lastSaved: Date | null;
   onToggleEditMode: () => void;
   onRecovery: () => void;
   onLevelUp: () => void;
   /** Open character sheet settings (e.g. visibility). Shown for owners. */
   onSettings?: () => void;
-  /** When false, hide edit/recovery/level-up/save (view-only mode for non-owners). */
+  /** When false, hide edit/recovery/level-up (view-only mode for non-owners). */
   canEdit?: boolean;
 }
 
 export function SheetActionToolbar({
   isEditMode,
   hasUnappliedPoints,
-  hasUnsavedChanges,
-  isSaving,
-  lastSaved,
   onToggleEditMode,
   onRecovery,
   onLevelUp,
@@ -128,45 +121,6 @@ export function SheetActionToolbar({
           <Settings className="w-5 h-5" />
         </button>
       )}
-
-      {/* Save State Indicator */}
-      <div
-        className={cn(
-          'w-11 h-11 rounded-full shadow-lg transition-all duration-200',
-          'flex items-center justify-center',
-          isSaving
-            ? 'bg-surface border border-border-light text-text-muted'
-            : hasUnsavedChanges
-              ? 'bg-warning-50 border border-warning-300 text-warning-600'
-              : lastSaved
-                ? 'bg-success-50 border border-success-300 text-success-600'
-                : 'bg-surface border border-border-light text-text-muted'
-        )}
-        title={
-          isSaving
-            ? 'Saving...'
-            : hasUnsavedChanges
-              ? 'Unsaved changes'
-              : lastSaved
-                ? 'Saved'
-                : 'No changes'
-        }
-        aria-label={
-          isSaving
-            ? 'Saving...'
-            : hasUnsavedChanges
-              ? 'Unsaved changes'
-              : 'Saved'
-        }
-      >
-        {isSaving ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : hasUnsavedChanges ? (
-          <AlertCircle className="w-4 h-4" />
-        ) : (
-          <Save className="w-4 h-4" />
-        )}
-      </div>
     </div>
   );
 }

@@ -44,6 +44,8 @@ interface SheetHeaderProps {
   onEnergyPointsChange?: (value: number) => void;
   onPortraitChange?: (file: File) => void | Promise<void>;
   isUploadingPortrait?: boolean;
+  /** After upload, pass a timestamp so the portrait image reloads (cache-bust). */
+  portraitRefreshKey?: number | null;
   // Character name editing
   onNameChange?: (name: string) => void;
   // Experience editing
@@ -56,6 +58,8 @@ interface SheetHeaderProps {
   // Innate info from archetype progression
   innateThreshold?: number;
   innatePools?: number;
+  // Edit archetype/ability (opens modal from sheet)
+  onEditArchetype?: () => void;
 }
 
 /**
@@ -432,6 +436,7 @@ export function SheetHeader({
   onEnergyPointsChange,
   onPortraitChange,
   isUploadingPortrait = false,
+  portraitRefreshKey = null,
   onNameChange,
   onExperienceChange,
   speedBase = 6,
@@ -440,6 +445,7 @@ export function SheetHeader({
   onEvasionBaseChange,
   innateThreshold = 0,
   innatePools = 0,
+  onEditArchetype,
 }: SheetHeaderProps) {
   const ctx = useCharacterSheetOptional();
   const character = (ctx?.character ?? characterProp) as Character;
@@ -520,7 +526,12 @@ export function SheetHeader({
             title={isEditMode && onPortraitChange ? "Click to change portrait" : undefined}
           >
             <Image
-              src={character.portrait || '/images/placeholder-portrait.png'}
+              key={`portrait-${character.portrait ?? ''}-${portraitRefreshKey ?? ''}`}
+              src={
+                character.portrait
+                  ? `${character.portrait}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`
+                  : '/images/placeholder-portrait.png'
+              }
               alt={character.name}
               fill
               className={cn(
@@ -585,15 +596,26 @@ export function SheetHeader({
             </p>
             
             {/* Archetype: Abilities */}
-            <p className="text-base text-text-primary">
-              {character.archetype?.name || (character.archetype?.type ? character.archetype.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'No Archetype')}
-              {(character.pow_abil || character.mart_abil) && ': '}
-              {character.pow_abil && (
-                <span className="text-category-power capitalize">{character.pow_abil}</span>
-              )}
-              {character.pow_abil && character.mart_abil && ' / '}
-              {character.mart_abil && (
-                <span className="text-category-technique capitalize">{character.mart_abil}</span>
+            <p className="text-base text-text-primary flex items-center gap-2">
+              <span>
+                {character.archetype?.name || (character.archetype?.type ? character.archetype.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'No Archetype')}
+                {(character.pow_abil || character.mart_abil) && ': '}
+                {character.pow_abil && (
+                  <span className="text-category-power capitalize">{character.pow_abil}</span>
+                )}
+                {character.pow_abil && character.mart_abil && ' / '}
+                {character.mart_abil && (
+                  <span className="text-category-technique capitalize">{character.mart_abil}</span>
+                )}
+              </span>
+              {onEditArchetype && (
+                <button
+                  onClick={onEditArchetype}
+                  className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                  title="Edit archetype and ability"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
               )}
             </p>
             

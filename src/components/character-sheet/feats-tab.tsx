@@ -19,6 +19,7 @@ import { useMemo, useState, useCallback } from 'react';
 import { SectionHeader, ListHeader, GridListRow, DecrementButton, IncrementButton } from '@/components/shared';
 import type { SortState, ListColumn } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
+import { cn } from '@/lib/utils';
 
 // =============================================================================
 // Types
@@ -87,6 +88,10 @@ interface FeatsTabProps {
   characterFeats?: FeatData[];
   stateFeats?: FeatData[];
   isEditMode?: boolean;
+  /** When true, show add/remove and current/max; when false, hide add/remove (library not in edit) */
+  showEditControls?: boolean;
+  maxArchetypeFeats?: number;
+  maxCharacterFeats?: number;
   onFeatUsesChange?: (featId: string, delta: number) => void;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
@@ -165,6 +170,9 @@ export function FeatsTab({
   characterFeats = [],
   stateFeats = [],
   isEditMode = false,
+  showEditControls = false,
+  maxArchetypeFeats,
+  maxCharacterFeats,
   onFeatUsesChange,
   onTraitUsesChange,
   onAddArchetypeFeat,
@@ -172,6 +180,10 @@ export function FeatsTab({
   onAddStateFeat,
   onRemoveFeat,
 }: FeatsTabProps) {
+  const archetypeCount = archetypeFeats.length;
+  const characterCount = characterFeats.length;
+  const archetypeOver = maxArchetypeFeats !== undefined && archetypeCount > maxArchetypeFeats;
+  const characterOver = maxCharacterFeats !== undefined && characterCount > maxCharacterFeats;
   // Sort state for each section
   const [traitSort, setTraitSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [archetypeFeatSort, setArchetypeFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
@@ -383,8 +395,14 @@ export function FeatsTab({
       <div>
         <SectionHeader 
           title="Archetype Feats" 
-          onAdd={onAddArchetypeFeat}
+          onAdd={showEditControls ? onAddArchetypeFeat : undefined}
           addLabel="Add archetype feat"
+          rightContent={showEditControls && maxArchetypeFeats !== undefined ? (
+            <span className={cn('tabular-nums text-sm font-medium', archetypeOver && 'text-danger-600')}>
+              {archetypeCount}/{maxArchetypeFeats}
+            </span>
+          ) : undefined}
+          addButtonClassName={archetypeOver ? 'text-danger-600 hover:text-danger-700 hover:bg-danger-50' : undefined}
         />
         {hasArchetypeFeats && (
           <ListHeader
@@ -435,7 +453,7 @@ export function FeatsTab({
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
                   onQuantityChange={undefined}
-                  onDelete={isEditMode && onRemoveFeat 
+                  onDelete={showEditControls && onRemoveFeat 
                     ? () => onRemoveFeat(featId, feat.name) 
                     : undefined}
                   compact
@@ -454,8 +472,14 @@ export function FeatsTab({
       <div>
         <SectionHeader 
           title="Character Feats" 
-          onAdd={onAddCharacterFeat}
+          onAdd={showEditControls ? onAddCharacterFeat : undefined}
           addLabel="Add character feat"
+          rightContent={showEditControls && maxCharacterFeats !== undefined ? (
+            <span className={cn('tabular-nums text-sm font-medium', characterOver && 'text-danger-600')}>
+              {characterCount}/{maxCharacterFeats}
+            </span>
+          ) : undefined}
+          addButtonClassName={characterOver ? 'text-danger-600 hover:text-danger-700 hover:bg-danger-50' : undefined}
         />
         {hasCharacterFeats && (
           <ListHeader
@@ -506,7 +530,7 @@ export function FeatsTab({
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
                   onQuantityChange={undefined}
-                  onDelete={isEditMode && onRemoveFeat 
+                  onDelete={showEditControls && onRemoveFeat 
                     ? () => onRemoveFeat(featId, feat.name) 
                     : undefined}
                   compact
@@ -526,7 +550,7 @@ export function FeatsTab({
         <div>
           <SectionHeader 
             title="State Feats" 
-            onAdd={onAddStateFeat}
+            onAdd={showEditControls ? onAddStateFeat : undefined}
             addLabel="Add state feat"
           />
           <ListHeader
@@ -577,7 +601,7 @@ export function FeatsTab({
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
                   onQuantityChange={undefined}
-                  onDelete={isEditMode && onRemoveFeat 
+                  onDelete={showEditControls && onRemoveFeat 
                     ? () => onRemoveFeat(featId, feat.name) 
                     : undefined}
                   compact

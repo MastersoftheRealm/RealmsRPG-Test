@@ -1,8 +1,9 @@
 /**
- * Equipment Step - Codex-Style
- * =============================
+ * Equipment Step - Unified List Style
+ * ===================================
  * Select starting equipment with real data from Codex.
- * Uses Codex-style filtering and list presentation.
+ * Uses ListHeader, GridListRow, design tokens, and steppers on the right
+ * to match Library/Codex and the rest of the site.
  * - Weapons and Armor come from user's item library (Prisma)
  * - General equipment comes from Codex items
  * Supports quantity selection for equipment items
@@ -13,14 +14,49 @@
 import { useState, useMemo, useCallback } from 'react';
 import { cn, formatDamageDisplay } from '@/lib/utils';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, type EquipmentItem } from '@/hooks';
+import { useEquipment, useUserItems, useItemProperties, usePublicLibrary } from '@/hooks';
 import { deriveItemDisplay } from '@/lib/calculators/item-calc';
-import { SearchInput, GridListRow, QuantitySelector, type ChipData } from '@/components/shared';
-import { FilterSection, SelectFilter } from '@/components/codex';
-import { Spinner, Button } from '@/components/ui';
+import { toggleSort, sortByColumn } from '@/hooks/use-sort';
+import {
+  SearchInput,
+  GridListRow,
+  QuantitySelector,
+  ListHeader,
+  SourceFilter,
+  type ChipData,
+  type ListColumn,
+  type SortState,
+} from '@/components/shared';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
+import { FilterSection } from '@/components/codex';
+import { Spinner, Button, EmptyState } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check } from 'lucide-react';
 import type { Item } from '@/types';
+
+// List column definitions and grid (unified with Library/Codex)
+const WEAPON_LIST_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.2fr' },
+  { key: 'damage', label: 'Damage', width: '0.9fr', align: 'center' },
+  { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
+  { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
+];
+const WEAPON_LIST_GRID = '1.2fr 0.9fr 0.6fr 0.6fr';
+
+const ARMOR_LIST_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.2fr' },
+  { key: 'armor_value', label: 'DR', width: '0.9fr', align: 'center' },
+  { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
+  { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
+];
+const ARMOR_LIST_GRID = '1.2fr 0.9fr 0.6fr 0.6fr';
+
+const EQUIPMENT_LIST_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.2fr' },
+  { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
+  { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
+];
+const EQUIPMENT_LIST_GRID = '1.2fr 0.6fr 0.6fr';
 
 // Unarmed Prowess constants
 const UNARMED_PROWESS_BASE_TP = 10;
@@ -47,7 +83,7 @@ interface UnifiedEquipmentItem {
   currency: number;
   properties: string[];
   rarity?: string;
-  source: 'library' | 'codex'; // Track where item came from
+  source: 'library' | 'codex' | 'public'; // Track where item came from
 }
 
 // Starting currency for new characters at level 1 is 200
@@ -76,9 +112,12 @@ export function EquipmentStep() {
   
   const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'library' | 'codex'>('all');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('all');
+  const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
 
-  const isLoading = userItemsLoading || codexLoading;
+  const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
+
+  const isLoading = userItemsLoading || codexLoading || publicItemsLoading;
   const error = codexError;
 
   // Current unarmed prowess level from draft (0 = not selected)
@@ -192,9 +231,52 @@ export function EquipmentStep() {
         });
       }
     }
-    
+
+    // Add public library items (weapons, armor, equipment) — same shape as user library
+    if (publicItems.length > 0 && itemProperties) {
+      for (const pub of publicItems as Array<Record<string, unknown>>) {
+        const rawType = (pub.type || pub.armamentType || '') as string;
+        const normalizedType = rawType ? rawType.charAt(0).toUpperCase() + rawType.slice(1).toLowerCase() : '';
+        let type: 'weapon' | 'armor' | 'equipment';
+        if (normalizedType === 'Weapon' || normalizedType === 'Shield') {
+          type = 'weapon';
+        } else if (normalizedType === 'Armor') {
+          type = 'armor';
+        } else {
+          type = 'equipment';
+        }
+        const display = deriveItemDisplay(
+          {
+            name: String(pub.name ?? ''),
+            description: String(pub.description ?? ''),
+            armamentType: (normalizedType || 'Weapon') as 'Weapon' | 'Armor' | 'Shield',
+            properties: (Array.isArray(pub.properties) ? pub.properties : []).map((p: unknown) => {
+              const q = p as { id?: number | string; name?: string; op_1_lvl?: number };
+              const id = q.id != null ? (typeof q.id === 'number' ? q.id : parseInt(String(q.id), 10)) : undefined;
+              return { id: Number.isNaN(id as number) ? undefined : id, name: q.name, op_1_lvl: q.op_1_lvl };
+            }),
+            damage: pub.damage as { amount: number; size: number; type: string }[] | undefined,
+          },
+          itemProperties
+        );
+        items.push({
+          id: String(pub.id ?? pub.docId ?? ''),
+          name: display.name,
+          type,
+          description: display.description,
+          damage: display.damage || undefined,
+          armor_value: display.damageReduction || undefined,
+          gold_cost: display.currencyCost,
+          currency: display.currencyCost,
+          properties: display.proficiencies.map(p => p.name),
+          rarity: display.rarity,
+          source: 'public',
+        });
+      }
+    }
+
     return items;
-  }, [userItems, codexEquipment, itemProperties]);
+  }, [userItems, codexEquipment, publicItems, itemProperties]);
 
   // Calculate starting currency - base 200 for level 1
   // For higher levels: 200 * 1.45^(level-1)
@@ -227,11 +309,12 @@ export function EquipmentStep() {
 
   const remainingCurrency = startingCurrency - spentCurrency;
 
-  // Filter equipment by type, search, and source
+  // Filter equipment by type, search, and source (All / Public / My — My = library only)
   const filteredEquipment = useMemo(() => {
     return allEquipment.filter(item => {
       if (item.type !== activeTab) return false;
-      if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
+      if (sourceFilter === 'my' && item.source !== 'library') return false;
+      if (sourceFilter === 'public' && item.source !== 'public') return false;
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         const name = String(item.name ?? '');
@@ -241,8 +324,14 @@ export function EquipmentStep() {
         }
       }
       return true;
-    }).sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
+    });
   }, [allEquipment, activeTab, searchTerm, sourceFilter]);
+
+  // Sorted list (unified sort via ListHeader)
+  const sortedEquipment = useMemo(
+    () => sortByColumn(filteredEquipment, equipmentSort),
+    [filteredEquipment, equipmentSort]
+  );
 
   // Add item to inventory
   const addItem = useCallback((item: UnifiedEquipmentItem) => {
@@ -364,8 +453,10 @@ export function EquipmentStep() {
         </div>
         
         <div className={cn(
-          'px-4 py-2 rounded-xl font-bold text-lg',
-          remainingCurrency >= 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+          'px-4 py-2 rounded-xl font-bold text-lg border',
+          remainingCurrency >= 0
+            ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text dark:text-warning-300'
+            : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
         )}>
           {remainingCurrency} / {startingCurrency}c
         </div>
@@ -373,20 +464,21 @@ export function EquipmentStep() {
 
       {/* Selected Items Summary */}
       {selectedItems.length > 0 && (
-        <div className="bg-surface-alt rounded-xl p-4 mb-6">
+        <div className="bg-surface-alt dark:bg-surface rounded-xl border border-border-light p-4 mb-6">
           <h3 className="font-medium text-text-primary mb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
           <div className="flex flex-wrap gap-2">
             {selectedItems.map(item => (
               <span
                 key={item.id}
-                className="px-3 py-1 bg-surface border border-border-light rounded-full text-sm flex items-center gap-2"
+                className="px-3 py-1 bg-surface dark:bg-surface-alt border border-border-light rounded-full text-sm flex items-center gap-2 text-text-primary"
               >
-                {item.quantity > 1 && <span className="font-bold text-primary-600">{item.quantity}×</span>}
+                {item.quantity > 1 && <span className="font-bold text-primary-600 dark:text-primary-400">{item.quantity}×</span>}
                 {item.name}
-                <span className="text-amber-600 text-xs">{item.cost * item.quantity}c</span>
+                <span className="text-tp-text dark:text-warning-400 text-xs">{item.cost * item.quantity}c</span>
                 <button
                   onClick={() => removeItem(item.id)}
-                  className="hover:text-red-500 ml-1"
+                  className="hover:text-danger-500 dark:hover:text-danger-400 ml-1"
+                  aria-label={`Remove ${item.name}`}
                 >
                   ×
                 </button>
@@ -414,7 +506,7 @@ export function EquipmentStep() {
       {activeTab === 'unarmed' ? (
         <div className="border border-border-light rounded-lg mb-8 p-6 bg-surface">
           <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 rounded-full bg-amber-100">
+            <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
               <Swords className="w-8 h-8 text-amber-600" />
             </div>
             <div className="flex-1">
@@ -509,26 +601,17 @@ export function EquipmentStep() {
           {/* Filters */}
           <FilterSection>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <SelectFilter
-                label="Source"
-                value={sourceFilter === 'all' ? '' : sourceFilter}
-                options={[
-                  { value: 'library', label: 'My Library' },
-                  { value: 'codex', label: 'Standard Equipment' },
-                ]}
-                onChange={(v) => setSourceFilter((v || 'all') as 'all' | 'library' | 'codex')}
-                placeholder="All Sources"
-              />
+              <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
               
               <div className="filter-group">
                 <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Budget Filter
+                  Budget
                 </label>
                 <div className={cn(
                   'px-3 py-2 rounded-lg border text-sm',
-                  remainingCurrency >= 0 
-                    ? 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-600/50 text-green-700 dark:text-green-300'
-                    : 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-600/50 text-red-700 dark:text-red-300'
+                  remainingCurrency >= 0
+                    ? 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-600/50 text-success-700 dark:text-success-400'
+                    : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-700 dark:text-danger-300'
                 )}>
                   {remainingCurrency}c remaining of {startingCurrency}c
                 </div>
@@ -536,48 +619,70 @@ export function EquipmentStep() {
             </div>
           </FilterSection>
 
-          {/* Equipment List - Using GridListRow */}
-          <div className="space-y-2 mb-8 max-h-[400px] overflow-y-auto pr-1">
-            {filteredEquipment.length === 0 ? (
-              <div className="text-center py-8 text-text-muted border border-border-light rounded-lg">
-                {activeTab === 'weapon' || activeTab === 'armor' ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <AlertCircle className="w-8 h-8 text-text-muted" />
-                    <p>No {activeTab}s found in your library.</p>
-                    <p className="text-sm">
-                      Create {activeTab}s using the{' '}
-                      <a href="/item-creator" className="text-primary-600 hover:underline">
-                        Item Creator
-                      </a>{' '}
-                      to add them here.
-                    </p>
-                  </div>
-                ) : (
-                  <p>No {activeTab}s found.</p>
-                )}
-              </div>
-            ) : (
-              filteredEquipment.map(item => {
-                const cost = item.gold_cost || item.currency || 0;
-                const quantity = getItemQuantity(item.id);
-                const canAfford = cost <= remainingCurrency;
-                
-                // Build badges for display
-                const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
-                if (item.damage) badges.push({ label: formatDamageDisplay(item.damage), color: 'red' });
-                if (item.armor_value) badges.push({ label: `+${item.armor_value} DR`, color: 'blue' });
-                if (item.rarity && item.rarity !== 'Common') badges.push({ label: item.rarity, color: 'amber' });
-                
-                // Build property chips
-                const chips: ChipData[] = item.properties.map(prop => ({
-                  name: prop,
-                  category: 'tag' as const,
-                }));
-                
-                // Quantity controls using shared QuantitySelector (matches codex/library style)
-                const maxAffordable = cost > 0 ? quantity + Math.floor(remainingCurrency / cost) : 99;
-                const quantityControls = (
-                  <div onClick={(e) => e.stopPropagation()}>
+          {/* Equipment List - ListHeader + GridListRow (unified with Library/Codex) */}
+          <div className="border border-border-light rounded-lg overflow-hidden bg-surface mb-8">
+            {activeTab === 'weapon' && sortedEquipment.length > 0 && (
+              <ListHeader
+                columns={WEAPON_LIST_COLUMNS}
+                gridColumns={WEAPON_LIST_GRID}
+                sortState={equipmentSort}
+                onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+              />
+            )}
+            {activeTab === 'armor' && sortedEquipment.length > 0 && (
+              <ListHeader
+                columns={ARMOR_LIST_COLUMNS}
+                gridColumns={ARMOR_LIST_GRID}
+                sortState={equipmentSort}
+                onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+              />
+            )}
+            {activeTab === 'equipment' && sortedEquipment.length > 0 && (
+              <ListHeader
+                columns={EQUIPMENT_LIST_COLUMNS}
+                gridColumns={EQUIPMENT_LIST_GRID}
+                sortState={equipmentSort}
+                onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
+              />
+            )}
+            <div className="space-y-1 max-h-[400px] overflow-y-auto p-1">
+              {sortedEquipment.length === 0 ? (
+                <EmptyState
+                  size="md"
+                  title={activeTab === 'weapon' || activeTab === 'armor' ? `No ${activeTab}s found` : 'No equipment found'}
+                  description={
+                    activeTab === 'weapon' || activeTab === 'armor'
+                      ? `Create ${activeTab}s in the Item Creator to add them here.`
+                      : undefined
+                  }
+                  icon={<AlertCircle className="w-8 h-8 text-text-muted" />}
+                  action={
+                    activeTab === 'weapon' || activeTab === 'armor'
+                      ? { label: 'Open Item Creator', onClick: () => window.open('/item-creator', '_blank'), variant: 'secondary' as const }
+                      : undefined
+                  }
+                />
+              ) : (
+                sortedEquipment.map(item => {
+                  const cost = item.gold_cost || item.currency || 0;
+                  const quantity = getItemQuantity(item.id);
+                  const canAfford = cost <= remainingCurrency;
+
+                  // Build badges for display
+                  const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
+                  if (item.damage) badges.push({ label: formatDamageDisplay(item.damage), color: 'red' });
+                  if (item.armor_value) badges.push({ label: `+${item.armor_value} DR`, color: 'blue' });
+                  if (item.rarity && item.rarity !== 'Common') badges.push({ label: item.rarity, color: 'amber' });
+
+                  // Build property chips
+                  const chips: ChipData[] = item.properties.map(prop => ({
+                    name: prop,
+                    category: 'tag' as const,
+                  }));
+
+                  // Stepper on the right (unified with Library)
+                  const maxAffordable = cost > 0 ? quantity + Math.floor(remainingCurrency / cost) : 99;
+                  const rightSlotContent = (
                     <QuantitySelector
                       quantity={quantity}
                       onChange={(newVal) => {
@@ -592,27 +697,80 @@ export function EquipmentStep() {
                       max={Math.min(99, maxAffordable)}
                       size="sm"
                     />
-                  </div>
-                );
-                
-                return (
-                  <GridListRow
-                    key={item.id}
-                    id={item.id}
-                    name={item.name}
-                    description={item.description}
-                    leftSlot={quantityControls}
-                    columns={[
-                      { key: 'Cost', value: `${cost}c`, highlight: !canAfford, className: canAfford ? 'text-amber-600 font-bold' : 'text-red-500 font-bold' },
-                      { key: 'Source', value: item.source === 'library' ? 'Library' : 'Standard', hideOnMobile: true },
-                    ]}
-                    badges={badges}
-                    detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
-                    compact
-                  />
-                );
-              })
-            )}
+                  );
+
+                  const sourceValue = item.source === 'library' ? 'Library' : item.source === 'public' ? 'Public' : 'Standard';
+                  const costColumn = {
+                    key: 'gold_cost',
+                    value: `${cost}c`,
+                    highlight: !canAfford,
+                    className: canAfford ? 'text-tp-text dark:text-warning-400 font-bold' : 'text-danger-600 dark:text-danger-400 font-bold',
+                    align: 'right' as const,
+                  };
+                  const sourceColumn = {
+                    key: 'source',
+                    value: sourceValue,
+                    hideOnMobile: true,
+                    align: 'center' as const,
+                  };
+
+                  if (activeTab === 'weapon') {
+                    return (
+                      <GridListRow
+                        key={item.id}
+                        id={item.id}
+                        name={item.name}
+                        description={item.description}
+                        columns={[
+                          { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', align: 'center' },
+                          costColumn,
+                          sourceColumn,
+                        ]}
+                        gridColumns={WEAPON_LIST_GRID}
+                        badges={badges}
+                        detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
+                        rightSlot={rightSlotContent}
+                        compact
+                      />
+                    );
+                  }
+                  if (activeTab === 'armor') {
+                    return (
+                      <GridListRow
+                        key={item.id}
+                        id={item.id}
+                        name={item.name}
+                        description={item.description}
+                        columns={[
+                          { key: 'armor_value', value: item.armor_value != null ? `+${item.armor_value}` : '-', align: 'center' },
+                          costColumn,
+                          sourceColumn,
+                        ]}
+                        gridColumns={ARMOR_LIST_GRID}
+                        badges={badges}
+                        detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
+                        rightSlot={rightSlotContent}
+                        compact
+                      />
+                    );
+                  }
+                  return (
+                    <GridListRow
+                      key={item.id}
+                      id={item.id}
+                      name={item.name}
+                      description={item.description}
+                      columns={[costColumn, sourceColumn]}
+                      gridColumns={EQUIPMENT_LIST_GRID}
+                      badges={badges}
+                      detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
+                      rightSlot={rightSlotContent}
+                      compact
+                    />
+                  );
+                })
+              )}
+            </div>
           </div>
         </>
       )}

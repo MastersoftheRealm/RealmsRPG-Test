@@ -148,7 +148,8 @@ function getReferenceName(ref: string | { name?: string; id?: string | number })
 export function enrichPowers(
   characterPowers: CharacterPower[] | undefined,
   userPowerLibrary: UserPower[],
-  powerPartsDb: PowerPart[] = []
+  powerPartsDb: PowerPart[] = [],
+  publicPowerLibrary?: UserPower[]
 ): EnrichedPower[] {
   if (!characterPowers || characterPowers.length === 0) return [];
   
@@ -156,7 +157,10 @@ export function enrichPowers(
     const name = typeof charPower === 'string' ? charPower : charPower.name;
     const innate = typeof charPower === 'object' ? !!(charPower as unknown as { innate?: boolean }).innate : false;
     
-    const libraryItem = findInLibrary(userPowerLibrary, charPower);
+    let libraryItem = findInLibrary(userPowerLibrary, charPower);
+    if (!libraryItem && publicPowerLibrary?.length) {
+      libraryItem = findInLibrary(publicPowerLibrary, charPower);
+    }
     
     if (libraryItem) {
       // Use derivePowerDisplay to calculate all display values including cost
@@ -216,14 +220,18 @@ export function enrichPowers(
 export function enrichTechniques(
   characterTechniques: CharacterTechnique[] | undefined,
   userTechniqueLibrary: UserTechnique[],
-  techniquePartsDb: TechniquePart[] = []
+  techniquePartsDb: TechniquePart[] = [],
+  publicTechniqueLibrary?: UserTechnique[]
 ): EnrichedTechnique[] {
   if (!characterTechniques || characterTechniques.length === 0) return [];
   
   return characterTechniques.map(charTech => {
     const name = typeof charTech === 'string' ? charTech : charTech.name;
     
-    const libraryItem = findInLibrary(userTechniqueLibrary, charTech);
+    let libraryItem = findInLibrary(userTechniqueLibrary, charTech);
+    if (!libraryItem && publicTechniqueLibrary?.length) {
+      libraryItem = findInLibrary(publicTechniqueLibrary, charTech);
+    }
     
     if (libraryItem) {
       // Extract first damage object if damage is an array
@@ -301,7 +309,8 @@ export function enrichItems(
   characterItems: Array<{ id?: string | number; name?: string; equipped?: boolean; type?: string; quantity?: number }> | undefined,
   userItemLibrary: UserItem[],
   itemType: 'weapon' | 'armor' | 'equipment',
-  codexEquipment?: CodexEquipmentItem[]
+  codexEquipment?: CodexEquipmentItem[],
+  publicItemLibrary?: UserItem[]
 ): EnrichedItem[] {
   if (!characterItems || characterItems.length === 0) return [];
   
@@ -310,8 +319,11 @@ export function enrichItems(
     const equipped = typeof charItem === 'object' ? !!charItem.equipped : false;
     const quantity = typeof charItem === 'object' ? (charItem.quantity ?? 1) : 1;
     
-    // First try user's library
-    const libraryItem = findInLibrary(userItemLibrary, charItem);
+    // First try user's library, then public library
+    let libraryItem = findInLibrary(userItemLibrary, charItem);
+    if (!libraryItem && publicItemLibrary?.length) {
+      libraryItem = findInLibrary(publicItemLibrary, charItem);
+    }
     
     if (libraryItem) {
       // Convert properties from SavedProperty objects to string names
@@ -429,38 +441,47 @@ export function enrichCharacterData(
   userItems: UserItem[],
   codexEquipment?: CodexEquipmentItem[],
   powerPartsDb?: PowerPart[],
-  techniquePartsDb?: TechniquePart[]
+  techniquePartsDb?: TechniquePart[],
+  publicLibraries?: {
+    powers?: UserPower[];
+    techniques?: UserTechnique[];
+    items?: UserItem[];
+  }
 ): EnrichedCharacterData {
   // Split items by type
   const weaponItems = userItems.filter(i => i.type === 'weapon');
   const armorItems = userItems.filter(i => i.type === 'armor');
   const equipmentItems = userItems.filter(i => i.type === 'equipment');
-  
-  // Split Codex equipment by type for fallback lookups
   const codexWeapons = codexEquipment?.filter(i => i.type === 'weapon');
   const codexArmor = codexEquipment?.filter(i => i.type === 'armor');
   const codexItems = codexEquipment?.filter(i => i.type === 'equipment');
-  
+  const publicWeaponItems = publicLibraries?.items?.filter(i => i.type === 'weapon');
+  const publicArmorItems = publicLibraries?.items?.filter(i => i.type === 'armor');
+  const publicEquipmentItems = publicLibraries?.items?.filter(i => (i.type || 'equipment') === 'equipment');
+
   return {
-    powers: enrichPowers(character.powers, userPowers, powerPartsDb || []),
-    techniques: enrichTechniques(character.techniques, userTechniques, techniquePartsDb || []),
+    powers: enrichPowers(character.powers, userPowers, powerPartsDb || [], publicLibraries?.powers),
+    techniques: enrichTechniques(character.techniques, userTechniques, techniquePartsDb || [], publicLibraries?.techniques),
     weapons: enrichItems(
       toEquipmentArray(character.equipment?.weapons),
       weaponItems,
       'weapon',
-      codexWeapons
+      codexWeapons,
+      publicWeaponItems
     ),
     armor: enrichItems(
       toEquipmentArray(character.equipment?.armor),
       armorItems,
       'armor',
-      codexArmor
+      codexArmor,
+      publicArmorItems
     ),
     equipment: enrichItems(
       toEquipmentArray(character.equipment?.items),
       equipmentItems,
       'equipment',
-      codexItems
+      codexItems,
+      publicEquipmentItems
     ),
   };
 }

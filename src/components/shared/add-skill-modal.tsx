@@ -5,11 +5,12 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { Alert } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
+import type { ChipData } from '@/components/shared/grid-list-row';
+import { ABILITY_ABBR, ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 
 export interface AddSkillModalProps {
@@ -19,26 +20,57 @@ export interface AddSkillModalProps {
   onAdd: (skills: Skill[]) => void;
 }
 
-function formatAbilityBadges(abilityString?: string): Array<{ label: string; color: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }> {
+/** Parse skill.ability (comma-separated) into list of abbreviated ability codes (STR, AGI, ...). */
+function getAbilityAbbrList(abilityString?: string): string[] {
   if (!abilityString) return [];
-  return abilityString.split(',').map(a => a.trim()).filter(Boolean).map(ability => ({
-    label: ability.slice(0, 3).toUpperCase(),
-    color: 'gray' as const
-  }));
+  return abilityString
+    .split(',')
+    .map((a) => a.trim().toLowerCase())
+    .filter(Boolean)
+    .map((a) => ABILITY_ABBR[a] ?? a.slice(0, 3).toUpperCase());
+}
+
+/** Build Abilities detail section and collapsed ability column (abbreviated, like sub-skill ability column). */
+function buildAbilityDisplay(abilityString?: string): {
+  detailChips: ChipData[];
+  columnValue: string | ReactNode;
+} {
+  const abbrList = getAbilityAbbrList(abilityString);
+  const detailChips: ChipData[] = abbrList.map((abbr) => ({ name: abbr, category: 'skill' as const }));
+  const columnValue: string | ReactNode =
+    abbrList.length === 0 ? (
+      '—'
+    ) : (
+      <span className="inline-flex flex-wrap gap-1">
+        {abbrList.map((abbr) => (
+          <span
+            key={abbr}
+            className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-info-50 dark:bg-info-900/30 border border-info-200 dark:border-info-800/50 text-info-700 dark:text-info-400"
+          >
+            {abbr}
+          </span>
+        ))}
+      </span>
+    );
+  return { detailChips, columnValue };
 }
 
 function skillToSelectableItem(skill: Skill & { ability?: string }): SelectableItem {
   const extraSections = getSkillExtraDescriptionDetailSections(skill);
+  const { detailChips, columnValue } = buildAbilityDisplay(skill.ability);
+  const detailSections: SelectableItem['detailSections'] = [];
+  if (detailChips.length > 0) {
+    detailSections.push({ label: 'Abilities', chips: detailChips, hideLabelIfSingle: true });
+  }
+  if (extraSections.length > 0) {
+    detailSections.push(...extraSections);
+  }
   return {
     id: String(skill.id),
     name: skill.name ?? '',
     description: skill.description,
-    columns: [
-      { key: 'name', value: skill.name ?? '—', align: 'left' },
-      { key: 'ability', value: skill.ability ?? '—', align: 'center' as const },
-    ],
-    badges: formatAbilityBadges(skill.ability),
-    detailSections: extraSections.length > 0 ? extraSections : undefined,
+    columns: [{ key: 'ability', value: columnValue, align: 'center' as const }],
+    detailSections: detailSections.length > 0 ? detailSections : undefined,
     data: skill,
   };
 }
@@ -100,7 +132,7 @@ export function AddSkillModal({
         isOpen={isOpen}
         onClose={onClose}
         title="Add Skills"
-        description="Select skills to add to your character. Click a row (or the + button) to select, then click Add Selected."
+        description="Expand a row to view details. Use the + button to add, then click Add Selected."
         items={items}
         isLoading={loading}
         onConfirm={(selected) => onAdd(selected.map(i => i.data as Skill))}

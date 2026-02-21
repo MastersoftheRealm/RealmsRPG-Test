@@ -321,7 +321,7 @@ export function SkillsAllocationPage({
         <Button
           size="sm"
           variant="secondary"
-          className="bg-teal-100 hover:bg-teal-200 text-teal-700"
+          className="dark:bg-surface dark:border-border dark:hover:bg-surface-alt dark:text-text-secondary"
           onClick={() => setAddSubSkillModalOpen(true)}
           disabled={remainingPoints < 1}
           title={remainingPoints < 1 ? 'No skill points remaining' : undefined}

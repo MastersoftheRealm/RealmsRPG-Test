@@ -156,14 +156,17 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       },
       
       setSpecies: (speciesId, speciesName) => {
-        const currentAncestry = get().draft.ancestry;
+        // When species changes, clear trait selections from the previous species
+        // so ancestry step doesn't treat old IDs as valid for the new species.
         set({
           draft: {
             ...get().draft,
             ancestry: {
-              ...currentAncestry,
               id: speciesId,
               name: speciesName,
+              selectedTraits: [],
+              selectedFlaw: undefined,
+              selectedCharacteristic: undefined,
             } as CharacterDraft['ancestry'],
           }
         });

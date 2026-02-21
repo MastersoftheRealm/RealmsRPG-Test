@@ -80,7 +80,7 @@ export function CreatorTabBar() {
             className={cn(
               'px-3 py-2 rounded-lg text-sm font-medium transition-all',
               isActive && 'bg-primary-600 text-white shadow-md',
-              !isActive && isComplete && 'bg-green-100 text-green-700 hover:bg-green-200',
+              !isActive && isComplete && 'bg-success-light text-success-700 hover:bg-success-200/80 dark:bg-success-900/30 dark:text-success-300 dark:hover:bg-success-800/40',
               !isActive && !isComplete && canNavigate && 'bg-surface text-text-secondary hover:bg-surface-alt',
               !isActive && !isComplete && !canNavigate && 'bg-surface text-text-muted cursor-not-allowed'
             )}
@@ -93,7 +93,7 @@ export function CreatorTabBar() {
       
       <button
         onClick={() => setShowRestartConfirm(true)}
-        className="ml-auto px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+        className="ml-auto px-3 py-2 rounded-lg text-sm font-medium bg-danger-light text-danger-700 hover:bg-danger-200/80 dark:bg-danger-900/30 dark:text-danger-300 dark:hover:bg-danger-800/40 transition-colors"
       >
         Restart
       </button>

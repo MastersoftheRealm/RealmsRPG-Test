@@ -71,13 +71,15 @@ function featToSelectableItem(
   });
   if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
 
+  const usesVal = feat.uses_per_rec ?? (feat as FeatModal).max_uses;
+  const usesDisplay = usesVal === 0 || usesVal === undefined ? '-' : String(usesVal);
   return {
     id: String(feat.id),
     name: feat.name ?? '',
     description: feat.description || (feat as FeatModal).effect,
     columns: [
+      { key: 'uses_per_rec', value: usesDisplay, align: 'center' as const },
       { key: 'rec_period', value: feat.rec_period || '-', align: 'center' as const },
-      { key: 'uses_per_rec', value: String(feat.uses_per_rec ?? (feat as FeatModal).max_uses ?? '-'), align: 'center' as const },
       { key: 'category', value: feat.category || '-', align: 'center' as const },
     ],
     detailSections: detailSections.length > 0 ? detailSections : undefined,
@@ -276,8 +278,8 @@ export function AddFeatModal({
         onConfirm={(selected) => onAdd(selected.map(i => i.data as FeatModal))}
         columns={[
           { key: 'name', label: 'Name' },
-          { key: 'rec_period', label: 'Rec.' },
           { key: 'uses_per_rec', label: 'Uses' },
+          { key: 'rec_period', label: 'Rec.' },
           { key: 'category', label: 'Category' },
         ]}
         gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"

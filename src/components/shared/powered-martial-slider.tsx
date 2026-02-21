@@ -48,24 +48,25 @@ export function PoweredMartialSlider({
   allowZeroEnds = false,
   className,
 }: PoweredMartialSliderProps) {
-  // Internal state to handle slider value
-  const [sliderValue, setSliderValue] = useState(powerValue);
+  // Slider value = martial (so left = 0 martial = all power, right = max martial = no power)
+  const [sliderValue, setSliderValue] = useState(martialValue);
   
-  // allowZeroEnds: character sheet (pure martial/power). !allowZeroEnds: creature creator (powered-martial min 1 each)
-  const minPower = allowZeroEnds ? 0 : (maxPoints > 1 ? 1 : 0);
-  const maxPower = allowZeroEnds ? maxPoints : (maxPoints > 1 ? maxPoints - 1 : maxPoints);
+  const minMartial = allowZeroEnds ? 0 : (maxPoints > 1 ? 1 : 0);
+  const maxMartial = allowZeroEnds ? maxPoints : (maxPoints > 1 ? maxPoints - 1 : maxPoints);
   
-  // Sync internal state when props change (clamp if out of bounds)
   useEffect(() => {
-    setSliderValue(Math.max(minPower, Math.min(maxPower, powerValue)));
-  }, [powerValue, minPower, maxPower]);
+    setSliderValue(Math.max(minMartial, Math.min(maxMartial, martialValue)));
+  }, [martialValue, minMartial, maxMartial]);
 
-  const handleSliderChange = (newPowerValue: number) => {
-    const clamped = Math.max(minPower, Math.min(maxPower, newPowerValue));
+  const handleSliderChange = (newMartialValue: number) => {
+    const clamped = Math.max(minMartial, Math.min(maxMartial, newMartialValue));
     setSliderValue(clamped);
-    onChange(clamped, maxPoints - clamped);
+    onChange(maxPoints - clamped, clamped);
   };
   
+  const powerDisplay = maxPoints - sliderValue;
+  const martialDisplay = sliderValue;
+
   return (
     <div className={cn(
       'rounded-xl bg-surface-secondary border border-border-light',
@@ -82,7 +83,7 @@ export function PoweredMartialSlider({
         </div>
       )}
 
-      {/* Slider Labels */}
+      {/* Slider Labels: Left = Power, Right = Martial (slide left = more power, right = more martial) */}
       {!hideLabels && (
         <div className={cn(
           'flex justify-between',
@@ -96,7 +97,7 @@ export function PoweredMartialSlider({
             <span className={cn(
               'font-bold text-violet-500',
               compact ? 'text-sm' : 'text-lg'
-            )}>{sliderValue}</span>
+            )}>{powerDisplay}</span>
           </div>
           <div className="text-center">
             <span className={cn(
@@ -106,12 +107,12 @@ export function PoweredMartialSlider({
             <span className={cn(
               'font-bold text-martial-dark',
               compact ? 'text-sm' : 'text-lg'
-            )}>{maxPoints - sliderValue}</span>
+            )}>{martialDisplay}</span>
           </div>
         </div>
       )}
 
-      {/* Custom Slider */}
+      {/* Custom Slider: left = 0 martial (all power), right = max martial */}
       <div className="relative py-2">
         <div className={cn(
           'absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-power-dark to-martial-dark',
@@ -119,8 +120,8 @@ export function PoweredMartialSlider({
         )} />
         <input
           type="range"
-          min={minPower}
-          max={maxPower}
+          min={minMartial}
+          max={maxMartial}
           value={sliderValue}
           onChange={(e) => handleSliderChange(parseInt(e.target.value))}
           disabled={disabled}
@@ -137,10 +138,10 @@ export function PoweredMartialSlider({
       </div>
 
       {/* Tick marks */}
-      {!compact && (maxPower - minPower + 1) <= 20 && (
+      {!compact && (maxMartial - minMartial + 1) <= 20 && (
         <div className="flex justify-between px-1 mt-1">
-          {Array.from({ length: maxPower - minPower + 1 }).map((_, i) => {
-            const tickValue = minPower + i;
+          {Array.from({ length: maxMartial - minMartial + 1 }).map((_, i) => {
+            const tickValue = minMartial + i;
             return (
               <div
                 key={i}

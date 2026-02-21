@@ -356,6 +356,10 @@ interface LibrarySectionProps {
   onAddArchetypeFeat?: () => void;
   onAddCharacterFeat?: () => void;
   onRemoveFeat?: (featId: string) => void;
+  /** Max archetype feats (for overspend indicator and current/max display) */
+  maxArchetypeFeats?: number;
+  /** Max character feats (for overspend indicator and current/max display) */
+  maxCharacterFeats?: number;
   className?: string;
 }
 
@@ -476,11 +480,21 @@ export function LibrarySection({
   onAddArchetypeFeat,
   onAddCharacterFeat,
   onRemoveFeat,
+  maxArchetypeFeats,
+  maxCharacterFeats,
   className,
 }: LibrarySectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>('feats');
+  const [isSectionEditing, setIsSectionEditing] = useState(false);
   const [currencyInput, setCurrencyInput] = useState(currency.toString());
   const rollContext = useRollsOptional();
+
+  const showLibraryEditControls = isEditMode && isSectionEditing;
+  const archetypeFeatCount = archetypeFeats?.length ?? 0;
+  const characterFeatCount = characterFeats?.length ?? 0;
+  const archetypeOver = maxArchetypeFeats !== undefined && archetypeFeatCount > maxArchetypeFeats;
+  const characterOver = maxCharacterFeats !== undefined && characterFeatCount > maxCharacterFeats;
+  const libraryEditState = archetypeOver || characterOver ? 'over-budget' : 'normal';
   
   // Sort state for each section
   const [powerSort, setPowerSort] = useState<SortState>({ col: 'name', dir: 1 });
@@ -536,12 +550,20 @@ export function LibrarySection({
 
   return (
     <div className={cn("bg-surface rounded-xl shadow-md p-4 md:p-6 relative flex flex-col", className)}>
-      {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
+      {/* Edit Mode Indicator - Pencil toggles library in/out of edit (like other sections) */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
           <EditSectionToggle 
-            state="normal"
-            title="Editing library (powers, techniques, inventory, feats)"
+            state={libraryEditState}
+            isActive={isSectionEditing}
+            onClick={() => setIsSectionEditing(prev => !prev)}
+            title={
+              isSectionEditing
+                ? 'Click to close library editing'
+                : libraryEditState === 'over-budget'
+                  ? 'Click to edit library — feats over limit'
+                  : 'Click to edit library (powers, techniques, inventory, feats)'
+            }
           />
         </div>
       )}
@@ -590,16 +612,23 @@ export function LibrarySection({
             <div className="mb-4">
               <SectionHeader 
                 title="Innate Powers" 
-                onAdd={onTogglePowerInnate ? undefined : onAddPower}
+                onAdd={showLibraryEditControls ? (onTogglePowerInnate ? undefined : onAddPower) : undefined}
                 addLabel="Add innate power"
               />
               {sortedInnatePowers.length > 0 && (
-                <ListHeader
-                  columns={POWER_COLUMNS}
-                  gridColumns={POWER_GRID}
-                  sortState={powerSort}
-                  onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
-                />
+                <div className="flex items-center">
+                  <div className="w-8 flex-shrink-0" aria-hidden />
+                  <div className="flex-1 min-w-0">
+                    <ListHeader
+                      columns={POWER_COLUMNS}
+                      gridColumns={POWER_GRID}
+                      sortState={powerSort}
+                      onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
+                    />
+                  </div>
+                  <div className="w-16 flex-shrink-0" aria-hidden />
+                  <div className="w-9 flex-shrink-0" aria-hidden />
+                </div>
               )}
               {sortedInnatePowers.length > 0 ? (
                 <div className="space-y-1">
@@ -610,9 +639,19 @@ export function LibrarySection({
                       const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                       const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
                       
+                      const damageCell = power.damage && rollContext?.rollDamage ? (
+                        <RollButton
+                          value={0}
+                          displayValue={formatDamageType(power.damage)}
+                          variant="danger"
+                          size="sm"
+                          onClick={() => rollContext.rollDamage(power.damage as string)}
+                          title="Roll damage"
+                        />
+                      ) : formatDamageType(power.damage);
                       const columns: ColumnValue[] = [
                         { key: 'action', value: power.actionType || '-', align: 'center' },
-                        { key: 'damage', value: formatDamageType(power.damage), align: 'center' },
+                        { key: 'damage', value: damageCell, align: 'center' },
                         { key: 'area', value: formatArea(power.area), align: 'center' },
                         { key: 'duration', value: formatDuration(power.duration), align: 'center' },
                       ];
@@ -632,7 +671,7 @@ export function LibrarySection({
                         <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
                       ) : null;
                       
-                      const innateToggle = onTogglePowerInnate ? (
+                      const innateToggle = showLibraryEditControls && onTogglePowerInnate ? (
                         <InnateToggle
                           isInnate={isInnate}
                           onToggle={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
@@ -653,7 +692,7 @@ export function LibrarySection({
                           innate={isInnate}
                           leftSlot={innateToggle}
                           rightSlot={energyButton}
-                          onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
+                          onDelete={showLibraryEditControls && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                           compact
                           expandedContent={
                             <>
@@ -673,7 +712,7 @@ export function LibrarySection({
                 </div>
               ) : (
                 <p className="text-sm text-text-muted italic text-center py-4">
-                  No innate powers — click ☆ on a power to mark it as innate
+                  No innate powers. Enter edit mode (click the pencil) to mark powers as innate.
                 </p>
               )}
             </div>
@@ -682,16 +721,23 @@ export function LibrarySection({
             <div>
               <SectionHeader 
                 title="Powers" 
-                onAdd={onAddPower}
+                onAdd={showLibraryEditControls ? onAddPower : undefined}
                 addLabel="Add power"
               />
               {sortedRegularPowers.length > 0 && (
-                <ListHeader
-                  columns={POWER_COLUMNS}
-                  gridColumns={POWER_GRID}
-                  sortState={powerSort}
-                  onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
-                />
+                <div className="flex items-center">
+                  <div className="w-8 flex-shrink-0" aria-hidden />
+                  <div className="flex-1 min-w-0">
+                    <ListHeader
+                      columns={POWER_COLUMNS}
+                      gridColumns={POWER_GRID}
+                      sortState={powerSort}
+                      onSort={(col) => setPowerSort(toggleSort(powerSort, col))}
+                    />
+                  </div>
+                  <div className="w-16 flex-shrink-0" aria-hidden />
+                  <div className="w-9 flex-shrink-0" aria-hidden />
+                </div>
               )}
               {sortedRegularPowers.length > 0 ? (
                 <div className="space-y-1">
@@ -702,15 +748,25 @@ export function LibrarySection({
                       const canUse = currentEnergy !== undefined && currentEnergy >= energyCost;
                       const partChips = partsToPartData(power.parts, powerPartsDb).map(p => ({ ...p, category: 'tag' as const }));
                       
-                      const columns: ColumnValue[] = [
+                      const damageCellRegular = power.damage && rollContext?.rollDamage ? (
+                        <RollButton
+                          value={0}
+                          displayValue={formatDamageType(power.damage)}
+                          variant="danger"
+                          size="sm"
+                          onClick={() => rollContext.rollDamage(power.damage as string)}
+                          title="Roll damage"
+                        />
+                      ) : formatDamageType(power.damage);
+                      const columnsRegular: ColumnValue[] = [
                         { key: 'action', value: power.actionType || '-', align: 'center' },
-                        { key: 'damage', value: formatDamageType(power.damage), align: 'center' },
+                        { key: 'damage', value: damageCellRegular, align: 'center' },
                         { key: 'area', value: formatArea(power.area), align: 'center' },
                         { key: 'duration', value: formatDuration(power.duration), align: 'center' },
                       ];
                       
                       // Energy button in rightmost column - styled like roll button
-                      const energyButton = onUsePower && energyCost > 0 ? (
+                      const energyButtonRegular = onUsePower && energyCost > 0 ? (
                         <RollButton
                           value={energyCost}
                           displayValue={String(energyCost)}
@@ -724,7 +780,7 @@ export function LibrarySection({
                         <span className="text-sm font-medium text-text-secondary">{energyCost}</span>
                       ) : null;
                       
-                      const innateToggle = onTogglePowerInnate ? (
+                      const innateToggleRegular = showLibraryEditControls && onTogglePowerInnate ? (
                         <InnateToggle
                           isInnate={isInnate}
                           onToggle={() => onTogglePowerInnate(power.id || String(i), !isInnate)}
@@ -738,14 +794,14 @@ export function LibrarySection({
                           id={String(power.id || i)}
                           name={power.name}
                           description={power.description}
-                          columns={columns}
+                          columns={columnsRegular}
                           gridColumns={POWER_GRID}
                           chips={partChips}
                           chipsLabel="Parts"
                           innate={isInnate}
-                          leftSlot={innateToggle}
-                          rightSlot={energyButton}
-                          onDelete={isEditMode && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
+                          leftSlot={innateToggleRegular}
+                          rightSlot={energyButtonRegular}
+                          onDelete={showLibraryEditControls && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
                           compact
                           expandedContent={
                             <>
@@ -778,7 +834,7 @@ export function LibrarySection({
             <div>
               <SectionHeader 
                 title="Techniques" 
-                onAdd={onAddTechnique}
+                onAdd={showLibraryEditControls ? onAddTechnique : undefined}
                 addLabel="Add technique"
               />
               {sortedTechniques.length > 0 && (
@@ -846,7 +902,7 @@ export function LibrarySection({
                         chips={partChips}
                         chipsLabel="Parts"
                         rightSlot={energyButton}
-                        onDelete={isEditMode && onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
+                        onDelete={showLibraryEditControls && onRemoveTechnique ? () => onRemoveTechnique(tech.id || String(i)) : undefined}
                         compact
                         expandedContent={extraInfo}
                       />
@@ -912,7 +968,7 @@ export function LibrarySection({
             <div>
               <SectionHeader 
                 title="Weapons" 
-                onAdd={onAddWeapon}
+                onAdd={showLibraryEditControls ? onAddWeapon : undefined}
                 addLabel="Add weapon"
               />
               {sortedWeapons.length > 0 && (
@@ -973,7 +1029,7 @@ export function LibrarySection({
                             )}
                           </div>
                         )}
-                        onDelete={isEditMode && onRemoveWeapon ? () => onRemoveWeapon(item.id ?? item.name ?? i) : undefined}
+                        onDelete={showLibraryEditControls && onRemoveWeapon ? () => onRemoveWeapon(item.id ?? item.name ?? i) : undefined}
                         expandedContent={item.description ? (
                           <p className="text-sm text-text-muted italic whitespace-pre-wrap">
                             {item.description}
@@ -992,7 +1048,7 @@ export function LibrarySection({
             <div>
               <SectionHeader 
                 title="Armor" 
-                onAdd={onAddArmor}
+                onAdd={showLibraryEditControls ? onAddArmor : undefined}
                 addLabel="Add armor"
               />
               {sortedArmor.length > 0 && (
@@ -1065,7 +1121,7 @@ export function LibrarySection({
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
-                        onDelete={isEditMode && onRemoveArmor ? () => onRemoveArmor(item.id ?? item.name ?? i) : undefined}
+                        onDelete={showLibraryEditControls && onRemoveArmor ? () => onRemoveArmor(item.id ?? item.name ?? i) : undefined}
                         expandedContent={expandedDetails.length > 0 ? (
                           <div className="space-y-1">
                             {expandedDetails.map((detail, idx) => (
@@ -1093,7 +1149,7 @@ export function LibrarySection({
             <div>
               <SectionHeader 
                 title="Equipment" 
-                onAdd={onAddEquipment}
+                onAdd={showLibraryEditControls ? onAddEquipment : undefined}
                 addLabel="Add equipment"
               />
               {sortedEquipment.length > 0 && (
@@ -1139,7 +1195,7 @@ export function LibrarySection({
                         badges={badges}
                         quantity={item.quantity}
                         onQuantityChange={onEquipmentQuantityChange ? (delta) => onEquipmentQuantityChange(item.id ?? item.name ?? i, delta) : undefined}
-                        onDelete={onRemoveEquipment ? () => onRemoveEquipment(item.id ?? item.name ?? i) : undefined}
+                        onDelete={showLibraryEditControls && onRemoveEquipment ? () => onRemoveEquipment(item.id ?? item.name ?? i) : undefined}
                         compact
                       />
                     );
@@ -1163,6 +1219,9 @@ export function LibrarySection({
             archetypeFeats={archetypeFeats}
             characterFeats={characterFeats}
             isEditMode={isEditMode}
+            showEditControls={showLibraryEditControls}
+            maxArchetypeFeats={maxArchetypeFeats}
+            maxCharacterFeats={maxCharacterFeats}
             onFeatUsesChange={onFeatUsesChange}
             onTraitUsesChange={onTraitUsesChange}
             onAddArchetypeFeat={onAddArchetypeFeat}

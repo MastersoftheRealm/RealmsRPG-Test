@@ -103,6 +103,9 @@ export interface UnifiedSelectionModalProps {
   searchPlaceholder?: string;
   searchFields?: (keyof SelectableItem)[];
   
+  /** Optional content between search and list (e.g. SourceFilter for My/Public/All) */
+  headerExtra?: ReactNode;
+  
   // Filters (optional)
   filterContent?: ReactNode;
   showFilters?: boolean;
@@ -142,6 +145,7 @@ export function UnifiedSelectionModal({
   emptySubMessage,
   searchPlaceholder,
   searchFields = ['name', 'description'],
+  headerExtra,
   filterContent,
   showFilters = false,
   showQuantity = false,
@@ -277,6 +281,8 @@ export function UnifiedSelectionModal({
             placeholder={searchPlaceholder || `Search ${itemLabel}s...`}
           />
         </div>
+        
+        {headerExtra && <div className="mb-4">{headerExtra}</div>}
         
         {/* Filters (optional) */}
         {showFilters && filterContent && (

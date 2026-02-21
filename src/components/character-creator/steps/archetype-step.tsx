@@ -65,7 +65,7 @@ export function ArchetypeStep() {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h1>
         
-        <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-6 mb-6">
           <h2 className="text-xl font-bold text-green-800 mb-2">
             {ARCHETYPE_INFO[draft.archetype!.type].title}
           </h2>

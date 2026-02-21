@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
-import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider } from '@/components/shared';
+import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, DecrementButton, IncrementButton } from '@/components/shared';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
 
@@ -583,36 +583,74 @@ export function ArchetypeSection({
             </span>
           </div>
         </>
-      ) : (martialProf > 0 || powerProf > 0) ? (
-        <div className={cn('flex gap-3 mb-4', (martialProf > 0) !== (powerProf > 0) && 'flex-1')}>
-          {powerProf > 0 && (
+      ) : (martialProf > 0 || powerProf > 0 || isEditMode) ? (
+        <div className={cn('flex gap-3 mb-4', (martialProf > 0) !== (powerProf > 0) && martialProf + powerProf > 0 && 'flex-1')}>
+          {(powerProf > 0 || (isEditMode && onPowerProfChange)) && (
             <div className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 dark:bg-violet-900/20',
-              martialProf === 0 && 'flex-1'
+              martialProf === 0 && powerProf > 0 && 'flex-1'
             )}>
               <span className={cn(
                 'font-semibold text-violet-600 dark:text-violet-300',
                 martialProf === 0 ? 'text-base' : 'text-xs'
               )}>Power Prof.</span>
-              <span className={cn(
-                'font-bold text-violet-700 dark:text-violet-200',
-                martialProf === 0 ? 'text-lg' : 'text-sm'
-              )}>{powerProf}</span>
+              {isEditMode && onPowerProfChange ? (
+                <div className="flex items-center gap-1">
+                  <DecrementButton
+                    onClick={() => onPowerProfChange(Math.max(0, powerProf - 1))}
+                    disabled={powerProf <= 0}
+                    size="sm"
+                  />
+                  <span className={cn(
+                    'font-bold text-violet-700 dark:text-violet-200 min-w-[1.5rem] text-center',
+                    martialProf === 0 ? 'text-lg' : 'text-sm'
+                  )}>{powerProf}</span>
+                  <IncrementButton
+                    onClick={() => onPowerProfChange(Math.min(6, powerProf + 1))}
+                    size="sm"
+                    title="Override: can exceed normal total"
+                  />
+                </div>
+              ) : (
+                <span className={cn(
+                  'font-bold text-violet-700 dark:text-violet-200',
+                  martialProf === 0 ? 'text-lg' : 'text-sm'
+                )}>{powerProf}</span>
+              )}
             </div>
           )}
-          {martialProf > 0 && (
+          {(martialProf > 0 || (isEditMode && onMartialProfChange)) && (
             <div className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg bg-martial-light dark:bg-martial-light',
-              powerProf === 0 && 'flex-1'
+              powerProf === 0 && martialProf > 0 && 'flex-1'
             )}>
               <span className={cn(
                 'font-semibold text-martial-text dark:text-martial-border',
                 powerProf === 0 ? 'text-base' : 'text-xs'
               )}>Martial Prof.</span>
-              <span className={cn(
-                'font-bold text-martial-dark dark:text-martial-border',
-                powerProf === 0 ? 'text-lg' : 'text-sm'
-              )}>{martialProf}</span>
+              {isEditMode && onMartialProfChange ? (
+                <div className="flex items-center gap-1">
+                  <DecrementButton
+                    onClick={() => onMartialProfChange(Math.max(0, martialProf - 1))}
+                    disabled={martialProf <= 0}
+                    size="sm"
+                  />
+                  <span className={cn(
+                    'font-bold text-martial-dark dark:text-martial-border min-w-[1.5rem] text-center',
+                    powerProf === 0 ? 'text-lg' : 'text-sm'
+                  )}>{martialProf}</span>
+                  <IncrementButton
+                    onClick={() => onMartialProfChange(Math.min(6, martialProf + 1))}
+                    size="sm"
+                    title="Override: can exceed normal total"
+                  />
+                </div>
+              ) : (
+                <span className={cn(
+                  'font-bold text-martial-dark dark:text-martial-border',
+                  powerProf === 0 ? 'text-lg' : 'text-sm'
+                )}>{martialProf}</span>
+              )}
             </div>
           )}
         </div>

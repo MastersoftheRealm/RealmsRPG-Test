@@ -14,7 +14,9 @@ import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { GridListRow, ListHeader } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
-import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, type PowerPart, type TechniquePart } from '@/hooks';
+import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, type PowerPart, type TechniquePart } from '@/hooks';
+import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
+import { SourceFilter, type SourceFilterValue } from '@/components/shared';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 
 /** Capitalize first letter of each word for display */
@@ -43,12 +45,44 @@ export function PowersStep() {
   const { draft, updateDraft, nextStep, prevStep } = useCharacterCreatorStore();
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
+  const [source, setSource] = useState<SourceFilterValue>('all');
   
-  // Fetch user's library
+  // Fetch user's library and public library
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
+  const { data: publicPowers = [] } = usePublicLibrary('powers');
+  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
   const { data: powerParts } = usePowerParts();
   const { data: techniqueParts } = useTechniqueParts();
+  
+  const normalizedPublicPowers = useMemo(() => 
+    (publicPowers as Record<string, unknown>[]).map((p) => ({
+      id: String(p.id ?? p.docId ?? ''),
+      docId: String(p.id ?? p.docId ?? ''),
+      name: String(p.name ?? ''),
+      description: String(p.description ?? ''),
+      parts: p.parts ?? [],
+      actionType: p.actionType,
+      isReaction: !!p.isReaction,
+      range: p.range,
+      area: p.area,
+      duration: p.duration,
+      damage: p.damage,
+    })) as UserPower[],
+    [publicPowers]
+  );
+  const normalizedPublicTechniques = useMemo(() => 
+    (publicTechniques as Record<string, unknown>[]).map((t) => ({
+      id: String(t.id ?? t.docId ?? ''),
+      docId: String(t.id ?? t.docId ?? ''),
+      name: String(t.name ?? ''),
+      description: String(t.description ?? ''),
+      parts: t.parts ?? [],
+      weapon: t.weapon,
+      damage: t.damage,
+    })) as UserTechnique[],
+    [publicTechniques]
+  );
   
   // Get selected powers and techniques from character draft
   const selectedPowers = draft.powers || [];
@@ -63,9 +97,20 @@ export function PowersStep() {
     [selectedTechniques]
   );
   
-  // Transform user powers to SelectableItems — match add-library-item layout (Action, Damage, Area)
+  const powersForList = useMemo(() => {
+    const my = (source === 'my' || source === 'all') ? userPowers : [];
+    const pub = (source === 'public' || source === 'all') ? normalizedPublicPowers : [];
+    return [...my, ...pub];
+  }, [source, userPowers, normalizedPublicPowers]);
+  const techniquesForList = useMemo(() => {
+    const my = (source === 'my' || source === 'all') ? userTechniques : [];
+    const pub = (source === 'public' || source === 'all') ? normalizedPublicTechniques : [];
+    return [...my, ...pub];
+  }, [source, userTechniques, normalizedPublicTechniques]);
+  
+  // Transform powers to SelectableItems — match add-library-item layout (Action, Damage, Area)
   const availablePowers = useMemo((): SelectableItem[] => {
-    return userPowers.map(power => {
+    return powersForList.map((power: UserPower) => {
       const damageStr = power.damage?.length
         ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
         : '-';
@@ -80,13 +125,14 @@ export function PowersStep() {
           { key: 'Area', value: areaStr, align: 'center' as const },
         ],
         chips: power.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+        data: power,
       };
     });
-  }, [userPowers]);
+  }, [powersForList]);
 
-  // Transform user techniques to SelectableItems — match add-library-item (Energy, Weapon, Training Pts)
+  // Transform techniques to SelectableItems — match add-library-item (Energy, Weapon, Training Pts)
   const availableTechniques = useMemo((): SelectableItem[] => {
-    return userTechniques.map(tech => {
+    return techniquesForList.map((tech: UserTechnique) => {
       const display = deriveTechniqueDisplay(
         {
           name: tech.name,
@@ -107,9 +153,10 @@ export function PowersStep() {
           { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
         ],
         chips: tech.parts?.map(p => ({ name: String(p.name || p.id) })) || undefined,
+        data: tech,
       };
     });
-  }, [userTechniques, techniqueParts]);
+  }, [techniquesForList, techniqueParts]);
   
   // Display items for selected powers/techniques
   const selectedPowerItems = useMemo((): SelectableItem[] => {
@@ -120,13 +167,11 @@ export function PowersStep() {
     return availableTechniques.filter(t => selectedTechniqueIds.has(t.id));
   }, [availableTechniques, selectedTechniqueIds]);
   
-  // Handle power selection - include full parts data for TP calculation
+  // Handle power selection - include full parts data for TP calculation (works for user or public)
   const handlePowerSelect = useCallback((items: SelectableItem[]) => {
     const powers = items.map(item => {
-      // Find the full user power to get parts data
-      const userPower = userPowers.find(p => p.docId === item.id);
-      // Merge codex TP data with saved option levels
-      const partsWithTP = (userPower?.parts || []).map(savedPart => {
+      const userPower = (item.data as UserPower | undefined) ?? userPowers.find((p: UserPower) => p.docId === item.id) ?? normalizedPublicPowers.find((p: UserPower) => p.docId === item.id);
+      const partsWithTP = (userPower?.parts || []).map((savedPart: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }) => {
         const codexPart = powerParts?.find((rp: PowerPart) => 
           String(rp.id) === String(savedPart.id) || 
           rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
@@ -152,15 +197,13 @@ export function PowersStep() {
     });
     updateDraft({ powers });
     setShowPowerModal(false);
-  }, [updateDraft, userPowers, powerParts]);
+  }, [updateDraft, userPowers, normalizedPublicPowers, powerParts]);
   
-  // Handle technique selection - include full parts data for TP calculation
+  // Handle technique selection - include full parts data for TP calculation (works for user or public)
   const handleTechniqueSelect = useCallback((items: SelectableItem[]) => {
     const techniques = items.map(item => {
-      // Find the full user technique to get parts data
-      const userTech = userTechniques.find(t => t.docId === item.id);
-      // Merge codex TP data with saved option levels
-      const partsWithTP = (userTech?.parts || []).map(savedPart => {
+      const userTech = (item.data as UserTechnique | undefined) ?? userTechniques.find((t: UserTechnique) => t.docId === item.id) ?? normalizedPublicTechniques.find((t: UserTechnique) => t.docId === item.id);
+      const partsWithTP = (userTech?.parts || []).map((savedPart: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }) => {
         const codexPart = techniqueParts?.find((rp: TechniquePart) => 
           String(rp.id) === String(savedPart.id) || 
           rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
@@ -186,7 +229,7 @@ export function PowersStep() {
     });
     updateDraft({ techniques });
     setShowTechniqueModal(false);
-  }, [updateDraft, userTechniques, techniqueParts]);
+  }, [updateDraft, userTechniques, normalizedPublicTechniques, techniqueParts]);
   
   // Remove a power
   const removePower = useCallback((powerId: string) => {
@@ -200,7 +243,7 @@ export function PowersStep() {
     updateDraft({ techniques: newTechniques });
   }, [selectedTechniques, updateDraft]);
   
-  const hasContent = userPowers.length > 0 || userTechniques.length > 0;
+  const hasContent = powersForList.length > 0 || techniquesForList.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -264,7 +307,7 @@ export function PowersStep() {
             </div>
             <Button
               onClick={() => setShowPowerModal(true)}
-              disabled={userPowers.length === 0}
+              disabled={powersForList.length === 0}
             >
               <Plus className="w-4 h-4" />
               Add Powers
@@ -333,7 +376,7 @@ export function PowersStep() {
             </div>
             <Button
               onClick={() => setShowTechniqueModal(true)}
-              disabled={userTechniques.length === 0}
+              disabled={techniquesForList.length === 0}
               className="bg-martial-dark hover:bg-martial-text"
             >
               <Plus className="w-4 h-4" />
@@ -405,10 +448,11 @@ export function PowersStep() {
       <UnifiedSelectionModal
         isOpen={showPowerModal}
         onClose={() => setShowPowerModal(false)}
+        headerExtra={<SourceFilter value={source} onChange={setSource} />}
         onConfirm={handlePowerSelect}
         items={availablePowers}
         title="Select Powers"
-        description="Choose powers from your library for your character to know. Click a row (or the + button) to select, then click Add Selected."
+        description="Choose powers from your library or public library. Click a row (or the + button) to select, then click Add Selected."
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder="Search powers..."
         itemLabel="power"
@@ -421,10 +465,11 @@ export function PowersStep() {
       <UnifiedSelectionModal
         isOpen={showTechniqueModal}
         onClose={() => setShowTechniqueModal(false)}
+        headerExtra={<SourceFilter value={source} onChange={setSource} />}
         onConfirm={handleTechniqueSelect}
         items={availableTechniques}
         title="Select Techniques"
-        description="Choose techniques from your library for your character to know. Click a row (or the + button) to select, then click Add Selected."
+        description="Choose techniques from your library or public library. Click a row (or the + button) to select, then click Add Selected."
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."
         itemLabel="technique"

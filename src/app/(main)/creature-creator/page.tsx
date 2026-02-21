@@ -9,9 +9,10 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter } from '@/components/shared';
+import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
-import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, useCreatorSave, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
+import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, useCreatorSave, usePublicLibrary, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
 import {
   transformUserPowerToDisplayItem,
   transformUserTechniqueToDisplayItem,
@@ -91,6 +92,9 @@ function CreatureCreatorContent() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: publicPowers = [] } = usePublicLibrary('powers');
+  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
+  const { data: publicItems = [] } = usePublicLibrary('items');
   
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -101,17 +105,63 @@ function CreatureCreatorContent() {
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
+  const [librarySource, setLibrarySource] = useState<SourceFilterValue>('all');
   
-  // Transform user library data to DisplayItem[] for modals
-  const powerDisplayItems = useMemo(() => 
-    userPowers.map((p: UserPower) => transformUserPowerToDisplayItem(p, powerPartsDb)),
-    [userPowers, powerPartsDb]
+  // Normalize public API item to UserPower/UserTechnique/UserItem shape (with docId for transformers)
+  const normalizedPublicPowers = useMemo(() => 
+    (publicPowers as Record<string, unknown>[]).map((p) => ({
+      id: String(p.id ?? p.docId ?? ''),
+      docId: String(p.id ?? p.docId ?? ''),
+      name: String(p.name ?? ''),
+      description: String(p.description ?? ''),
+      parts: p.parts ?? [],
+      actionType: p.actionType,
+      isReaction: !!p.isReaction,
+      range: p.range,
+      area: p.area,
+      duration: p.duration,
+      damage: p.damage,
+    })) as UserPower[],
+    [publicPowers]
+  );
+  const normalizedPublicTechniques = useMemo(() => 
+    (publicTechniques as Record<string, unknown>[]).map((t) => ({
+      id: String(t.id ?? t.docId ?? ''),
+      docId: String(t.id ?? t.docId ?? ''),
+      name: String(t.name ?? ''),
+      description: String(t.description ?? ''),
+      parts: t.parts ?? [],
+      weapon: t.weapon,
+      damage: t.damage,
+    })) as UserTechnique[],
+    [publicTechniques]
+  );
+  const normalizedPublicItems = useMemo(() => 
+    (publicItems as Record<string, unknown>[]).map((i) => ({
+      id: String(i.id ?? i.docId ?? ''),
+      docId: String(i.id ?? i.docId ?? ''),
+      name: String(i.name ?? ''),
+      description: String(i.description ?? ''),
+      type: (i.type as string) || 'weapon',
+      properties: i.properties ?? [],
+      damage: i.damage,
+      armorValue: i.armorValue,
+    })) as UserItem[],
+    [publicItems]
   );
   
-  const techniqueDisplayItems = useMemo(() => 
-    userTechniques.map((t: UserTechnique) => transformUserTechniqueToDisplayItem(t, techniquePartsDb)),
-    [userTechniques, techniquePartsDb]
-  );
+  // Transform library data (user + public by source) to DisplayItem[] for modals
+  const powerDisplayItems = useMemo(() => {
+    const my = (librarySource === 'my' || librarySource === 'all') ? userPowers : [];
+    const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicPowers : [];
+    return [...my, ...pub].map((p: UserPower) => transformUserPowerToDisplayItem(p, powerPartsDb));
+  }, [userPowers, normalizedPublicPowers, librarySource, powerPartsDb]);
+  
+  const techniqueDisplayItems = useMemo(() => {
+    const my = (librarySource === 'my' || librarySource === 'all') ? userTechniques : [];
+    const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicTechniques : [];
+    return [...my, ...pub].map((t: UserTechnique) => transformUserTechniqueToDisplayItem(t, techniquePartsDb));
+  }, [userTechniques, normalizedPublicTechniques, librarySource, techniquePartsDb]);
   
   const featDisplayItems = useMemo(() => {
     const selectedIds = new Set(
@@ -126,10 +176,12 @@ function CreatureCreatorContent() {
     const selectedIds = new Set(
       creature.armaments.map((a: { id: string }) => String(a.id)).filter((id) => id.length > 0)
     );
-    return userItems
+    const my = (librarySource === 'my' || librarySource === 'all') ? userItems : [];
+    const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicItems : [];
+    return [...my, ...pub]
       .filter((item: UserItem) => !selectedIds.has(item.docId))
       .map((item: UserItem) => transformUserItemToDisplayItem(item, itemPropertiesDb));
-  }, [userItems, creature.armaments, itemPropertiesDb]);
+  }, [userItems, normalizedPublicItems, librarySource, creature.armaments, itemPropertiesDb]);
 
   // Convert to SelectableItem for UnifiedSelectionModal (GridListRow list style)
   const powerSelectableItems = useMemo(() => 
@@ -489,7 +541,7 @@ function CreatureCreatorContent() {
         <div className="self-start sticky top-24 space-y-6">
           <CreatorSummaryPanel
             title="Creature Summary"
-            badge={creature.name ? { label: creature.name, className: 'bg-primary-100 text-primary-700' } : undefined}
+            badge={creature.name ? { label: creature.name, className: 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' } : undefined}
             resourceBoxes={[
               { label: 'Ability Pts', value: stats.abilityRemaining, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
               { label: 'Skill Pts', value: stats.skillRemaining, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
@@ -538,6 +590,7 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showPowerModal}
             onClose={() => setShowPowerModal(false)}
+            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const powers = items.map(displayItemToCreaturePower);
@@ -545,7 +598,7 @@ function CreatureCreatorContent() {
             }}
             items={powerSelectableItems}
             title="Select Powers"
-            description="Choose powers from your library to add to this creature. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose powers from your library or public library. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="power"
             searchPlaceholder="Search powers..."
@@ -556,6 +609,7 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showTechniqueModal}
             onClose={() => setShowTechniqueModal(false)}
+            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const techniques = items.map(displayItemToCreatureTechnique);
@@ -563,7 +617,7 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            description="Choose techniques from your library to add to this creature. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose techniques from your library or public library. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
@@ -592,6 +646,7 @@ function CreatureCreatorContent() {
           <UnifiedSelectionModal
             isOpen={showArmamentModal}
             onClose={() => setShowArmamentModal(false)}
+            headerExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
               const armaments = items.map(displayItemToCreatureArmament);
@@ -599,7 +654,7 @@ function CreatureCreatorContent() {
             }}
             items={armamentSelectableItems}
             title="Select Armaments"
-            description="Choose items from your library to equip on this creature. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose items from your library or public library. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="armament"
             searchPlaceholder="Search items..."
@@ -791,7 +846,7 @@ function CreatureCreatorContent() {
                 <ChipList 
                   items={creature.resistances} 
                   onRemove={(item) => removeFromArray('resistances', item)}
-                  color="bg-green-100 text-green-800"
+                  color="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}
@@ -840,8 +895,8 @@ function CreatureCreatorContent() {
                 <ExpandableChipList 
                   items={creature.senses} 
                   onRemove={(item) => removeFromArray('senses', item)}
-                  color="bg-info-light text-info-700"
-                  rowHoverClass="hover:bg-info-200"
+                  color="bg-info-light text-info-700 dark:text-info-300"
+                  rowHoverClass="hover:bg-info-200 dark:hover:bg-info-900/40"
                   descriptions={senseDescriptions}
                 />
                 <AddItemDropdown
@@ -856,8 +911,8 @@ function CreatureCreatorContent() {
                 <ExpandableChipList 
                   items={creature.movementTypes} 
                   onRemove={(item) => removeFromArray('movementTypes', item)}
-                  color="bg-amber-100 text-amber-800"
-                  rowHoverClass="hover:bg-amber-200"
+                  color="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300"
+                  rowHoverClass="hover:bg-amber-200 dark:hover:bg-amber-800/40"
                   descriptions={movementDescriptions}
                 />
                 <AddItemDropdown
@@ -894,9 +949,9 @@ function CreatureCreatorContent() {
                 <span className={cn(
                   'px-3 py-1 rounded-full text-sm font-medium',
                   stats.skillRemaining < 0 
-                    ? 'bg-red-100 text-red-700' 
+                    ? 'bg-red-100 text-red-700 dark:bg-danger-900/30 dark:text-danger-300' 
                     : stats.skillRemaining === 0
-                    ? 'bg-green-100 text-green-700'
+                    ? 'bg-green-100 text-green-700 dark:bg-success-900/30 dark:text-success-300'
                     : 'bg-surface-alt text-text-secondary'
                 )}>
                   {stats.skillRemaining} remaining
@@ -944,7 +999,7 @@ function CreatureCreatorContent() {
             <ChipList 
               items={creature.languages} 
               onRemove={(item) => removeFromArray('languages', item)}
-              color="bg-teal-100 text-teal-800"
+              color="bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300"
             />
             <div className="flex gap-2 mt-2">
               <Input

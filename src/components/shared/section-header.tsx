@@ -32,6 +32,8 @@ export interface SectionHeaderProps {
   addLabel?: string;
   /** Additional content to render on the right side (before add button) */
   rightContent?: ReactNode;
+  /** Optional className for the add button (e.g. text-danger-600 when over budget) */
+  addButtonClassName?: string;
   /** Custom className for container */
   className?: string;
   /** Size variant - controls text size and spacing */
@@ -49,6 +51,7 @@ export function SectionHeader({
   onAdd,
   addLabel,
   rightContent,
+  addButtonClassName,
   className,
   size = 'sm',
 }: SectionHeaderProps) {
@@ -74,7 +77,10 @@ export function SectionHeader({
             size="sm"
             onClick={onAdd}
             label={addLabel || `Add ${title.toLowerCase()}`}
-            className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+            className={cn(
+              'text-primary-600 hover:text-primary-700 hover:bg-primary-50',
+              addButtonClassName
+            )}
           >
             <Plus className="w-4 h-4" />
           </IconButton>

@@ -9,10 +9,11 @@
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
-import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, type Species, type Trait, type Skill } from '@/hooks';
+import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPointsForEntity, calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
+import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import {
   SheetHeader,
   AbilitiesSection,
@@ -55,6 +56,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [skillModalType, setSkillModalType] = useState<SkillModalType>(null);
   const [featToRemove, setFeatToRemove] = useState<{ id: string; name: string } | null>(null);
   const [uploadingPortrait, setUploadingPortrait] = useState(false);
+  const [portraitRefreshKey, setPortraitRefreshKey] = useState<number | null>(null);
+  const [showEditArchetypeModal, setShowEditArchetypeModal] = useState(false);
   
   // Fetch user's library for data enrichment
   const { data: userPowers = [] } = useUserPowers();
@@ -70,6 +73,46 @@ export default function CharacterSheetPage({ params }: PageParams) {
   
   // Codex equipment for enrichment fallback
   const { data: codexEquipment = [] } = useEquipment();
+  
+  // Public library for enrichment fallback (character can reference public items without copying to user library)
+  const { data: publicPowersRaw = [] } = usePublicLibrary('powers');
+  const { data: publicTechniquesRaw = [] } = usePublicLibrary('techniques');
+  const { data: publicItemsRaw = [] } = usePublicLibrary('items');
+  const publicLibraries = useMemo(() => {
+    const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
+      id: String(p.id ?? p.docId ?? ''),
+      docId: String(p.id ?? p.docId ?? ''),
+      name: String(p.name ?? ''),
+      description: String(p.description ?? ''),
+      parts: p.parts ?? [],
+      actionType: p.actionType,
+      isReaction: !!p.isReaction,
+      range: p.range,
+      area: p.area,
+      duration: p.duration,
+      damage: p.damage,
+    }));
+    const techniques = (publicTechniquesRaw as Record<string, unknown>[]).map((t) => ({
+      id: String(t.id ?? t.docId ?? ''),
+      docId: String(t.id ?? t.docId ?? ''),
+      name: String(t.name ?? ''),
+      description: String(t.description ?? ''),
+      parts: t.parts ?? [],
+      weapon: t.weapon,
+      damage: t.damage,
+    }));
+    const items = (publicItemsRaw as Record<string, unknown>[]).map((i) => ({
+      id: String(i.id ?? i.docId ?? ''),
+      docId: String(i.id ?? i.docId ?? ''),
+      name: String(i.name ?? ''),
+      description: String(i.description ?? ''),
+      type: (i.type as string) || 'weapon',
+      properties: i.properties ?? [],
+      damage: i.damage,
+      armorValue: i.armorValue,
+    }));
+    return { powers, techniques, items } as { powers: import('@/hooks/use-user-library').UserPower[]; techniques: import('@/hooks/use-user-library').UserTechnique[]; items: import('@/hooks/use-user-library').UserItem[] };
+  }, [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]);
   
   // Fetch all species data to look up species traits
   const { data: allSpecies = [] } = useSpecies();
@@ -92,14 +135,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
     };
   }, [campaignsFull, user?.uid, character]);
   
-  // Enrich character data: use owner's library when viewing another user's character, else current user's library
+  // Enrich character data: use owner's library when viewing another user's character, else current user's library. Public library used as fallback so character-referenced public items display correctly.
   const enrichedData = useMemo(() => {
     if (!character) return null;
     const powers = libraryForView ? (libraryForView.powers as unknown as typeof userPowers) : userPowers;
     const techniques = libraryForView ? (libraryForView.techniques as unknown as typeof userTechniques) : userTechniques;
     const items = libraryForView ? (libraryForView.items as unknown as typeof userItems) : userItems;
-    return enrichCharacterData(character, powers, techniques, items, codexEquipment, powerPartsDb, techniquePartsDb);
-  }, [character, libraryForView, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb]);
+    return enrichCharacterData(character, powers, techniques, items, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries);
+  }, [character, libraryForView, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries]);
   
   // Look up character's species and its species_traits (automatically granted to all characters of that species)
   const characterSpeciesTraits = useMemo(() => {
@@ -255,9 +298,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
       return sum + cost;
     }, 0);
     
-    // Defense vals cost 2 skill points per 1
+    // Defense vals: DEFENSE_INCREASE_COST skill points per +1 (core rules: 2)
     const defVals = character.defenseVals || character.defenseSkills || {};
-    const spentDefensePoints = Object.values(defVals).reduce((sum: number, val) => sum + ((val as number || 0) * 2), 0);
+    const spentDefensePoints = Object.values(defVals).reduce((sum: number, val) => sum + ((val as number || 0) * DEFENSE_INCREASE_COST), 0);
     spentSkillPoints += spentDefensePoints;
     
     return {
@@ -318,9 +361,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
       }
       return sum + cost;
     }, 0);
-    // Defense vals cost 2 skill points per 1
+    // Defense vals: DEFENSE_INCREASE_COST skill points per +1
     const defVals2 = character.defenseVals || character.defenseSkills || {};
-    const spentDefensePoints = Object.values(defVals2).reduce((sum: number, val) => sum + ((val as number) * 2), 0);
+    const spentDefensePoints = Object.values(defVals2).reduce((sum: number, val) => sum + ((val as number || 0) * DEFENSE_INCREASE_COST), 0);
     const skillPointsRemaining = totalSkillPoints - spentSkillPoints - spentDefensePoints;
     
     // Calculate feat slots using correct formulas
@@ -448,6 +491,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       const { url } = (await res.json()) as { url: string };
 
       setCharacter(prev => prev ? { ...prev, portrait: url } : null);
+      setPortraitRefreshKey(Date.now());
       await saveCharacter(character.id, { portrait: url });
     } catch (err) {
       console.error('Portrait upload error:', err);
@@ -1108,6 +1152,22 @@ export default function CharacterSheetPage({ params }: PageParams) {
     } : null);
   }, [character]);
   
+  // Edit archetype modal save: update archetype, abilities, and proficiencies
+  const handleArchetypeSave = useCallback((result: { archetype: { id: string; type: string }; pow_abil?: AbilityName; mart_abil?: AbilityName; mart_prof: number; pow_prof: number }) => {
+    if (!character) return;
+    setCharacter(prev => prev ? {
+      ...prev,
+      archetype: { id: result.archetype.id, type: result.archetype.type as 'power' | 'martial' | 'powered-martial' },
+      pow_abil: result.pow_abil,
+      mart_abil: result.mart_abil,
+      mart_prof: result.mart_prof,
+      pow_prof: result.pow_prof,
+      martialProficiency: result.mart_prof,
+      powerProficiency: result.pow_prof,
+    } : null);
+    setShowEditArchetypeModal(false);
+  }, [character]);
+
   // Mixed archetype milestone choice handler
   const handleMilestoneChoiceChange = useCallback((level: number, choice: 'innate' | 'feat') => {
     if (!character) return;
@@ -1331,9 +1391,6 @@ export default function CharacterSheetPage({ params }: PageParams) {
         <SheetActionToolbar
           isEditMode={isEditMode}
           hasUnappliedPoints={hasUnappliedPoints}
-          hasUnsavedChanges={hasUnsavedChanges}
-          isSaving={saving || isSaving}
-          lastSaved={lastSaved}
           onToggleEditMode={handleToggleEditMode}
           onRecovery={() => setShowRecoveryModal(true)}
           onLevelUp={() => setShowLevelUpModal(true)}
@@ -1366,6 +1423,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onEnergyPointsChange={handleEnergyPointsChange}
                 onPortraitChange={handlePortraitChange}
                 isUploadingPortrait={uploadingPortrait}
+                portraitRefreshKey={portraitRefreshKey}
                 onNameChange={effectiveEditMode ? handleNameChange : undefined}
                 onExperienceChange={handleExperienceChange}
                 speedBase={character.speedBase ?? 6}
@@ -1374,6 +1432,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onEvasionBaseChange={(v: number) => setCharacter(prev => prev ? { ...prev, evasionBase: v } : null)}
                 innateThreshold={archetypeProgression?.innateThreshold || 0}
                 innatePools={archetypeProgression?.innatePools || 0}
+                onEditArchetype={effectiveEditMode ? () => setShowEditArchetypeModal(true) : undefined}
               />
               
               <AbilitiesSection
@@ -1398,7 +1457,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   skills={skills}
                   abilities={character.abilities}
                   isEditMode={effectiveEditMode}
-                  totalSkillPoints={calculateSkillPointsForEntity(character.level || 1, 'character')}
+                  totalSkillPoints={pointBudgets?.totalSkillPoints ?? calculateSkillPointsForEntity(character.level || 1, 'character')}
+                  spentSkillPoints={pointBudgets?.spentSkillPoints}
                   speciesSkills={characterSpeciesSkills}
                   onSkillChange={handleSkillChange}
                   onRemoveSkill={handleRemoveSkill}
@@ -1518,6 +1578,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   speciesTraitsFromCodex={characterSpeciesTraits}
                   archetypeFeats={character.archetypeFeats}
                   characterFeats={character.feats}
+                  maxArchetypeFeats={calculateMaxArchetypeFeats(character.level || 1, (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial')}
+                  maxCharacterFeats={calculateMaxCharacterFeats(character.level || 1)}
                   onFeatUsesChange={handleFeatUsesChange}
                   onAddArchetypeFeat={() => setFeatModalType('archetype')}
                   onAddCharacterFeat={() => setFeatModalType('character')}
@@ -1559,6 +1621,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
           onLevelUp={handleLevelUp}
           onFullRecovery={handleFullRecovery}
           onPartialRecovery={handlePartialRecovery}
+          showEditArchetypeModal={showEditArchetypeModal}
+          setShowEditArchetypeModal={setShowEditArchetypeModal}
+          onArchetypeSave={handleArchetypeSave}
         />
         </div>
       </CharacterSheetProvider>

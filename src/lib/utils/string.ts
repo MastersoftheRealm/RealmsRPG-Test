@@ -9,7 +9,18 @@
  */
 export function capitalize(str: string | null | undefined): string {
   if (!str) return '';
-  return String(str).charAt(0).toUpperCase() + String(str).slice(1);
+  return String(str).charAt(0).toUpperCase() + String(str).slice(1).toLowerCase();
+}
+
+/**
+ * Capitalize each word (e.g. "slashing" → "Slashing", "fire" → "Fire").
+ */
+export function capitalizeWords(str: string | null | undefined): string {
+  if (!str) return '';
+  return String(str)
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 }
 
 /**
@@ -20,8 +31,17 @@ export function capitalize(str: string | null | undefined): string {
 export function formatDamageDisplay(
   damage: unknown
 ): string {
-  // Already a string
-  if (typeof damage === 'string') return damage;
+  // Already a string — capitalize damage type (e.g. "2d6 slashing" → "2d6 Slashing")
+  if (typeof damage === 'string') {
+    const trimmed = damage.trim();
+    const lastSpace = trimmed.lastIndexOf(' ');
+    if (lastSpace > 0) {
+      const dice = trimmed.slice(0, lastSpace);
+      const typePart = trimmed.slice(lastSpace + 1);
+      return `${dice} ${capitalize(typePart)}`;
+    }
+    return trimmed;
+  }
   
   // Null/undefined
   if (damage == null) return '';
@@ -30,19 +50,19 @@ export function formatDamageDisplay(
   if (typeof damage === 'object' && !Array.isArray(damage)) {
     const d = damage as Record<string, unknown>;
     if (d.amount && d.size) {
-      const typeStr = d.type && d.type !== 'none' ? ` ${d.type}` : '';
+      const typeStr = d.type && d.type !== 'none' ? ` ${capitalize(String(d.type))}` : '';
       return `${d.amount}d${d.size}${typeStr}`;
     }
     return '';
   }
-  
+
   // Array of damage objects
   if (Array.isArray(damage)) {
     const formatted = damage
       .filter((d): d is Record<string, unknown> => d && typeof d === 'object')
       .map(d => {
         if (d.amount && d.size) {
-          const typeStr = d.type && d.type !== 'none' ? ` ${d.type}` : '';
+          const typeStr = d.type && d.type !== 'none' ? ` ${capitalize(String(d.type))}` : '';
           return `${d.amount}d${d.size}${typeStr}`;
         }
         return '';
@@ -50,7 +70,7 @@ export function formatDamageDisplay(
       .filter(Boolean);
     return formatted.join(', ');
   }
-  
+
   return '';
 }
 

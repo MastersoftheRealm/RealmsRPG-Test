@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
@@ -28,11 +28,13 @@ import {
   useSpecies,
   useCodexFeats,
   useCodexSkills,
+  usePublicLibrary,
   type Species,
   type Skill,
 } from '@/hooks';
 import { calculateArchetypeProgression, calculateSkillPointsForEntity } from '@/lib/game/formulas';
 import type { Character, Item } from '@/types';
+import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 
 export default function CampaignCharacterViewPage() {
@@ -63,6 +65,44 @@ function CampaignCharacterViewContent() {
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
   const { data: codexEquipment = [] } = useEquipment();
+  const { data: publicPowersRaw = [] } = usePublicLibrary('powers');
+  const { data: publicTechniquesRaw = [] } = usePublicLibrary('techniques');
+  const { data: publicItemsRaw = [] } = usePublicLibrary('items');
+  const publicLibraries = useMemo(() => {
+    const powers = (publicPowersRaw as Record<string, unknown>[]).map((p) => ({
+      id: String(p.id ?? p.docId ?? ''),
+      docId: String(p.id ?? p.docId ?? ''),
+      name: String(p.name ?? ''),
+      description: String(p.description ?? ''),
+      parts: p.parts ?? [],
+      actionType: p.actionType,
+      isReaction: !!p.isReaction,
+      range: p.range,
+      area: p.area,
+      duration: p.duration,
+      damage: p.damage,
+    }));
+    const techniques = (publicTechniquesRaw as Record<string, unknown>[]).map((t) => ({
+      id: String(t.id ?? t.docId ?? ''),
+      docId: String(t.id ?? t.docId ?? ''),
+      name: String(t.name ?? ''),
+      description: String(t.description ?? ''),
+      parts: t.parts ?? [],
+      weapon: t.weapon,
+      damage: t.damage,
+    }));
+    const items = (publicItemsRaw as Record<string, unknown>[]).map((i) => ({
+      id: String(i.id ?? i.docId ?? ''),
+      docId: String(i.id ?? i.docId ?? ''),
+      name: String(i.name ?? ''),
+      description: String(i.description ?? ''),
+      type: (i.type as string) || 'weapon',
+      properties: i.properties ?? [],
+      damage: i.damage,
+      armorValue: i.armorValue,
+    }));
+    return { powers, techniques, items } as { powers: UserPower[]; techniques: UserTechnique[]; items: UserItem[] };
+  }, [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]);
   const { data: allSpecies = [] } = useSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: featsDb = [] } = useCodexFeats();
@@ -97,7 +137,7 @@ function CampaignCharacterViewContent() {
   const techniquesForEnrich = (libraryForView?.techniques as typeof userTechniques) ?? userTechniques;
   const itemsForEnrich = (libraryForView?.items as typeof userItems) ?? userItems;
   const enrichedData = character
-    ? enrichCharacterData(character, powersForEnrich, techniquesForEnrich, itemsForEnrich, codexEquipment, powerPartsDb, techniquePartsDb)
+    ? enrichCharacterData(character, powersForEnrich, techniquesForEnrich, itemsForEnrich, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries)
     : null;
 
   const characterSpeciesSkills = character && allSpecies.length

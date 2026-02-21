@@ -6186,3 +6186,27 @@ Agents should **create new tasks** during their work when they discover addition
     - Phase 3 (optional): LoadCreatureModal uses ListHeader+GridListRow+search; shared useModalListState or Add-X via UnifiedSelectionModal where feasible.
     - npm run build passes.
   notes: "Done 2026-02-20: Phase 1 — UnifiedSelectionModal, LoadFromLibraryModal, AddFeatModal, AddLibraryItemModal, AddSkillModal use EmptyState/LoadingState; AddLibraryItemModal ListHeader wrapper removed; AGENT_GUIDE list modal layout added. Phase 2 — AddFeatModal and AddSkillModal use FilterSection; padding standardized (px-4 py-3 border-border-light bg-surface-alt). Phase 3 — LoadCreatureModal refactored to ListHeader+GridListRow+SearchInput+EmptyState/LoadingState. useModalListState hook added; used in LoadFromLibraryModal and LoadCreatureModal. npm run build passes."
+
+- id: TASK-265
+  title: Add source filter (My/Public/All) to add-X modals + reference public items on character
+  priority: high
+  status: done
+  created_at: 2026-02-21
+  created_by: agent
+  description: |
+    In modals that add powers, techniques, armor, weapons, equipment (character sheet, character creator, creature creator), add the same SourceFilter as the Library page (All sources / Public library / My library) so users can add public library items to characters. Use reference-based approach: when adding a public item to a character, do NOT copy it to the user's personal library; store only the reference (id + name) on the character. Enrichment resolves from user library first, then public library by id. Copy to personal library remains an explicit action on the Library page only. See src/docs/ai/PUBLIC_LIBRARY_IN_MODALS_DESIGN.md.
+  related_files:
+    - src/components/shared/filters/source-filter.tsx
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/lib/data-enrichment.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/library/LibraryPowersTab.tsx
+  acceptance_criteria:
+    - Add-library-item modal (character sheet), equipment-step (creator), and creature creator power/technique/item modals show SourceFilter (All / Public / My) and merge user + public lists by source, same pattern as Library tabs.
+    - Adding a public item to a character/creature adds only a reference (id, name) to the character; no new row in user_powers/user_techniques/user_items.
+    - enrichCharacterData (and callers) receive optional public library arrays; enrichment resolves by id from user library first, then from public library so character sheet displays public items correctly.
+    - npm run build passes.
+  notes: "Done 2026-02-21: SourceFilter + public merge in add-library-item-modal, equipment-step, powers-step, creature creator (power/technique/armament modals). UnifiedSelectionModal headerExtra prop for SourceFilter. enrichPowers/enrichTechniques/enrichItems accept optional public library; enrichCharacterData accepts publicLibraries; character sheet and campaign view fetch public and pass to enrichment. Fixed sheet-header onEditArchetype destructuring. npm run build passes."
