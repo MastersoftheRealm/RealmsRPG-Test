@@ -1,5 +1,6 @@
 /**
  * Admin Public Library — Creatures tab
+ * List (name, level, type) + structured edit modal. Row delete with confirm.
  */
 
 'use client';
@@ -13,14 +14,15 @@ import {
   ErrorDisplay,
   GridListRow,
   ListEmptyState,
+  DeleteConfirmModal,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { usePublicLibrary } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
 import { Users } from 'lucide-react';
+import { PublicCreatureEditModal } from './PublicCreatureEditModal';
 
-const GRID = '1.5fr 0.8fr 1fr 80px';
+const CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
 const QUERY_KEY = ['public-library', 'creatures'] as const;
 
 export function AdminPublicCreaturesTab() {
@@ -29,43 +31,48 @@ export function AdminPublicCreaturesTab() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; data: Record<string, unknown> } | null>(null);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [jsonBody, setJsonBody] = useState('{}');
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const { sortState, handleSort, sortItems } = useSort('name');
 
+  const cardData = useMemo(() => {
+    return (items as Array<Record<string, unknown>>).map((c) => ({
+      id: String(c.id ?? c.docId ?? ''),
+      raw: c,
+      name: String(c.name ?? ''),
+      description: String(c.description ?? ''),
+      level: Number(c.level ?? 0),
+      type: String(c.type ?? ''),
+    }));
+  }, [items]);
+
   const filtered = useMemo(() => {
-    let list = items as Array<Record<string, unknown>>;
+    let r = cardData;
     if (search) {
       const s = search.toLowerCase();
-      list = list.filter((p: Record<string, unknown>) =>
-        String(p.name ?? '').toLowerCase().includes(s) || String(p.description ?? '').toLowerCase().includes(s)
+      r = r.filter(
+        (x) =>
+          String(x.name ?? '').toLowerCase().includes(s) ||
+          String(x.type ?? '').toLowerCase().includes(s) ||
+          String(x.description ?? '').toLowerCase().includes(s)
       );
     }
-    return sortItems(list.map((p: Record<string, unknown>) => ({ ...p, name: String(p.name ?? '') })));
-  }, [items, search, sortItems]);
+    return sortItems(r);
+  }, [cardData, search, sortItems]);
 
   const openAdd = () => {
     setEditing(null);
-    setName('');
-    setDescription('');
-    setJsonBody('{}');
     setModalOpen(true);
   };
 
-  const openEdit = (item: Record<string, unknown>) => {
-    const id = String(item.id ?? item.docId ?? '');
-    const data = { ...item } as Record<string, unknown>;
+  const openEdit = (item: (typeof cardData)[0]) => {
+    const data = { ...item.raw } as Record<string, unknown>;
     delete data.id;
     delete data.docId;
     delete data._source;
-    setEditing({ id, name: String(item.name ?? ''), data });
-    setName(String(item.name ?? ''));
-    setDescription(String(item.description ?? ''));
-    setJsonBody(JSON.stringify(data, null, 2));
+    setEditing({ id: item.id, name: item.name, data });
     setModalOpen(true);
   };
 
@@ -75,22 +82,9 @@ export function AdminPublicCreaturesTab() {
     setDeleteId(null);
   };
 
-  const handleSave = async () => {
-    if (!name.trim()) return;
+  const handleSave = async (payload: Record<string, unknown>) => {
     setSaving(true);
     try {
-      let payload: Record<string, unknown>;
-      try {
-        payload = JSON.parse(jsonBody || '{}') as Record<string, unknown>;
-      } catch {
-        alert('Invalid JSON in document body.');
-        setSaving(false);
-        return;
-      }
-      payload.name = name.trim();
-      payload.description = description.trim();
-      if (editing) payload.id = editing.id;
-
       const res = await fetch(`/api/public/creatures`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,22 +103,34 @@ export function AdminPublicCreaturesTab() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteFromModal = () => {
     if (!editing) return;
     if (deleteId !== editing.id) {
       setDeleteId(editing.id);
       return;
     }
     setSaving(true);
+    fetch(`/api/public/creatures?id=${encodeURIComponent(editing.id)}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) throw new Error(res.statusText);
+        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        closeModal();
+      })
+      .catch((e) => alert(e instanceof Error ? e.message : 'Failed to delete'))
+      .finally(() => setSaving(false));
+  };
+
+  const handleDeleteFromList = async () => {
+    if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/public/creatures?id=${encodeURIComponent(editing.id)}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error(await res.text());
+      const res = await fetch(`/api/public/creatures?id=${encodeURIComponent(deleteConfirm.id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error(res.statusText);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      closeModal();
+      setDeleteConfirm(null);
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to delete');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -143,7 +149,7 @@ export function AdminPublicCreaturesTab() {
           { key: 'type', label: 'TYPE', sortable: false as const },
           { key: '_actions', label: '', sortable: false as const },
         ]}
-        gridColumns={GRID}
+        gridColumns={CREATURE_GRID}
         sortState={sortState}
         onSort={handleSort}
       />
@@ -151,48 +157,52 @@ export function AdminPublicCreaturesTab() {
         {isLoading ? (
           <LoadingState />
         ) : filtered.length === 0 ? (
-          <ListEmptyState icon={<Users className="w-8 h-8" />} title="No public creatures" message="Add one from the header or publish from a creator." />
+          <ListEmptyState
+            icon={<Users className="w-8 h-8" />}
+            title="No public creatures"
+            message="Add one from the header or publish from a creator."
+          />
         ) : (
-          filtered.map((p: Record<string, unknown>) => (
+          filtered.map((c) => (
             <GridListRow
-              key={String(p.id ?? p.docId)}
-              id={String(p.id ?? p.docId)}
-              name={String(p.name ?? '')}
-              description={String(p.description ?? '')}
-              gridColumns={GRID}
+              key={c.id}
+              id={c.id}
+              name={c.name}
+              description={c.description}
+              gridColumns={CREATURE_GRID}
               columns={[
-                { key: 'Level', value: String(p.level ?? '-'), highlight: true },
-                { key: 'Type', value: String(p.type ?? '-') },
+                { key: 'Level', value: c.level, highlight: true },
+                { key: 'Type', value: c.type },
               ]}
-              onEdit={() => openEdit(p)}
+              onEdit={() => openEdit(c)}
+              onDelete={() => setDeleteConfirm({ id: c.id, name: c.name })}
             />
           ))
         )}
       </div>
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Public Creature' : 'Add Public Creature'}>
-        <div className="space-y-4">
-          <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Creature name" />
-          <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description" rows={2} />
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Document (JSON)</label>
-            <Textarea value={jsonBody} onChange={(e) => setJsonBody(e.target.value)} className="font-mono text-sm" rows={12} placeholder="{}" />
-          </div>
-          <div className="flex justify-between pt-2">
-            <div>
-              {editing && (
-                <Button variant="outline" onClick={handleDelete} disabled={saving}>
-                  {deleteId === editing.id ? 'Confirm delete?' : 'Delete'}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={closeModal}>Cancel</Button>
-              <Button variant="primary" onClick={handleSave} disabled={saving}>Save</Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
+      <PublicCreatureEditModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        initialData={editing?.data ?? null}
+        existingId={editing?.id ?? null}
+        onSave={handleSave}
+        onDelete={editing ? handleDeleteFromModal : null}
+        saving={saving}
+        deleteConfirm={editing ? deleteId === editing.id : false}
+      />
+
+      {deleteConfirm && (
+        <DeleteConfirmModal
+          isOpen={true}
+          itemName={deleteConfirm.name}
+          itemType="creature"
+          deleteContext="public library"
+          isDeleting={false}
+          onConfirm={handleDeleteFromList}
+          onClose={() => setDeleteConfirm(null)}
+        />
+      )}
     </div>
   );
 }

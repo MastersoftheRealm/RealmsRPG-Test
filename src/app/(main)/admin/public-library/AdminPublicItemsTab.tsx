@@ -1,5 +1,6 @@
 /**
  * Admin Public Library — Armaments (items) tab
+ * List displayed like Library (type, rarity, currency, TP, range, damage, properties). Edit modal + row delete.
  */
 
 'use client';
@@ -13,59 +14,102 @@ import {
   ErrorDisplay,
   GridListRow,
   ListEmptyState,
+  DeleteConfirmModal,
+  type ChipData,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea } from '@/components/ui';
-import { usePublicLibrary } from '@/hooks';
+import { usePublicLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
+import type { ItemPropertyPayload, ItemDamage } from '@/lib/calculators/item-calc';
+import {
+  calculateItemCosts,
+  calculateCurrencyCostAndRarity,
+  formatRange,
+  formatDamage,
+} from '@/lib/calculators/item-calc';
 import { Shield } from 'lucide-react';
+import { PublicItemEditModal } from './PublicItemEditModal';
 
-const GRID = '1.5fr 0.8fr 0.8fr 80px';
+const ITEM_GRID = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const QUERY_KEY = ['public-library', 'items'] as const;
+
+const TYPE_MAP: Record<string, string> = {
+  weapon: 'Weapon',
+  armor: 'Armor',
+  shield: 'Shield',
+  equipment: 'Equipment',
+};
 
 export function AdminPublicItemsTab() {
   const queryClient = useQueryClient();
   const { data: items = [], isLoading, error } = usePublicLibrary('items');
+  const { data: propertiesDb = [] } = useItemProperties();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string; data: Record<string, unknown> } | null>(null);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [jsonBody, setJsonBody] = useState('{}');
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const { sortState, handleSort, sortItems } = useSort('name');
 
+  const cardData = useMemo(() => {
+    return (items as Array<Record<string, unknown>>).map((item) => {
+      const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
+      const costs = calculateItemCosts(props, propertiesDb);
+      const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
+      const rangeStr = formatRange(props);
+      const damageArr = item.damage;
+      const damageStr = Array.isArray(damageArr) && damageArr[0]
+        ? formatDamage(damageArr as ItemDamage[])
+        : '';
+      const typeStr = TYPE_MAP[String(item.type ?? '').toLowerCase()] || String(item.type ?? '');
+      const parts: ChipData[] = ((item.properties as Array<{ id?: unknown; name?: string; op_1_lvl?: number }>) || []).map((prop) => ({
+        name: prop.name || '',
+        cost: prop.op_1_lvl ?? 1,
+        costLabel: 'Lvl',
+      }));
+      return {
+        id: String(item.id ?? item.docId ?? ''),
+        raw: item,
+        name: String(item.name ?? ''),
+        description: String(item.description ?? ''),
+        type: typeStr,
+        rarity,
+        currency: currencyCost,
+        tp: costs.totalTP,
+        range: rangeStr,
+        damage: damageStr,
+        parts,
+      };
+    });
+  }, [items, propertiesDb]);
+
   const filtered = useMemo(() => {
-    let list = items as Array<Record<string, unknown>>;
+    let r = cardData;
     if (search) {
       const s = search.toLowerCase();
-      list = list.filter((p: Record<string, unknown>) =>
-        String(p.name ?? '').toLowerCase().includes(s) || String(p.description ?? '').toLowerCase().includes(s)
+      r = r.filter(
+        (x) =>
+          String(x.name ?? '').toLowerCase().includes(s) ||
+          String(x.description ?? '').toLowerCase().includes(s) ||
+          String(x.type ?? '').toLowerCase().includes(s)
       );
     }
-    return sortItems(list.map((p: Record<string, unknown>) => ({ ...p, name: String(p.name ?? '') })));
-  }, [items, search, sortItems]);
+    return sortItems(r);
+  }, [cardData, search, sortItems]);
 
   const openAdd = () => {
     setEditing(null);
-    setName('');
-    setDescription('');
-    setJsonBody('{}');
     setModalOpen(true);
   };
 
-  const openEdit = (item: Record<string, unknown>) => {
-    const id = String(item.id ?? item.docId ?? '');
-    const data = { ...item } as Record<string, unknown>;
+  const openEdit = (item: (typeof cardData)[0]) => {
+    const data = { ...item.raw } as Record<string, unknown>;
     delete data.id;
     delete data.docId;
     delete data._source;
-    setEditing({ id, name: String(item.name ?? ''), data });
-    setName(String(item.name ?? ''));
-    setDescription(String(item.description ?? ''));
-    setJsonBody(JSON.stringify(data, null, 2));
+    setEditing({ id: item.id, name: item.name, data });
     setModalOpen(true);
   };
 
@@ -75,22 +119,9 @@ export function AdminPublicItemsTab() {
     setDeleteId(null);
   };
 
-  const handleSave = async () => {
-    if (!name.trim()) return;
+  const handleSave = async (payload: Record<string, unknown>) => {
     setSaving(true);
     try {
-      let payload: Record<string, unknown>;
-      try {
-        payload = JSON.parse(jsonBody || '{}') as Record<string, unknown>;
-      } catch {
-        alert('Invalid JSON in document body.');
-        setSaving(false);
-        return;
-      }
-      payload.name = name.trim();
-      payload.description = description.trim();
-      if (editing) payload.id = editing.id;
-
       const res = await fetch(`/api/public/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -109,22 +140,34 @@ export function AdminPublicItemsTab() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteFromModal = () => {
     if (!editing) return;
     if (deleteId !== editing.id) {
       setDeleteId(editing.id);
       return;
     }
     setSaving(true);
+    fetch(`/api/public/items?id=${encodeURIComponent(editing.id)}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) throw new Error(res.statusText);
+        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        closeModal();
+      })
+      .catch((e) => alert(e instanceof Error ? e.message : 'Failed to delete'))
+      .finally(() => setSaving(false));
+  };
+
+  const handleDeleteFromList = async () => {
+    if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/public/items?id=${encodeURIComponent(editing.id)}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error(await res.text());
+      const res = await fetch(`/api/public/items?id=${encodeURIComponent(deleteConfirm.id)}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error(res.statusText);
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      closeModal();
+      setDeleteConfirm(null);
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to delete');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -141,9 +184,13 @@ export function AdminPublicItemsTab() {
           { key: 'name', label: 'NAME' },
           { key: 'type', label: 'TYPE', sortable: false as const },
           { key: 'rarity', label: 'RARITY', sortable: false as const },
+          { key: 'currency', label: 'CURRENCY', sortable: false as const },
+          { key: 'tp', label: 'TP', sortable: false as const },
+          { key: 'range', label: 'RANGE', sortable: false as const },
+          { key: 'damage', label: 'DAMAGE', sortable: false as const },
           { key: '_actions', label: '', sortable: false as const },
         ]}
-        gridColumns={GRID}
+        gridColumns={ITEM_GRID}
         sortState={sortState}
         onSort={handleSort}
       />
@@ -151,48 +198,60 @@ export function AdminPublicItemsTab() {
         {isLoading ? (
           <LoadingState />
         ) : filtered.length === 0 ? (
-          <ListEmptyState icon={<Shield className="w-8 h-8" />} title="No public armaments" message="Add one from the header or publish from a creator." />
+          <ListEmptyState
+            icon={<Shield className="w-8 h-8" />}
+            title="No public armaments"
+            message="Add one from the header or publish from a creator."
+          />
         ) : (
-          filtered.map((p: Record<string, unknown>) => (
+          filtered.map((i) => (
             <GridListRow
-              key={String(p.id ?? p.docId)}
-              id={String(p.id ?? p.docId)}
-              name={String(p.name ?? '')}
-              description={String(p.description ?? '')}
-              gridColumns={GRID}
+              key={i.id}
+              id={i.id}
+              name={i.name}
+              description={i.description}
+              gridColumns={ITEM_GRID}
               columns={[
-                { key: 'Type', value: String(p.type ?? '-') },
-                { key: 'Rarity', value: String(p.rarity ?? '-') },
+                { key: 'Type', value: i.type },
+                { key: 'Rarity', value: i.rarity },
+                { key: 'Currency', value: i.currency },
+                { key: 'TP', value: i.tp },
+                { key: 'Range', value: i.range },
+                { key: 'Damage', value: i.damage },
               ]}
-              onEdit={() => openEdit(p)}
+              chips={i.parts}
+              chipsLabel="Properties"
+              totalCost={i.tp}
+              costLabel="TP"
+              onEdit={() => openEdit(i)}
+              onDelete={() => setDeleteConfirm({ id: i.id, name: i.name })}
             />
           ))
         )}
       </div>
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Public Armament' : 'Add Public Armament'}>
-        <div className="space-y-4">
-          <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" />
-          <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description" rows={2} />
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Document (JSON)</label>
-            <Textarea value={jsonBody} onChange={(e) => setJsonBody(e.target.value)} className="font-mono text-sm" rows={12} placeholder="{}" />
-          </div>
-          <div className="flex justify-between pt-2">
-            <div>
-              {editing && (
-                <Button variant="outline" onClick={handleDelete} disabled={saving}>
-                  {deleteId === editing.id ? 'Confirm delete?' : 'Delete'}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" onClick={closeModal}>Cancel</Button>
-              <Button variant="primary" onClick={handleSave} disabled={saving}>Save</Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
+      <PublicItemEditModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        initialData={editing?.data ?? null}
+        existingId={editing?.id ?? null}
+        onSave={handleSave}
+        onDelete={editing ? handleDeleteFromModal : null}
+        saving={saving}
+        deleteConfirm={editing ? deleteId === editing.id : false}
+      />
+
+      {deleteConfirm && (
+        <DeleteConfirmModal
+          isOpen={true}
+          itemName={deleteConfirm.name}
+          itemType="armament"
+          deleteContext="public library"
+          isDeleting={false}
+          onConfirm={handleDeleteFromList}
+          onClose={() => setDeleteConfirm(null)}
+        />
+      )}
     </div>
   );
 }

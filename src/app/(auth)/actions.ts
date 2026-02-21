@@ -220,12 +220,32 @@ export async function changeUsernameAction(newUsername: string) {
 }
 
 /**
- * Delete the current user's account.
+ * Delete the current user's account and all data tied to it.
+ * Removes: characters, user library (powers/techniques/items/creatures), username lookup,
+ * profile, encounters, campaigns owned by user; removes user from campaign membership
+ * and campaign character lists where they are a member; then deletes the auth user.
  */
 export async function deleteAccountAction() {
   try {
     const user = await requireAuth();
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Remove user from campaigns where they are a member (not owner); remove their characters from campaign
+    const campaigns = await prisma.campaign.findMany();
+    const memberCampaigns = campaigns.filter((c) => {
+      const ids = (c.memberIds as string[]) || [];
+      return ids.includes(user.uid) && c.ownerId !== user.uid;
+    });
+    for (const c of memberCampaigns) {
+      const members = ((c.memberIds as string[]) || []).filter((id) => id !== user.uid);
+      const chars = ((c.characters as Array<{ userId: string; characterId: string }>) || []).filter(
+        (cc) => cc.userId !== user.uid
+      );
+      await prisma.campaign.update({
+        where: { id: c.id },
+        data: { memberIds: members, characters: chars },
+      });
+    }
 
     await prisma.$transaction([
       prisma.character.deleteMany({ where: { userId: user.uid } }),
@@ -234,6 +254,8 @@ export async function deleteAccountAction() {
       prisma.userItem.deleteMany({ where: { userId: user.uid } }),
       prisma.userCreature.deleteMany({ where: { userId: user.uid } }),
       prisma.usernameLookup.deleteMany({ where: { userId: user.uid } }),
+      prisma.encounter.deleteMany({ where: { userId: user.uid } }),
+      prisma.campaign.deleteMany({ where: { ownerId: user.uid } }),
       prisma.userProfile.delete({ where: { id: user.uid } }),
     ]);
 
