@@ -355,7 +355,7 @@ function WeaponsSection({
   );
 }
 
-// Shields Section - displays equipped shields with block amount, optional damage, and rolls
+// Shields Section - displays equipped shields: Name, Block, Damage, Attack (same horizontal layout as weapons)
 function ShieldsSection({
   character,
   martialProf,
@@ -371,7 +371,6 @@ function ShieldsSection({
 }) {
   const abilities = character.abilities || {};
   const strBonus = (abilities.strength ?? 0) + martialProf;
-  const agiBonus = (abilities.agility ?? 0) + martialProf;
 
   const shields = enrichedShields || (character.equipment?.shields || []) as Item[];
   const equippedShields = shields.filter(s => s.equipped);
@@ -394,8 +393,7 @@ function ShieldsSection({
             <th className="text-left py-1">Name</th>
             <th className="text-center py-1">Block</th>
             <th className="text-center py-1">Damage</th>
-            <th className="text-center py-1">Hands</th>
-            <th className="text-center py-1">Rolls</th>
+            <th className="text-center py-1">Attack</th>
           </tr>
         </thead>
         <tbody>
@@ -403,39 +401,29 @@ function ShieldsSection({
             const enriched = shield as EnrichedItem & { shieldAmount?: string; shieldDamage?: string | null };
             const blockStr = enriched.shieldAmount ?? '-';
             const damageStr = enriched.shieldDamage ?? (shield.damage ? String(shield.damage) : '-');
-            const props = (shield.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name || '');
-            const isTwoHanded = props.some(p => p?.toLowerCase() === 'two-handed');
-            const handedness = isTwoHanded ? 'Two' : 'One';
             const hasDamage = damageStr !== '-';
             const attackBonus = strBonus; // Shields used as weapon typically use Strength
+            // All shield damage is bludgeoning for display/roll
+            const damageRollStr = hasDamage ? (damageStr.includes('Bludgeoning') ? damageStr : `${damageStr} Bludgeoning`) : '';
+
+            // Properties below name (same style as weapons) — exclude mechanical ones
+            const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
+            const props = (shield.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name || '');
+            const displayProps = props.filter(p => p && !excludedProps.includes(p));
 
             return (
               <tr key={shield.id || idx} className="border-b border-border-subtle last:border-0 align-top">
-                <td className="py-2 font-medium text-text-secondary">{shield.name}</td>
-                <td className="text-center py-2 font-mono text-primary-600 dark:text-primary-400">{blockStr}</td>
-                <td className="text-center py-2 text-text-muted">{damageStr}</td>
-                <td className="text-center py-2 text-text-muted">{handedness}</td>
+                <td className="py-2 font-medium text-text-secondary">
+                  {shield.name}
+                  {displayProps.length > 0 && (
+                    <div className="text-xs text-text-muted font-normal">
+                      {displayProps.map(p => `• ${p}`).join(' ')}
+                    </div>
+                  )}
+                </td>
                 <td className="text-center py-2">
-                  <div className="flex flex-col items-center gap-1">
-                    {hasDamage && onRollAttack && (
-                      <RollButton
-                        value={attackBonus}
-                        onClick={() => onRollAttack(shield.name || 'Shield bash', attackBonus)}
-                        size="sm"
-                        title={`Roll attack with ${shield.name}`}
-                      />
-                    )}
-                    {hasDamage && onRollDamage && (
-                      <RollButton
-                        value={0}
-                        displayValue={damageStr}
-                        variant="danger"
-                        size="sm"
-                        onClick={() => onRollDamage(damageStr, attackBonus)}
-                        title={`Roll ${damageStr} damage`}
-                      />
-                    )}
-                    {blockStr !== '-' && onRollDamage && (
+                  {blockStr !== '-' ? (
+                    onRollDamage ? (
                       <RollButton
                         value={0}
                         displayValue={blockStr}
@@ -444,8 +432,42 @@ function ShieldsSection({
                         onClick={() => onRollDamage(blockStr + ' Bludgeoning', 0)}
                         title="Roll shield block amount"
                       />
-                    )}
-                  </div>
+                    ) : (
+                      <span className="font-mono text-primary-600 dark:text-primary-400">{blockStr}</span>
+                    )
+                  ) : (
+                    <span className="text-text-muted">-</span>
+                  )}
+                </td>
+                <td className="text-center py-2">
+                  {hasDamage ? (
+                    onRollDamage ? (
+                      <RollButton
+                        value={0}
+                        displayValue={damageStr}
+                        variant="danger"
+                        size="sm"
+                        onClick={() => onRollDamage(damageRollStr, attackBonus)}
+                        title={`Roll ${damageStr} damage (Bludgeoning)`}
+                      />
+                    ) : (
+                      <span className="text-sm font-medium text-text-muted">{damageStr}</span>
+                    )
+                  ) : (
+                    <span className="text-text-muted">-</span>
+                  )}
+                </td>
+                <td className="text-center py-2">
+                  {hasDamage && onRollAttack ? (
+                    <RollButton
+                      value={attackBonus}
+                      onClick={() => onRollAttack(shield.name || 'Shield bash', attackBonus)}
+                      size="sm"
+                      title={`Roll attack with ${shield.name}`}
+                    />
+                  ) : (
+                    <span className="text-text-muted">-</span>
+                  )}
                 </td>
               </tr>
             );

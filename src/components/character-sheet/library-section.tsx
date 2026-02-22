@@ -448,11 +448,11 @@ const WEAPON_GRID = '1fr 0.7fr 0.8fr 0.6fr';
 
 const SHIELD_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
+  { key: 'attack', label: 'Attack', width: '0.6fr', align: 'center' },
+  { key: 'damage', label: 'Damage', width: '0.7fr', align: 'center' },
   { key: 'block', label: 'Block', width: '0.7fr', align: 'center' },
-  { key: 'damage', label: 'Damage', width: '0.8fr', align: 'center' },
-  { key: 'hands', label: 'Hands', width: '0.5fr', align: 'center' },
 ];
-const SHIELD_GRID = '1fr 0.7fr 0.8fr 0.5fr';
+const SHIELD_GRID = '1fr 0.6fr 0.7fr 0.7fr';
 
 const ARMOR_COLUMNS: ListColumn[] = [
   { key: '_equip', label: '', width: '2rem', sortable: false as const },
@@ -1177,9 +1177,7 @@ export function LibrarySection({
                     const enriched = item as Item & { shieldAmount?: string; shieldDamage?: string | null };
                     const shieldBlock = enriched.shieldAmount ?? '-';
                     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? formatDamageDisplay(item.damage) : '-');
-                    const props = (item.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name || '');
-                    const isTwoHanded = props.some(p => p?.toLowerCase() === 'two-handed');
-                    const handedness = isTwoHanded ? 'Two' : 'One';
+                    const { bonus: attackBonus } = getWeaponAttackBonus(item, abilities);
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
@@ -1189,12 +1187,10 @@ export function LibrarySection({
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
                     const columns: ColumnValue[] = [
-                      { key: 'block', value: shieldBlock, className: 'text-primary-600 dark:text-primary-400 font-medium', align: 'center' },
+                      { key: 'attack', value: shieldDamageStr !== '-' ? (attackBonus >= 0 ? '+' : '') + attackBonus : '-', align: 'center' },
                       { key: 'damage', value: shieldDamageStr !== '-' ? shieldDamageStr : '-', className: shieldDamageStr !== '-' ? 'text-danger-600 font-medium' : '', align: 'center' },
-                      { key: 'hands', value: handedness, align: 'center' },
+                      { key: 'block', value: shieldBlock, className: 'text-primary-600 dark:text-primary-400 font-medium', align: 'center' },
                     ];
-                    const hasShieldDamage = shieldDamageStr !== '-';
-                    const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities);
                     return (
                       <GridListRow
                         key={item.id || i}
@@ -1213,38 +1209,16 @@ export function LibrarySection({
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
-                        rightSlot={rollContext?.canRoll !== false && rollContext && (
-                          <div className="flex flex-wrap items-center gap-1 justify-end">
-                            {hasShieldDamage && (
-                              <>
-                                <RollButton
-                                  value={attackBonus}
-                                  onClick={() => rollContext.rollAttack(item.name, attackBonus)}
-                                  size="sm"
-                                  title={`Roll attack (${abilityName})`}
-                                />
-                                <RollButton
-                                  value={0}
-                                  displayValue="💥"
-                                  variant="danger"
-                                  onClick={() => rollContext.rollDamage(typeof item.damage === 'string' ? item.damage : shieldDamageStr)}
-                                  size="sm"
-                                  title="Roll damage"
-                                />
-                              </>
-                            )}
-                            {shieldBlock !== '-' && (
-                              <RollButton
-                                value={0}
-                                displayValue={shieldBlock}
-                                variant="primary"
-                                onClick={() => rollContext.rollDamage(shieldBlock + ' Bludgeoning', 0, 'Shield block')}
-                                size="sm"
-                                title="Roll shield block amount"
-                              />
-                            )}
-                          </div>
-                        )}
+                        rightSlot={rollContext?.canRoll !== false && rollContext && shieldBlock !== '-' ? (
+                          <RollButton
+                            value={0}
+                            displayValue={shieldBlock}
+                            variant="primary"
+                            onClick={() => rollContext.rollDamage(shieldBlock + ' Bludgeoning', 0, 'Shield block')}
+                            size="sm"
+                            title="Roll shield block amount"
+                          />
+                        ) : undefined}
                         onDelete={showLibraryEditControls && onRemoveShield ? () => onRemoveShield(item.id ?? item.name ?? i) : undefined}
                       />
                     );
