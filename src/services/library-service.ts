@@ -7,8 +7,10 @@
 
 const API_BASE = '/api/user/library';
 
+export type LibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
+
 export async function saveToLibrary(
-  type: 'powers' | 'techniques' | 'items' | 'creatures',
+  type: LibraryType,
   data: Record<string, unknown>,
   options?: { existingId?: string }
 ): Promise<string> {
@@ -39,7 +41,7 @@ export async function saveToLibrary(
 }
 
 export async function findLibraryItemByName(
-  type: 'powers' | 'techniques' | 'items' | 'creatures',
+  type: LibraryType,
   name: string
 ): Promise<{ id: string } | null> {
   const res = await fetch(`${API_BASE}/${type}`);

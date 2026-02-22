@@ -1,28 +1,25 @@
 {
-  "generated_at": "2026-02-05T19:21:47.003Z",
+  "generated_at": "2026-02-22T13:20:27.061Z",
   "tasks": [
     {
       "id": "TASK-001",
       "title": "Unify skill rows across creators",
-      "status": "not-started",
+      "status": "done",
       "matches": [],
-      "related_files": [
-        "src/components/charactersheet/skillssection.tsx",
-        "src/components/shared/skillrow.tsx",
-        "created_at:20260205",
-        "created_by:agent",
-        "description:Replaceinlineskillimplementationsincharactercreatorandcreaturecreatorwiththeshared`SkillRow`component.",
-        "acceptance_criteria:",
-        "AllthreeskillUIsuse`SkillRow`with`variant`prop",
-        "`npmrunbuild`passes",
-        "Manualverify:addskillincreator,save,reload",
-        "notes:\"\""
-      ],
+      "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-002",
       "title": "Audit lists and modals for `ListHeader` adoption",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-042",
+      "title": "Fix inconsistent button styling in modals",
       "status": "not-started",
       "matches": [],
       "related_files": [],
@@ -31,117 +28,2126 @@
     {
       "id": "TASK-003",
       "title": "Show weapon damage in Library and wire Edit -> Item Creator",
-      "status": "not-started",
+      "status": "done",
       "matches": [],
-      "related_files": [
-        "src/app/(main)/library/page.tsx",
-        "src/components/charactersheet/librarysection.tsx",
-        "src/app/(main)/itemcreator/page.tsx",
-        "created_at:20260205",
-        "created_by:owner",
-        "description:|",
-        "Librarylist(Armaments)currentlydoesnotshowcomputedweapondamage.TheEditactionshouldopentheItemCreatorwiththeitemloadedforediting(nofullpageredirectifpossible).Duplicatinganitemshouldcopydataandstayonthelibraryoropenthecreatorwiththecopyloaded.",
-        "acceptance_criteria:",
-        "LibraryarmamentslistshowsaDamagecolumnwithcomputeddamageforweapons.",
-        "Editactionopens`itemcreator`with`?edit=<id>`(ornavigatesinapp)andpopulatestheeditorwiththeitem'sdata.",
-        "Duplicatepreservesdataandopenscreatorwiththenewcopyloaded(orperformsinplacecopyandupdateslist).",
-        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
-      ],
+      "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-004",
       "title": "Fix RTDB enrichment so list views compute EN/TP/C correctly",
-      "status": "not-started",
+      "status": "done",
       "matches": [],
-      "related_files": [
-        "src/lib/dataenrichment.ts",
-        "src/components/charactersheet/librarysection.tsx",
-        "src/components/shared/gridlistrow.tsx",
-        "src/app/(main)/powercreator/page.tsx",
-        "src/app/(main)/techniquecreator/page.tsx",
-        "created_at:20260205",
-        "created_by:owner",
-        "description:|",
-        "Enrichmentpipelinemustresolvesavedpart/propertyIDsagainstRTDBrecordsandcompute/displaythefinalEnergy(EN),TrainingPoints(TP),andCurrency(C)valuesinalllistviews(library,creators,charactersheet).SomesavedentriesonlyincludeIDsandlackcomputedtotals.",
-        "acceptance_criteria:",
-        "`enrichPowers`/`enrichTechniques`produce`cost`/`tp`/`currency`fieldsconsistently.",
-        "Libraryandcreatorlistsdisplaycomputedcostsinsteadofblank/incorrectvalues.",
-        "`npmrunbuild`passesandmanualspotcheckof3itemsshowscorrectvalues.",
-        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
-      ],
+      "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-005",
       "title": "Fix Innate toggle hit area and alignment in list rows",
-      "status": "not-started",
+      "status": "done",
       "matches": [],
-      "related_files": [
-        "src/components/shared/gridlistrow.tsx",
-        "src/components/charactersheet/librarysection.tsx",
-        "src/components/shared/skillrow.tsx",
-        "created_at:20260205",
-        "created_by:owner",
-        "description:|",
-        "Innate(star)toggleinpower/techniquelistrowsisdifficulttohitandnotverticallycentered.Improveclicktarget,alignment,andaccessibilitysotogglinginnateworksreliablyoutsideeditmode.",
-        "acceptance_criteria:",
-        "Innatetogglehasaminimum40x40pxhitareaandisverticallycentered.",
-        "Toggleworksinbothlistandexpandedrowviewswithoutrequiringeditmode.",
-        "Manualverificationondesktop/mobilepasses.",
-        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
-      ],
+      "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-006",
       "title": "Fix missing/incorrect EN/TP display for Powers/Techniques/Armaments",
-      "status": "not-started",
+      "status": "done",
       "matches": [],
-      "related_files": [
-        "src/lib/dataenrichment.ts",
-        "src/components/charactersheet/librarysection.tsx",
-        "src/components/shared/gridlistrow.tsx",
-        "created_at:20260205",
-        "created_by:owner",
-        "description:|",
-        "Listsforpowers,techniques,andarmamentsintermittentlyshowmissingorincorrectEnergy(EN)orTrainingPoint(TP)values.Investigatewhereenrichmentorrendertimecalculationsdroporrenamefields(energyvscostvsenergyCost)andmakefieldsconsistentacrossenrichmentandUI.",
-        "acceptance_criteria:",
-        "`dataenrichment`outputsuse`cost`consistentlyfordisplay.",
-        "Listrenderersreadthesamefieldnamesanddisplaycorrectnumbers.",
-        "Manualspotcheckacrosslibraryandcharactersheetshowscorrectvalues.",
-        "notes:\"autoextractedfromALL_FEEDBACK_CLEAN.md\""
-      ],
+      "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-007",
-      "title": "2/3/2026 20:27 — Library / Creators - 'The armaments (weapons/shields with da...",
-      "status": "not-started",
+      "title": "Library — Show weapon damage and enable in-place Edit/Duplicate",
+      "status": "done",
       "matches": [],
       "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-008",
-      "title": "2/3/2026 21:00 — Creators / UI - RTDB enrichment: saved powers/techniques sto...",
-      "status": "not-started",
+      "title": "RTDB Enrichment — Resolve part IDs and compute costs in creators",
+      "status": "done",
       "matches": [],
       "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-009",
-      "title": "2/4/2026 16:00 — Character Sheet - 'Innate star doesn't toggle in the UI (hit...",
-      "status": "not-started",
+      "title": "Character Sheet — Innate toggle hit area & alignment (duplicate check)",
+      "status": "done",
       "matches": [],
       "related_files": [],
       "related_overlap": []
     },
     {
       "id": "TASK-010",
-      "title": "2/4/2026 16:00 — Powers/Techniques - 'Powers/techniques/armaments sometimes d...",
-      "status": "not-started",
+      "title": "Powers/Techniques/Armaments — Fix missing/incorrect EN/TP display (duplicate)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-011",
+      "title": "Fix login redirect to previous page",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-012",
+      "title": "My Account — Security audit and feature review",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-013",
+      "title": "Add theme toggle (dark/light/system) in nav dropdown",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-014",
+      "title": "Replace placeholder login icon with \"Login\" button",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-015",
+      "title": "Create reusable Powered Martial allocation slider component",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-016",
+      "title": "Unify ability/defense allocation and stepper styles across creators",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-017",
+      "title": "Implement Recovery Modal with full and partial recovery options",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-018",
+      "title": "\"BUG: Prevent negative weight/height values in character notes\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-019",
+      "title": "\"BUG: Fix unable to remove items from inventory\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-020",
+      "title": "Unify pencil/edit icons across character sheet",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-021",
+      "title": "Character name edit mode restriction + XP always editable",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-022",
+      "title": "Library feats tab - enable feat deletion via pencil icon",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-023",
+      "title": "\"BUG: Custom note name edit should not collapse the note\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-024",
+      "title": "Energy cost buttons for Powers/Techniques - match roll button styles",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-025",
+      "title": "Update Innate Energy tab summary text and centering",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-026",
+      "title": "Power/Technique display formatting - capitalize and abbreviate",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-027",
+      "title": "Remove invalid \"radiant\" damage type from Power Creator",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-028",
+      "title": "List headers - use all caps consistently",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-029",
+      "title": "List header column alignment - center over list items",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-030",
+      "title": "Remove \"Character Saved\" toast - keep only top bar save state",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-031",
+      "title": "Relocate character sheet top bar actions to side icons",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-032",
+      "title": "Dice Roller overhaul - match vanilla site design with enhancements",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-033",
+      "title": "Chip expansion behavior - expand in place without separate bubble",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-034",
+      "title": "\"BUG: Fix armor/weapon equip toggle functionality\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-035",
+      "title": "Equipment/Inventory tab fixes - quantity, tags, height",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-036",
+      "title": "Archetype ability indicators - purple/red outlines instead of yellow",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-037",
+      "title": "Ability edit mode - center skill/ability points display",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-038",
+      "title": "Remove hold-to-increase from ability/defense steppers",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-039",
+      "title": "Implement skill value cap (max 3) and defense bonus validation",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-040",
+      "title": "Character library UI - capitalize Currency, bigger tabs, defense button style",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-041",
+      "title": "Character/profile picture upload modal with crop",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-042",
+      "title": "Separate species name from level line in character sheet header",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-043",
+      "title": "Hide skill point display in non-edit mode",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-044",
+      "title": "Fix skill point calculation - show 3/3 not 5/5 at level 1",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-045",
+      "title": "Unify HP/EN pool allocation styles across sheet and creators",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-046",
+      "title": "Username change with validation (uniqueness, filtering, rate limit)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-047",
+      "title": "Auth provider detection for My Account settings",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-048",
+      "title": "Library tab ordering - default to Feats",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-049",
+      "title": "Sortable list headers (column sorting)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-050",
+      "title": "Creature creator fixes (prowess, dropdowns, summary scroll)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-051",
+      "title": "Implement modern thin scrollbars sitewide",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-052",
+      "title": "Character creator - persist skill allocations on tab switch",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-053",
+      "title": "Add confirmation dialog before feat deletion (TASK-022 compliance)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-054",
+      "title": "Documentation — add agent verification guidelines",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-055",
+      "title": "Rename \"Ability Scores\" to \"Abilities\" everywhere + fix cost hint",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-056",
+      "title": "Auto-capitalize archetype ability display",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-057",
+      "title": "Unify page content width across non-unique pages",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-058",
+      "title": "Fix health bar half-HP color (yellower orange) and deepen terminal red",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-059",
+      "title": "Unify selection/add button styles site-wide",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-060",
+      "title": "Fix vitality box height mismatch in ability editor",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-061",
+      "title": "TASK-012 completion — close security audit with sub-task references",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-062",
+      "title": "Match character library section heights to archetype section",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-063",
+      "title": "Creature creator basic info dropdown alignment and sizing",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-064",
+      "title": "Game rules audit — fix terminology and CreatureStatBlock ability schema",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-065",
+      "title": "Enable hold-to-repeat for Health/Energy allocation in creature creator",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-066",
+      "title": "Remove hold-to-repeat from defense steppers in creature creator",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-067",
+      "title": "Fix inconsistent vertical margins on senses/movement item cards (ExpandableChipList)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-068",
+      "title": "Unify creature creator add modals with character sheet/codex list styles",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-069",
+      "title": "Power/Martial slider should not allow 0 at either end (min 1 each)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-070",
+      "title": "Restructure Creature Summary to match other creators with resource boxes",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-071",
+      "title": "Unify stepper button styles across the site",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-072",
+      "title": "Health/Energy edit mode — bump current when at max and increasing max",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-073",
+      "title": "Speed/Evasion base editing — pencil icon, hide by default, red/green validation",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-074",
+      "title": "Dark mode — soften contrasting colors for easier viewing",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-075",
+      "title": "Fix /api/session 500 Internal Server Error",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-076",
+      "title": "Fix Firebase Storage rules for portraits and profile-pictures",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-077",
+      "title": "Fix username regex — invalid character class in pattern attribute",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-078",
+      "title": "\"Dice roller — replace Lucide icons with custom dice PNGs\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-079",
+      "title": "\"Weapon columns — add attack bonus column\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-080",
+      "title": "\"Unified Selection Modal — remove 'Add' column header text\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-081",
+      "title": "\"Add Skill / Add Sub-Skill modals — adopt ListHeader + sort\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-082",
+      "title": "\"LoadFromLibraryModal — remove item count from footer\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-083",
+      "title": "\"Remove remaining button gradients site-wide\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-084",
+      "title": "\"Dark mode — comprehensive pass on remaining hardcoded light colors\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-085",
+      "title": "\"Creator summaries — add sticky positioning to power/technique/item creators\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-086",
+      "title": "\"Full recovery — filter feat resets by recovery type\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-087",
+      "title": "\"Remove dead code — unused imports and deprecated definitions\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-088",
+      "title": "\"Fix chevron layout shift — use single icon with rotation\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-089",
+      "title": "\"Power/Technique/Item creator modals — unify LoadFromLibraryModal with shared patterns\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-090",
+      "title": "\"Codebase health audit — dead code removal, deduplication, shared component unification, best practices\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-091",
+      "title": "\"Extract shared useSort hook — eliminate 20+ duplicate toggleSort/handleSort implementations\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-092",
+      "title": "\"Import SortState type from shared instead of inline definitions\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-093",
+      "title": "\"Remaining template literal → cn() conversions\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-094",
+      "title": "\"Replace inline button styling with Button component\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-095",
+      "title": "\"Replace remaining raw inputs with Input/SearchInput components\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-096",
+      "title": "\"Split large page components (>1000 lines) into focused sub-components\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-097",
+      "title": "\"Unify filter component className patterns — extract filter-group class\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-098",
+      "title": "\"Fix dark mode contrast and missing variants — audit follow-up\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-099",
+      "title": "Campaigns — return to Join tab after creating character",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-100",
+      "title": "Campaigns — real-time updates via Firestore onSnapshot",
+      "status": "cancelled",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-101",
+      "title": "Archetype prof slider — hide unless pencil clicked; show simple values otherwise",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-102",
+      "title": "Encounter Tracker — add creatures from library (auto HP/EN, quantity)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-103",
+      "title": "Encounters hub — rename to Encounters; list/create/filter/search/sort",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-104",
+      "title": "Persist encounters to Firestore; save/return to sessions",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-105",
+      "title": "Designate combat tracker; tie to encounter ID",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-106",
+      "title": "Create Skill Encounter page",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-107",
+      "title": "Create Mixed Encounter page (combat + skill combined)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-108",
+      "title": "Campaign integration — add characters from campaigns to encounters",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-109",
+      "title": "Verify equip toggle ID matching and persistence",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-110",
+      "title": "Verify weapon/armor delete in character sheet",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-111",
+      "title": "Fix inventory remove bug (Library → Equipment)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-112",
+      "title": "Audit all list/section headers for full caps",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-113",
+      "title": "Full dark mode implementation pass",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-114",
+      "title": "Style consistency audit (ability/defense/health-energy)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-115",
+      "title": "Component reuse audit (add-X modals)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-116",
+      "title": "Add Firestore rules for codex_* collections",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-117",
+      "title": "Create migration script RTDB → Firestore",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-118",
+      "title": "Create useFirestoreCodex hooks (read from Firestore)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-119",
+      "title": "Switch all codex consumers to Firestore hooks",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-120",
+      "title": "[USER] Run migration script and verify in Firebase Console",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-121",
+      "title": "Admin config and isAdmin helper",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-122",
+      "title": "[USER] Add admin UID to config",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-123",
+      "title": "Admin layout and route protection",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-124",
+      "title": "Admin Codex page shell with tabs",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-125",
+      "title": "Admin CRUD server actions for codex",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-126",
+      "title": "Admin Feats editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-127",
+      "title": "Admin Traits editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-128",
+      "title": "Admin Species editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-129",
+      "title": "Admin Skills editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-130",
+      "title": "Admin Parts editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-131",
+      "title": "Admin Properties editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-132",
+      "title": "Admin Equipment editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-133",
+      "title": "Admin Archetypes editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-134",
+      "title": "Admin Creature Feats editor tab",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-135",
+      "title": "Admin Codex UI polish — consistent design",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-136",
+      "title": "Prisma tables for public library",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-137",
+      "title": "Admin Save to library — public vs private toggle in creators",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-138",
+      "title": "User Add to my library from public library",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-139",
+      "title": "Unified source filter (public / library / all) across app",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-140",
+      "title": "Public vs private badges/chips in lists",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-141",
+      "title": "Add public library tab to Codex",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-142",
+      "title": "Update ARCHITECTURE.md for Supabase/Prisma codex and data flow",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-143",
+      "title": "Add Admin / Public Library workflow docs",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-144",
+      "title": "Documentation migration audit — update all docs for Supabase stack",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-145",
+      "title": "Rename RTDB → Codex globally (hooks, types, variables)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-146",
+      "title": "Fix TypeScript build errors (implicit any, type mismatches)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-147",
+      "title": "Fix gold → currency terminology globally",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-148",
+      "title": "Migrate character-service, use-user-library, campaign-service to Prisma",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-149",
+      "title": "Migrate admin codex actions to Prisma",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-150",
+      "title": "Add auth confirm route for Supabase email OTP / magic links",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-151",
+      "title": "Add x-forwarded-host handling in auth callback for Vercel/proxy",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-152",
+      "title": "Audit skill encounter page — verify completeness vs feedback",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-153",
+      "title": "Navbar — Move Campaigns to right of RM Tools, left of About",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-154",
+      "title": "Admin Codex — Display \"-\" for feat level 0 in list",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-155",
+      "title": "Admin Codex — List refresh after delete; unify UI with Codex",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-156",
+      "title": "Feat Editing — Ability dropdown (6 abilities + 6 defenses)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-157",
+      "title": "Feat Editing — Add all missing editable fields",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-158",
+      "title": "Centralized codex data schema — AI reference doc",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-159",
+      "title": "Admin Codex — Reduce input lag in edit mode",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-160",
+      "title": "Admin Codex — Array fields use dropdowns, not raw IDs",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-161",
+      "title": "Campaign–Encounter attachment and \"Add all Characters\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-162",
+      "title": "Fix encounter combatant HP/EN when tied to user character",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-163",
+      "title": "Add roll log to encounters for RM (personal + campaign tabs)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-164",
+      "title": "Roll log consistency — styles, date display across encounter/campaign/sheet",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-165",
+      "title": "Roll log real-time sync via Supabase Realtime",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-166",
+      "title": "Health/Energy real-time sync between encounters and characters",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-167",
+      "title": "Character visibility — public link, campaign-only, private→campaign on join",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-168",
+      "title": "Character-derived content visibility — library items view-only for viewers",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-169",
+      "title": "Admin Feats — remove prereq_text and rely on req_desc",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-170",
+      "title": "Admin Codex — unify Skills, Parts, Properties, and Equipment tabs with Codex layout",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-171",
+      "title": "Admin Skills — base skill dropdown resolves base_skill_id",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-172",
+      "title": "Admin Skills — expose additional description fields",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-173",
+      "title": "Skills — render extra descriptions as expandable chips in item cards",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-174",
+      "title": "Codex schema — add Use column and align fields",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-175",
+      "title": "Codex skills — remove invalid trained_only field",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-176",
+      "title": "Codex seeding — wipe and reseed from canonical CSVs",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-177",
+      "title": "Codex schema usage audit — IDs, equipment, mechanic properties",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-178",
+      "title": "Armament creator — hide mechanic properties from add-property lists",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-179",
+      "title": "Feat skill_req — convert to ID-based everywhere",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-180",
+      "title": "Species skills/traits/flaws/characteristics — enforce ID-based usage",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-181",
+      "title": "Admin Skills — ability multi-select aligned with schema",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-182",
+      "title": "Admin Equipment — align fields with codex_equipment schema",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-184",
+      "title": "Publish confirmation modal in all creators",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-185",
+      "title": "Unify admin codex delete icons (Trash2 → X) and fix delete handler bug",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-186",
+      "title": "Inline delete confirmation in admin codex",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-187",
+      "title": "Add inline pencil/edit icon to GridListRow for library items",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-188",
+      "title": "Power and technique creators handle ?edit= query param to load items",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-189",
+      "title": "Fix save/display pipeline — item auto-gen properties, technique actionType, enrichment",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-183",
+      "title": "Admin Parts — edit defense targets",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-190",
+      "title": "Admin Creature Feats — level, requirement, mechanic flags",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-191",
+      "title": "Admin Equipment — currency, category, and type alignment",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-192",
+      "title": "Admin Properties & Parts — mechanic/duration flags, percentage display, option chips",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-193",
+      "title": "Admin Traits & Species — flaw/characteristic flags, sizes, trait chips",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-194",
+      "title": "Admin Skills & Feats — base skill display and filter “All” options",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-195",
+      "title": "\"CANCELLED: Ability cost threshold - code is correct\"",
+      "status": "cancelled",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-196",
+      "title": "\"Bug: maxHealth ignores archetype ability - always uses Vitality\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-197",
+      "title": "\"Bug: Character creator uses hardcoded base health/energy (10) instead of formulas\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-198",
+      "title": "\"Fix game constants - ability caps, damage types, Staggered, ice naming\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-199",
+      "title": "\"Fix feat slot formulas - character feats = level, archetype varies by archetype\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-199",
+      "title": "\"Bug: SAVEABLE_FIELDS missing critical fields, xp vs experience mismatch\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-200",
+      "title": "\"Design: Define canonical CharacterSaveData type - what gets persisted\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-201",
+      "title": "\"Centralize all health/energy/defense/speed/evasion calculations\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-202",
+      "title": "\"Unify defense fields - keep only defenseVals, remove defenseSkills alias\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-203",
+      "title": "\"Creator: Save species as speciesId, not name/object - derive on load\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-204",
+      "title": "\"Creator: Save archetype as archetypeId only - derive prof/abilities from codex\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-205",
+      "title": "\"Creator: Save feats as IDs only - derive name/description from codex\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-206",
+      "title": "\"Creator: Save powers as { id, innate } only - derive from library + codex parts\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-207",
+      "title": "\"Creator: Save techniques as { id } only - derive from library + codex parts\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-208",
+      "title": "\"Creator: Save skills as Record<skillId, {prof,val}> - derive name/ability from codex\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-209",
+      "title": "\"Creator: Save equipment as single inventory with IDs - remove redundant sub-arrays\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-210",
+      "title": "\"Creator: Save lean health/energy - allocation + current only, remove duplicates\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-211",
+      "title": "\"Sheet: Load feats by ID from codex - derive name, description, uses\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-212",
+      "title": "\"Sheet: Load powers/techniques by ID from library - derive all display data\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-213",
+      "title": "\"Sheet: Load equipment by ID from codex/library - derive stats and properties\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-214",
+      "title": "\"Sheet: Derive skills display from codex - only prof/val from character\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-215",
+      "title": "\"Sheet: Derive all computed stats - stop persisting maxHP/maxEN/evasion/speed\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-216",
+      "title": "\"Unify enrichment pipeline - shared ID-based loading for all contexts\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-217",
+      "title": "\"Update cleanForSave to match lean schema\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-218",
+      "title": "\"Remove all redundant fields from Character type - final cleanup\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-219",
+      "title": "\"Portrait storage - move from base64 blob to Supabase Storage URL\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-220",
+      "title": "\"Data migration script - convert existing characters from old schema to lean\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-221",
+      "title": "\"Design: Core rules DB schema and data categories\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-222",
+      "title": "\"Create Prisma model + migration for core_rules table\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-223",
+      "title": "\"Seed core_rules table with current hardcoded values\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-224",
+      "title": "\"Create useGameRules() hook - loads core rules from DB with fallback\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-225",
+      "title": "\"Admin Core Rules page - Progression tab (Player & Creature)\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-226",
+      "title": "\"Admin Core Rules page - Combat & Scores tab\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-227",
+      "title": "\"Admin Core Rules page - Archetypes tab\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-228",
+      "title": "\"Admin Core Rules page - Conditions tab (with definitions)\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-229",
+      "title": "\"Admin Core Rules page - Sizes & Carrying Capacity tab\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-230",
+      "title": "\"Admin Core Rules page - Rarities & Currency tab\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-231",
+      "title": "\"Admin Core Rules page - Ability Scores tab\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-232",
+      "title": "\"Admin Core Rules page - Skills, Recovery, Experience, Damage Types tabs\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-233",
+      "title": "\"Refactor formulas.ts to read from useGameRules() instead of constants.ts\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-234",
+      "title": "\"Refactor calculations.ts to read from useGameRules() instead of constants.ts\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-235",
+      "title": "About page — dice carousel redesign (center, 7 dice, wrap, no brackets)",
+      "status": "done",
+      "matches": [
+        {
+          "hash": "a9a1b1f184100cede1c7593b2a3fe422e83d981e",
+          "subject": "About dice carousel, Skill encounter Successes/RM bonus, Combat tracker UX (TASK-235, 236, 237)",
+          "files": [
+            "src/app/(main)/about/page.tsx",
+            "src/app/(main)/encounter-tracker/CombatantCard.tsx",
+            "src/app/(main)/encounters/[id]/combat/page.tsx",
+            "src/app/(main)/encounters/[id]/skill/page.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/AI_TASK_QUEUE.md",
+            "src/types/encounter.ts"
+          ]
+        }
+      ],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-236",
+      "title": "Skill encounter — Successes UI, DS post-roll, RM bonus, additional success/failure",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-237",
+      "title": "Combat tracker — surprised checkbox, initiative select-all, delete turn, auto-sort",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-238",
+      "title": "\"Codebase Audit 2026-02-13 — Phase 1-3 implementation\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-239",
+      "title": "\"Audit Phase 2 — Complete design token migration (blue/green/red/amber → tokens)\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-240",
+      "title": "\"Audit Phase 2 — Standardize modal/error/loading patterns\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-241",
+      "title": "\"Audit Phase 1 — Add Zod input validation to API routes\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-242",
+      "title": "\"Audit Phase 1 — Add rate limiting to API routes\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-243",
+      "title": "\"Audit Phase 4 — Add loading.tsx and error.tsx route handlers\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-244",
+      "title": "\"Audit Phase 5 — Add missing Prisma indexes\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-245",
+      "title": "\"Audit Phase 6 — Public character view page (frontend)\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-246",
+      "title": "\"Audit Phase 6 — Character creator skill auto-save on tab switch\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-247",
+      "title": "\"Audit Phase 4 — Optimize React Query stale times for codex data\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-248",
+      "title": "\"P-5: Create CharacterSheetContext to reduce prop drilling\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-249",
+      "title": "\"FB-6: Campaign join notification for visibility change\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-250",
+      "title": "\"Character creator — Species modal skill description clear when switching species\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-251",
+      "title": "\"Character creator — Step check mark when navigating away with 'Continue anyway'\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-252",
+      "title": "\"Unify add power/technique modals — character creator and creature creator\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-253",
+      "title": "\"Finalize step — display ability names as full text (min 3-letter)\"",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-254",
+      "title": "Creators — description/option contrast + dropdown dark mode",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-255",
+      "title": "Accessibility audit — color contrast WCAG 2.1 AA",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-256",
+      "title": "Species height/weight/lifespan — API mapping and display everywhere",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-257",
+      "title": "Skill admin — governing ability is abilities-only (not defenses)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-258",
+      "title": "Public codex — add Traits tab and Advanced tabs toggle",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-259",
+      "title": "Public vs admin codex unification — layouts, chips, descriptions",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-260",
+      "title": "Edit property — option cost labels (IP/TP/c) and larger description field",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-261",
+      "title": "Edit equipment — category dropdown with add-new and existing list",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-262",
+      "title": "Single list header component — migrate SortHeader views to ListHeader",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-263",
+      "title": "Shared creator load helper — useCreatorLoad(type, options)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-264",
+      "title": "Modal unification — implement audit recommendations (list modals)",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-265",
+      "title": "Add source filter (My/Public/All) to add-X modals + reference public items on character",
+      "status": "done",
       "matches": [],
       "related_files": [],
       "related_overlap": []

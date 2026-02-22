@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter } from '@/components/shared';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
@@ -95,6 +96,10 @@ function CreatureCreatorContent() {
   const { data: publicPowers = [] } = usePublicLibrary('powers');
   const { data: publicTechniques = [] } = usePublicLibrary('techniques');
   const { data: publicItems = [] } = usePublicLibrary('items');
+  const { data: publicCreatures = [] } = usePublicLibrary('creatures');
+  const { data: userCreatures = [] } = useUserCreatures();
+  const searchParams = useSearchParams();
+  const editCreatureId = searchParams.get('edit');
   
   const [isInitialized, setIsInitialized] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -465,6 +470,67 @@ function CreatureCreatorContent() {
     successMessage: 'Creature saved!',
     publicSuccessMessage: 'Creature saved to public library!',
   });
+
+  // Merged creatures (user + public) for ?edit= load from admin public library
+  const mergedCreaturesForEdit = useMemo(() => {
+    const user = (userCreatures ?? []) as unknown as Array<Record<string, unknown> & { id?: string; docId?: string }>;
+    const pub = (publicCreatures as Array<Record<string, unknown>>).map((c) => ({
+      ...c,
+      id: String(c.id ?? c.docId ?? ''),
+      docId: String(c.id ?? c.docId ?? ''),
+    }));
+    return [...user, ...pub];
+  }, [userCreatures, publicCreatures]);
+
+  // Load creature for editing from URL (?edit=<id>) when coming from admin public library
+  useEffect(() => {
+    if (!editCreatureId || !mergedCreaturesForEdit.length || isInitialized) return;
+    const c = mergedCreaturesForEdit.find(
+      (x) => String((x as { id?: string; docId?: string }).id) === editCreatureId || String((x as { id?: string; docId?: string }).docId) === editCreatureId
+    ) as Record<string, unknown> | undefined;
+    if (!c) {
+      setIsInitialized(true);
+      return;
+    }
+    const loaded: CreatureState = {
+      name: String(c.name ?? ''),
+      level: Number(c.level ?? 1),
+      type: String(c.type ?? 'Humanoid'),
+      size: String(c.size ?? 'medium'),
+      description: String(c.description ?? ''),
+      archetypeType: (c.archetypeType as CreatureState['archetypeType']) ?? 'power',
+      abilities: (c.abilities as CreatureState['abilities']) ?? initialState.abilities,
+      defenses: (c.defenses as CreatureState['defenses']) ?? initialState.defenses,
+      hitPoints: Number(c.hitPoints ?? 0),
+      energyPoints: Number(c.energyPoints ?? 0),
+      powerProficiency: Number(c.powerProficiency ?? 0),
+      martialProficiency: Number(c.martialProficiency ?? 0),
+      enablePowers: (c.enablePowers as boolean) ?? Boolean((c.powers as unknown[])?.length),
+      enableTechniques: (c.enableTechniques as boolean) ?? Boolean((c.techniques as unknown[])?.length),
+      enableArmaments: (c.enableArmaments as boolean) ?? Boolean((c.armaments as unknown[])?.length),
+      resistances: (c.resistances as string[]) ?? [],
+      weaknesses: (c.weaknesses as string[]) ?? [],
+      immunities: (c.immunities as string[]) ?? [],
+      conditionImmunities: (c.conditionImmunities as string[]) ?? [],
+      senses: (c.senses as string[]) ?? [],
+      movementTypes: (c.movementTypes as string[]) ?? [],
+      languages: (c.languages as string[]) ?? [],
+      skills: (c.skills as CreatureSkill[]) ?? [],
+      powers: (c.powers as CreatureState['powers']) ?? [],
+      techniques: (c.techniques as CreatureState['techniques']) ?? [],
+      feats: (c.feats as CreatureState['feats']) ?? [],
+      armaments: (c.armaments as CreatureState['armaments']) ?? [],
+    };
+    setCreature(loaded);
+    try {
+      localStorage.removeItem(CREATURE_CREATOR_CACHE_KEY);
+    } catch (_e) {
+      // ignore
+    }
+    save.setSaveMessage({ type: 'success', text: 'Creature loaded from public library.' });
+    setTimeout(() => save.setSaveMessage(null), 2000);
+    setIsInitialized(true);
+  }, [editCreatureId, mergedCreaturesForEdit, isInitialized, save]);
 
   const handleSave = useCallback(async () => {
     if (!user) {

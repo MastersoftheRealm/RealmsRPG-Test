@@ -41,6 +41,7 @@ model UserProfile {
   userTechniques   UserTechnique[]
   userItems        UserItem[]
   userCreatures    UserCreature[]
+  userSpecies      UserSpecies[]
   usernameLookups  UsernameLookup[]
 
   @@map("user_profiles")
@@ -127,6 +128,19 @@ model UserCreature {
 
   @@index([userId])
   @@map("user_creatures")
+  @@schema("users")
+}
+
+model UserSpecies {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      Json     // name, description, type, sizes, skills, traits, languages, etc.
+  createdAt DateTime? @map("created_at")
+  updatedAt DateTime? @map("updated_at")
+
+  @@index([userId])
+  @@map("user_species")
   @@schema("users")
 }
 

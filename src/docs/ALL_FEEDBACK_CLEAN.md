@@ -991,3 +991,19 @@ Notes
 - Priority: High
 - Feedback: (1) Encounter isn't saving changes after adding campaign tied combatants/characters, stuck on unsaved changes. (2) Added characters in campaign aren't loading their energy and health properly; need to show current and total for both values and sync changes between encounter and character sheet in real time. (3) Characters in campaigns cannot ever set their privacy to private unless they leave the campaign. (4) A character's privacy is set to public but it says private when trying to view the character sheet. (5) In character sheet health we allow steppers to increase beyond the max, but manual input won't allow a value higher than max; allow directly inputting a value higher than max as well.
 - Expected: (1) Encounter PATCH persists combatants and dirty state clears after save. (2) Campaign combatants show current/max HP and EN; realtime sync between encounter and sheet. (3) When character is in a campaign, Private option disabled or blocked until they leave. (4) Public characters viewable by link; fix visibility read/save so public shows correctly. (5) Health/energy manual input accepts values above max like the steppers.
+
+**Raw Feedback Log — 2026-02-22 (Encounter HP/EN/AP realtime + max energy/sheet discrepancy)**
+- Date: 2026-02-22
+- Context: Encounters with combatants tied to player characters; character sheet as source of truth for calculation logic
+- Priority: High
+- Feedback: Encounters with combatants tied to player characters are designed to work seamlessly with realtime updates for current health, current energy, and current AP. This is not the case — roll logs work in real time to display rolls, but realtime current health, energy, and AP updates do not. There are also discrepancies between the maximum energy of a player character and the maximum energy displayed in an encounter; the encounter is likely using bad logic for energy and possibly HP calculations and should use the same logic the character sheet uses. The character sheets are the source of truth for calculation logic.
+- Expected: Realtime updates for current health, current energy, and current AP on encounter combatant cards when the character sheet (or any source) updates those values. Max health and max energy shown in encounters must match the character sheet (use character-sheet calculation logic everywhere).
+- Disposition: Implemented 2026-02-22. See AI_CHANGELOG.md.
+
+**Raw Feedback Log — 2026-02-22 (Codex: My Codex vs Public Codex)**
+- Date: 2026-02-22
+- Context: Codex page; future custom feats, traits, parts, properties
+- Priority: Medium
+- Feedback: Add to the Codex the "My Codex vs Public Codex" functionality. All things in the database are currently public codex; public codex is the default view. Use the same logic as My Library vs Public Library (toggle, title/description by mode). Codex = pieces/parts (mechanics, properties, etc.) that make up things in the Library; Library = things that use those pieces. Species are codex (made of traits/skills). Eventually users may create custom codex content; for now that isn't the case. Use shared logic, best DB practice, common sense; copy the behavior already in the library.
+- Expected: Codex page has Public Codex (default) and My Codex toggle; Public Codex shows current reference data; My Codex shows placeholder until custom codex feature exists.
+- Implemented 2026-02-22: Codex page has codexMode state (default 'public'); pill toggle "Public Codex" | "My Codex" (same styling as Library); title/description update by mode; My Codex shows CodexMyCodexEmpty placeholder. No DB changes; ready for future user codex.

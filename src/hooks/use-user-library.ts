@@ -7,8 +7,11 @@
 
 'use client';
 
+import { useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
+import { useCodexSpecies } from './use-codex';
+import type { Species } from './use-rtdb';
 
 // =============================================================================
 // Types
@@ -88,6 +91,28 @@ export interface UserItem {
   updatedAt?: Date;
 }
 
+export interface UserSpecies {
+  id: string;
+  docId?: string;
+  name: string;
+  description?: string;
+  type?: string;
+  size?: string;
+  sizes?: string[];
+  speed?: number;
+  skills?: string[];
+  species_traits?: string[];
+  ancestry_traits?: string[];
+  flaws?: string[];
+  characteristics?: string[];
+  languages?: string[];
+  ave_height?: number;
+  ave_weight?: number;
+  adulthood_lifespan?: number[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface UserCreature {
   id: string;
   docId: string;
@@ -129,6 +154,7 @@ const QUERY_KEYS = {
   userTechniques: (userId: string) => ['user-techniques', userId] as const,
   userItems: (userId: string) => ['user-items', userId] as const,
   userCreatures: (userId: string) => ['user-creatures', userId] as const,
+  userSpecies: (userId: string) => ['user-species', userId] as const,
 };
 
 // =============================================================================
@@ -200,6 +226,89 @@ export function useUserCreatures(): UseQueryResult<UserCreature[], Error> {
   });
 }
 
+export function useUserSpecies(): UseQueryResult<UserSpecies[], Error> {
+  const { user } = useAuthStore();
+  const userId = user?.uid || '';
+
+  return useQuery({
+    queryKey: QUERY_KEYS.userSpecies(userId),
+    queryFn: () => fetchLibrary<UserSpecies>('species', userId),
+    enabled: !!userId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+/** Normalize user species to Species shape for use in character creator and sheet. */
+function userSpeciesToSpecies(u: UserSpecies): Species {
+  const sizes = u.sizes?.length ? u.sizes : (u.size ? [u.size] : ['Medium']);
+  return {
+    id: u.id,
+    name: u.name,
+    description: u.description ?? '',
+    type: u.type ?? '',
+    size: sizes[0] ?? 'Medium',
+    sizes,
+    speed: u.speed ?? 6,
+    traits: [],
+    species_traits: u.species_traits ?? [],
+    ancestry_traits: u.ancestry_traits ?? [],
+    flaws: u.flaws ?? [],
+    characteristics: u.characteristics ?? [],
+    skills: u.skills ?? [],
+    languages: u.languages ?? [],
+    ave_height: u.ave_height,
+    ave_weight: u.ave_weight,
+    adulthood_lifespan: u.adulthood_lifespan,
+  };
+}
+
+/** Merged species list: user (My Codex) first, then codex (public). Use for species step, skills step, and character sheet so user-created species can be selected and resolved. */
+export function useMergedSpecies(): UseQueryResult<Species[], Error> {
+  const { data: codexSpecies = [], isLoading: codexLoading, error: codexError, refetch: refetchCodex } = useCodexSpecies();
+  const { data: userSpecies = [], isLoading: userLoading, error: userError, refetch: refetchUser } = useUserSpecies();
+
+  const merged = useMemo(() => {
+    const codex = (codexSpecies ?? []) as Species[];
+    const user = (userSpecies ?? []).map(userSpeciesToSpecies);
+    return [...user, ...codex];
+  }, [codexSpecies, userSpecies]);
+
+  const isLoading = codexLoading || userLoading;
+  const error = codexError ?? userError;
+
+  const refetch = useCallback(async () => {
+    await Promise.all([refetchCodex(), refetchUser()]);
+  }, [refetchCodex, refetchUser]);
+
+  return useMemo(
+    () =>
+      ({
+        data: merged,
+        isLoading,
+        error: error ?? null,
+        isError: !!error,
+        refetch,
+        status: isLoading ? 'pending' : error ? 'error' : 'success',
+        isSuccess: !error && !isLoading,
+        isPending: isLoading,
+        isFetching: isLoading,
+        failureCount: 0,
+        failureReason: null,
+        isStale: false,
+        isFetched: true,
+        fetchStatus: 'idle',
+        dataUpdatedAt: 0,
+        errorUpdatedAt: 0,
+        isRefetching: false,
+        isRefetchError: false,
+        isLoadingError: false,
+        isPaused: false,
+      }) as unknown as UseQueryResult<Species[], Error>,
+    [merged, isLoading, error, refetch]
+  );
+}
+
 // =============================================================================
 // Mutations
 // =============================================================================
@@ -232,13 +341,14 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
 // Generic Mutation Factories
 // =============================================================================
 
-type LibraryType = 'powers' | 'techniques' | 'items' | 'creatures';
+type LibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
 
 const TYPE_QUERY_KEYS: Record<LibraryType, (uid: string) => readonly string[]> = {
   powers: QUERY_KEYS.userPowers,
   techniques: QUERY_KEYS.userTechniques,
   items: QUERY_KEYS.userItems,
   creatures: QUERY_KEYS.userCreatures,
+  species: QUERY_KEYS.userSpecies,
 };
 
 /** Generic delete mutation for any library type */

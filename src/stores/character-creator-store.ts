@@ -58,6 +58,7 @@ interface CharacterCreatorState {
   updateDraft: (updates: Partial<CharacterDraft>) => void;
   setArchetype: (type: ArchetypeCategory, ability: AbilityName, martialAbility?: AbilityName) => void;
   setSpecies: (speciesId: string, speciesName: string) => void;
+  setMixedSpecies: (speciesA: { id: string; name: string }, speciesB: { id: string; name: string }) => void;
   setAncestry: (ancestryId: string, ancestryName: string, traits: string[]) => void;
   updateAbility: (ability: AbilityName, value: number) => void;
   
@@ -156,8 +157,6 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       },
       
       setSpecies: (speciesId, speciesName) => {
-        // When species changes, clear trait selections from the previous species
-        // so ancestry step doesn't treat old IDs as valid for the new species.
         set({
           draft: {
             ...get().draft,
@@ -167,6 +166,35 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
               selectedTraits: [],
               selectedFlaw: undefined,
               selectedCharacteristic: undefined,
+              mixed: false,
+              speciesIds: undefined,
+              speciesNames: undefined,
+              selectedSize: undefined,
+              selectedSpeciesTraits: undefined,
+              selectedFlawSpeciesId: undefined,
+              mixedPhysical: undefined,
+            } as CharacterDraft['ancestry'],
+          }
+        });
+      },
+
+      setMixedSpecies: (speciesA, speciesB) => {
+        set({
+          draft: {
+            ...get().draft,
+            ancestry: {
+              id: `mixed:${speciesA.id}+${speciesB.id}`,
+              name: `${speciesA.name} / ${speciesB.name}`,
+              mixed: true,
+              speciesIds: [speciesA.id, speciesB.id],
+              speciesNames: [speciesA.name, speciesB.name],
+              selectedTraits: [],
+              selectedFlaw: undefined,
+              selectedCharacteristic: undefined,
+              selectedSize: undefined,
+              selectedSpeciesTraits: undefined,
+              selectedFlawSpeciesId: undefined,
+              mixedPhysical: undefined,
             } as CharacterDraft['ancestry'],
           }
         });

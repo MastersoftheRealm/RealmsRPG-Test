@@ -10,7 +10,7 @@
 import { useState, useCallback } from 'react';
 import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName, findPublicLibraryItemByName } from '@/services/library-service';
 
-export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures';
+export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
 
 export interface CreatorSavePayload {
   name: string;
@@ -83,9 +83,11 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       const payload = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date() };
       setSaving(true);
       setSaveMessage(null);
+      const effectiveTarget = type === 'species' ? 'private' as const : target;
+      const publicLibraryType = type === 'species' ? null : type;
       try {
-        if (target === 'public') {
-          await saveToPublicLibrary(type, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
+        if (effectiveTarget === 'public' && publicLibraryType) {
+          await saveToPublicLibrary(publicLibraryType, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
           setSaveMessage({ type: 'success', text: publicSuccessMessage });
         } else {
           const existing = await findLibraryItemByName(type, name.trim());
@@ -112,10 +114,10 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const handleSave = useCallback(async () => {
     const { name } = getPayload();
     if (!name?.trim()) {
-      setSaveMessage({ type: 'error', text: `Please enter a ${type.slice(0, -1)} name` });
+      setSaveMessage({ type: 'error', text: `Please enter a ${type === 'species' ? 'species' : type.slice(0, -1)} name` });
       return;
     }
-    if (saveTarget === 'public' && requirePublishConfirm) {
+    if (saveTarget === 'public' && requirePublishConfirm && type !== 'species') {
       const existing = await findPublicLibraryItemByName(type, name.trim());
       setPublishExistingId(existing?.id ?? null);
       setShowPublishConfirmState(true);

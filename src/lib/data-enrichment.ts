@@ -6,6 +6,7 @@
  */
 
 import type { CharacterPower, CharacterTechnique, Character } from '@/types';
+import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks/use-rtdb';
 import { derivePowerDisplay, deriveTechniqueDisplay, formatPowerDamage, formatTechniqueDamage, formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
@@ -633,21 +634,22 @@ export function cleanForSave(data: Character): Partial<Character> {
     cleaned.currentEnergy = data.energy.current;
   }
 
-  // Persist health/energy { current, max } for realtime sync to encounter tracker (current + max so encounter gets both)
+  // Persist health/energy { current, max } for realtime sync to encounter tracker; max from character-sheet logic (single source of truth)
   const dataHealth = data.health as { current?: number; max?: number } | undefined;
   const dataEnergy = data.energy as { current?: number; max?: number } | undefined;
   const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
   const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
+  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(data as unknown as Record<string, unknown>);
   if (typeof healthCurrent === 'number') {
     cleaned.health = {
       current: healthCurrent,
-      max: typeof dataHealth?.max === 'number' ? dataHealth.max : (data as Character).health?.max ?? healthCurrent,
+      max: typeof dataHealth?.max === 'number' ? dataHealth.max : (data as Character).health?.max ?? computedMaxHealth,
     };
   }
   if (typeof energyCurrent === 'number') {
     cleaned.energy = {
       current: energyCurrent,
-      max: typeof dataEnergy?.max === 'number' ? dataEnergy.max : (data as Character).energy?.max ?? energyCurrent,
+      max: typeof dataEnergy?.max === 'number' ? dataEnergy.max : (data as Character).energy?.max ?? computedMaxEnergy,
     };
   }
 

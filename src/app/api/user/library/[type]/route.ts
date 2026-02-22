@@ -11,14 +11,15 @@ import { getSession } from '@/lib/supabase/session';
 import { validateJson, libraryItemCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 
-const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures'] as const;
+const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures', 'species'] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
 
-const PRISMA_MAP: Record<LibraryType, { model: 'userPower' | 'userTechnique' | 'userItem' | 'userCreature'; orderBy: string }> = {
+const PRISMA_MAP: Record<LibraryType, { model: 'userPower' | 'userTechnique' | 'userItem' | 'userCreature' | 'userSpecies'; orderBy: string }> = {
   powers: { model: 'userPower', orderBy: 'name' },
   techniques: { model: 'userTechnique', orderBy: 'name' },
   items: { model: 'userItem', orderBy: 'name' },
   creatures: { model: 'userCreature', orderBy: 'name' },
+  species: { model: 'userSpecies', orderBy: 'name' },
 };
 
 type ListDelegate = {

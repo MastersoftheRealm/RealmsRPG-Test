@@ -10,16 +10,28 @@
 
 import { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useSpecies, type Species } from '@/hooks';
+import { useMergedSpecies, type Species } from '@/hooks';
 import { SkillsAllocationPage } from '@/components/shared';
 import { Button } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 
 export function SkillsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
-  const { data: allSpecies = [] } = useSpecies();
+  const { data: allSpecies = [] } = useMergedSpecies();
 
   const speciesSkillIds = useMemo(() => {
+    const isMixed = draft.ancestry?.mixed === true;
+    const speciesIds = draft.ancestry?.speciesIds;
+
+    if (isMixed && speciesIds?.length === 2) {
+      const a = allSpecies.find((s: Species) => s.id === speciesIds[0]);
+      const b = allSpecies.find((s: Species) => s.id === speciesIds[1]);
+      const ids = new Set<string>();
+      (a?.skills || []).forEach((id: string | number) => ids.add(String(id)));
+      (b?.skills || []).forEach((id: string | number) => ids.add(String(id)));
+      return ids;
+    }
+
     const speciesId = draft.ancestry?.id;
     const speciesName = draft.ancestry?.name || draft.species;
     if (!speciesId && !speciesName) return new Set<string>();
@@ -29,7 +41,7 @@ export function SkillsStep() {
       : allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
 
     return new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
-  }, [draft.ancestry?.id, draft.ancestry?.name, draft.species, allSpecies]);
+  }, [draft.ancestry?.id, draft.ancestry?.name, draft.ancestry?.mixed, draft.ancestry?.speciesIds, draft.species, allSpecies]);
 
   const allocations = draft.skills || {};
   const defenseVals = draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS };

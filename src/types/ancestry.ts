@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Ancestry Types
  * ===============
  * Species and ancestry definitions
@@ -44,4 +44,23 @@ export interface CharacterAncestry {
   selectedFlaw?: string | null;
   /** Selected characteristic ID */
   selectedCharacteristic?: string | null;
+  /** True when character is mixed (two species) */
+  mixed?: boolean;
+  /** For mixed: [speciesAId, speciesBId] */
+  speciesIds?: [string, string];
+  /** For mixed: [speciesAName, speciesBName] */
+  speciesNames?: [string, string];
+  /** For mixed: chosen size from combined unique sizes */
+  selectedSize?: string;
+  /** For mixed: [speciesTraitIdFromA, speciesTraitIdFromB] — one from each species */
+  selectedSpeciesTraits?: [string, string];
+  /** For mixed: species id that the selected flaw comes from (extra ancestry trait must be from same) */
+  selectedFlawSpeciesId?: string | null;
+  /** For mixed: averaged physical (height, weight, adulthood, maxAge) for display/save */
+  mixedPhysical?: {
+    aveHeight?: number;
+    aveWeight?: number;
+    adulthood?: number;
+    maxAge?: number;
+  };
 }

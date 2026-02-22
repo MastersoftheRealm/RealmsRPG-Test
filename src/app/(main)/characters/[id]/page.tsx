@@ -9,7 +9,7 @@
 import { use, useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
-import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
+import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechniques, useUserItems, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useMergedSpecies, useCodexFeats, useCodexSkills, useEquipment, usePublicLibrary, type Species, type Trait, type Skill } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPointsForEntity, calculateMaxArchetypeFeats, calculateMaxCharacterFeats, calculateProficiency } from '@/lib/game/formulas';
@@ -115,7 +115,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   }, [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]);
   
   // Fetch all species data to look up species traits
-  const { data: allSpecies = [] } = useSpecies();
+  const { data: allSpecies = [] } = useMergedSpecies();
   
   // Fetch all Codex skills to get ability options for each skill
   const { data: codexSkills = [] } = useCodexSkills();
@@ -155,35 +155,44 @@ export default function CharacterSheetPage({ params }: PageParams) {
     return enrichCharacterData(character, powers, techniques, items, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries);
   }, [character, libraryForView, userPowers, userTechniques, userItems, codexEquipment, powerPartsDb, techniquePartsDb, publicLibraries]);
   
-  // Look up character's species and its species_traits (automatically granted to all characters of that species)
+  // Look up character's species traits (single = full species_traits; mixed = selected one from each)
   const characterSpeciesTraits = useMemo(() => {
     if (!character || !allSpecies.length) return [];
-    
-    // Find species by ID first (handle type coercion), then by name
-    const speciesId = character.ancestry?.id;
-    const speciesName = character.ancestry?.name || character.species;
-    
+    const ancestry = character.ancestry;
+
+    if (ancestry?.mixed === true && ancestry?.selectedSpeciesTraits?.length === 2) {
+      return [...ancestry.selectedSpeciesTraits];
+    }
+
+    const speciesId = ancestry?.id;
+    const speciesName = ancestry?.name || character.species;
     let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
       species = allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
     }
-    
-    // Return the species_traits array (IDs/names of traits automatically granted)
     return species?.species_traits || [];
   }, [character, allSpecies]);
-  
-  // Look up character's species skills (auto-granted proficiencies that don't cost choosable skill points)
+
+  // Look up character's species skills (single = one species; mixed = merge both)
   const characterSpeciesSkills = useMemo(() => {
     if (!character || !allSpecies.length) return [] as string[];
-    
-    const speciesId = character.ancestry?.id;
-    const speciesName = character.ancestry?.name || character.species;
-    
+    const ancestry = character.ancestry;
+
+    if (ancestry?.mixed === true && ancestry?.speciesIds?.length === 2) {
+      const a = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![0]);
+      const b = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![1]);
+      const ids = new Set<string>();
+      (a?.skills || []).forEach((id: string | number) => ids.add(String(id)));
+      (b?.skills || []).forEach((id: string | number) => ids.add(String(id)));
+      return Array.from(ids);
+    }
+
+    const speciesId = ancestry?.id;
+    const speciesName = ancestry?.name || character.species;
     let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
       species = allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
     }
-    
     return (species?.skills || []) as string[];
   }, [character, allSpecies]);
   

@@ -307,8 +307,9 @@ export function computeMaxHealthEnergy(charData: Record<string, unknown>, rules?
   const level = (charData.level as number) ?? 1;
   const healthPoints = (charData.healthPoints as number) ?? 0;
   const energyPoints = (charData.energyPoints as number) ?? 0;
-  const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string } | undefined;
-  const powAbil = archetype?.pow_abil;
+  const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string; ability?: string } | undefined;
+  // Match calculateAllStats: top-level pow_abil / archetype.pow_abil / archetype.ability
+  const powAbil = (charData.pow_abil as string) || archetype?.pow_abil || archetype?.ability;
   const martAbil = archetype?.mart_abil;
 
   const maxHealth = calculateMaxHealth(healthPoints, abilities.vitality || 0, level, powAbil, abilities, rules);

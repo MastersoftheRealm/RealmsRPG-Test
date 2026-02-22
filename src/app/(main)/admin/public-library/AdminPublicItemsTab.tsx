@@ -1,11 +1,12 @@
 /**
  * Admin Public Library — Armaments (items) tab
- * List displayed like Library (type, rarity, currency, TP, range, damage, properties). Edit modal + row delete.
+ * List displayed like Library. Edit opens Item Creator with item loaded; row delete remains.
  */
 
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   SectionHeader,
   SearchInput,
@@ -28,7 +29,6 @@ import {
   formatDamage,
 } from '@/lib/calculators/item-calc';
 import { Shield } from 'lucide-react';
-import { PublicItemEditModal } from './PublicItemEditModal';
 
 const ITEM_GRID = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const QUERY_KEY = ['public-library', 'items'] as const;
@@ -41,14 +41,11 @@ const TYPE_MAP: Record<string, string> = {
 };
 
 export function AdminPublicItemsTab() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { data: items = [], isLoading, error } = usePublicLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const [search, setSearch] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{ id: string; name: string; data: Record<string, unknown> } | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -99,64 +96,6 @@ export function AdminPublicItemsTab() {
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  const openAdd = () => {
-    setEditing(null);
-    setModalOpen(true);
-  };
-
-  const openEdit = (item: (typeof cardData)[0]) => {
-    const data = { ...item.raw } as Record<string, unknown>;
-    delete data.id;
-    delete data.docId;
-    delete data._source;
-    setEditing({ id: item.id, name: item.name, data });
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setDeleteId(null);
-  };
-
-  const handleSave = async (payload: Record<string, unknown>) => {
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/public/items`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error || res.statusText);
-      }
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      closeModal();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed to save');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteFromModal = () => {
-    if (!editing) return;
-    if (deleteId !== editing.id) {
-      setDeleteId(editing.id);
-      return;
-    }
-    setSaving(true);
-    fetch(`/api/public/items?id=${encodeURIComponent(editing.id)}`, { method: 'DELETE' })
-      .then((res) => {
-        if (!res.ok) throw new Error(res.statusText);
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-        closeModal();
-      })
-      .catch((e) => alert(e instanceof Error ? e.message : 'Failed to delete'))
-      .finally(() => setSaving(false));
-  };
-
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
@@ -175,7 +114,7 @@ export function AdminPublicItemsTab() {
 
   return (
     <div>
-      <SectionHeader title="Public Armaments" onAdd={openAdd} size="md" />
+      <SectionHeader title="Public Armaments" size="md" />
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search armaments..." />
       </div>
@@ -223,23 +162,12 @@ export function AdminPublicItemsTab() {
               chipsLabel="Properties"
               totalCost={i.tp}
               costLabel="TP"
-              onEdit={() => openEdit(i)}
+              onEdit={() => router.push(`/item-creator?edit=${encodeURIComponent(i.id)}`)}
               onDelete={() => setDeleteConfirm({ id: i.id, name: i.name })}
             />
           ))
         )}
       </div>
-
-      <PublicItemEditModal
-        isOpen={modalOpen}
-        onClose={closeModal}
-        initialData={editing?.data ?? null}
-        existingId={editing?.id ?? null}
-        onSave={handleSave}
-        onDelete={editing ? handleDeleteFromModal : null}
-        saving={saving}
-        deleteConfirm={editing ? deleteId === editing.id : false}
-      />
 
       {deleteConfirm && (
         <DeleteConfirmModal

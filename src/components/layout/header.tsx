@@ -24,6 +24,7 @@ const navLinks = [
       { href: '/power-creator', label: 'Powers' },
       { href: '/technique-creator', label: 'Techniques' },
       { href: '/item-creator', label: 'Armaments' },
+      { href: '/species-creator', label: 'Species' },
     ],
   },
   {

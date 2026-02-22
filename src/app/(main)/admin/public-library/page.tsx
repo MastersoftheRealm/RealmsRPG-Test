@@ -1,8 +1,9 @@
 /**
  * Admin Public Library Editor
  * ============================
- * Edit published public library items (powers, techniques, armaments, creatures).
- * Same list + modal pattern as Codex editor. Admin only.
+ * Browse and manage published public library items. Edit opens the corresponding
+ * creator with the item loaded; save with the same name overwrites the public item.
+ * Admin only.
  */
 
 'use client';
@@ -31,7 +32,7 @@ export default function AdminPublicLibraryPage() {
     <PageContainer size="xl">
       <PageHeader
         title="Public Library Editor"
-        description="Edit published public library items. Same format as Codex editor; changes are visible to all users on the Library page."
+        description="Edit published items via the creators (Edit opens Power/Technique/Item/Creature Creator with the item loaded). Save with the same name to overwrite. Changes are visible to all users on the Library page."
       />
 
       <TabNavigation

@@ -1,10 +1,10 @@
 /**
  * Codex Page - Full Implementation
  * =================================
- * Complete game reference matching vanilla site functionality.
- * Main tabs: Feats, Skills, Species, Equipment.
- * Advanced tabs (hidden by default): Power & Technique Parts, Armament Properties, Creature Feats, Traits.
- * Public library content lives on the Library page (My Library / Public Library switch).
+ * Complete game reference (pieces/parts: feats, skills, species, equipment, parts, properties, etc.).
+ * My Codex vs Public Codex: same pattern as Library (My Library / Public Library).
+ * Public Codex = default; all DB codex data. My Codex = future user-created content (placeholder for now).
+ * Public library content (powers, techniques, armaments, creatures) lives on the Library page.
  */
 
 'use client';
@@ -19,8 +19,11 @@ import { CodexPropertiesTab } from './CodexPropertiesTab';
 import { CodexPartsTab } from './CodexPartsTab';
 import { CodexTraitsTab } from './CodexTraitsTab';
 import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
+import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+type CodexMode = 'public' | 'my';
 
 type TabId = 'feats' | 'skills' | 'species' | 'equipment' | 'properties' | 'parts' | 'traits' | 'creature_feats';
 
@@ -39,6 +42,7 @@ const TAB_META: { id: TabId; label: string; labelMobile?: string }[] = [
 ];
 
 export default function CodexPage() {
+  const [codexMode, setCodexMode] = useState<CodexMode>('public');
   const [activeTab, setActiveTab] = useState<TabId>('feats');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -65,12 +69,18 @@ export default function CodexPage() {
     });
   }, [activeTab]);
 
+  const isPublic = codexMode === 'public';
+
   return (
     <PageContainer size="xl">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
         <PageHeader
-          title="Codex"
-          description="Complete reference for the Realms RPG system."
+          title={isPublic ? 'Public Codex' : 'My Codex'}
+          description={
+            isPublic
+              ? 'Complete reference for the Realms RPG system — feats, skills, species, equipment, parts, and properties.'
+              : 'Your custom codex content (feats, traits, parts, properties) will appear here when that feature is available.'
+          }
         />
         <Button
           variant="outline"
@@ -86,6 +96,31 @@ export default function CodexPage() {
         </Button>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
+          <button
+            type="button"
+            onClick={() => setCodexMode('public')}
+            className={cn(
+              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
+              codexMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+            )}
+          >
+            Public Codex
+          </button>
+          <button
+            type="button"
+            onClick={() => setCodexMode('my')}
+            className={cn(
+              'px-3 py-1.5 rounded text-sm font-medium transition-colors',
+              codexMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+            )}
+          >
+            My Codex
+          </button>
+        </div>
+      </div>
+
       <TabNavigation
         tabs={tabs}
         activeTab={activeTab}
@@ -94,14 +129,19 @@ export default function CodexPage() {
         className="mb-6"
       />
 
-      {activeTab === 'feats' && <CodexFeatsTab />}
-      {activeTab === 'skills' && <CodexSkillsTab />}
-      {activeTab === 'species' && <CodexSpeciesTab />}
-      {activeTab === 'equipment' && <CodexEquipmentTab />}
-      {activeTab === 'properties' && <CodexPropertiesTab />}
-      {activeTab === 'parts' && <CodexPartsTab />}
-      {activeTab === 'traits' && <CodexTraitsTab />}
-      {activeTab === 'creature_feats' && <CodexCreatureFeatsTab />}
+      {isPublic && (
+        <>
+          {activeTab === 'feats' && <CodexFeatsTab />}
+          {activeTab === 'skills' && <CodexSkillsTab />}
+          {activeTab === 'species' && <CodexSpeciesTab />}
+          {activeTab === 'equipment' && <CodexEquipmentTab />}
+          {activeTab === 'properties' && <CodexPropertiesTab />}
+          {activeTab === 'parts' && <CodexPartsTab />}
+          {activeTab === 'traits' && <CodexTraitsTab />}
+          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab />}
+        </>
+      )}
+      {!isPublic && <CodexMyCodexEmpty />}
     </PageContainer>
   );
 }
