@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-22T13:20:27.061Z",
+  "generated_at": "2026-02-22T14:25:58.860Z",
   "tasks": [
     {
       "id": "TASK-001",
@@ -2147,6 +2147,14 @@
     {
       "id": "TASK-265",
       "title": "Add source filter (My/Public/All) to add-X modals + reference public items on character",
+      "status": "done",
+      "matches": [],
+      "related_files": [],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-266",
+      "title": "Mobile-first UX overhaul (Phases 2–4)",
       "status": "done",
       "matches": [],
       "related_files": [],
