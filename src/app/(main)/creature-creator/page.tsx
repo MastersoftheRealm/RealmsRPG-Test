@@ -458,7 +458,10 @@ function CreatureCreatorContent() {
     getPayload,
     requirePublishConfirm: true,
     publishConfirmTitle: 'Publish to Public Library',
-    publishConfirmDescription: (n) => `Are you sure you wish to publish this creature "${n}" to the public library? All users will be able to see and use it.`,
+    publishConfirmDescription: (n, { existingInPublic }) =>
+      existingInPublic
+        ? `Are you sure you want to override "${n}" (creature)? The existing public creature with this name will be replaced.`
+        : `Are you sure you wish to publish this creature "${n}" to the public library? All users will be able to see and use it.`,
     successMessage: 'Creature saved!',
     publicSuccessMessage: 'Creature saved to public library!',
   });
@@ -695,7 +698,7 @@ function CreatureCreatorContent() {
             onClose={() => save.setShowPublishConfirm(false)}
             onConfirm={() => save.confirmPublish()}
             title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(creature.name.trim()) ?? ''}
+            description={save.publishConfirmDescription?.(creature.name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
             confirmLabel="Publish"
             icon="publish"
           />

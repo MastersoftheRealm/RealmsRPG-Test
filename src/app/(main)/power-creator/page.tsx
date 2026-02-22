@@ -403,7 +403,10 @@ function PowerCreatorContent() {
     getPayload,
     requirePublishConfirm: true,
     publishConfirmTitle: 'Publish to Public Library',
-    publishConfirmDescription: (n) => `Are you sure you wish to publish this power "${n}" to the public library? All users will be able to see and use it.`,
+    publishConfirmDescription: (n, { existingInPublic }) =>
+      existingInPublic
+        ? `Are you sure you want to override "${n}" (power)? The existing public power with this name will be replaced.`
+        : `Are you sure you wish to publish this power "${n}" to the public library? All users will be able to see and use it.`,
     successMessage: 'Power saved successfully!',
     publicSuccessMessage: 'Power saved to public library!',
     onSaveSuccess: () => {
@@ -706,7 +709,7 @@ function PowerCreatorContent() {
             onClose={() => save.setShowPublishConfirm(false)}
             onConfirm={() => save.confirmPublish()}
             title={save.publishConfirmTitle}
-            description={save.publishConfirmDescription?.(name.trim()) ?? ''}
+            description={save.publishConfirmDescription?.(name.trim(), { existingInPublic: save.publishExistingInPublic }) ?? ''}
             confirmLabel="Publish"
             icon="publish"
           />

@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Wand2, Swords, Shield, Users } from 'lucide-react';
+import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import {
   GridListRow,
   SearchInput,
@@ -16,9 +16,10 @@ import {
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
+  ConfirmActionModal,
   type ChipData,
 } from '@/components/shared';
-import { useToast } from '@/components/ui';
+import { useToast, IconButton } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import {
   usePublicLibrary,
@@ -62,7 +63,29 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
   const { data: partsDb = [] } = usePowerParts();
   const addMutation = useAddPublicToLibrary('powers');
   const [search, setSearch] = useState('');
+  const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
+
+  const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    setAddConfirm({ name, raw });
+  };
+
+  const handleAddConfirm = () => {
+    if (!addConfirm) return;
+    addMutation.mutate(addConfirm.raw, {
+      onSuccess: () => {
+        showToast('Added to your library', 'success');
+        setAddConfirm(null);
+      },
+      onError: (e) => {
+        showToast(e?.message ?? 'Failed to add to library', 'error');
+      },
+    });
+  };
 
   const cardData = useMemo(() => {
     return items.map((p: Record<string, unknown>) => {
@@ -160,19 +183,33 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
               totalCost={p.tp}
               costLabel="TP"
               badges={[{ label: 'Public', color: 'blue' }]}
-              onAddToLibrary={() => {
-                if (!user) {
-                  onLoginRequired();
-                  return;
-                }
-                addMutation.mutate(p.raw, {
-                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
-                });
-              }}
+              rightSlot={
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); openAddConfirm(p.name, p.raw); }}
+                  label="Add to my library"
+                  className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+                >
+                  <Plus className="w-4 h-4" />
+                </IconButton>
+              }
+              onAddToLibrary={() => openAddConfirm(p.name, p.raw)}
             />
           ))
         )}
       </div>
+      <ConfirmActionModal
+        isOpen={!!addConfirm}
+        onClose={() => setAddConfirm(null)}
+        onConfirm={handleAddConfirm}
+        title="Add to your library?"
+        description={addConfirm ? `Add "${addConfirm.name}" to your library?` : ''}
+        confirmLabel="Add"
+        loadingLabel="Adding..."
+        isLoading={addMutation.isPending}
+        icon="publish"
+      />
     </div>
   );
 }
@@ -184,7 +221,29 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
   const { data: partsDb = [] } = useTechniqueParts();
   const addMutation = useAddPublicToLibrary('techniques');
   const [search, setSearch] = useState('');
+  const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
+
+  const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    setAddConfirm({ name, raw });
+  };
+
+  const handleAddConfirm = () => {
+    if (!addConfirm) return;
+    addMutation.mutate(addConfirm.raw, {
+      onSuccess: () => {
+        showToast('Added to your library', 'success');
+        setAddConfirm(null);
+      },
+      onError: (e) => {
+        showToast(e?.message ?? 'Failed to add to library', 'error');
+      },
+    });
+  };
 
   const cardData = useMemo(() => {
     return items.map((t: Record<string, unknown>) => {
@@ -274,19 +333,33 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
               totalCost={t.tp}
               costLabel="TP"
               badges={[{ label: 'Public', color: 'blue' }]}
-              onAddToLibrary={() => {
-                if (!user) {
-                  onLoginRequired();
-                  return;
-                }
-                addMutation.mutate(t.raw, {
-                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
-                });
-              }}
+              rightSlot={
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); openAddConfirm(t.name, t.raw); }}
+                  label="Add to my library"
+                  className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+                >
+                  <Plus className="w-4 h-4" />
+                </IconButton>
+              }
+              onAddToLibrary={() => openAddConfirm(t.name, t.raw)}
             />
           ))
         )}
       </div>
+      <ConfirmActionModal
+        isOpen={!!addConfirm}
+        onClose={() => setAddConfirm(null)}
+        onConfirm={handleAddConfirm}
+        title="Add to your library?"
+        description={addConfirm ? `Add "${addConfirm.name}" to your library?` : ''}
+        confirmLabel="Add"
+        loadingLabel="Adding..."
+        isLoading={addMutation.isPending}
+        icon="publish"
+      />
     </div>
   );
 }
@@ -298,7 +371,29 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
   const { data: propertiesDb = [] } = useItemProperties();
   const addMutation = useAddPublicToLibrary('items');
   const [search, setSearch] = useState('');
+  const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
+
+  const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    setAddConfirm({ name, raw });
+  };
+
+  const handleAddConfirm = () => {
+    if (!addConfirm) return;
+    addMutation.mutate(addConfirm.raw, {
+      onSuccess: () => {
+        showToast('Added to your library', 'success');
+        setAddConfirm(null);
+      },
+      onError: (e) => {
+        showToast(e?.message ?? 'Failed to add to library', 'error');
+      },
+    });
+  };
 
   const cardData = useMemo(() => {
     return items.map((item: Record<string, unknown>) => {
@@ -393,19 +488,33 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
               totalCost={i.tp}
               costLabel="TP"
               badges={[{ label: 'Public', color: 'blue' }]}
-              onAddToLibrary={() => {
-                if (!user) {
-                  onLoginRequired();
-                  return;
-                }
-                addMutation.mutate(i.raw, {
-                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
-                });
-              }}
+              rightSlot={
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); openAddConfirm(i.name, i.raw); }}
+                  label="Add to my library"
+                  className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+                >
+                  <Plus className="w-4 h-4" />
+                </IconButton>
+              }
+              onAddToLibrary={() => openAddConfirm(i.name, i.raw)}
             />
           ))
         )}
       </div>
+      <ConfirmActionModal
+        isOpen={!!addConfirm}
+        onClose={() => setAddConfirm(null)}
+        onConfirm={handleAddConfirm}
+        title="Add to your library?"
+        description={addConfirm ? `Add "${addConfirm.name}" to your library?` : ''}
+        confirmLabel="Add"
+        loadingLabel="Adding..."
+        isLoading={addMutation.isPending}
+        icon="publish"
+      />
     </div>
   );
 }
@@ -416,7 +525,29 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
   const { data: items = [], isLoading, error } = usePublicLibrary('creatures');
   const addMutation = useAddPublicToLibrary('creatures');
   const [search, setSearch] = useState('');
+  const [addConfirm, setAddConfirm] = useState<{ name: string; raw: Record<string, unknown> } | null>(null);
   const { sortState, handleSort, sortItems } = useSort('name');
+
+  const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    setAddConfirm({ name, raw });
+  };
+
+  const handleAddConfirm = () => {
+    if (!addConfirm) return;
+    addMutation.mutate(addConfirm.raw, {
+      onSuccess: () => {
+        showToast('Added to your library', 'success');
+        setAddConfirm(null);
+      },
+      onError: (e) => {
+        showToast(e?.message ?? 'Failed to add to library', 'error');
+      },
+    });
+  };
 
   const cardData = useMemo(() => {
     return items.map((c: Record<string, unknown>) => ({
@@ -475,19 +606,33 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
                 { key: 'Type', value: c.type },
               ]}
               badges={[{ label: 'Public', color: 'blue' }]}
-              onAddToLibrary={() => {
-                if (!user) {
-                  onLoginRequired();
-                  return;
-                }
-                addMutation.mutate(c.raw, {
-                  onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error'),
-                });
-              }}
+              rightSlot={
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); openAddConfirm(c.name, c.raw); }}
+                  label="Add to my library"
+                  className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+                >
+                  <Plus className="w-4 h-4" />
+                </IconButton>
+              }
+              onAddToLibrary={() => openAddConfirm(c.name, c.raw)}
             />
           ))
         )}
       </div>
+      <ConfirmActionModal
+        isOpen={!!addConfirm}
+        onClose={() => setAddConfirm(null)}
+        onConfirm={handleAddConfirm}
+        title="Add to your library?"
+        description={addConfirm ? `Add "${addConfirm.name}" to your library?` : ''}
+        confirmLabel="Add"
+        loadingLabel="Adding..."
+        isLoading={addMutation.isPending}
+        icon="publish"
+      />
     </div>
   );
 }

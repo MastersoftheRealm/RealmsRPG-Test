@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName } from '@/services/library-service';
+import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName, findPublicLibraryItemByName } from '@/services/library-service';
 
 export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures';
 
@@ -24,7 +24,8 @@ export interface UseCreatorSaveOptions {
   /** Require confirmation modal before saving to public library */
   requirePublishConfirm?: boolean;
   publishConfirmTitle?: string;
-  publishConfirmDescription?: (name: string) => string;
+  /** Receives name and whether an item with that name already exists in the public library (override case). */
+  publishConfirmDescription?: (name: string, opts: { existingInPublic: boolean }) => string;
   /** Called after successful save (e.g. reset form). Optional. */
   onSaveSuccess?: () => void;
   /** Success message for private save. Default: "Saved successfully!" */
@@ -45,7 +46,9 @@ export interface UseCreatorSaveReturn {
   /** Call when user confirms publish in modal */
   confirmPublish: () => Promise<void>;
   publishConfirmTitle: string;
-  publishConfirmDescription: ((name: string) => string) | undefined;
+  publishConfirmDescription: ((name: string, opts: { existingInPublic: boolean }) => string) | undefined;
+  /** True when publishing would replace an existing public item with the same name. */
+  publishExistingInPublic: boolean;
 }
 
 const DEFAULT_SUCCESS = 'Saved successfully!';
@@ -66,17 +69,23 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [saving, setSaving] = useState(false);
-  const [showPublishConfirm, setShowPublishConfirm] = useState(false);
+  const [showPublishConfirm, setShowPublishConfirmState] = useState(false);
+  const [publishExistingId, setPublishExistingId] = useState<string | null>(null);
+
+  const setShowPublishConfirm = useCallback((show: boolean) => {
+    setShowPublishConfirmState(show);
+    if (!show) setPublishExistingId(null);
+  }, []);
 
   const executeSave = useCallback(
-    async (target: 'private' | 'public') => {
+    async (target: 'private' | 'public', existingPublicId?: string) => {
       const { name, data } = getPayload();
       const payload = { ...data, createdAt: new Date().toISOString(), updatedAt: new Date() };
       setSaving(true);
       setSaveMessage(null);
       try {
         if (target === 'public') {
-          await saveToPublicLibrary(type, payload);
+          await saveToPublicLibrary(type, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
           setSaveMessage({ type: 'success', text: publicSuccessMessage });
         } else {
           const existing = await findLibraryItemByName(type, name.trim());
@@ -107,16 +116,19 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       return;
     }
     if (saveTarget === 'public' && requirePublishConfirm) {
-      setShowPublishConfirm(true);
+      const existing = await findPublicLibraryItemByName(type, name.trim());
+      setPublishExistingId(existing?.id ?? null);
+      setShowPublishConfirmState(true);
       return;
     }
     await executeSave(saveTarget);
   }, [getPayload, type, saveTarget, requirePublishConfirm, executeSave]);
 
   const confirmPublish = useCallback(async () => {
+    const existingId = publishExistingId;
     setShowPublishConfirm(false);
-    await executeSave('public');
-  }, [executeSave]);
+    await executeSave('public', existingId ?? undefined);
+  }, [executeSave, publishExistingId]);
 
   return {
     saveMessage,
@@ -130,5 +142,6 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     confirmPublish,
     publishConfirmTitle,
     publishConfirmDescription,
+    publishExistingInPublic: !!publishExistingId,
   };
 }

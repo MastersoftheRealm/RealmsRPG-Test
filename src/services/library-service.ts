@@ -58,6 +58,19 @@ export async function fetchPublicLibrary(
   return (await res.json()) as Array<Record<string, unknown>>;
 }
 
+/** Find a public library item by name (for replace-by-name when publishing). */
+export async function findPublicLibraryItemByName(
+  type: 'powers' | 'techniques' | 'items' | 'creatures',
+  name: string
+): Promise<{ id: string } | null> {
+  const items = await fetchPublicLibrary(type);
+  const normalized = (name || '').trim().toLowerCase();
+  const found = items.find(
+    (i) => (String((i as Record<string, unknown>).name ?? '').trim().toLowerCase() === normalized)
+  ) as { id: string } | undefined;
+  return found ? { id: found.id } : null;
+}
+
 /** Copy a public library item to the user's library. Strips public-specific fields. */
 export async function addPublicItemToLibrary(
   type: 'powers' | 'techniques' | 'items' | 'creatures',

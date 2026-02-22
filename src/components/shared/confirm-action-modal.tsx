@@ -33,6 +33,8 @@ interface ConfirmActionModalProps {
   confirmVariant?: 'primary' | 'danger';
   /** Whether the action is in progress */
   isLoading?: boolean;
+  /** Label for confirm button when loading (default: "Publishing..." when confirmVariant is primary, else "Confirming...") */
+  loadingLabel?: string;
   /** Icon to display: 'warning' | 'publish' (default: 'warning') */
   icon?: 'warning' | 'publish';
 }
@@ -47,9 +49,13 @@ export function ConfirmActionModal({
   cancelLabel = 'Cancel',
   confirmVariant = 'primary',
   isLoading = false,
+  loadingLabel,
   icon = 'warning',
 }: ConfirmActionModalProps) {
   if (!isOpen) return null;
+
+  const defaultLoadingLabel = confirmVariant === 'primary' ? 'Publishing...' : 'Confirming...';
+  const confirmButtonLabel = isLoading ? (loadingLabel ?? defaultLoadingLabel) : confirmLabel;
 
   const IconComponent = icon === 'publish' ? Upload : AlertTriangle;
   const iconBg = icon === 'publish' ? 'bg-primary-100 dark:bg-primary-900/30' : 'bg-danger-light';
@@ -88,7 +94,7 @@ export function ConfirmActionModal({
             isLoading={isLoading}
             className="flex-1"
           >
-            {isLoading ? 'Publishing...' : confirmLabel}
+            {confirmButtonLabel}
           </Button>
         </div>
       </div>

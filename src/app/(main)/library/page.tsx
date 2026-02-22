@@ -1,8 +1,8 @@
 /**
  * Library Page
  * =============
- * My Library: user's personal library + source filter (All / Public / My).
- * Public Library: browse community content (Powers, Techniques, Armaments, Creatures) and add to my library.
+ * My Library: user's personal library (powers, techniques, armaments, creatures).
+ * Public Library: browse community content and add items to your library via + button with confirmation.
  * Page title updates based on which library is shown.
  */
 
@@ -14,7 +14,7 @@ import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/layout';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
-import { DeleteConfirmModal, SourceFilter, LoginPromptModal, type SourceFilterValue } from '@/components/shared';
+import { DeleteConfirmModal, LoginPromptModal } from '@/components/shared';
 import {
   useUserPowers,
   useUserTechniques,
@@ -64,7 +64,6 @@ function LibraryContent() {
   const { showToast } = useToast();
   const [libraryMode, setLibraryMode] = useState<LibraryMode>('my');
   const [activeTab, setActiveTab] = useState<TabId>('powers');
-  const [source, setSource] = useState<SourceFilterValue>('my');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem } | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
@@ -178,7 +177,6 @@ function LibraryContent() {
             Public Library
           </button>
         </div>
-        {!isPublic && <SourceFilter value={source} onChange={setSource} />}
       </div>
 
       <TabNavigation
@@ -196,10 +194,10 @@ function LibraryContent() {
         />
       ) : (
         <>
-          {activeTab === 'powers' && <LibraryPowersTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
-          {activeTab === 'techniques' && <LibraryTechniquesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
-          {activeTab === 'items' && <LibraryItemsTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
-          {activeTab === 'creatures' && <LibraryCreaturesTab source={source} onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
+          {activeTab === 'powers' && <LibraryPowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
+          {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
+          {activeTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
+          {activeTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
         </>
       )}
 

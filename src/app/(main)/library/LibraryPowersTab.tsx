@@ -20,11 +20,10 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
-import { useUserPowers, usePowerParts, useDuplicatePower, usePublicLibrary, useAddPublicToLibrary } from '@/hooks';
+import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 
 const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
 const POWER_HEADER_COLUMNS = [
@@ -39,38 +38,19 @@ const POWER_HEADER_COLUMNS = [
 ];
 
 interface LibraryPowersTabProps {
-  source: SourceFilterValue;
   onDelete: (item: DisplayItem) => void;
 }
 
-export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
+export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const { showToast } = useToast();
-  const { data: powers = [], isLoading: loadingUser, error } = useUserPowers();
-  const { data: publicItems = [], isLoading: loadingPublic } = usePublicLibrary('powers');
+  const { data: powers = [], isLoading, error } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
   const duplicatePower = useDuplicatePower();
-  const addPublic = useAddPublicToLibrary('powers');
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
-    const rows: Array<{
-      id: string;
-      name: string;
-      description: string;
-      energy: string | number;
-      action: string;
-      duration: string;
-      range: string;
-      area: string;
-      damage: string;
-      tp: number;
-      parts: ChipData[];
-      itemSource: 'my' | 'public';
-      raw: Record<string, unknown>;
-    }> = [];
-
-    const toRow = (p: { docId?: string; id?: string; name?: string; description?: string; parts?: unknown[]; damage?: unknown; actionType?: string; isReaction?: boolean; range?: unknown; area?: unknown; duration?: unknown }, itemSource: 'my' | 'public', raw: Record<string, unknown>) => {
+    return powers.map(p => {
       const doc: PowerDocument = {
         name: String(p.name ?? ''),
         description: String(p.description ?? ''),
@@ -102,23 +82,9 @@ export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
         damage: damageStr,
         tp: display.tp,
         parts,
-        itemSource,
-        raw,
       };
-    };
-
-    if (source === 'my' || source === 'all') {
-      powers.forEach(p => rows.push(toRow(p, 'my', p as unknown as Record<string, unknown>)));
-    }
-    if (source === 'public' || source === 'all') {
-      publicItems.forEach((p: Record<string, unknown>) => {
-        rows.push(toRow(p as Parameters<typeof toRow>[0], 'public', p));
-      });
-    }
-    return rows;
-  }, [powers, publicItems, partsDb, source]);
-
-  const isLoading = ((source === 'my' || source === 'all') && loadingUser) || ((source === 'public' || source === 'all') && loadingPublic);
+    });
+  }, [powers, partsDb]);
 
   const filteredData = useMemo(() => {
     let result = cardData;
@@ -139,20 +105,19 @@ export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
   }
 
   if (!isLoading && cardData.length === 0) {
-    const isPublicOnly = source === 'public';
     return (
       <ListEmptyState
         icon={<Wand2 className="w-8 h-8" />}
-        title={isPublicOnly ? 'No public powers' : 'No powers yet'}
-        message={isPublicOnly ? 'Public powers will appear here when admins add them.' : 'Create your first power to see it here in your library.'}
-        action={!isPublicOnly ? (
+        title="No powers yet"
+        message="Create your first power to see it here in your library."
+        action={
           <Button asChild>
             <Link href="/power-creator">
               <Plus className="w-4 h-4" />
               Create Power
             </Link>
           </Button>
-        ) : undefined}
+        }
       />
     );
   }
@@ -182,7 +147,7 @@ export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
         ) : (
           filteredData.map(power => (
             <GridListRow
-              key={`${power.itemSource}-${power.id}`}
+              key={power.id}
               id={power.id}
               name={power.name}
               description={power.description}
@@ -199,11 +164,9 @@ export function LibraryPowersTab({ source, onDelete }: LibraryPowersTabProps) {
               chipsLabel="Parts & Proficiencies"
               totalCost={power.tp}
               costLabel="TP"
-              badges={power.itemSource === 'public' ? [{ label: 'Public', color: 'blue' }] : undefined}
-              onEdit={power.itemSource === 'my' ? () => window.open(`/power-creator?edit=${power.id}`, '_blank') : undefined}
-              onDelete={power.itemSource === 'my' ? () => onDelete({ id: power.id, name: power.name } as DisplayItem) : undefined}
-              onDuplicate={power.itemSource === 'my' ? () => duplicatePower.mutate(power.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') }) : undefined}
-              onAddToLibrary={power.itemSource === 'public' ? () => addPublic.mutate(power.raw, { onError: (e) => showToast(e?.message ?? 'Failed to add to library', 'error') }) : undefined}
+              onEdit={() => window.open(`/power-creator?edit=${power.id}`, '_blank')}
+              onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
+              onDuplicate={() => duplicatePower.mutate(power.id, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
             />
           ))
         )}

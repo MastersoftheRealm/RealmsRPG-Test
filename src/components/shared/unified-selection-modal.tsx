@@ -110,6 +110,8 @@ export interface UnifiedSelectionModalProps {
   
   /** Optional content between search and list (e.g. SourceFilter for My/Public/All) */
   headerExtra?: ReactNode;
+  /** When set, only items passing this filter are shown in the list; selection and confirm still use the full items list so selections from other "tabs" are kept. */
+  displayFilter?: (item: SelectableItem) => boolean;
   
   // Filters (optional)
   filterContent?: ReactNode;
@@ -151,6 +153,7 @@ export function UnifiedSelectionModal({
   searchPlaceholder,
   searchFields = ['name', 'description'],
   headerExtra,
+  displayFilter,
   filterContent,
   showFilters = false,
   showQuantity = false,
@@ -179,9 +182,9 @@ export function UnifiedSelectionModal({
     }
   }, [isOpen, initialSelectedIds]);
   
-  // Filter items
+  // Filter items for display (displayFilter e.g. by source tab; selection still uses full items)
   const filteredItems = useMemo(() => {
-    let result = items;
+    let result = displayFilter ? items.filter(displayFilter) : items;
     
     // Hide disabled items if configured
     if (hideDisabled) {
@@ -204,7 +207,7 @@ export function UnifiedSelectionModal({
     
     // Sort
     return sortItems(result);
-  }, [items, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
+  }, [items, displayFilter, searchQuery, searchFields, sortState, hideDisabled, sortItems]);
   
   // Toggle selection — normalize id to string so selection works when codex returns number ids
   const toggleSelection = useCallback((id: string | number) => {
