@@ -291,8 +291,8 @@ function AccountContent() {
   }
 
   return (
-    <PageContainer size="xs" padded={false} className="space-y-6">
-      <div className="mb-8">
+    <PageContainer size="xs" padded={false} className="space-y-6 min-w-0">
+      <div className="mb-8 min-w-0">
         <h1 className="text-3xl font-bold text-text-primary flex items-center gap-3">
           <UserIcon className="w-8 h-8 text-primary-600" />
           My Account

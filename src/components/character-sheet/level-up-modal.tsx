@@ -125,7 +125,7 @@ export function LevelUpModal({
   const milestones = getMilestones();
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Level Up!">
+    <Modal isOpen={isOpen} onClose={onClose} title="Level Up!" fullScreenOnMobile>
       <div className="space-y-6">
         {/* Level Selector */}
         <div className="text-center">

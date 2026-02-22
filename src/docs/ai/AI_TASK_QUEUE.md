@@ -6210,3 +6210,29 @@ Agents should **create new tasks** during their work when they discover addition
     - enrichCharacterData (and callers) receive optional public library arrays; enrichment resolves by id from user library first, then from public library so character sheet displays public items correctly.
     - npm run build passes.
   notes: "Done 2026-02-21: SourceFilter + public merge in add-library-item-modal, equipment-step, powers-step, creature creator (power/technique/armament modals). UnifiedSelectionModal headerExtra prop for SourceFilter. enrichPowers/enrichTechniques/enrichItems accept optional public library; enrichCharacterData accepts publicLibraries; character sheet and campaign view fetch public and pass to enrichment. Fixed sheet-header onEditArchetype destructuring. npm run build passes."
+
+- id: TASK-266
+  title: Mobile-first UX overhaul (Phases 2–4)
+  priority: high
+  status: done
+  created_at: 2026-02-22
+  created_by: agent
+  description: |
+    Phase 1 (foundation) done: MOBILE_UX.md, Modal fullScreenOnMobile, realms-mobile.mdc, AGENTS.md/AGENT_GUIDE/realms-tasks updates, fullScreenOnMobile enabled on character sheet and creator modals. Phase 2 done: character sheet side-scroll panels, responsive SheetHeader, SheetActionToolbar at bottom on mobile. Phase 3 done: CreatorLayout order, creator tab bar horizontal scroll, Library/Codex min-w-0. Phase 4 done: encounters, campaigns, my-account (min-w-0); rules/resources/admin use PageContainer. See src/docs/MOBILE_UX.md.
+  related_files:
+    - src/docs/MOBILE_UX.md
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/sheet-action-toolbar.tsx
+    - src/components/creator/CreatorLayout.tsx
+    - .cursor/rules/realms-mobile.mdc
+  acceptance_criteria:
+    - Phase 2: Character sheet uses horizontal side-scroll of section panels (Abilities, Skills, Archetype, Library) below md; SheetHeader responsive; SheetActionToolbar mobile-friendly (e.g. bottom or non-overlap).
+    - Phase 3: CreatorLayout/summary and Library/Codex lists and filters audited for mobile; character creator tab bar scrolls or adapts on narrow screens.
+    - Phase 4: Remaining pages (encounters, campaigns, my-account, rules, admin) have no horizontal scroll at 360px and readable text.
+    - npm run build passes.
+  notes: |
+    Phase 1 completed 2026-02-22: MOBILE_UX.md, Modal fullScreenOnMobile, globals.css mobile tokens, realms-mobile.mdc, AGENTS.md, realms-tasks.mdc, AGENT_GUIDE Mobile subsection; fullScreenOnMobile enabled on unified-selection, LoadFromLibraryModal, level-up, recovery, settings, edit-archetype, add-combatant, confirm-action, delete-confirm, login-prompt, creator-tab-bar, species-modal, MixedSpeciesModal, LoadCreatureModal.
+    Phase 2 completed 2026-02-22: Character sheet page — below md, horizontal side-scroll (snap-x snap-mandatory) with 4 panels (Abilities & Defenses, Skills, Archetype & Attacks, Library); each panel full-width, scroll-snap-align start, vertical scroll inside panel. Desktop layout unchanged (hidden md:block). SheetHeader: right column w-full min-w-0 on mobile, AP+Health/Energy stack on xs (flex-col sm:flex-row). SheetActionToolbar: on mobile fixed bottom-4 left-4 right-4, flex-row justify-center; on md+ fixed top-24 right-4, flex-col. npm run build passes.
+    Phase 3 completed 2026-02-22: CreatorLayout — main content order-2 lg:order-1, sidebar order-1 lg:order-2 (sidebar first on mobile); min-w-0 on both. Creator tab bar — flex-nowrap md:flex-wrap, overflow-x-auto, scrollbar-thin, step buttons flex-shrink-0. Library/Codex — mode toggle and TabNavigation wrapped in min-w-0 divs.
+    Phase 4 completed 2026-02-22: Encounters — Create Encounter modal fullScreenOnMobile, type grid grid-cols-1 sm:grid-cols-3, top bar min-w-0. Campaigns — TabNavigation and main content min-w-0. My-account — PageContainer and header div given min-w-0. Rules, resources, privacy, terms use PageContainer; admin tables documented. npm run build passes.

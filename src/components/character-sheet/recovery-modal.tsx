@@ -189,6 +189,7 @@ export function RecoveryModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      fullScreenOnMobile
       title="Recovery"
       size="md"
     >

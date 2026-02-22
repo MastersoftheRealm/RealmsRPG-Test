@@ -53,10 +53,8 @@ export function CreatorLayout({
       />
       {modals}
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {children}
-        </div>
-        <div>{sidebar}</div>
+        <div className="lg:col-span-2 space-y-6 order-2 lg:order-1 min-w-0">{children}</div>
+        <div className="order-1 lg:order-2 min-w-0">{sidebar}</div>
       </div>
     </PageContainer>
   );

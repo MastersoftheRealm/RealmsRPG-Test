@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { Users, FolderOpen, Plus, AlertTriangle } from 'lucide-react';
+import { Users, Plus, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/stores';
 import {
   useSpecies,
@@ -20,9 +20,17 @@ import {
   type Trait,
   type Skill,
 } from '@/hooks';
+import { CREATURE_TYPES } from '@/lib/game/creator-constants';
 import { CreatorLayout, CreatorSaveToolbar, CreatorSummaryPanel } from '@/components/creator';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { Button, Input, Textarea, Modal, LoadingState, Alert } from '@/components/ui';
+import {
+  SearchInput,
+  ListHeader,
+  GridListRow,
+  ListEmptyState as EmptyState,
+} from '@/components/shared';
+import { useSort } from '@/hooks/use-sort';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
 
 const MAX_SPECIES_TRAITS = 3;
@@ -44,7 +52,6 @@ interface SpeciesFormState {
   name: string;
   description: string;
   type: string;
-  speed: number;
   sizes: string[];
   skillIds: string[];
   species_traits: string[];
@@ -54,14 +61,13 @@ interface SpeciesFormState {
   languages: string[];
   ave_height: number | '';
   ave_weight: number | '';
-  adulthood_lifespan: [number | '', number | ''];
+  adulthood_lifespan: [number | '', number | '']; // [adulthood_years, lifespan_years]
 }
 
 const initialState: SpeciesFormState = {
   name: '',
   description: '',
   type: '',
-  speed: 6,
   sizes: ['Medium'],
   skillIds: [],
   species_traits: [],
@@ -73,6 +79,9 @@ const initialState: SpeciesFormState = {
   ave_weight: '',
   adulthood_lifespan: ['', ''],
 };
+
+/** Default speed for species (not user-editable). */
+const DEFAULT_SPECIES_SPEED = 6;
 
 function normalizeTraitIds(ids: (string | number)[] | undefined, allTraits: Trait[]): string[] {
   if (!ids?.length) return [];
@@ -97,7 +106,9 @@ export default function SpeciesCreatorPage() {
   const { user } = useAuthStore();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
-  const [showAddTraitModal, setShowAddTraitModal] = useState(false);
+  const [showAddSpeciesAncestryModal, setShowAddSpeciesAncestryModal] = useState(false);
+  const [showAddFlawModal, setShowAddFlawModal] = useState(false);
+  const [showAddCharacteristicModal, setShowAddCharacteristicModal] = useState(false);
   const [showThirdSpeciesTraitConfirm, setShowThirdSpeciesTraitConfirm] = useState(false);
   const [pendingTraitAdd, setPendingTraitAdd] = useState<{ traitId: string; category: TraitCategory } | null>(null);
   const [newLanguage, setNewLanguage] = useState('');
@@ -116,8 +127,12 @@ export default function SpeciesCreatorPage() {
     flaws: MAX_FLAWS,
   };
 
+  // Base skills only (no sub-skills) for species skill selection
   const skillOptions = useMemo(() => {
-    const opts = (skills as Skill[]).map((s) => ({ value: String(s.id), label: s.name }));
+    const baseSkills = (skills as Skill[]).filter(
+      (s) => s.base_skill_id == null || s.base_skill_id === 0
+    );
+    const opts = baseSkills.map((s) => ({ value: String(s.id), label: s.name }));
     return [{ value: '0', label: 'Any' }, ...opts];
   }, [skills]);
 
@@ -135,7 +150,7 @@ export default function SpeciesCreatorPage() {
         type: form.type.trim(),
         size: sizes[0],
         sizes,
-        speed: form.speed,
+        speed: DEFAULT_SPECIES_SPEED,
         skills: form.skillIds,
         species_traits: form.species_traits,
         ancestry_traits: form.ancestry_traits,
@@ -190,7 +205,6 @@ export default function SpeciesCreatorPage() {
         name: String(d.name ?? ''),
         description: String(d.description ?? ''),
         type: String(d.type ?? ''),
-        speed: typeof d.speed === 'number' ? d.speed : 6,
         sizes: sizes.slice(0, MAX_SIZES),
         skillIds: skillIds.slice(0, MAX_SKILLS),
         species_traits: species_traits.slice(0, MAX_SPECIES_TRAITS),
@@ -219,7 +233,9 @@ export default function SpeciesCreatorPage() {
       }
       if (current.includes(traitId)) return;
       setForm((prev) => ({ ...prev, [key]: [...prev[key], traitId] }));
-      setShowAddTraitModal(false);
+      setShowAddSpeciesAncestryModal(false);
+      setShowAddFlawModal(false);
+      setShowAddCharacteristicModal(false);
     },
     [form, traitLimits]
   );
@@ -233,7 +249,7 @@ export default function SpeciesCreatorPage() {
     }
     setPendingTraitAdd(null);
     setShowThirdSpeciesTraitConfirm(false);
-    setShowAddTraitModal(false);
+    setShowAddSpeciesAncestryModal(false);
   }, [pendingTraitAdd]);
 
   const removeTrait = useCallback((category: TraitCategory, traitId: string) => {
@@ -297,15 +313,6 @@ export default function SpeciesCreatorPage() {
     [form]
   );
 
-  const canAddTrait = useMemo(() => {
-    return (
-      form.species_traits.length < MAX_SPECIES_TRAITS ||
-      form.ancestry_traits.length < MAX_ANCESTRY_TRAITS ||
-      form.characteristics.length < MAX_CHARACTERISTICS ||
-      form.flaws.length < MAX_FLAWS
-    );
-  }, [form]);
-
   return (
     <CreatorLayout
       icon={<Users className="w-8 h-8 text-primary-600" />}
@@ -319,7 +326,13 @@ export default function SpeciesCreatorPage() {
           onLoad={() => setShowLoadModal(true)}
           onReset={handleReset}
           saving={save.saving}
-          saveDisabled={!form.name.trim()}
+          saveDisabled={
+            !form.name.trim() ||
+            form.ave_height === '' ||
+            form.ave_weight === '' ||
+            form.adulthood_lifespan[0] === '' ||
+            form.adulthood_lifespan[1] === ''
+          }
           showPublicPrivate={false}
           user={user}
         />
@@ -357,7 +370,7 @@ export default function SpeciesCreatorPage() {
             />
           )}
 
-          <Modal isOpen={showLoadModal} onClose={() => setShowLoadModal(false)} title="Load species" size="lg">
+          <Modal isOpen={showLoadModal} onClose={() => setShowLoadModal(false)} title="Load species" size="lg" fullScreenOnMobile>
             <p className="text-sm text-text-muted mb-4">Load a species from Public Codex or My Codex to edit and save to your private codex.</p>
             {codexLoading ? (
               <LoadingState />
@@ -401,14 +414,41 @@ export default function SpeciesCreatorPage() {
             )}
           </Modal>
 
-          <Modal isOpen={showAddTraitModal} onClose={() => setShowAddTraitModal(false)} title="Add trait" size="md">
-            <AddTraitModalContent
+          <Modal isOpen={showAddSpeciesAncestryModal} onClose={() => setShowAddSpeciesAncestryModal(false)} title="Add species or ancestry trait" size="lg" fullScreenOnMobile>
+            <TraitListModal
               traits={traits as Trait[]}
+              filter={(t) => !t.flaw && !t.characteristic}
               form={form}
               traitLimits={traitLimits}
-              traitIdToName={traitIdToName}
+              mode="species_ancestry"
               onAdd={addTraitToCategory}
-              onClose={() => setShowAddTraitModal(false)}
+              onClose={() => setShowAddSpeciesAncestryModal(false)}
+              onThirdSpeciesTrait={(traitId) => {
+                setPendingTraitAdd({ traitId, category: 'species_traits' });
+                setShowThirdSpeciesTraitConfirm(true);
+              }}
+            />
+          </Modal>
+          <Modal isOpen={showAddFlawModal} onClose={() => setShowAddFlawModal(false)} title="Add flaw" size="lg" fullScreenOnMobile>
+            <TraitListModal
+              traits={traits as Trait[]}
+              filter={(t) => t.flaw === true}
+              form={form}
+              traitLimits={traitLimits}
+              mode="flaw"
+              onAdd={addTraitToCategory}
+              onClose={() => setShowAddFlawModal(false)}
+            />
+          </Modal>
+          <Modal isOpen={showAddCharacteristicModal} onClose={() => setShowAddCharacteristicModal(false)} title="Add characteristic" size="lg" fullScreenOnMobile>
+            <TraitListModal
+              traits={traits as Trait[]}
+              filter={(t) => t.characteristic === true}
+              form={form}
+              traitLimits={traitLimits}
+              mode="characteristic"
+              onAdd={addTraitToCategory}
+              onClose={() => setShowAddCharacteristicModal(false)}
             />
           </Modal>
         </>
@@ -430,11 +470,16 @@ export default function SpeciesCreatorPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-              <Input value={form.type} onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))} placeholder="e.g. Humanoid" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Speed</label>
-              <Input type="number" min={0} value={form.speed} onChange={(e) => setForm((p) => ({ ...p, speed: parseInt(e.target.value, 10) || 0 }))} />
+              <select
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                value={form.type}
+                onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+              >
+                <option value="">— Select type —</option>
+                {CREATURE_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="mt-4">
@@ -491,7 +536,7 @@ export default function SpeciesCreatorPage() {
         <section className="bg-surface rounded-xl shadow-md p-6">
           <h2 className="text-lg font-bold text-text-primary mb-2">Traits</h2>
           <p className="text-sm text-text-muted mb-4">
-            Species traits ({MAX_SPECIES_TRAITS} max), ancestry traits ({MAX_ANCESTRY_TRAITS} max), characteristics ({MAX_CHARACTERISTICS} max), flaws ({MAX_FLAWS} max). Classify each trait when adding.
+            Species traits ({MAX_SPECIES_TRAITS} max), ancestry traits ({MAX_ANCESTRY_TRAITS} max), characteristics ({MAX_CHARACTERISTICS} max), flaws ({MAX_FLAWS} max). Add from the matching list; species/ancestry traits are classified after you add.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <TraitBlock title="Species traits" limit={MAX_SPECIES_TRAITS} ids={form.species_traits} traitIdToName={traitIdToName} onRemove={(id) => removeTrait('species_traits', id)} />
@@ -499,29 +544,49 @@ export default function SpeciesCreatorPage() {
             <TraitBlock title="Characteristics" limit={MAX_CHARACTERISTICS} ids={form.characteristics} traitIdToName={traitIdToName} onRemove={(id) => removeTrait('characteristics', id)} />
             <TraitBlock title="Flaws" limit={MAX_FLAWS} ids={form.flaws} traitIdToName={traitIdToName} onRemove={(id) => removeTrait('flaws', id)} />
           </div>
-          <Button onClick={() => setShowAddTraitModal(true)} disabled={!canAddTrait}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add trait
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => setShowAddSpeciesAncestryModal(true)}
+              disabled={form.species_traits.length >= MAX_SPECIES_TRAITS && form.ancestry_traits.length >= MAX_ANCESTRY_TRAITS}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add species/ancestry trait
+            </Button>
+            <Button
+              onClick={() => setShowAddFlawModal(true)}
+              disabled={form.flaws.length >= MAX_FLAWS}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add flaw
+            </Button>
+            <Button
+              onClick={() => setShowAddCharacteristicModal(true)}
+              disabled={form.characteristics.length >= MAX_CHARACTERISTICS}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add characteristic
+            </Button>
+          </div>
         </section>
 
         <section className="bg-surface rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-4">Optional: height, weight, lifespan</h2>
+          <h2 className="text-lg font-bold text-text-primary mb-4">Height, weight & lifespan *</h2>
+          <p className="text-sm text-text-muted mb-4">Required. Average height (cm), average weight (kg), adulthood age, and lifespan (years).</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Average height (cm)</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Average height (cm) *</label>
               <Input type="number" min={0} value={form.ave_height} onChange={(e) => setForm((p) => ({ ...p, ave_height: e.target.value === '' ? '' : Number(e.target.value) }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Average weight (kg)</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Average weight (kg) *</label>
               <Input type="number" min={0} value={form.ave_weight} onChange={(e) => setForm((p) => ({ ...p, ave_weight: e.target.value === '' ? '' : Number(e.target.value) }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Adulthood age</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Adulthood age *</label>
               <Input type="number" min={0} value={form.adulthood_lifespan[0]} onChange={(e) => setForm((p) => ({ ...p, adulthood_lifespan: [e.target.value === '' ? '' : Number(e.target.value), p.adulthood_lifespan[1]] }))} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Max age</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Lifespan (years) *</label>
               <Input type="number" min={0} value={form.adulthood_lifespan[1]} onChange={(e) => setForm((p) => ({ ...p, adulthood_lifespan: [p.adulthood_lifespan[0], e.target.value === '' ? '' : Number(e.target.value)] }))} />
             </div>
           </div>
@@ -563,76 +628,170 @@ function TraitBlock({
   );
 }
 
-function AddTraitModalContent({
+const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr 40px';
+const TRAIT_LIST_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'uses_per_rec', label: 'USES' },
+  { key: 'rec_period', label: 'RECOVERY' },
+  { key: '_actions', label: '', sortable: false as const },
+];
+
+function TraitListModal({
   traits,
+  filter,
   form,
   traitLimits,
-  traitIdToName,
+  mode,
   onAdd,
   onClose,
+  onThirdSpeciesTrait,
 }: {
   traits: Trait[];
+  filter: (t: Trait) => boolean;
   form: SpeciesFormState;
   traitLimits: Record<TraitCategory, number>;
-  traitIdToName: Map<string, string>;
+  mode: 'species_ancestry' | 'flaw' | 'characteristic';
   onAdd: (traitId: string, category: TraitCategory) => void;
   onClose: () => void;
+  onThirdSpeciesTrait?: (traitId: string) => void;
 }) {
-  const [selectedTraitId, setSelectedTraitId] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<TraitCategory>('species_traits');
+  const [search, setSearch] = useState('');
+  const [selectedTraitId, setSelectedTraitId] = useState<string | null>(null);
+  const { sortState, handleSort, sortItems } = useSort('name');
 
-  const alreadyUsed = useMemo(() => {
-    const set = new Set([...form.species_traits, ...form.ancestry_traits, ...form.characteristics, ...form.flaws]);
-    return set;
-  }, [form]);
+  const alreadyUsed = useMemo(
+    () => new Set([...form.species_traits, ...form.ancestry_traits, ...form.characteristics, ...form.flaws]),
+    [form]
+  );
 
-  const availableTraits = useMemo(() => traits.filter((t) => !alreadyUsed.has(String(t.id))), [traits, alreadyUsed]);
-  const canAddToCategory = form[selectedCategory].length < traitLimits[selectedCategory];
+  const filtered = useMemo(() => {
+    const list = traits.filter((t) => filter(t) && !alreadyUsed.has(String(t.id)));
+    const searched =
+      !search.trim()
+        ? list
+        : list.filter(
+            (t) =>
+              t.name.toLowerCase().includes(search.toLowerCase()) ||
+              (t.description ?? '').toLowerCase().includes(search.toLowerCase())
+          );
+    return sortItems<Trait>(searched);
+  }, [traits, filter, alreadyUsed, search, sortState, sortItems]);
 
-  const handleAdd = () => {
-    if (!selectedTraitId || !canAddToCategory) return;
-    onAdd(selectedTraitId, selectedCategory);
-    setSelectedTraitId('');
+  const canAddSpecies = form.species_traits.length < traitLimits.species_traits;
+  const canAddAncestry = form.ancestry_traits.length < traitLimits.ancestry_traits;
+  const canAddFlaw = form.flaws.length < traitLimits.flaws;
+  const canAddCharacteristic = form.characteristics.length < traitLimits.characteristics;
+
+  const handleAddAsSpecies = () => {
+    if (!selectedTraitId || !canAddSpecies) return;
+    if (form.species_traits.length === 2) {
+      onThirdSpeciesTrait?.(selectedTraitId);
+      return;
+    }
+    onAdd(selectedTraitId, 'species_traits');
+    setSelectedTraitId(null);
+  };
+
+  const handleAddAsAncestry = () => {
+    if (!selectedTraitId || !canAddAncestry) return;
+    onAdd(selectedTraitId, 'ancestry_traits');
+    setSelectedTraitId(null);
+  };
+
+  const handleAddFlaw = () => {
+    if (!selectedTraitId || !canAddFlaw) return;
+    onAdd(selectedTraitId, 'flaws');
+    setSelectedTraitId(null);
+  };
+
+  const handleAddCharacteristic = () => {
+    if (!selectedTraitId || !canAddCharacteristic) return;
+    onAdd(selectedTraitId, 'characteristics');
+    setSelectedTraitId(null);
   };
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-text-muted">Choose a trait and classify it. Limits: Species {traitLimits.species_traits}, Ancestry {traitLimits.ancestry_traits}, Characteristics {traitLimits.characteristics}, Flaws {traitLimits.flaws}.</p>
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Trait</label>
-        <select
-          className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-          value={selectedTraitId}
-          onChange={(e) => setSelectedTraitId(e.target.value)}
-        >
-          <option value="">— Select trait —</option>
-          {availableTraits.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
-          ))}
-        </select>
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-text-muted">
+        {mode === 'species_ancestry' &&
+          'Select a trait, then add it as a species trait or ancestry trait. Expand a row to see full description.'}
+        {mode === 'flaw' && 'Select a flaw to add. Expand a row to see full description.'}
+        {mode === 'characteristic' && 'Select a characteristic to add. Expand a row to see full description.'}
+      </p>
+      <SearchInput value={search} onChange={setSearch} placeholder="Search traits..." />
+      <ListHeader
+        columns={TRAIT_LIST_COLUMNS}
+        gridColumns={TRAIT_GRID_COLUMNS}
+        sortState={sortState}
+        onSort={handleSort}
+      />
+      <div className="border border-border-light rounded-lg overflow-hidden max-h-[50vh] overflow-y-auto">
+        {filtered.length === 0 ? (
+          <EmptyState title="No traits found" description="Try adjusting your search or check limits." size="sm" />
+        ) : (
+          <div className="flex flex-col gap-1 p-2">
+            {filtered.map((t) => (
+              <div
+                key={t.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedTraitId(selectedTraitId === String(t.id) ? null : String(t.id))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedTraitId(selectedTraitId === String(t.id) ? null : String(t.id));
+                  }
+                }}
+                className={selectedTraitId === String(t.id) ? 'ring-2 ring-primary-500 rounded-lg' : ''}
+              >
+                <GridListRow
+                  id={t.id}
+                  name={t.name}
+                  description={t.description ?? ''}
+                  gridColumns={TRAIT_GRID_COLUMNS}
+                  columns={[
+                    {
+                      key: 'uses_per_rec',
+                      value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-',
+                    },
+                    { key: 'rec_period', value: t.rec_period ?? '-' },
+                  ]}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Classification</label>
-        <select
-          className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as TraitCategory)}
-        >
-          <option value="species_traits">Species trait ({form.species_traits.length}/{traitLimits.species_traits})</option>
-          <option value="ancestry_traits">Ancestry trait ({form.ancestry_traits.length}/{traitLimits.ancestry_traits})</option>
-          <option value="characteristics">Characteristic ({form.characteristics.length}/{traitLimits.characteristics})</option>
-          <option value="flaws">Flaw ({form.flaws.length}/{traitLimits.flaws})</option>
-        </select>
-      </div>
-      {selectedCategory === 'species_traits' && form.species_traits.length === 2 && (
-        <Alert variant="warning" className="flex items-start gap-2">
-          <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <span>{SPECIES_TRAIT_WARNING}</span>
-        </Alert>
-      )}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onClose}>Cancel</Button>
-        <Button onClick={handleAdd} disabled={!selectedTraitId || !canAddToCategory}>Add trait</Button>
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border-light pt-3">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        {mode === 'species_ancestry' && (
+          <>
+            <Button
+              onClick={handleAddAsSpecies}
+              disabled={!selectedTraitId || !canAddSpecies}
+            >
+              Add as species trait
+            </Button>
+            <Button
+              onClick={handleAddAsAncestry}
+              disabled={!selectedTraitId || !canAddAncestry}
+            >
+              Add as ancestry trait
+            </Button>
+          </>
+        )}
+        {mode === 'flaw' && (
+          <Button onClick={handleAddFlaw} disabled={!selectedTraitId || !canAddFlaw}>
+            Add flaw
+          </Button>
+        )}
+        {mode === 'characteristic' && (
+          <Button onClick={handleAddCharacteristic} disabled={!selectedTraitId || !canAddCharacteristic}>
+            Add characteristic
+          </Button>
+        )}
       </div>
     </div>
   );

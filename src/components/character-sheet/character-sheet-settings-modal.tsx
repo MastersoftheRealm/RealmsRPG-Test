@@ -102,6 +102,7 @@ export function CharacterSheetSettingsModal({
       description="Adjust visibility and display preferences."
       size="md"
       showCloseButton
+      fullScreenOnMobile
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-border-light bg-surface-alt dark:bg-[#21262d] p-3">

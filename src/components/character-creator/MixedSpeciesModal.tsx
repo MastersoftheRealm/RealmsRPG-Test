@@ -68,7 +68,7 @@ export function MixedSpeciesModal({
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Mixed species" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Mixed species" size="lg" fullScreenOnMobile>
       <div className="space-y-4">
         <p className="text-sm text-text-secondary">
           Choose two species to play a mixed version. On the Ancestry step you will set physical traits (averaged), pick one species trait from each species, one ancestry trait, and optionally take a flaw for an extra ancestry trait from that same species.

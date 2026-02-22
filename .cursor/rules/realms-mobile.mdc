@@ -1,0 +1,18 @@
+---
+description: Mobile-first UI — breakpoints, modals, dense layouts, touch targets. Apply when creating or editing pages, modals, or layouts.
+alwaysApply: true
+---
+
+# Mobile UX
+
+When **creating or editing** any page, modal, or layout:
+
+1. **Read** `src/docs/MOBILE_UX.md` for breakpoints, touch targets, modal behavior, and dense-layout strategy (side-scroll vs collapse).
+
+2. **Modals:** For selection, add-X, load, recovery, level-up, settings, wizards, and other large dialogs, set **`fullScreenOnMobile`** on the `Modal` component so the modal is full-screen on viewports &lt; 768px (sticky header/footer, scrollable content).
+
+3. **Dense layouts:** For pages with many sections (e.g. character sheet, encounter tracker), prefer **horizontal side-scroll** between section panels on mobile; use **Collapsible** or responsive stacking when sections are few or content is lighter.
+
+4. **Touch targets:** New interactive elements (buttons, icon buttons, steppers, tab triggers) must have a minimum size of **44×44px** on touch (use `--touch-target-min: 44px` or equivalent).
+
+5. **Checklist:** Use the **Agent checklist** in `MOBILE_UX.md` when adding or significantly changing a page or modal (responsive breakpoints, side-scroll/collapse for dense sections, list/table patterns, verification at ~360px width).

@@ -1636,6 +1636,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 onEditArchetype={effectiveEditMode ? () => setShowEditArchetypeModal(true) : undefined}
               />
               
+              {/* Desktop: Abilities + 3-column grid (Skills | Archetype | Library) */}
+              <div className="hidden md:block">
               <AbilitiesSection
                 abilities={character.abilities}
                 defenseSkills={character.defenseVals || character.defenseSkills}
@@ -1805,6 +1807,156 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 />
               </div>
             </div>
+              </div>
+
+              {/* Mobile: horizontal side-scroll panels (Abilities | Skills | Archetype | Library) */}
+              <div className="md:hidden overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth -mx-4 px-4 pb-4 touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
+                <div className="flex flex-nowrap gap-0 min-h-[60vh]">
+                  <section aria-label="Abilities & Defenses" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                    <AbilitiesSection
+                      abilities={character.abilities}
+                      defenseSkills={character.defenseVals || character.defenseSkills}
+                      level={character.level || 1}
+                      archetypeAbility={(character.pow_abil || character.archetype?.ability) as AbilityName}
+                      martialAbility={character.mart_abil}
+                      powerAbility={character.pow_abil}
+                      isEditMode={effectiveEditMode}
+                      totalAbilityPoints={pointBudgets?.totalAbilityPoints}
+                      spentAbilityPoints={pointBudgets?.spentAbilityPoints}
+                      totalSkillPoints={pointBudgets?.totalSkillPoints}
+                      spentSkillPoints={pointBudgets?.spentSkillPoints}
+                      onAbilityChange={handleAbilityChange}
+                      onDefenseChange={handleDefenseChange}
+                    />
+                  </section>
+                  <section aria-label="Skills" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                    <SkillsSection
+                      skills={skills}
+                      abilities={character.abilities}
+                      isEditMode={effectiveEditMode}
+                      totalSkillPoints={pointBudgets?.totalSkillPoints ?? calculateSkillPointsForEntity(character.level || 1, 'character')}
+                      spentSkillPoints={pointBudgets?.spentSkillPoints}
+                      speciesSkills={characterSpeciesSkills}
+                      onSkillChange={handleSkillChange}
+                      onRemoveSkill={handleRemoveSkill}
+                      onAddSkill={() => setSkillModalType('skill')}
+                      onAddSubSkill={() => setSkillModalType('subskill')}
+                      className="min-h-0"
+                    />
+                  </section>
+                  <section aria-label="Archetype & Attacks" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                    <ArchetypeSection
+                      character={character}
+                      isEditMode={effectiveEditMode}
+                      onMartialProfChange={handleMartialProfChange}
+                      onPowerProfChange={handlePowerProfChange}
+                      onMilestoneChoiceChange={handleMilestoneChoiceChange}
+                      unarmedProwess={character.unarmedProwess}
+                      onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
+                      enrichedWeapons={enrichedData?.weapons}
+                      enrichedShields={enrichedData?.shields}
+                      enrichedArmor={enrichedData?.armor}
+                      className="min-h-0"
+                    />
+                  </section>
+                  <section aria-label="Library" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                    <LibrarySection
+                      className="min-h-0"
+                      powers={enrichedData?.powers || character.powers || []}
+                      techniques={enrichedData?.techniques || character.techniques || []}
+                      weapons={(enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[]}
+                      shields={(enrichedData?.shields || (character.equipment?.shields || [])) as Item[]}
+                      armor={(enrichedData?.armor || (character.equipment?.armor || [])) as Item[]}
+                      equipment={(enrichedData?.equipment || (character.equipment?.items || [])) as Item[]}
+                      currency={character.currency}
+                      innateEnergy={archetypeProgression?.innateEnergy || 0}
+                      innateThreshold={archetypeProgression?.innateThreshold || 0}
+                      innatePools={archetypeProgression?.innatePools || 0}
+                      currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
+                      martialProficiency={character.mart_prof}
+                      isEditMode={effectiveEditMode}
+                      onAddPower={() => setAddModalType('power')}
+                      onRemovePower={handleRemovePower}
+                      onTogglePowerInnate={handleTogglePowerInnate}
+                      onUsePower={handleUsePower}
+                      onAddTechnique={() => setAddModalType('technique')}
+                      onRemoveTechnique={handleRemoveTechnique}
+                      onUseTechnique={handleUseTechnique}
+                      onAddWeapon={() => setAddModalType('weapon')}
+                      onRemoveWeapon={handleRemoveWeapon}
+                      onToggleEquipWeapon={handleToggleEquipWeapon}
+                      onAddShield={() => setAddModalType('shield')}
+                      onRemoveShield={handleRemoveShield}
+                      onToggleEquipShield={handleToggleEquipShield}
+                      onAddArmor={() => setAddModalType('armor')}
+                      onRemoveArmor={handleRemoveArmor}
+                      onToggleEquipArmor={handleToggleEquipArmor}
+                      onAddEquipment={() => setAddModalType('equipment')}
+                      onRemoveEquipment={handleRemoveEquipment}
+                      onEquipmentQuantityChange={handleEquipmentQuantityChange}
+                      onCurrencyChange={handleCurrencyChange}
+                      weight={character.weight}
+                      height={character.height}
+                      appearance={character.appearance}
+                      archetypeDesc={character.archetypeDesc}
+                      notes={character.notes}
+                      abilities={character.abilities}
+                      onWeightChange={(v) => setCharacter(prev => prev ? { ...prev, weight: v } : null)}
+                      onHeightChange={(v) => setCharacter(prev => prev ? { ...prev, height: v } : null)}
+                      visibility={character.visibility}
+                      onVisibilityChange={(v) => setCharacter(prev => prev ? { ...prev, visibility: v } : null)}
+                      speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
+                      onAppearanceChange={(v) => setCharacter(prev => prev ? { ...prev, appearance: v } : null)}
+                      onArchetypeDescChange={(v) => setCharacter(prev => prev ? { ...prev, archetypeDesc: v } : null)}
+                      onNotesChange={(v) => setCharacter(prev => prev ? { ...prev, notes: v } : null)}
+                      namedNotes={character.namedNotes}
+                      onAddNote={() => {
+                        const newNote = { id: `note_${Date.now()}`, name: 'New Note', content: '' };
+                        setCharacter(prev => prev ? { ...prev, namedNotes: [...(prev.namedNotes || []), newNote] } : null);
+                      }}
+                      onUpdateNote={(id, updates) => {
+                        setCharacter(prev => prev ? { ...prev, namedNotes: (prev.namedNotes || []).map(note => note.id === id ? { ...note, ...updates } : note) } : null);
+                      }}
+                      onDeleteNote={(id) => {
+                        setCharacter(prev => prev ? { ...prev, namedNotes: (prev.namedNotes || []).filter(note => note.id !== id) } : null);
+                      }}
+                      level={character.level}
+                      archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
+                      unarmedProwess={character.unarmedProwess}
+                      onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
+                      powerPartsDb={powerPartsDb}
+                      techniquePartsDb={techniquePartsDb}
+                      itemPropertiesDb={itemPropertiesDb}
+                      ancestry={character.ancestry as any}
+                      vanillaTraits={{
+                        ancestryTraits: character.ancestryTraits,
+                        flawTrait: character.flawTrait,
+                        characteristicTrait: character.characteristicTrait,
+                        speciesTraits: character.speciesTraits,
+                      }}
+                      speciesTraitsFromCodex={characterSpeciesTraits}
+                      archetypeFeats={archetypeFeatsForDisplay}
+                      characterFeats={characterFeatsForDisplay}
+                      stateFeats={stateFeatsList}
+                      stateUsesCurrent={stateUsesCurrent}
+                      stateUsesMax={stateUsesMax}
+                      onStateUsesChange={handleStateUsesChange}
+                      onEnterState={handleEnterState}
+                      maxArchetypeFeats={calculateMaxArchetypeFeats(character.level || 1, (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial')}
+                      maxCharacterFeats={calculateMaxCharacterFeats(character.level || 1)}
+                      onFeatUsesChange={handleFeatUsesChange}
+                      onAddArchetypeFeat={() => setFeatModalType('archetype')}
+                      onAddCharacterFeat={() => setFeatModalType('character')}
+                      onAddStateFeat={() => setFeatModalType('state')}
+                      onRemoveFeat={handleRequestRemoveFeat}
+                      traitsDb={traitsDb}
+                      featsDb={featsDb}
+                      traitUses={character.traitUses}
+                      onTraitUsesChange={handleTraitUsesChange}
+                    />
+                  </section>
+                </div>
+              </div>
           </>
         )}
         </div>

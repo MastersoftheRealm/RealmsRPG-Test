@@ -42,7 +42,7 @@ export function PageContainer({
     <div
       className={cn(
         sizeClasses[size],
-        'px-4 sm:px-6 lg:px-8',
+        'min-w-0 px-4 sm:px-6 lg:px-8',
         padded && 'py-8',
         centered && 'mx-auto',
         className

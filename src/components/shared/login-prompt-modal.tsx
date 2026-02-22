@@ -48,6 +48,7 @@ export function LoginPromptModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      fullScreenOnMobile
       size="md"
     >
       {/* Content */}

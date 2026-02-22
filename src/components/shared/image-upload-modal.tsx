@@ -223,6 +223,7 @@ export function ImageUploadModal({
       description={sizeHint}
       size="lg"
       className="max-h-[90vh]"
+      fullScreenOnMobile
     >
       <div className="space-y-4">
         {/* Error message */}

@@ -198,7 +198,7 @@ function EncountersContent() {
 
       <div className="mt-6">
         {/* Search & Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
           <div className="flex-1 min-w-[200px]">
             <SearchInput
               value={search}
@@ -389,7 +389,7 @@ function CreateEncounterModal({
   };
 
   return (
-    <Modal isOpen onClose={onClose} title="Create Encounter">
+    <Modal isOpen onClose={onClose} title="Create Encounter" fullScreenOnMobile>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label="Name"
@@ -404,7 +404,7 @@ function CreateEncounterModal({
           <label className="block text-sm font-medium text-text-secondary mb-2">
             Encounter Type
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {(['combat', 'skill', 'mixed'] as const).map((t) => (
               <button
                 key={t}

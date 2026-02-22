@@ -713,8 +713,8 @@ export function SheetHeader({
         </div>
 
         {/* Right: Action Points (left, spans vertically) + Health & Energy (right) */}
-        <div className="lg:w-1/3 min-w-[260px] flex flex-col">
-          <div className="flex flex-row gap-3 items-stretch">
+        <div className="w-full min-w-0 md:min-w-[260px] lg:w-1/3 flex flex-col">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch">
             {/* Action Points - left column, spans full height of Health+Energy */}
             <div className={cn(
               'flex flex-col justify-center p-3 rounded-lg border min-w-[72px]',

@@ -9,6 +9,7 @@ alwaysApply: true
 1. Read `src/docs/ai/AI_TASK_QUEUE.md` — pick highest-priority `not-started` task.
 2. Read `src/docs/ai/AGENT_GUIDE.md` — sources of truth, component locations.
 3. For validation, caps, tooltips, or calculations: reference `src/docs/GAME_RULES.md` (terminology, formulas, display conventions).
+4. For UI work: check `src/docs/MOBILE_UX.md`; ensure new/edited modals and pages follow mobile patterns (fullScreenOnMobile, side-scroll or collapse for dense sections, touch targets).
 
 **When implementing:**
 - Update task `status` to `in-progress`, then `done` when merged.

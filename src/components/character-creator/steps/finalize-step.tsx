@@ -97,6 +97,7 @@ function ValidationModal({
       footer={modalFooter}
       showCloseButton={false}
       contentClassName="p-4 overflow-y-auto max-h-[50vh]"
+      fullScreenOnMobile
     >
       {isValid ? (
         <p className="text-text-secondary text-center py-8">

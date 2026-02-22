@@ -41,6 +41,7 @@ export function DeleteConfirmModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      fullScreenOnMobile
       size="sm"
       showCloseButton={false}
     >

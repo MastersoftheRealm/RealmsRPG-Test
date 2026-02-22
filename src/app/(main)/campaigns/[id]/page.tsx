@@ -636,7 +636,7 @@ function AddCharacterModal({
 }) {
   if (characters.length === 0) {
     return (
-      <Modal isOpen onClose={onClose} title="Add Character">
+      <Modal isOpen onClose={onClose} title="Add Character" fullScreenOnMobile>
         <p className="text-text-secondary">You have no more characters to add.</p>
         <Button className="mt-4" onClick={onClose}>
           Close
@@ -646,7 +646,7 @@ function AddCharacterModal({
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Add Character to Campaign">
+    <Modal isOpen onClose={onClose} title="Add Character to Campaign" fullScreenOnMobile>
       <div className="space-y-2 max-h-64 overflow-y-auto">
         {characters.map((c) => (
           <button

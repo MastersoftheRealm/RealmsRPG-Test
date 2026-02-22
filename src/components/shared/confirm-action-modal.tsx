@@ -65,6 +65,7 @@ export function ConfirmActionModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      fullScreenOnMobile
       size="sm"
       showCloseButton={false}
     >

@@ -265,6 +265,12 @@
   --color-muted-foreground: #64748b;
   --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
+
+  /* ---------------------------------------------------------------------------
+     MOBILE UX (touch targets, gutters — see src/docs/MOBILE_UX.md)
+     --------------------------------------------------------------------------- */
+  --touch-target-min: 44px;
+  --mobile-gutter: 0.75rem;
 }
 
 /* =============================================================================

@@ -151,6 +151,7 @@ function LoadFromLibraryModalLegacy<T extends LibraryItem>({
       header={modalHeader}
       showCloseButton={false}
       flexLayout
+      fullScreenOnMobile
       contentClassName=""
       className="max-h-[80vh]"
     >
@@ -272,8 +273,8 @@ function LoadFromLibraryModalUnified({
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" showCloseButton={false}>
-      <div className="flex flex-col h-[70vh] max-h-[60vh]">
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" showCloseButton={false} fullScreenOnMobile flexLayout>
+      <div className="flex flex-col h-[70vh] max-h-[60vh] min-h-0 flex-1">
         {modalHeader}
 
         <div className="mb-4">

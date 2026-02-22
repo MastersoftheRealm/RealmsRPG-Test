@@ -154,8 +154,8 @@ function LibraryContent() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
+      <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt flex-shrink-0">
           <button
             type="button"
             onClick={() => setLibraryMode('my')}
@@ -179,13 +179,14 @@ function LibraryContent() {
         </div>
       </div>
 
-      <TabNavigation
-        tabs={tabsWithCounts}
-        activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as TabId)}
-        variant="underline"
-        className="mb-6"
-      />
+      <div className="min-w-0 mb-6">
+        <TabNavigation
+          tabs={tabsWithCounts}
+          activeTab={activeTab}
+          onTabChange={(tabId) => setActiveTab(tabId as TabId)}
+          variant="underline"
+        />
+      </div>
 
       {isPublic ? (
         <LibraryPublicContent

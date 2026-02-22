@@ -155,7 +155,7 @@ export function SpeciesModal({
     : species.size || 'Medium';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" title={species.name}>
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" title={species.name} fullScreenOnMobile>
       <div className="p-6">
         {/* Header */}
         <div className="mb-4">

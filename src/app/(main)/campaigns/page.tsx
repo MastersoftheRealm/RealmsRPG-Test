@@ -81,16 +81,18 @@ function CampaignsContent() {
         description="Create campaigns, invite players, and manage your Realm Master sessions."
       />
 
-      <TabNavigation
-        tabs={TABS.map((t) => ({
-          ...t,
-          count: t.id === 'my-campaigns' ? campaigns.length : undefined,
-        }))}
-        activeTab={activeTab}
-        onTabChange={(id) => setActiveTab(id as TabId)}
-      />
+      <div className="min-w-0">
+        <TabNavigation
+          tabs={TABS.map((t) => ({
+            ...t,
+            count: t.id === 'my-campaigns' ? campaigns.length : undefined,
+          }))}
+          activeTab={activeTab}
+          onTabChange={(id) => setActiveTab(id as TabId)}
+        />
+      </div>
 
-      <div className="mt-6">
+      <div className="mt-6 min-w-0">
         {activeTab === 'my-campaigns' && (
           <MyCampaignsTab
             campaigns={campaigns}
@@ -471,6 +473,7 @@ function JoinCampaignTab({
           isOpen
           onClose={() => setVisibilityConfirmOpen(false)}
           title="Character visibility will change"
+          fullScreenOnMobile
         >
           <p className="text-text-secondary mb-4">
             <strong>{selectedCharacter.name}</strong> is private. Joining this campaign will set its visibility to <strong>Campaign</strong> so the Realm Master and other players can view it (read-only). You can change this later in the character&apos;s Notes tab.

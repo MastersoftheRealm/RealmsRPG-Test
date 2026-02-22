@@ -83,6 +83,7 @@ export function LoadCreatureModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      fullScreenOnMobile
       size="xl"
       header={modalHeader}
       showCloseButton={false}

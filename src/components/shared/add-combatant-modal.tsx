@@ -41,7 +41,7 @@ export function AddCombatantModal({ onClose, onAdd, onAddParticipants, mode }: A
   const [tab, setTab] = useState<TabId>('library');
 
   return (
-    <Modal isOpen onClose={onClose} title="Add From Library / Campaign">
+    <Modal isOpen onClose={onClose} title="Add From Library / Campaign" fullScreenOnMobile>
       {/* Tab switcher */}
       <div className="flex gap-1 mb-4 p-1 bg-surface-alt rounded-lg">
         <button

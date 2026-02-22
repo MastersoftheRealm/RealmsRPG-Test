@@ -36,6 +36,8 @@ interface ModalProps {
   showCloseButton?: boolean;
   /** Use flex layout for scrollable content with sticky header/footer */
   flexLayout?: boolean;
+  /** When true, render full-screen on viewports < md (768px). Sticky header/footer, scrollable content. See MOBILE_UX.md. */
+  fullScreenOnMobile?: boolean;
 }
 
 const sizeClasses = {
@@ -46,6 +48,8 @@ const sizeClasses = {
   '2xl': 'max-w-3xl',
   full: 'max-w-4xl',
 };
+
+const MOBILE_BREAKPOINT_PX = 768;
 
 export function Modal({
   isOpen,
@@ -60,13 +64,24 @@ export function Modal({
   size = 'md',
   showCloseButton = true,
   flexLayout = false,
+  fullScreenOnMobile = false,
 }: ModalProps) {
   const [mounted, setMounted] = React.useState(false);
   const [animating, setAnimating] = React.useState(false);
+  const [isMobileViewport, setIsMobileViewport] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    if (!mounted) return;
+    const mq = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX - 1}px)`);
+    const update = () => setIsMobileViewport(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, [mounted]);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -96,8 +111,13 @@ export function Modal({
   const hasSimpleHeader = (title || description) && !header;
   const hasCustomHeader = !!header;
 
+  const useFullScreenMobile = fullScreenOnMobile && isMobileViewport;
+
   const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className={cn(
+      'fixed inset-0 z-50 flex',
+      useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4'
+    )}>
       {/* Backdrop */}
       <div
         className={cn(
@@ -111,11 +131,15 @@ export function Modal({
       {/* Modal */}
       <div
         className={cn(
-          'relative z-10 w-full rounded-2xl bg-surface shadow-2xl border border-border-light overflow-hidden',
-          flexLayout ? 'flex flex-col max-h-[90vh]' : 'max-h-[90vh] overflow-auto scrollbar-thin',
-          // Animation matching vanilla: scale + translateY
-          'animate-modal-pop',
-          sizeClasses[size],
+          'relative z-10 w-full bg-surface shadow-2xl border-border-light overflow-hidden',
+          useFullScreenMobile
+            ? 'inset-0 flex flex-col rounded-none border-0 max-h-none'
+            : cn(
+                'rounded-2xl border',
+                flexLayout ? 'flex flex-col max-h-[90vh]' : 'max-h-[90vh] overflow-auto scrollbar-thin',
+                'animate-modal-pop',
+                sizeClasses[size]
+              ),
           className
         )}
         role="dialog"
@@ -156,7 +180,7 @@ export function Modal({
         
         {/* Content */}
         <div className={cn(
-          flexLayout ? 'flex-1 min-h-0 overflow-y-auto scrollbar-thin' : '',
+          (flexLayout || useFullScreenMobile) ? 'flex-1 min-h-0 overflow-y-auto scrollbar-thin' : '',
           contentClassName ?? 'p-6'
         )}>
           {children}

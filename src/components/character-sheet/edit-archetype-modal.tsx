@@ -141,6 +141,7 @@ export function EditArchetypeModal({
       title="Edit Archetype & Ability"
       description="Change archetype type or abilities. Proficiency points will be redistributed when you change type."
       size="lg"
+      fullScreenOnMobile
       footer={
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose}>
