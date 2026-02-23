@@ -1126,6 +1126,14 @@ Notes
 - Expected: btn-solid and footer links meet 4.5:1 (normal text) in both light and dark; outline buttons and about page links readable in dark mode.
 - Disposition: (1) globals.css: .btn-solid dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50 (dark blue bg so white text passes); .btn-outline-clean dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30. (2) footer.tsx: dark:bg-neutral-700 → dark:bg-neutral-800; dark:text-neutral-100 → dark:text-white, dark:hover:text-primary-400 → dark:hover:text-primary-300 (theme overrides made neutral-100 dark, so use explicit white). (3) about/page.tsx: carousel h2 dark:text-primary-300; all inline links and list icons text-primary-600 → dark:text-primary-400. npm run build passes.
 
+**Raw Feedback Log — 2026-02-23 (Creature creator dark mode WCAG AA — contrast, labels, headings)**
+- Date: 2026-02-23
+- Context: Creature creator; production console and axe
+- Priority: High
+- Feedback: (1) Range input (powered-martial slider) must have label/aria-label. (2) Minimum contrast: My library/All sources buttons (bg-primary-600 text-white), h3/h4 text-primary, text-martial-dark/text-power-dark, bg-danger-light text-danger-700, bg-power-light text-power-text. (3) Heading levels increase by one: h4 for Martial/Power/Powered-Martial and STR etc. (4) Zustand/DialogContent warnings from dependencies (documented).
+- Expected: Range has aria-label; primary chips and headings have dark variants; danger/power chip text passes in dark; heading hierarchy h2 → h3 (ability names) not h4.
+- Disposition: (1) PoweredMartialSlider: aria-label on range input; dark variants for power/martial display numbers and tick. (2) CreatorSaveToolbar + SourceFilter: dark:bg-primary-100 dark:text-white for active state. (3) Creature creator: ChipList weakness/immunity colors + dark text; CreatureCreatorHelpers ChipList remove button + None text dark. (4) CollapsibleSection + ArchetypeSelector: headings dark:text-primary-300; archetype proficiency display dark:text-martial-300/dark:text-power-300; archetype selected card dark:bg-primary-900/20. (5) Chip: power/technique variants dark:text-power-300, dark:text-martial-300. (6) globals .dark: --color-power-300, --color-martial-300 for contrast. (7) AbilityScoreEditor: ability name h4→h3 for hierarchy under h2 Abilities. npm run build passes.
+
 **Raw Feedback Log — 2026-02-23 (Dark mode WCAG AA — Delete Campaign button, campaign roll log badges)**
 - Date: 2026-02-23
 - Context: Production; WCAG 2 AA contrast; campaigns page, roll logs

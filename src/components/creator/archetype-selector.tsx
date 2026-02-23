@@ -104,17 +104,17 @@ export function ArchetypeSelector({
               className={cn(
                 'p-4 rounded-xl border-2 text-left transition-all',
                 isSelected
-                  ? 'border-primary-500 bg-primary-50 shadow-md'
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md'
                   : 'border-border-light bg-surface hover:border-border hover:shadow',
                 disabled && 'opacity-50 cursor-not-allowed'
               )}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{info.icon}</span>
-                <h4 className="font-bold text-primary">{info.title}</h4>
+                <h4 className="font-bold text-primary dark:text-primary-300">{info.title}</h4>
               </div>
               {!compact && (
-                <p className="text-xs text-secondary">{info.description}</p>
+                <p className="text-xs text-secondary dark:text-text-secondary">{info.description}</p>
               )}
             </button>
           );
@@ -136,12 +136,12 @@ export function ArchetypeSelector({
       {value !== 'powered-martial' && (
         <div className="p-4 rounded-xl bg-surface-secondary border border-border-light">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-secondary">
+            <span className="text-sm text-secondary dark:text-text-secondary">
               {value === 'martial' ? 'Martial Proficiency' : 'Power Proficiency'}
             </span>
             <span className={cn(
               'text-xl font-bold',
-              value === 'martial' ? 'text-martial-dark' : 'text-power-dark'
+              value === 'martial' ? 'text-martial-dark dark:text-martial-300' : 'text-power-dark dark:text-power-300'
             )}>
               +{maxProficiency}
             </span>

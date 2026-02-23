@@ -215,8 +215,8 @@ export function CreatorSummaryPanel({
         <div className="space-y-2 text-sm mb-6">
           {statRows.map((row, index) => (
             <div key={index} className="flex justify-between">
-              <span className="text-text-secondary">{row.label}:</span>
-              <span className={cn('font-medium', row.valueColor)}>{row.value}</span>
+              <span className="text-text-secondary dark:text-text-primary">{row.label}:</span>
+              <span className={cn('font-medium text-text-primary', row.valueColor)}>{row.value}</span>
             </div>
           ))}
         </div>
@@ -252,7 +252,7 @@ export function CreatorSummaryPanel({
         <div className="space-y-2 text-sm border-t border-border-subtle pt-4 mt-4">
           {lineItems.filter(li => li.items.length > 0).map((li, i) => (
             <div key={i}>
-              <span className="font-medium text-text-secondary">{li.label}: </span>
+              <span className="font-medium text-text-secondary dark:text-text-primary">{li.label}: </span>
               <span className="text-text-primary">{li.items.join(', ')}</span>
             </div>
           ))}
@@ -264,8 +264,8 @@ export function CreatorSummaryPanel({
         <>
           {breakdowns.map((breakdown, index) => (
             <div key={index} className="border-t border-border-subtle pt-4 mt-4">
-              <h4 className="text-sm font-medium text-text-secondary dark:text-text-primary mb-2">{breakdown.title}</h4>
-              <ul className="text-xs text-text-secondary space-y-1">
+              <h3 className="text-sm font-medium text-text-secondary dark:text-text-primary mb-2">{breakdown.title}</h3>
+              <ul className="text-xs text-text-secondary dark:text-text-primary space-y-1">
                 {breakdown.items.map((item, i) => (
                   <li key={i}>
                     • {typeof item === 'string' ? item : (

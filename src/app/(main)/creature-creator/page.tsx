@@ -929,7 +929,7 @@ function CreatureCreatorContent() {
                 <ChipList 
                   items={creature.weaknesses} 
                   onRemove={(item) => removeFromArray('weaknesses', item)}
-                  color="bg-danger-light text-danger-700"
+                  color="bg-danger-light text-danger-700 dark:text-danger-400"
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}
@@ -943,7 +943,7 @@ function CreatureCreatorContent() {
                 <ChipList 
                   items={creature.immunities} 
                   onRemove={(item) => removeFromArray('immunities', item)}
-                  color="bg-power-light text-power-text"
+                  color="bg-power-light text-power-text dark:text-power-300"
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}

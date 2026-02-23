@@ -196,9 +196,9 @@ export function AbilityScoreEditor({
                 )}
               >
                 <div className="text-center mb-2">
-                  <h4 className="font-bold text-sm text-text-primary capitalize">
+                  <h3 className="font-bold text-sm text-text-primary capitalize">
                     {compact ? info.shortName : info.name}
-                  </h4>
+                  </h3>
                 </div>
 
                 <div className="flex items-center justify-center gap-2">

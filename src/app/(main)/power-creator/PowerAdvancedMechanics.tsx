@@ -57,17 +57,17 @@ function AdvancedChip({
         <div className="mt-2 pt-2 border-t border-current/20 text-sm space-y-1">
           <p className={colors.text}>{part.description || 'No description available.'}</p>
           {part.op_1_desc && (
-            <p className="text-text-secondary">
+            <p className="text-text-secondary dark:text-text-primary">
               <span className="font-medium">Option 1:</span> {part.op_1_desc}
             </p>
           )}
           {part.op_2_desc && (
-            <p className="text-text-secondary">
+            <p className="text-text-secondary dark:text-text-primary">
               <span className="font-medium">Option 2:</span> {part.op_2_desc}
             </p>
           )}
           {part.op_3_desc && (
-            <p className="text-text-secondary">
+            <p className="text-text-secondary dark:text-text-primary">
               <span className="font-medium">Option 3:</span> {part.op_3_desc}
             </p>
           )}
@@ -264,7 +264,7 @@ export function PowerAdvancedMechanicsSection({
               );
             })}
             {selectedAdvancedParts.length > 5 && (
-              <span className="px-2 py-0.5 rounded text-xs font-medium bg-surface-alt text-text-secondary">
+              <span className="px-2 py-0.5 rounded text-xs font-medium bg-surface-alt text-text-secondary dark:text-text-primary">
                 +{selectedAdvancedParts.length - 5} more
               </span>
             )}
@@ -276,7 +276,7 @@ export function PowerAdvancedMechanicsSection({
         <div className="p-6 space-y-6">
           {selectedAdvancedParts.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-text-secondary mb-3">Added Advanced Mechanics</h3>
+              <h3 className="text-sm font-bold text-text-secondary dark:text-text-primary mb-3">Added Advanced Mechanics</h3>
               <div className="flex flex-wrap gap-2">
                 {selectedAdvancedParts.map((ap, idx) => (
                   <AddedAdvancedChip
@@ -297,7 +297,7 @@ export function PowerAdvancedMechanicsSection({
               if (parts.length === 0) return null;
               return (
                 <div key={category}>
-                  <h4 className="text-sm font-bold text-text-secondary mb-2">{category}</h4>
+                  <h4 className="text-sm font-bold text-text-secondary dark:text-text-primary mb-2">{category}</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                     {parts.map((part) => (
                       <AdvancedChip

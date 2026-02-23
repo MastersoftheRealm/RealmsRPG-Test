@@ -33,7 +33,7 @@ export function SourceFilter({ value, onChange, className }: SourceFilterProps) 
           onClick={() => onChange(opt.value)}
           className={cn(
             'px-2 py-1 rounded text-sm font-medium transition-colors',
-            value === opt.value ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
+            value === opt.value ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-secondary dark:text-text-primary hover:text-text-primary'
           )}
         >
           {opt.label}

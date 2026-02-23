@@ -62,7 +62,7 @@ export function CollapsibleSection({
           <div className="flex items-center gap-3">
             {icon && <span className="text-2xl text-text-muted dark:text-text-secondary">{icon}</span>}
             <div>
-              <h3 className="font-bold text-secondary">{title}</h3>
+              <h3 className="font-bold text-text-secondary dark:text-text-primary">{title}</h3>
               {subtitle && <p className="text-sm text-text-muted dark:text-text-secondary">{subtitle}</p>}
             </div>
           </div>
@@ -92,7 +92,7 @@ export function CollapsibleSection({
           {icon && <span className="text-xl">{icon}</span>}
           <div className="text-left">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-primary">{title}</h3>
+              <h3 className="font-bold text-primary dark:text-primary-300">{title}</h3>
               {points && (
                 <span className={cn(
                   'px-2 py-0.5 text-xs font-medium rounded-full',

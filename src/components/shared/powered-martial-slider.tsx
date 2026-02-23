@@ -95,7 +95,7 @@ export function PoweredMartialSlider({
               compact ? 'text-[10px]' : 'text-xs'
             )}>Power</span>
             <span className={cn(
-              'font-bold text-violet-500',
+              'font-bold text-violet-500 dark:text-violet-300',
               compact ? 'text-sm' : 'text-lg'
             )}>{powerDisplay}</span>
           </div>
@@ -105,7 +105,7 @@ export function PoweredMartialSlider({
               compact ? 'text-[10px]' : 'text-xs'
             )}>Martial</span>
             <span className={cn(
-              'font-bold text-martial-dark',
+              'font-bold text-martial-dark dark:text-martial-300',
               compact ? 'text-sm' : 'text-lg'
             )}>{martialDisplay}</span>
           </div>
@@ -127,6 +127,7 @@ export function PoweredMartialSlider({
           onPointerDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
           disabled={disabled}
+          aria-label="Power-Martial proficiency allocation"
           className={cn(
             'relative w-full appearance-none bg-transparent cursor-pointer',
             'range-slider',
@@ -150,7 +151,7 @@ export function PoweredMartialSlider({
                 key={i}
                 className={cn(
                   'w-1 h-1 rounded-full',
-                  tickValue === sliderValue ? 'bg-primary-600' : 'bg-border-light'
+                  tickValue === sliderValue ? 'bg-primary-600 dark:bg-primary-400' : 'bg-border-light'
                 )}
               />
             );

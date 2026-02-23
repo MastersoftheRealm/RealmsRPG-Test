@@ -350,6 +350,9 @@
     --color-energy-light: #0f172a;
     --color-power-light: #1e1b24;
     --color-martial-light: #241b1b;
+    /* Lighter power/martial text on dark power/martial backgrounds for WCAG AA */
+    --color-power-300: #c4b8d4;
+    --color-martial-300: #d4b8c0;
     --color-info-light: #0f172a;
     --color-warning-light: #292419;
     /* TP/currency cost stat boxes in creator summary panel */

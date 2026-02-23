@@ -60,7 +60,7 @@ const STATUS_COLORS: Record<EncounterStatus, string> = {
   preparing: 'bg-surface-alt text-text-secondary',
   active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
   paused: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  completed: 'bg-surface-alt text-text-muted',
+  completed: 'bg-surface-alt text-text-muted dark:text-text-secondary',
 };
 
 type TabId = 'all' | 'active' | 'completed';
@@ -214,8 +214,8 @@ function EncountersContent() {
                 className={cn(
                   'px-3 py-1.5 text-sm rounded-lg font-medium transition-colors',
                   typeFilter === type
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-surface-alt text-text-secondary hover:bg-surface-alt/80'
+                    ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white'
+                    : 'bg-surface-alt text-text-secondary dark:text-text-primary hover:bg-surface-alt/80'
                 )}
               >
                 {type ? TYPE_LABELS[type] : 'All Types'}
@@ -340,14 +340,14 @@ function EncounterRow({
             {encounter.status.charAt(0).toUpperCase() + encounter.status.slice(1)}
           </span>
         </div>
-        <p className="text-sm text-text-muted mt-0.5">
+        <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5">
           {TYPE_LABELS[encounter.type]}
           {participantLabel && ` \u00b7 ${participantLabel}`}
           {encounter.round > 0 && ` \u00b7 Round ${encounter.round}`}
           {updatedDate && ` \u00b7 ${updatedDate}`}
         </p>
         {encounter.description && (
-          <p className="text-xs text-text-muted mt-0.5 truncate">{encounter.description}</p>
+          <p className="text-xs text-text-muted dark:text-text-secondary mt-0.5 truncate">{encounter.description}</p>
         )}
       </div>
 
@@ -358,7 +358,7 @@ function EncounterRow({
             e.stopPropagation();
             onDelete();
           }}
-          className="p-2 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
+          className="p-2 rounded-lg text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 hover:bg-red-50 dark:hover:bg-danger-900/20 transition-colors opacity-0 group-hover:opacity-100"
           title="Delete encounter"
         >
           <Trash2 className="w-4 h-4" />
@@ -423,7 +423,7 @@ function CreateEncounterModal({
                 <span className="text-sm font-medium text-text-primary">
                   {TYPE_LABELS[t]}
                 </span>
-                <span className="text-xs text-text-muted text-center">
+                <span className="text-xs text-text-muted dark:text-text-secondary text-center">
                   {t === 'combat'
                     ? 'Initiative, HP, conditions'
                     : t === 'skill'

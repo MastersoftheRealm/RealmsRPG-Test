@@ -37,7 +37,7 @@ export interface CreatorSaveToolbarProps {
 const toggleButtonClass = (active: boolean) =>
   cn(
     'px-2 py-1 rounded text-sm font-medium transition-colors',
-    active ? 'bg-primary-600 text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
+    active ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
   );
 
 export function CreatorSaveToolbar({

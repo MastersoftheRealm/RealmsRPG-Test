@@ -41,7 +41,7 @@ export function ChipList({
           {item}
           <button
             onClick={() => onRemove(item)}
-            className="text-text-muted hover:text-danger-500"
+            className="text-text-muted dark:text-text-secondary hover:text-danger-500 dark:hover:text-danger-400"
           >
             ×
           </button>

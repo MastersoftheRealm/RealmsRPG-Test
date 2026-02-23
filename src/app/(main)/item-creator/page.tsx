@@ -1114,8 +1114,8 @@ function ItemCreatorContent() {
                       className={cn(
                         'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
                         armamentType === type.value
-                          ? 'bg-amber-600 text-white hover:bg-amber-700'
-                          : 'bg-surface-alt hover:bg-surface text-text-primary'
+                          ? 'bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600'
+                          : 'bg-surface-alt dark:bg-surface hover:bg-surface text-text-primary'
                       )}
                     >
                       <type.icon className="w-4 h-4" />
@@ -1157,8 +1157,8 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         !isTwoHanded
-                          ? "bg-amber-600 text-white hover:bg-amber-700"
-                          : "bg-surface-alt text-text-primary hover:bg-surface"
+                          ? "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600"
+                          : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
                       )}
                     >
                       One-Handed
@@ -1169,8 +1169,8 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         isTwoHanded
-                          ? "bg-amber-600 text-white hover:bg-amber-700"
-                          : "bg-surface-alt text-text-primary hover:bg-surface"
+                          ? "bg-amber-600 text-white hover:bg-amber-700 dark:bg-amber-700 dark:text-white dark:hover:bg-amber-600"
+                          : "bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface"
                       )}
                     >
                       Two-Handed
@@ -1434,7 +1434,7 @@ function ItemCreatorContent() {
               <Button
                 type="button"
                 variant="primary"
-                className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white"
+                className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-white"
                 onClick={addProperty}
               >
                 <Plus className="w-4 h-4" />
