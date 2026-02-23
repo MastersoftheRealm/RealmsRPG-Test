@@ -130,6 +130,7 @@ export default function AdminUsersPage() {
                         onChange={(e) => handleRoleChange(u.username, e.target.value as UserRole)}
                         disabled={updating === u.username}
                         className="rounded border border-border bg-background px-2 py-1 text-sm"
+                        aria-label={`Role for ${u.username || 'user'}`}
                       >
                         <option value="new_player">New Player</option>
                         <option value="playtester">Playtester</option>

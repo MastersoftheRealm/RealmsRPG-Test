@@ -336,6 +336,7 @@ export function AdminEquipmentTab() {
                   setForm((f) => ({ ...f, category: v === '__new__' ? '' : v }));
                 }}
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Category"
               >
                 <option value="">— None —</option>
                 {filterOptions.categories.map((c) => (
@@ -368,6 +369,7 @@ export function AdminEquipmentTab() {
                 value={form.rarity}
                 onChange={(e) => setForm((f) => ({ ...f, rarity: e.target.value }))}
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Rarity"
               >
                 {['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Ascended'].map((r) => (
                   <option key={r} value={r}>{r}</option>

@@ -269,6 +269,7 @@ export function AdminTraitsTab() {
                 value={form.rec_period}
                 onChange={(e) => setForm((f) => ({ ...f, rec_period: e.target.value }))}
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Recovery period"
               >
                 <option value="">—</option>
                 <option value="Full">Full</option>

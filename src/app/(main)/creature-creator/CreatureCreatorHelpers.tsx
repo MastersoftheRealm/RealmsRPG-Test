@@ -128,6 +128,7 @@ export function AddItemDropdown({
         value={selectedValue}
         onChange={e => setSelectedValue(e.target.value)}
         className="flex-1 min-w-0 px-3 py-2 border border-border-light rounded-lg text-sm bg-surface"
+        aria-label={placeholder || 'Selection'}
       >
         <option value="">{placeholder}</option>
         {availableOptions.map(opt => (

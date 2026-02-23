@@ -449,7 +449,7 @@ export function AdminPartsTab() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-              <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as 'power' | 'technique' }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary">
+              <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as 'power' | 'technique' }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary" aria-label="Part type (power or technique)">
                 <option value="power">Power</option>
                 <option value="technique">Technique</option>
               </select>

@@ -172,7 +172,7 @@ function PartCard({
                 onChange={(e) => {
                   const newCategory = e.target.value;
                   // Get parts for the new category
-                  const partsInCategory = newCategory === 'any' 
+                  const partsInCategory = newCategory === 'any'
                     ? allParts.sort((a, b) => a.name.localeCompare(b.name))
                     : allParts.filter((p) => p.category === newCategory).sort((a, b) => a.name.localeCompare(b.name));
                   // Auto-select first alphabetical part in the new category
@@ -188,6 +188,7 @@ function PartCard({
                   }
                 }}
                 className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
+                aria-label="Technique part category"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -215,6 +216,7 @@ function PartCard({
                   }
                 }}
                 className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
+                aria-label="Technique part"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>
@@ -838,6 +840,7 @@ function TechniqueCreatorContent() {
                     if (selected) setWeapon(selected);
                   }}
                   className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                  aria-label="Weapon"
                 >
                   {/* Default options */}
                   <optgroup label="General">
@@ -869,6 +872,7 @@ function TechniqueCreatorContent() {
                   value={actionType}
                   onChange={(e) => setActionType(e.target.value)}
                   className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                  aria-label="Action type"
                 >
                   {ACTION_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -943,6 +947,7 @@ function TechniqueCreatorContent() {
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
                   className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                  aria-label="Damage die size"
                 >
                   {DIE_SIZES.map((size) => (
                     <option key={size} value={size}>

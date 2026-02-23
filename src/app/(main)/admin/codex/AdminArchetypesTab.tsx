@@ -174,7 +174,7 @@ export function AdminArchetypesTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-            <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as 'power' | 'powered-martial' | 'martial' }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary">
+            <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as 'power' | 'powered-martial' | 'martial' }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary" aria-label="Archetype type">
               <option value="power">Power</option>
               <option value="powered-martial">Powered-Martial</option>
               <option value="martial">Martial</option>

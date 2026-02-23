@@ -591,6 +591,7 @@ export function AdminFeatsTab() {
                       scheduleFormUpdate((f) => ({ ...f, ability_req: next }));
                     }}
                     className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+                    aria-label={`Ability requirement ${i + 1}`}
                   >
                     {abil && !(ABILITIES_AND_DEFENSES as readonly string[]).includes(abil) && (
                       <option value={abil}>{abil}</option>
@@ -650,6 +651,7 @@ export function AdminFeatsTab() {
                       scheduleFormUpdate((f) => ({ ...f, skill_req: next }));
                     }}
                     className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+                    aria-label={`Skill requirement ${i + 1}`}
                   >
                     {skillId && !(skills as Skill[]).some((s) => String(s.id) === String(skillId)) && (
                       <option value={skillId}>{skillId}</option>
@@ -715,6 +717,7 @@ export function AdminFeatsTab() {
                 value={form.rec_period}
                 onChange={(e) => scheduleFormUpdate((f) => ({ ...f, rec_period: e.target.value }))}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+                aria-label="Recovery period"
               >
                 <option value="">—</option>
                 <option value="Full">Full</option>

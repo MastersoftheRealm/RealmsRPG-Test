@@ -388,7 +388,7 @@ export function AdminPropertiesTab() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-              <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary">
+              <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary" aria-label="Property type">
                 <option value="Armor">Armor</option>
                 <option value="Shield">Shield</option>
                 <option value="Weapon">Weapon</option>

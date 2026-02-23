@@ -100,4 +100,4 @@ Based on session discussion: dark mode contrast, foreground/background, accessib
 4. ~~Phase 4 (status color dark variants)~~ DONE 2026-02-23
 5. ~~Phase 5 (roll-log, CombatantCard, ability-score-editor)~~ DONE 2026-02-23
 6. ~~Phase 2b (dice-roller, home, campaigns, codex tabs, about, encounter views, health-energy-allocator, abilities-section, PowerPartCard, power-creator, PowerAdvancedMechanics)~~ DONE 2026-02-23
-7. **Remaining:** Phase 3b — technique-creator, item-creator, creature-creator, admin: add aria-label to remaining selects
+7. ~~Phase 3b — technique-creator, item-creator, creature-creator, admin: add aria-label to remaining selects~~ DONE 2026-02-23

@@ -197,6 +197,7 @@ function PropertyCard({
                 }
               }}
               className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
+              aria-label="Property"
             >
               {selectableProperties.map((p, idx) => (
                 <option key={p.id} value={idx}>
@@ -1215,6 +1216,7 @@ function ItemCreatorContent() {
                     value={damage.size}
                     onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
                     className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                    aria-label="Damage die size"
                   >
                     {DIE_SIZES.map((size) => (
                       <option key={size} value={size}>
@@ -1227,6 +1229,7 @@ function ItemCreatorContent() {
                   value={damage.type}
                   onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
                   className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                  aria-label="Damage type"
                 >
                   {WEAPON_DAMAGE_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -1311,6 +1314,7 @@ function ItemCreatorContent() {
                       value={shieldDR.size}
                       onChange={(e) => setShieldDR((d) => ({ ...d, size: parseInt(e.target.value) }))}
                       className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                      aria-label="Shield damage reduction die size"
                     >
                       {DIE_SIZES.map((size) => (
                         <option key={size} value={size}>
@@ -1353,6 +1357,7 @@ function ItemCreatorContent() {
                           value={shieldDamage.size}
                           onChange={(e) => setShieldDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
                           className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                          aria-label="Shield damage die size"
                         >
                           {DIE_SIZES.map((size) => (
                             <option key={size} value={size}>
@@ -1395,6 +1400,7 @@ function ItemCreatorContent() {
                     }
                   }}
                   className="w-full px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                  aria-label="Ability requirement"
                 >
                   <option value="">None</option>
                   {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (

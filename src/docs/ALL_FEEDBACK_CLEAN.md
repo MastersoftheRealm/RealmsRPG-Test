@@ -1080,3 +1080,11 @@ Notes
 - Feedback: Icon buttons (bg-white/10) fail contrast in dark; HP/EN inputs need explicit bg in dark; section titles text-text-muted may fail; toast message no explicit text color; Recover button warning-600 contrast; text-xs font-semibold and bare spans need explicit text color. Fix site-wide and document patterns in ACCESSIBILITY.md.
 - Expected: Document dark-mode contrast patterns; fix icon buttons, inputs, section headers, toasts, warning buttons, grid-list-row labels.
 - Disposition: Implementing; documenting patterns.
+
+**Raw Feedback Log — 2026-02-23 (Species traits multi-select + Codex spreadsheet sort/columns)**
+- Date: 2026-02-23
+- Context: Species Creator (add trait modals); Admin Editor Codex spreadsheet view
+- Priority: High
+- Feedback: (1) Like other add modals, allow selecting multiple traits in the species traits add modals and adding all at once (provided the count is less than the maximum for said trait/flaw/characteristics). (2) Admin Editor: Allow the headers in spreadsheet view to sort ascending/descending if you click them. Make the order of the columns for all codex editor spreadsheets be id (smaller column), name, description (longer, but not too long), and so on in a logical order; id and name far left is logical/common sense, with description right after. Make columns that have less possible width of information smaller horizontally (e.g. Boolean column only up to 5 letters; rec period, speed req only up to 2 digits usually). Use common sense, logic, best practice for formatting sheet view of edit mode codex.
+- Expected: Species trait modals support multi-select and "Add selected as species/ancestry trait(s)" (and flaw/characteristic) respecting limits; third-species-trait confirm still applies when adding batch. Codex spreadsheet: clickable sortable column headers (asc/desc); column order id → name → description → rest in logical order; variable column widths (narrow for id, boolean, rec_period, etc.; wider for description).
+- Disposition: Implemented 2026-02-23.

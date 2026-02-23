@@ -111,6 +111,7 @@ export default function SpeciesCreatorPage() {
   const [showAddCharacteristicModal, setShowAddCharacteristicModal] = useState(false);
   const [showThirdSpeciesTraitConfirm, setShowThirdSpeciesTraitConfirm] = useState(false);
   const [pendingTraitAdd, setPendingTraitAdd] = useState<{ traitId: string; category: TraitCategory } | null>(null);
+  const [pendingBatch, setPendingBatch] = useState<{ traitIds: string[]; category: TraitCategory } | null>(null);
   const [newLanguage, setNewLanguage] = useState('');
 
   const [form, setForm] = useState<SpeciesFormState>(initialState);
@@ -240,6 +241,44 @@ export default function SpeciesCreatorPage() {
     [form, traitLimits]
   );
 
+  /** Add multiple traits at once; respects limits and shows third-species-trait confirm when needed. */
+  const addTraitBatchToCategory = useCallback(
+    (traitIds: string[], category: TraitCategory) => {
+      if (!traitIds.length) return;
+      const key = category;
+      const limit = traitLimits[category];
+      setForm((prev) => {
+        const current = prev[key];
+        const toAdd: string[] = [];
+        let needThirdConfirm: string | null = null;
+        for (const id of traitIds) {
+          if (current.length + toAdd.length >= limit) break;
+          if (prev[key].includes(id)) continue;
+          if (category === 'species_traits' && current.length + toAdd.length === 2) {
+            needThirdConfirm = id;
+            break;
+          }
+          toAdd.push(id);
+        }
+        if (needThirdConfirm !== null) {
+          setPendingTraitAdd({ traitId: needThirdConfirm, category });
+          setPendingBatch({
+            traitIds: [needThirdConfirm, ...traitIds.filter((x) => !toAdd.includes(x) && x !== needThirdConfirm)],
+            category,
+          });
+          setShowThirdSpeciesTraitConfirm(true);
+          return toAdd.length > 0 ? { ...prev, [key]: [...prev[key], ...toAdd] } : prev;
+        }
+        if (toAdd.length === 0) return prev;
+        return { ...prev, [key]: [...prev[key], ...toAdd] };
+      });
+      setShowAddSpeciesAncestryModal(false);
+      setShowAddFlawModal(false);
+      setShowAddCharacteristicModal(false);
+    },
+    [form, traitLimits]
+  );
+
   const confirmThirdSpeciesTrait = useCallback(() => {
     if (pendingTraitAdd?.category === 'species_traits') {
       setForm((prev) => ({
@@ -248,6 +287,7 @@ export default function SpeciesCreatorPage() {
       }));
     }
     setPendingTraitAdd(null);
+    setPendingBatch(null);
     setShowThirdSpeciesTraitConfirm(false);
     setShowAddSpeciesAncestryModal(false);
   }, [pendingTraitAdd]);
@@ -422,6 +462,7 @@ export default function SpeciesCreatorPage() {
               traitLimits={traitLimits}
               mode="species_ancestry"
               onAdd={addTraitToCategory}
+              onAddBatch={addTraitBatchToCategory}
               onClose={() => setShowAddSpeciesAncestryModal(false)}
               onThirdSpeciesTrait={(traitId) => {
                 setPendingTraitAdd({ traitId, category: 'species_traits' });
@@ -437,6 +478,7 @@ export default function SpeciesCreatorPage() {
               traitLimits={traitLimits}
               mode="flaw"
               onAdd={addTraitToCategory}
+              onAddBatch={addTraitBatchToCategory}
               onClose={() => setShowAddFlawModal(false)}
             />
           </Modal>
@@ -448,6 +490,7 @@ export default function SpeciesCreatorPage() {
               traitLimits={traitLimits}
               mode="characteristic"
               onAdd={addTraitToCategory}
+              onAddBatch={addTraitBatchToCategory}
               onClose={() => setShowAddCharacteristicModal(false)}
             />
           </Modal>
@@ -638,6 +681,18 @@ const TRAIT_LIST_COLUMNS = [
   { key: '_actions', label: '', sortable: false as const },
 ];
 
+interface TraitListModalProps {
+  traits: Trait[];
+  filter: (t: Trait) => boolean;
+  form: SpeciesFormState;
+  traitLimits: Record<TraitCategory, number>;
+  mode: 'species_ancestry' | 'flaw' | 'characteristic';
+  onAdd: (traitId: string, category: TraitCategory) => void;
+  onAddBatch: (traitIds: string[], category: TraitCategory) => void;
+  onClose: () => void;
+  onThirdSpeciesTrait?: (traitId: string) => void;
+}
+
 function TraitListModal({
   traits,
   filter,
@@ -645,20 +700,12 @@ function TraitListModal({
   traitLimits,
   mode,
   onAdd,
+  onAddBatch,
   onClose,
   onThirdSpeciesTrait,
-}: {
-  traits: Trait[];
-  filter: (t: Trait) => boolean;
-  form: SpeciesFormState;
-  traitLimits: Record<TraitCategory, number>;
-  mode: 'species_ancestry' | 'flaw' | 'characteristic';
-  onAdd: (traitId: string, category: TraitCategory) => void;
-  onClose: () => void;
-  onThirdSpeciesTrait?: (traitId: string) => void;
-}) {
+}: TraitListModalProps) {
   const [search, setSearch] = useState('');
-  const [selectedTraitId, setSelectedTraitId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const alreadyUsed = useMemo(
@@ -684,41 +731,54 @@ function TraitListModal({
   const canAddFlaw = form.flaws.length < traitLimits.flaws;
   const canAddCharacteristic = form.characteristics.length < traitLimits.characteristics;
 
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const handleAddAsSpecies = () => {
-    if (!selectedTraitId || !canAddSpecies) return;
-    if (form.species_traits.length === 2) {
-      onThirdSpeciesTrait?.(selectedTraitId);
+    const ids = Array.from(selectedIds);
+    if (!ids.length || !canAddSpecies) return;
+    if (ids.length === 1 && form.species_traits.length === 2) {
+      onThirdSpeciesTrait?.(ids[0]);
       return;
     }
-    onAdd(selectedTraitId, 'species_traits');
-    setSelectedTraitId(null);
+    onAddBatch(ids, 'species_traits');
+    setSelectedIds(new Set());
   };
 
   const handleAddAsAncestry = () => {
-    if (!selectedTraitId || !canAddAncestry) return;
-    onAdd(selectedTraitId, 'ancestry_traits');
-    setSelectedTraitId(null);
+    const ids = Array.from(selectedIds);
+    if (!ids.length || !canAddAncestry) return;
+    onAddBatch(ids, 'ancestry_traits');
+    setSelectedIds(new Set());
   };
 
   const handleAddFlaw = () => {
-    if (!selectedTraitId || !canAddFlaw) return;
-    onAdd(selectedTraitId, 'flaws');
-    setSelectedTraitId(null);
+    const ids = Array.from(selectedIds);
+    if (!ids.length || !canAddFlaw) return;
+    onAddBatch(ids, 'flaws');
+    setSelectedIds(new Set());
   };
 
   const handleAddCharacteristic = () => {
-    if (!selectedTraitId || !canAddCharacteristic) return;
-    onAdd(selectedTraitId, 'characteristics');
-    setSelectedTraitId(null);
+    const ids = Array.from(selectedIds);
+    if (!ids.length || !canAddCharacteristic) return;
+    onAddBatch(ids, 'characteristics');
+    setSelectedIds(new Set());
   };
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-text-muted">
         {mode === 'species_ancestry' &&
-          'Select a trait, then add it as a species trait or ancestry trait. Expand a row to see full description.'}
-        {mode === 'flaw' && 'Select a flaw to add. Expand a row to see full description.'}
-        {mode === 'characteristic' && 'Select a characteristic to add. Expand a row to see full description.'}
+          'Select one or more traits, then add as species traits or ancestry traits. Expand a row to see full description.'}
+        {mode === 'flaw' && 'Select one or more flaws to add. Expand a row to see full description.'}
+        {mode === 'characteristic' && 'Select one or more characteristics to add. Expand a row to see full description.'}
       </p>
       <SearchInput value={search} onChange={setSearch} placeholder="Search traits..." />
       <ListHeader
@@ -732,21 +792,25 @@ function TraitListModal({
           <EmptyState title="No traits found" description="Try adjusting your search or check limits." size="sm" />
         ) : (
           <div className="flex flex-col gap-1 p-2">
-            {filtered.map((t) => (
-              <div
-                key={t.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedTraitId(selectedTraitId === String(t.id) ? null : String(t.id))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedTraitId(selectedTraitId === String(t.id) ? null : String(t.id));
-                  }
-                }}
-                className={selectedTraitId === String(t.id) ? 'ring-2 ring-primary-500 rounded-lg' : ''}
-              >
-                <GridListRow
+            {filtered.map((t) => {
+              const idStr = String(t.id);
+              const isSelected = selectedIds.has(idStr);
+              return (
+                <div
+                  key={t.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleSelection(idStr)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleSelection(idStr);
+                    }
+                  }}
+                  className={isSelected ? 'ring-2 ring-primary-500 rounded-lg' : ''}
+                  aria-pressed={isSelected}
+                >
+                  <GridListRow
                   id={t.id}
                   name={t.name}
                   description={t.description ?? ''}
@@ -760,11 +824,14 @@ function TraitListModal({
                   ]}
                 />
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border-light pt-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border-light pt-3">
+        <span className="text-sm text-text-muted">{selectedIds.size} selected</span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
         <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
@@ -772,28 +839,29 @@ function TraitListModal({
           <>
             <Button
               onClick={handleAddAsSpecies}
-              disabled={!selectedTraitId || !canAddSpecies}
+              disabled={selectedIds.size === 0 || !canAddSpecies}
             >
-              Add as species trait
+              Add selected as species trait{selectedIds.size !== 1 ? 's' : ''}
             </Button>
             <Button
               onClick={handleAddAsAncestry}
-              disabled={!selectedTraitId || !canAddAncestry}
+              disabled={selectedIds.size === 0 || !canAddAncestry}
             >
-              Add as ancestry trait
+              Add selected as ancestry trait{selectedIds.size !== 1 ? 's' : ''}
             </Button>
           </>
         )}
         {mode === 'flaw' && (
-          <Button onClick={handleAddFlaw} disabled={!selectedTraitId || !canAddFlaw}>
-            Add flaw
+          <Button onClick={handleAddFlaw} disabled={selectedIds.size === 0 || !canAddFlaw}>
+            Add selected flaw{selectedIds.size !== 1 ? 's' : ''}
           </Button>
         )}
         {mode === 'characteristic' && (
-          <Button onClick={handleAddCharacteristic} disabled={!selectedTraitId || !canAddCharacteristic}>
-            Add characteristic
+          <Button onClick={handleAddCharacteristic} disabled={selectedIds.size === 0 || !canAddCharacteristic}>
+            Add selected characteristic{selectedIds.size !== 1 ? 's' : ''}
           </Button>
         )}
+        </div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Search, Replace, Copy, Save, Loader2 } from 'lucide-react';
+import { Search, Replace, Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button, Spinner } from '@/components/ui';
 import { useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
@@ -96,6 +96,45 @@ function generateNewId(existingIds: Set<string>, baseName?: string): string {
   return id.slice(0, 150);
 }
 
+/** Preferred column order: id, name, description first, then known short/narrow columns, then rest alphabetically. */
+const PREFERRED_ORDER_AFTER_DESC = [
+  'flaw', 'characteristic', 'rec_period', 'uses_per_rec', 'uses_per_rec_per_tier',
+  'category', 'type', 'size', 'speed', 'skill_req', 'skill_req_val', 'ability_req', 'abil_req_val',
+  'char_feat', 'state_feat', 'tags', 'lvl_req', 'mechanic', 'base_skill_id', 'base_skill_id_alt',
+  'sizes', 'skills', 'species_traits', 'ancestry_traits', 'characteristics', 'flaws',
+  'languages', 'ave_height', 'ave_weight', 'adulthood_lifespan',
+];
+
+function orderColumns(keys: string[]): string[] {
+  const hasId = keys.includes('id');
+  const hasName = keys.includes('name');
+  const hasDesc = keys.includes('description');
+  const rest = keys.filter((k) => k !== 'id' && k !== 'name' && k !== 'description');
+  const ordered: string[] = [];
+  if (hasId) ordered.push('id');
+  if (hasName) ordered.push('name');
+  if (hasDesc) ordered.push('description');
+  const afterSet = new Set(PREFERRED_ORDER_AFTER_DESC);
+  const preferred = PREFERRED_ORDER_AFTER_DESC.filter((k) => rest.includes(k));
+  const remaining = rest.filter((k) => !afterSet.has(k)).sort();
+  return [...ordered, ...preferred, ...remaining];
+}
+
+/** Column width in px: narrow for id/boolean/short fields, wider for description. */
+function getColumnWidth(colKey: string, sampleValue: unknown): number {
+  if (colKey === 'id') return 90;
+  if (colKey === 'name') return 120;
+  if (colKey === 'description') return 220;
+  if (typeof sampleValue === 'boolean') return 56;
+  const narrowKeys = [
+    'rec_period', 'uses_per_rec', 'uses_per_rec_per_tier', 'lvl_req', 'speed',
+    'flaw', 'characteristic', 'char_feat', 'state_feat', 'base_skill_id', 'base_skill_id_alt',
+  ];
+  if (narrowKeys.includes(colKey)) return 72;
+  if (colKey === 'category' || colKey === 'type' || colKey === 'size') return 88;
+  return 140;
+}
+
 interface CodexSpreadsheetViewProps {
   activeTab: TabId;
 }
@@ -110,13 +149,15 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
   const [replaceValue, setReplaceValue] = useState('');
   const [replaceMode, setReplaceMode] = useState(false);
   const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const tableRef = useRef<HTMLDivElement>(null);
 
   const config = TAB_CONFIG[activeTab];
   const rawArray = config && codex ? (codex[config.apiKey] as unknown[] | undefined) : undefined;
   const collection = config?.collection;
 
-  // Derive columns: id first, then union of all keys in row order
+  // Derive columns: id, name, description first, then logical order
   const columns = useMemo(() => {
     if (!rawArray || rawArray.length === 0) return ['id'];
     const keySet = new Set<string>(['id']);
@@ -125,9 +166,43 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
         Object.keys(row as Record<string, unknown>).forEach((k) => keySet.add(k));
       }
     });
-    const rest = Array.from(keySet).filter((k) => k !== 'id').sort();
-    return ['id', ...rest];
+    return orderColumns(Array.from(keySet));
   }, [rawArray]);
+
+  // Per-column width from first row sample
+  const columnWidths = useMemo(() => {
+    const first = rows[0] as Record<string, unknown> | undefined;
+    return columns.map((col) => getColumnWidth(col, first?.[col]));
+  }, [columns, rows]);
+
+  const minTableWidth = useMemo(
+    () => columnWidths.reduce((a, b) => a + b, 0) + 48 + 56,
+    [columnWidths]
+  );
+
+  // Sorted view: array of row indices into rows
+  const sortedRowIndices = useMemo(() => {
+    if (!sortKey || rows.length === 0) return rows.map((_, i) => i);
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...rows.keys()].sort((i, j) => {
+      const a = rows[i] as Record<string, unknown>;
+      const b = rows[j] as Record<string, unknown>;
+      const sa = cellValueToString(a[sortKey]);
+      const sb = cellValueToString(b[sortKey]);
+      return sa.localeCompare(sb, undefined, { numeric: true }) * dir;
+    });
+  }, [rows, sortKey, sortDir]);
+
+  const handleSort = useCallback((key: string) => {
+    setSortKey((prev) => {
+      if (prev === key) {
+        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+        return prev;
+      }
+      setSortDir('asc');
+      return key;
+    });
+  }, []);
 
   // Sync rows from API when tab or codex changes
   useEffect(() => {
@@ -273,8 +348,6 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
     );
   }
 
-  const columnWidth = 140;
-  const minTableWidth = columns.length * columnWidth;
   const hasDirty = dirty.size > 0;
 
   return (
@@ -348,38 +421,52 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
               <th className="sticky left-0 z-20 w-12 min-w-[48px] max-w-[48px] bg-surface-alt border-r border-border p-1 text-left text-xs font-semibold text-text-secondary">
                 #
               </th>
-              {columns.map((col) => (
-                <th
-                  key={col}
-                  className="border-r border-border-subtle p-1.5 text-left text-xs font-semibold text-text-secondary whitespace-nowrap"
-                  style={{ width: columnWidth, minWidth: columnWidth }}
-                >
-                  {col}
-                </th>
-              ))}
+              {columns.map((col, colIndex) => {
+                const isSortKey = sortKey === col;
+                return (
+                  <th
+                    key={col}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleSort(col)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col); } }}
+                    className="border-r border-border-subtle p-1.5 text-left text-xs font-semibold text-text-secondary whitespace-nowrap cursor-pointer select-none hover:bg-surface-alt/80 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400"
+                    style={{ width: columnWidths[colIndex], minWidth: columnWidths[colIndex] }}
+                    aria-sort={isSortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
+                    aria-label={isSortKey ? `Sort by ${col} ${sortDir === 'asc' ? 'ascending' : 'descending'}. Click to reverse.` : `Sort by ${col}`}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {col}
+                      {isSortKey && (sortDir === 'asc' ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />)}
+                    </span>
+                  </th>
+                );
+              })}
               <th className="w-14 min-w-[56px] bg-surface-alt border-l border-border p-1 text-center text-xs font-semibold text-text-secondary">
                 Copy
               </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
+            {sortedRowIndices.map((rowIndex, displayIndex) => {
+              const row = rows[rowIndex] as Record<string, unknown>;
+              return (
               <tr
                 key={rowIndex}
                 className={`border-b border-border-subtle hover:bg-surface-alt/50 ${dirty.has(rowIndex) ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''}`}
               >
                 <td className="sticky left-0 z-10 bg-surface border-r border-border-subtle p-0 text-center text-xs text-text-muted">
-                  {rowIndex + 1}
+                  {displayIndex + 1}
                 </td>
                 {columns.map((colKey, colIndex) => {
-                  const value = (row as Record<string, unknown>)[colKey];
+                  const value = row[colKey];
                   const str = cellValueToString(value);
                   const isFocused = focusedCell?.row === rowIndex && focusedCell?.col === colIndex;
                   return (
                     <td
                       key={colKey}
                       className="border-r border-border-subtle p-0 align-top"
-                      style={{ width: columnWidth, minWidth: columnWidth }}
+                      style={{ width: columnWidths[colIndex], minWidth: columnWidths[colIndex] }}
                     >
                       <input
                         type="text"
@@ -403,12 +490,14 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                     onClick={() => copyRow(rowIndex)}
                     className="p-1.5 rounded text-text-muted hover:bg-surface-alt hover:text-text-primary transition-colors"
                     title="Copy row below (new ID)"
+                    aria-label="Copy row below (new ID)"
                   >
                     <Copy className="w-4 h-4" />
                   </button>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>
