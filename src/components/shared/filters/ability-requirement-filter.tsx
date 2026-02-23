@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { Chip, IconButton, Input } from '@/components/ui';
@@ -34,6 +34,7 @@ export function AbilityRequirementFilter({
   onRemove,
   className = '',
 }: AbilityRequirementFilterProps) {
+  const abilitySelectId = useId();
   const [selectedAbility, setSelectedAbility] = useState('');
   const [maxValue, setMaxValue] = useState('');
 
@@ -57,11 +58,12 @@ export function AbilityRequirementFilter({
 
   return (
     <div className={cn('filter-group', className)}>
-      <label className="block text-sm font-medium text-text-secondary mb-1">
+      <label htmlFor={abilitySelectId} className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
       <div className="flex gap-2">
         <select
+          id={abilitySelectId}
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
           className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"

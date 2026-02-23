@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
 import { Alert } from '@/components/ui';
@@ -78,9 +78,9 @@ function featToSelectableItem(
     name: feat.name ?? '',
     description: feat.description || (feat as FeatModal).effect,
     columns: [
-      { key: 'uses_per_rec', value: usesDisplay, align: 'center' as const },
-      { key: 'rec_period', value: feat.rec_period || '-', align: 'center' as const },
-      { key: 'category', value: feat.category || '-', align: 'center' as const },
+      { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
+      { key: 'rec_period', label: 'Recovery', value: feat.rec_period || '-', align: 'center' as const },
+      { key: 'category', label: 'Category', value: feat.category || '-', align: 'center' as const },
     ],
     detailSections: detailSections.length > 0 ? detailSections : undefined,
     disabled,
@@ -97,6 +97,8 @@ export function AddFeatModal({
   existingFeatIds,
   onAdd,
 }: AddFeatModalProps) {
+  const categorySelectId = useId();
+  const abilitySelectId = useId();
   const { data: codexFeats = [], isLoading: loading, error: queryError } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -221,8 +223,9 @@ export function AddFeatModal({
   const filterContent = (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-2">
-        <label className="text-sm text-text-muted">Category:</label>
+        <label htmlFor={categorySelectId} className="text-sm text-text-muted dark:text-text-secondary">Category:</label>
         <select
+          id={categorySelectId}
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -232,8 +235,9 @@ export function AddFeatModal({
         </select>
       </div>
       <div className="flex items-center gap-2">
-        <label className="text-sm text-text-muted">Ability:</label>
+        <label htmlFor={abilitySelectId} className="text-sm text-text-muted dark:text-text-secondary">Ability:</label>
         <select
+          id={abilitySelectId}
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
           className="text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -242,7 +246,7 @@ export function AddFeatModal({
           {abilities.map(abil => <option key={abil} value={abil}>{abil}</option>)}
         </select>
       </div>
-      <label className="flex items-center gap-2 text-sm text-text-muted">
+      <label className="flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
         <input
           type="checkbox"
           checked={showStateFeats}
@@ -251,7 +255,7 @@ export function AddFeatModal({
         />
         Show state feats
       </label>
-      <label className="flex items-center gap-2 text-sm text-text-muted">
+      <label className="flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
         <input
           type="checkbox"
           checked={showBlocked}

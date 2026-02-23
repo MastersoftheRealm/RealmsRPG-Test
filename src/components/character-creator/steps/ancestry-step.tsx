@@ -430,6 +430,7 @@ export function AncestryStep() {
               value={selectedSize}
               onChange={(e) => setMixedSize(e.target.value)}
               className="w-full max-w-xs rounded-lg border border-border bg-surface px-3 py-2 text-text-primary"
+              aria-label="Size for mixed species"
             >
               <option value="">Select size</option>
               {combinedSizes.map((s) => (

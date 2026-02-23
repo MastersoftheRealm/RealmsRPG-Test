@@ -54,7 +54,7 @@ function DieResultDisplay({ value, dieType, className }: { value: number; dieTyp
     <div className={cn('flex flex-col items-center gap-0.5', className)}>
       <Image
         src={src}
-        alt={`d${dieType} = ${value}`}
+        alt=""
         width={28}
         height={28}
         className="object-contain"
@@ -121,9 +121,10 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
           onClick={() => setShowHistory(!showHistory)}
           className={cn(
             'p-2 rounded-lg transition-colors',
-            showHistory ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' : 'text-text-muted hover:bg-surface-alt'
+            showHistory ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300' : 'text-text-muted dark:text-text-secondary hover:bg-surface-alt'
           )}
           title="Roll history"
+          aria-label={showHistory ? 'Hide roll history' : 'Show roll history'}
         >
           <History className="w-5 h-5" />
         </button>
@@ -147,7 +148,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
               >
                 <Image
                   src={DIE_IMAGES[die]}
-                  alt={`d${die}`}
+                  alt=""
                   width={32}
                   height={32}
                   className="object-contain"
@@ -235,15 +236,16 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
             <span className="text-sm text-text-secondary">Recent Rolls</span>
             <button
               onClick={clearHistory}
-              className="p-1 text-text-muted hover:text-danger-500 transition-colors"
+              className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-500 transition-colors"
               title="Clear history"
+              aria-label="Clear roll history"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
           
           {rollHistory.length === 0 ? (
-            <p className="text-center text-text-muted py-4">No rolls yet</p>
+            <p className="text-center text-text-muted dark:text-text-secondary py-4">No rolls yet</p>
           ) : (
             <div className="max-h-[300px] overflow-y-auto space-y-2">
               {rollHistory.map((roll) => (
@@ -253,11 +255,11 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                       {roll.count}d{roll.dieType}{formatModifier(roll.modifier)}
                     </span>
                     {roll.label && (
-                      <span className="ml-2 text-xs text-text-muted">{roll.label}</span>
+                      <span className="ml-2 text-xs text-text-muted dark:text-text-secondary">{roll.label}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-text-muted">
+                    <span className="text-xs text-text-muted dark:text-text-secondary">
                       [{roll.results.join(', ')}]
                     </span>
                     <span className="font-bold text-primary-600 dark:text-primary-400">= {roll.total}</span>

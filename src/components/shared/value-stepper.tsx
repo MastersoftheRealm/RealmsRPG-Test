@@ -44,20 +44,24 @@ import { cn } from '@/lib/utils/cn';
 
 /**
  * Hook for handling hold-to-repeat with exponential acceleration.
+ * On touch: single tap = one step (delay before repeat); hold = repeat after initial delay.
  * Starts at maxDelay (default 200ms), decreases to minDelay (default 50ms) as you hold.
  */
 function useHoldRepeat(
   callback: () => void,
   enabled: boolean = true,
   minDelay = 50,
-  maxDelay = 200
+  maxDelay = 200,
+  /** Delay (ms) before first repeat so a quick tap only fires once. Default 400ms. */
+  initialDelay = 400
 ) {
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const delayRef = useRef(maxDelay);
   const isHoldingRef = useRef(false);
+  const hasRepeatedRef = useRef(false);
   const callbackRef = useRef(callback);
   
-  // Keep callback ref updated
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
@@ -65,37 +69,41 @@ function useHoldRepeat(
   const start = useCallback(() => {
     if (!enabled || isHoldingRef.current) return;
     isHoldingRef.current = true;
+    hasRepeatedRef.current = false;
     delayRef.current = maxDelay;
     
-    // Execute immediately
-    callbackRef.current();
-    
-    // Start repeating
-    const repeat = () => {
-      if (!isHoldingRef.current) return;
+    initialTimeoutRef.current = setTimeout(() => {
+      initialTimeoutRef.current = null;
+      hasRepeatedRef.current = true;
       callbackRef.current();
-      // Decrease delay exponentially (faster as you hold)
-      delayRef.current = Math.max(minDelay, delayRef.current * 0.85);
-      intervalRef.current = setTimeout(repeat, delayRef.current);
-    };
-    
-    intervalRef.current = setTimeout(repeat, maxDelay);
-  }, [enabled, minDelay, maxDelay]);
+      const repeat = () => {
+        if (!isHoldingRef.current) return;
+        callbackRef.current();
+        delayRef.current = Math.max(minDelay, delayRef.current * 0.85);
+        intervalRef.current = setTimeout(repeat, delayRef.current);
+      };
+      intervalRef.current = setTimeout(repeat, maxDelay);
+    }, initialDelay);
+  }, [enabled, minDelay, maxDelay, initialDelay]);
 
   const stop = useCallback(() => {
+    if (initialTimeoutRef.current) {
+      clearTimeout(initialTimeoutRef.current);
+      initialTimeoutRef.current = null;
+      if (!hasRepeatedRef.current) callbackRef.current();
+    }
     isHoldingRef.current = false;
+    hasRepeatedRef.current = false;
     if (intervalRef.current) {
       clearTimeout(intervalRef.current);
       intervalRef.current = null;
     }
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (intervalRef.current) {
-        clearTimeout(intervalRef.current);
-      }
+      if (initialTimeoutRef.current) clearTimeout(initialTimeoutRef.current);
+      if (intervalRef.current) clearTimeout(intervalRef.current);
     };
   }, []);
 
@@ -146,8 +154,8 @@ const valueDisplayVariants = cva(
         positive: 'text-success-700',
         negative: 'text-danger-700',
         neutral: 'text-text-primary',
-        health: 'text-success-600',
-        energy: 'text-info-600',
+        health: 'text-success-600 dark:text-success-400',
+        energy: 'text-info-600 dark:text-info-400',
       },
     },
     defaultVariants: {

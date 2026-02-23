@@ -239,8 +239,8 @@ export function useUserSpecies(): UseQueryResult<UserSpecies[], Error> {
   });
 }
 
-/** Normalize user species to Species shape for use in character creator and sheet. */
-function userSpeciesToSpecies(u: UserSpecies): Species {
+/** Normalize user species to Species shape for use in character creator, sheet, and codex. */
+export function userSpeciesToSpecies(u: UserSpecies): Species {
   const sizes = u.sizes?.length ? u.sizes : (u.size ? [u.size] : ['Medium']);
   return {
     id: u.id,

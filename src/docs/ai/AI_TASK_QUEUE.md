@@ -6236,3 +6236,33 @@ Agents should **create new tasks** during their work when they discover addition
     Phase 2 completed 2026-02-22: Character sheet page — below md, horizontal side-scroll (snap-x snap-mandatory) with 4 panels (Abilities & Defenses, Skills, Archetype & Attacks, Library); each panel full-width, scroll-snap-align start, vertical scroll inside panel. Desktop layout unchanged (hidden md:block). SheetHeader: right column w-full min-w-0 on mobile, AP+Health/Energy stack on xs (flex-col sm:flex-row). SheetActionToolbar: on mobile fixed bottom-4 left-4 right-4, flex-row justify-center; on md+ fixed top-24 right-4, flex-col. npm run build passes.
     Phase 3 completed 2026-02-22: CreatorLayout — main content order-2 lg:order-1, sidebar order-1 lg:order-2 (sidebar first on mobile); min-w-0 on both. Creator tab bar — flex-nowrap md:flex-wrap, overflow-x-auto, scrollbar-thin, step buttons flex-shrink-0. Library/Codex — mode toggle and TabNavigation wrapped in min-w-0 divs.
     Phase 4 completed 2026-02-22: Encounters — Create Encounter modal fullScreenOnMobile, type grid grid-cols-1 sm:grid-cols-3, top bar min-w-0. Campaigns — TabNavigation and main content min-w-0. My-account — PageContainer and header div given min-w-0. Rules, resources, privacy, terms use PageContainer; admin tables documented. npm run build passes.
+
+- id: TASK-267
+  title: Accessibility audit fixes and a11y systems (Vercel audit)
+  priority: high
+  status: done
+  created_at: 2026-02-23
+  created_by: owner
+  description: |
+    Address Vercel accessibility audit (light mode): contrast (home feature text, auth, status green), icon-only button labels, select accessible names, heading hierarchy (campaigns, campaign detail, encounters), dice image alt (no duplicate text). Add eslint-plugin-jsx-a11y and Cursor rule so future code and AI agents comply with WCAG 2.1 AA.
+  related_files:
+    - src/app/(main)/home-page.tsx
+    - src/components/auth/password-input.tsx
+    - src/app/(main)/campaigns/page.tsx
+    - src/app/(main)/campaigns/[id]/page.tsx
+    - src/app/(main)/encounters/[id]/combat/page.tsx
+    - src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx
+    - src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx
+    - src/components/character-sheet/dice-roller.tsx
+    - src/components/character-sheet/roll-log.tsx
+    - eslint.config.mjs
+    - .cursor/rules
+  acceptance_criteria:
+    - Home feature text meets contrast (e.g. text-neutral-700 or semantic token in light mode).
+    - All icon-only buttons have aria-label (password toggle, dice roller history/clear, campaign edit, encounter add participant).
+    - All selects have associated label (htmlFor/id) or aria-label.
+    - Heading hierarchy: no skip (h1→h2→h3); campaigns list and detail, encounter views use h2 for first section after h1.
+    - Dice images with visible die label use alt="" to avoid duplicate announcement.
+    - eslint-plugin-jsx-a11y installed and enabled; .cursor/rules or ACCESSIBILITY.md documents a11y requirements for agents.
+    - npm run build passes.
+  notes: "Implemented 2026-02-23: Home feature text contrast (text-neutral-700); password toggle aria-label; campaigns/campaign [id] heading hierarchy (h2); encounter skill/combat section headings (h2), Campaign select id/htmlFor, participant skill select aria-label, Add participant aria-label; dice-roller and roll-log dice images alt='', History/Clear aria-labels; campaign edit name/description buttons aria-label; combat encounter Campaign select id/htmlFor; green status text (text-green-700). Added .cursor/rules/realms-accessibility.mdc and src/docs/ACCESSIBILITY.md. eslint-plugin-jsx-a11y already in devDependencies via eslint-config-next."

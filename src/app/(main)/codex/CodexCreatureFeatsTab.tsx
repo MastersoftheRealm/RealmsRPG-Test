@@ -16,6 +16,7 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
+import { EmptyState as UiEmptyState } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 
@@ -28,7 +29,16 @@ const CREATURE_FEAT_COLUMNS = [
   { key: '_actions', label: '', sortable: false as const },
 ];
 
-export function CodexCreatureFeatsTab() {
+export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+  if (codexMode === 'my') {
+    return (
+      <UiEmptyState
+        size="lg"
+        title="My Codex — Creature Feats"
+        description="Custom creature feats are not available yet. For now, use Public Codex."
+      />
+    );
+  }
   const { data: creatureFeats, isLoading, error } = useCreatureFeats();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');

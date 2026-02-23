@@ -27,10 +27,10 @@ interface ItemCardProps {
 const badgeVariants = {
   default: 'bg-surface-alt text-text-secondary',
   primary: 'bg-primary-100 text-primary-700',
-  success: 'bg-success-100 text-success-700',
-  warning: 'bg-warning-100 text-warning-700',
-  danger: 'bg-danger-100 text-danger-700',
-  info: 'bg-info-100 text-info-700',
+  success: 'bg-success-100 text-success-700 dark:text-success-300',
+  warning: 'bg-warning-100 text-warning-700 dark:text-warning-300',
+  danger: 'bg-danger-100 text-danger-700 dark:text-danger-300',
+  info: 'bg-info-100 text-info-700 dark:text-info-300',
 };
 
 export const ItemCard = memo(function ItemCard({ 
@@ -255,7 +255,7 @@ export const ItemCard = memo(function ItemCard({
                 {item.requirements.map((req, i) => (
                   <span 
                     key={i}
-                    className={cn(req.met ? 'text-success-600' : 'text-danger-600')}
+                    className={cn(req.met ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400')}
                   >
                     {req.name} {req.value}
                     {i < item.requirements!.length - 1 ? ', ' : ''}

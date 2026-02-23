@@ -684,7 +684,7 @@ export default function CombatEncounterView({
           </div>
 
           {!encounter.isActive && sortedCombatants.length > 0 && (
-            <div className="text-xs text-text-muted flex items-center gap-4 px-2 flex-shrink-0">
+            <div className="text-xs text-text-muted dark:text-text-secondary flex items-center gap-4 px-2 flex-shrink-0">
               <span>
                 Drag the grip handle to reorder. Surprised creatures go last in round 1. Companions always go last.
               </span>
@@ -693,7 +693,7 @@ export default function CombatEncounterView({
 
           <div className="space-y-3 overflow-y-auto pr-2 scroll-smooth flex-1 min-h-[300px]">
             {sortedCombatants.length === 0 ? (
-              <div className="bg-surface rounded-xl shadow-md p-8 text-center text-text-muted">
+              <div className="bg-surface rounded-xl shadow-md p-8 text-center text-text-muted dark:text-text-secondary">
                 No combatants added yet. Add some using the panel on the right.
               </div>
             ) : (
@@ -725,10 +725,11 @@ export default function CombatEncounterView({
 
         <div className="space-y-6 flex flex-col min-h-0">
           <div className="bg-surface rounded-xl shadow-md p-6 flex-shrink-0">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Add Combatant</h2>
             <div className="mb-4 space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">Campaign</label>
+              <label htmlFor="combat-encounter-campaign" className="block text-sm font-medium text-text-secondary">Campaign</label>
               <select
+                id="combat-encounter-campaign"
                 value={encounter.campaignId ?? ''}
                 onChange={(e) => {
                   const id = e.target.value || undefined;
@@ -810,7 +811,7 @@ export default function CombatEncounterView({
                     size="sm"
                     enableHoldRepeat
                   />
-                  <span className="text-xs text-text-muted ml-2">A, B, C... suffixes</span>
+                  <span className="text-xs text-text-muted dark:text-text-secondary ml-2">A, B, C... suffixes</span>
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-wrap">

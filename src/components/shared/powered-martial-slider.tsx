@@ -76,8 +76,8 @@ export function PoweredMartialSlider({
       {/* Header with total info */}
       {!compact && (
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-secondary">Proficiency Allocation</span>
-          <span className="text-sm text-tertiary">
+          <span className="text-sm font-medium text-text-secondary dark:text-text-primary">Proficiency Allocation</span>
+          <span className="text-sm text-text-muted dark:text-text-secondary">
             Total: {maxPoints} points
           </span>
         </div>
@@ -91,7 +91,7 @@ export function PoweredMartialSlider({
         )}>
           <div className="text-center">
             <span className={cn(
-              'text-tertiary block',
+              'text-text-muted dark:text-text-secondary block',
               compact ? 'text-[10px]' : 'text-xs'
             )}>Power</span>
             <span className={cn(
@@ -101,7 +101,7 @@ export function PoweredMartialSlider({
           </div>
           <div className="text-center">
             <span className={cn(
-              'text-tertiary block',
+              'text-text-muted dark:text-text-secondary block',
               compact ? 'text-[10px]' : 'text-xs'
             )}>Martial</span>
             <span className={cn(
@@ -112,8 +112,8 @@ export function PoweredMartialSlider({
         </div>
       )}
 
-      {/* Custom Slider: left = 0 martial (all power), right = max martial */}
-      <div className="relative py-2">
+      {/* Custom Slider: left = 0 martial (all power), right = max martial. touch-action: pan-y so horizontal drag doesn't trigger section swipe on mobile. */}
+      <div className="relative py-2 touch-pan-y" style={{ touchAction: 'pan-y' }}>
         <div className={cn(
           'absolute inset-x-0 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-power-dark to-martial-dark',
           compact ? 'h-1.5' : 'h-2'
@@ -124,6 +124,8 @@ export function PoweredMartialSlider({
           max={maxMartial}
           value={sliderValue}
           onChange={(e) => handleSliderChange(parseInt(e.target.value))}
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           disabled={disabled}
           className={cn(
             'relative w-full appearance-none bg-transparent cursor-pointer',
@@ -133,6 +135,7 @@ export function PoweredMartialSlider({
           )}
           style={{
             WebkitAppearance: 'none',
+            touchAction: 'none',
           }}
         />
       </div>

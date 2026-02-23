@@ -22,6 +22,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
+import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { Input } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
@@ -108,7 +109,16 @@ function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<stri
   );
 }
 
-export function CodexFeatsTab() {
+export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex — Feats"
+        description="Custom feats are not available yet. For now, use Public Codex."
+      />
+    );
+  }
   const { data: feats, isLoading, error } = useCodexFeats();
   const { data: skills = [] } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -252,7 +262,7 @@ export function CodexFeatsTab() {
               }))}
               placeholder="No limit"
             />
-            <p className="text-xs text-text-muted mt-1">Hide feats requiring higher levels</p>
+            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Hide feats requiring higher levels</p>
           </div>
 
           <div className="md:col-span-2">
@@ -334,7 +344,7 @@ export function CodexFeatsTab() {
         {isLoading ? (
           <LoadingState />
         ) : filteredFeats.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No feats match your filters.</div>
+          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No feats match your filters.</div>
         ) : (
           filteredFeats.map(feat => (
             <FeatCard key={feat.id} feat={feat} skillIdToName={skillIdToName} />

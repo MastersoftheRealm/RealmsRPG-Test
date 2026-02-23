@@ -45,10 +45,10 @@ const toastIcons: Record<ToastType, React.ReactNode> = {
 };
 
 const toastStyles: Record<ToastType, string> = {
-  success: 'border-l-4 border-l-success-500 bg-success-light text-success-700',
-  error: 'border-l-4 border-l-danger-500 bg-danger-light text-danger-700',
-  warning: 'border-l-4 border-l-warning-500 bg-warning-light text-warning-700',
-  info: 'border-l-4 border-l-info-500 bg-info-light text-info-700',
+  success: 'border-l-4 border-l-success-500 bg-success-light text-success-700 dark:text-success-300',
+  error: 'border-l-4 border-l-danger-500 bg-danger-light text-danger-700 dark:text-danger-300',
+  warning: 'border-l-4 border-l-warning-500 bg-warning-light text-warning-700 dark:text-warning-300',
+  info: 'border-l-4 border-l-info-500 bg-info-light text-info-700 dark:text-info-300',
 };
 
 const iconStyles: Record<ToastType, string> = {
@@ -92,7 +92,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
       <span className={cn('flex-shrink-0', iconStyles[toast.type])}>
         {toastIcons[toast.type]}
       </span>
-      <p className="flex-1 text-sm font-medium">{toast.message}</p>
+      <p className="flex-1 text-sm font-medium text-inherit">{toast.message}</p>
       <IconButton
         variant="ghost"
         size="sm"

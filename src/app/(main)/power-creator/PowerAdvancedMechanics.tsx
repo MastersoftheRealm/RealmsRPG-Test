@@ -109,7 +109,7 @@ function AddedAdvancedChip({
         <span className={cn('text-sm font-medium', colors.text)}>
           {part.name}
           {(advPart.op_1_lvl > 0 || advPart.op_2_lvl > 0 || advPart.op_3_lvl > 0) && (
-            <span className="ml-2 text-xs opacity-75">
+            <span className="ml-2 text-xs text-text-muted dark:text-text-secondary">
               ({advPart.op_1_lvl}/{advPart.op_2_lvl}/{advPart.op_3_lvl})
             </span>
           )}
@@ -241,9 +241,9 @@ export function PowerAdvancedMechanicsSection({
       >
         <div className="flex items-center gap-2">
           {expanded ? (
-            <ChevronUp className="w-5 h-5 text-text-muted" />
+            <ChevronUp className="w-5 h-5 text-text-muted dark:text-text-secondary" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-text-muted" />
+            <ChevronDown className="w-5 h-5 text-text-muted dark:text-text-secondary" />
           )}
           <span className="font-bold text-text-primary">Advanced Power Mechanics</span>
         </div>

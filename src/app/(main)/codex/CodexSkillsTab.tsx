@@ -19,6 +19,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
+import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
@@ -65,7 +66,16 @@ function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<
   );
 }
 
-export function CodexSkillsTab() {
+export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex — Skills"
+        description="Custom skills are not available yet. For now, use Public Codex."
+      />
+    );
+  }
   const { data: skills, isLoading, error } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -212,7 +222,7 @@ export function CodexSkillsTab() {
         {isLoading ? (
           <LoadingState />
         ) : filteredSkills.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No skills match your filters.</div>
+          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No skills match your filters.</div>
         ) : (
           filteredSkills.map((skill: Skill) => (
             <SkillCard key={skill.id} skill={skill} skillIdToName={skillIdToName} />

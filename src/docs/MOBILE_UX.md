@@ -50,7 +50,7 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 
 ## Lists and tables
 
-- **ListHeader:** Already `hidden lg:grid` — column headers are hidden on small screens; rows still show key info.
+- **ListHeader:** Desktop: column headers in a grid (`hidden lg:grid`). **Mobile:** no column headers; instead an expandable **"Sort by"** control that uses the same sort logic (sortState, onSort). Tap to expand and choose sort criteria (e.g. Name, Damage, Energy); tap an option to sort; tap same option again toggles A→Z / Z→A. Same behavior as desktop column clicks.
 - **GridListRow:** Use `hideOnMobile` on columns that aren’t essential on small viewports (e.g. hide secondary columns, show name + primary value). Expanded row shows full details.
 - **Tabs:** TabNavigation uses `overflow-x-auto`; ensure tab strip scrolls horizontally on narrow screens instead of wrapping into a tall block.
 
@@ -83,7 +83,7 @@ When **creating or editing** a page or modal:
 |-----------|----------|-----------------|
 | Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` prop → full-screen below `md`. |
 | Collapsible | `src/components/ui/collapsible.tsx` | Use for within-panel sub-sections or lighter pages. |
-| ListHeader | `src/components/shared/list-header.tsx` | `hidden lg:grid` — headers hidden on small screens. |
+| ListHeader | `src/components/shared/list-header.tsx` | Desktop: column header grid. Mobile: expandable "Sort by [criteria] (A→Z)" using same sortState/onSort; no column headers. |
 | GridListRow | `src/components/shared/grid-list-row.tsx` | `hideOnMobile` on column values. |
 | TabNavigation | `src/components/ui/tab-navigation.tsx` | Tabs use `overflow-x-auto` in globals. |
 | PageContainer | `src/components/ui/page-container.tsx` | `px-4 sm:px-6 lg:px-8`; adjust if audit shows overflow. |

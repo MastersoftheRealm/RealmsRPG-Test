@@ -474,6 +474,7 @@ export default function SpeciesCreatorPage() {
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
                 value={form.type}
                 onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+                aria-label="Creature type"
               >
                 <option value="">— Select type —</option>
                 {CREATURE_TYPES.map((t) => (
@@ -512,6 +513,7 @@ export default function SpeciesCreatorPage() {
                   className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
                   value={form.skillIds[i] ?? ''}
                   onChange={(e) => setSkill(i, e.target.value)}
+                  aria-label={i === 0 ? 'First base skill' : 'Second base skill'}
                 >
                   <option value="">— Select —</option>
                   {skillOptions.filter((opt) => opt.value !== form.skillIds[1 - i]).map((opt) => (

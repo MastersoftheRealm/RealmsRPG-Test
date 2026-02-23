@@ -246,7 +246,7 @@ export function AbilitiesSection({
               />
             )}
           </div>
-          <div className="text-xs text-text-muted">
+          <div className="text-xs text-text-muted dark:text-text-secondary">
             Max ability: +{maxAbility} | Defense: {DEFENSE_INCREASE_COST}sp per +1 (max +{maxDefenseSkill}, over allowed)
           </div>
         </div>
@@ -274,7 +274,7 @@ export function AbilitiesSection({
               )}
             >
               {/* Ability Name */}
-              <span className="text-xs font-bold text-text-muted uppercase tracking-wider mb-2">
+              <span className="text-xs font-bold text-text-muted dark:text-text-secondary uppercase tracking-wider mb-2">
                 {info.name}
               </span>
               
@@ -288,7 +288,7 @@ export function AbilitiesSection({
                   />
                   <span className={cn(
                     'text-2xl font-bold min-w-[56px] text-center',
-                    value > 0 ? 'text-success-600' : value < 0 ? 'text-danger-600' : 'text-text-secondary'
+                    value > 0 ? 'text-success-700 dark:text-success-400' : value < 0 ? 'text-danger-600' : 'text-text-secondary'
                   )}>
                     {formatBonus(value)}
                   </span>
@@ -339,7 +339,7 @@ export function AbilitiesSection({
                 className="flex flex-col items-center p-3 bg-surface-alt rounded-lg"
               >
                 {/* Defense Name */}
-                <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                <span className="text-[10px] font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider mb-1">
                   {defenseInfo.name}
                 </span>
                 

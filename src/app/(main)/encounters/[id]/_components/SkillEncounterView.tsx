@@ -318,7 +318,7 @@ export default function SkillEncounterView({
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-surface rounded-xl border border-border-light p-4">
-            <h3 className="text-sm font-semibold text-text-secondary mb-3">Successes</h3>
+            <h2 className="text-sm font-semibold text-text-secondary mb-3">Successes</h2>
             <SuccessFailureTracker
               rollSuccesses={skill.currentSuccesses}
               rollFailures={skill.currentFailures}
@@ -345,7 +345,7 @@ export default function SkillEncounterView({
             <Button variant="ghost" onClick={restartEncounter}>
               <RotateCcw className="w-4 h-4" /> Restart Encounter
             </Button>
-            <div className="ml-auto text-sm text-text-muted">
+            <div className="ml-auto text-sm text-text-muted dark:text-text-secondary">
               {skill.participants.length} participant{skill.participants.length !== 1 ? 's' : ''}
               {' · '}
               {skill.participants.filter((p) => p.hasRolled || p.isHelping).length} acted
@@ -354,7 +354,7 @@ export default function SkillEncounterView({
 
           <div className="space-y-2">
             {skill.participants.length === 0 ? (
-              <div className="bg-surface rounded-xl border border-border-light p-8 text-center text-text-muted">
+              <div className="bg-surface rounded-xl border border-border-light p-8 text-center text-text-muted dark:text-text-secondary">
                 <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p>No participants yet. Add characters using the panel on the right.</p>
               </div>
@@ -379,9 +379,9 @@ export default function SkillEncounterView({
 
         <div className="space-y-6">
           <div className="bg-surface rounded-xl border border-border-light p-6">
-            <h3 className="font-bold text-text-primary mb-4 flex items-center gap-2">
+            <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
               <Brain className="w-5 h-5 text-blue-500" /> Configuration
-            </h3>
+            </h2>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty Score (DS)</label>
               <ValueStepper
@@ -395,17 +395,18 @@ export default function SkillEncounterView({
                 size="sm"
                 enableHoldRepeat
               />
-              <p className="text-xs text-text-muted mt-1">
+              <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
                 Roll ≥ DS = success. Each 5 over/under adds extra success/failure.
               </p>
             </div>
           </div>
 
           <div className="bg-surface rounded-xl border border-border-light p-6">
-            <h3 className="font-bold text-text-primary mb-4">Add Participants</h3>
+            <h2 className="font-bold text-text-primary mb-4">Add Participants</h2>
             <div className="mb-4 space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">Campaign</label>
+              <label htmlFor="skill-encounter-campaign" className="block text-sm font-medium text-text-secondary">Campaign</label>
               <select
+                id="skill-encounter-campaign"
                 value={encounter.campaignId ?? ''}
                 onChange={(e) => {
                   const id = e.target.value || undefined;
@@ -441,15 +442,15 @@ export default function SkillEncounterView({
                 placeholder="Character name..."
                 onKeyDown={(e) => e.key === 'Enter' && addParticipant()}
               />
-              <Button onClick={addParticipant} disabled={!newParticipantName.trim()}>
+              <Button onClick={addParticipant} disabled={!newParticipantName.trim()} aria-label="Add participant">
                 <Plus className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
           <div className="bg-surface rounded-xl border border-border-light p-6">
-            <h3 className="font-bold text-text-primary mb-3">Quick Reference</h3>
-            <div className="space-y-2 text-xs text-text-muted">
+            <h2 className="font-bold text-text-primary mb-3">Quick Reference</h2>
+            <div className="space-y-2 text-xs text-text-muted dark:text-text-secondary">
               <p>
                 <strong className="text-text-secondary">Required Successes:</strong>{' '}
                 {skill.participants.length + 1} (per GAME_RULES: # participants + 1)
@@ -501,7 +502,7 @@ function SuccessFailureTracker({
 
   return (
     <div className="flex items-center justify-center gap-2">
-      <div className="px-4 py-2 rounded-lg bg-surface-alt text-text-muted text-sm font-medium min-w-[4rem] text-center">
+      <div className="px-4 py-2 rounded-lg bg-surface-alt text-text-muted dark:text-text-secondary text-sm font-medium min-w-[4rem] text-center">
         {net === 0 ? '0' : net > 0 ? `+${net}` : net}
       </div>
       <div className="flex items-center gap-1">
@@ -602,6 +603,7 @@ function ParticipantCard({
         <div className="font-medium text-text-primary">{participant.name}</div>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <select
+            aria-label="Skill for participant"
             value={participant.skillUsed || ''}
             onChange={(e) => onUpdateSkill(e.target.value)}
             className="text-xs bg-transparent border border-border-light rounded px-1 py-0.5 text-text-secondary focus:border-primary-500 focus:outline-none min-w-0 max-w-[140px]"
@@ -613,7 +615,7 @@ function ParticipantCard({
               </option>
             ))}
           </select>
-          <span className="text-xs text-text-muted">RM Bonus:</span>
+          <span className="text-xs text-text-muted dark:text-text-secondary">RM Bonus:</span>
           <input
             type="number"
             value={participant.rmBonus ?? ''}
@@ -625,7 +627,7 @@ function ParticipantCard({
             className="w-12 px-1 py-0.5 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-500 focus:outline-none"
           />
           {participant.hasRolled && participant.rollValue != null && (
-            <span className="text-xs text-text-muted">
+            <span className="text-xs text-text-muted dark:text-text-secondary">
               {(participant.successCount ?? 0) > 0
                 ? `${participant.successCount}S`
                 : (participant.failureCount ?? 0) > 0
@@ -661,7 +663,7 @@ function ParticipantCard({
             </div>
             <button
               onClick={onClearRoll}
-              className="p-1 text-text-muted hover:text-text-secondary rounded"
+              className="p-1 text-text-muted dark:text-text-secondary hover:text-text-secondary rounded"
               title="Clear roll"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -694,7 +696,7 @@ function ParticipantCard({
 
       <button
         onClick={onRemove}
-        className="p-1.5 text-text-muted hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
+        className="p-1.5 text-text-muted dark:text-text-secondary hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
         title="Remove"
       >
         <Trash2 className="w-4 h-4" />

@@ -7,6 +7,7 @@
 
 'use client';
 
+import { useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip } from '@/components/ui';
 
@@ -33,6 +34,7 @@ export function TagFilter({
   onModeChange,
   className = '',
 }: TagFilterProps) {
+  const id = useId();
   const availableTags = tags.filter(t => !selectedTags.includes(t));
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -45,11 +47,12 @@ export function TagFilter({
 
   return (
     <div className={cn('filter-group', className)}>
-      <label className="block text-sm font-medium text-text-secondary mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
       <div className="flex gap-2 items-center">
         <select
+          id={id}
           onChange={handleChange}
           className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           defaultValue=""

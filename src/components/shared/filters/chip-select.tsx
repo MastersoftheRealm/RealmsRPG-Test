@@ -7,6 +7,7 @@
 
 'use client';
 
+import { useId } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +30,7 @@ export function ChipSelect({
   onRemove,
   className = '',
 }: ChipSelectProps) {
+  const id = useId();
   const availableOptions = options.filter(opt => !selectedValues.includes(opt.value));
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -41,10 +43,11 @@ export function ChipSelect({
 
   return (
     <div className={cn('filter-group', className)}>
-      <label className="block text-sm font-medium text-text-secondary mb-1">
+      <label htmlFor={id} className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
       <select
+        id={id}
         onChange={handleChange}
         className="w-full px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         defaultValue=""

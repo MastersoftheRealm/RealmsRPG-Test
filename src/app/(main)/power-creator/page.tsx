@@ -747,9 +747,10 @@ function PowerCreatorContent() {
 
           {/* Action Type */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Action Type</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Action Type</h2>
             <div className="flex flex-wrap gap-4">
               <select
+                aria-label="Action type"
                 value={actionType}
                 onChange={(e) => setActionType(e.target.value)}
                 className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
@@ -770,7 +771,7 @@ function PowerCreatorContent() {
 
           {/* Range */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Range</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Range</h2>
             <div className="flex flex-wrap items-center gap-4">
               <ValueStepper
                 value={range.steps}
@@ -787,9 +788,10 @@ function PowerCreatorContent() {
 
           {/* Area of Effect */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Area of Effect</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Area of Effect</h2>
             <div className="flex flex-wrap items-center gap-4">
               <select
+                aria-label="Area of effect"
                 value={area.type}
                 onChange={(e) => setArea((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
                 className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
@@ -821,9 +823,10 @@ function PowerCreatorContent() {
 
           {/* Duration */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Duration</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Duration</h2>
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
+                aria-label="Duration type"
                 value={duration.type}
                 onChange={(e) => {
                   const newType = e.target.value as DurationConfig['type'];
@@ -855,6 +858,7 @@ function PowerCreatorContent() {
               </select>
               {duration.type !== 'instant' && duration.type !== 'permanent' && DURATION_VALUES[duration.type] && (
                 <select
+                  aria-label="Duration value"
                   value={duration.value}
                   onChange={(e) => {
                     const newValue = parseInt(e.target.value);
@@ -918,6 +922,7 @@ function PowerCreatorContent() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm">Sustain:</span>
                     <select
+                      aria-label="Sustain cost in action points"
                       value={duration.sustain || 0}
                       onChange={(e) => setDuration((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
                       className="px-2 py-1 border border-border-light rounded text-sm text-text-primary bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
@@ -931,7 +936,7 @@ function PowerCreatorContent() {
                     </select>
                   </div>
                   {isShortDuration && (
-                    <span className="text-xs text-text-muted italic">
+                    <span className="text-xs text-text-muted dark:text-text-secondary italic">
                       (Requires 2+ rounds)
                     </span>
                   )}
@@ -943,9 +948,9 @@ function PowerCreatorContent() {
           {/* Power Parts */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-text-primary">
+              <h2 className="text-lg font-bold text-text-primary">
                 Power Parts ({selectedParts.length})
-              </h3>
+              </h2>
               <Button
                 type="button"
                 variant="primary"
@@ -958,7 +963,7 @@ function PowerCreatorContent() {
             </div>
 
             {selectedParts.length === 0 ? (
-              <div className="text-center py-8 text-text-muted">
+              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No parts added yet. Click &quot;Add Part&quot; to begin building your power.</p>
               </div>
@@ -989,7 +994,7 @@ function PowerCreatorContent() {
 
           {/* Damage (Optional) */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Damage (Optional)</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Damage (Optional)</h2>
             <div className="flex flex-wrap items-center gap-4">
               <ValueStepper
                 value={damage.amount}
@@ -1001,6 +1006,7 @@ function PowerCreatorContent() {
               <div className="flex items-center gap-1">
                 <span className="font-bold text-lg">d</span>
                 <select
+                  aria-label="Damage die size"
                   value={damage.size}
                   onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
                   className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
@@ -1013,6 +1019,7 @@ function PowerCreatorContent() {
                 </select>
               </div>
               <select
+                aria-label="Damage type"
                 value={damage.type}
                 onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
                 className="px-3 py-2 border border-border-light rounded-lg"

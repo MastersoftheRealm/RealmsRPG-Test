@@ -192,7 +192,7 @@ export function AbilityScoreEditor({
                   'p-3 rounded-xl border-2 transition-all flex-1',
                   borderClass,
                   bgClass,
-                  !isEditMode && 'opacity-75'
+                  !isEditMode && 'text-text-muted dark:text-text-secondary'
                 )}
               >
                 <div className="text-center mb-2">
@@ -213,7 +213,7 @@ export function AbilityScoreEditor({
 
                   <div className={cn(
                     'text-2xl font-bold min-w-[3rem] text-center',
-                    value > 0 ? 'text-success-600' :
+                    value > 0 ? 'text-success-600 dark:text-success-400' :
                     value < 0 ? 'text-danger-600' :
                     'text-text-secondary'
                   )}>

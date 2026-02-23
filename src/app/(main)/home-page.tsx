@@ -8,23 +8,48 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import type { ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Sparkles, BookOpen, Sword, Wand2 } from 'lucide-react';
 
-// Reviews data - can be expanded
-const reviews = [
+// Reviews data - quote can include inline links for CTAs
+const reviews: Array<{ quote: ReactNode; author: string }> = [
   {
-    quote: "It's a genuinely enjoyable time. I love the character creation experience.",
+    quote: (
+      <>
+        It&apos;s a genuinely enjoyable time. I love the{' '}
+        <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+          character creation experience
+        </Link>
+        .
+      </>
+    ),
     author: "Olive, Realms Playtester"
   },
   {
-    quote: "A refreshing take on tabletop RPGs with incredible flexibility in character building.",
+    quote: (
+      <>
+        A refreshing take on tabletop RPGs with incredible flexibility in{' '}
+        <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+          character building
+        </Link>
+        .
+      </>
+    ),
     author: "Marcus, Realms Player"
   },
   {
-    quote: "The power creation system is unlike anything I've seen before. So creative!",
+    quote: (
+      <>
+        The{' '}
+        <Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+          power creation system
+        </Link>
+        {' '}is unlike anything I&apos;ve seen before. So creative!
+      </>
+    ),
     author: "Sarah, Game Master"
   }
 ];
@@ -46,7 +71,7 @@ function HomeContent() {
   if (code) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-text-muted">Signing you in...</p>
+        <p className="text-text-muted dark:text-text-secondary">Signing you in...</p>
       </div>
     );
   }
@@ -61,8 +86,8 @@ function HomeContent() {
 
   return (
     <>
-      {/* Hero Banner */}
-      <section className="relative w-full h-[400px] overflow-hidden">
+      {/* Hero Banner - constrain on small screens */}
+      <section className="relative w-full h-[240px] sm:h-[320px] md:h-[400px] overflow-hidden">
         <Image
           src="/images/Banner.png"
           alt="Realms Banner"
@@ -71,36 +96,36 @@ function HomeContent() {
           priority
           suppressHydrationWarning
         />
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center p-4">
           <Image
             src="/images/LogoFullGrey.png"
             alt="Realms Logo"
             width={600}
             height={200}
-            className="w-1/2 h-auto object-contain pointer-events-none"
+            className="w-full max-w-[90vw] sm:max-w-[70vw] md:w-1/2 h-auto object-contain pointer-events-none"
             priority
             suppressHydrationWarning
           />
         </div>
       </section>
 
-      {/* Features Section - linked cards */}
-      <section className="bg-neutral-300 dark:bg-neutral-800 py-14 px-24 shadow-md">
-        <div className="max-w-[1440px] mx-auto flex justify-between items-start gap-[116px]">
+      {/* Features Section - linked cards; mobile: stack single column, desktop: row */}
+      <section className="bg-neutral-300 dark:bg-neutral-800 py-8 sm:py-14 px-4 sm:px-6 lg:px-24 shadow-md">
+        <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row justify-between items-stretch lg:items-start gap-8 lg:gap-[116px]">
           <FeatureCard
             href="/characters/new"
             title="CREATE CHARACTERS"
             description="Design your unique characters with detailed attributes and backgrounds."
             icon={<Sparkles className="w-6 h-6" suppressHydrationWarning />}
           />
-          <div className="w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
+          <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
           <FeatureCard
             href="/power-creator"
             title="DEFINE POWERS"
             description="Customize and create powerful abilities for your characters."
             icon={<Wand2 className="w-6 h-6" suppressHydrationWarning />}
           />
-          <div className="w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
+          <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
           <FeatureCard
             href="/library"
             title="JOIN ADVENTURES"
@@ -110,15 +135,15 @@ function HomeContent() {
         </div>
       </section>
 
-      {/* Content Section: Reviews + Creator Message + CTAs */}
-      <section className="flex bg-surface-alt min-h-[272px]">
+      {/* Content Section: Reviews + Creator Message + CTAs; mobile: stack, no horizontal overflow */}
+      <section className="flex flex-col lg:flex-row bg-surface-alt min-h-[272px]">
         {/* Reviews Section */}
-        <div className="flex-1 py-2 pl-24 flex items-center justify-center">
-          <div className="flex items-center gap-6 w-full max-w-[781px]">
+        <div className="flex-1 py-6 sm:py-2 pl-4 sm:pl-6 lg:pl-24 pr-4 flex items-center justify-center min-w-0">
+          <div className="flex items-center gap-3 sm:gap-6 w-full max-w-[781px]">
             <button
               type="button"
               onClick={handlePrevReview}
-              className="p-2 hover:opacity-70 transition-opacity flex-shrink-0"
+              className="p-2 hover:opacity-70 transition-opacity flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Previous review"
             >
               <Image
@@ -131,17 +156,17 @@ function HomeContent() {
               />
             </button>
 
-            <div className="flex-1 text-left">
-              <h2 className="font-nunito font-semibold text-3xl text-title mb-6">
+            <div className="flex-1 text-left min-w-0">
+              <h2 className="font-nunito font-semibold text-2xl sm:text-3xl text-title mb-4 sm:mb-6">
                 Reviews
               </h2>
-              <div className="flex gap-6 items-start">
-                <div className="w-[133px] h-[148px] bg-border-light flex-shrink-0 rounded" />
-                <div className="flex-1">
-                  <p className="font-nunito text-xl text-title leading-relaxed mb-4">
+              <div className="flex gap-3 sm:gap-6 items-start">
+                <div className="w-20 h-24 sm:w-[133px] sm:h-[148px] bg-border-light flex-shrink-0 rounded" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-nunito text-base sm:text-xl text-title leading-relaxed mb-3 sm:mb-4">
                     {reviews[currentReviewIndex].quote}
                   </p>
-                  <p className="font-nunito text-xl text-title leading-relaxed text-right">
+                  <p className="font-nunito text-sm sm:text-xl text-title leading-relaxed text-right">
                     {reviews[currentReviewIndex].author}
                   </p>
                 </div>
@@ -151,7 +176,7 @@ function HomeContent() {
             <button
               type="button"
               onClick={handleNextReview}
-              className="p-2 hover:opacity-70 transition-opacity flex-shrink-0"
+              className="p-2 hover:opacity-70 transition-opacity flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Next review"
             >
               <Image
@@ -167,16 +192,16 @@ function HomeContent() {
         </div>
 
         {/* Creator Message + CTAs */}
-        <div className="w-[499px] py-2 pr-24 flex items-center gap-6 flex-shrink-0">
-          <div className="w-px h-[225px] bg-divider flex-shrink-0" />
-          <div className="flex-1 max-w-[328px]">
-            <p className="font-nunito text-lg text-text-muted text-center italic mb-4">
+        <div className="w-full lg:w-[499px] py-6 sm:py-2 px-4 sm:pr-24 flex items-center justify-center gap-4 sm:gap-6 flex-shrink-0 border-t lg:border-t-0 border-border-light">
+          <div className="hidden lg:block w-px h-[225px] bg-divider flex-shrink-0" />
+          <div className="flex-1 max-w-[328px] min-w-0">
+            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3 sm:mb-4">
               Dear Realms Players,
             </p>
-            <p className="font-nunito text-lg text-text-muted text-center italic mb-4">
+            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3 sm:mb-4">
               Thank you for playing my game! I designed it with the hope that others would have as much fun with it as I do, and it means a lot to see people enjoying it. I appreciate your time and enthusiasm.
             </p>
-            <p className="font-nunito text-lg text-text-muted text-center italic mb-6">
+            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-4 sm:mb-6">
               Sincerely, Realms creator<br />Kadin Brooksby
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
@@ -206,7 +231,7 @@ export default function HomePage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center py-24">
-        <p className="text-text-muted">Loading...</p>
+        <p className="text-text-muted dark:text-text-secondary">Loading...</p>
       </div>
     }>
       <HomeContent />
@@ -228,7 +253,7 @@ function FeatureCard({
   return (
     <Link
       href={href}
-      className="flex-1 max-w-[286px] group block transition-transform hover:-translate-y-1"
+      className="flex-1 max-w-full lg:max-w-[286px] group block transition-transform hover:-translate-y-1 min-w-0"
     >
       <div className="flex items-center gap-2 mb-3">
         {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:text-primary-300 transition-colors">{icon}</span>}
@@ -236,7 +261,7 @@ function FeatureCard({
           {title}
         </h3>
       </div>
-      <p className="font-nunito font-normal text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed">
+      <p className="font-nunito font-normal text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed">
         {description}
       </p>
     </Link>

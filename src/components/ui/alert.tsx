@@ -15,10 +15,10 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        info: 'bg-info-light border-info-300 text-info-700',
-        success: 'bg-success-light border-success-300 text-success-700',
-        warning: 'bg-warning-light border-warning-300 text-warning-700',
-        danger: 'bg-danger-light border-danger-300 text-danger-700',
+        info: 'bg-info-light border-info-300 text-info-700 dark:text-info-300',
+        success: 'bg-success-light border-success-300 text-success-700 dark:text-success-300',
+        warning: 'bg-warning-light border-warning-300 text-warning-700 dark:text-warning-300',
+        danger: 'bg-danger-light border-danger-300 text-danger-700 dark:text-danger-300',
       },
     },
     defaultVariants: {

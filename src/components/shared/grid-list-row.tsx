@@ -30,8 +30,10 @@ import { QuantitySelector, QuantityBadge } from './quantity-selector';
 // =============================================================================
 
 export interface ColumnValue {
-  /** Column key (for mobile labels and accessibility) */
+  /** Column key (for identity, sort, accessibility) */
   key: string;
+  /** Optional display label (use for UI; falls back to key if missing) */
+  label?: string;
   /** Display value */
   value: string | number | ReactNode;
   /** Optional highlight styling (primary color) */
@@ -42,6 +44,14 @@ export interface ColumnValue {
   hideOnMobile?: boolean;
   /** Text alignment */
   align?: 'left' | 'center' | 'right';
+}
+
+/** Humanize column key for display when label is not set (e.g. "uses_per_rec" → "Uses per rec", "attack" → "Attack"). */
+function columnDisplayLabel(col: ColumnValue): string {
+  if (col.label) return col.label;
+  const key = col.key;
+  if (!key) return '';
+  return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 export interface ChipData {
@@ -300,7 +310,7 @@ export const GridListRow = memo(function GridListRow({
             )}
             {/* Uses display (hidden when Uses column shows stepper). Show - when no/zero uses. */}
             {uses && !hideUsesInName && (
-              <span className="text-xs text-text-muted flex-shrink-0">
+              <span className="text-xs text-text-muted dark:text-text-secondary flex-shrink-0">
                 {uses.max > 0 ? `(${uses.current}/${uses.max})` : '-'}
               </span>
             )}
@@ -357,7 +367,7 @@ export const GridListRow = memo(function GridListRow({
             <div className="hidden md:flex items-center gap-4 text-sm text-text-secondary">
               {columns.slice(0, 3).map((col) => (
                 <span key={col.key} className="whitespace-nowrap">
-                  <span className="text-text-muted">{col.key}:</span>{' '}
+                  <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>{' '}
                   <span className={cn(col.highlight && 'text-primary-600 font-medium', col.className)}>
                     {col.value ?? '-'}
                   </span>
@@ -390,7 +400,7 @@ export const GridListRow = memo(function GridListRow({
               size="sm"
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
               label="Edit"
-              className="text-text-muted hover:text-primary-600 hover:bg-transparent"
+              className="text-text-muted dark:text-text-secondary hover:text-primary-600 hover:bg-transparent"
             >
               <Edit className="w-4 h-4" />
             </IconButton>
@@ -439,7 +449,7 @@ export const GridListRow = memo(function GridListRow({
           {columns.slice(0, 3).map((col) => (
             col.value && (
               <span key={col.key} className="flex items-center gap-1">
-                <span className="text-text-muted">{col.key}:</span>
+                <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>
                 <span className={cn(col.highlight && 'text-primary-600 font-medium')}>
                   {col.value}
                 </span>
@@ -498,7 +508,7 @@ export const GridListRow = memo(function GridListRow({
                 <div className="lg:hidden grid grid-cols-2 gap-2 mb-4 text-sm">
                   {columns.map((col) => (
                     <div key={col.key} className="flex items-center gap-2">
-                      <span className="text-text-muted capitalize">{col.key}:</span>
+                      <span className="text-text-muted dark:text-text-secondary capitalize">{(columnDisplayLabel(col))}:</span>
                       <span className={cn('font-medium text-text-primary', col.highlight && 'text-primary-600')}>
                         {col.value ?? '-'}
                       </span>
@@ -533,9 +543,9 @@ export const GridListRow = memo(function GridListRow({
                 return (
                   <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
                     {showLabel && (
-                      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                      <h3 className="text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider">
                         {section.label}
-                      </h4>
+                      </h3>
                     )}
                     <div className="flex flex-wrap gap-2">
                       {sectionChips.map((chip, chipIdx) => {
@@ -558,17 +568,17 @@ export const GridListRow = memo(function GridListRow({
                             <span className="inline-flex items-center gap-1.5">
                               <span>{chip.name}</span>
                               {chip.level && chip.level > 1 && (
-                                <span className="text-xs opacity-75">(Lv.{chip.level})</span>
+                                <span className="text-xs text-text-muted dark:text-text-secondary">(Lv.{chip.level})</span>
                               )}
                               {hasCost && (
                                 <>
                                   <span className="opacity-40">|</span>
-                                  <span className="text-xs font-semibold">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
                                 </>
                               )}
                             </span>
                             {isChipExpanded && chip.description && (
-                              <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed whitespace-pre-line">
+                              <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line">
                                 {chip.description}
                               </span>
                             )}
@@ -583,9 +593,9 @@ export const GridListRow = memo(function GridListRow({
               {/* Chips Section - legacy single section */}
               {hasChips && chips.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                  <h3 className="text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider">
                     {chipsLabel}
-                  </h4>
+                  </h3>
                   <div className="flex flex-wrap gap-2">
                     {chips.map((chip, index) => {
                       const hasCost = (chip.cost ?? 0) > 0;
@@ -606,17 +616,17 @@ export const GridListRow = memo(function GridListRow({
                           <span className="inline-flex items-center gap-1.5">
                             <span>{chip.name}</span>
                             {chip.level && chip.level > 1 && (
-                              <span className="text-xs opacity-75">(Lv.{chip.level})</span>
+                              <span className="text-xs text-text-muted dark:text-text-secondary">(Lv.{chip.level})</span>
                             )}
                             {hasCost && (
                               <>
                                 <span className="opacity-40">|</span>
-                                <span className="text-xs font-semibold">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
                               </>
                             )}
                           </span>
                           {isChipExpanded && chip.description && (
-                            <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left opacity-90 leading-relaxed whitespace-pre-line">
+                            <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line">
                               {chip.description}
                             </span>
                           )}

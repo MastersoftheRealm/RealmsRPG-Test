@@ -84,18 +84,18 @@ export function EmptyState({
       {icon && (
         <div
           className={cn(
-            'flex items-center justify-center rounded-full bg-surface-alt text-text-muted mb-4',
+            'flex items-center justify-center rounded-full bg-surface-alt text-text-muted dark:text-text-secondary mb-4',
             sizes.iconWrapper
           )}
         >
           {icon}
         </div>
       )}
-      <h3 className={cn('font-semibold text-text-primary', sizes.title)}>
+      <h2 className={cn('font-semibold text-text-primary', sizes.title)}>
         {title}
-      </h3>
+      </h2>
       {displayMessage && (
-        <p className={cn('mt-2 text-text-muted max-w-md', sizes.description)}>
+        <p className={cn('mt-2 text-text-muted dark:text-text-secondary max-w-md', sizes.description)}>
           {displayMessage}
         </p>
       )}

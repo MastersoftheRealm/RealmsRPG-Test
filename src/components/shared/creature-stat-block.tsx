@@ -149,10 +149,10 @@ function AbilityRow({ abilities }: { abilities: CreatureAbilities }) {
     <div className="grid grid-cols-6 gap-1 text-center text-xs">
       {entries.map(({ key, value }) => (
           <div key={key} className="flex flex-col">
-            <span className="font-bold text-text-muted">{getAbilityAbbrev(key)}</span>
+            <span className="font-bold text-text-muted dark:text-text-secondary">{getAbilityAbbrev(key)}</span>
             <span className={cn(
               'font-medium',
-              value > 0 ? 'text-success-600' : value < 0 ? 'text-danger-600' : 'text-text-muted'
+              value > 0 ? 'text-success-600 dark:text-success-400' : value < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted dark:text-text-secondary'
             )}>
               {formatModifier(value)}
             </span>
@@ -194,12 +194,12 @@ function TagList({ label, items, variant = 'default' }: {
     default: 'bg-surface-alt text-text-secondary',
     success: 'bg-success-light text-success-700',
     danger: 'bg-danger-light text-danger-700',
-    warning: 'bg-warning-light text-warning-700',
+    warning: 'bg-warning-light text-warning-700 dark:text-warning-300',
   };
   
   return (
     <div className="text-xs">
-      <span className="font-semibold text-text-muted">{label}: </span>
+      <span className="font-semibold text-text-muted dark:text-text-secondary">{label}: </span>
       {items.map((item, i) => (
         <span key={i}>
           <span className={cn('px-1.5 py-0.5 rounded', colors[variant])}>{item}</span>
@@ -244,12 +244,12 @@ export function CreatureStatBlock({
             <h3 className="font-bold text-white text-lg">{creature.name}</h3>
             <div className="flex gap-2">
               {creature.size && (
-                <span className="px-2 py-0.5 bg-white/20 text-white text-xs rounded">
+                <span className="px-2 py-0.5 bg-white/20 dark:bg-white/30 text-white text-xs rounded">
                   {creature.size}
                 </span>
               )}
               {creature.type && (
-                <span className="px-2 py-0.5 bg-white/20 text-white text-xs rounded">
+                <span className="px-2 py-0.5 bg-white/20 dark:bg-white/30 text-white text-xs rounded">
                   {creature.type}
                 </span>
               )}
@@ -282,7 +282,7 @@ export function CreatureStatBlock({
         <div className="p-4 space-y-4">
           {/* Description */}
           {creature.description && (
-            <p className="text-sm text-text-muted italic border-l-2 border-border-light pl-3">
+            <p className="text-sm text-text-muted dark:text-text-secondary italic border-l-2 border-border-light pl-3">
               {creature.description}
             </p>
           )}
@@ -322,7 +322,7 @@ export function CreatureStatBlock({
           
           {/* Senses, Movement, Languages */}
           {(creature.senses?.length || creature.movementTypes?.length || creature.languages?.length) && (
-            <div className="space-y-1 text-xs text-text-muted">
+            <div className="space-y-1 text-xs text-text-muted dark:text-text-secondary">
               {creature.senses && creature.senses.length > 0 && (
                 <div><span className="font-semibold">Senses:</span> {creature.senses.join(', ')}</div>
               )}
@@ -338,7 +338,7 @@ export function CreatureStatBlock({
           {/* Skills */}
           {creature.skills && (
             <div className="text-xs">
-              <span className="font-semibold text-text-muted">Skills: </span>
+              <span className="font-semibold text-text-muted dark:text-text-secondary">Skills: </span>
               <span className="text-text-secondary">
                 {Array.isArray(creature.skills)
                   ? creature.skills
@@ -384,7 +384,7 @@ export function CreatureStatBlock({
               {creature.armaments && creature.armaments.length > 0 && (
                 <div className="text-xs">
                   <span className="font-semibold text-text-secondary">Equipment: </span>
-                  <span className="text-text-muted">
+                  <span className="text-text-muted dark:text-text-secondary">
                     {creature.armaments.map(a => a.name).join(', ')}
                   </span>
                 </div>

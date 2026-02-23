@@ -355,6 +355,14 @@
     /* TP/currency cost stat boxes in creator summary panel */
     --color-tp-light: #292419;
     --color-tp: #f59e0b;
+    /* Dark mode: ensure energy/TP text meet contrast on dark backgrounds */
+    --color-energy: #93c5fd;
+    --color-energy-text: #93c5fd;
+    --color-tp-text: #fcd34d;
+    /* Dark mode: warning buttons (e.g. Recover) so white text meets contrast */
+    --color-warning-500: #d97706;
+    --color-warning-600: #b45309;
+    --color-warning-700: #92400e;
   }
   
   body {

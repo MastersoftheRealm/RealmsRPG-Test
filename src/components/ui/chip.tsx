@@ -42,9 +42,9 @@ const chipVariants = cva(
         restriction: 'bg-category-restriction text-category-restriction-text border-category-restriction-border',
         
         // Status colors (KEEP - semantic feedback)
-        success: 'bg-success-light text-success-700 border-success-300',
-        danger: 'bg-danger-light text-danger-700 border-danger-300',
-        warning: 'bg-warning-light text-warning-700 border-warning-300',
+        success: 'bg-success-light text-success-700 dark:text-success-300 border-success-300',
+        danger: 'bg-danger-light text-danger-700 dark:text-danger-300 border-danger-300',
+        warning: 'bg-warning-light text-warning-700 dark:text-warning-300 border-warning-300',
         
         // DEPRECATED VARIANTS (kept for backwards compatibility)
         /** @deprecated Use 'default' instead */
@@ -54,7 +54,7 @@ const chipVariants = cva(
         /** @deprecated Use 'primary' instead */
         accent: 'bg-accent-chip text-primary-700 border-accent-200',
         /** @deprecated Use 'default' instead */
-        info: 'bg-info-light text-info-700 border-info-300',
+        info: 'bg-info-light text-info-700 dark:text-info-300 border-info-300',
         
         // Equipment types - DEPRECATED (context provides meaning)
         /** @deprecated Use 'default' - context provides meaning */

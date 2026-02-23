@@ -113,6 +113,7 @@ const RollButton = React.forwardRef<HTMLButtonElement, RollButtonProps>(
         ref={ref}
         className={cn(rollButtonVariants({ variant, size, className }))}
         title={title ?? `Roll ${display}`}
+        aria-label={title ?? `Roll ${display}`}
         {...props}
       >
         {display}

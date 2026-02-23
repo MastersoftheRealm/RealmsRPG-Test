@@ -104,6 +104,7 @@ export {
   useUserCreatures,
   useUserSpecies,
   useMergedSpecies,
+  userSpeciesToSpecies,
   useDeletePower,
   useDeleteTechnique,
   useDeleteItem,

@@ -100,6 +100,7 @@ export function MixedSpeciesModal({
               className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
               value={speciesAId}
               onChange={(e) => setSpeciesAId(e.target.value)}
+              aria-label="First species"
             >
               <option value="">— Select —</option>
               {optionsForA.map((s) => (
@@ -113,6 +114,7 @@ export function MixedSpeciesModal({
               className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
               value={speciesBId}
               onChange={(e) => setSpeciesBId(e.target.value)}
+              aria-label="Second species"
             >
               <option value="">— Select —</option>
               {optionsForB.map((s) => (

@@ -212,9 +212,9 @@ export function PartChipList({
   return (
     <div className={cn('space-y-2', className)}>
       {label && (
-        <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider">
           {label}
-        </h4>
+        </h3>
       )}
 
       {/* Chips */}

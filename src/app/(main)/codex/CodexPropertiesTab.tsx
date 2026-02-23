@@ -18,6 +18,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
+import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 
@@ -74,7 +75,16 @@ function PropertyCard({ property }: { property: ItemProperty }) {
   );
 }
 
-export function CodexPropertiesTab() {
+export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex — Properties"
+        description="Custom properties are not available yet. For now, use Public Codex."
+      />
+    );
+  }
   const { data: properties, isLoading, error } = useItemProperties();
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PropertyFilters>({
@@ -142,7 +152,7 @@ export function CodexPropertiesTab() {
         {isLoading ? (
           <LoadingState />
         ) : filteredProperties.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No properties found.</div>
+          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No properties found.</div>
         ) : (
           filteredProperties.map((prop: ItemProperty) => (
             <PropertyCard key={prop.id} property={prop} />

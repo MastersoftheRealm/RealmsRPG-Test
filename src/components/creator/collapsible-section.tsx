@@ -60,10 +60,10 @@ export function CollapsibleSection({
       )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {icon && <span className="text-2xl text-tertiary">{icon}</span>}
+            {icon && <span className="text-2xl text-text-muted dark:text-text-secondary">{icon}</span>}
             <div>
               <h3 className="font-bold text-secondary">{title}</h3>
-              {subtitle && <p className="text-sm text-tertiary">{subtitle}</p>}
+              {subtitle && <p className="text-sm text-text-muted dark:text-text-secondary">{subtitle}</p>}
             </div>
           </div>
           <Button
@@ -104,7 +104,7 @@ export function CollapsibleSection({
                 </span>
               )}
             </div>
-            {subtitle && <p className="text-sm text-tertiary">{subtitle}</p>}
+            {subtitle && <p className="text-sm text-text-muted dark:text-text-secondary">{subtitle}</p>}
           </div>
         </div>
         

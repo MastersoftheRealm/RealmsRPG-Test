@@ -236,7 +236,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                   onClick={() => setMode('personal')}
                   className={cn(
                     'px-2.5 py-1 text-xs font-medium transition-colors',
-                    mode === 'personal' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15'
+                    mode === 'personal' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15 dark:bg-white/20 dark:text-white dark:hover:bg-white/30'
                   )}
                   title="Your personal rolls"
                 >
@@ -246,7 +246,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                   onClick={() => setMode('campaign')}
                   className={cn(
                     'px-2.5 py-1 text-xs font-medium transition-colors',
-                    mode === 'campaign' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15'
+                    mode === 'campaign' ? 'bg-white/25 text-white' : 'bg-white/10 text-white/80 hover:bg-white/15 dark:bg-white/20 dark:text-white dark:hover:bg-white/30'
                   )}
                   title="Campaign rolls (all players)"
                 >
@@ -269,7 +269,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
         {/* Roll History */}
         <div ref={listRef} className="flex-1 overflow-y-auto p-2 bg-surface-alt">
           {displayRolls.length === 0 ? (
-            <p className="text-center text-text-muted italic py-10">
+            <p className="text-center text-text-muted dark:text-text-secondary italic py-10">
               {isCampaignMode ? 'No campaign rolls yet. Rolls from any character sheet will appear here.' : 'No rolls yet. Build your dice pool below!'}
             </p>
           ) : (
@@ -283,8 +283,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
           )}
         </div>
 
-        {/* Dice Builder - hide when viewing campaign log */}
-        {!isCampaignMode && (
+        {/* Dice Builder - visible in both Personal and Campaign tabs so users can send custom rolls to campaign */}
         <div className="p-3 bg-primary-700 border-t-2 border-border-light">
           {/* Dice Grid - clickable images with labels and counts */}
           <div className="grid grid-cols-6 gap-1.5 mb-3">
@@ -295,14 +294,14 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
                 onContextMenu={(e) => { e.preventDefault(); removeDie(die); }}
                 className={cn(
                   'relative flex flex-col items-center justify-center py-1.5 px-1 rounded-lg',
-                  'bg-white/10 hover:bg-white/25 transition-all cursor-pointer',
+                  'bg-white/10 hover:bg-white/25 transition-all cursor-pointer dark:bg-white/20 dark:hover:bg-white/35',
                   dicePool[die] > 0 && 'ring-2 ring-yellow-400 bg-white/20'
                 )}
                 title={`Left-click: add ${die} · Right-click: remove`}
               >
                 <Image
                   src={DIE_IMAGES[die]}
-                  alt={die}
+                  alt=""
                   width={32}
                   height={32}
                   className="w-8 h-8 object-contain drop-shadow-md"
@@ -323,7 +322,8 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
               <span className="text-white/70 text-xs font-semibold">MOD</span>
               <button
                 onClick={() => setModifier(m => m - 1)}
-                className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 dark:bg-white/20 dark:hover:bg-white/35 text-white flex items-center justify-center"
+                aria-label="Decrease modifier"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
@@ -332,7 +332,8 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
               </span>
               <button
                 onClick={() => setModifier(m => m + 1)}
-                className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                className="w-7 h-7 rounded bg-white/10 hover:bg-white/20 dark:bg-white/20 dark:hover:bg-white/35 text-white flex items-center justify-center"
+                aria-label="Increase modifier"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -360,7 +361,6 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
             {totalDice > 0 ? `Roll ${totalDice} ${totalDice === 1 ? 'die' : 'dice'}` : 'Select dice to roll'}
           </button>
         </div>
-        )}
       </div>
 
       {/* Toggle Button - custom d20 image matching vanilla site */}
@@ -441,10 +441,10 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt dark:bg-neutral-800 text-text-secondary text-xs font-medium">
               <Image
                 src={DIE_IMAGES[group.type]}
-                alt={group.type}
+                alt=""
                 width={16}
                 height={16}
-                className="w-4 h-4 object-contain opacity-75"
+                className="w-4 h-4 object-contain opacity-75 dark:opacity-90"
               />
               <span>{group.results.length}{group.type}</span>
             </span>
@@ -476,7 +476,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
         {/* Bonus when modifier present - avoid duplicate +/- (e.g. d20 + +5 → d20 + 5); red for negative */}
         {showModifier && (
           <>
-            <span className="text-text-muted text-xs">{roll.modifier >= 0 ? '+' : '−'}</span>
+            <span className="text-text-muted dark:text-text-secondary text-xs">{roll.modifier >= 0 ? '+' : '−'}</span>
             <span className={cn(
               'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border',
               roll.modifier >= 0
@@ -491,7 +491,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
         {/* = Total (blue) */}
         {(showSubtotal || roll.dice.length === 1) && (
           <>
-            <span className="text-text-muted text-xs">=</span>
+            <span className="text-text-muted dark:text-text-secondary text-xs">=</span>
             <span className={cn(
               'inline-flex items-center px-2 py-0.5 rounded text-sm font-bold',
               roll.isCrit && 'bg-success-100 border border-success-400 text-success-800',

@@ -20,6 +20,7 @@ import {
   GridListRow,
   type ChipData,
 } from '@/components/shared';
+import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { useParts } from '@/hooks';
 
@@ -120,7 +121,16 @@ interface PartFilters {
   mechanicMode: 'all' | 'only' | 'hide';
 }
 
-export function CodexPartsTab() {
+export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex — Parts"
+        description="Custom parts are not available yet. For now, use Public Codex."
+      />
+    );
+  }
   const { data: parts, isLoading, error } = useParts();
   const { sortState, handleSort, sortItems } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
@@ -217,7 +227,7 @@ export function CodexPartsTab() {
         {isLoading ? (
           <LoadingState />
         ) : filteredParts.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No parts found.</div>
+          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No parts found.</div>
         ) : (
           filteredParts.map(part => (
             <PartCard key={part.id} part={part} />

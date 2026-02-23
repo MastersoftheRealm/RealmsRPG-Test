@@ -98,10 +98,10 @@ export function HealthEnergyAllocator({
           </span>
         </div>
         
-        <div className="flex items-center gap-4 px-4 py-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 px-4 py-3">
           {/* Health Points - Green colors, show total prominently */}
-          <div className="flex-1 flex items-center gap-2">
-            <span className="text-lg font-bold text-success-600 dark:text-success-400 min-w-[60px]">{maxHp} HP</span>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <span className="text-lg font-bold text-success-600 dark:text-success-400 min-w-[60px] shrink-0">{maxHp} HP</span>
             <ValueStepper
               value={hpBonus}
               onChange={onHpChange}
@@ -115,15 +115,15 @@ export function HealthEnergyAllocator({
               decrementTitle="Remove HP points"
               incrementTitle="Add HP points"
             />
-            <span className="text-xs text-text-muted whitespace-nowrap">pts</span>
+            <span className="text-xs text-text-muted dark:text-text-secondary whitespace-nowrap shrink-0">pts</span>
           </div>
           
-          {/* Divider */}
-          <div className="w-px h-10 bg-border-light" />
+          {/* Divider - hidden on narrow mobile */}
+          <div className="hidden sm:block w-px h-10 bg-border-light shrink-0" />
           
           {/* Energy Points - Blue colors, show total prominently */}
-          <div className="flex-1 flex items-center gap-2">
-            <span className="text-lg font-bold text-info-600 dark:text-info-400 min-w-[60px]">{maxEnergy} EN</span>
+          <div className="flex-1 flex items-center gap-2 min-w-0">
+            <span className="text-lg font-bold text-info-600 dark:text-info-400 min-w-[60px] shrink-0">{maxEnergy} EN</span>
             <ValueStepper
               value={energyBonus}
               onChange={onEnergyChange}
@@ -137,7 +137,7 @@ export function HealthEnergyAllocator({
               decrementTitle="Remove Energy points"
               incrementTitle="Add Energy points"
             />
-            <span className="text-xs text-text-muted whitespace-nowrap">pts</span>
+            <span className="text-xs text-text-muted dark:text-text-secondary whitespace-nowrap shrink-0">pts</span>
           </div>
         </div>
       </div>
@@ -187,7 +187,7 @@ export function HealthEnergyAllocator({
             decrementTitle="Remove HP points"
             incrementTitle="Add HP points"
           />
-          <span className="text-sm text-text-muted whitespace-nowrap">pts</span>
+          <span className="text-sm text-text-muted dark:text-text-secondary whitespace-nowrap">pts</span>
         </div>
 
         {/* Energy Allocator - Show total prominently, points secondary */}
@@ -205,7 +205,7 @@ export function HealthEnergyAllocator({
             decrementTitle="Remove Energy points"
             incrementTitle="Add Energy points"
           />
-          <span className="text-sm text-text-muted whitespace-nowrap">pts</span>
+          <span className="text-sm text-text-muted dark:text-text-secondary whitespace-nowrap">pts</span>
         </div>
       </div>
     </div>

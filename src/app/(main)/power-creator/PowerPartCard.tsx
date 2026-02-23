@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useId } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
 import { IconButton, Checkbox } from '@/components/ui';
@@ -26,6 +26,8 @@ export function PowerPartCard({
   onUpdate,
   allParts,
 }: PowerPartCardProps) {
+  const categorySelectId = useId();
+  const partSelectId = useId();
   const [expanded, setExpanded] = useState(true);
   const { part } = selectedPart;
 
@@ -67,7 +69,7 @@ export function PowerPartCard({
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
         >
-          <span className="text-text-muted">
+          <span className="text-text-muted dark:text-text-secondary">
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </span>
           <span className="font-medium text-text-primary truncate">{part.name}</span>
@@ -85,8 +87,9 @@ export function PowerPartCard({
         <div className="px-4 py-4 space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
+              <label htmlFor={categorySelectId} className="block text-sm font-medium text-text-secondary mb-1">Category</label>
               <select
+                id={categorySelectId}
                 value={selectedPart.selectedCategory}
                 onChange={(e) => {
                   const newCategory = e.target.value;
@@ -117,8 +120,9 @@ export function PowerPartCard({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Part</label>
+              <label htmlFor={partSelectId} className="block text-sm font-medium text-text-secondary mb-1">Part</label>
               <select
+                id={partSelectId}
                 value={filteredParts.findIndex((p) => p.id === part.id)}
                 onChange={(e) => {
                   const idx = parseInt(e.target.value);

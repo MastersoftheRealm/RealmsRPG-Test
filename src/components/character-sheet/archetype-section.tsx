@@ -7,7 +7,7 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatDamageDisplay } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
 import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, DecrementButton, IncrementButton } from '@/components/shared';
@@ -79,7 +79,7 @@ function AttackBonusesTable({
       <SectionHeader title="Attack Bonuses" className="mb-2" />
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-xs text-text-muted">
+          <tr className="text-xs text-text-muted dark:text-text-secondary">
             <th className="text-left py-1"></th>
             <th className="text-center py-1">Prof.</th>
             <th className="text-center py-1">Unprof.</th>
@@ -99,7 +99,7 @@ function AttackBonusesTable({
                     title={`Roll ${key} (proficient)`}
                   />
                 ) : (
-                  <span className="text-sm font-medium text-text-muted">{martialBonuses[key].prof >= 0 ? '+' : ''}{martialBonuses[key].prof}</span>
+                  <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{martialBonuses[key].prof >= 0 ? '+' : ''}{martialBonuses[key].prof}</span>
                 )}
               </td>
               <td className="text-center py-1">
@@ -112,7 +112,7 @@ function AttackBonusesTable({
                     title={`Roll ${key} (unproficient)`}
                   />
                 ) : (
-                  <span className="text-sm font-medium text-text-muted">{martialBonuses[key].unprof >= 0 ? '+' : ''}{martialBonuses[key].unprof}</span>
+                  <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{martialBonuses[key].unprof >= 0 ? '+' : ''}{martialBonuses[key].unprof}</span>
                 )}
               </td>
             </tr>
@@ -133,7 +133,7 @@ function AttackBonusesTable({
                 title={`Roll power attack - ${powAbilDisplayName}`}
               />
             ) : (
-              <span className="text-sm font-medium text-text-muted">{powerBonus.prof >= 0 ? '+' : ''}{powerBonus.prof}</span>
+              <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{powerBonus.prof >= 0 ? '+' : ''}{powerBonus.prof}</span>
             )}
           </div>
         </div>
@@ -204,7 +204,7 @@ function WeaponsSection({
       <SectionHeader title="Weapons" className="mb-2" />
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-xs text-text-muted">
+          <tr className="text-xs text-text-muted dark:text-text-secondary">
             <th className="text-left py-1">Name</th>
             <th className="text-center py-1">Attack</th>
             <th className="text-center py-1">Damage</th>
@@ -261,7 +261,7 @@ function WeaponsSection({
                 <td className="py-2 font-medium text-text-secondary">
                   {weapon.name}
                   {displayProps.length > 0 && (
-                    <div className="text-xs text-text-muted font-normal">
+                    <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
                       {displayProps.map(p => `• ${p}`).join(' ')}
                     </div>
                   )}
@@ -275,7 +275,7 @@ function WeaponsSection({
                       title={`Roll attack with ${weapon.name}`}
                     />
                   ) : (
-                    <span className="text-sm font-medium text-text-muted">{attackBonus >= 0 ? '+' : ''}{attackBonus}</span>
+                    <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{attackBonus >= 0 ? '+' : ''}{attackBonus}</span>
                   )}
                 </td>
                 <td className="text-center py-2">
@@ -290,14 +290,14 @@ function WeaponsSection({
                         title={`Roll ${damageStr} damage`}
                       />
                     ) : (
-                      <span className="text-sm font-medium text-text-muted">{damageDice}</span>
+                      <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{damageDice}</span>
                     )}
                     {damageType && (
-                      <span className="text-[10px] text-text-muted">{damageType}</span>
+                      <span className="text-[10px] text-text-muted dark:text-text-secondary">{damageType}</span>
                     )}
                   </div>
                 </td>
-                <td className="text-center py-2 text-text-muted">
+                <td className="text-center py-2 text-text-muted dark:text-text-secondary">
                   {weapon.range || 'Melee'}
                 </td>
               </tr>
@@ -321,7 +321,7 @@ function WeaponsSection({
                   title={`Roll unarmed attack (${hasProwess ? 'proficient' : 'unproficient'})`}
                 />
               ) : (
-                <span className="text-sm font-medium text-text-muted">{unarmedAttackBonus >= 0 ? '+' : ''}{unarmedAttackBonus}</span>
+                <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedAttackBonus >= 0 ? '+' : ''}{unarmedAttackBonus}</span>
               )}
             </td>
             <td className="text-center py-2">
@@ -342,12 +342,12 @@ function WeaponsSection({
                     title="Roll unarmed damage"
                   />
                 ) : (
-                  <span className="text-sm font-medium text-text-muted">{unarmedDamageDisplay}</span>
+                  <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedDamageDisplay}</span>
                 )}
-                <span className="text-[10px] text-text-muted">Bludgeoning</span>
+                <span className="text-[10px] text-text-muted dark:text-text-secondary">Bludgeoning</span>
               </div>
             </td>
-            <td className="text-center py-2 text-text-muted">Melee</td>
+            <td className="text-center py-2 text-text-muted dark:text-text-secondary">Melee</td>
           </tr>
         </tbody>
       </table>
@@ -379,7 +379,7 @@ function ShieldsSection({
     return (
       <div className="bg-surface-alt rounded-lg p-3 mb-4">
         <SectionHeader title="Shields" className="mb-2" />
-        <p className="text-sm text-text-muted italic text-center py-2">No shield equipped</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-2">No shield equipped</p>
       </div>
     );
   }
@@ -389,7 +389,7 @@ function ShieldsSection({
       <SectionHeader title="Shields" className="mb-2" />
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-xs text-text-muted">
+          <tr className="text-xs text-text-muted dark:text-text-secondary">
             <th className="text-left py-1">Name</th>
             <th className="text-center py-1">Block</th>
             <th className="text-center py-1">Damage</th>
@@ -400,7 +400,8 @@ function ShieldsSection({
           {equippedShields.map((shield, idx) => {
             const enriched = shield as EnrichedItem & { shieldAmount?: string; shieldDamage?: string | null };
             const blockStr = enriched.shieldAmount ?? '-';
-            const damageStr = enriched.shieldDamage ?? (shield.damage ? String(shield.damage) : '-');
+            const rawDamage = enriched.shieldDamage ?? (shield.damage ? formatDamageDisplay(shield.damage) : '');
+            const damageStr = rawDamage && String(rawDamage).trim() !== '' ? String(rawDamage).trim() : '-';
             const hasDamage = damageStr !== '-';
             const attackBonus = strBonus; // Shields used as weapon typically use Strength
             // All shield damage is bludgeoning for display/roll
@@ -416,7 +417,7 @@ function ShieldsSection({
                 <td className="py-2 font-medium text-text-secondary">
                   {shield.name}
                   {displayProps.length > 0 && (
-                    <div className="text-xs text-text-muted font-normal">
+                    <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
                       {displayProps.map(p => `• ${p}`).join(' ')}
                     </div>
                   )}
@@ -436,7 +437,7 @@ function ShieldsSection({
                       <span className="font-mono text-primary-600 dark:text-primary-400">{blockStr}</span>
                     )
                   ) : (
-                    <span className="text-text-muted">-</span>
+                    <span className="text-text-muted dark:text-text-secondary">-</span>
                   )}
                 </td>
                 <td className="text-center py-2">
@@ -451,10 +452,10 @@ function ShieldsSection({
                         title={`Roll ${damageStr} damage (Bludgeoning)`}
                       />
                     ) : (
-                      <span className="text-sm font-medium text-text-muted">{damageStr}</span>
+                      <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{damageStr}</span>
                     )
                   ) : (
-                    <span className="text-text-muted">-</span>
+                    <span className="text-text-muted dark:text-text-secondary">-</span>
                   )}
                 </td>
                 <td className="text-center py-2">
@@ -466,7 +467,7 @@ function ShieldsSection({
                       title={`Roll attack with ${shield.name}`}
                     />
                   ) : (
-                    <span className="text-text-muted">-</span>
+                    <span className="text-text-muted dark:text-text-secondary">-</span>
                   )}
                 </td>
               </tr>
@@ -500,7 +501,7 @@ function ArmorSection({
       <SectionHeader title="Armor" className="mb-2" />
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-xs text-text-muted">
+          <tr className="text-xs text-text-muted dark:text-text-secondary">
             <th className="text-left py-1">Name</th>
             <th className="text-center py-1">DMG Red.</th>
             <th className="text-center py-1">Crit Rng</th>
@@ -550,7 +551,7 @@ function ArmorSection({
                   <td className="py-1 font-medium text-text-secondary">
                     {armorItem.name}
                     {displayProps.length > 0 && (
-                      <div className="text-xs text-text-muted font-normal">
+                      <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
                         {displayProps.map(p => `• ${p}`).join(' ')}
                       </div>
                     )}
@@ -563,7 +564,7 @@ function ArmorSection({
             })
           ) : (
             <tr>
-              <td colSpan={4} className="py-2 text-center text-text-muted italic">No armor equipped</td>
+              <td colSpan={4} className="py-2 text-center text-text-muted dark:text-text-secondary italic">No armor equipped</td>
             </tr>
           )}
         </tbody>
@@ -767,7 +768,7 @@ export function ArchetypeSection({
               const currentChoice = archetypeChoices[milestoneLevel];
               return (
                 <div key={milestoneLevel} className="flex items-center gap-1">
-                  <span className="text-xs text-text-muted min-w-[32px]">Lv.{milestoneLevel}:</span>
+                  <span className="text-xs text-text-muted dark:text-text-secondary min-w-[32px]">Lv.{milestoneLevel}:</span>
                   {showEditControls && onMilestoneChoiceChange ? (
                     <div className="flex gap-1">
                       <button
@@ -799,10 +800,10 @@ export function ArchetypeSection({
                     <span className={cn(
                       'px-2 py-0.5 text-xs rounded',
                       currentChoice === 'innate'
-                        ? 'bg-violet-100 text-violet-700'
+                        ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200'
                         : currentChoice === 'feat'
                           ? 'bg-martial-light text-martial-dark'
-                          : 'bg-surface text-text-muted italic'
+                          : 'bg-surface text-text-muted dark:text-text-secondary italic'
                     )}>
                       {currentChoice === 'innate' ? '✨ Innate' : 
                        currentChoice === 'feat' ? '🎯 Feat' : 'Not chosen'}
@@ -812,7 +813,7 @@ export function ArchetypeSection({
               );
             })}
           </div>
-          <p className="text-[10px] text-text-muted mt-2">
+          <p className="text-[10px] text-text-muted dark:text-text-secondary mt-2">
             Mixed archetypes choose at levels 4, 7, 10, etc.: +1 Innate (Threshold & Pools) OR +1 Bonus Feat
           </p>
         </div>
@@ -832,7 +833,7 @@ export function ArchetypeSection({
           {powerProf > 0 && (
             <div className="flex-1 bg-violet-50 dark:bg-violet-900/30 rounded-lg px-3 py-2 flex items-center justify-between">
               <span className="text-sm font-medium text-violet-600 dark:text-violet-300">Power Potency</span>
-              <span className="text-lg font-bold text-violet-700" title="10 + Power Prof + Power Ability">
+              <span className="text-lg font-bold text-violet-700 dark:text-violet-200" title="10 + Power Prof + Power Ability">
                 {powerPotency}
               </span>
             </div>

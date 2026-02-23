@@ -64,9 +64,9 @@ export function SectionHeader({
       )}
     >
       {/* Left: Title only - clean, minimal */}
-      <h4 className="font-semibold text-text-muted uppercase tracking-wide">
+      <h2 className="font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wide">
         {title}
-      </h4>
+      </h2>
       
       {/* Right: Custom content and/or add button */}
       <div className="flex items-center gap-2">

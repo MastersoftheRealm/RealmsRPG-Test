@@ -77,6 +77,7 @@ Notes:
 - **Dark mode — cost/TP/currency and advanced mechanics:** Cost stat boxes (Energy, TP, Currency) in CreatorSummaryPanel and advanced mechanics option boxes in Power Creator must use dark-mode-appropriate backgrounds (semantic tokens or .dark overrides). Implemented 2026-02-21: .dark --color-tp-light and --color-tp; PowerAdvancedMechanics option boxes use bg-surface-alt.
 - **Armaments: strength requirements and descriptions:** When loading armaments (weapons, armor) from library or character, description and strength/ability requirements must display when saved. Implemented 2026-02-21: item creator edit load restores abilityRequirement.id from saved item; enrichItems derives abilityRequirement from properties when missing on library item; description preserved with ?? ''.
 - Full accessibility audit: Elements must meet WCAG 2.1 AA contrast (4.5:1 small text, 3:1 large text). Use axe DevTools to identify and fix violations. ✅ TASK-255 (not-started; handled by other agent)
+- **Site-wide accessibility (Vercel audit 2026-02-23):** (1) Minimum color contrast in light mode: home feature text (text-neutral-600 → text-neutral-700 or semantic token), auth password toggle icon, primary buttons, status text (e.g. green-600). (2) Buttons must have discernable text: icon-only buttons need aria-label (e.g. password show/hide, dice roller history, campaign edit name/description). (3) Select elements must have an accessible name: use <label htmlFor> + id on select, or aria-label. (4) Heading levels must only increase by one: page h1 → next section h2 (not h3); fix campaigns list, campaign detail, encounter combat/skill views. (5) Image alt text must not duplicate adjacent visible text: dice images with "d4"/"d6" etc. next to them should use alt="". (6) Set up eslint-plugin-jsx-a11y and Cursor rule so future code complies. TASK-267.
 
 ### 7) Bugs / Behavior to Prioritize
 - Login redirect: return user to the page that initiated login.
@@ -1023,3 +1024,59 @@ Notes
 - Feedback: (1) In the character sheet the side swiping is too sensitive — it should only swipe one section at a time. (2) The dropdown menus on the nav bar sometimes don't work properly on touchscreen: they don't show up or go away too quick.
 - Expected: (1) One section per swipe on mobile character sheet (scroll-snap-stop so each panel is a mandatory stop). (2) Nav dropdowns open on tap, stay open until user taps outside or selects a link; desktop hover still works.
 - Implemented 2026-02-22: (1) Added [scroll-snap-stop:always] to all four character sheet panels. (2) NavDropdown and Account menu use state + click-to-toggle, outside-click close, and hover (onMouseEnter/Leave) for desktop; MobileDropdown gets min-h-[44px] and onLinkClick to close mobile menu when a sub-link is tapped.
+
+**Raw Feedback Log — 2026-02-22 (Mobile batch: footer, home, dark nav, steppers, slider, list labels)**
+- Date: 2026-02-22
+- Context: Mobile UX — footer, home page, nav, steppers, archetype slider, list details
+- Priority: High
+- Feedback: (1) Footer doesn't scale/adapt well on mobile; use best practice for mobile footer. (2) Home page isn't set up for mobile — lots of stuff off screen horizontally; may need new layout for mobile. (3) In dark mode the mobile navbar dropdown has pages fonts too dark other than Creators/Rules/RM Tools. (4) Health/energy/other steppers increase too quickly on mobile — hard to tap to change by one (usually goes up by 2+). (5) Health/energy allocation stepper for energy is out of the box to the right on mobile. (6) Archetype edit prof slider: when you try to slide on mobile, it swipes between sections instead of moving the slider. (7) Many list item details show variable names (uses_per_rec, rec_period, "attack") instead of UI-facing labels (Uses, Recovery, Attack); not capitalized.
+- Expected: (1) Footer stacks on mobile, readable text, touch targets. (2) Home: responsive layout, no horizontal overflow. (3) Mobile nav links visible in dark mode (primary-300 or similar). (4) Single tap = one step; hold = repeat after delay. (5) Allocation: stack HP/EN on mobile. (6) Slider captures horizontal touch so section doesn’t swipe. (7) Column labels human-readable and capitalized.
+- Implemented 2026-02-22: Footer: flex-col on mobile, py-4, text-sm sm:text-base, dark bg, min-h-[44px] links. Home: flex-col lg:flex-row features/reviews/creator, responsive padding and min-w-0, hero height responsive. Mobile nav: text-primary-700 dark:text-primary-300 for all links and dropdown items. ValueStepper: useHoldRepeat now has initialDelay (400ms) so tap fires once from stop(); hold repeats after delay. HealthEnergyAllocator inline: flex-col sm:flex-row, divider hidden on small. PoweredMartialSlider: touch-action pan-y on wrapper, touch-action none + stopPropagation on range input. GridListRow: ColumnValue.label optional; columnDisplayLabel() humanizes key when label missing; add-feat-modal passes label Uses/Recovery/Category. npm run build passes.
+
+**Raw Feedback Log — 2026-02-23 (Shields without damage + roll log campaign custom dice)**
+- Date: 2026-02-23
+- Context: Character sheet — Archetype section (Shields), Roll log (Personal/Campaign tabs)
+- Priority: High
+- Feedback: (1) Shields in the shield part of the archetype section without damage need no buttons for attack/damage rolls if they have no shield damage added; remove these buttons and show - instead. (2) The bottom section of the roll log (add/roll custom dice) should be visible in the campaign tab too, not just personal roll log, since you can send custom rolls to the campaign log.
+- Expected: (1) Archetype Shields: when shield has no shield damage, show "-" for Damage and Attack (no roll buttons). (2) Roll log: custom dice builder visible in Campaign tab so users can send custom rolls to campaign.
+- Implemented 2026-02-23: (1) archetype-section: shield damage via formatDamageDisplay fallback; hasDamage only when damageStr non-empty; Attack/Damage show "-" when no damage. (2) roll-log: dice builder no longer hidden in Campaign tab; visible in both tabs so custom rolls can go to campaign.
+
+**Raw Feedback Log — 2026-02-23 (Custom species not showing in My Codex Species tab)**
+- Date: 2026-02-23
+- Context: Codex → My Codex → Species tab
+- Priority: High
+- Feedback: I made a custom species, and saved it, it isn't showing up in the species tab of the codex if I select "my codex".
+- Expected: Custom (user-created) species should appear in the Species tab when viewing "My Codex".
+- Implemented 2026-02-23: Codex page now renders tab content in both Public and My Codex modes; Species tab in My Codex uses useUserSpecies() and displays user-created species with the same card UI. Other tabs in My Codex show empty state until those content types are supported. userSpeciesToSpecies exported from use-user-library.
+
+**Raw Feedback Log — 2026-02-23 (Vercel accessibility audit — light mode)**
+- Date: 2026-02-23
+- Context: Vercel accessibility audit on home, login, campaigns, encounters (combat/skill), encounter combat; light mode
+- Priority: High
+- Feedback: (1) Minimum contrast threshold: home page feature card descriptions (text-neutral-600); login page password visibility button (text-gray-300); Sign In button; green status text (e.g. "Saved to cloud"). (2) Buttons need discernable text: login (password toggle), encounter combat/skill (icon-only buttons). (3) Select elements must have accessible name: skill encounter skill dropdowns, campaign select on encounter pages. (4) Heading levels should only increase by one: campaigns main page (h3 for campaign name when page has h1); campaigns [id] (h3 for Invite Code, etc.); encounters (h3 for encounter name, Successes). (5) Alternative text of images should not be repeated as text: dice images (d4, d6, d8, d10, d12, d20) have alt like "d4" and same text shown beside image. (6) Set up systems so AI agents and future code always comply with accessibility (eslint, Cursor rule).
+- Expected: Fix all reported issues; add eslint-plugin-jsx-a11y; add .cursor/rules or doc so new UI meets WCAG 2.1 AA (contrast, focus, labels, headings, alt).
+- Disposition: TASK-267 created; implementing fixes and a11y systems.
+
+**Raw Feedback Log — 2026-02-23 (Character sheet & Codex accessibility — light mode, more examples)**
+- Date: 2026-02-23
+- Context: Character sheet, Library, Codex — Vercel accessibility audit (light mode); examples only, patterns to fix site-wide
+- Priority: High
+- Feedback: (1) Heading levels only increase by one: e.g. h4 "Attack Bonuses" (skip from h1); h3 "No powers yet"; h4 "Parts & Proficiencies", "Tags". (2) Minimum color contrast: text-xs opacity-75; font-medium text-success-600 (+2 bonus text). (3) Form elements must have labels: numeric inputs (HP/EN in sheet header); select elements in Codex need accessible name. (4) Buttons need discernable text: icon-only buttons (e.g. w-7 h-7 rounded bg-white/10). (5) Codex: select elements must have accessible name; heading levels should only increase by one (e.g. h4 Tags). Owner will gather dark-mode samples next; same components/styles used site-wide so fixing shared components fixes many issues.
+- Expected: Fix heading hierarchy (SectionHeader, EmptyState, GridListRow, part-chip); improve contrast (opacity-75, success-600→700 where needed); ensure all selects have id+htmlFor or aria-label; icon buttons have aria-label. Apply in shared components where possible.
+- Disposition: Implementing in shared components and character sheet/codex.
+
+**Raw Feedback Log — 2026-02-23 (Dark mode accessibility audit — about, campaigns, power creator, character sheet)**
+- Date: 2026-02-23
+- Context: Vercel accessibility audit — dark mode; about page, campaigns page, power creator, character sheet
+- Priority: High
+- Feedback: (1) About/campaigns: nav links must meet minimum color contrast — text-primary-500 (active) and text-text-primary hover:text-primary-700 fail in dark mode; footer/header links need dark variants. (2) Campaigns: h3 "Kadin's Campagin" (heading levels only increase by one). (3) Power creator dark mode: select elements need accessible name (action type, area, duration, sustain, damage size/type; power part Category/Part); color contrast — text-energy, text-energy-text, text-tp; "Requires 2+ rounds" text-text-muted italic; "My library" button; heading levels (e.g. Action Type h3). (4) Character sheet dark mode: minimum color contrast — bg-tp-light text-tp-text, text-xs opacity-75, opacity-90, roll buttons (primary-600/danger-600/neutral-500); buttons need discernable text (roll buttons have title but need aria-label); violet-700 needs dark variant; nav links same as about/campaigns.
+- Expected: Add dark mode link contrast (header/footer); ensure all selects have id+htmlFor or aria-label site-wide; RollButton and icon-only buttons get aria-label; energy/TP/energy-text and violet-700 have dark mode CSS overrides; fix any remaining opacity/contrast and heading hierarchy.
+- Disposition: Implementing across header, footer, globals, power-creator, character sheet, roll-button.
+
+**Raw Feedback Log — 2026-02-23 (Dark mode character sheet contrast — site-wide patterns)**
+- Date: 2026-02-23
+- Context: Dark mode character sheet re-audit; most issues color contrast; patterns indicate site-wide fixes
+- Priority: High
+- Feedback: Icon buttons (bg-white/10) fail contrast in dark; HP/EN inputs need explicit bg in dark; section titles text-text-muted may fail; toast message no explicit text color; Recover button warning-600 contrast; text-xs font-semibold and bare spans need explicit text color. Fix site-wide and document patterns in ACCESSIBILITY.md.
+- Expected: Document dark-mode contrast patterns; fix icon buttons, inputs, section headers, toasts, warning buttons, grid-list-row labels.
+- Disposition: Implementing; documenting patterns.

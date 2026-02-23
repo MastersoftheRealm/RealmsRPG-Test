@@ -37,7 +37,7 @@ export interface CreatorSaveToolbarProps {
 const toggleButtonClass = (active: boolean) =>
   cn(
     'px-2 py-1 rounded text-sm font-medium transition-colors',
-    active ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+    active ? 'bg-primary-600 text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
   );
 
 export function CreatorSaveToolbar({
@@ -53,13 +53,15 @@ export function CreatorSaveToolbar({
   className,
 }: CreatorSaveToolbarProps) {
   return (
-    <>
+    <div className="flex flex-wrap items-center gap-2">
       {showPublicPrivate && (
         <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt">
           <button
             type="button"
             onClick={() => onSaveTargetChange('private')}
             className={toggleButtonClass(saveTarget === 'private')}
+            aria-label="Save to my library"
+            aria-pressed={saveTarget === 'private'}
           >
             My library
           </button>
@@ -67,6 +69,8 @@ export function CreatorSaveToolbar({
             type="button"
             onClick={() => onSaveTargetChange('public')}
             className={toggleButtonClass(saveTarget === 'public')}
+            aria-label="Save to public library"
+            aria-pressed={saveTarget === 'public'}
           >
             Public library
           </button>
@@ -76,6 +80,7 @@ export function CreatorSaveToolbar({
         variant="secondary"
         onClick={onLoad}
         title={user ? 'Load from library' : 'Log in to load from library'}
+        aria-label={user ? 'Load from library' : 'Log in to load from library'}
       >
         <FolderOpen className="w-5 h-5" />
         Load
@@ -90,6 +95,6 @@ export function CreatorSaveToolbar({
       >
         {saving ? 'Saving...' : 'Save'}
       </Button>
-    </>
+    </div>
   );
 }

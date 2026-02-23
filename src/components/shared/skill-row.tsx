@@ -199,6 +199,7 @@ export const SkillRow = memo(function SkillRow({
             <select
               value={ability || abilityOptions[0]?.value || 'strength'}
               onChange={(e) => onAbilityChange(e.target.value)}
+              aria-label="Ability for skill"
               className="text-xs px-1 py-0.5 rounded border border-border-light bg-surface-alt text-text-secondary cursor-pointer"
               onClick={(e) => e.stopPropagation()}
             >
@@ -207,7 +208,7 @@ export const SkillRow = memo(function SkillRow({
               ))}
             </select>
           ) : (
-            <span className="text-xs text-text-muted font-semibold">
+            <span className="text-xs text-text-muted dark:text-text-secondary font-semibold">
               {abilityAbbr}
             </span>
           )}
@@ -218,7 +219,7 @@ export const SkillRow = memo(function SkillRow({
           {isEditing || !showRollButton ? (
             <span className={cn(
               'inline-block min-w-[40px] font-bold',
-              bonus > 0 ? 'text-success-600 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
+              bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
             )}>
               {formatBonus(bonus)}
             </span>
@@ -355,7 +356,7 @@ export const SkillRow = memo(function SkillRow({
                 {/* Bonus display */}
                 <span className={cn(
                   'w-12 text-right font-bold',
-                  bonus > 0 ? 'text-success-600 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted'
+                  bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted'
                 )}>
                   {formatBonus(bonus)}
                 </span>

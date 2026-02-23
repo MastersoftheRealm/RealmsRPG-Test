@@ -131,7 +131,7 @@ export const CombatantCard = memo(function CombatantCard({
       className={cn(
         'bg-surface rounded-xl shadow-md p-3 transition-all',
         isCurrentTurn && 'ring-2 ring-primary-500 shadow-lg',
-        isDead && 'bg-red-50 dark:bg-red-900/30 opacity-75',
+        isDead && 'bg-red-50 dark:bg-red-900/30 dark:opacity-90',
         isDragOver && 'ring-2 ring-amber-400 bg-amber-50 dark:bg-amber-900/30',
         isDragging && 'opacity-50',
         'border-l-4',
@@ -171,7 +171,7 @@ export const CombatantCard = memo(function CombatantCard({
               <>
                 <span className="text-lg font-bold leading-none">{combatant.initiative}</span>
                 {combatant.acuity !== 0 && (
-                  <span className="text-[10px] opacity-75 leading-none">+{combatant.acuity}</span>
+                  <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">+{combatant.acuity}</span>
                 )}
               </>
             )}
@@ -207,6 +207,7 @@ export const CombatantCard = memo(function CombatantCard({
                 onUpdate({ combatantType: t, isAlly: t !== 'enemy' });
               }}
               title="Change side"
+              aria-label="Combatant side (Ally, Enemy, or Companion)"
               className={cn(
                 'text-[10px] font-medium rounded px-1.5 py-0.5 border cursor-pointer',
                 combatant.combatantType === 'ally' && 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300',
@@ -545,6 +546,7 @@ export const CombatantCard = memo(function CombatantCard({
                   value={selectedCondition}
                   onChange={(e) => setSelectedCondition(e.target.value)}
                   className="flex-1 px-3 py-1 text-sm border border-border-light rounded"
+                  aria-label="Select condition to add"
                 >
                   <option value="">Select Condition...</option>
                   {CONDITION_OPTIONS.map(cond => (

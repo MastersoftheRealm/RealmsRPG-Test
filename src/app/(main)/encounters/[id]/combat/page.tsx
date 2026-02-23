@@ -158,7 +158,7 @@ function CombatEncounterContent({ params }: { params: Promise<{ id: string }> })
                   <CloudOff className="w-3 h-3" /> Unsaved changes
                 </span>
               ) : (
-                <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
+                <span className="text-green-700 dark:text-green-400 flex items-center gap-1">
                   <Cloud className="w-3 h-3" /> Saved to cloud
                 </span>
               )}

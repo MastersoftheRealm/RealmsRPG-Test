@@ -85,8 +85,8 @@ export function Header() {
               <Link
                 href="/admin"
                 className={cn(
-                  'font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors whitespace-nowrap',
-                  pathname?.startsWith('/admin') ? 'text-primary-500' : ''
+                  'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
+                  pathname?.startsWith('/admin') ? 'text-primary-500 dark:text-primary-400' : ''
                 )}
               >
                 Admin
@@ -100,8 +100,8 @@ export function Header() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors whitespace-nowrap',
-                    pathname === item.href ? 'text-primary-500' : ''
+                    'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
+                    pathname === item.href ? 'text-primary-500 dark:text-primary-400' : ''
                   )}
                 >
                   {item.label}
@@ -118,7 +118,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={handleLoginClick}
-                className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors whitespace-nowrap"
+                className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap"
               >
                 Login
               </button>
@@ -149,7 +149,7 @@ export function Header() {
             {isAdmin && (
               <Link
                 href="/admin"
-                className="block py-2 text-lg font-semibold text-primary-800"
+                className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Admin
@@ -162,7 +162,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block py-2 text-lg font-semibold text-primary-800"
+                  className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -244,7 +244,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
         type="button"
         aria-label={`${item.label} menu`}
         aria-expanded={open}
-        className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors flex items-center gap-1 whitespace-nowrap min-h-[44px] items-center"
+        className="font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors flex items-center gap-1 whitespace-nowrap min-h-[44px] items-center"
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
       >
         {item.label}
@@ -258,8 +258,8 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
                 key={subItem.href}
                 href={subItem.href}
                 className={cn(
-                  'block px-5 py-3 text-primary-700 hover:bg-surface hover:text-primary-500 transition-colors min-h-[44px] flex items-center',
-                  pathname === subItem.href ? 'bg-surface-alt text-primary-500' : ''
+                  'block px-5 py-3 text-primary-700 dark:text-primary-300 hover:bg-surface hover:text-primary-500 dark:hover:text-primary-200 transition-colors min-h-[44px] flex items-center',
+                  pathname === subItem.href ? 'bg-surface-alt text-primary-500 dark:text-primary-400' : ''
                 )}
                 onClick={() => setOpen(false)}
               >
@@ -282,7 +282,7 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
         type="button"
         aria-expanded={open}
         aria-label={`${item.label} menu`}
-        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 min-h-[44px]"
+        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px]"
         onClick={() => setOpen(!open)}
       >
         {item.label}
@@ -295,8 +295,8 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
               key={subItem.href}
               href={subItem.href}
               className={cn(
-                'block py-3 text-primary-700 min-h-[44px] flex items-center',
-                pathname === subItem.href ? 'text-primary-500' : ''
+                'block py-3 text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center',
+                pathname === subItem.href ? 'text-primary-500 dark:text-primary-400' : ''
               )}
               onClick={onLinkClick}
             >

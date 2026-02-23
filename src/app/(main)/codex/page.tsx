@@ -19,7 +19,6 @@ import { CodexPropertiesTab } from './CodexPropertiesTab';
 import { CodexPartsTab } from './CodexPartsTab';
 import { CodexTraitsTab } from './CodexTraitsTab';
 import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
-import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -79,7 +78,7 @@ export default function CodexPage() {
           description={
             isPublic
               ? 'Complete reference for the Realms RPG system — feats, skills, species, equipment, parts, and properties.'
-              : 'Your custom codex content (feats, traits, parts, properties) will appear here when that feature is available.'
+              : 'Your custom species and other codex content appear here. Create species in the Species Creator.'
           }
         />
         <Button
@@ -103,7 +102,7 @@ export default function CodexPage() {
             onClick={() => setCodexMode('public')}
             className={cn(
               'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              codexMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+              codexMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
             )}
           >
             Public Codex
@@ -113,7 +112,7 @@ export default function CodexPage() {
             onClick={() => setCodexMode('my')}
             className={cn(
               'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              codexMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+              codexMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
             )}
           >
             My Codex
@@ -132,17 +131,28 @@ export default function CodexPage() {
 
       {isPublic && (
         <>
-          {activeTab === 'feats' && <CodexFeatsTab />}
-          {activeTab === 'skills' && <CodexSkillsTab />}
-          {activeTab === 'species' && <CodexSpeciesTab />}
-          {activeTab === 'equipment' && <CodexEquipmentTab />}
-          {activeTab === 'properties' && <CodexPropertiesTab />}
-          {activeTab === 'parts' && <CodexPartsTab />}
-          {activeTab === 'traits' && <CodexTraitsTab />}
-          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab />}
+          {activeTab === 'feats' && <CodexFeatsTab codexMode="public" />}
+          {activeTab === 'skills' && <CodexSkillsTab codexMode="public" />}
+          {activeTab === 'species' && <CodexSpeciesTab codexMode="public" />}
+          {activeTab === 'equipment' && <CodexEquipmentTab codexMode="public" />}
+          {activeTab === 'properties' && <CodexPropertiesTab codexMode="public" />}
+          {activeTab === 'parts' && <CodexPartsTab codexMode="public" />}
+          {activeTab === 'traits' && <CodexTraitsTab codexMode="public" />}
+          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="public" />}
         </>
       )}
-      {!isPublic && <CodexMyCodexEmpty />}
+      {!isPublic && (
+        <>
+          {activeTab === 'feats' && <CodexFeatsTab codexMode="my" />}
+          {activeTab === 'skills' && <CodexSkillsTab codexMode="my" />}
+          {activeTab === 'species' && <CodexSpeciesTab codexMode="my" />}
+          {activeTab === 'equipment' && <CodexEquipmentTab codexMode="my" />}
+          {activeTab === 'properties' && <CodexPropertiesTab codexMode="my" />}
+          {activeTab === 'parts' && <CodexPartsTab codexMode="my" />}
+          {activeTab === 'traits' && <CodexTraitsTab codexMode="my" />}
+          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="my" />}
+        </>
+      )}
     </PageContainer>
   );
 }

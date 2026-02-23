@@ -103,13 +103,13 @@ function getVariantClasses(variant: SummaryItem['variant'], remaining: number): 
 
   switch (variant) {
     case 'danger':
-      return 'bg-danger-light text-danger-600';
+      return 'bg-danger-light text-danger-600 dark:text-danger-400';
     case 'success':
-      return 'bg-success-light text-success-600';
+      return 'bg-success-light text-success-600 dark:text-success-400';
     case 'warning':
-      return 'bg-warning-light text-warning-700';
+      return 'bg-warning-light text-warning-700 dark:text-warning-300';
     case 'info':
-      return 'bg-info-light text-info-600';
+      return 'bg-info-light text-info-600 dark:text-info-400';
     default:
       return 'bg-surface-alt text-secondary';
   }
@@ -147,7 +147,7 @@ export function CreatorSummaryPanel({
               )}
             >
               <div className="font-bold text-base">{box.value}</div>
-              <div className="text-[10px] uppercase tracking-wide opacity-90">{box.label}</div>
+              <div className="text-[10px] uppercase tracking-wide text-text-muted dark:text-text-secondary">{box.label}</div>
             </div>
           ))}
         </div>

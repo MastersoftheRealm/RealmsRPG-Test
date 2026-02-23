@@ -28,7 +28,7 @@ const SPECIES_COLUMNS = [
   { key: 'sizes', label: 'SIZES' },
   { key: '_desc', label: 'DESCRIPTION', sortable: false as const },
 ];
-import { useSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
+import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
 
 interface SpeciesFilters {
   search: string;
@@ -72,7 +72,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
         <div className="text-text-secondary hidden lg:block">{species.sizes?.join(', ') || '-'}</div>
         <div className="hidden lg:flex items-center justify-between">
           <span className="text-text-secondary truncate">{species.description?.substring(0, 50)}...</span>
-          <ChevronDown className={cn('w-4 h-4 text-text-muted transition-transform flex-shrink-0', expanded && 'rotate-180')} />
+          <ChevronDown className={cn('w-4 h-4 text-text-muted dark:text-text-secondary transition-transform flex-shrink-0', expanded && 'rotate-180')} />
         </div>
       </button>
 
@@ -172,8 +172,19 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
   );
 }
 
-export function CodexSpeciesTab() {
-  const { data: species, isLoading, error } = useSpecies();
+export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+  const { data: codexSpecies = [], isLoading: codexLoading, error: codexError } = useSpecies();
+  const { data: userSpeciesRaw = [], isLoading: userLoading, error: userError } = useUserSpecies();
+
+  const species = useMemo(() => {
+    if (codexMode === 'my') {
+      return (userSpeciesRaw ?? []).map(userSpeciesToSpecies);
+    }
+    return codexSpecies ?? [];
+  }, [codexMode, codexSpecies, userSpeciesRaw]);
+
+  const isLoading = codexMode === 'my' ? userLoading : codexLoading;
+  const error = codexMode === 'my' ? userError : codexError;
   const { data: allTraits } = useTraits();
   const { data: allSkills } = useCodexSkills();
   const { sortState, handleSort } = useSort('name');
@@ -293,7 +304,11 @@ export function CodexSpeciesTab() {
         {isLoading ? (
           <LoadingState />
         ) : filteredSpecies.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No species match your filters.</div>
+          <div className="p-8 text-center text-text-muted dark:text-text-secondary">
+            {codexMode === 'my'
+              ? 'No custom species yet. Create one in the Species Creator.'
+              : 'No species match your filters.'}
+          </div>
         ) : (
           filteredSpecies.map((s: Species) => (
             <SpeciesCard key={s.id} species={s} allTraits={allTraits || []} skillIdToName={skillIdToName} />

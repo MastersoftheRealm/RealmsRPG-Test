@@ -226,7 +226,7 @@ function CampaignCharacterViewContent() {
             <ChevronLeft className="w-4 h-4" />
             Back to Campaign
           </Link>
-          <p className="text-sm text-text-muted mb-4">View-only — Realm Master view</p>
+          <p className="text-sm text-text-muted dark:text-text-secondary mb-4">View-only — Realm Master view</p>
 
           {calculatedStats && (
             <>

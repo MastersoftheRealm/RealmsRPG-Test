@@ -270,6 +270,7 @@ export function ItemList({
                   value={sortState.field}
                   onChange={(e) => setSortState(prev => ({ ...prev, field: e.target.value }))}
                   className="px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  aria-label="Sort by"
                 >
                   {sortOptions.map(opt => (
                     <option key={opt.id} value={opt.field}>{opt.label}</option>
@@ -354,6 +355,7 @@ export function ItemList({
                         [filter.id]: e.target.value 
                       }))}
                       className="px-3 py-1.5 rounded border border-border bg-background text-sm min-w-[140px]"
+                      aria-label={filter.label ? `Filter by ${filter.label}` : 'Filter'}
                     >
                       <option value="">All</option>
                       {filter.options.map(opt => (

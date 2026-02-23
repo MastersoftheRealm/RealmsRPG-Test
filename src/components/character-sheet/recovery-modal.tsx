@@ -234,7 +234,7 @@ export function RecoveryModal({
               <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
                 <Heart className="w-6 h-6 text-success-600 dark:text-success-400" />
                 <div>
-                  <div className="text-xs text-text-muted">Health</div>
+                  <div className="text-xs text-text-muted dark:text-text-secondary">Health</div>
                   <div className="font-bold">
                     {currentHealth} → <span className="text-success-600 dark:text-success-400">{maxHealth}</span>
                   </div>
@@ -245,7 +245,7 @@ export function RecoveryModal({
               <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
                 <Zap className="w-6 h-6 text-info-500 dark:text-info-400" />
                 <div>
-                  <div className="text-xs text-text-muted">Energy</div>
+                  <div className="text-xs text-text-muted dark:text-text-secondary">Energy</div>
                   <div className="font-bold">
                     {currentEnergy} → <span className="text-success-600 dark:text-success-400">{maxEnergy}</span>
                   </div>
@@ -289,7 +289,7 @@ export function RecoveryModal({
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-text-muted">
+              <p className="mt-2 text-xs text-text-muted dark:text-text-secondary">
                 Each 2 hours = 2 quarters (¼ HP + ¼ EN, or allocate freely). 
                 {hours}h = {totalQuarters} quarter{totalQuarters > 1 ? 's' : ''} ({hpPerQuarter} HP or {enPerQuarter} EN per quarter). 
                 Full recovery (8h) restores all.
@@ -359,7 +359,7 @@ export function RecoveryModal({
                   }}
                 />
                 
-                <div className="flex justify-between text-xs text-text-muted">
+                <div className="flex justify-between text-xs text-text-muted dark:text-text-secondary">
                   <span>All to HP</span>
                   <span>All to EN</span>
                 </div>
@@ -375,9 +375,9 @@ export function RecoveryModal({
                 <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
                   <Heart className="w-6 h-6 text-success-600 dark:text-success-400" />
                   <div>
-                    <div className="text-xs text-text-muted">Health</div>
+                    <div className="text-xs text-text-muted dark:text-text-secondary">Health</div>
                     <div className="font-bold">
-                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted')}>{newHealth}</span>
+                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted dark:text-text-secondary')}>{newHealth}</span>
                     </div>
                     <div className="text-xs text-success-600 dark:text-success-400">
                       +{hpRestored} HP ({currentAllocation.hp}/{totalQuarters} quarters)
@@ -389,9 +389,9 @@ export function RecoveryModal({
                 <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
                   <Zap className="w-6 h-6 text-info-500 dark:text-info-400" />
                   <div>
-                    <div className="text-xs text-text-muted">Energy</div>
+                    <div className="text-xs text-text-muted dark:text-text-secondary">Energy</div>
                     <div className="font-bold">
-                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted')}>{newEnergy}</span>
+                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted dark:text-text-secondary')}>{newEnergy}</span>
                     </div>
                     <div className="text-xs text-success-600 dark:text-success-400">
                       +{enRestored} EN ({currentAllocation.en}/{totalQuarters} quarters)
@@ -427,7 +427,7 @@ export function RecoveryModal({
           <Button 
             variant="primary" 
             onClick={handleConfirm}
-            className={cn(mode === 'full' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-warning-600 hover:bg-warning-700')}
+            className={cn(mode === 'full' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600')}
           >
             {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
           </Button>

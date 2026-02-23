@@ -253,10 +253,11 @@ function ResourceInput({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-12 text-center text-lg font-bold rounded border px-1 py-0.5',
+            'w-12 text-center text-lg font-bold rounded border px-1 py-0.5 bg-surface dark:bg-surface-alt',
             'focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400',
             inputBorderText
           )}
+          aria-label={`Current ${label}`}
         />
         <span className={cn('text-base font-medium', labelColor)}>/ {max}</span>
         {onChange && (
@@ -357,7 +358,7 @@ function LargeStatBlock({
               'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
               baseValue! > minBase
                 ? 'bg-surface hover:bg-border-light text-text-secondary'
-                : 'bg-surface text-text-muted cursor-not-allowed'
+                : 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
             )}
           >
             −
@@ -365,7 +366,7 @@ function LargeStatBlock({
           <span className={cn(
             'text-xs min-w-[3rem] text-center',
             pencilState === 'over-budget' ? 'text-danger-600 font-bold' :
-            pencilState === 'has-points' ? 'text-success-600 font-bold' : 'text-text-muted'
+            pencilState === 'has-points' ? 'text-success-700 dark:text-success-400 font-bold' : 'text-text-muted dark:text-text-secondary'
           )}>
             Base: {baseValue}
           </span>
@@ -376,7 +377,7 @@ function LargeStatBlock({
               'w-6 h-6 rounded flex items-center justify-center text-sm font-bold transition-colors',
               baseValue! < maxBase
                 ? 'bg-surface hover:bg-border-light text-text-secondary'
-                : 'bg-surface text-text-muted cursor-not-allowed'
+                : 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
             )}
           >
             +
@@ -393,9 +394,9 @@ function LargeStatBlock({
 function SmallStatBlock({ label, value, subValue }: { label: string; value: number | string; subValue?: string }) {
   return (
     <div className="flex flex-col items-center p-2 bg-surface-alt rounded-lg border border-border-light">
-      <span className="text-xs text-text-muted uppercase tracking-wide">{label}</span>
+      <span className="text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">{label}</span>
       <span className="text-lg font-bold text-text-primary">{value}</span>
-      {subValue && <span className="text-xs text-text-muted">{subValue}</span>}
+      {subValue && <span className="text-xs text-text-muted dark:text-text-secondary">{subValue}</span>}
     </div>
   );
 }
@@ -677,7 +678,7 @@ export function SheetHeader({
               )}
               {canLevelUp && (
                 <span 
-                  className="text-success-600 animate-pulse text-sm font-medium" 
+                  className="text-success-600 dark:text-success-400 animate-pulse text-sm font-medium" 
                   title="Ready to level up!"
                 >
                   ⬆ Level up!

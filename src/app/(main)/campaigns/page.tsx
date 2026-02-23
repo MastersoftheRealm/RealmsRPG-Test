@@ -189,13 +189,13 @@ function MyCampaignsTab({
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h3 className="font-bold text-lg text-text-primary truncate">
+              <h2 className="font-bold text-lg text-text-primary truncate">
                 {campaign.name}
-              </h3>
+              </h2>
               <p className="mt-1 text-sm text-text-secondary line-clamp-2">
                 {campaign.description || 'No description'}
               </p>
-              <div className="mt-3 flex items-center gap-2 text-sm text-text-muted">
+              <div className="mt-3 flex items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
                 {campaign.isOwner ? (
                   <span className="inline-flex items-center gap-1">
                     <Crown className="w-4 h-4 text-accent-500" />
@@ -211,7 +211,7 @@ function MyCampaignsTab({
                 <span>{campaign.characterCount} character{campaign.characterCount !== 1 ? 's' : ''}</span>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-text-muted flex-shrink-0" />
+            <ChevronRight className="w-5 h-5 text-text-muted dark:text-text-secondary flex-shrink-0" />
           </div>
         </Link>
       ))}
@@ -258,7 +258,7 @@ function CreateCampaignTab({ onSuccess }: { onSuccess: () => void }) {
   if (createdInviteCode) {
     return (
       <div className="rounded-xl border border-success-200 bg-success-50 p-6 max-w-lg">
-        <h3 className="font-bold text-lg text-success-800">Campaign created!</h3>
+        <h2 className="font-bold text-lg text-success-800">Campaign created!</h2>
         <p className="mt-2 text-success-700">
           Share this invite code with players so they can join:
         </p>
@@ -449,7 +449,7 @@ function JoinCampaignTab({
               )}
               <div className="min-w-0 flex-1">
                 <span className="font-medium text-text-primary">{c.name}</span>
-                <span className="block text-sm text-text-muted">
+                <span className="block text-sm text-text-muted dark:text-text-secondary">
                   Level {c.level}
                   {c.archetypeName && ` • ${c.archetypeName}`}
                   {c.ancestryName && ` • ${c.ancestryName}`}

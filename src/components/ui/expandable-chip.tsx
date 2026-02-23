@@ -83,7 +83,7 @@ export function ExpandableChip({
       <div className="flex items-center gap-2 px-3 py-1.5">
         <span className="font-medium">{label}</span>
         {cost !== undefined && (
-          <span className="text-xs opacity-75">({cost})</span>
+          <span className="text-xs text-text-muted dark:text-text-secondary">({cost})</span>
         )}
         {canExpand && (
           <ChevronDown
@@ -97,7 +97,7 @@ export function ExpandableChip({
       
       {/* Expanded content */}
       {isExpanded && hasContent && (
-        <div className="px-3 pb-2 pt-0 text-xs opacity-90 border-t border-current/10">
+        <div className="px-3 pb-2 pt-0 text-xs text-text-secondary border-t border-current/10">
           {sublabel && <div className="font-medium mt-1">{sublabel}</div>}
           {description && <div className="mt-1">{description}</div>}
         </div>

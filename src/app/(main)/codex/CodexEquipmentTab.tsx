@@ -18,6 +18,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
+import { EmptyState } from '@/components/ui';
 import { formatDamageDisplay } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
 import { useEquipment, useItemProperties, type ItemProperty } from '@/hooks';
@@ -94,7 +95,16 @@ function EquipmentCard({ item, propertiesDb = [] }: { item: Equipment; propertie
   );
 }
 
-export function CodexEquipmentTab() {
+export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+  if (codexMode === 'my') {
+    return (
+      <EmptyState
+        size="lg"
+        title="My Codex — Equipment"
+        description="Custom equipment lives in Library (My Library). Use Public Codex for reference."
+      />
+    );
+  }
   const { data: equipment, isLoading, error } = useEquipment();
   const { data: propertiesDb = [] } = useItemProperties();
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -177,7 +187,7 @@ export function CodexEquipmentTab() {
         {isLoading ? (
           <LoadingState />
         ) : filteredEquipment.length === 0 ? (
-          <div className="p-8 text-center text-text-muted">No equipment found.</div>
+          <div className="p-8 text-center text-text-muted dark:text-text-secondary">No equipment found.</div>
         ) : (
           filteredEquipment.map((item: Equipment & { category: string; cost: number; rarity: string }) => (
             <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />

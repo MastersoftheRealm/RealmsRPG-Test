@@ -308,6 +308,7 @@ function CampaignDetailContent() {
                     }}
                     className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
                     title="Edit campaign name"
+                    aria-label="Edit campaign name"
                     disabled={updateLoading}
                   >
                     <Pencil className="w-4 h-4" />
@@ -346,6 +347,7 @@ function CampaignDetailContent() {
                       }}
                       className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
                       title="Edit description"
+                      aria-label="Edit description"
                       disabled={updateLoading}
                     >
                       <Pencil className="w-4 h-4" />
@@ -380,7 +382,7 @@ function CampaignDetailContent() {
 
       {/* Invite Code */}
       <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-        <h3 className="font-semibold text-text-primary mb-2">Invite Code</h3>
+        <h2 className="font-semibold text-text-primary mb-2">Invite Code</h2>
         <p className="text-sm text-text-secondary mb-3">
           Share this code with players so they can join your campaign.
           {isCampaignFull && ' (Campaign is full — no new players can join until someone leaves.)'}
@@ -402,10 +404,10 @@ function CampaignDetailContent() {
 
       {/* Realm Master */}
       <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-        <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
+        <h2 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
           <Crown className="w-5 h-5 text-accent-500" />
           Realm Master: {campaign.ownerUsername || 'Unknown'}
-        </h3>
+        </h2>
         {ownerCharacters.length > 0 ? (
           <div className="flex flex-wrap gap-4">
             {ownerCharacters.map((c) => (
@@ -421,7 +423,7 @@ function CampaignDetailContent() {
             {canAddOwnCharacters && (
               <button
                 onClick={() => setAddModalOpen(true)}
-                className="flex flex-col items-center justify-center w-20 h-24 rounded-lg border-2 border-dashed border-border-light hover:border-primary-400 hover:bg-primary-50 transition-colors text-text-muted"
+                className="flex flex-col items-center justify-center w-20 h-24 rounded-lg border-2 border-dashed border-border-light hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-surface transition-colors text-text-muted dark:text-text-secondary"
               >
                 <UserPlus className="w-6 h-6" />
                 <span className="text-xs mt-1">Add</span>
@@ -436,7 +438,7 @@ function CampaignDetailContent() {
                 Add Your Characters
               </Button>
             ) : (
-              <p className="text-text-muted text-sm">No characters added yet.</p>
+              <p className="text-text-muted dark:text-text-secondary text-sm">No characters added yet.</p>
             )}
           </div>
         )}
@@ -445,7 +447,7 @@ function CampaignDetailContent() {
       {/* Other Players */}
       {otherCharacters.length > 0 && (
         <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-          <h3 className="font-semibold text-text-primary mb-3">Players</h3>
+          <h2 className="font-semibold text-text-primary mb-3">Players</h2>
           <div className="flex flex-wrap gap-4">
             {otherCharacters.map((c) => (
               <CharacterChip
@@ -463,16 +465,16 @@ function CampaignDetailContent() {
 
       {/* Campaign Roll Log — same layout/styling as character sheet RollLog */}
       <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-        <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
+        <h2 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
           <Dices className="w-5 h-5 text-accent-500" />
           Campaign Roll Log
-        </h3>
+        </h2>
         <p className="text-sm text-text-secondary mb-4">
           Rolls from all characters in this campaign. Updates in real time.
         </p>
         <div ref={rollLogScrollRef} className="max-h-[400px] overflow-y-auto p-2 bg-surface-alt rounded-lg">
           {campaignRolls.length === 0 ? (
-            <p className="text-center text-text-muted italic py-10">
+            <p className="text-center text-text-muted dark:text-text-secondary italic py-10">
               No campaign rolls yet. Rolls from character sheets will appear here.
             </p>
           ) : (
@@ -591,13 +593,13 @@ function CharacterChip({
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-text-primary truncate">{character.characterName}</p>
-        <p className="text-sm text-text-muted">
+        <p className="text-sm text-text-muted dark:text-text-secondary">
           Lvl {character.level}
           {character.species && ` • ${character.species}`}
           {character.archetype && ` • ${character.archetype}`}
         </p>
         {!isOwner && character.ownerUsername && (
-          <p className="text-xs text-text-muted">@{character.ownerUsername}</p>
+          <p className="text-xs text-text-muted dark:text-text-secondary">@{character.ownerUsername}</p>
         )}
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
@@ -665,7 +667,7 @@ function AddCharacterModal({
             )}
             <div>
               <p className="font-medium">{c.name}</p>
-              <p className="text-sm text-text-muted">
+              <p className="text-sm text-text-muted dark:text-text-secondary">
                 Level {c.level}
                 {c.archetypeName && ` • ${c.archetypeName}`}
                 {c.ancestryName && ` • ${c.ancestryName}`}

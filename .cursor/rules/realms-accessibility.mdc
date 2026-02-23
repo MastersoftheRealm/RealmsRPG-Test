@@ -1,0 +1,22 @@
+---
+description: WCAG 2.1 AA accessibility — contrast, labels, headings, images. Apply when creating or editing UI (pages, modals, components).
+alwaysApply: true
+---
+
+# Accessibility (RealmsRPG)
+
+When **creating or editing** any page, modal, or component with UI:
+
+1. **Contrast:** Text must meet WCAG 2.1 AA (4.5:1 for normal text, 3:1 for large). In light mode avoid `text-neutral-600` on light backgrounds; use `text-neutral-700` or semantic tokens (`text-text-primary`, `text-text-secondary`). Status text (e.g. success green) use `text-green-700` in light mode if `text-green-600` fails.
+
+2. **Buttons:** Every button must have **discernable text**. Icon-only buttons need `aria-label` (e.g. "Show password", "Edit campaign name", "Clear roll history"). Do not rely only on `title` for screen readers.
+
+3. **Form controls:** Every `<select>`, `<input>` (when not wrapped by a visible label), and custom control must have an **accessible name**: use `<label htmlFor="id">` with matching `id` on the control, or `aria-label`. Placeholder is not a substitute for a label.
+
+4. **Headings:** Heading levels must **increase by at most one** (no skip from `h1` to `h3`). Page title = `h1` (e.g. from `PageHeader`); first section = `h2`; subsections = `h3`, etc.
+
+5. **Images:** Decorative or redundant images (e.g. dice icons next to visible "d4"/"1d6" text) must use **`alt=""`** so the same information is not announced twice. Meaningful images need descriptive `alt` text.
+
+6. **ESLint:** `eslint-config-next` (core-web-vitals) enables `eslint-plugin-jsx-a11y`. Fix any a11y violations reported by `npm run lint` or the editor.
+
+7. **Checklist:** Before merging UI changes: (1) No icon-only buttons without `aria-label`, (2) All selects/inputs have label or `aria-label`, (3) Heading hierarchy has no skip, (4) Images that duplicate adjacent text use `alt=""`, (5) Text contrast passes in both light and dark themes where applicable.

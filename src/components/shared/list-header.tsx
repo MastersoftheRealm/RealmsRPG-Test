@@ -7,14 +7,14 @@
  * Matches Codex/Library patterns with ascending/descending sort functionality.
  * 
  * Features:
- * - Grid-based layout matching GridListRow columns
+ * - Grid-based layout matching GridListRow columns (desktop)
+ * - Mobile: expandable "Sort by" control using same sort logic (no column headers on small screens)
  * - Sortable columns with click-to-toggle
  * - Visual indicator for active sort column and direction
- * - Responsive - hides on mobile
- * - Clean, minimal design with subtle background
  */
 
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ListColumn {
@@ -88,6 +88,25 @@ export function ListHeader({
     }
   };
 
+  const sortableColumns = columns.filter((c) => c.sortable !== false && onSort);
+  const hasSortable = sortableColumns.length > 0;
+  const currentCol = sortState && hasSortable ? sortableColumns.find((c) => c.key === sortState.col) : sortableColumns[0];
+  const currentLabel = currentCol?.label ?? sortState?.col ?? 'Name';
+  const currentDir = (sortState?.dir ?? 1) === 1 ? 'A→Z' : 'Z→A';
+
+  // Mobile sort dropdown state
+  const [mobileSortOpen, setMobileSortOpen] = useState(false);
+  const mobileSortRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (mobileSortRef.current && !mobileSortRef.current.contains(e.target as Node)) {
+        setMobileSortOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   // Use same horizontal padding as GridListRow so column content aligns with headers site-wide
   const rowPaddingX = compact ? 'px-3' : 'px-4';
   const baseHeaderClasses = cn(
@@ -148,25 +167,149 @@ export function ListHeader({
 
   if (rightSlotWidth) {
     return (
-      <div className="hidden lg:flex items-center w-full">
-        <div
-          className={cn(baseHeaderClasses, 'flex-1 min-w-0')}
-          style={{ gridTemplateColumns: gridTemplate }}
-        >
-          {headerContent}
+      <>
+        {/* Desktop: grid header */}
+        <div className="hidden lg:flex items-center w-full">
+          <div
+            className={cn(baseHeaderClasses, 'flex-1 min-w-0')}
+            style={{ gridTemplateColumns: gridTemplate }}
+          >
+            {headerContent}
+          </div>
+          <div className="flex-shrink-0" style={{ width: rightSlotWidth }} aria-hidden />
         </div>
-        <div className="flex-shrink-0" style={{ width: rightSlotWidth }} aria-hidden />
-      </div>
+        {/* Mobile: sort-by dropdown (same sort logic) */}
+        {hasSortable && (
+          <div ref={mobileSortRef} className="lg:hidden mb-2">
+            <button
+              type="button"
+              onClick={() => setMobileSortOpen((o) => !o)}
+              className={cn(
+                'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
+                'bg-primary-50 dark:bg-surface-alt border-primary-200 dark:border-border',
+                'text-primary-700 dark:text-text-secondary',
+                'hover:bg-primary-100 dark:hover:bg-surface transition-colors'
+              )}
+              aria-expanded={mobileSortOpen}
+              aria-haspopup="listbox"
+              aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="text-primary-600 dark:text-text-secondary">Sort by</span>
+                <span>{currentLabel}</span>
+                <span className="text-primary-600 dark:text-text-secondary text-xs">({currentDir})</span>
+              </span>
+              <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
+            </button>
+            {mobileSortOpen && (
+              <div
+                className="mt-1 rounded-lg border border-border-light bg-surface shadow-lg overflow-hidden"
+                role="listbox"
+              >
+                {sortableColumns.map((column) => {
+                  const isActive = sortState?.col === column.key;
+                  return (
+                    <button
+                      key={column.key}
+                      type="button"
+                      role="option"
+                      aria-selected={isActive}
+                      onClick={() => {
+                        handleColumnClick(column);
+                        setMobileSortOpen(false);
+                      }}
+                      className={cn(
+                        'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
+                        'hover:bg-surface-alt transition-colors',
+                        isActive && 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                      )}
+                    >
+                      <span>{column.label}</span>
+                      {isActive && (
+                        sortState.dir === 1
+                          ? <ChevronUp className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                          : <ChevronDown className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </>
     );
   }
 
   return (
-    <div
-      className={baseHeaderClasses}
-      style={{ gridTemplateColumns: finalGridTemplate }}
-    >
-      {headerContent}
-    </div>
+    <>
+      {/* Desktop: grid header */}
+      <div
+        className={cn(baseHeaderClasses, 'lg:grid')}
+        style={{ gridTemplateColumns: finalGridTemplate }}
+      >
+        {headerContent}
+      </div>
+      {/* Mobile: sort-by dropdown (same sort logic) */}
+      {hasSortable && (
+        <div ref={mobileSortRef} className="lg:hidden mb-2">
+          <button
+            type="button"
+            onClick={() => setMobileSortOpen((o) => !o)}
+            className={cn(
+              'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
+              'bg-primary-50 dark:bg-surface-alt border-primary-200 dark:border-border',
+              'text-primary-700 dark:text-text-secondary',
+              'hover:bg-primary-100 dark:hover:bg-surface transition-colors'
+            )}
+            aria-expanded={mobileSortOpen}
+            aria-haspopup="listbox"
+            aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="text-primary-600 dark:text-text-secondary">Sort by</span>
+              <span>{currentLabel}</span>
+              <span className="text-primary-600 dark:text-text-secondary text-xs">({currentDir})</span>
+            </span>
+            <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
+          </button>
+          {mobileSortOpen && (
+            <div
+              className="mt-1 rounded-lg border border-border-light bg-surface shadow-lg overflow-hidden"
+              role="listbox"
+            >
+              {sortableColumns.map((column) => {
+                const isActive = sortState?.col === column.key;
+                return (
+                  <button
+                    key={column.key}
+                    type="button"
+                    role="option"
+                    aria-selected={isActive}
+                    onClick={() => {
+                      handleColumnClick(column);
+                      setMobileSortOpen(false);
+                    }}
+                    className={cn(
+                      'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
+                      'hover:bg-surface-alt transition-colors',
+                      isActive && 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium'
+                    )}
+                  >
+                    <span>{column.label}</span>
+                    {isActive && (
+                      sortState.dir === 1
+                        ? <ChevronUp className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                        : <ChevronDown className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
 }
 
