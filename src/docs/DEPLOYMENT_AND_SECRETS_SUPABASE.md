@@ -142,6 +142,19 @@ See `ADMIN_SETUP.md` for current implementation.
 
 ---
 
+## One-shot SQL: idempotent full setup
+
+If you want to set (or fix) schemas, tables, RLS, and Realtime in one go without tracking what’s already applied:
+
+1. Open **Supabase Dashboard → SQL Editor**.
+2. Paste and run the entire contents of **`prisma/supabase-idempotent-full.sql`**.
+
+That script is safe to run multiple times. It creates missing schemas and tables, adds missing columns (e.g. `user_profiles.role`), (re)creates all RLS policies, and applies Realtime grants. It does **not** drop or overwrite existing data.
+
+After that, run **`prisma/supabase-storage-policies.sql`** once if you need Storage RLS for the `portraits` and `profile-pictures` buckets.
+
+---
+
 ## Verification
 
 1. **Local:** Run `npm run dev`; sign in; create a campaign.

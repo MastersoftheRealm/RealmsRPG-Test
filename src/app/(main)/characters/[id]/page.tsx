@@ -1809,10 +1809,10 @@ export default function CharacterSheetPage({ params }: PageParams) {
             </div>
               </div>
 
-              {/* Mobile: horizontal side-scroll panels (Abilities | Skills | Archetype | Library) */}
-              <div className="md:hidden overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth -mx-4 px-4 pb-4 touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {/* Mobile: horizontal side-scroll panels — one full panel in frame, no bleed (no px on scroll so each section fills viewport) */}
+              <div className="md:hidden overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth -mx-4 pb-4 touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <div className="flex flex-nowrap gap-0 min-h-[60vh]">
-                  <section aria-label="Abilities & Defenses" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                  <section aria-label="Abilities & Defenses" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
                     <AbilitiesSection
                       abilities={character.abilities}
                       defenseSkills={character.defenseVals || character.defenseSkills}
@@ -1829,7 +1829,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       onDefenseChange={handleDefenseChange}
                     />
                   </section>
-                  <section aria-label="Skills" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                  <section aria-label="Skills" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
                     <SkillsSection
                       skills={skills}
                       abilities={character.abilities}
@@ -1844,7 +1844,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       className="min-h-0"
                     />
                   </section>
-                  <section aria-label="Archetype & Attacks" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                  <section aria-label="Archetype & Attacks" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
                     <ArchetypeSection
                       character={character}
                       isEditMode={effectiveEditMode}
@@ -1859,7 +1859,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       className="min-h-0"
                     />
                   </section>
-                  <section aria-label="Library" className="flex-shrink-0 w-full min-w-full snap-start overflow-y-auto overflow-x-hidden pr-2">
+                  <section aria-label="Library" className="flex-shrink-0 w-full min-w-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden px-4 box-border">
                     <LibrarySection
                       className="min-h-0"
                       powers={enrichedData?.powers || character.powers || []}

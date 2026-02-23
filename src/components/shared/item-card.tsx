@@ -109,7 +109,7 @@ export const ItemCard = memo(function ItemCard({
           
           {/* Name and subtitle */}
           <div className="min-w-0 flex-1">
-            <h3 className={cn('font-medium text-text-primary truncate', compact && 'text-sm')}>
+            <h3 className={cn('font-medium text-text-primary break-words lg:truncate', compact && 'text-sm')}>
               {item.name}
             </h3>
             {item.subtitle && (

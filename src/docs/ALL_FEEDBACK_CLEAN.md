@@ -1015,3 +1015,11 @@ Notes
 - Feedback: (1) Speed isn't a setting you can edit for a species — remove or make non-editable. (2) Make the species type a dropdown from creature types in Realms (like creature creator; may need to pull from core rules that admins can edit for types/sizes). (3) Don't allow picking sub-skills for the species skill — base skills only. (4) Height, Weight, Lifespan (use "lifespan" instead of "max age") are not optional; they need these as required. (5) Add trait modal: use the same layout as other add trait modals — codex-like compact version to sort, filter, search, expand; don't make users classify trait type until later. Traits are already classified as flaw or characteristics (Boolean in DB). So: three sections — (a) Add species/ancestry trait (classify as species vs ancestry after add), (b) Add flaw (traits where flaw=true), (c) Add characteristic (traits where characteristic=true).
 - Expected: Species creator: no speed edit; type dropdown from creature types; species skill = base skills only; height/weight/lifespan required with "Lifespan" label; three add-trait flows with codex-like list modals (species/ancestry with post-add classification; flaw; characteristic).
 - Implemented 2026-02-22: See species-creator page and AI_CHANGELOG.md.
+
+**Raw Feedback Log — 2026-02-22 (Character sheet swipe + nav dropdowns touch)**
+- Date: 2026-02-22
+- Context: Character sheet (mobile), nav bar
+- Priority: High
+- Feedback: (1) In the character sheet the side swiping is too sensitive — it should only swipe one section at a time. (2) The dropdown menus on the nav bar sometimes don't work properly on touchscreen: they don't show up or go away too quick.
+- Expected: (1) One section per swipe on mobile character sheet (scroll-snap-stop so each panel is a mandatory stop). (2) Nav dropdowns open on tap, stay open until user taps outside or selects a link; desktop hover still works.
+- Implemented 2026-02-22: (1) Added [scroll-snap-stop:always] to all four character sheet panels. (2) NavDropdown and Account menu use state + click-to-toggle, outside-click close, and hover (onMouseEnter/Leave) for desktop; MobileDropdown gets min-h-[44px] and onLinkClick to close mobile menu when a sub-link is tapped.

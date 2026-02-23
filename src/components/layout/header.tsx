@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -113,34 +113,7 @@ export function Header() {
           {/* Account Section */}
           <div className="flex items-center gap-4">
             {user ? (
-              <div className="relative group">
-                <button type="button" aria-label="Account menu" className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
-                    {profile?.username?.charAt(0).toUpperCase() ?? '?'}
-                  </div>
-                </button>
-                {/* Hover bridge: invisible pseudo-element to prevent dropdown from closing */}
-                <div className="hidden group-hover:block absolute right-0 top-full pt-4 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-4">
-                  <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
-                    <Link href="/my-account" className="block px-4 py-2 text-text-secondary hover:bg-surface-alt">
-                      My Account
-                    </Link>
-                    {/* Divider */}
-                    <div className="border-t border-border-light my-1" />
-                    {/* Theme Toggle */}
-                    <ThemeToggle />
-                    {/* Divider */}
-                    <div className="border-t border-border-light my-1" />
-                    <button
-                      type="button"
-                      onClick={() => signOut()}
-                      className="w-full text-left px-4 py-2 text-text-secondary hover:bg-surface-alt"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <AccountDropdown profile={profile} signOut={signOut} />
             ) : (
               <button
                 type="button"
@@ -184,7 +157,7 @@ export function Header() {
             )}
             {navLinks.map((item) => (
               item.dropdown ? (
-                <MobileDropdown key={item.label} item={item} pathname={pathname} />
+                <MobileDropdown key={item.label} item={item} pathname={pathname} onLinkClick={() => setMobileMenuOpen(false)} />
               ) : (
                 <Link
                   key={item.href}
@@ -209,35 +182,98 @@ interface DropdownItem {
   dropdown?: { href: string; label: string }[];
 }
 
-function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string }) {
+function AccountDropdown({ profile, signOut }: { profile: { username?: string | null } | null; signOut: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
   return (
-    <div className="relative group">
-      <button type="button" aria-label={`${item.label} menu`} className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors flex items-center gap-1 whitespace-nowrap">
-        {item.label}
-        <ChevronDownIcon className="w-4 h-4 group-hover:rotate-180 transition-transform" />
-      </button>
-      {/* Hover bridge: invisible pseudo-element to prevent dropdown from closing when mouse moves from button to dropdown */}
-      <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 pt-2 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-4">
-        <div className="w-48 bg-surface-secondary rounded-lg shadow-lg border border-divider py-2">
-          {item.dropdown?.map((subItem) => (
-            <Link
-              key={subItem.href}
-              href={subItem.href}
-              className={cn(
-                'block px-5 py-3 text-primary-700 hover:bg-surface hover:text-primary-500 transition-colors',
-                pathname === subItem.href ? 'bg-surface-alt text-primary-500' : ''
-              )}
-            >
-              {subItem.label}
-            </Link>
-          ))}
+    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        aria-label="Account menu"
+        aria-expanded={open}
+        className="flex items-center gap-2 min-h-[44px] min-w-[44px]"
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+      >
+        <div className="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold">
+          {profile?.username?.charAt(0).toUpperCase() ?? '?'}
         </div>
-      </div>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full pt-2 z-50">
+          <div className="w-56 bg-surface rounded-lg shadow-lg border border-border-light py-2">
+            <Link href="/my-account" className="block px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px] flex items-center" onClick={() => setOpen(false)}>
+              My Account
+            </Link>
+            <div className="border-t border-border-light my-1" />
+            <ThemeToggle />
+            <div className="border-t border-border-light my-1" />
+            <button
+              type="button"
+              onClick={() => { signOut(); setOpen(false); }}
+              className="w-full text-left px-4 py-2.5 text-text-secondary hover:bg-surface-alt min-h-[44px]"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function MobileDropdown({ item, pathname }: { item: DropdownItem; pathname: string }) {
+function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+  return (
+    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        aria-label={`${item.label} menu`}
+        aria-expanded={open}
+        className="font-semibold text-lg text-primary-700 hover:text-primary-500 transition-colors flex items-center gap-1 whitespace-nowrap min-h-[44px] items-center"
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+      >
+        {item.label}
+        <ChevronDownIcon className={cn('w-4 h-4 transition-transform', open ? 'rotate-180' : '')} />
+      </button>
+      {open && (
+        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 before:content-[''] before:absolute before:top-0 before:left-0 before:right-0 before:h-2">
+          <div className="w-48 bg-surface-secondary rounded-lg shadow-lg border border-divider py-2">
+            {item.dropdown?.map((subItem) => (
+              <Link
+                key={subItem.href}
+                href={subItem.href}
+                className={cn(
+                  'block px-5 py-3 text-primary-700 hover:bg-surface hover:text-primary-500 transition-colors min-h-[44px] flex items-center',
+                  pathname === subItem.href ? 'bg-surface-alt text-primary-500' : ''
+                )}
+                onClick={() => setOpen(false)}
+              >
+                {subItem.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; pathname: string; onLinkClick?: () => void }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -246,7 +282,7 @@ function MobileDropdown({ item, pathname }: { item: DropdownItem; pathname: stri
         type="button"
         aria-expanded={open}
         aria-label={`${item.label} menu`}
-        className="flex items-center justify-between w-full py-2 text-lg font-semibold text-primary-700"
+        className="flex items-center justify-between w-full py-3 text-lg font-semibold text-primary-700 min-h-[44px]"
         onClick={() => setOpen(!open)}
       >
         {item.label}
@@ -259,9 +295,10 @@ function MobileDropdown({ item, pathname }: { item: DropdownItem; pathname: stri
               key={subItem.href}
               href={subItem.href}
               className={cn(
-                'block py-2 text-primary-700',
+                'block py-3 text-primary-700 min-h-[44px] flex items-center',
                 pathname === subItem.href ? 'text-primary-500' : ''
               )}
+              onClick={onLinkClick}
             >
               {subItem.label}
             </Link>

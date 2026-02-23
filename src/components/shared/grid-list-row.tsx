@@ -288,12 +288,12 @@ export const GridListRow = memo(function GridListRow({
           )}
           style={gridStyle}
         >
-          {/* Name column with optional state indicators */}
+          {/* Name column: full name visible on mobile (wrap), truncate on desktop */}
           <div className={cn(
-            'font-medium text-text-primary truncate flex items-center gap-2',
+            'font-medium text-text-primary flex items-center gap-2 min-w-0',
             useFlex && 'flex-1'
           )}>
-            <span className="truncate">{name}</span>
+            <span className="break-words lg:truncate">{name}</span>
             {/* Innate indicator */}
             {innate && (
               <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
