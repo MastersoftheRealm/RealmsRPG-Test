@@ -139,13 +139,13 @@ function PartCard({
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
         >
-          <span className="text-text-muted">
+          <span className="text-text-muted dark:text-text-secondary">
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </span>
           <span className="font-medium text-text-primary truncate">{part.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
-            <span className="text-red-600">EN: {formatCost(partEnergy)}</span>
-            <span className="text-tp">TP: {formatCost(partTP)}</span>
+            <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
+            <span className="text-tp-text">TP: {formatCost(partTP)}</span>
           </span>
         </button>
         <IconButton
@@ -233,10 +233,10 @@ function PartCard({
           {/* Base Values */}
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
-              Base Energy: <strong className="text-red-600 dark:text-red-400">{formatCost(part.base_en || 0)}</strong>
+              Base Energy: <strong className="text-energy-text">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
-              Base TP: <strong className="text-tp">{formatCost(part.base_tp || 0)}</strong>
+              Base TP: <strong className="text-tp-text">{formatCost(part.base_tp || 0)}</strong>
             </span>
           </div>
 
@@ -244,14 +244,14 @@ function PartCard({
           {(hasOption(1) || hasOption(2) || hasOption(3)) && (
             <div className="space-y-3 pt-2 border-t border-border-light">
               {hasOption(1) && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-3">
+                <div className="bg-energy-light dark:bg-energy-light/10 border border-energy-border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-red-800 dark:text-red-300">Option 1</span>
-                      <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                      <span className="text-sm font-semibold text-energy-text">Option 1</span>
+                      <span className="text-sm font-medium text-energy-text">
                         EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp">
+                      <span className="text-sm font-medium text-tp-text">
                         TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
                       </span>
                     </div>
@@ -268,14 +268,14 @@ function PartCard({
               )}
 
               {hasOption(2) && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-3">
+                <div className="bg-energy-light dark:bg-energy-light/10 border border-energy-border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-red-800 dark:text-red-300">Option 2</span>
-                      <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                      <span className="text-sm font-semibold text-energy-text">Option 2</span>
+                      <span className="text-sm font-medium text-energy-text">
                         EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp">
+                      <span className="text-sm font-medium text-tp-text">
                         TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
                       </span>
                     </div>
@@ -292,14 +292,14 @@ function PartCard({
               )}
 
               {hasOption(3) && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-3">
+                <div className="bg-energy-light dark:bg-energy-light/10 border border-energy-border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-red-800 dark:text-red-300">Option 3</span>
-                      <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                      <span className="text-sm font-semibold text-energy-text">Option 3</span>
+                      <span className="text-sm font-medium text-energy-text">
                         EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp">
+                      <span className="text-sm font-medium text-tp-text">
                         TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
                       </span>
                     </div>
@@ -717,7 +717,7 @@ function TechniqueCreatorContent() {
 
   return (
     <CreatorLayout
-      icon={<Swords className="w-8 h-8 text-red-600" />}
+      icon={<Swords className="w-8 h-8 text-energy-text" />}
       title="Technique Creator"
       description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
       actions={
@@ -738,7 +738,7 @@ function TechniqueCreatorContent() {
           <CreatorSummaryPanel
             title="Technique Summary"
             costStats={[
-              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'health' },
+              { label: 'Energy Cost', value: costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
               { label: 'Training Points', value: costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
             ]}
             statRows={[
@@ -826,7 +826,7 @@ function TechniqueCreatorContent() {
 
           {/* Weapon & Action Type */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Combat Configuration</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Combat Configuration</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -894,9 +894,9 @@ function TechniqueCreatorContent() {
           {/* Technique Parts */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-text-primary">
+              <h2 className="text-lg font-bold text-text-primary">
                 Technique Parts ({selectedParts.length})
-              </h3>
+              </h2>
               <Button
                 variant="danger"
                 onClick={addPart}
@@ -907,7 +907,7 @@ function TechniqueCreatorContent() {
             </div>
 
             {selectedParts.length === 0 ? (
-              <div className="text-center py-8 text-text-muted">
+              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No parts added yet. Click &quot;Add Part&quot; to begin building your technique.</p>
               </div>
@@ -929,7 +929,7 @@ function TechniqueCreatorContent() {
 
           {/* Additional Damage */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Additional Damage</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Additional Damage</h2>
             <p className="text-sm text-text-secondary mb-4">
               Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.
             </p>

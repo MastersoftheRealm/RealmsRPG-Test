@@ -136,6 +136,7 @@ function LoginContent() {
           type="submit"
           className="w-full"
           disabled={isLoading || !ready}
+          aria-label="Sign in"
         >
           {!ready ? 'Loading...' : isLoading ? 'Signing in...' : 'Sign In'}
         </Button>

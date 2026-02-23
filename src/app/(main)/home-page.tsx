@@ -157,16 +157,16 @@ function HomeContent() {
             </button>
 
             <div className="flex-1 text-left min-w-0">
-              <h2 className="font-nunito font-semibold text-2xl sm:text-3xl text-title mb-4 sm:mb-6">
+              <h2 className="font-nunito font-semibold text-2xl sm:text-3xl text-text-primary mb-4 sm:mb-6">
                 Reviews
               </h2>
               <div className="flex gap-3 sm:gap-6 items-start">
                 <div className="w-20 h-24 sm:w-[133px] sm:h-[148px] bg-border-light flex-shrink-0 rounded" />
                 <div className="flex-1 min-w-0">
-                  <p className="font-nunito text-base sm:text-xl text-title leading-relaxed mb-3 sm:mb-4">
+                  <p className="font-nunito text-base sm:text-xl text-text-primary leading-relaxed mb-3 sm:mb-4">
                     {reviews[currentReviewIndex].quote}
                   </p>
-                  <p className="font-nunito text-sm sm:text-xl text-title leading-relaxed text-right">
+                  <p className="font-nunito text-sm sm:text-xl text-text-primary leading-relaxed text-right">
                     {reviews[currentReviewIndex].author}
                   </p>
                 </div>
@@ -257,11 +257,11 @@ function FeatureCard({
     >
       <div className="flex items-center gap-2 mb-3">
         {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:text-primary-300 transition-colors">{icon}</span>}
-        <h3 className="font-display font-normal text-xl text-neutral-800 dark:text-neutral-100 uppercase group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+        <h3 className="font-display font-normal text-xl text-text-primary uppercase group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
           {title}
         </h3>
       </div>
-      <p className="font-nunito font-normal text-xl text-neutral-700 dark:text-neutral-300 leading-relaxed">
+      <p className="font-nunito font-normal text-xl text-text-primary dark:text-neutral-300 leading-relaxed">
         {description}
       </p>
     </Link>

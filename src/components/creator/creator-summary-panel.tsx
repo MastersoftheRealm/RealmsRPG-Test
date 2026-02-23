@@ -87,10 +87,10 @@ export interface CreatorSummaryPanelProps {
 }
 
 const COST_STAT_COLORS: Record<CostStat['color'], { bg: string; text: string }> = {
-  energy: { bg: 'bg-energy-light', text: 'text-energy' },
-  tp: { bg: 'bg-tp-light', text: 'text-tp' },
+  energy: { bg: 'bg-energy-light', text: 'text-energy-text' },
+  tp: { bg: 'bg-tp-light', text: 'text-tp-text' },
   health: { bg: 'bg-health-light', text: 'text-health' },
-  currency: { bg: 'bg-tp-light', text: 'text-tp' },
+  currency: { bg: 'bg-tp-light', text: 'text-tp-text' },
 };
 
 function getVariantClasses(variant: SummaryItem['variant'], remaining: number): string {
@@ -103,7 +103,7 @@ function getVariantClasses(variant: SummaryItem['variant'], remaining: number): 
 
   switch (variant) {
     case 'danger':
-      return 'bg-danger-light text-danger-600 dark:text-danger-400';
+      return 'bg-danger-light text-danger-700 dark:text-danger-400';
     case 'success':
       return 'bg-success-light text-success-600 dark:text-success-400';
     case 'warning':
@@ -133,7 +133,7 @@ export function CreatorSummaryPanel({
       'bg-surface rounded-xl shadow-md p-6',
       className
     )}>
-      <h3 className="text-lg font-bold text-text-primary mb-4">{title}</h3>
+      <h2 className="text-lg font-bold text-text-primary mb-4">{title}</h2>
 
       {/* Resource boxes (compact, for creature creator - ability/skill/feat/training/currency) */}
       {resourceBoxes && resourceBoxes.length > 0 && (
@@ -146,8 +146,8 @@ export function CreatorSummaryPanel({
                 getVariantClasses(box.variant, box.value)
               )}
             >
-              <div className="font-bold text-base">{box.value}</div>
-              <div className="text-[10px] uppercase tracking-wide text-text-muted dark:text-text-secondary">{box.label}</div>
+              <div className="font-bold text-base text-inherit">{box.value}</div>
+              <div className="text-[10px] uppercase tracking-wide text-inherit opacity-80">{box.label}</div>
             </div>
           ))}
         </div>
@@ -203,7 +203,7 @@ export function CreatorSummaryPanel({
                 stat.color || 'bg-surface-alt'
               )}
             >
-              <span className="text-text-muted">{stat.label}</span>
+              <span className="text-text-muted dark:text-text-secondary">{stat.label}</span>
               <span className="font-bold">{stat.value}</span>
             </div>
           ))}
@@ -239,7 +239,7 @@ export function CreatorSummaryPanel({
               <span className="font-bold">
                 {item.remaining}
                 {typeof item.total === 'number' && (
-                  <span className="text-xs text-text-muted ml-1">/ {item.total}</span>
+                  <span className="text-xs text-text-muted dark:text-text-secondary ml-1">/ {item.total}</span>
                 )}
               </span>
             </div>
@@ -264,14 +264,14 @@ export function CreatorSummaryPanel({
         <>
           {breakdowns.map((breakdown, index) => (
             <div key={index} className="border-t border-border-subtle pt-4 mt-4">
-              <h4 className="text-sm font-medium text-text-secondary mb-2">{breakdown.title}</h4>
+              <h4 className="text-sm font-medium text-text-secondary dark:text-text-primary mb-2">{breakdown.title}</h4>
               <ul className="text-xs text-text-secondary space-y-1">
                 {breakdown.items.map((item, i) => (
                   <li key={i}>
                     • {typeof item === 'string' ? item : (
                       <>
                         {item.label}
-                        {item.detail && <span className="text-text-muted ml-1">({item.detail})</span>}
+                        {item.detail && <span className="text-text-muted dark:text-text-secondary ml-1">({item.detail})</span>}
                       </>
                     )}
                   </li>

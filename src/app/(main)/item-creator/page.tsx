@@ -149,21 +149,21 @@ function PropertyCard({
           onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
         >
-          <span className="text-text-muted">
+          <span className="text-text-muted dark:text-text-secondary">
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </span>
           <span className="font-medium text-text-primary truncate">{property.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
             {propIP > 0 && (
-              <span className="text-primary-600">
+              <span className="text-primary-600 dark:text-primary-400">
                 IP: {formatCost(propIP)}
               </span>
             )}
             {propTP > 0 && (
-              <span className="text-tp">TP: {formatCost(propTP)}</span>
+              <span className="text-tp-text">TP: {formatCost(propTP)}</span>
             )}
             {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
-              <span className="text-amber-600">
+              <span className="text-tp-text">
                 C: {formatCost((property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl)}
               </span>
             )}
@@ -215,14 +215,14 @@ function PropertyCard({
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">Option</span>
+                  <span className="text-sm font-semibold text-tp-text">Option</span>
                   {property.op_1_tp && (
-                    <span className="text-sm font-medium text-tp">
+                    <span className="text-sm font-medium text-tp-text">
                       TP +{formatCost(property.op_1_tp)}/level
                     </span>
                   )}
                   {property.op_1_c && (
-                    <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                    <span className="text-sm font-medium text-tp-text">
                       C +{formatCost(property.op_1_c)}/level
                     </span>
                   )}
@@ -247,13 +247,13 @@ function PropertyCard({
 // =============================================================================
 
 const RARITY_REFERENCE = [
-  { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-secondary bg-neutral-100' },
-  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100, color: 'text-green-700 bg-green-100' },
-  { name: 'Rare', ipRange: '6 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100' },
+  { name: 'Common', ipRange: '0 – 4', baseCost: 25, color: 'text-text-primary bg-neutral-200 dark:bg-neutral-600 dark:text-neutral-100' },
+  { name: 'Uncommon', ipRange: '4 – 6', baseCost: 100, color: 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/40' },
+  { name: 'Rare', ipRange: '6 – 8', baseCost: 500, color: 'text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40' },
   { name: 'Epic', ipRange: '8 – 11', baseCost: 2500, color: 'text-power-text bg-power-light' },
-  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000, color: 'text-amber-700 bg-amber-100' },
-  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000, color: 'text-red-700 bg-red-100' },
-  { name: 'Ascended', ipRange: '16+', baseCost: 100000, color: 'text-pink-700 bg-pink-100' },
+  { name: 'Legendary', ipRange: '11 – 14', baseCost: 10000, color: 'text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/40' },
+  { name: 'Mythic', ipRange: '14 – 16', baseCost: 50000, color: 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/40' },
+  { name: 'Ascended', ipRange: '16+', baseCost: 100000, color: 'text-pink-700 bg-pink-100 dark:text-pink-300 dark:bg-pink-900/40' },
 ];
 
 function RarityReferenceTable({ currentIP }: { currentIP: number }) {
@@ -276,10 +276,10 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface-alt/80 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface-alt/80 transition-colors text-text-primary"
       >
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-amber-600" />
+          <Info className="w-4 h-4 text-tp-text" />
           <span className="font-medium text-text-primary">Rarity Reference</span>
         </div>
         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -287,7 +287,7 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
       
       {expanded && (
         <div className="p-4">
-          <p className="text-xs text-text-muted mb-3">
+          <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
             IP (Item Power) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C multiplier)
           </p>
           <table className="w-full text-sm">
@@ -312,11 +312,11 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
                       {r.name}
                     </span>
                     {currentRarity === r.name && (
-                      <span className="ml-1 text-xs text-amber-600">← Current</span>
+                      <span className="ml-1 text-xs text-tp-text">← Current</span>
                     )}
                   </td>
                   <td className="text-right py-1.5 text-text-secondary">{r.ipRange}</td>
-                  <td className="text-right py-1.5 text-amber-600">{r.baseCost.toLocaleString()}</td>
+                  <td className="text-right py-1.5 text-tp-text">{r.baseCost.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -976,7 +976,7 @@ function ItemCreatorContent() {
 
   return (
     <CreatorLayout
-      icon={<Sword className="w-8 h-8 text-amber-600" />}
+      icon={<Sword className="w-8 h-8 text-tp-text" />}
       title="Armament Creator"
       description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
       actions={
@@ -1113,8 +1113,8 @@ function ItemCreatorContent() {
                       className={cn(
                         'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1',
                         armamentType === type.value
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-surface-alt hover:bg-surface text-text-secondary'
+                          ? 'bg-amber-600 text-white hover:bg-amber-700'
+                          : 'bg-surface-alt hover:bg-surface text-text-primary'
                       )}
                     >
                       <type.icon className="w-4 h-4" />
@@ -1142,9 +1142,9 @@ function ItemCreatorContent() {
           {/* Weapon / Shield Configuration - Handedness & (Weapon) Range */}
           {(armamentType === 'Weapon' || armamentType === 'Shield') && (
             <div className="bg-surface rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-text-primary mb-4">
+              <h2 className="text-lg font-bold text-text-primary mb-4">
                 {armamentType === 'Weapon' ? 'Weapon Configuration' : 'Shield Configuration'}
-              </h3>
+              </h2>
               <div className="flex flex-wrap items-center gap-6">
                 {/* Handedness Toggle */}
                 <div className="flex items-center gap-3">
@@ -1156,8 +1156,8 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         !isTwoHanded
-                          ? "bg-amber-600 text-white"
-                          : "bg-surface-alt text-text-secondary hover:bg-surface"
+                          ? "bg-amber-600 text-white hover:bg-amber-700"
+                          : "bg-surface-alt text-text-primary hover:bg-surface"
                       )}
                     >
                       One-Handed
@@ -1168,8 +1168,8 @@ function ItemCreatorContent() {
                       className={cn(
                         "px-4 py-2 text-sm font-medium transition-colors",
                         isTwoHanded
-                          ? "bg-amber-600 text-white"
-                          : "bg-surface-alt text-text-secondary hover:bg-surface"
+                          ? "bg-amber-600 text-white hover:bg-amber-700"
+                          : "bg-surface-alt text-text-primary hover:bg-surface"
                       )}
                     >
                       Two-Handed
@@ -1181,7 +1181,7 @@ function ItemCreatorContent() {
                 {armamentType === 'Weapon' && (
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-text-secondary">Range:</span>
-                    <span className="font-medium text-amber-600 min-w-[80px]">{rangeDisplay}</span>
+                    <span className="font-medium text-tp-text min-w-[80px]">{rangeDisplay}</span>
                     <ValueStepper
                       value={rangeLevel}
                       onChange={setRangeLevel}
@@ -1190,7 +1190,7 @@ function ItemCreatorContent() {
                       size="sm"
                     />
                     {rangeLevel > 0 && (
-                      <span className="text-xs text-text-muted">(8 spaces per level)</span>
+                      <span className="text-xs text-text-muted dark:text-text-secondary">(8 spaces per level)</span>
                     )}
                   </div>
                 )}
@@ -1201,7 +1201,7 @@ function ItemCreatorContent() {
           {/* Weapon Damage */}
           {armamentType === 'Weapon' && (
             <div className="bg-surface rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-text-primary mb-4">Base Damage</h3>
+              <h2 className="text-lg font-bold text-text-primary mb-4">Base Damage</h2>
               <div className="flex flex-wrap items-center gap-4">
                 <ValueStepper
                   value={damage.amount}
@@ -1244,7 +1244,7 @@ function ItemCreatorContent() {
           {/* Armor Configuration */}
           {armamentType === 'Armor' && (
             <div className="bg-surface rounded-xl shadow-md p-6">
-              <h3 className="text-lg font-bold text-text-primary mb-4">Armor Configuration</h3>
+              <h2 className="text-lg font-bold text-text-primary mb-4">Armor Configuration</h2>
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Damage Reduction */}
                 <div>
@@ -1258,7 +1258,7 @@ function ItemCreatorContent() {
                     max={10}
                     size="lg"
                   />
-                  <p className="text-xs text-text-muted mt-1">Reduces physical damage taken</p>
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Reduces physical damage taken</p>
                 </div>
                 
                 {/* Agility Reduction */}
@@ -1273,7 +1273,7 @@ function ItemCreatorContent() {
                     max={6}
                     size="lg"
                   />
-                  <p className="text-xs text-text-muted mt-1">Reduces Agility for wearing this armor</p>
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Reduces Agility for wearing this armor</p>
                 </div>
                 
                 {/* Critical Range Increase */}
@@ -1288,7 +1288,7 @@ function ItemCreatorContent() {
                     max={6}
                     size="lg"
                   />
-                  <p className="text-xs text-text-muted mt-1">Increases critical hit range</p>
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Increases critical hit range</p>
                 </div>
               </div>
             </div>
@@ -1299,7 +1299,7 @@ function ItemCreatorContent() {
             <>
               {/* Shield Damage Reduction */}
               <div className="bg-surface rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-bold text-text-primary mb-4">Shield Block (Damage Reduction)</h3>
+                <h2 className="text-lg font-bold text-text-primary mb-4">Shield Block (Damage Reduction)</h2>
                 <div className="flex flex-wrap items-center gap-4">
                   <ValueStepper
                     value={shieldDR.amount}
@@ -1327,7 +1327,7 @@ function ItemCreatorContent() {
                     ({shieldDR.amount}d{shieldDR.size} damage blocked)
                   </span>
                 </div>
-                <p className="text-xs text-text-muted mt-2">Damage blocked when using Shield reaction</p>
+                <p className="text-xs text-text-muted dark:text-text-secondary mt-2">Damage blocked when using Shield reaction</p>
               </div>
 
               {/* Shield Damage (Optional) */}
@@ -1368,11 +1368,11 @@ function ItemCreatorContent() {
                       </div>
                       <span className="text-sm text-text-secondary">Bludgeoning</span>
                     </div>
-                    <p className="text-xs text-text-muted mt-2">This shield can deal {shieldDamage.amount}d{shieldDamage.size} bludgeoning damage as a melee weapon attack</p>
+                    <p className="text-xs text-text-muted dark:text-text-secondary mt-2">This shield can deal {shieldDamage.amount}d{shieldDamage.size} bludgeoning damage as a melee weapon attack</p>
                   </>
                 )}
                 {!hasShieldDamage && (
-                  <p className="text-sm text-text-muted">Enable to allow this shield to be used as a weapon</p>
+                  <p className="text-sm text-text-muted dark:text-text-secondary">Enable to allow this shield to be used as a weapon</p>
                 )}
               </div>
             </>
@@ -1380,7 +1380,7 @@ function ItemCreatorContent() {
 
           {/* Ability Requirement (Optional) */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Ability Requirement</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Ability Requirement</h2>
             <p className="text-sm text-text-secondary mb-4">
               Require a minimum Ability to use this {armamentType.toLowerCase()} effectively.
             </p>
@@ -1427,13 +1427,13 @@ function ItemCreatorContent() {
           {/* Item Properties */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-text-primary">
+              <h2 className="text-lg font-bold text-text-primary">
                 Properties ({selectedProperties.length})
-              </h3>
+              </h2>
               <Button
                 type="button"
                 variant="primary"
-                className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700"
+                className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700 text-white"
                 onClick={addProperty}
               >
                 <Plus className="w-4 h-4" />
@@ -1442,7 +1442,7 @@ function ItemCreatorContent() {
             </div>
 
             {selectedProperties.length === 0 ? (
-              <div className="text-center py-8 text-text-muted">
+              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
                 <p>No properties added yet. Click &quot;Add Property&quot; to enhance your item.</p>
               </div>

@@ -191,13 +191,17 @@ export const CombatantCard = memo(function CombatantCard({
                 autoFocus
               />
             ) : (
-              <h3
+              <div
+                role="button"
+                tabIndex={0}
                 className={cn('text-base font-bold cursor-pointer hover:text-primary-600', isDead && 'line-through text-text-muted')}
                 onClick={() => setIsEditingName(true)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsEditingName(true); } }}
                 title="Click to edit name"
+                aria-label={`Combatant name: ${combatant.name}. Click to edit.`}
               >
                 {combatant.name}
-              </h3>
+              </div>
             )}
 
             <select

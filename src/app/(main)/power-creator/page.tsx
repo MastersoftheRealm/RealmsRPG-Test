@@ -920,7 +920,7 @@ function PowerCreatorContent() {
                     disabled={isShortDuration}
                   />
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">Sustain:</span>
+                    <span className="text-sm font-medium text-text-secondary">Sustain:</span>
                     <select
                       aria-label="Sustain cost in action points"
                       value={duration.sustain || 0}

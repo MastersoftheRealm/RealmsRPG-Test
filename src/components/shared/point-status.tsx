@@ -39,13 +39,13 @@ const pointStatusVariants = cva('font-semibold transition-colors', {
     },
     status: {
       /** Points remaining to spend */
-      remaining: 'bg-success-light text-success-700 border-success-200',
+      remaining: 'bg-success-light text-success-700 dark:text-success-400 border-success-200',
       /** All points spent (balanced) */
-      balanced: 'bg-info-light text-info-700 border-info-200',
+      balanced: 'bg-info-light text-info-700 dark:text-info-400 border-info-200',
       /** Over budget */
-      overspent: 'bg-danger-light text-danger-700 border-danger-200',
+      overspent: 'bg-danger-light text-danger-700 dark:text-danger-400 border-danger-200',
       /** Has points but some spent */
-      partial: 'bg-primary-50 text-primary-700 border-primary-200',
+      partial: 'bg-primary-50 text-primary-700 dark:text-primary-400 border-primary-200',
     },
   },
   defaultVariants: {
@@ -98,22 +98,22 @@ export function PointStatus({
         {showCalculation ? (
           <>
             <div className="text-center">
-              <span className="text-xs text-text-muted block">Total</span>
+              <span className="text-xs text-text-muted dark:text-text-secondary block">Total</span>
               <span className="text-lg font-bold text-text-primary">{total}</span>
             </div>
             <span className="text-2xl text-border-light">−</span>
             <div className="text-center">
-              <span className="text-xs text-text-muted block">Spent</span>
+              <span className="text-xs text-text-muted dark:text-text-secondary block">Spent</span>
               <span className="text-lg font-bold text-text-primary">{spent}</span>
             </div>
             <span className="text-2xl text-border-light">=</span>
             <div className="text-center">
-              <span className="text-xs text-text-muted block">Remaining</span>
+              <span className="text-xs text-text-muted dark:text-text-secondary block">Remaining</span>
               <span className={cn(
                 'text-lg font-bold',
-                status === 'overspent' && 'text-danger-600',
-                status === 'balanced' && 'text-success-600',
-                status === 'remaining' && 'text-primary-600'
+                status === 'overspent' && 'text-danger-700 dark:text-danger-400',
+                status === 'balanced' && 'text-success-600 dark:text-success-400',
+                status === 'remaining' && 'text-primary-600 dark:text-primary-400'
               )}>
                 {remaining}
               </span>
@@ -143,7 +143,7 @@ export function PointStatus({
     <span className={cn(pointStatusVariants({ variant, status }), className)}>
       {label && <span>{label}:</span>}
       <span className="font-bold">{remaining}</span>
-      <span className="text-text-muted">/ {total}</span>
+      <span className="text-text-muted dark:text-text-secondary">/ {total}</span>
     </span>
   );
 }

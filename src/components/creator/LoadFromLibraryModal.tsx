@@ -262,7 +262,7 @@ function LoadFromLibraryModalUnified({
     <div className="flex items-start justify-between mb-4">
       <div>
         <h2 className="text-xl font-bold text-text-primary">{title}</h2>
-        <p className="text-sm text-text-muted mt-1">
+        <p className="text-sm text-text-muted dark:text-text-secondary mt-1">
           Expand a row to view details. Select one item, then click Load.
         </p>
       </div>
@@ -273,7 +273,7 @@ function LoadFromLibraryModalUnified({
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg" showCloseButton={false} fullScreenOnMobile flexLayout>
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" showCloseButton={false} fullScreenOnMobile flexLayout titleA11y={title}>
       <div className="flex flex-col h-[70vh] max-h-[60vh] min-h-0 flex-1">
         {modalHeader}
 
@@ -346,7 +346,7 @@ function LoadFromLibraryModalUnified({
 
         <div className="flex flex-col gap-3 pt-4 border-t border-border-light mt-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-text-muted">
+            <span className="text-sm text-text-muted dark:text-text-secondary">
               {selectedId ? '1 item selected' : 'Select an item to load'}
             </span>
             <div className="flex gap-2">

@@ -74,8 +74,8 @@ export function PowerPartCard({
           </span>
           <span className="font-medium text-text-primary truncate">{part.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
-            <span className="text-energy">EN: {formatCost(partEnergy)}</span>
-            <span className="text-tp">TP: {formatCost(partTP)}</span>
+            <span className="text-energy-text">EN: {formatCost(partEnergy)}</span>
+            <span className="text-tp-text">TP: {formatCost(partTP)}</span>
           </span>
         </button>
         <IconButton onClick={onRemove} label="Remove part" variant="danger" size="sm">
@@ -151,10 +151,10 @@ export function PowerPartCard({
 
           <div className="flex gap-4 text-sm">
             <span className="text-text-secondary">
-              Base Energy: <strong className="text-energy">{formatCost(part.base_en || 0)}</strong>
+              Base Energy: <strong className="text-energy-text">{formatCost(part.base_en || 0)}</strong>
             </span>
             <span className="text-text-secondary">
-              Base TP: <strong className="text-tp">{formatCost(part.base_tp || 0)}</strong>
+              Base TP: <strong className="text-tp-text">{formatCost(part.base_tp || 0)}</strong>
             </span>
           </div>
 
@@ -165,10 +165,10 @@ export function PowerPartCard({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-energy-text">Option 1</span>
-                      <span className="text-sm font-medium text-energy">
+                      <span className="text-sm font-medium text-energy-text">
                         EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp">
+                      <span className="text-sm font-medium text-tp-text">
                         TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
                       </span>
                     </div>
@@ -189,10 +189,10 @@ export function PowerPartCard({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-energy-text">Option 2</span>
-                      <span className="text-sm font-medium text-energy">
+                      <span className="text-sm font-medium text-energy-text">
                         EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp">
+                      <span className="text-sm font-medium text-tp-text">
                         TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
                       </span>
                     </div>
@@ -213,10 +213,10 @@ export function PowerPartCard({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-energy-text">Option 3</span>
-                      <span className="text-sm font-medium text-energy">
+                      <span className="text-sm font-medium text-energy-text">
                         EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                       </span>
-                      <span className="text-sm font-medium text-tp">
+                      <span className="text-sm font-medium text-tp-text">
                         TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
                       </span>
                     </div>

@@ -604,10 +604,14 @@ function CharacterChip({
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
         {onViewSheet && (
-          <Link href={onViewSheet} target="_blank" rel="noopener noreferrer">
-            <IconButton label="View sheet" size="sm">
-              <ExternalLink className="w-4 h-4" />
-            </IconButton>
+          <Link
+            href={onViewSheet}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`View ${character.characterName} sheet`}
+            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          >
+            <ExternalLink className="w-4 h-4" />
           </Link>
         )}
         {canRemove && (
@@ -616,6 +620,7 @@ function CharacterChip({
             variant="danger"
             size="sm"
             onClick={onRemove}
+            className="min-h-[44px] min-w-[44px]"
           >
             <Trash2 className="w-4 h-4" />
           </IconButton>

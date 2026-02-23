@@ -160,13 +160,13 @@ export const DURATION_VALUES: Record<string, { value: number; label: string }[]>
 // =============================================================================
 
 export const RARITY_COLORS: Record<string, string> = {
-  Common: 'text-text-secondary bg-neutral-100',
-  Uncommon: 'text-green-600 bg-green-100',
-  Rare: 'text-blue-600 bg-blue-100',
+  Common: 'text-text-primary bg-neutral-200 dark:bg-neutral-600 dark:text-neutral-100',
+  Uncommon: 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/40',
+  Rare: 'text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40',
   Epic: 'text-power-text bg-power-light',
-  Legendary: 'text-amber-600 bg-amber-100',
-  Mythic: 'text-red-600 bg-red-100',
-  Ascended: 'text-pink-600 bg-pink-100',
+  Legendary: 'text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/40',
+  Mythic: 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/40',
+  Ascended: 'text-pink-700 bg-pink-100 dark:text-pink-300 dark:bg-pink-900/40',
 };
 
 // =============================================================================

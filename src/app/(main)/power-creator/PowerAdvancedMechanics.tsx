@@ -134,10 +134,10 @@ function AddedAdvancedChip({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 1</span>
-                  <span className="text-sm font-medium text-energy">
+                  <span className="text-sm font-medium text-energy-text">
                     EN {(part.op_1_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_en || 0)}
                   </span>
-                  <span className="text-sm font-medium text-tp">
+                  <span className="text-sm font-medium text-tp-text">
                     TP {(part.op_1_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_1_tp || 0)}
                   </span>
                 </div>
@@ -156,10 +156,10 @@ function AddedAdvancedChip({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 2</span>
-                  <span className="text-sm font-medium text-energy">
+                  <span className="text-sm font-medium text-energy-text">
                     EN {(part.op_2_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_en || 0)}
                   </span>
-                  <span className="text-sm font-medium text-tp">
+                  <span className="text-sm font-medium text-tp-text">
                     TP {(part.op_2_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_2_tp || 0)}
                   </span>
                 </div>
@@ -178,10 +178,10 @@ function AddedAdvancedChip({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-text-primary">Option 3</span>
-                  <span className="text-sm font-medium text-energy">
+                  <span className="text-sm font-medium text-energy-text">
                     EN {(part.op_3_en || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_en || 0)}
                   </span>
-                  <span className="text-sm font-medium text-tp">
+                  <span className="text-sm font-medium text-tp-text">
                     TP {(part.op_3_tp || 0) >= 0 ? '+' : ''}{formatCost(part.op_3_tp || 0)}
                   </span>
                 </div>
@@ -273,7 +273,7 @@ export function PowerAdvancedMechanicsSection({
         <div className="p-6 space-y-6">
           {selectedAdvancedParts.length > 0 && (
             <div>
-              <h4 className="text-sm font-bold text-text-secondary mb-3">Added Advanced Mechanics</h4>
+              <h3 className="text-sm font-bold text-text-secondary mb-3">Added Advanced Mechanics</h3>
               <div className="flex flex-wrap gap-2">
                 {selectedAdvancedParts.map((ap, idx) => (
                   <AddedAdvancedChip

@@ -68,6 +68,7 @@ export function ConfirmActionModal({
       fullScreenOnMobile
       size="sm"
       showCloseButton={false}
+      titleA11y={title}
     >
       <div className="flex flex-col items-center text-center">
         <div className={cn('w-12 h-12 rounded-full flex items-center justify-center mb-4', iconBg)}>

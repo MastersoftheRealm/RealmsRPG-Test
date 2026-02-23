@@ -97,8 +97,8 @@ export function CollapsibleSection({
                 <span className={cn(
                   'px-2 py-0.5 text-xs font-medium rounded-full',
                   points.spent > points.total 
-                    ? 'bg-danger-light text-danger-600' 
-                    : 'bg-warning-light text-warning-700'
+                    ? 'bg-danger-light text-danger-700 dark:text-danger-400' 
+                    : 'bg-warning-light text-warning-700 dark:text-warning-300'
                 )}>
                   {points.spent}/{points.total} pts
                 </span>
@@ -117,7 +117,7 @@ export function CollapsibleSection({
                 e.stopPropagation();
                 onEnabledChange?.(false);
               }}
-              className="text-danger-600 hover:bg-danger-light"
+              className="text-danger-600 dark:text-danger-400 hover:bg-danger-light dark:hover:bg-danger-900/20"
             >
               Remove
             </Button>

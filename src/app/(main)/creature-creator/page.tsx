@@ -773,7 +773,7 @@ function CreatureCreatorContent() {
     >
           {/* Basic Info - name, description, level, type, size (matches other creators) */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Basic Information</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Basic Information</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
@@ -818,7 +818,7 @@ function CreatureCreatorContent() {
 
           {/* Archetype Selection */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Archetype</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Archetype</h2>
             <ArchetypeSelector
               value={creature.archetypeType}
               powerProficiency={creature.powerProficiency}
@@ -834,7 +834,7 @@ function CreatureCreatorContent() {
 
           {/* HP/EN Allocation */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Health & Energy</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Health & Energy</h2>
             <HealthEnergyAllocator
               hpBonus={creature.hitPoints}
               energyBonus={creature.energyPoints}
@@ -849,7 +849,7 @@ function CreatureCreatorContent() {
 
           {/* Abilities - Using shared AbilityScoreEditor */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Abilities</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Abilities</h2>
             <AbilityScoreEditor
               abilities={creature.abilities}
               totalPoints={stats.abilityPoints}
@@ -865,7 +865,7 @@ function CreatureCreatorContent() {
 
           {/* Defenses */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Defenses</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Defenses</h2>
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               <DefenseBlock
                 name="Might"
@@ -908,7 +908,7 @@ function CreatureCreatorContent() {
 
           {/* Resistances, Weaknesses, Immunities */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h2>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Resistances</label>
@@ -957,7 +957,7 @@ function CreatureCreatorContent() {
 
           {/* Senses & Movement */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Senses & Movement</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Senses & Movement</h2>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Senses</label>
@@ -996,7 +996,7 @@ function CreatureCreatorContent() {
 
           {/* Condition Immunities */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Condition Immunities</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Condition Immunities</h2>
             <ChipList 
               items={creature.conditionImmunities} 
               onRemove={(item) => removeFromArray('conditionImmunities', item)}
@@ -1013,7 +1013,7 @@ function CreatureCreatorContent() {
           {/* Skills */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-text-primary">Skills</h3>
+              <h2 className="text-lg font-bold text-text-primary">Skills</h2>
               <div className="flex items-center gap-3">
                 <span className={cn(
                   'px-3 py-1 rounded-full text-sm font-medium',
@@ -1029,7 +1029,7 @@ function CreatureCreatorContent() {
             </div>
             
             {creature.skills.length === 0 ? (
-              <p className="text-sm text-text-muted italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {creature.skills.map(skill => {
@@ -1064,7 +1064,7 @@ function CreatureCreatorContent() {
 
           {/* Languages */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold text-text-primary mb-4">Languages</h3>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Languages</h2>
             <ChipList 
               items={creature.languages} 
               onRemove={(item) => removeFromArray('languages', item)}
@@ -1099,7 +1099,7 @@ function CreatureCreatorContent() {
             defaultExpanded={true}
           >
             {creature.feats.length === 0 ? (
-              <p className="text-sm text-text-muted italic mb-4">No feats added</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No feats added</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {creature.feats.map(feat => (
@@ -1137,7 +1137,7 @@ function CreatureCreatorContent() {
             defaultExpanded={true}
           >
             {creature.powers.length === 0 ? (
-              <p className="text-sm text-text-muted italic mb-4">No powers added</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No powers added</p>
             ) : (
               <div className="border border-border-light rounded-lg overflow-hidden mb-4">
                 <ListHeader
@@ -1199,7 +1199,7 @@ function CreatureCreatorContent() {
             defaultExpanded={true}
           >
             {creature.techniques.length === 0 ? (
-              <p className="text-sm text-text-muted italic mb-4">No techniques added</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No techniques added</p>
             ) : (
               <div className="border border-border-light rounded-lg overflow-hidden mb-4">
                 <ListHeader
@@ -1261,7 +1261,7 @@ function CreatureCreatorContent() {
             defaultExpanded={true}
           >
             {creature.armaments.length === 0 ? (
-              <p className="text-sm text-text-muted italic mb-4">No armaments added</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No armaments added</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {creature.armaments.map(armament => (

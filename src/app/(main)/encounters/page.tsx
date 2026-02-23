@@ -330,7 +330,7 @@ function EncounterRow({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-text-primary truncate">{encounter.name}</h3>
+          <h2 className="font-semibold text-text-primary truncate">{encounter.name}</h2>
           <span
             className={cn(
               'px-2 py-0.5 text-xs rounded-full font-medium',

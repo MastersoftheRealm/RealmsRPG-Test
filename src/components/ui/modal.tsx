@@ -38,6 +38,8 @@ interface ModalProps {
   flexLayout?: boolean;
   /** When true, render full-screen on viewports < md (768px). Sticky header/footer, scrollable content. See MOBILE_UX.md. */
   fullScreenOnMobile?: boolean;
+  /** Accessible name for the dialog when using custom content (no title/header). Overrides default "Dialog". */
+  titleA11y?: string;
 }
 
 const sizeClasses = {
@@ -65,6 +67,7 @@ export function Modal({
   showCloseButton = true,
   flexLayout = false,
   fullScreenOnMobile = false,
+  titleA11y,
 }: ModalProps) {
   const [mounted, setMounted] = React.useState(false);
   const [animating, setAnimating] = React.useState(false);
@@ -144,9 +147,18 @@ export function Modal({
         )}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? 'modal-title' : undefined}
+        aria-labelledby={(title && hasSimpleHeader) || (!title && hasCustomHeader) ? 'modal-title' : undefined}
+        aria-label={
+          ((title && hasSimpleHeader) || (!title && hasCustomHeader))
+            ? undefined
+            : (titleA11y ?? (!title && !hasCustomHeader ? 'Dialog' : undefined))
+        }
         aria-describedby={description ? 'modal-description' : undefined}
       >
+        {/* Visually hidden title when custom header without title, for screen readers */}
+        {!title && hasCustomHeader && (
+          <span id="modal-title" className="sr-only">Dialog</span>
+        )}
         {/* Simple Header (title/description mode) */}
         {hasSimpleHeader && (
           <div className="mx-4 mt-4 mb-2 px-4 py-3 bg-primary-50 dark:bg-primary-900/30 rounded-xl border-b border-border-light">
