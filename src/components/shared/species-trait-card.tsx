@@ -123,7 +123,7 @@ const NEUTRAL_COLORS = {
   bg: 'bg-surface-alt',
   border: 'border-border-light',
   text: 'text-text-primary',
-  iconColor: 'text-text-muted',
+  iconColor: 'text-text-muted dark:text-text-secondary',
   selectedBg: 'bg-primary-50',
   selectedBorder: 'border-primary-400',
 };
@@ -218,7 +218,7 @@ export function SpeciesTraitCard({
               </h4>
               {/* Subtext label for trait type when using neutral style */}
               {neutralStyle && (
-                <span className="text-xs text-text-muted italic">
+                <span className="text-xs text-text-muted dark:text-text-secondary italic">
                   {config.label}
                 </span>
               )}
@@ -237,7 +237,7 @@ export function SpeciesTraitCard({
                 )}
                 <span className={cn(
                   'text-xs font-medium min-w-[36px] text-center',
-                  usesRemaining === 0 ? 'text-danger-600' : 'text-text-secondary'
+                  usesRemaining === 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
                 )}>
                   {usesRemaining}/{maxUses}
                 </span>
@@ -264,7 +264,7 @@ export function SpeciesTraitCard({
           
           {/* Recovery period */}
           {hasLimitedUses && trait.recoveryPeriod && (
-            <p className="text-xs text-text-muted mt-1 italic">
+            <p className="text-xs text-text-muted dark:text-text-secondary mt-1 italic">
               🔄 {trait.recoveryPeriod}
             </p>
           )}
@@ -322,15 +322,15 @@ export function TraitGroup({
         <div className="flex items-center gap-2">
           <Icon className={cn('w-5 h-5', colors.iconColor)} />
           <h3 className={cn('font-semibold', colors.text)}>{title}</h3>
-          <span className="text-sm text-text-muted">({traits.length})</span>
+          <span className="text-sm text-text-muted dark:text-text-secondary">({traits.length})</span>
         </div>
         {subtitle && (
-          <span className="text-sm text-text-muted">{subtitle}</span>
+          <span className="text-sm text-text-muted dark:text-text-secondary">{subtitle}</span>
         )}
         {selection && selection.maxSelections && (
           <span className={cn(
             'text-sm font-medium',
-            selectedCount >= (selection.maxSelections || 0) ? 'text-success-600' : 'text-text-muted'
+            selectedCount >= (selection.maxSelections || 0) ? 'text-success-700 dark:text-success-400' : 'text-text-muted dark:text-text-secondary'
           )}>
             {selectedCount}/{selection.maxSelections} selected
           </span>
@@ -339,7 +339,7 @@ export function TraitGroup({
       
       {/* Traits */}
       {traits.length === 0 ? (
-        <p className="text-sm text-text-muted italic">{emptyMessage}</p>
+        <p className="text-sm text-text-muted dark:text-text-secondary italic">{emptyMessage}</p>
       ) : (
         <div className={cn('grid gap-2', compact ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2')}>
           {traits.map((trait, idx) => {

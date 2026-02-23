@@ -53,11 +53,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       return (
         <div className="flex flex-col items-center justify-center gap-3 p-8 rounded-lg bg-surface border border-border-light text-center">
-          <AlertCircle className="w-8 h-8 text-danger-600" />
+          <AlertCircle className="w-8 h-8 text-danger-600 dark:text-danger-400" />
           <h3 className="text-lg font-semibold text-text-primary">
             Something went wrong
           </h3>
-          <p className="text-sm text-text-muted max-w-md">
+          <p className="text-sm text-text-muted dark:text-text-secondary max-w-md">
             {this.props.section
               ? `An error occurred in the ${this.props.section} section.`
               : 'An unexpected error occurred.'}

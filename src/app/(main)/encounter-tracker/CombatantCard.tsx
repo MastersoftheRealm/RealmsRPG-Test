@@ -145,7 +145,7 @@ export const CombatantCard = memo(function CombatantCard({
           onDragEnd={onDragEnd}
           className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none"
         >
-          <div className="text-text-muted hover:text-text-secondary p-1 rounded hover:bg-surface-alt">
+          <div className="text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary p-1 rounded hover:bg-surface-alt">
             <GripVertical className="w-5 h-5" />
           </div>
           <div
@@ -194,7 +194,7 @@ export const CombatantCard = memo(function CombatantCard({
               <div
                 role="button"
                 tabIndex={0}
-                className={cn('text-base font-bold cursor-pointer hover:text-primary-600', isDead && 'line-through text-text-muted')}
+                className={cn('text-base font-bold cursor-pointer hover:text-primary-600', isDead && 'line-through text-text-muted dark:text-text-secondary')}
                 onClick={() => setIsEditingName(true)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsEditingName(true); } }}
                 title="Click to edit name"
@@ -230,7 +230,7 @@ export const CombatantCard = memo(function CombatantCard({
                 onChange={(e) => onUpdate({ isSurprised: e.target.checked })}
                 className="rounded border-border-light w-3.5 h-3.5"
               />
-              <span className="text-[10px] text-text-muted">Surprised</span>
+              <span className="text-[10px] text-text-muted dark:text-text-secondary">Surprised</span>
             </label>
             {isCurrentTurn && (
               <span className="px-1.5 py-0.5 text-[10px] bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 rounded font-medium">
@@ -244,7 +244,7 @@ export const CombatantCard = memo(function CombatantCard({
             )}
 
             <div className={cn('flex items-center gap-1 ml-auto', variant === 'compact' && 'gap-2')}>
-              <span className={cn('text-text-muted', variant === 'compact' ? 'text-sm font-medium' : 'text-xs')}>AP:</span>
+              <span className={cn('text-text-muted dark:text-text-secondary', variant === 'compact' ? 'text-sm font-medium' : 'text-xs')}>AP:</span>
               {isLinkedToCharacter ? (
                 <span className={cn('font-medium', variant === 'compact' ? 'text-sm' : 'text-xs')} title="Synced from character sheet">{combatant.ap}</span>
               ) : (
@@ -351,7 +351,7 @@ export const CombatantCard = memo(function CombatantCard({
                         combatant.currentHealth <= 0 ? 'border-red-300 dark:border-red-600/50 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300' : 'border-border-light'
                       )}
                     />
-                    <span className="text-text-muted text-xs">/</span>
+                    <span className="text-text-muted dark:text-text-secondary text-xs">/</span>
                     <input
                       type="number"
                       value={combatant.maxHealth}
@@ -380,7 +380,7 @@ export const CombatantCard = memo(function CombatantCard({
                       onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
                       className="w-12 px-1 py-0.5 text-xs border border-border-light rounded text-center font-medium"
                     />
-                    <span className="text-text-muted text-xs">/</span>
+                    <span className="text-text-muted dark:text-text-secondary text-xs">/</span>
                     <input
                       type="number"
                       value={combatant.maxEnergy}
@@ -593,7 +593,7 @@ export const CombatantCard = memo(function CombatantCard({
                   Add Custom
                 </Button>
               </div>
-              <p className="text-xs text-text-muted">
+              <p className="text-xs text-text-muted dark:text-text-secondary">
                 Left-click to increase level, right-click or × to decrease/remove. Custom conditions are leveled.
               </p>
             </div>

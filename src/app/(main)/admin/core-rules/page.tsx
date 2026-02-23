@@ -52,7 +52,7 @@ function FieldRow({ label, children, hint }: { label: string; children: React.Re
     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 py-2 border-b border-border-subtle last:border-0">
       <label className="sm:w-64 text-sm font-medium text-text-secondary shrink-0">{label}</label>
       <div className="flex-1">{children}</div>
-      {hint && <span className="text-xs text-text-muted ml-2 shrink-0">{hint}</span>}
+      {hint && <span className="text-xs text-text-muted dark:text-text-secondary ml-2 shrink-0">{hint}</span>}
     </div>
   );
 }
@@ -121,7 +121,7 @@ function ProgressionPreview({ data }: { data: Record<string, unknown> }) {
       <SectionTitle>Level 1-10 Preview</SectionTitle>
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-text-muted border-b">
+          <tr className="text-text-muted dark:text-text-secondary border-b">
             <th className="text-center py-1 px-2">Lvl</th>
             <th className="text-center py-1 px-2">Ability Pts</th>
             <th className="text-center py-1 px-2">Skill Pts</th>
@@ -325,7 +325,7 @@ function CategoryEditor({
                   delete updated[name];
                   set('standardArrays', updated);
                 }}
-                className="p-1 text-text-muted hover:text-red-500 transition-colors"
+                className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 transition-colors"
                 title="Remove array"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -391,7 +391,7 @@ function CategoryEditor({
                     const updated = standard.filter((_, idx) => idx !== i);
                     set('standard', updated);
                   }}
-                  className="p-1 text-text-muted hover:text-red-500 transition-colors shrink-0"
+                  className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 transition-colors shrink-0"
                   title="Remove condition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -434,7 +434,7 @@ function CategoryEditor({
                     const updated = leveled.filter((_, idx) => idx !== i);
                     set('leveled', updated);
                   }}
-                  className="p-1 text-text-muted hover:text-red-500 transition-colors shrink-0"
+                  className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 transition-colors shrink-0"
                   title="Remove condition"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -467,7 +467,7 @@ function CategoryEditor({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-text-muted border-b">
+                <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
                   <th className="text-left py-1 px-2">Label</th>
                   <th className="text-left py-1 px-2">Height</th>
                   <th className="text-center py-1 px-2">Spaces</th>
@@ -499,7 +499,7 @@ function CategoryEditor({
                       <NumInput value={s.minCarry as number ?? 0} onChange={v => setSizeField(i, 'minCarry', v)} min={0} />
                     </td>
                     <td className="py-1 px-1">
-                      <button onClick={() => set('categories', categories.filter((_, idx) => idx !== i))} className="p-1 text-text-muted hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => set('categories', categories.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
                 ))}
@@ -530,7 +530,7 @@ function CategoryEditor({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-text-muted border-b">
+                <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
                   <th className="text-left py-1 px-2">Name</th>
                   <th className="text-center py-1 px-2">Level Min</th>
                   <th className="text-center py-1 px-2">Level Max</th>
@@ -550,7 +550,7 @@ function CategoryEditor({
                     <td className="text-center py-1 px-1"><NumInput value={t.currencyMin as number ?? 0} onChange={v => setTierField(i, 'currencyMin', v)} min={0} /></td>
                     <td className="text-center py-1 px-1"><NumInput value={t.currencyMax as number ?? 0} onChange={v => setTierField(i, 'currencyMax', v || null)} min={0} /></td>
                     <td className="py-1 px-1">
-                      <button onClick={() => set('tiers', tiers.filter((_, idx) => idx !== i))} className="p-1 text-text-muted hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => set('tiers', tiers.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
                 ))}
@@ -591,7 +591,7 @@ function CategoryEditor({
           </div>
 
           <SectionTitle>Armor Exception Types</SectionTitle>
-          <p className="text-sm text-text-muted mb-2">These damage types bypass armor damage reduction. Click to toggle.</p>
+          <p className="text-sm text-text-muted dark:text-text-secondary mb-2">These damage types bypass armor damage reduction. Click to toggle.</p>
           <div className="flex flex-wrap gap-1.5">
             {all.map(t => (
               <button
@@ -603,7 +603,7 @@ function CategoryEditor({
                     set('armorExceptions', [...exceptions, t]);
                   }
                 }}
-                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 ring-1 ring-amber-300' : 'bg-surface-alt text-text-muted hover:bg-surface-alt/80'}`}
+                className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${exceptions.includes(t) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 ring-1 ring-amber-300' : `bg-surface-alt text-text-muted dark:text-text-secondary hover:bg-surface-alt/80`}`}
               >
                 {t}{exceptions.includes(t) ? ' ⚡' : ''}
               </button>
@@ -653,7 +653,7 @@ function CategoryEditor({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-text-muted border-b">
+                <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
                   <th className="text-center py-1 px-4">Martial Prof</th>
                   <th className="text-center py-1 px-4">Armament Max (TP)</th>
                   <th className="w-8"></th>
@@ -669,7 +669,7 @@ function CategoryEditor({
                       <NumInput value={row.armamentMax} onChange={v => { const u = [...table]; u[i] = { ...row, armamentMax: v }; set('table', u); }} min={0} />
                     </td>
                     <td className="py-1 px-1">
-                      <button onClick={() => set('table', table.filter((_, idx) => idx !== i))} className="p-1 text-text-muted hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => set('table', table.filter((_, idx) => idx !== i))} className="p-1 text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
                 ))}
@@ -691,7 +691,7 @@ function CategoryEditor({
     }
 
     default:
-      return <p className="text-text-muted">No editor available for this category.</p>;
+      return <p className="text-text-muted dark:text-text-secondary">No editor available for this category.</p>;
   }
 }
 
@@ -794,7 +794,7 @@ export default function AdminCoreRulesPage() {
   return (
     <PageContainer size="xl">
       <div className="flex items-center gap-3 mb-4">
-        <Link href="/admin" className="text-text-muted hover:text-text-primary transition-colors">
+        <Link href="/admin" className="text-text-muted dark:text-text-secondary hover:text-text-primary transition-colors">
           <ChevronLeft className="w-5 h-5" />
         </Link>
         <PageHeader

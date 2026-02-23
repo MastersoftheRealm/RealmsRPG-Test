@@ -680,7 +680,7 @@ export function LibrarySection({
                     value={innatePools}
                   />
                 </SummaryRow>
-                <p className="text-xs text-text-muted mt-1 text-center">
+                <p className="text-xs text-text-muted dark:text-text-secondary mt-1 text-center">
                   Innate powers have no cost to use. You may have powers with energy costs up to your innate energy.
                 </p>
               </TabSummarySection>
@@ -795,7 +795,7 @@ export function LibrarySection({
                     })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted italic text-center py-4">
+                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
                   No innate powers. Enter edit mode (click the pencil) to mark powers as innate.
                 </p>
               )}
@@ -910,7 +910,7 @@ export function LibrarySection({
                     })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted italic text-center py-4">
+                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
                   No powers learned
                 </p>
               )}
@@ -1008,7 +1008,7 @@ export function LibrarySection({
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted italic text-center py-4">
+                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
                   No techniques learned
                 </p>
               )}
@@ -1043,7 +1043,7 @@ export function LibrarySection({
                     className="w-20 px-2 py-1 text-sm font-bold text-warning-600 dark:text-warning-400 border border-warning-300 dark:border-warning-600/50 rounded focus:ring-2 focus:ring-warning-500 bg-white dark:bg-surface"
                     title="Use +5, -10, or a number"
                   />
-                  <span className="text-sm font-medium text-text-muted">Currency</span>
+                  <span className="text-sm font-medium text-text-muted dark:text-text-secondary">Currency</span>
                 </div>
               </SummaryRow>
               {martialProficiency !== undefined && (
@@ -1099,7 +1099,7 @@ export function LibrarySection({
                     }));
                     const columns: ColumnValue[] = [
                       { key: 'attack', value: attackDisplay, className: 'font-medium', align: 'center' },
-                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-danger-600 font-medium', align: 'center' },
+                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-danger-600 dark:text-danger-400 font-medium', align: 'center' },
                       { key: 'range', value: (item as Item & { range?: string }).range || 'Melee', align: 'center' },
                     ];
                     
@@ -1147,7 +1147,7 @@ export function LibrarySection({
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted italic text-center py-4">No weapons (see Unarmed Prowess in Archetype section)</p>
+                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No weapons (see Unarmed Prowess in Archetype section)</p>
               )}
             </div>
 
@@ -1188,7 +1188,7 @@ export function LibrarySection({
                     }));
                     const columns: ColumnValue[] = [
                       { key: 'attack', value: shieldDamageStr !== '-' ? (attackBonus >= 0 ? '+' : '') + attackBonus : '-', align: 'center' },
-                      { key: 'damage', value: shieldDamageStr !== '-' ? shieldDamageStr : '-', className: shieldDamageStr !== '-' ? 'text-danger-600 font-medium' : '', align: 'center' },
+                      { key: 'damage', value: shieldDamageStr !== '-' ? shieldDamageStr : '-', className: shieldDamageStr !== '-' ? 'text-danger-600 dark:text-danger-400 font-medium' : '', align: 'center' },
                       { key: 'block', value: shieldBlock, className: 'text-primary-600 dark:text-primary-400 font-medium', align: 'center' },
                     ];
                     return (
@@ -1225,7 +1225,7 @@ export function LibrarySection({
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted italic text-center py-4">No shields</p>
+                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No shields</p>
               )}
             </div>
             
@@ -1326,7 +1326,7 @@ export function LibrarySection({
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted italic text-center py-4">No armor</p>
+                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No armor</p>
               )}
             </div>
             
@@ -1413,7 +1413,7 @@ export function LibrarySection({
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-text-muted italic text-center py-4">No equipment</p>
+                <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">No equipment</p>
               )}
             </div>
           </div>
@@ -1488,7 +1488,7 @@ export function LibrarySection({
         )}
 
         {activeTab === 'notes' && !abilities && (
-          <p className="text-text-muted text-sm italic text-center py-4">
+          <p className="text-text-muted dark:text-text-secondary text-sm italic text-center py-4">
             Character abilities not loaded
           </p>
         )}

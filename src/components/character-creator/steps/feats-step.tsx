@@ -391,7 +391,7 @@ export function FeatsStep() {
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedArchetypeFeats.length === 0 ? (
-              <span className="text-sm text-text-muted italic">None selected</span>
+              <span className="text-sm text-text-muted dark:text-text-secondary italic">None selected</span>
             ) : (
               selectedArchetypeFeats.map(feat => {
                 const key = `arch-${feat.id}`;
@@ -409,7 +409,7 @@ export function FeatsStep() {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        className="hover:text-red-500 font-bold flex-shrink-0"
+                        className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
                       </button>
@@ -446,7 +446,7 @@ export function FeatsStep() {
           </div>
           <div className="flex flex-wrap gap-2">
             {selectedCharacterFeats.length === 0 ? (
-              <span className="text-sm text-text-muted italic">None selected</span>
+              <span className="text-sm text-text-muted dark:text-text-secondary italic">None selected</span>
             ) : (
               selectedCharacterFeats.map(feat => {
                 const key = `char-${feat.id}`;
@@ -464,7 +464,7 @@ export function FeatsStep() {
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); updateDraft({ feats: draft.feats?.filter(f => f.id !== feat.id) }); }}
-                        className="hover:text-red-500 font-bold flex-shrink-0"
+                        className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 font-bold flex-shrink-0 min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]"
                       >
                         ×
                       </button>

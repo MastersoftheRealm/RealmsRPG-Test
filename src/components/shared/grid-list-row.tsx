@@ -415,7 +415,7 @@ export const GridListRow = memo(function GridListRow({
               size="sm"
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               label="Remove"
-              className="text-danger hover:text-danger-600 hover:bg-transparent"
+              className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
             >
               <X className="w-4 h-4" />
             </IconButton>
@@ -480,7 +480,7 @@ export const GridListRow = memo(function GridListRow({
               
               {/* Warning message */}
               {warningMessage && (
-                <p className="text-xs text-warning-600 mb-3 flex items-center gap-1">
+                <p className="text-xs text-warning-600 dark:text-warning-400 mb-3 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
                   {warningMessage}
                 </p>

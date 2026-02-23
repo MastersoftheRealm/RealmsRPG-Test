@@ -82,7 +82,7 @@ const TYPE_CONFIG: Record<LibraryItemType, { icon: React.ReactNode; color: strin
   },
   technique: {
     icon: <Sword className="w-5 h-5" />,
-    color: 'text-martial',
+    color: 'text-martial-dark',
     emptyText: 'No saved techniques found. Create some techniques first!',
   },
   item: {

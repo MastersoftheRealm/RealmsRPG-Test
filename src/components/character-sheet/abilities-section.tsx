@@ -288,7 +288,7 @@ export function AbilitiesSection({
                   />
                   <span className={cn(
                     'text-2xl font-bold min-w-[56px] text-center',
-                    value > 0 ? 'text-success-700 dark:text-success-400' : value < 0 ? 'text-danger-600' : 'text-text-secondary'
+                    value > 0 ? 'text-success-700 dark:text-success-400' : value < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-secondary'
                   )}>
                     {formatBonus(value)}
                   </span>
@@ -310,7 +310,7 @@ export function AbilitiesSection({
               
               {/* Cost indicator in edit mode - only show if next point costs 2 */}
               {showEditControls && value >= 3 && canIncrease && (
-                <span className="text-[10px] text-warning-600 font-medium mt-1">
+                <span className="text-[10px] text-warning-600 dark:text-warning-400 font-medium mt-1">
                   Next: {cost} Points
                 </span>
               )}

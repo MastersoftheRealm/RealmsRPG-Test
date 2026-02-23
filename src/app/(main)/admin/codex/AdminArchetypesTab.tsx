@@ -133,7 +133,7 @@ export function AdminArchetypesTab() {
                       size="sm"
                       onClick={() => setPendingDeleteId(a.id)}
                       label="Delete"
-                      className="text-danger hover:text-danger-600 hover:bg-transparent"
+                      className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
                     >
                       <X className="w-4 h-4" />
                     </IconButton>

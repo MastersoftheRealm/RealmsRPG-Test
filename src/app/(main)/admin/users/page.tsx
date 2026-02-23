@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
       ) : error ? (
         <Alert variant="danger">{error}</Alert>
       ) : users.length === 0 ? (
-        <p className="text-text-muted italic">No users found.</p>
+        <p className="text-text-muted dark:text-text-secondary italic">No users found.</p>
       ) : (
         <div className="rounded-lg border border-border overflow-hidden bg-surface">
           <table className="w-full text-sm">
@@ -123,7 +123,7 @@ export default function AdminUsersPage() {
                   <td className="py-3 px-4 text-text-secondary">{ROLE_LABELS[u.role]}</td>
                   <td className="py-3 px-4">
                     {u.role === 'admin' ? (
-                      <span className="text-text-muted">Admin</span>
+                      <span className="text-text-muted dark:text-text-secondary">Admin</span>
                     ) : (
                       <select
                         value={u.role}

@@ -113,7 +113,7 @@ export const ItemCard = memo(function ItemCard({
               {item.name}
             </h3>
             {item.subtitle && (
-              <p className="text-xs text-text-muted truncate">{item.subtitle}</p>
+              <p className="text-xs text-text-muted dark:text-text-secondary truncate">{item.subtitle}</p>
             )}
           </div>
         </div>
@@ -178,7 +178,7 @@ export const ItemCard = memo(function ItemCard({
                   size="sm"
                   onClick={() => actions.onDelete?.(item)}
                   label="Remove"
-                  className="text-danger hover:text-danger-600 hover:bg-transparent"
+                  className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
                 >
                   <X className="w-4 h-4" />
                 </IconButton>
@@ -210,7 +210,7 @@ export const ItemCard = memo(function ItemCard({
           {item.tags.map((tag, i) => (
             <span 
               key={i}
-              className="text-xs px-1.5 py-0.5 rounded bg-surface-alt text-text-muted"
+              className="text-xs px-1.5 py-0.5 rounded bg-surface-alt text-text-muted dark:text-text-secondary"
             >
               {tag}
             </span>
@@ -220,7 +220,7 @@ export const ItemCard = memo(function ItemCard({
       
       {/* Disabled reason */}
       {item.isDisabled && item.disabledReason && (
-        <div className="flex items-center gap-1.5 mt-2 text-xs text-danger-600">
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-danger-600 dark:text-danger-400">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>{item.disabledReason}</span>
         </div>

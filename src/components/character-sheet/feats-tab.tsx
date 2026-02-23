@@ -398,7 +398,7 @@ export function FeatsTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-muted italic text-center py-4">
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
             No traits
           </p>
         )}
@@ -411,11 +411,11 @@ export function FeatsTab({
           onAdd={showEditControls ? onAddArchetypeFeat : undefined}
           addLabel="Add archetype feat"
           rightContent={showEditControls && maxArchetypeFeats !== undefined ? (
-            <span className={cn('tabular-nums text-sm font-medium', archetypeOver && 'text-danger-600')}>
+            <span className={cn('tabular-nums text-sm font-medium', archetypeOver && 'text-danger-600 dark:text-danger-400')}>
               {archetypeCount}/{maxArchetypeFeats}
             </span>
           ) : undefined}
-          addButtonClassName={archetypeOver ? 'text-danger-600 hover:text-danger-700 hover:bg-danger-50' : undefined}
+          addButtonClassName={archetypeOver ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30' : undefined}
         />
         {hasArchetypeFeats && (
           <ListHeader
@@ -477,7 +477,7 @@ export function FeatsTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-muted italic text-center py-4">
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
             No archetype feats selected
           </p>
         )}
@@ -490,11 +490,11 @@ export function FeatsTab({
           onAdd={showEditControls ? onAddCharacterFeat : undefined}
           addLabel="Add character feat"
           rightContent={showEditControls && maxCharacterFeats !== undefined ? (
-            <span className={cn('tabular-nums text-sm font-medium', characterOver && 'text-danger-600')}>
+            <span className={cn('tabular-nums text-sm font-medium', characterOver && 'text-danger-600 dark:text-danger-400')}>
               {characterCount}/{maxCharacterFeats}
             </span>
           ) : undefined}
-          addButtonClassName={characterOver ? 'text-danger-600 hover:text-danger-700 hover:bg-danger-50' : undefined}
+          addButtonClassName={characterOver ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30' : undefined}
         />
         {hasCharacterFeats && (
           <ListHeader
@@ -556,7 +556,7 @@ export function FeatsTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-muted italic text-center py-4">
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">
             No character feats selected
           </p>
         )}
@@ -604,7 +604,7 @@ export function FeatsTab({
                         'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
                         (stateUsesCurrent ?? stateUsesMax) > 0
                           ? 'bg-primary-600 text-white hover:bg-primary-700'
-                          : 'bg-surface-alt text-text-muted cursor-not-allowed'
+                          : 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
                       )}
                     >
                       Enter State
@@ -677,7 +677,7 @@ export function FeatsTab({
 
       {/* Empty state */}
       {!hasTraits && !hasArchetypeFeats && !hasCharacterFeats && !hasStateFeats && (
-        <div className="text-center py-8 text-text-muted">
+        <div className="text-center py-8 text-text-muted dark:text-text-secondary">
           <p className="text-sm italic">No traits or feats to display</p>
         </div>
       )}

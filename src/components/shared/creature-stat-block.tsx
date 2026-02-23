@@ -152,7 +152,7 @@ function AbilityRow({ abilities }: { abilities: CreatureAbilities }) {
             <span className="font-bold text-text-muted dark:text-text-secondary">{getAbilityAbbrev(key)}</span>
             <span className={cn(
               'font-medium',
-              value > 0 ? 'text-success-600 dark:text-success-400' : value < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted dark:text-text-secondary'
+              value > 0 ? 'text-success-700 dark:text-success-400' : value < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted dark:text-text-secondary'
             )}>
               {formatModifier(value)}
             </span>

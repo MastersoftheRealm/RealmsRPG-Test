@@ -365,7 +365,7 @@ function LargeStatBlock({
           </button>
           <span className={cn(
             'text-xs min-w-[3rem] text-center',
-            pencilState === 'over-budget' ? 'text-danger-600 font-bold' :
+            pencilState === 'over-budget' ? 'text-danger-600 dark:text-danger-400 font-bold' :
             pencilState === 'has-points' ? 'text-success-700 dark:text-success-400 font-bold' : 'text-text-muted dark:text-text-secondary'
           )}>
             Base: {baseValue}

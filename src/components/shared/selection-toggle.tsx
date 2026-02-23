@@ -64,8 +64,8 @@ export function SelectionToggle({
         'flex items-center justify-center transition-all duration-200 ease-out',
         SIZE_STYLES[size],
         isSelected
-          ? 'text-success-600'
-          : 'text-text-muted hover:text-primary-600',
+          ? 'text-success-700 dark:text-success-400'
+          : 'text-text-muted dark:text-text-secondary hover:text-primary-600',
         disabled && 'opacity-40 cursor-not-allowed',
         className
       )}

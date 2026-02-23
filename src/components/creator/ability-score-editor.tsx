@@ -213,8 +213,8 @@ export function AbilityScoreEditor({
 
                   <div className={cn(
                     'text-2xl font-bold min-w-[3rem] text-center',
-                    value > 0 ? 'text-success-600 dark:text-success-400' :
-                    value < 0 ? 'text-danger-600' :
+                    value > 0 ? 'text-success-700 dark:text-success-400' :
+                    value < 0 ? 'text-danger-600 dark:text-danger-400' :
                     'text-text-secondary'
                   )}>
                     {formatBonus(value)}
@@ -235,7 +235,7 @@ export function AbilityScoreEditor({
                 {isEditMode && useHighAbilityCost && (
                   <p className={cn(
                     "text-[10px] font-medium text-center mt-1",
-                    value >= 3 && canInc ? "text-warning-600" : "invisible"
+                    value >= 3 && canInc ? "text-warning-600 dark:text-warning-400" : "invisible"
                   )}>
                     Next: {increaseCost} Points
                   </p>
@@ -244,7 +244,7 @@ export function AbilityScoreEditor({
               
               {/* Description below card (not in compact mode) */}
               {!compact && (
-                <p className="text-xs text-text-muted text-center mt-1.5 px-1 line-clamp-2 min-h-[2.5rem]">
+                <p className="text-xs text-text-muted dark:text-text-secondary text-center mt-1.5 px-1 line-clamp-2 min-h-[2.5rem]">
                   {info.description}
                 </p>
               )}

@@ -183,13 +183,13 @@ export const SkillRow = memo(function SkillRow({
         {/* Skill Name */}
         <td className={cn(
           'py-2 pl-2 font-medium',
-          isSubSkill ? 'text-text-muted italic' : 'text-text-primary',
-          !isUnlocked && 'text-text-muted'
+          isSubSkill ? 'text-text-muted dark:text-text-secondary italic' : 'text-text-primary',
+          !isUnlocked && 'text-text-muted dark:text-text-secondary'
         )}>
-          {isSubSkill && <span className="text-text-muted mr-1">└</span>}
+          {isSubSkill && <span className="text-text-muted dark:text-text-secondary mr-1">└</span>}
           {name}
           {isSpeciesSkill && (
-            <span className="ml-1 text-xs text-text-muted">(species)</span>
+            <span className="ml-1 text-xs text-text-muted dark:text-text-secondary">(species)</span>
           )}
         </td>
         
@@ -276,7 +276,7 @@ export const SkillRow = memo(function SkillRow({
               size="sm"
               onClick={() => onRemove()}
               label="Remove skill"
-              className="text-danger hover:text-danger-600 hover:bg-transparent"
+              className="text-danger dark:text-danger-400 hover:text-danger-600 dark:hover:text-danger-300 hover:bg-transparent"
             >
               <X className="w-4 h-4" />
             </IconButton>
@@ -308,7 +308,7 @@ export const SkillRow = memo(function SkillRow({
                 disabled={isSpeciesSkill}
                 className={cn(
                   isSpeciesSkill
-                    ? 'text-text-muted opacity-50 cursor-not-allowed'
+                    ? 'text-text-muted dark:text-text-secondary opacity-50 cursor-not-allowed'
                     : 'text-danger hover:text-danger-600 hover:bg-transparent'
                 )}
               >
@@ -331,7 +331,7 @@ export const SkillRow = memo(function SkillRow({
             <div className="flex flex-col">
               <span className="font-medium text-text-primary">{name}</span>
               {ability && (
-                <span className="text-xs text-text-muted capitalize">{ability}</span>
+                <span className="text-xs text-text-muted dark:text-text-secondary capitalize">{ability}</span>
               )}
             </div>
             
@@ -356,13 +356,13 @@ export const SkillRow = memo(function SkillRow({
                 {/* Bonus display */}
                 <span className={cn(
                   'w-12 text-right font-bold',
-                  bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted'
+                  bonus > 0 ? 'text-success-700 dark:text-success-400' : bonus < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-text-muted dark:text-text-secondary'
                 )}>
                   {formatBonus(bonus)}
                 </span>
               </>
             ) : (
-              <span className="text-xs text-text-muted italic">
+              <span className="text-xs text-text-muted dark:text-text-secondary italic">
                 {lockMessage || `Requires ${baseSkillName || 'base skill'}`}
               </span>
             )}
@@ -385,11 +385,11 @@ export const SkillRow = memo(function SkillRow({
       )}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted">↳</span>
+            <span className="text-xs text-text-muted dark:text-text-secondary">↳</span>
             <span className={cn(
               'font-medium',
               isSpeciesSkill ? 'text-primary-700' :
-                isUnlocked ? 'text-text-primary' : 'text-text-muted'
+                isUnlocked ? 'text-text-primary' : 'text-text-muted dark:text-text-secondary'
             )}>
               {name}
             </span>
@@ -411,7 +411,7 @@ export const SkillRow = memo(function SkillRow({
               )}
             </div>
           ) : (
-            <span className="text-xs text-text-muted italic">
+            <span className="text-xs text-text-muted dark:text-text-secondary italic">
               {lockMessage || `Requires ${baseSkillName || 'base skill'}`}
             </span>
           )}

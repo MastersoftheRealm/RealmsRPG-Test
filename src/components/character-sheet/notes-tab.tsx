@@ -111,7 +111,7 @@ function NoteCard({
             title="Click to rename"
           >
             {note.name}
-            <Pencil className="w-3 h-3 inline ml-1 text-text-muted" />
+            <Pencil className="w-3 h-3 inline ml-1 text-text-muted dark:text-text-secondary" />
           </span>
         )}
         
@@ -233,7 +233,7 @@ export function NotesTab({
                     onBlur={handleWeightBlur}
                     className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
                   />
-                  <span className="text-sm text-text-muted">kg</span>
+                  <span className="text-sm text-text-muted dark:text-text-secondary">kg</span>
                 </div>
               ) : (
                 <span className="text-sm font-bold text-text-primary">{weight} kg</span>
@@ -253,7 +253,7 @@ export function NotesTab({
                     onBlur={handleHeightBlur}
                     className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
                   />
-                  <span className="text-sm text-text-muted">cm</span>
+                  <span className="text-sm text-text-muted dark:text-text-secondary">cm</span>
                 </div>
               ) : (
                 <span className="text-sm font-bold text-text-primary">{height} cm</span>
@@ -280,7 +280,7 @@ export function NotesTab({
             >
               {fallDice}
             </Button>
-            <span className="text-text-muted">
+            <span className="text-text-muted dark:text-text-secondary">
               bludgeoning per 2 spaces fallen ({weightCategory}kg category)
             </span>
           </div>
@@ -341,7 +341,7 @@ export function NotesTab({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-text-muted italic py-4 text-center">
+          <p className="text-sm text-text-muted dark:text-text-secondary italic py-4 text-center">
             No custom notes yet. Click + to add one.
           </p>
         )}

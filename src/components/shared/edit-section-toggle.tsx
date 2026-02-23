@@ -36,11 +36,11 @@ const STATE_COLORS: Record<EditState, { icon: string; glow?: string }> = {
     icon: 'text-primary-500 hover:text-primary-600',
   },
   'has-points': {
-    icon: 'text-success-600 hover:text-success-700',
+    icon: 'text-success-700 dark:text-success-400 hover:text-success-800 dark:hover:text-success-300',
     glow: 'drop-shadow-[0_0_3px_rgba(34,197,94,0.5)]',
   },
   'over-budget': {
-    icon: 'text-danger-600 hover:text-danger-700',
+    icon: 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300',
     glow: 'drop-shadow-[0_0_3px_rgba(239,68,68,0.5)]',
   },
 };

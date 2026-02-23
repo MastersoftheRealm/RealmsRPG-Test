@@ -166,22 +166,22 @@ export function SpeciesModal({
         {/* Stats Grid - NO SPEED (species don't have speed in RTDB) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-surface-alt rounded-xl mb-6">
           <div className="text-center">
-            <span className="block text-xs text-text-muted uppercase tracking-wide">Size</span>
+            <span className="block text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">Size</span>
             <span className="font-bold text-text-primary capitalize">{sizesDisplay}</span>
           </div>
           <div className="text-center">
-            <span className="block text-xs text-text-muted uppercase tracking-wide">Type</span>
+            <span className="block text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">Type</span>
             <span className="font-bold text-text-primary capitalize">{species.type || 'Humanoid'}</span>
           </div>
           {species.ave_height && (
             <div className="text-center">
-              <span className="block text-xs text-text-muted uppercase tracking-wide">Avg Height</span>
+              <span className="block text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">Avg Height</span>
               <span className="font-bold text-text-primary">{species.ave_height} cm</span>
             </div>
           )}
           {species.ave_weight && (
             <div className="text-center">
-              <span className="block text-xs text-text-muted uppercase tracking-wide">Avg Weight</span>
+              <span className="block text-xs text-text-muted dark:text-text-secondary uppercase tracking-wide">Avg Weight</span>
               <span className="font-bold text-text-primary">{species.ave_weight} kg</span>
             </div>
           )}
@@ -232,7 +232,7 @@ export function SpeciesModal({
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedSkill(null)}
-                      className="text-info-600 hover:text-info-800 h-auto py-0 px-1 min-w-0"
+                      className="text-info-600 dark:text-info-400 hover:text-info-800 dark:hover:text-info-300 h-auto py-0 px-1 min-w-0"
                     >
                       ✕
                     </Button>
@@ -243,7 +243,7 @@ export function SpeciesModal({
                       : ((selectedSkill as { description?: string }).description || 'No description available.')}
                   </p>
                   {selectedSkill.ability && (
-                    <p className="text-xs text-info-600 mt-1">
+                    <p className="text-xs text-info-600 dark:text-info-400 mt-1">
                       Ability: {selectedSkill.ability}
                     </p>
                   )}

@@ -156,7 +156,7 @@ function HealthEnergyAllocationSection() {
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-text-primary">Health/Energy Allocation</h3>
-        <div className="text-xs text-text-muted">
+        <div className="text-xs text-text-muted dark:text-text-secondary">
           Base HP: {baseHealth} | Base EN: {baseEnergy}
         </div>
       </div>
@@ -273,8 +273,8 @@ function PortraitUpload() {
             </>
           ) : (
             <div className="text-center p-2">
-              <span className="text-3xl text-text-muted">📷</span>
-              <p className="text-xs text-text-muted mt-1">No image</p>
+              <span className="text-3xl text-text-muted dark:text-text-secondary">📷</span>
+              <p className="text-xs text-text-muted dark:text-text-secondary mt-1">No image</p>
             </div>
           )}
         </div>
@@ -287,7 +287,7 @@ function PortraitUpload() {
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors',
               isProcessing
-                ? 'bg-surface-alt text-text-muted cursor-not-allowed'
+                ? 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
                 : 'border-primary-300 dark:border-primary-600/50 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30'
             )}
           >
@@ -300,7 +300,7 @@ function PortraitUpload() {
               <>📤 {draft.portrait ? 'Change Image' : 'Upload Image'}</>
             )}
           </button>
-          <p className="text-xs text-text-muted mt-2">
+          <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
             Click to upload and crop. JPG, PNG, or GIF. Max 5MB.
           </p>
           {error && (
@@ -525,12 +525,12 @@ export function FinalizeStep() {
         
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-text-muted">Level:</span>
+            <span className="text-text-muted dark:text-text-secondary">Level:</span>
             <span className="ml-2 font-medium">{draft.level || 1}</span>
           </div>
           
           <div>
-            <span className="text-text-muted">Archetype:</span>
+            <span className="text-text-muted dark:text-text-secondary">Archetype:</span>
             <span className="ml-2 font-medium">
               {draft.archetype?.type 
                 ? draft.archetype.type.charAt(0).toUpperCase() + draft.archetype.type.slice(1)
@@ -539,20 +539,20 @@ export function FinalizeStep() {
           </div>
           
           <div>
-            <span className="text-text-muted">Species:</span>
+            <span className="text-text-muted dark:text-text-secondary">Species:</span>
             <span className="ml-2 font-medium">{draft.ancestry?.name || 'Not selected'}</span>
           </div>
           
           {draft.pow_abil && (
             <div>
-              <span className="text-text-muted">Power Ability:</span>
+              <span className="text-text-muted dark:text-text-secondary">Power Ability:</span>
               <span className="ml-2 font-medium capitalize text-power-dark">{draft.pow_abil}</span>
             </div>
           )}
           
           {draft.mart_abil && (
             <div>
-              <span className="text-text-muted">Martial Ability:</span>
+              <span className="text-text-muted dark:text-text-secondary">Martial Ability:</span>
               <span className="ml-2 font-medium capitalize text-martial-dark">{draft.mart_abil}</span>
             </div>
           )}
@@ -561,7 +561,7 @@ export function FinalizeStep() {
         {/* Abilities Summary */}
         {draft.abilities && (
           <div className="mt-4 pt-4 border-t border-border-light">
-            <span className="text-text-muted text-sm">Abilities:</span>
+            <span className="text-text-muted dark:text-text-secondary text-sm">Abilities:</span>
             <div className="flex flex-wrap gap-2 mt-2">
               {Object.entries(draft.abilities).map(([ability, value]) => {
                 const isPowerAbil = draft.pow_abil === ability;
@@ -589,7 +589,7 @@ export function FinalizeStep() {
         {/* Feats Summary */}
         {draft.feats && draft.feats.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border-light">
-            <span className="text-text-muted text-sm">Feats:</span>
+            <span className="text-text-muted dark:text-text-secondary text-sm">Feats:</span>
             <div className="flex flex-wrap gap-2 mt-2">
               {draft.feats.map((feat) => (
                 <span
@@ -611,7 +611,7 @@ export function FinalizeStep() {
           <div className="mt-4 pt-4 border-t border-border-light">
             {draft.powers && draft.powers.length > 0 && (
               <div className="mb-2">
-                <span className="text-text-muted text-sm">Powers: </span>
+                <span className="text-text-muted dark:text-text-secondary text-sm">Powers: </span>
                 <span className="text-sm text-power-dark">
                   {draft.powers.map(p => p.name).join(', ')}
                 </span>
@@ -619,7 +619,7 @@ export function FinalizeStep() {
             )}
             {draft.techniques && draft.techniques.length > 0 && (
               <div>
-                <span className="text-text-muted text-sm">Techniques: </span>
+                <span className="text-text-muted dark:text-text-secondary text-sm">Techniques: </span>
                 <span className="text-sm text-martial-dark">
                   {draft.techniques.map(t => t.name).join(', ')}
                 </span>
@@ -631,7 +631,7 @@ export function FinalizeStep() {
         {/* Equipment Summary */}
         {draft.equipment?.inventory && draft.equipment.inventory.length > 0 && (
           <div className="mt-4 pt-4 border-t border-border-light">
-            <span className="text-text-muted text-sm">Equipment: </span>
+            <span className="text-text-muted dark:text-text-secondary text-sm">Equipment: </span>
             <span className="text-sm text-text-secondary">
               {draft.equipment.inventory.map(i => 
                 (i.quantity ?? 1) > 1 ? `${i.name} ×${i.quantity ?? 1}` : i.name
