@@ -31,7 +31,7 @@ import { formatAbilityList } from '@/lib/utils';
 import type { ArchetypeCategory } from '@/types';
 
 // Grid columns for feat display (Name, Category, Ability, Recovery, Uses, Add) — match Codex
-const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
+const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 44px';
 const FEAT_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
@@ -360,7 +360,7 @@ export function FeatsStep() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary mb-2">Select Feats</h1>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Select Feats</h2>
           <p className="text-text-secondary">
             Choose feats that grant special abilities and bonuses. Your archetype 
             ({archetypeType}) allows {maxArchetypeFeats} archetype feat{maxArchetypeFeats !== 1 ? 's' : ''} 

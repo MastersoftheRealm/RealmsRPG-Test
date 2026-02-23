@@ -232,11 +232,11 @@ export function RecoveryModal({
             <div className="grid grid-cols-2 gap-4">
               {/* HP Recovery */}
               <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
-                <Heart className="w-6 h-6 text-success-600 dark:text-success-400" />
+                <Heart className="w-6 h-6 text-success-700 dark:text-success-400" />
                 <div>
                   <div className="text-xs text-text-muted dark:text-text-secondary">Health</div>
                   <div className="font-bold">
-                    {currentHealth} → <span className="text-success-600 dark:text-success-400">{maxHealth}</span>
+                    {currentHealth} → <span className="text-success-700 dark:text-success-400">{maxHealth}</span>
                   </div>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export function RecoveryModal({
                 <div>
                   <div className="text-xs text-text-muted dark:text-text-secondary">Energy</div>
                   <div className="font-bold">
-                    {currentEnergy} → <span className="text-success-600 dark:text-success-400">{maxEnergy}</span>
+                    {currentEnergy} → <span className="text-success-700 dark:text-success-400">{maxEnergy}</span>
                   </div>
                 </div>
               </div>
@@ -333,7 +333,7 @@ export function RecoveryModal({
             {allocationMode === 'manual' && (
               <div className="space-y-3 p-4 bg-surface-alt rounded-lg">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1 text-success-600 dark:text-success-400 font-medium">
+                  <span className="flex items-center gap-1 text-success-700 dark:text-success-400 font-medium">
                     <Heart className="w-4 h-4" />
                     HP: {hpQuarters}/{totalQuarters}
                   </span>
@@ -373,13 +373,13 @@ export function RecoveryModal({
               <div className="grid grid-cols-2 gap-4">
                 {/* HP Recovery */}
                 <div className="flex items-center gap-3 p-3 bg-white dark:bg-surface rounded-lg">
-                  <Heart className="w-6 h-6 text-success-600 dark:text-success-400" />
+                  <Heart className="w-6 h-6 text-success-700 dark:text-success-400" />
                   <div>
                     <div className="text-xs text-text-muted dark:text-text-secondary">Health</div>
                     <div className="font-bold">
-                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted dark:text-text-secondary')}>{newHealth}</span>
+                      {currentHealth} → <span className={cn(hpRestored > 0 ? 'text-success-700 dark:text-success-400' : 'text-text-muted dark:text-text-secondary')}>{newHealth}</span>
                     </div>
-                    <div className="text-xs text-success-600 dark:text-success-400">
+                    <div className="text-xs text-success-700 dark:text-success-400">
                       +{hpRestored} HP ({currentAllocation.hp}/{totalQuarters} quarters)
                     </div>
                   </div>
@@ -391,9 +391,9 @@ export function RecoveryModal({
                   <div>
                     <div className="text-xs text-text-muted dark:text-text-secondary">Energy</div>
                     <div className="font-bold">
-                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-success-600 dark:text-success-400' : 'text-text-muted dark:text-text-secondary')}>{newEnergy}</span>
+                      {currentEnergy} → <span className={cn(enRestored > 0 ? 'text-success-700 dark:text-success-400' : 'text-text-muted dark:text-text-secondary')}>{newEnergy}</span>
                     </div>
-                    <div className="text-xs text-success-600 dark:text-success-400">
+                    <div className="text-xs text-success-700 dark:text-success-400">
                       +{enRestored} EN ({currentAllocation.en}/{totalQuarters} quarters)
                     </div>
                   </div>

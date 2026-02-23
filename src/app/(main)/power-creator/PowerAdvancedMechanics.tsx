@@ -145,6 +145,7 @@ function AddedAdvancedChip({
                   value={advPart.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label=""
+                  min={0}
                 />
               </div>
               <p className="text-sm text-text-primary">{part.op_1_desc}</p>
@@ -167,6 +168,7 @@ function AddedAdvancedChip({
                   value={advPart.op_2_lvl}
                   onChange={(v) => onUpdate({ op_2_lvl: v })}
                   label=""
+                  min={0}
                 />
               </div>
               <p className="text-sm text-text-primary">{part.op_2_desc}</p>
@@ -189,6 +191,7 @@ function AddedAdvancedChip({
                   value={advPart.op_3_lvl}
                   onChange={(v) => onUpdate({ op_3_lvl: v })}
                   label=""
+                  min={0}
                 />
               </div>
               <p className="text-sm text-text-primary">{part.op_3_desc}</p>

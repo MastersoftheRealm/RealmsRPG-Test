@@ -350,7 +350,7 @@ export function AncestryStep() {
   if (!draft.ancestry?.id) {
     return (
       <div className="max-w-2xl mx-auto text-center">
-        <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h1>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h2>
         <p className="text-text-secondary mb-6">
           Customize your character with ancestry traits and an optional flaw.
         </p>
@@ -390,7 +390,7 @@ export function AncestryStep() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary mb-2">Mixed Species — Ancestry</h1>
+            <h2 className="text-2xl font-bold text-text-primary mb-2">Mixed Species — Ancestry</h2>
             <p className="text-text-secondary">
               <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one species trait from each, then ancestry and optional flaw.
             </p>
@@ -570,7 +570,7 @@ export function AncestryStep() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h1>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Ancestry Traits</h2>
           <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
           </p>

@@ -291,7 +291,7 @@ export const GridListRow = memo(function GridListRow({
           onClick={handleRowClick}
           disabled={disabled && (!selectable || !showExpander)}
           className={cn(
-            'flex-1 text-left transition-colors',
+            'flex-1 text-left transition-colors min-h-[44px]',
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
             compact ? 'px-3 py-2' : 'px-4 py-3',
             disabled && 'cursor-default'
@@ -310,7 +310,7 @@ export const GridListRow = memo(function GridListRow({
             )}
             {/* Uses display (hidden when Uses column shows stepper). Show - when no/zero uses. */}
             {uses && !hideUsesInName && (
-              <span className="text-xs text-text-muted dark:text-text-secondary flex-shrink-0">
+              <span className="text-xs text-text-secondary flex-shrink-0">
                 {uses.max > 0 ? `(${uses.current}/${uses.max})` : '-'}
               </span>
             )}
@@ -352,7 +352,7 @@ export const GridListRow = memo(function GridListRow({
               className={cn(
                 'text-sm truncate text-left',
                 col.hideOnMobile !== false && 'hidden lg:block',
-                col.highlight ? 'text-primary-600 font-medium' : 'text-text-secondary',
+                col.highlight ? 'text-primary-600 font-medium' : 'text-text-primary',
                 col.align === 'center' && 'text-center',
                 col.align === 'right' && 'text-right',
                 col.className
@@ -426,7 +426,7 @@ export const GridListRow = memo(function GridListRow({
         {selectable && (
           <div
             className={cn(
-              'w-10 flex-shrink-0 flex items-center justify-center',
+              'min-w-[44px] w-11 flex-shrink-0 flex items-center justify-center min-h-[44px]',
               disabled && 'cursor-not-allowed opacity-50'
             )}
             onClick={(e) => e.stopPropagation()}
@@ -568,7 +568,7 @@ export const GridListRow = memo(function GridListRow({
                             <span className="inline-flex items-center gap-1.5">
                               <span>{chip.name}</span>
                               {chip.level && chip.level > 1 && (
-                                <span className="text-xs text-text-muted dark:text-text-secondary">(Lv.{chip.level})</span>
+                                <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
                               )}
                               {hasCost && (
                                 <>
@@ -616,7 +616,7 @@ export const GridListRow = memo(function GridListRow({
                           <span className="inline-flex items-center gap-1.5">
                             <span>{chip.name}</span>
                             {chip.level && chip.level > 1 && (
-                              <span className="text-xs text-text-muted dark:text-text-secondary">(Lv.{chip.level})</span>
+                              <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
                             )}
                             {hasCost && (
                               <>

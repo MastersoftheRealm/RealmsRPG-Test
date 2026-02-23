@@ -86,7 +86,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
       {isLoading ? (
         <LoadingState />
       ) : myOnlyCreatures.length === 0 ? (
-        <div className="py-12 text-center text-text-muted">No creatures match your search.</div>
+        <div className="py-12 text-center text-text-secondary">No creatures match your search.</div>
       ) : (
         <div className="space-y-3">
           {myOnlyCreatures.map(creature => (

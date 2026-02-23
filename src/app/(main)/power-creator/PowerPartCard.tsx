@@ -176,6 +176,7 @@ export function PowerPartCard({
                       value={selectedPart.op_1_lvl}
                       onChange={(v) => onUpdate({ op_1_lvl: v })}
                       label="Level:"
+                      min={0}
                     />
                   </div>
                   {part.op_1_desc && (
@@ -200,6 +201,7 @@ export function PowerPartCard({
                       value={selectedPart.op_2_lvl}
                       onChange={(v) => onUpdate({ op_2_lvl: v })}
                       label="Level:"
+                      min={0}
                     />
                   </div>
                   {part.op_2_desc && (
@@ -224,6 +226,7 @@ export function PowerPartCard({
                       value={selectedPart.op_3_lvl}
                       onChange={(v) => onUpdate({ op_3_lvl: v })}
                       label="Level:"
+                      min={0}
                     />
                   </div>
                   {part.op_3_desc && (

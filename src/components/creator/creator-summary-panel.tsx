@@ -105,7 +105,7 @@ function getVariantClasses(variant: SummaryItem['variant'], remaining: number): 
     case 'danger':
       return 'bg-danger-light text-danger-700 dark:text-danger-400';
     case 'success':
-      return 'bg-success-light text-success-600 dark:text-success-400';
+      return 'bg-success-light text-success-700 dark:text-success-400';
     case 'warning':
       return 'bg-warning-light text-warning-700 dark:text-warning-300';
     case 'info':

@@ -6266,3 +6266,33 @@ Agents should **create new tasks** during their work when they discover addition
     - eslint-plugin-jsx-a11y installed and enabled; .cursor/rules or ACCESSIBILITY.md documents a11y requirements for agents.
     - npm run build passes.
   notes: "Implemented 2026-02-23: Home feature text contrast (text-neutral-700); password toggle aria-label; campaigns/campaign [id] heading hierarchy (h2); encounter skill/combat section headings (h2), Campaign select id/htmlFor, participant skill select aria-label, Add participant aria-label; dice-roller and roll-log dice images alt='', History/Clear aria-labels; campaign edit name/description buttons aria-label; combat encounter Campaign select id/htmlFor; green status text (text-green-700). Added .cursor/rules/realms-accessibility.mdc and src/docs/ACCESSIBILITY.md. eslint-plugin-jsx-a11y already in devDependencies via eslint-config-next."
+
+- id: TASK-268
+  title: Investigate Range/selectNode InvalidNodeTypeError on mouse up
+  priority: medium
+  status: not-started
+  created_at: 2026-02-23
+  created_by: agent
+  description: |
+    Console error: "Failed to execute 'selectNode' on 'Range': the given Node has no parent." Triggered during handleMouseUp; stack references 525.js (React/Next) and attributes. Likely selection/range logic running after a DOM node was unmounted. Search codebase and dependencies for getSelection/selectNode/Range usage; add guards or defer selection logic to avoid detached nodes.
+  related_files: []
+  acceptance_criteria:
+    - Identify source (our code vs dependency).
+    - If our code: guard selection/range so it never runs on detached nodes.
+    - If dependency: document and optionally report upstream.
+    - npm run build passes.
+  notes: "Created from sitewide feedback 2026-02-23. No direct selectNode in src found in initial grep."
+
+- id: TASK-269
+  title: Fix Resources page Character Sheet PDF 404
+  priority: medium
+  status: not-started
+  created_at: 2026-02-23
+  created_by: agent
+  description: |
+    Resources page links to "/Realms Character Sheet Alpha.pdf"; GET returns 404. File must be placed in public/ (exact name with spaces) or link updated to an existing asset. Alternatively show "Coming soon" or conditional message if file is not yet available.
+  related_files:
+    - src/app/(main)/resources/page.tsx
+  acceptance_criteria:
+    - Either PDF exists in public/ and link works, or link points to existing asset, or UI clearly indicates unavailability and does not 404.
+  notes: "Created from sitewide feedback 2026-02-23. No PDF in public/ at repo; owner may need to add file."

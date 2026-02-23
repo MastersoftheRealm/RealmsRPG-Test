@@ -90,7 +90,7 @@ export function HealthEnergyAllocator({
           <span className={cn(
             'text-xs font-bold',
             isOverspent ? 'text-danger-600 dark:text-danger-400' : 
-            isComplete ? 'text-success-600 dark:text-success-400' : 
+            isComplete ? 'text-success-700 dark:text-success-400' : 
             'text-info-600 dark:text-info-400'
           )}>
             {spent} / {poolTotal}
@@ -101,7 +101,7 @@ export function HealthEnergyAllocator({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 px-4 py-3">
           {/* Health Points - Green colors, show total prominently */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
-            <span className="text-lg font-bold text-success-600 dark:text-success-400 min-w-[60px] shrink-0">{maxHp} HP</span>
+            <span className="text-lg font-bold text-success-700 dark:text-success-400 min-w-[60px] shrink-0">{maxHp} HP</span>
             <ValueStepper
               value={hpBonus}
               onChange={onHpChange}
@@ -163,7 +163,7 @@ export function HealthEnergyAllocator({
         <span className={cn(
           'text-sm font-bold',
           isOverspent ? 'text-danger-600 dark:text-danger-400' : 
-          isComplete ? 'text-success-600 dark:text-success-400' : 
+          isComplete ? 'text-success-700 dark:text-success-400' : 
           'text-info-600 dark:text-info-400'
         )}>
           {spent} / {poolTotal}
@@ -174,7 +174,7 @@ export function HealthEnergyAllocator({
       <div className="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2">
         {/* HP Allocator - Show total prominently, points secondary */}
         <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-success-600 dark:text-success-400 min-w-[70px]">{maxHp} HP</span>
+          <span className="text-xl font-bold text-success-700 dark:text-success-400 min-w-[70px]">{maxHp} HP</span>
           <ValueStepper
             value={hpBonus}
             onChange={onHpChange}

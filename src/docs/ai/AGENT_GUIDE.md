@@ -65,6 +65,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Prisma | `prisma/schema.prisma`, `src/lib/prisma.ts` |
 | Codex API | `src/app/api/codex/` |
 | **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |
+| **Accessibility & contrast** | `src/docs/ACCESSIBILITY.md` — contrast tokens (success-700 + dark variant, power/martial-dark), form labels, headings, modals, touch targets; `src/docs/DESIGN_SYSTEM.md` — status and game-specific color tokens for light + dark mode. When editing UI, ensure new or changed text/controls follow these so both themes pass WCAG 2.1 AA. |
 | Architecture | `src/docs/ARCHITECTURE.md` |
 | **Character/creature math** | `src/lib/formulas.ts`, `src/lib/calculations.ts`, `src/lib/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |

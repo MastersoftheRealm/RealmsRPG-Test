@@ -161,7 +161,7 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
       />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-muted">No powers match your search.</div>
+          <div className="py-12 text-center text-text-secondary">No powers match your search.</div>
         ) : (
           filtered.map(p => (
             <GridListRow
@@ -312,7 +312,7 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
       />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-muted">No techniques match your search.</div>
+          <div className="py-12 text-center text-text-secondary">No techniques match your search.</div>
         ) : (
           filtered.map(t => (
             <GridListRow
@@ -466,7 +466,7 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
       />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-muted">No armaments match your search.</div>
+          <div className="py-12 text-center text-text-secondary">No armaments match your search.</div>
         ) : (
           filtered.map(i => (
             <GridListRow
@@ -592,7 +592,7 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
       />
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? <LoadingState /> : filtered.length === 0 ? (
-          <div className="py-12 text-center text-text-muted">No creatures match your search.</div>
+          <div className="py-12 text-center text-text-secondary">No creatures match your search.</div>
         ) : (
           filtered.map(c => (
             <GridListRow

@@ -135,7 +135,7 @@ export function LibraryTechniquesTab({ onDelete }: LibraryTechniquesTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-muted">No techniques match your search.</div>
+          <div className="py-12 text-center text-text-secondary">No techniques match your search.</div>
         ) : (
           filteredData.map(tech => (
             <GridListRow

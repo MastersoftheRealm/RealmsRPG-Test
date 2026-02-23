@@ -508,12 +508,18 @@ export default function SpeciesCreatorPage() {
           <h2 className="text-lg font-bold text-text-primary mb-4">Basics</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-              <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Species name" />
+              <Input
+                label="Name *"
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                placeholder="Species name"
+                aria-label="Species name"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
+              <label htmlFor="species-type" className="block text-sm font-medium text-text-secondary mb-1">Type</label>
               <select
+                id="species-type"
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
                 value={form.type}
                 onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
@@ -527,8 +533,15 @@ export default function SpeciesCreatorPage() {
             </div>
           </div>
           <div className="mt-4">
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <Textarea value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} placeholder="Species description" rows={3} className="w-full" />
+            <Textarea
+              label="Description"
+              value={form.description}
+              onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+              placeholder="Species description"
+              rows={3}
+              className="w-full"
+              aria-label="Species description"
+            />
           </div>
         </section>
 
@@ -551,8 +564,9 @@ export default function SpeciesCreatorPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {([0, 1] as const).map((i) => (
               <div key={i}>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Skill {i + 1}</label>
+                <label htmlFor={i === 0 ? 'base-skill-0' : 'base-skill-1'} className="block text-sm font-medium text-text-secondary mb-1">Skill {i + 1}</label>
                 <select
+                  id={i === 0 ? 'base-skill-0' : 'base-skill-1'}
                   className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
                   value={form.skillIds[i] ?? ''}
                   onChange={(e) => setSkill(i, e.target.value)}
@@ -573,7 +587,15 @@ export default function SpeciesCreatorPage() {
           <p className="text-sm text-text-muted mb-4">Universal can be included by default; add or remove as desired.</p>
           <ChipList items={form.languages} onRemove={removeLanguage} color="bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300" />
           <div className="flex gap-2 mt-2">
-            <Input value={newLanguage} onChange={(e) => setNewLanguage(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addLanguage()} placeholder="Enter language..." className="flex-1" />
+            <Input
+              label="New language"
+              value={newLanguage}
+              onChange={(e) => setNewLanguage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addLanguage()}
+              placeholder="Enter language..."
+              className="flex-1"
+              aria-label="New language to add"
+            />
             <Button onClick={addLanguage} disabled={!newLanguage.trim() || form.languages.length >= MAX_LANGUAGES} size="sm">Add</Button>
           </div>
         </section>
@@ -619,20 +641,44 @@ export default function SpeciesCreatorPage() {
           <p className="text-sm text-text-muted mb-4">Required. Average height (cm), average weight (kg), adulthood age, and lifespan (years).</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Average height (cm) *</label>
-              <Input type="number" min={0} value={form.ave_height} onChange={(e) => setForm((p) => ({ ...p, ave_height: e.target.value === '' ? '' : Number(e.target.value) }))} />
+              <Input
+                label="Average height (cm) *"
+                type="number"
+                min={0}
+                value={form.ave_height}
+                onChange={(e) => setForm((p) => ({ ...p, ave_height: e.target.value === '' ? '' : Number(e.target.value) }))}
+                aria-label="Average height in centimeters"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Average weight (kg) *</label>
-              <Input type="number" min={0} value={form.ave_weight} onChange={(e) => setForm((p) => ({ ...p, ave_weight: e.target.value === '' ? '' : Number(e.target.value) }))} />
+              <Input
+                label="Average weight (kg) *"
+                type="number"
+                min={0}
+                value={form.ave_weight}
+                onChange={(e) => setForm((p) => ({ ...p, ave_weight: e.target.value === '' ? '' : Number(e.target.value) }))}
+                aria-label="Average weight in kilograms"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Adulthood age *</label>
-              <Input type="number" min={0} value={form.adulthood_lifespan[0]} onChange={(e) => setForm((p) => ({ ...p, adulthood_lifespan: [e.target.value === '' ? '' : Number(e.target.value), p.adulthood_lifespan[1]] }))} />
+              <Input
+                label="Adulthood age *"
+                type="number"
+                min={0}
+                value={form.adulthood_lifespan[0]}
+                onChange={(e) => setForm((p) => ({ ...p, adulthood_lifespan: [e.target.value === '' ? '' : Number(e.target.value), p.adulthood_lifespan[1]] }))}
+                aria-label="Adulthood age"
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Lifespan (years) *</label>
-              <Input type="number" min={0} value={form.adulthood_lifespan[1]} onChange={(e) => setForm((p) => ({ ...p, adulthood_lifespan: [p.adulthood_lifespan[0], e.target.value === '' ? '' : Number(e.target.value)] }))} />
+              <Input
+                label="Lifespan (years) *"
+                type="number"
+                min={0}
+                value={form.adulthood_lifespan[1]}
+                onChange={(e) => setForm((p) => ({ ...p, adulthood_lifespan: [p.adulthood_lifespan[0], e.target.value === '' ? '' : Number(e.target.value)] }))}
+                aria-label="Lifespan in years"
+              />
             </div>
           </div>
         </section>

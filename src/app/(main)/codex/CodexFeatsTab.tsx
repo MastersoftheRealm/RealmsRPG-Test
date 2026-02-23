@@ -238,6 +238,7 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
 
   return (
     <div>
+      <h2 className="sr-only">Feats</h2>
       <div className="mb-4">
         <SearchInput
           value={filters.search}

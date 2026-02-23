@@ -72,7 +72,7 @@ export function SpeciesStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Species</h1>
+      <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Species</h2>
       <p className="text-text-secondary mb-4">
         Your species defines your character&apos;s physical traits and inherent abilities.
         Click a card to view details, or choose Mixed to combine two species.

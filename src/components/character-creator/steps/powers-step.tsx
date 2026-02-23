@@ -279,9 +279,9 @@ export function PowersStep() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          Powers & Techniques
-        </h1>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Powers & Techniques
+            </h2>
         <p className="text-muted-foreground">
           Select powers and techniques from your library for your character to know.
         </p>
@@ -329,7 +329,7 @@ export function PowersStep() {
                 <Wand2 className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-foreground">Powers</h2>
+                <h3 className="text-lg font-semibold text-foreground">Powers</h3>
                 <p className="text-sm text-muted-foreground">
                   {selectedPowers.length} power{selectedPowers.length !== 1 ? 's' : ''} selected
                 </p>
@@ -399,7 +399,7 @@ export function PowersStep() {
                 <Swords className="w-5 h-5 text-martial-dark" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-foreground">Techniques</h2>
+                <h3 className="text-lg font-semibold text-foreground">Techniques</h3>
                 <p className="text-sm text-muted-foreground">
                   {selectedTechniques.length} technique{selectedTechniques.length !== 1 ? 's' : ''} selected
                 </p>

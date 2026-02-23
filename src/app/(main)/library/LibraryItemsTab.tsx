@@ -194,7 +194,7 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-muted">No armaments match your search.</div>
+          <div className="py-12 text-center text-text-secondary">No armaments match your search.</div>
         ) : (
           filteredData.map(item => (
             <GridListRow

@@ -143,7 +143,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         {isLoading ? (
           <LoadingState />
         ) : filteredData.length === 0 ? (
-          <div className="py-12 text-center text-text-muted">No powers match your search.</div>
+          <div className="py-12 text-center text-text-secondary">No powers match your search.</div>
         ) : (
           filteredData.map(power => (
             <GridListRow

@@ -255,7 +255,7 @@ export const ItemCard = memo(function ItemCard({
                 {item.requirements.map((req, i) => (
                   <span 
                     key={i}
-                    className={cn(req.met ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400')}
+                    className={cn(req.met ? 'text-success-700 dark:text-success-400' : 'text-danger-600 dark:text-danger-400')}
                   >
                     {req.name} {req.value}
                     {i < item.requirements!.length - 1 ? ', ' : ''}

@@ -454,7 +454,7 @@ export function EquipmentStep() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Equipment</h1>
+          <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Equipment</h2>
           <p className="text-text-secondary">
             Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
           </p>

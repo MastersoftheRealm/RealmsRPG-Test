@@ -363,6 +363,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
               onChange={(e) => setFindValue(e.target.value)}
               placeholder="Find..."
               className="w-40 bg-transparent text-sm outline-none"
+              aria-label="Find in spreadsheet"
             />
           </div>
           {replaceMode ? (
@@ -375,6 +376,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                   onChange={(e) => setReplaceValue(e.target.value)}
                   placeholder="Replace with..."
                   className="w-40 bg-transparent text-sm outline-none"
+                  aria-label="Replace with"
                 />
               </div>
               <Button size="sm" variant="secondary" onClick={() => doFindReplace(false)}>
@@ -480,6 +482,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
                         onFocus={() => setFocusedCell({ row: rowIndex, col: colIndex })}
                         className={`w-full min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-inset focus:ring-primary-400 ${isFocused ? 'ring-1 ring-inset ring-primary-400' : ''}`}
                         style={{ boxSizing: 'border-box' }}
+                        aria-label={`Edit ${colKey}, row ${displayIndex + 1}`}
                       />
                     </td>
                   );
@@ -501,7 +504,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-2 text-xs text-text-muted border-t border-border">
+      <div className="px-4 py-2 text-xs text-text-muted dark:text-text-secondary border-t border-border">
         {rows.length} rows · {columns.length} columns
         {hasDirty && ` · ${dirty.size} unsaved change(s)`}
       </div>

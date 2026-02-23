@@ -161,7 +161,7 @@ function LibraryContent() {
             onClick={() => setLibraryMode('my')}
             className={cn(
               'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              libraryMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+              libraryMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
             )}
           >
             My Library
@@ -171,7 +171,7 @@ function LibraryContent() {
             onClick={() => setLibraryMode('public')}
             className={cn(
               'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              libraryMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+              libraryMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
             )}
           >
             Public Library

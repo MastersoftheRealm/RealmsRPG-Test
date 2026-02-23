@@ -18,6 +18,7 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 - **Unification over duplication** — Before adding a component, search for existing patterns. Use design tokens (`bg-surface`, `text-text-primary`, etc.) not raw `gray-*` outside auth.
 - **Verify, don’t assume** — Docs may be stale. Inspect the codebase to confirm patterns and usage.
 - **Consider mobile on every UI change** — See `src/docs/MOBILE_UX.md` and `.cursor/rules/realms-mobile.mdc`. New pages, modals, and dense sections must follow breakpoints, full-screen modals on small viewports (`fullScreenOnMobile`), and touch targets (≥44px).
+- **Accessibility & contrast** — See `src/docs/ACCESSIBILITY.md` and `.cursor/rules/realms-accessibility.mdc`. Use semantic tokens and status colors that pass WCAG 2.1 AA in **both light and dark mode** (e.g. `text-success-700` not `text-success-600` for body text; `text-power-dark` / `text-martial-dark` for archetype body text). Every form control needs a label or `aria-label`; heading levels must not skip (h1 → h2 → h3). Modals need a title or `titleA11y`.
 
 ## Implementation
 

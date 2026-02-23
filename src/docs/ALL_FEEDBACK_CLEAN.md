@@ -84,6 +84,11 @@ Notes:
 - Character creator: persist skill allocations automatically when switching tabs.
 - Creature creator: hide unarmed prowess options > level 1 for new characters; fix dropdown alignment; make summary scroll behavior consistent.
 - Powers/Techniques/Armaments: ensure RTDB enrichment computes and displays EN/TP/C in all list views.
+- **Power creator: option levels must not be negative.** Implemented 2026-02-23: PowerPartCard and PowerAdvancedMechanics ValueSteppers for op_1/2/3_lvl now use min={0}.
+- **Console: InvalidNodeTypeError (Range/selectNode — "the given Node has no parent").** Triggered on mouse up; likely React/dependency selection logic when a node was unmounted. TASK-268 to investigate.
+- **Rules page (embedded Google Doc): DOCS_timing is not defined.** Error is from inside the embedded Google Doc iframe; not fixable in our codebase.
+- **Resources page: Character Sheet PDF 404.** Link is `/Realms Character Sheet Alpha.pdf`; file must exist in `public/` or link updated. TASK-269.
+- **Zustand default export deprecation:** Our stores use named import; warning is from a dependency (noted in AI_CHANGELOG 2026-02-23).
 
 ### 8) RTDB & Data Guidance
 - Enrich saved items by resolving saved IDs against RTDB entries to obtain base_en/base_tp/op_* values.
@@ -1096,3 +1101,11 @@ Notes
 - Feedback: (1) Console: [DEPRECATED] zustand default export — use `import { create } from 'zustand'`. (2) Console: `DialogContent` requires a `DialogTitle` for screen readers; missing `Description` or `aria-describedby={undefined}`. (3) Home page: Sign In button (contrast/accessibility). (4) Home page + footer: elemental contrast issues — feature card h3/p, footer links, CTA, reviews section text. All need sufficient foreground/background contrast in light mode.
 - Expected: Fix zustand import if in our code; ensure dialogs have accessible title/description; fix home and footer light-mode contrast; add aria-label to Sign In button.
 - Disposition: Implemented 2026-02-23. Modal: fallback aria-label and sr-only title when no title. Home: FeatureCard and reviews use text-text-primary; footer links use text-neutral-900. Login: Sign In button aria-label="Sign in". DialogContent warning from dependency; zustand already named import in our code.
+
+**Raw Feedback Log — 2026-02-23 (Sitewide errors / UX — Range selectNode, DOCS_timing, PDF 404, Zustand, Power option levels)**
+- Date: 2026-02-23
+- Context: Sitewide error/UI/UX feedback; production (Vercel) console and Resources/Rules pages
+- Priority: High (errors); Medium (PDF, option levels)
+- Feedback: (1) Uncaught InvalidNodeTypeError: Failed to execute 'selectNode' on 'Range': the given Node has no parent — in 525.js, triggered from handleMouseUp/attributes. (2) Rules page (pub?embedded=true): Uncaught ReferenceError: DOCS_timing is not defined. (3) Resources page: GET .../Realms%20Character%20Sheet%20Alpha.pdf 404. (4) [DEPRECATED] Default export is deprecated. Instead use `import { create } from 'zustand'`. (5) Power page: don't allow options levels to be set to negative values.
+- Expected: No Range/selectNode error; rules page note or accept external doc noise; PDF available or handle missing asset; Power creator option level steppers have min 0.
+- Disposition: Power option levels implemented (min={0} on PowerPartCard and PowerAdvancedMechanics). TASK-268 (Range/selectNode), TASK-269 (Resources PDF). DOCS_timing and Zustand documented as external/dependency.

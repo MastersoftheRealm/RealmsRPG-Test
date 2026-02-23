@@ -63,12 +63,12 @@ export function ArchetypeStep() {
   if (isLocked) {
     return (
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h1>
+        <h2 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h2>
         
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-6 mb-6">
-          <h2 className="text-xl font-bold text-green-800 mb-2">
+          <h3 className="text-xl font-bold text-green-800 mb-2">
             {ARCHETYPE_INFO[draft.archetype!.type].title}
-          </h2>
+          </h3>
           <p className="text-green-700 mb-4">
             {ARCHETYPE_INFO[draft.archetype!.type].description}
           </p>
@@ -111,7 +111,7 @@ export function ArchetypeStep() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-text-primary mb-2">Choose Your Archetype</h1>
+      <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Your Archetype</h2>
       <p className="text-text-secondary mb-6">
         Your archetype defines your character&apos;s approach to combat and supernatural abilities.
       </p>

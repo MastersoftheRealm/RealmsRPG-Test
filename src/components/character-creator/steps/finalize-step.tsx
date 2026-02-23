@@ -497,7 +497,7 @@ export function FinalizeStep() {
   
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-text-primary mb-2">Finalize Your Character</h1>
+      <h2 className="text-2xl font-bold text-text-primary mb-2">Finalize Your Character</h2>
       <p className="text-text-secondary mb-6">
         Add the final details to bring your character to life.
       </p>
@@ -521,7 +521,7 @@ export function FinalizeStep() {
       
       {/* Character Summary */}
       <div className="bg-surface-alt rounded-xl p-6 mb-6">
-        <h3 className="font-bold text-text-primary mb-4">Character Summary</h3>
+        <h2 className="font-bold text-text-primary mb-4">Character Summary</h2>
         
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -546,14 +546,14 @@ export function FinalizeStep() {
           {draft.pow_abil && (
             <div>
               <span className="text-text-muted">Power Ability:</span>
-              <span className="ml-2 font-medium capitalize text-power">{draft.pow_abil}</span>
+              <span className="ml-2 font-medium capitalize text-power-dark">{draft.pow_abil}</span>
             </div>
           )}
           
           {draft.mart_abil && (
             <div>
               <span className="text-text-muted">Martial Ability:</span>
-              <span className="ml-2 font-medium capitalize text-martial">{draft.mart_abil}</span>
+              <span className="ml-2 font-medium capitalize text-martial-dark">{draft.mart_abil}</span>
             </div>
           )}
         </div>
@@ -612,7 +612,7 @@ export function FinalizeStep() {
             {draft.powers && draft.powers.length > 0 && (
               <div className="mb-2">
                 <span className="text-text-muted text-sm">Powers: </span>
-                <span className="text-sm text-power">
+                <span className="text-sm text-power-dark">
                   {draft.powers.map(p => p.name).join(', ')}
                 </span>
               </div>
@@ -620,7 +620,7 @@ export function FinalizeStep() {
             {draft.techniques && draft.techniques.length > 0 && (
               <div>
                 <span className="text-text-muted text-sm">Techniques: </span>
-                <span className="text-sm text-martial">
+                <span className="text-sm text-martial-dark">
                   {draft.techniques.map(t => t.name).join(', ')}
                 </span>
               </div>

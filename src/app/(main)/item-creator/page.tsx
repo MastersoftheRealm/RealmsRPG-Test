@@ -231,6 +231,7 @@ function PropertyCard({
                   value={selectedProperty.op_1_lvl}
                   onChange={(v) => onUpdate({ op_1_lvl: v })}
                   label="Level:"
+                  min={0}
                 />
               </div>
               <p className="text-sm text-text-primary">{property.op_1_desc}</p>

@@ -220,7 +220,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                 {lastRoll.modifier !== 0 && (
                   <span className={cn(
                     'px-2 py-0.5',
-                    lastRoll.modifier > 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'
+                    lastRoll.modifier > 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'
                   )}>
                     {formatModifier(lastRoll.modifier)}
                   </span>

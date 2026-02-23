@@ -55,7 +55,7 @@ Grays for text, borders, and backgrounds.
 | `divider` | #707070 | Section dividers |
 
 ### Status Colors
-Semantic colors for success, danger, warning, and info states.
+Semantic colors for success, danger, warning, and info states. **Accessibility:** Use **-700** (or darker) for normal-sized text in light mode so contrast meets WCAG 2.1 AA; pair with **-400** (or equivalent) in dark mode, e.g. `text-success-700 dark:text-success-400`.
 
 | Status | Main | Hover | Light | Dark |
 |--------|------|-------|-------|------|
@@ -65,14 +65,14 @@ Semantic colors for success, danger, warning, and info states.
 | Info | #3b82f6 | #2563eb | #dbeafe | - |
 
 ### Game-Specific Colors
-Colors for health, energy, power, and martial concepts.
+Colors for health, energy, power, and martial concepts. **For accessibility (WCAG 2.1 AA):** use the **darker** text tokens in light mode so contrast passes on white/light backgrounds.
 
-| Concept | Text Token | Background Token | Border Token |
-|---------|-----------|------------------|-------------|
-| Health | `text-success-600` | `bg-success-50` | `border-success-*` |
-| Energy | `text-info-600` | `bg-info-50` | `border-info-*` |
-| Power (archetype) | `text-power-text` | `bg-power-light` | `border-power-border` |
-| Martial (archetype) | `text-martial-text` | `bg-martial-light` | `border-martial-border` |
+| Concept | Text Token (light) | Dark Mode Text | Background Token | Border Token |
+|---------|-------------------|----------------|------------------|-------------|
+| Health | `text-success-700` | `dark:text-success-400` | `bg-success-50` | `border-success-*` |
+| Energy | `text-info-600` | `dark:text-info-400` | `bg-info-50` | `border-info-*` |
+| Power (archetype) | `text-power-dark` for body/labels; `text-power-text` only where contrast passes | `dark:text-power-300` | `bg-power-light` | `border-power-border` |
+| Martial (archetype) | `text-martial-dark` for body/labels; `text-martial-text` only where contrast passes | `dark:text-martial-border` / `dark:text-martial-*` | `bg-martial-light` | `border-martial-border` |
 
 ### Color Migration Guide (2026-02-13 Audit)
 

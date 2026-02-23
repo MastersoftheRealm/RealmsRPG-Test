@@ -74,6 +74,7 @@ When **creating or editing** a page or modal:
 
 4. **Verification**
    - Resize to 360px width (or use DevTools device mode); confirm no pinch-zoom needed, modals usable, controls tappable.
+   - For accessibility: contrast and labels per `src/docs/ACCESSIBILITY.md`; touch targets ≥ 44px (above).
 
 ---
 

@@ -98,21 +98,21 @@ export function PointStatus({
         {showCalculation ? (
           <>
             <div className="text-center">
-              <span className="text-xs text-text-muted dark:text-text-secondary block">Total</span>
+              <span className="text-xs text-text-secondary block">Total</span>
               <span className="text-lg font-bold text-text-primary">{total}</span>
             </div>
             <span className="text-2xl text-border-light">−</span>
             <div className="text-center">
-              <span className="text-xs text-text-muted dark:text-text-secondary block">Spent</span>
+              <span className="text-xs text-text-secondary block">Spent</span>
               <span className="text-lg font-bold text-text-primary">{spent}</span>
             </div>
             <span className="text-2xl text-border-light">=</span>
             <div className="text-center">
-              <span className="text-xs text-text-muted dark:text-text-secondary block">Remaining</span>
+              <span className="text-xs text-text-secondary block">Remaining</span>
               <span className={cn(
                 'text-lg font-bold',
                 status === 'overspent' && 'text-danger-700 dark:text-danger-400',
-                status === 'balanced' && 'text-success-600 dark:text-success-400',
+                status === 'balanced' && 'text-success-700 dark:text-success-400',
                 status === 'remaining' && 'text-primary-600 dark:text-primary-400'
               )}>
                 {remaining}

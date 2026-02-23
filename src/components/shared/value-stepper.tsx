@@ -154,7 +154,7 @@ const valueDisplayVariants = cva(
         positive: 'text-success-700',
         negative: 'text-danger-700',
         neutral: 'text-text-primary',
-        health: 'text-success-600 dark:text-success-400',
+        health: 'text-success-700 dark:text-success-400',
         energy: 'text-info-600 dark:text-info-400',
       },
     },

@@ -74,10 +74,10 @@ export function ConfirmActionModal({
         <div className={cn('w-12 h-12 rounded-full flex items-center justify-center mb-4', iconBg)}>
           <IconComponent className={cn('w-6 h-6', iconColor)} />
         </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">
+        <h2 className="text-lg font-semibold text-text-primary mb-2">
           {title}
-        </h3>
-        <p className="text-text-muted mb-6">
+        </h2>
+        <p className="text-text-muted dark:text-text-secondary mb-6">
           {description}
         </p>
         <div className="flex items-center justify-center gap-3 w-full">

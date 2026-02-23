@@ -678,7 +678,7 @@ export function SheetHeader({
               )}
               {canLevelUp && (
                 <span 
-                  className="text-success-600 dark:text-success-400 animate-pulse text-sm font-medium" 
+                  className="text-success-700 dark:text-success-400 animate-pulse text-sm font-medium" 
                   title="Ready to level up!"
                 >
                   ⬆ Level up!
