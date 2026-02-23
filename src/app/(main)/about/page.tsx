@@ -37,7 +37,7 @@ const CAROUSEL_SLIDES: Array<{
     content: (
       <>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom <Link href="/item-creator" className="text-primary-600 hover:underline font-medium">Armaments</Link> and weapons, build <Link href="/creature-creator" className="text-primary-600 hover:underline font-medium">Creatures</Link> and companions, and manage <Link href="/encounter-tracker" className="text-primary-600 hover:underline font-medium">Encounters</Link> with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
+          <strong className="text-text-primary">Equip your party and run the game.</strong> Craft custom <Link href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Armaments</Link> and weapons, build <Link href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> and companions, and manage <Link href="/encounter-tracker" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link> with ease. Whether you&apos;re a player outfitting your Character or a Realm Master preparing the next challenge, these tools put creation at your fingertips.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
           Design the perfect sword, summon a custom creature, or track your party&apos;s progress through Skill and Combat Encounters—all in one place.
@@ -88,10 +88,10 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Dice are the lifeblood of the story.</strong> They introduce random chance and represent a hint of chaos in every Encounter, making each roll an exciting part of the game.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <Link href="/characters/new" className="text-primary-600 hover:underline font-medium">Character creation</Link> is the most exciting part of the game—a comprehensive guide for everything you need to create a unique Character. Whether you&apos;re a Realm Master crafting adventures for your party or a player bringing your dream Character to life, we&apos;re here to support your journey.
+          <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Character creation</Link> is the most exciting part of the game—a comprehensive guide for everything you need to create a unique Character. Whether you&apos;re a Realm Master crafting adventures for your party or a player bringing your dream Character to life, we&apos;re here to support your journey.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed">
-          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the <Link href="/library" className="text-primary-600 hover:underline font-medium">Codex</Link>, build in the <Link href="/power-creator" className="text-primary-600 hover:underline font-medium">Creators</Link>, and adventure in a way only the imagination can picture.
+          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the <Link href="/library" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Codex</Link>, build in the <Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creators</Link>, and adventure in a way only the imagination can picture.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
           <Link href="/characters/new" className="btn-solid">
@@ -158,24 +158,24 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <ul className="space-y-3 text-text-secondary">
           <li className="flex items-start gap-3">
-            <BookOpen className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link href="/characters/new" className="text-primary-600 hover:underline">Digital Character Sheets</Link></strong> — Automatic ability calculations, dropdown menus for Skills and Feats, and user-friendly tools to streamline gameplay and Character creation.</span>
+            <BookOpen className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline">Digital Character Sheets</Link></strong> — Automatic ability calculations, dropdown menus for Skills and Feats, and user-friendly tools to streamline gameplay and Character creation.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Wand2 className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link href="/power-creator" className="text-primary-600 hover:underline">Power</Link> & <Link href="/technique-creator" className="text-primary-600 hover:underline">Technique Creator</Link></strong> — Design your Character&apos;s unique toolset with infinite combinations of flavor and effect.</span>
+            <Wand2 className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Power</Link> & <Link href="/technique-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Technique Creator</Link></strong> — Design your Character&apos;s unique toolset with infinite combinations of flavor and effect.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link href="/item-creator" className="text-primary-600 hover:underline">Item Creator</Link></strong> — Craft custom Armaments, weapons, and armor to fit your vision.</span>
+            <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Item Creator</Link></strong> — Craft custom Armaments, weapons, and armor to fit your vision.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Skull className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link href="/creature-creator" className="text-primary-600 hover:underline">Creature Creator</Link></strong> — Build custom monsters, companions, and Encounters for your party.</span>
+            <Skull className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline">Creature Creator</Link></strong> — Build custom monsters, companions, and Encounters for your party.</span>
           </li>
           <li className="flex items-start gap-3">
-            <Users className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><strong className="text-text-primary"><Link href="/encounter-tracker" className="text-primary-600 hover:underline">Encounter Tracker</Link></strong> — Run Skill and Combat Encounters with ease.</span>
+            <Users className="w-5 h-5 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><strong className="text-text-primary"><Link href="/encounter-tracker" className="text-primary-600 dark:text-primary-400 hover:underline">Encounter Tracker</Link></strong> — Run Skill and Combat Encounters with ease.</span>
           </li>
         </ul>
       </>
@@ -187,20 +187,20 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <ul className="space-y-2 text-text-secondary text-sm">
           <li className="flex items-start gap-2">
-            <BookOpen className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><Link href="/characters/new" className="text-primary-600 hover:underline font-medium">Character Sheets</Link> — calculations, Skills, Feats.</span>
+            <BookOpen className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Character Sheets</Link> — calculations, Skills, Feats.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Wand2 className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><Link href="/power-creator" className="text-primary-600 hover:underline font-medium">Powers</Link> & <Link href="/technique-creator" className="text-primary-600 hover:underline font-medium">Techniques</Link>.</span>
+            <Wand2 className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Powers</Link> & <Link href="/technique-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Techniques</Link>.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Shield className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><Link href="/item-creator" className="text-primary-600 hover:underline font-medium">Armaments</Link> — weapons, armor.</span>
+            <Shield className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><Link href="/item-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Armaments</Link> — weapons, armor.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Skull className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5" />
-            <span><Link href="/creature-creator" className="text-primary-600 hover:underline font-medium">Creatures</Link> & <Link href="/encounter-tracker" className="text-primary-600 hover:underline font-medium">Encounters</Link>.</span>
+            <Skull className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5" />
+            <span><Link href="/creature-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creatures</Link> & <Link href="/encounter-tracker" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Encounters</Link>.</span>
           </li>
         </ul>
       </>
@@ -237,7 +237,7 @@ const CAROUSEL_SLIDES: Array<{
     content: (
       <>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
-          <strong className="text-text-primary">Your Character is yours to define.</strong> From Species and Ancestry to <Link href="/power-creator" className="text-primary-600 hover:underline font-medium">Powers</Link>, <Link href="/technique-creator" className="text-primary-600 hover:underline font-medium">Techniques</Link>, Skills, and Feats—every choice shapes who they are. Create custom Powers that fit your vision, design Techniques that feel uniquely yours, and build a <Link href="/characters/new" className="text-primary-600 hover:underline font-medium">Character</Link> that reflects your imagination.
+          <strong className="text-text-primary">Your Character is yours to define.</strong> From Species and Ancestry to <Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Powers</Link>, <Link href="/technique-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Techniques</Link>, Skills, and Feats—every choice shapes who they are. Create custom Powers that fit your vision, design Techniques that feel uniquely yours, and build a <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Character</Link> that reflects your imagination.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
           Whether you&apos;re a spellcaster weaving magic or a martial warrior mastering the blade, Realms gives you the tools to bring your ideal adventurer to life.
@@ -406,7 +406,7 @@ export default function AboutPage() {
         <div className={cn('relative p-8 md:p-12', CAROUSEL_CONTENT_MIN_H)}>
           <h2
             className={cn(
-              'text-xl font-bold text-primary-700 mb-6 flex items-center gap-2 transition-all duration-300',
+              'text-xl font-bold text-primary-700 dark:text-primary-300 mb-6 flex items-center gap-2 transition-all duration-300',
               (isFadingOut || isFadingIn) ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'
             )}
           >

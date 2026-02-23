@@ -1109,3 +1109,27 @@ Notes
 - Feedback: (1) Uncaught InvalidNodeTypeError: Failed to execute 'selectNode' on 'Range': the given Node has no parent — in 525.js, triggered from handleMouseUp/attributes. (2) Rules page (pub?embedded=true): Uncaught ReferenceError: DOCS_timing is not defined. (3) Resources page: GET .../Realms%20Character%20Sheet%20Alpha.pdf 404. (4) [DEPRECATED] Default export is deprecated. Instead use `import { create } from 'zustand'`. (5) Power page: don't allow options levels to be set to negative values.
 - Expected: No Range/selectNode error; rules page note or accept external doc noise; PDF available or handle missing asset; Power creator option level steppers have min 0.
 - Disposition: Power option levels implemented (min={0} on PowerPartCard and PowerAdvancedMechanics). TASK-268 (Range/selectNode), TASK-269 (Resources PDF). DOCS_timing and Zustand documented as external/dependency.
+
+**Raw Feedback Log — 2026-02-23 (Dark mode accessibility / instrumentation console)**
+- Date: 2026-02-23
+- Context: Production (Vercel) console; dark mode accessibility
+- Priority: Medium
+- Feedback: (1) [DEPRECATED] Default export is deprecated. Instead use `import { create } from 'zustand'`. (2) DialogContent requires a DialogTitle for screen reader users; missing Description or aria-describedby for DialogContent. (3) Home page feature cards and footer links: ensure dark mode uses design tokens (e.g. text-text-primary rather than ad-hoc dark:text-neutral-300).
+- Expected: No deprecation/warnings from our code; dialogs accessible; dark mode text uses design system tokens.
+- Disposition: Home page FeatureCard description now uses text-text-primary only. ACCESSIBILITY.md updated with dependency warnings section. Zustand and DialogContent warnings originate from dependencies; our code uses create from 'zustand' and Modal with aria-labelledby/aria-describedby.
+
+**Raw Feedback Log — 2026-02-23 (Dark mode site-wide WCAG AA contrast — about, footer, btn-solid)**
+- Date: 2026-02-23
+- Context: Production (Vercel); WCAG 2 AA color contrast; about page, footer, btn-solid
+- Priority: High
+- Feedback: Elements must meet minimum color contrast ratio thresholds WCAG 2 AA. About page: btn-solid link failing; footer links (About, Core Rulebook, Codex, Library, Terms, Privacy, Contact, Discord) and footer fixes needed in dark mode.
+- Expected: btn-solid and footer links meet 4.5:1 (normal text) in both light and dark; outline buttons and about page links readable in dark mode.
+- Disposition: (1) globals.css: .btn-solid dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50 (dark blue bg so white text passes); .btn-outline-clean dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30. (2) footer.tsx: dark:bg-neutral-700 → dark:bg-neutral-800; dark:text-neutral-100 → dark:text-white, dark:hover:text-primary-400 → dark:hover:text-primary-300 (theme overrides made neutral-100 dark, so use explicit white). (3) about/page.tsx: carousel h2 dark:text-primary-300; all inline links and list icons text-primary-600 → dark:text-primary-400. npm run build passes.
+
+**Raw Feedback Log — 2026-02-23 (Dark mode WCAG AA — Delete Campaign button, campaign roll log badges)**
+- Date: 2026-02-23
+- Context: Production; WCAG 2 AA contrast; campaigns page, roll logs
+- Priority: High
+- Feedback: Elements must meet minimum color contrast: (1) Delete Campaign button (bg-danger-600 text-white) fails in dark mode. (2) Roll log / campaign roll log spans (bg-surface-alt dark:bg-neutral-800 text-text-secondary) — numbers in badges fail contrast. (3) About link still reported (may be cached build).
+- Expected: Danger buttons and roll log numeric badges meet 4.5:1 in dark mode.
+- Disposition: (1) Button component: danger variant dark:bg-danger-800 dark:text-white dark:hover:bg-danger-700; primary variant dark mode aligned with btn-solid; link variant dark:text-primary-400. (2) roll-log.tsx: dice notation and die value badges using dark:bg-neutral-800 given dark:text-text-primary so numbers pass on dark bg. npm run build passes.

@@ -29,11 +29,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // RECOMMENDED VARIANTS - clean solid/outline preferred over gradients
-        primary: 'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-accent',
+        primary: 'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-accent dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50',
         secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
-        danger: 'bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger',
+        danger: 'bg-danger-600 text-white hover:bg-danger-700 focus-visible:ring-danger dark:bg-danger-800 dark:text-white dark:hover:bg-danger-700',
         ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-border',
-        link: 'text-primary-600 underline-offset-4 hover:underline focus-visible:ring-primary-accent',
+        link: 'text-primary-600 dark:text-primary-400 underline-offset-4 hover:underline focus-visible:ring-primary-accent',
         outline: 'border-2 border-primary-600 text-primary-700 bg-transparent hover:bg-primary-50 focus-visible:ring-primary-accent dark:text-primary-300 dark:hover:bg-primary-900/30',
       },
       size: {

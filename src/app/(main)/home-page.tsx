@@ -261,7 +261,7 @@ function FeatureCard({
           {title}
         </h3>
       </div>
-      <p className="font-nunito font-normal text-xl text-text-primary dark:text-neutral-300 leading-relaxed">
+      <p className="font-nunito font-normal text-xl text-text-primary leading-relaxed">
         {description}
       </p>
     </Link>

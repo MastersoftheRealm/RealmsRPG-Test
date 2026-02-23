@@ -526,20 +526,22 @@
      BUTTON COMPONENTS - Unified styling
      Clean solid/outline variants preferred over gradients for modern feel
      --------------------------------------------------------------------------- */
-  /* Clean solid primary - flat bg, no gradient */
+  /* Clean solid primary - flat bg, no gradient. Dark: use darker primary so white text meets WCAG AA. */
   .btn-solid {
     @apply inline-flex items-center gap-2 rounded-lg font-semibold
            bg-primary-600 text-white px-5 py-2.5 transition-all
            hover:bg-primary-700
+           dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
            disabled:pointer-events-none disabled:opacity-50;
   }
 
-  /* Clean outline - border only, no fill */
+  /* Clean outline - border only, no fill. Dark: lighter border/text for contrast on dark bg. */
   .btn-outline-clean {
     @apply inline-flex items-center gap-2 rounded-lg font-semibold
            border-2 border-primary-600 text-primary-700 px-5 py-2.5 transition-all
            hover:bg-primary-50
+           dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2
            disabled:pointer-events-none disabled:opacity-50;
   }

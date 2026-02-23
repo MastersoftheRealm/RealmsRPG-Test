@@ -37,3 +37,11 @@ Use these patterns so elements meet WCAG 2.1 AA in **both light and dark** theme
 - **Form inputs** (HP/EN, etc.): Use `bg-surface dark:bg-surface-alt` so the field is visible in dark mode. Every `<input>` and `<select>` must have an accessible name (`label` + `id`/`htmlFor` or `aria-label`).
 - **Modals:** Use `Modal` from `@/components/ui/modal`. Provide `title` (and optional `description`) for the dialog; if using a custom header with no visible title, pass `titleA11y` so screen readers get an accessible name.
 - **Touch targets:** Interactive controls (buttons, steppers, tab triggers, row actions) must have a minimum **44×44px** tap area on touch devices. See `src/docs/MOBILE_UX.md`.
+- **Primary text in dark mode:** Prefer the design token `text-text-primary` (no override). In `globals.css`, `.dark` sets `--color-text-primary` for contrast; avoid ad-hoc overrides like `dark:text-neutral-300` unless the token is insufficient for a specific background.
+
+## Console warnings from dependencies
+
+These warnings can appear in production (e.g. Vercel) and are **not from our application code**:
+
+- **Zustand:** `[DEPRECATED] Default export is deprecated. Instead use import { create } from 'zustand'`. Our stores use `import { create } from 'zustand'`; the warning comes from a dependency that still uses the default export. No change required in our code.
+- **DialogContent / DialogTitle / Description:** Radix UI warns when `DialogContent` is used without a `DialogTitle` or without `Description`/`aria-describedby`. Our modals use the custom `Modal` component (`@/components/ui/modal`) with `role="dialog"`, `aria-labelledby`, `aria-describedby`, and optional `titleA11y`. The warning is emitted by a dependency that uses Radix Dialog, not by our Modal.

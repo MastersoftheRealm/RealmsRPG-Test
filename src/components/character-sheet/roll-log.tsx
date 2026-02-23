@@ -438,7 +438,7 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
         {/* Dice notation + roll value (light grey) */}
         {diceGroups.map((group, gi) => (
           <div key={gi} className="flex items-center gap-1">
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt dark:bg-neutral-800 text-text-secondary text-xs font-medium">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary text-xs font-medium">
               <Image
                 src={DIE_IMAGES[group.type]}
                 alt=""
@@ -458,12 +458,12 @@ export function RollEntryCard({ roll, characterName }: { roll: RollEntry | Campa
                         'border',
                         die.isMax && 'bg-success-100 border-success-500 text-success-800',
                         die.isMin && 'bg-danger-100 border-danger-500 text-danger-800',
-                        !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-neutral-800 text-text-secondary border-border-light'
+                        !die.isMax && !die.isMin && 'bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary border-border-light'
                       )
                     : cn(
                         die.isMax ? 'bg-success-100 border border-success-400 text-success-800' :
                         die.isMin ? 'bg-danger-100 border border-danger-400 text-danger-800' :
-                        'bg-surface-alt dark:bg-neutral-800 text-text-secondary border border-border-light'
+                        'bg-surface-alt dark:bg-neutral-800 text-text-secondary dark:text-text-primary border border-border-light'
                       )
                 )}
               >
