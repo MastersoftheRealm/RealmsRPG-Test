@@ -44,15 +44,15 @@ export function QuantitySelector({
   className,
   disabled = false,
 }: QuantitySelectorProps) {
-  // Touch targets min 44px per MOBILE_UX.md
+  // Touch targets min 44px on mobile (below md), compact on desktop per MOBILE_UX.md
   const sizeClasses = {
     sm: {
-      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 text-xs',
+      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 md:min-w-0 md:min-h-0 md:w-5 md:h-5 text-xs',
       text: 'w-6 text-xs',
       icon: 'w-2.5 h-2.5',
     },
     md: {
-      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 text-sm',
+      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 md:min-w-0 md:min-h-0 md:w-6 md:h-6 text-sm',
       text: 'w-8 text-sm',
       icon: 'w-3 h-3',
     },

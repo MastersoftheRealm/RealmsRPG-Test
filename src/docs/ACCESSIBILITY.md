@@ -11,7 +11,7 @@ We target **WCAG 2.1 Level AA** for contrast, focus, labels, headings, and image
 | **Form controls** | Every `<select>` and meaningful `<input>` has an accessible name: `<label htmlFor="id">` + `id` on control, or `aria-label`. For spreadsheet-style or unlabeled contexts, use `aria-label` (e.g. "Edit [column], row [n]"). |
 | **Headings** | Levels increase by at most one (no h1 → h3). Page title = h1; first section = h2; subsections = h3. In wizards, step title = h2; section titles within step = h3. SectionHeader renders h2; GridListRow/PartChip section labels render h3; EmptyState title renders h2. |
 | **Modals** | Use `Modal` with `title` (and optional `description`). If using custom header with no visible title, set `titleA11y` for screen readers. |
-| **Touch targets** | Minimum 44×44px for tappable controls (buttons, steppers, tab triggers, list row actions). See MOBILE_UX.md. |
+| **Touch targets** | On mobile/touch viewports (below `md`), minimum 44×44px for tappable controls. Desktop can use smaller controls. Spacing between targets helps but does not replace minimum size on touch. See MOBILE_UX.md. |
 | **Images** | Decorative or when the same info is visible as text (e.g. dice "d4" next to image), use `alt=""`. Otherwise use descriptive `alt`. |
 
 ## Tooling
@@ -36,7 +36,7 @@ Use these patterns so elements meet WCAG 2.1 AA in **both light and dark** theme
 - **Icon-only buttons** on dark UI (e.g. roll log MOD +/-): avoid `bg-white/10` only; add `dark:bg-white/20 dark:hover:bg-white/35`. Keep icon `text-white` or use a token that contrasts on the button.
 - **Form inputs** (HP/EN, etc.): Use `bg-surface dark:bg-surface-alt` so the field is visible in dark mode. Every `<input>` and `<select>` must have an accessible name (`label` + `id`/`htmlFor` or `aria-label`).
 - **Modals:** Use `Modal` from `@/components/ui/modal`. Provide `title` (and optional `description`) for the dialog; if using a custom header with no visible title, pass `titleA11y` so screen readers get an accessible name.
-- **Touch targets:** Interactive controls (buttons, steppers, tab triggers, row actions) must have a minimum **44×44px** tap area on touch devices. See `src/docs/MOBILE_UX.md`.
+- **Touch targets:** On mobile/touch viewports (below `md`), interactive controls (buttons, steppers, tab triggers, row actions) must have a minimum **44×44px** tap area. On desktop, smaller controls are acceptable. Prefer responsive sizing (44px on mobile, compact on `md+`). See `src/docs/MOBILE_UX.md`.
 - **Primary text in dark mode:** Prefer the design token `text-text-primary` (no override). In `globals.css`, `.dark` sets `--color-text-primary` for contrast; avoid ad-hoc overrides like `dark:text-neutral-300` unless the token is insufficient for a specific background.
 
 ## Console warnings from dependencies

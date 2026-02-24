@@ -115,16 +115,16 @@ function useHoldRepeat(
 // =============================================================================
 
 const stepperButtonVariants = cva(
-  // Base button styles; touch targets min 44px per MOBILE_UX.md
-  'flex items-center justify-center font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)]',
+  // Base: 44px min on touch viewports (below md), compact on desktop per MOBILE_UX.md
+  'flex items-center justify-center font-bold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0',
   {
     variants: {
       size: {
-        xs: 'w-11 h-11 text-xs',
-        sm: 'w-11 h-11 text-sm',
-        md: 'w-11 h-11 text-base',
-        lg: 'w-12 h-12 text-lg',
-        xl: 'w-14 h-14 text-xl',
+        xs: 'w-11 h-11 md:w-5 md:h-5 text-xs',
+        sm: 'w-11 h-11 md:w-6 md:h-6 text-sm',
+        md: 'w-11 h-11 md:w-8 md:h-8 text-base',
+        lg: 'w-12 h-12 md:w-10 md:h-10 text-lg',
+        xl: 'w-14 h-14 md:w-12 md:h-12 text-xl',
       },
       colorVariant: {
         default: '',

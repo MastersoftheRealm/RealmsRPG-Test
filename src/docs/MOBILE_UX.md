@@ -21,7 +21,10 @@ Single reference for mobile breakpoints, touch targets, and layout patterns. Use
 
 ## Touch targets
 
-- **Minimum size:** 44×44px for any tappable control (buttons, icon buttons, steppers, tab triggers, toolbar icons, links in dense UI).
+- **Scope:** The 44×44px minimum applies to **mobile/touch viewports** (e.g. below `md`), not as a blanket rule for the whole site. WCAG 2.1 AA does not require a minimum target size; WCAG 2.5.5 (Level AAA) and platform guidelines (Apple HIG, Material) recommend 44–48pt for touch. We enforce 44px so the site is usable on phones without zoom.
+- **Minimum size (on touch):** Below `md`, tappable controls (buttons, icon buttons, steppers, tab triggers, toolbar icons, links in dense UI) should be at least 44×44px. On desktop (`md+`), controls can be smaller (e.g. compact steppers) since pointer precision is higher.
+- **Spacing:** Leaving enough gap between targets (e.g. 8px) helps avoid mis-taps. Spacing **supplements** but does not replace a minimum target size on touch: small targets remain hard to tap accurately even with spacing.
+- **Implementation:** Prefer responsive sizing: `min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0` with smaller `w`/`h` at `md+` so steppers and toggles stay compact on desktop. Use `--touch-target-min: 44px` and `--mobile-gutter: 0.75rem` in `globals.css` when helpful.
 - **Spacing:** Leave enough gap between targets so taps don’t hit the wrong one.
 - **Reference:** `--touch-target-min: 44px` and `--mobile-gutter: 0.75rem` in `globals.css` (optional; use in components when helpful).
 
@@ -63,7 +66,7 @@ When **creating or editing** a page or modal:
 1. **Page**
    - Responsive breakpoints: stack or single column below `md`?
    - **Dense layout (many sections)?** Prefer **side-scroll** between section panels on mobile; use **collapse** when sections are few or content is lighter.
-   - Touch targets ≥ 44px for interactive elements?
+   - Touch targets ≥ 44px for interactive elements **on mobile** (below `md`)?
    - No horizontal scroll at ~360px width for main content (tabs can scroll horizontally).
 
 2. **Modal**
@@ -74,7 +77,7 @@ When **creating or editing** a page or modal:
 
 4. **Verification**
    - Resize to 360px width (or use DevTools device mode); confirm no pinch-zoom needed, modals usable, controls tappable.
-   - For accessibility: contrast and labels per `src/docs/ACCESSIBILITY.md`; touch targets ≥ 44px (above).
+   - For accessibility: contrast and labels per `src/docs/ACCESSIBILITY.md`; touch targets ≥ 44px on mobile (above).
 
 ---
 
