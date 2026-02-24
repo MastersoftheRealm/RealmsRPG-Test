@@ -137,18 +137,14 @@ export default function CombatEncounterView({
     refetchCharacterResources();
   }, [encounter?.id, encounter?.campaignId, encounter?.combatants, refetchCharacterResources]);
 
-  useEffect(() => {
-    const onFocus = () => refetchCharacterResources();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [refetchCharacterResources]);
-
   const hasLinkedCombatants = encounter?.combatants?.some(
     (c) => (c as TrackedCombatant).sourceType === 'campaign-character' && (c as TrackedCombatant).sourceId
   );
+  // Poll linked character HP/energy every 60s; Supabase Realtime also pushes character updates.
+  // No refetch on window focus — avoids N API calls per tab switch (N = linked combatants).
   useEffect(() => {
     if (!hasLinkedCombatants || !refetchCharacterResources) return;
-    const interval = setInterval(refetchCharacterResources, 30_000);
+    const interval = setInterval(refetchCharacterResources, 60_000);
     return () => clearInterval(interval);
   }, [hasLinkedCombatants, refetchCharacterResources]);
 

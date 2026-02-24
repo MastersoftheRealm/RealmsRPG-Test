@@ -1181,3 +1181,11 @@ Notes
 - Feedback: Huge spike in Fast Data Transfer (4 GB) and Edge Request CPU Duration today, same day as Edge Request spike.
 - Expected: Reduce data transfer and Edge CPU so free tier is sustainable.
 - Implemented 2026-02-24: (1) Edge CPU: Already reduced by excluding api/codex and api/public from proxy (those requests no longer run on Edge). (2) Fast Data Transfer: /api/codex and /api/public GET had no cache headers; repeated fetches (prefetch, hooks, tabs) re-downloaded full payload every time. Added Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300 to both APIs so browser and CDN cache 5–10 min and repeated requests don't re-download. (3) DEPLOYMENT_AND_SECRETS_SUPABASE.md: added "Vercel free tier usage" section documenting proxy exclusions, cache headers, and guidance for new public APIs.
+
+**Raw Feedback Log — 2026-02-24 (Edge Requests spiked 10x — re-audit)**
+- Date: 2026-02-24
+- Context: Vercel Usage; Edge Requests spiked to 10x normal today. Edge Requests = all requests to the site (static assets + functions). Vercel guidance: optimize re-mounting (many images), excessive polling/refetch on focus (SWR/React Query).
+- Priority: High
+- Feedback: Re-audit roll-log and roll-context (and related hooks) for causes of Edge Request spike. Edge Requests recently spiked to 10x the normal amount today. Managing Edge Requests: count, projects, region. Optimizing: identify frequent re-mounting (304 on repeated paths); reduce excessive polling or data fetching (APIs polled for live updates, SWR/React Query reload on focus).
+- Expected: Identify and fix refetch-on-focus and aggressive polling that multiply requests; reduce Edge Request count.
+- Implemented 2026-02-24: (1) use-campaign-rolls: refetchOnWindowFocus set to false — Supabase Realtime (postgres_changes) already pushes campaign roll updates; refetch on every tab/window focus was redundant and multiplied API calls. (2) CombatEncounterView: removed window focus listener that called refetchCharacterResources (N API calls per tab switch, N = linked combatants); increased character-resource polling interval from 30s to 60s; Realtime still pushes character updates. Roll-log/roll-context: no polling; images are static Next/Image; no further change.

@@ -23,7 +23,8 @@ export function useCampaignRolls(campaignId: string | undefined) {
     queryFn: () => getCampaignRolls(stableId!),
     enabled: !!stableId,
     refetchInterval: false,
-    refetchOnWindowFocus: true,
+    // Supabase Realtime (postgres_changes) pushes updates; refetch on focus would duplicate requests.
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
