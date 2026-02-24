@@ -19,7 +19,7 @@
  */
 
 import { useState, memo, ReactNode } from 'react';
-import { Edit, Copy, Zap, Check, Plus, AlertCircle, X } from 'lucide-react';
+import { Edit, Copy, Zap, Check, Plus, AlertCircle, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
@@ -54,6 +54,13 @@ function columnDisplayLabel(col: ColumnValue): string {
   return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
+/** Option row for part/property chips (level > 0) with optional description */
+export interface ChipOptionData {
+  label: string;
+  description?: string;
+  level: number;
+}
+
 export interface ChipData {
   /** Chip label/name */
   name: string;
@@ -67,6 +74,8 @@ export interface ChipData {
   level?: number;
   /** Chip category for styling */
   category?: 'default' | 'cost' | 'tag' | 'warning' | 'success' | 'archetype' | 'skill';
+  /** Options with level > 0 (shown below description in expanded chip, collapsible) */
+  options?: ChipOptionData[];
 }
 
 export interface GridListRowProps {
@@ -115,7 +124,7 @@ export interface GridListRowProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
-  /** Add to my library (for public library items) */
+  /** Add to my library (for Realms Library items) */
   onAddToLibrary?: () => void;
   
   // ===== Character Sheet Slots (Phase 1 Unification) =====
@@ -127,6 +136,8 @@ export interface GridListRowProps {
   equipped?: boolean;
   /** Visual state: item is innate (purple styling) */
   innate?: boolean;
+  /** When true, do not show the innate star badge (e.g. already in innate section) */
+  hideInnateBadge?: boolean;
   /** Uses tracking for feats with limited uses */
   uses?: { current: number; max: number };
   /** When true, do not show (current/max) after name (e.g. when Uses column has a stepper) */
@@ -164,14 +175,15 @@ const BADGE_COLORS = {
   red: 'bg-danger-100 dark:bg-danger-900/40 text-danger-700 dark:text-danger-400',
 };
 
-const CHIP_STYLES = {
-  default: 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-800/50 text-primary-700 dark:text-primary-300 hover:bg-primary-100 dark:hover:bg-primary-800/40',
-  cost: 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text hover:bg-tp-light/80 dark:hover:bg-warning-800/30',
-  tag: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-800/40',
-  warning: 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-800/50 text-danger-700 dark:text-danger-400 hover:bg-danger-100 dark:hover:bg-danger-800/40',
-  success: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-800/40',
-  archetype: 'bg-power-light dark:bg-power-900/30 border-power-border text-power-text dark:text-power-300 hover:bg-power-light/80 dark:hover:bg-power-800/30',
-  skill: 'bg-info-50 dark:bg-info-900/30 border-info-200 dark:border-info-800/50 text-info-700 dark:text-info-400 hover:bg-info-100 dark:hover:bg-info-800/40',
+/** Unified chip styles: default (neutral), cost (blue), tag (neutral same as default) */
+const CHIP_STYLES: Record<string, string> = {
+  default: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary hover:bg-surface dark:hover:bg-surface-alt',
+  cost: 'bg-info-50 dark:bg-info-900/30 border-info-200 dark:border-info-800/50 text-info-700 dark:text-info-400 hover:bg-info-100 dark:hover:bg-info-800/40',
+  tag: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary hover:bg-surface dark:hover:bg-surface-alt',
+  warning: 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-800/50 text-danger-700 dark:text-danger-400',
+  success: 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-800/50 text-success-700 dark:text-success-400',
+  archetype: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary',
+  skill: 'bg-surface-alt dark:bg-surface border-border-light dark:border-border text-text-secondary dark:text-text-primary',
 };
 
 // =============================================================================
@@ -206,6 +218,7 @@ export const GridListRow = memo(function GridListRow({
   rightSlot,
   equipped = false,
   innate = false,
+  hideInnateBadge = false,
   uses,
   hideUsesInName = false,
   quantity,
@@ -220,6 +233,7 @@ export const GridListRow = memo(function GridListRow({
 }: GridListRowProps) {
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const [expandedChipIndex, setExpandedChipIndex] = useState<number | null>(null);
+  const [expandedOptionsChipIndex, setExpandedOptionsChipIndex] = useState<number | null>(null);
   
   // Support both controlled and uncontrolled expansion
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
@@ -304,8 +318,8 @@ export const GridListRow = memo(function GridListRow({
             useFlex && 'flex-1'
           )}>
             <span className="break-words lg:truncate">{name}</span>
-            {/* Innate indicator */}
-            {innate && (
+            {/* Innate indicator (hidden when already in innate section) */}
+            {innate && !hideInnateBadge && (
               <span className="text-[10px] px-1 py-0.5 rounded bg-violet-200 dark:bg-violet-800/50 text-violet-600 dark:text-violet-300 flex-shrink-0">★</span>
             )}
             {/* Uses display (hidden when Uses column shows stepper). Show - when no/zero uses. */}
@@ -520,7 +534,7 @@ export const GridListRow = memo(function GridListRow({
               {/* Total Cost */}
               {totalCost !== undefined && totalCost > 0 && (
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-tp-light text-tp-text">
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border border-info-200 dark:border-info-800/50">
                     <Zap className="w-4 h-4" />
                     Total {costLabel}: {totalCost}
                   </span>
@@ -553,36 +567,63 @@ export const GridListRow = memo(function GridListRow({
                         const hasCost = (chip.cost ?? 0) > 0;
                         const isChipExpanded = expandedChipIndex === index;
                         const category = chip.category || (hasCost ? 'cost' : 'default');
-                        const isExpandable = !!(chip.description || hasCost) && category !== 'tag';
+                        const isExpandable = !!(chip.description || hasCost || (chip.options?.length ?? 0) > 0) && category !== 'tag';
+                        const showOptions = isChipExpanded && (chip.options?.length ?? 0) > 0;
+                        const optionsOpen = expandedOptionsChipIndex === index;
                         return (
-                          <button
+                          <div
                             key={chipIdx}
-                            onClick={isExpandable ? (e) => handleChipClick(index, e) : (e) => e.stopPropagation()}
                             className={cn(
                               'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',
-                              isExpandable ? 'cursor-pointer' : 'cursor-default',
                               CHIP_STYLES[category],
                               isChipExpanded ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2' : 'px-3 py-1.5'
                             )}
                           >
-                            <span className="inline-flex items-center gap-1.5">
-                              <span>{chip.name}</span>
-                              {chip.level && chip.level > 1 && (
-                                <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
-                              )}
-                              {hasCost && (
-                                <>
-                                  <span className="opacity-40">|</span>
-                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
-                                </>
-                              )}
-                            </span>
-                            {isChipExpanded && chip.description && (
-                              <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line">
-                                {chip.description}
+                            <button
+                              onClick={isExpandable ? (e) => { e.stopPropagation(); handleChipClick(index, e); } : (e) => e.stopPropagation()}
+                              className={cn('text-left w-full', isExpandable ? 'cursor-pointer' : 'cursor-default')}
+                            >
+                              <span className="inline-flex items-center gap-1.5">
+                                <span>{chip.name}</span>
+                                {chip.level && chip.level > 1 && (
+                                  <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
+                                )}
+                                {hasCost && (
+                                  <>
+                                    <span className="opacity-40">|</span>
+                                    <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                  </>
+                                )}
                               </span>
+                            </button>
+                            {isChipExpanded && chip.description && (
+                              <p className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line w-full">
+                                {chip.description}
+                              </p>
                             )}
-                          </button>
+                            {showOptions && (
+                              <div className="mt-2 w-full">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setExpandedOptionsChipIndex(optionsOpen ? null : index); }}
+                                  className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
+                                >
+                                  <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
+                                  Options ({chip.options!.length})
+                                </button>
+                                {optionsOpen && (
+                                  <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-border-light dark:border-border">
+                                    {chip.options!.map((opt, oi) => (
+                                      <li key={oi} className="text-xs">
+                                        <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
+                                        {opt.description && <p className="mt-0.5 text-text-secondary leading-relaxed">{opt.description}</p>}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -601,36 +642,63 @@ export const GridListRow = memo(function GridListRow({
                       const hasCost = (chip.cost ?? 0) > 0;
                       const isChipExpanded = expandedChipIndex === index;
                       const category = chip.category || (hasCost ? 'cost' : 'default');
-                      const isExpandable = !!(chip.description || hasCost) && category !== 'tag';
+                      const isExpandable = !!(chip.description || hasCost || (chip.options?.length ?? 0) > 0) && category !== 'tag';
+                      const showOptions = isChipExpanded && (chip.options?.length ?? 0) > 0;
+                      const optionsOpen = expandedOptionsChipIndex === index;
                       return (
-                        <button
+                        <div
                           key={`${chip.name}-${category}-${index}`}
-                          onClick={isExpandable ? (e) => handleChipClick(index, e) : (e) => e.stopPropagation()}
                           className={cn(
                             'inline-flex flex-col items-start rounded-xl text-sm font-medium transition-all duration-200 border',
-                            isExpandable ? 'cursor-pointer' : 'cursor-default',
                             CHIP_STYLES[category],
                             isChipExpanded ? 'w-full ring-2 ring-offset-1 ring-current px-3 py-2' : 'px-3 py-1.5'
                           )}
                         >
-                          <span className="inline-flex items-center gap-1.5">
-                            <span>{chip.name}</span>
-                            {chip.level && chip.level > 1 && (
-                              <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
-                            )}
-                            {hasCost && (
-                              <>
-                                <span className="opacity-40">|</span>
-                                <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
-                              </>
-                            )}
-                          </span>
-                          {isChipExpanded && chip.description && (
-                            <span className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line">
-                              {chip.description}
+                          <button
+                            onClick={isExpandable ? (e) => { e.stopPropagation(); handleChipClick(index, e); } : (e) => e.stopPropagation()}
+                            className={cn('text-left w-full', isExpandable ? 'cursor-pointer' : 'cursor-default')}
+                          >
+                            <span className="inline-flex items-center gap-1.5">
+                              <span>{chip.name}</span>
+                              {chip.level && chip.level > 1 && (
+                                <span className="text-xs text-text-secondary">(Lv.{chip.level})</span>
+                              )}
+                              {hasCost && (
+                                <>
+                                  <span className="opacity-40">|</span>
+                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                </>
+                              )}
                             </span>
+                          </button>
+                          {isChipExpanded && chip.description && (
+                            <p className="block mt-1.5 pt-1.5 border-t border-current/15 text-xs font-normal text-left text-text-secondary leading-relaxed whitespace-pre-line w-full">
+                              {chip.description}
+                            </p>
                           )}
-                        </button>
+                          {showOptions && (
+                            <div className="mt-2 w-full">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setExpandedOptionsChipIndex(optionsOpen ? null : index); }}
+                                className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
+                              >
+                                <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
+                                Options ({chip.options!.length})
+                              </button>
+                              {optionsOpen && (
+                                <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-border-light dark:border-border">
+                                  {chip.options!.map((opt, oi) => (
+                                    <li key={oi} className="text-xs">
+                                      <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
+                                      {opt.description && <p className="mt-0.5 text-text-secondary leading-relaxed">{opt.description}</p>}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>

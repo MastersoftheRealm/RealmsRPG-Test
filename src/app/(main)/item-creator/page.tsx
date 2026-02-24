@@ -816,13 +816,13 @@ function ItemCreatorContent() {
     type: 'items',
     getPayload,
     requirePublishConfirm: true,
-    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmTitle: 'Publish to Realms Library',
     publishConfirmDescription: (n, { existingInPublic }) =>
       existingInPublic
         ? `Are you sure you want to override "${n}" (${armamentType.toLowerCase()})? The existing public ${armamentType.toLowerCase()} with this name will be replaced.`
-        : `Are you sure you wish to publish this ${armamentType.toLowerCase()} "${n}" to the public library? All users will be able to see and use it.`,
+        : `Are you sure you wish to publish this ${armamentType.toLowerCase()} "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Item saved successfully!',
-    publicSuccessMessage: 'Item saved to public library!',
+    publicSuccessMessage: 'Item saved to Realms Library!',
     onSaveSuccess: () => {
       setName('');
       setDescription('');

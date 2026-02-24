@@ -1,8 +1,8 @@
 /**
  * Library Public Content
  * ======================
- * Public library lists (Powers, Techniques, Armaments, Creatures) for the Library page.
- * Browse and add to my library. Requires login to add.
+ * Realms Library lists (Powers, Techniques, Armaments, Creatures) for the Library page.
+ * Browse and add to My Library (use as-is or customize). Requires login to add.
  */
 
 'use client';
@@ -46,17 +46,19 @@ const CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
 interface LibraryPublicContentProps {
   activeTab: LibraryPublicTabId;
   onLoginRequired: () => void;
+  /** When true, show lists without Add to library (e.g. for /browse when not logged in). */
+  readOnly?: boolean;
 }
 
-export function LibraryPublicContent({ activeTab, onLoginRequired }: LibraryPublicContentProps) {
-  if (activeTab === 'powers') return <PublicPowersList onLoginRequired={onLoginRequired} />;
-  if (activeTab === 'techniques') return <PublicTechniquesList onLoginRequired={onLoginRequired} />;
-  if (activeTab === 'items') return <PublicItemsList onLoginRequired={onLoginRequired} />;
-  if (activeTab === 'creatures') return <PublicCreaturesList onLoginRequired={onLoginRequired} />;
+export function LibraryPublicContent({ activeTab, onLoginRequired, readOnly = false }: LibraryPublicContentProps) {
+  if (activeTab === 'powers') return <PublicPowersList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  if (activeTab === 'techniques') return <PublicTechniquesList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  if (activeTab === 'items') return <PublicItemsList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  if (activeTab === 'creatures') return <PublicCreaturesList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   return null;
 }
 
-function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) {
+function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('powers');
@@ -67,8 +69,8 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
-    if (!user) {
-      onLoginRequired();
+    if (readOnly || !user) {
+      if (!user) onLoginRequired();
       return;
     }
     setAddConfirm({ name, raw });
@@ -78,7 +80,7 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
     if (!addConfirm) return;
     addMutation.mutate(addConfirm.raw, {
       onSuccess: () => {
-        showToast('Added to your library', 'success');
+        showToast('Added to My Library. You can use it as-is or edit a copy.', 'success');
         setAddConfirm(null);
       },
       onError: (e) => {
@@ -134,9 +136,9 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load public powers" />;
+  if (error) return <ErrorDisplay message="Failed to load Realms Library powers" />;
   if (!isLoading && cardData.length === 0) {
-    return <ListEmptyState icon={<Wand2 className="w-8 h-8" />} title="No public powers" message="Public powers will appear here when admins add them." />;
+    return <ListEmptyState icon={<Wand2 className="w-8 h-8" />} title="No powers yet" message="Official powers will appear here when added to Realms Library." />;
   }
 
   return (
@@ -182,8 +184,8 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
               chipsLabel="Parts"
               totalCost={p.tp}
               costLabel="TP"
-              badges={[{ label: 'Public', color: 'blue' }]}
-              rightSlot={
+              badges={[{ label: 'Realms', color: 'blue' }]}
+              rightSlot={readOnly ? undefined : (
                 <IconButton
                   variant="ghost"
                   size="sm"
@@ -193,14 +195,14 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
                 >
                   <Plus className="w-4 h-4" />
                 </IconButton>
-              }
-              onAddToLibrary={() => openAddConfirm(p.name, p.raw)}
+              )}
+              onAddToLibrary={readOnly ? undefined : () => openAddConfirm(p.name, p.raw)}
             />
           ))
         )}
       </div>
       <ConfirmActionModal
-        isOpen={!!addConfirm}
+        isOpen={!readOnly && !!addConfirm}
         onClose={() => setAddConfirm(null)}
         onConfirm={handleAddConfirm}
         title="Add to your library?"
@@ -214,7 +216,7 @@ function PublicPowersList({ onLoginRequired }: { onLoginRequired: () => void }) 
   );
 }
 
-function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void }) {
+function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('techniques');
@@ -225,8 +227,8 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
-    if (!user) {
-      onLoginRequired();
+    if (readOnly || !user) {
+      if (!user) onLoginRequired();
       return;
     }
     setAddConfirm({ name, raw });
@@ -236,7 +238,7 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
     if (!addConfirm) return;
     addMutation.mutate(addConfirm.raw, {
       onSuccess: () => {
-        showToast('Added to your library', 'success');
+        showToast('Added to My Library. You can use it as-is or edit a copy.', 'success');
         setAddConfirm(null);
       },
       onError: (e) => {
@@ -286,9 +288,9 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load public techniques" />;
+  if (error) return <ErrorDisplay message="Failed to load Realms Library techniques" />;
   if (!isLoading && cardData.length === 0) {
-    return <ListEmptyState icon={<Swords className="w-8 h-8" />} title="No public techniques" message="Public techniques will appear here when admins add them." />;
+    return <ListEmptyState icon={<Swords className="w-8 h-8" />} title="No techniques yet" message="Official techniques will appear here when added to Realms Library." />;
   }
 
   return (
@@ -332,8 +334,8 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
               chipsLabel="Parts"
               totalCost={t.tp}
               costLabel="TP"
-              badges={[{ label: 'Public', color: 'blue' }]}
-              rightSlot={
+              badges={[{ label: 'Realms', color: 'blue' }]}
+              rightSlot={readOnly ? undefined : (
                 <IconButton
                   variant="ghost"
                   size="sm"
@@ -343,14 +345,14 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
                 >
                   <Plus className="w-4 h-4" />
                 </IconButton>
-              }
-              onAddToLibrary={() => openAddConfirm(t.name, t.raw)}
+              )}
+              onAddToLibrary={readOnly ? undefined : () => openAddConfirm(t.name, t.raw)}
             />
           ))
         )}
       </div>
       <ConfirmActionModal
-        isOpen={!!addConfirm}
+        isOpen={!readOnly && !!addConfirm}
         onClose={() => setAddConfirm(null)}
         onConfirm={handleAddConfirm}
         title="Add to your library?"
@@ -364,7 +366,7 @@ function PublicTechniquesList({ onLoginRequired }: { onLoginRequired: () => void
   );
 }
 
-function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
+function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('items');
@@ -375,8 +377,8 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
-    if (!user) {
-      onLoginRequired();
+    if (readOnly || !user) {
+      if (!user) onLoginRequired();
       return;
     }
     setAddConfirm({ name, raw });
@@ -386,7 +388,7 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
     if (!addConfirm) return;
     addMutation.mutate(addConfirm.raw, {
       onSuccess: () => {
-        showToast('Added to your library', 'success');
+        showToast('Added to My Library. You can use it as-is or edit a copy.', 'success');
         setAddConfirm(null);
       },
       onError: (e) => {
@@ -439,9 +441,9 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load public armaments" />;
+  if (error) return <ErrorDisplay message="Failed to load Realms Library armaments" />;
   if (!isLoading && cardData.length === 0) {
-    return <ListEmptyState icon={<Shield className="w-8 h-8" />} title="No public armaments" message="Public armaments will appear here when admins add them." />;
+    return <ListEmptyState icon={<Shield className="w-8 h-8" />} title="No armaments yet" message="Official armaments will appear here when added to Realms Library." />;
   }
 
   return (
@@ -487,8 +489,8 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
               chipsLabel="Properties"
               totalCost={i.tp}
               costLabel="TP"
-              badges={[{ label: 'Public', color: 'blue' }]}
-              rightSlot={
+              badges={[{ label: 'Realms', color: 'blue' }]}
+              rightSlot={readOnly ? undefined : (
                 <IconButton
                   variant="ghost"
                   size="sm"
@@ -498,14 +500,14 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
                 >
                   <Plus className="w-4 h-4" />
                 </IconButton>
-              }
-              onAddToLibrary={() => openAddConfirm(i.name, i.raw)}
+              )}
+              onAddToLibrary={readOnly ? undefined : () => openAddConfirm(i.name, i.raw)}
             />
           ))
         )}
       </div>
       <ConfirmActionModal
-        isOpen={!!addConfirm}
+        isOpen={!readOnly && !!addConfirm}
         onClose={() => setAddConfirm(null)}
         onConfirm={handleAddConfirm}
         title="Add to your library?"
@@ -519,7 +521,7 @@ function PublicItemsList({ onLoginRequired }: { onLoginRequired: () => void }) {
   );
 }
 
-function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void }) {
+function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
   const { user } = useAuthStore();
   const { showToast } = useToast();
   const { data: items = [], isLoading, error } = usePublicLibrary('creatures');
@@ -529,8 +531,8 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const openAddConfirm = (name: string, raw: Record<string, unknown>) => {
-    if (!user) {
-      onLoginRequired();
+    if (readOnly || !user) {
+      if (!user) onLoginRequired();
       return;
     }
     setAddConfirm({ name, raw });
@@ -540,7 +542,7 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
     if (!addConfirm) return;
     addMutation.mutate(addConfirm.raw, {
       onSuccess: () => {
-        showToast('Added to your library', 'success');
+        showToast('Added to My Library. You can use it as-is or edit a copy.', 'success');
         setAddConfirm(null);
       },
       onError: (e) => {
@@ -569,9 +571,9 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
     return sortItems(r);
   }, [cardData, search, sortItems]);
 
-  if (error) return <ErrorDisplay message="Failed to load public creatures" />;
+  if (error) return <ErrorDisplay message="Failed to load Realms Library creatures" />;
   if (!isLoading && cardData.length === 0) {
-    return <ListEmptyState icon={<Users className="w-8 h-8" />} title="No public creatures" message="Public creatures will appear here when admins add them." />;
+    return <ListEmptyState icon={<Users className="w-8 h-8" />} title="No creatures yet" message="Official creatures will appear here when added to Realms Library." />;
   }
 
   return (
@@ -605,8 +607,8 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
                 { key: 'Level', value: c.level, highlight: true },
                 { key: 'Type', value: c.type },
               ]}
-              badges={[{ label: 'Public', color: 'blue' }]}
-              rightSlot={
+              badges={[{ label: 'Realms', color: 'blue' }]}
+              rightSlot={readOnly ? undefined : (
                 <IconButton
                   variant="ghost"
                   size="sm"
@@ -616,14 +618,14 @@ function PublicCreaturesList({ onLoginRequired }: { onLoginRequired: () => void 
                 >
                   <Plus className="w-4 h-4" />
                 </IconButton>
-              }
-              onAddToLibrary={() => openAddConfirm(c.name, c.raw)}
+              )}
+              onAddToLibrary={readOnly ? undefined : () => openAddConfirm(c.name, c.raw)}
             />
           ))
         )}
       </div>
       <ConfirmActionModal
-        isOpen={!!addConfirm}
+        isOpen={!readOnly && !!addConfirm}
         onClose={() => setAddConfirm(null)}
         onConfirm={handleAddConfirm}
         title="Add to your library?"

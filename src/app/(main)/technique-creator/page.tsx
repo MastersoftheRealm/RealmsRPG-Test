@@ -573,13 +573,13 @@ function TechniqueCreatorContent() {
     type: 'techniques',
     getPayload,
     requirePublishConfirm: true,
-    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmTitle: 'Publish to Realms Library',
     publishConfirmDescription: (n, { existingInPublic }) =>
       existingInPublic
         ? `Are you sure you want to override "${n}" (technique)? The existing public technique with this name will be replaced.`
-        : `Are you sure you wish to publish this technique "${n}" to the public library? All users will be able to see and use it.`,
+        : `Are you sure you wish to publish this technique "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Technique saved successfully!',
-    publicSuccessMessage: 'Technique saved to public library!',
+    publicSuccessMessage: 'Technique saved to Realms Library!',
     onSaveSuccess: () => {
       setName('');
       setDescription('');

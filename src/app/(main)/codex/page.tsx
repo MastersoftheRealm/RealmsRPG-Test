@@ -2,9 +2,9 @@
  * Codex Page - Full Implementation
  * =================================
  * Complete game reference (pieces/parts: feats, skills, species, equipment, parts, properties, etc.).
- * My Codex vs Public Codex: same pattern as Library (My Library / Public Library).
- * Public Codex = default; all DB codex data. My Codex = future user-created content (placeholder for now).
- * Public library content (powers, techniques, armaments, creatures) lives on the Library page.
+ * Realms Codex vs My Codex: same pattern as Library (My Library / Realms Library).
+ * Realms Codex = default; all official DB codex data. My Codex = future user-created content (placeholder for now).
+ * Realms Library content (powers, techniques, armaments, creatures) lives on the Library page.
  */
 
 'use client';
@@ -74,7 +74,7 @@ export default function CodexPage() {
     <PageContainer size="xl">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
         <PageHeader
-          title={isPublic ? 'Public Codex' : 'My Codex'}
+          title={isPublic ? 'Realms Codex' : 'My Codex'}
           description={
             isPublic
               ? 'Complete reference for the Realms RPG system — feats, skills, species, equipment, parts, and properties.'
@@ -107,7 +107,7 @@ export default function CodexPage() {
                 : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
             )}
           >
-            Public Codex
+            Realms Codex
           </button>
           <button
             type="button"

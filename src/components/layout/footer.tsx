@@ -19,7 +19,7 @@ export function Footer() {
           <Link href="/terms" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Terms</Link>
           <Link href="/privacy" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Privacy</Link>
           <a href="mailto:RealmsRoleplayGame@gmail.com" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Contact</a>
-          <a href="https://discord.gg/Dbd5X9FQFJ" target="_blank" rel="noopener noreferrer" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Discord</a>
+          <a href="https://discord.com/invite/WW7uVEEdpk" target="_blank" rel="noopener noreferrer" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center" aria-label="Join the community on Discord">Join the Community</a>
         </nav>
       </div>
     </footer>

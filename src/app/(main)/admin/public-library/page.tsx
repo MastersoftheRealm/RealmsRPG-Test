@@ -31,7 +31,7 @@ export default function AdminPublicLibraryPage() {
   return (
     <PageContainer size="xl">
       <PageHeader
-        title="Public Library Editor"
+        title="Realms Library Editor"
         description="Edit published items via the creators (Edit opens Power/Technique/Item/Creature Creator with the item loaded). Save with the same name to overwrite. Changes are visible to all users on the Library page."
       />
 

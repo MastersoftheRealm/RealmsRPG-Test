@@ -292,7 +292,7 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
           <a
-            href="https://discord.gg/realmsrpg"
+            href="https://discord.com/invite/WW7uVEEdpk"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-solid inline-flex items-center gap-2"
@@ -313,7 +313,7 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Realms is better together.</strong> Connect with players, share house rules, find games.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <a href="https://discord.gg/realmsrpg" target="_blank" rel="noopener noreferrer" className="btn-solid text-sm inline-flex items-center gap-2">
+          <a href="https://discord.com/invite/WW7uVEEdpk" target="_blank" rel="noopener noreferrer" className="btn-solid text-sm inline-flex items-center gap-2">
             <MessageCircle className="w-4 h-4" />
             Discord
           </a>

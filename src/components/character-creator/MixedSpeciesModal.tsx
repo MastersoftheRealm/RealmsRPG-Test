@@ -28,7 +28,7 @@ export function MixedSpeciesModal({
   allSpecies,
   userSpeciesIds,
 }: MixedSpeciesModalProps) {
-  const [source, setSource] = useState<SourceFilterValue>('all');
+  const [source, setSource] = useState<SourceFilterValue>('public');
   const [speciesAId, setSpeciesAId] = useState<string>('');
   const [speciesBId, setSpeciesBId] = useState<string>('');
 

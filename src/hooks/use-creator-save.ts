@@ -30,7 +30,7 @@ export interface UseCreatorSaveOptions {
   onSaveSuccess?: () => void;
   /** Success message for private save. Default: "Saved successfully!" */
   successMessage?: string;
-  /** Success message for public save. Default: "Saved to public library!" */
+  /** Success message for public save. Default: "Saved to Realms Library!" */
   publicSuccessMessage?: string;
 }
 
@@ -52,14 +52,14 @@ export interface UseCreatorSaveReturn {
 }
 
 const DEFAULT_SUCCESS = 'Saved successfully!';
-const DEFAULT_PUBLIC_SUCCESS = 'Saved to public library!';
+const DEFAULT_PUBLIC_SUCCESS = 'Saved to Realms Library!';
 
 export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveReturn {
   const {
     type,
     getPayload,
     requirePublishConfirm = true,
-    publishConfirmTitle = 'Publish to Public Library',
+    publishConfirmTitle = 'Publish to Realms Library',
     publishConfirmDescription,
     onSaveSuccess,
     successMessage = DEFAULT_SUCCESS,

@@ -195,9 +195,9 @@ export function useLoadModalLibrary(type: LoadModalLibraryType): UseLoadModalLib
       : 'No matching items';
   const emptySubMessage =
     selectableItems.length === 0 && source === 'public' && isPublicError
-      ? 'Failed to load public library. Try again later.'
+      ? 'Failed to load Realms Library. Try again later.'
       : selectableItems.length === 0 && source === 'public'
-        ? 'Public content can be added by admins via Admin → Public Library Editor.'
+        ? 'Official content can be added by admins via Admin → Realms Library Editor.'
         : selectableItems.length === 0
           ? type === 'power'
             ? 'Create some in the Power Creator first!'

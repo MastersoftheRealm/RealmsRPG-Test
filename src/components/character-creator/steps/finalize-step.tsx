@@ -13,7 +13,7 @@ import { useAuth, useCodexSkills, useSpecies } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
 import type { Character } from '@/types';
-import { Spinner, Button, Alert, Modal, Textarea } from '@/components/ui';
+import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
@@ -325,6 +325,7 @@ export function FinalizeStep() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
   const { data: codexSkills } = useCodexSkills();
   const { data: allSpecies = [] } = useSpecies();
@@ -482,6 +483,7 @@ export function FinalizeStep() {
 
       // Navigate: returnTo param (e.g. from campaigns Join tab) or new character sheet
       const returnTo = searchParams.get('returnTo');
+      showToast('Your character is ready!', 'success');
       if (returnTo && returnTo.startsWith('/')) {
         router.push(returnTo);
       } else {
@@ -699,7 +701,13 @@ export function FinalizeStep() {
       )}
       
       {/* Navigation */}
-      <div className="flex justify-between">
+      <div className="flex flex-col items-end gap-2">
+        {!user && (
+          <p className="text-sm text-text-muted dark:text-text-secondary">
+            Create an account to save your character. Your progress is stored locally until you sign in.
+          </p>
+        )}
+        <div className="flex justify-between w-full">
         <Button
           variant="secondary"
           onClick={prevStep}
@@ -720,6 +728,7 @@ export function FinalizeStep() {
         >
           {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}
         </Button>
+        </div>
       </div>
       
       {/* Validation Modal */}

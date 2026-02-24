@@ -142,7 +142,17 @@ function CampaignCharacterViewContent() {
 
   const characterSpeciesSkills = character && allSpecies.length
     ? (() => {
-        const speciesName = character.ancestry?.name || character.species;
+        const ancestry = character.ancestry;
+        if (ancestry?.mixed === true && ancestry?.speciesIds?.length === 2) {
+          if (ancestry.selectedSpeciesSkillIds?.length === 2) return ancestry.selectedSpeciesSkillIds;
+          const a = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![0]);
+          const b = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![1]);
+          const ids = new Set<string>();
+          (a?.skills || []).forEach((id: string | number) => ids.add(String(id)));
+          (b?.skills || []).forEach((id: string | number) => ids.add(String(id)));
+          return Array.from(ids);
+        }
+        const speciesName = ancestry?.name || character.species;
         const species = allSpecies.find((s: Species) => s.name?.toLowerCase() === speciesName?.toLowerCase());
         return (species?.skills || []) as string[];
       })()

@@ -2,7 +2,7 @@
  * Library Page
  * =============
  * My Library: user's personal library (powers, techniques, armaments, creatures).
- * Public Library: browse community content and add items to your library via + button with confirmation.
+ * Realms Library: official game content; browse and add items to your library (use as-is or customize).
  * Page title updates based on which library is shown.
  */
 
@@ -139,8 +139,8 @@ function LibraryContent() {
   return (
     <PageContainer size="xl">
       <PageHeader
-        title={isPublic ? 'Public Library' : 'My Library'}
-        description={isPublic ? 'Browse community-shared content. Log in to add items to your library.' : 'Your custom powers, techniques, armaments, and creatures'}
+        title={isPublic ? 'Realms Library' : 'My Library'}
+        description={isPublic ? 'Official Realms content. Add items to My Library to use as-is or customize.' : 'Your custom powers, techniques, armaments, and creatures'}
         actions={
           !isPublic ? (
             <Link href={currentTab.createHref}>
@@ -174,7 +174,7 @@ function LibraryContent() {
               libraryMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-secondary hover:text-text-primary'
             )}
           >
-            Public Library
+            Realms Library
           </button>
         </div>
       </div>

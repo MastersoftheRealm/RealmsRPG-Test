@@ -23,3 +23,4 @@ export { SheetActionToolbar } from './sheet-action-toolbar';
 export { CharacterSheetSettingsModal } from './character-sheet-settings-modal';
 export { FeatsTab } from './feats-tab';
 export { EditArchetypeModal, type EditArchetypeResult } from './edit-archetype-modal';
+export { EditSpeciesModal, type EditSpeciesResult } from './edit-species-modal';

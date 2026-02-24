@@ -58,6 +58,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
   const [uploadingPortrait, setUploadingPortrait] = useState(false);
   const [portraitRefreshKey, setPortraitRefreshKey] = useState<number | null>(null);
   const [showEditArchetypeModal, setShowEditArchetypeModal] = useState(false);
+  const [showEditSpeciesModal, setShowEditSpeciesModal] = useState(false);
   
   // Fetch user's library for data enrichment
   const { data: userPowers = [] } = useUserPowers();
@@ -173,12 +174,15 @@ export default function CharacterSheetPage({ params }: PageParams) {
     return species?.species_traits || [];
   }, [character, allSpecies]);
 
-  // Look up character's species skills (single = one species; mixed = merge both)
+  // Look up character's species skills (single = one species; mixed = 2 chosen from both, or legacy merge)
   const characterSpeciesSkills = useMemo(() => {
     if (!character || !allSpecies.length) return [] as string[];
     const ancestry = character.ancestry;
 
     if (ancestry?.mixed === true && ancestry?.speciesIds?.length === 2) {
+      if (ancestry.selectedSpeciesSkillIds?.length === 2) {
+        return ancestry.selectedSpeciesSkillIds;
+      }
       const a = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![0]);
       const b = allSpecies.find((s: Species) => s.id === ancestry.speciesIds![1]);
       const ids = new Set<string>();
@@ -1261,6 +1265,13 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setShowEditArchetypeModal(false);
   }, [character]);
 
+  // Edit species modal save: update ancestry and migrate skills
+  const handleEditSpeciesSave = useCallback((updates: { ancestry: Character['ancestry']; skills: unknown }) => {
+    if (!character) return;
+    setCharacter(prev => prev ? { ...prev, ancestry: updates.ancestry, skills: updates.skills as Character['skills'] } : null);
+    setShowEditSpeciesModal(false);
+  }, [character]);
+
   // Mixed archetype milestone choice handler
   const handleMilestoneChoiceChange = useCallback((level: number, choice: 'innate' | 'feat') => {
     if (!character) return;
@@ -1634,6 +1645,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
                 innateThreshold={archetypeProgression?.innateThreshold || 0}
                 innatePools={archetypeProgression?.innatePools || 0}
                 onEditArchetype={effectiveEditMode ? () => setShowEditArchetypeModal(true) : undefined}
+                onEditSpecies={effectiveEditMode ? () => setShowEditSpeciesModal(true) : undefined}
               />
               
               {/* Desktop: Abilities + 3-column grid (Skills | Archetype | Library) */}
@@ -1989,6 +2001,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
           showEditArchetypeModal={showEditArchetypeModal}
           setShowEditArchetypeModal={setShowEditArchetypeModal}
           onArchetypeSave={handleArchetypeSave}
+          showEditSpeciesModal={showEditSpeciesModal}
+          setShowEditSpeciesModal={setShowEditSpeciesModal}
+          onSpeciesSave={handleEditSpeciesSave}
         />
         </div>
       </CharacterSheetProvider>

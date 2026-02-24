@@ -4,7 +4,7 @@
  * ConfirmActionModal
  * ==================
  * Generic reusable confirmation modal for actions that need user verification.
- * Used for: publishing to public library, destructive actions, etc.
+ * Used for: publishing to Realms Library, destructive actions, etc.
  * 
  * For delete-specific confirmations, see `DeleteConfirmModal`.
  */

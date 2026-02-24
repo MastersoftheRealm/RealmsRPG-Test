@@ -115,7 +115,7 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
       <EmptyState
         size="lg"
         title="My Codex — Feats"
-        description="Custom feats are not available yet. For now, use Public Codex."
+        description="Custom feats are not available yet. For now, use Realms Codex."
       />
     );
   }

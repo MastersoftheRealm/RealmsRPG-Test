@@ -72,7 +72,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       <EmptyState
         size="lg"
         title="My Codex — Skills"
-        description="Custom skills are not available yet. For now, use Public Codex."
+        description="Custom skills are not available yet. For now, use Realms Codex."
       />
     );
   }

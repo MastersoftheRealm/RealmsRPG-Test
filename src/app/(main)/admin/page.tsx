@@ -27,12 +27,12 @@ export default function AdminPage() {
         </section>
 
         <section className="rounded-lg border border-border bg-surface p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-2">Public Library Editor</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-2">Realms Library Editor</h2>
           <p className="text-text-secondary mb-4">
-            Edit published public library items: powers, techniques, armaments, and creatures. Same list + modal format as the Codex editor. Changes are visible to all users on the Library page (Public Library).
+            Edit published Realms Library items: powers, techniques, armaments, and creatures. Same list + modal format as the Codex editor. Changes are visible to all users on the Library page (Realms Library).
           </p>
           <Button asChild>
-            <Link href="/admin/public-library">Open Public Library Editor</Link>
+            <Link href="/admin/public-library">Open Realms Library Editor</Link>
           </Button>
         </section>
 

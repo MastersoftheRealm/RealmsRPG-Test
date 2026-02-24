@@ -63,6 +63,8 @@ interface SheetHeaderProps {
   innatePools?: number;
   // Edit archetype/ability (opens modal from sheet)
   onEditArchetype?: () => void;
+  // Edit species/ancestry (opens modal from sheet)
+  onEditSpecies?: () => void;
 }
 
 /**
@@ -455,6 +457,7 @@ export function SheetHeader({
   innateThreshold = 0,
   innatePools = 0,
   onEditArchetype,
+  onEditSpecies,
 }: SheetHeaderProps) {
   const ctx = useCharacterSheetOptional();
   const character = (ctx?.character ?? characterProp) as Character;
@@ -609,8 +612,18 @@ export function SheetHeader({
             )}
             
             {/* Level and Species - separated */}
-            <p className="text-base text-text-primary">
+            <p className="text-base text-text-primary flex items-center gap-2">
               Level {character.level} · <span className="font-medium">{character.ancestry?.name || character.species || 'Unknown'}</span>
+              {onEditSpecies && (
+                <button
+                  onClick={onEditSpecies}
+                  className="text-primary-500 hover:text-primary-600 transition-colors hover:scale-110"
+                  title="Edit species and ancestry"
+                  aria-label="Edit species and ancestry"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
             </p>
             
             {/* Archetype: Abilities */}

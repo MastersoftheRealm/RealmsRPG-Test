@@ -22,8 +22,12 @@ export function SkillsStep() {
   const speciesSkillIds = useMemo(() => {
     const isMixed = draft.ancestry?.mixed === true;
     const speciesIds = draft.ancestry?.speciesIds;
+    const selectedMixedSkills = draft.ancestry?.selectedSpeciesSkillIds;
 
     if (isMixed && speciesIds?.length === 2) {
+      if (selectedMixedSkills?.length === 2) {
+        return new Set<string>(selectedMixedSkills);
+      }
       const a = allSpecies.find((s: Species) => s.id === speciesIds[0]);
       const b = allSpecies.find((s: Species) => s.id === speciesIds[1]);
       const ids = new Set<string>();
@@ -41,7 +45,7 @@ export function SkillsStep() {
       : allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
 
     return new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
-  }, [draft.ancestry?.id, draft.ancestry?.name, draft.ancestry?.mixed, draft.ancestry?.speciesIds, draft.species, allSpecies]);
+  }, [draft.ancestry?.id, draft.ancestry?.name, draft.ancestry?.mixed, draft.ancestry?.speciesIds, draft.ancestry?.selectedSpeciesSkillIds, draft.species, allSpecies]);
 
   const allocations = draft.skills || {};
   const defenseVals = draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS };

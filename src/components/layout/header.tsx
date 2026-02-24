@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle } from '@/components/shared';
 
-const navLinks = [
+const navLinks: Array<{ href: string; label: string; external?: boolean } | { label: string; dropdown: { href: string; label: string }[] }> = [
   { href: '/characters', label: 'Characters' },
   { href: '/library', label: 'Library' },
   { href: '/codex', label: 'Codex' },
@@ -43,6 +43,7 @@ const navLinks = [
   },
   { href: '/campaigns', label: 'Campaigns' },
   { href: '/about', label: 'About' },
+  { href: 'https://discord.com/invite/WW7uVEEdpk', label: 'Join the Community', external: true },
 ];
 
 export function Header() {
@@ -93,8 +94,21 @@ export function Header() {
               </Link>
             )}
             {navLinks.map((item) => (
-              item.dropdown ? (
+              'dropdown' in item ? (
                 <NavDropdown key={item.label} item={item} pathname={pathname} />
+              ) : item.external ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    'font-semibold text-lg text-primary-700 dark:text-primary-300 hover:text-primary-500 dark:hover:text-primary-200 transition-colors whitespace-nowrap',
+                    pathname === item.href ? 'text-primary-500 dark:text-primary-400' : ''
+                  )}
+                >
+                  {item.label}
+                </a>
               ) : (
                 <Link
                   key={item.href}
@@ -156,8 +170,19 @@ export function Header() {
               </Link>
             )}
             {navLinks.map((item) => (
-              item.dropdown ? (
+              'dropdown' in item ? (
                 <MobileDropdown key={item.label} item={item} pathname={pathname} onLinkClick={() => setMobileMenuOpen(false)} />
+              ) : item.external ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block py-3 text-lg font-semibold text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
               ) : (
                 <Link
                   key={item.href}
@@ -179,6 +204,7 @@ export function Header() {
 interface DropdownItem {
   label: string;
   href?: string;
+  external?: boolean;
   dropdown?: { href: string; label: string }[];
 }
 

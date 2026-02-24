@@ -1,6 +1,6 @@
 /**
  * Add Library Item Modal — UnifiedSelectionModal wrapper
- * Adds powers, techniques, or items from the user's library or public library to the character sheet.
+ * Adds powers, techniques, or items from the user's library or Realms Library to the character sheet.
  * Source filter: All sources / Public library / My library (same as Library page). References only — no copy to user library.
  */
 
@@ -337,9 +337,9 @@ export function AddLibraryItemModal({
     : 'All already added or no matches';
   const emptyDesc = displayedCount === 0
     ? (source === 'public' && publicLibraryError
-      ? 'Failed to load public library. Try again later.'
+      ? 'Failed to load Realms Library. Try again later.'
       : source === 'public'
-        ? 'Public content can be added by admins via Admin → Public Library Editor.'
+        ? 'Official content can be added by admins via Admin → Realms Library Editor.'
         : itemType === 'equipment'
           ? 'Equipment is loaded from the Codex. Add equipment via the Admin Codex if needed.'
           : `Create some in the ${itemType === 'power' ? 'Power' : itemType === 'technique' ? 'Technique' : 'Item'} Creator first!`)

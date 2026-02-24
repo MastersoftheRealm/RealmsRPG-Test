@@ -63,4 +63,6 @@ export interface CharacterAncestry {
     adulthood?: number;
     maxAge?: number;
   };
+  /** For mixed: exactly 2 skill IDs the player chose from the combined species skills (not all 4) */
+  selectedSpeciesSkillIds?: string[];
 }

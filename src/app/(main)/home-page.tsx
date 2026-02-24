@@ -12,7 +12,12 @@ import type { ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Sparkles, BookOpen, Sword, Wand2 } from 'lucide-react';
+import { Sparkles, BookOpen, Sword, MessageCircle, X } from 'lucide-react';
+import { useAuth } from '@/hooks';
+import { OnboardingTour } from '@/components/shared';
+
+// Discord / community link (same as About page)
+const DISCORD_URL = 'https://discord.com/invite/WW7uVEEdpk';
 
 // Reviews data - quote can include inline links for CTAs
 const reviews: Array<{ quote: ReactNode; author: string }> = [
@@ -54,10 +59,27 @@ const reviews: Array<{ quote: ReactNode; author: string }> = [
   }
 ];
 
+const WELCOME_DISMISSED_KEY = 'realms_welcome_dismissed';
+
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (user && !sessionStorage.getItem(WELCOME_DISMISSED_KEY)) {
+      setShowWelcome(true);
+    }
+  }, [user]);
+
+  const dismissWelcome = () => {
+    if (typeof window !== 'undefined') sessionStorage.setItem(WELCOME_DISMISSED_KEY, '1');
+    setShowWelcome(false);
+  };
 
   // Redirect OAuth code to callback when Supabase redirects to / instead of /auth/callback
   const code = searchParams.get('code');
@@ -96,7 +118,7 @@ function HomeContent() {
           priority
           suppressHydrationWarning
         />
-        <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 gap-3 sm:gap-4">
           <Image
             src="/images/LogoFullGrey.png"
             alt="Realms Logo"
@@ -106,30 +128,75 @@ function HomeContent() {
             priority
             suppressHydrationWarning
           />
+          <p className="text-center text-sm sm:text-base md:text-lg text-white drop-shadow-md max-w-[520px] font-nunito">
+            Create your character your way — use what&apos;s in the game or build your own.
+          </p>
         </div>
       </section>
+
+      {/* Welcome banner for logged-in users (dismissible, once per session) */}
+      {showWelcome && user && (
+        <section className="bg-primary-50 dark:bg-primary-900/20 border-b border-primary-200 dark:border-primary-800">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24 py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm sm:text-base text-primary-800 dark:text-primary-200 font-medium">
+              Welcome! Finish your character, browse Realms Library, or join the community.
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link href="/characters/new" className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">
+                Create character
+              </Link>
+              <span className="text-primary-600 dark:text-primary-400">·</span>
+              <Link href="/library" className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">
+                Realms Library
+              </Link>
+              <span className="text-primary-600 dark:text-primary-400">·</span>
+              <button
+                type="button"
+                onClick={() => setShowTour(true)}
+                className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline"
+              >
+                Take a quick tour
+              </button>
+              <span className="text-primary-600 dark:text-primary-400">·</span>
+              <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary-700 dark:text-primary-300 hover:underline">
+                Join Discord
+              </a>
+              <button
+                type="button"
+                onClick={dismissWelcome}
+                className="p-1 rounded hover:bg-primary-200/50 dark:hover:bg-primary-800/50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Dismiss welcome"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <OnboardingTour isOpen={showTour} onClose={() => setShowTour(false)} />
 
       {/* Features Section - linked cards; mobile: stack single column, desktop: row */}
       <section className="bg-neutral-300 dark:bg-neutral-800 py-8 sm:py-14 px-4 sm:px-6 lg:px-24 shadow-md">
         <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row justify-between items-stretch lg:items-start gap-8 lg:gap-[116px]">
           <FeatureCard
             href="/characters/new"
-            title="CREATE CHARACTERS"
-            description="Design your unique characters with detailed attributes and backgrounds."
+            title="CREATE A CHARACTER"
+            description="Use what's in the game or build your own. Choose species, feats, powers, and more."
             icon={<Sparkles className="w-6 h-6" suppressHydrationWarning />}
           />
           <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
           <FeatureCard
-            href="/power-creator"
-            title="DEFINE POWERS"
-            description="Customize and create powerful abilities for your characters."
-            icon={<Wand2 className="w-6 h-6" suppressHydrationWarning />}
+            href="/codex"
+            title="BROWSE CODEX"
+            description="Full reference: feats, skills, species, equipment, and parts for the Realms system."
+            icon={<BookOpen className="w-6 h-6" suppressHydrationWarning />}
           />
           <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
           <FeatureCard
-            href="/library"
-            title="JOIN ADVENTURES"
-            description="Browse your library of armaments, powers, and creatures."
+            href="/browse"
+            title="BROWSE REALMS LIBRARY"
+            description="Official powers, techniques, armaments, and creatures. Add to your library to use as-is or customize."
             icon={<Sword className="w-6 h-6" suppressHydrationWarning />}
           />
         </div>
@@ -204,7 +271,7 @@ function HomeContent() {
             <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-4 sm:mb-6">
               Sincerely, Realms creator<br />Kadin Brooksby
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center flex-wrap">
               <Link
                 href="/about"
                 className="btn-outline-clean inline-flex items-center gap-2"
@@ -219,6 +286,15 @@ function HomeContent() {
                 <Sparkles className="w-5 h-5" suppressHydrationWarning />
                 Create a Character
               </Link>
+              <a
+                href={DISCORD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-outline-clean inline-flex items-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" suppressHydrationWarning />
+                Join the Community
+              </a>
             </div>
           </div>
         </div>

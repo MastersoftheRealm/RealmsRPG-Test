@@ -22,7 +22,7 @@ export function SpeciesStep() {
   const { data: allSpecies = [], isLoading: speciesLoading } = useMergedSpecies();
   const { data: userSpeciesList = [] } = useUserSpecies();
   const { data: traits } = useTraits();
-  const [source, setSource] = useState<SourceFilterValue>('all');
+  const [source, setSource] = useState<SourceFilterValue>('public');
   const [selectedSpeciesForModal, setSelectedSpeciesForModal] = useState<Species | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showMixedModal, setShowMixedModal] = useState(false);

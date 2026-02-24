@@ -174,7 +174,7 @@ export function AdminPublicItemsTab() {
           isOpen={true}
           itemName={deleteConfirm.name}
           itemType="armament"
-          deleteContext="public library"
+          deleteContext="Realms Library"
           isDeleting={false}
           onConfirm={handleDeleteFromList}
           onClose={() => setDeleteConfirm(null)}

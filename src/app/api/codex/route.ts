@@ -150,6 +150,8 @@ export async function GET() {
       // New booleans per CODEX_SCHEMA_REFERENCE
       flaw: d.flaw === true || d.flaw === 'true',
       characteristic: d.characteristic === true || d.characteristic === 'true',
+      // Choice trait: when non-empty, player must pick one of these option trait IDs
+      option_trait_ids: toStrArray(d.option_trait_ids),
     };
   });
 

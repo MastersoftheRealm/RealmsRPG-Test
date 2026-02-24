@@ -160,7 +160,7 @@ export function AdminPublicTechniquesTab() {
           isOpen={true}
           itemName={deleteConfirm.name}
           itemType="technique"
-          deleteContext="public library"
+          deleteContext="Realms Library"
           isDeleting={false}
           onConfirm={handleDeleteFromList}
           onClose={() => setDeleteConfirm(null)}

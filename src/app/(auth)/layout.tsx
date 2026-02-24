@@ -82,7 +82,7 @@ export default function AuthLayout({
           <a href="mailto:RealmsRoleplayGame@gmail.com" className="hover:text-white transition-colors">
             Contact
           </a>
-          <a href="https://discord.gg/Dbd5X9FQFJ" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+          <a href="https://discord.com/invite/WW7uVEEdpk" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
             Discord
           </a>
         </div>

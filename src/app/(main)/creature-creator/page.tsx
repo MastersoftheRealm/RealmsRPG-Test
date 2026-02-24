@@ -462,13 +462,13 @@ function CreatureCreatorContent() {
     type: 'creatures',
     getPayload,
     requirePublishConfirm: true,
-    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmTitle: 'Publish to Realms Library',
     publishConfirmDescription: (n, { existingInPublic }) =>
       existingInPublic
         ? `Are you sure you want to override "${n}" (creature)? The existing public creature with this name will be replaced.`
-        : `Are you sure you wish to publish this creature "${n}" to the public library? All users will be able to see and use it.`,
+        : `Are you sure you wish to publish this creature "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Creature saved!',
-    publicSuccessMessage: 'Creature saved to public library!',
+    publicSuccessMessage: 'Creature saved to Realms Library!',
   });
 
   // Merged creatures (user + public) for ?edit= load from admin public library
@@ -527,7 +527,7 @@ function CreatureCreatorContent() {
     } catch (_e) {
       // ignore
     }
-    save.setSaveMessage({ type: 'success', text: 'Creature loaded from public library.' });
+    save.setSaveMessage({ type: 'success', text: 'Creature loaded from Realms Library.' });
     setTimeout(() => save.setSaveMessage(null), 2000);
     setIsInitialized(true);
   }, [editCreatureId, mergedCreaturesForEdit, isInitialized, save]);
@@ -667,7 +667,7 @@ function CreatureCreatorContent() {
             }}
             items={powerSelectableItems}
             title="Select Powers"
-            description="Choose powers from your library or public library. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose powers from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="power"
             searchPlaceholder="Search powers..."
@@ -686,7 +686,7 @@ function CreatureCreatorContent() {
             }}
             items={techniqueSelectableItems}
             title="Select Techniques"
-            description="Choose techniques from your library or public library. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose techniques from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="technique"
             searchPlaceholder="Search techniques..."
@@ -723,7 +723,7 @@ function CreatureCreatorContent() {
             }}
             items={armamentSelectableItems}
             title="Select Armaments"
-            description="Choose items from your library or public library. Click a row (or the + button) to select, then click Add Selected."
+            description="Choose items from your library or Realms Library. Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="armament"
             searchPlaceholder="Search items..."

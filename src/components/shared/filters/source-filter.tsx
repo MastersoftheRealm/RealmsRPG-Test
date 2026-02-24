@@ -1,8 +1,8 @@
 /**
  * SourceFilter Component
  * ======================
- * Unified source filter: All | Public | My library.
- * Used across Library, Codex, add-X modals, equipment-step.
+ * Unified source filter: All | Realms Library | My Library.
+ * Used across Library, add-X modals, equipment-step.
  */
 
 'use client';
@@ -19,8 +19,8 @@ interface SourceFilterProps {
 
 const OPTIONS: { value: SourceFilterValue; label: string }[] = [
   { value: 'all', label: 'All sources' },
-  { value: 'public', label: 'Public library' },
-  { value: 'my', label: 'My library' },
+  { value: 'public', label: 'Realms Library' },
+  { value: 'my', label: 'My Library' },
 ];
 
 export function SourceFilter({ value, onChange, className }: SourceFilterProps) {

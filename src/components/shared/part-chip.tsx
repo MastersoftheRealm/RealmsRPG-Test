@@ -38,6 +38,8 @@ export interface PartData {
   };
   /** Category for styling (action, activation, area, duration, target, special, restriction) */
   category?: string;
+  /** Options with level > 0 (for expandable chip details) */
+  options?: Array<{ label: string; description?: string; level: number }>;
 }
 
 // Category-specific colors using design tokens from globals.css
@@ -49,10 +51,10 @@ const categoryStyles: Record<string, string> = {
   target: 'bg-category-target-bg text-category-target-text border-category-target-border',
   special: 'bg-category-special-bg text-category-special-text border-category-special-border',
   restriction: 'bg-category-restriction-bg text-category-restriction-text border-category-restriction-border',
-  cost: 'bg-tp-light text-tp-text border-tp-border',
-  proficiency: 'bg-tp-light text-tp-text border-tp-border',
+  cost: 'bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50',
+  proficiency: 'bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border-info-200 dark:border-info-800/50',
   property: 'bg-surface-alt text-text-secondary border-border-light',
-  default: 'bg-primary-50 text-primary-700 border-primary-200',
+  default: 'bg-surface-alt text-text-secondary border-border-light',
 };
 
 // =============================================================================
@@ -91,7 +93,7 @@ export function PartChip({
         canExpand && 'cursor-pointer hover:shadow-md',
         !canExpand && 'cursor-default',
         isExpanded && 'ring-2 ring-offset-1',
-        isExpanded && hasTP ? 'ring-tp' : isExpanded && 'ring-primary-400',
+        isExpanded && hasTP ? 'ring-info-400' : isExpanded && 'ring-primary-400',
         className
       )}
     >
@@ -135,11 +137,8 @@ interface PartChipDetailsProps {
 }
 
 export function PartChipDetails({ part, className }: PartChipDetailsProps) {
-  const hasOptions = part.optionLevels && (
-    (part.optionLevels.opt1 ?? 0) > 0 ||
-    (part.optionLevels.opt2 ?? 0) > 0 ||
-    (part.optionLevels.opt3 ?? 0) > 0
-  );
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const hasOptions = (part.options?.length ?? 0) > 0;
 
   return (
     <div className={cn(
@@ -149,7 +148,7 @@ export function PartChipDetails({ part, className }: PartChipDetailsProps) {
       <div className="flex items-start justify-between gap-2 mb-2">
         <h5 className="font-semibold text-text-primary">{part.name}</h5>
         {(part.tpCost ?? 0) > 0 && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-tp-light text-tp-text">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400">
             <Zap className="w-3 h-3" />
             {part.tpCost} TP
           </span>
@@ -160,22 +159,25 @@ export function PartChipDetails({ part, className }: PartChipDetailsProps) {
         <p className="text-sm text-text-secondary mb-2">{part.description}</p>
       )}
 
-      {hasOptions && part.optionLevels && (
-        <div className="flex flex-wrap gap-2 text-xs">
-          {(part.optionLevels.opt1 ?? 0) > 0 && (
-            <span className="px-2 py-1 rounded bg-surface-alt text-text-secondary">
-              Option 1: Level {part.optionLevels.opt1}
-            </span>
-          )}
-          {(part.optionLevels.opt2 ?? 0) > 0 && (
-            <span className="px-2 py-1 rounded bg-surface-alt text-text-secondary">
-              Option 2: Level {part.optionLevels.opt2}
-            </span>
-          )}
-          {(part.optionLevels.opt3 ?? 0) > 0 && (
-            <span className="px-2 py-1 rounded bg-surface-alt text-text-secondary">
-              Option 3: Level {part.optionLevels.opt3}
-            </span>
+      {hasOptions && part.options && (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setOptionsOpen(!optionsOpen)}
+            className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
+          >
+            <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
+            Options ({part.options.length})
+          </button>
+          {optionsOpen && (
+            <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-border-light dark:border-border">
+              {part.options.map((opt, oi) => (
+                <li key={oi} className="text-xs py-1">
+                  <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
+                  {opt.description && <p className="mt-0.5 text-text-secondary leading-relaxed">{opt.description}</p>}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}

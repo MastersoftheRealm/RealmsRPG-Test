@@ -51,6 +51,9 @@ interface CodexPart {
   op_1_tp?: number;
   op_2_tp?: number;
   op_3_tp?: number;
+  op_1_desc?: string;
+  op_2_desc?: string;
+  op_3_desc?: string;
 }
 
 // Helper to convert power/technique parts to PartData format, with Codex enrichment
@@ -93,6 +96,14 @@ function partsToPartData(
                    op_2_tp * (part.op_2_lvl ?? 0) + 
                    op_3_tp * (part.op_3_lvl ?? 0);
     
+    const opt1 = part.op_1_lvl ?? 0;
+    const opt2 = part.op_2_lvl ?? 0;
+    const opt3 = part.op_3_lvl ?? 0;
+    const options: Array<{ label: string; description?: string; level: number }> = [];
+    if (opt1 > 0) options.push({ label: 'Option 1', description: codexPart?.op_1_desc, level: opt1 });
+    if (opt2 > 0) options.push({ label: 'Option 2', description: codexPart?.op_2_desc, level: opt2 });
+    if (opt3 > 0) options.push({ label: 'Option 3', description: codexPart?.op_3_desc, level: opt3 });
+    
     return {
       name: codexPart?.name || partName,
       description: codexPart?.description,
@@ -102,6 +113,7 @@ function partsToPartData(
         opt2: part.op_2_lvl,
         opt3: part.op_3_lvl,
       },
+      options: options.length > 0 ? options : undefined,
     };
   });
 }
@@ -725,6 +737,7 @@ export function LibrarySection({
                         costLabel: 'TP',
                         category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                         level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
+                        options: p.options,
                       }));
                       const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
                       
@@ -786,6 +799,7 @@ export function LibrarySection({
                             </div>
                           ) : undefined}
                           innate={isInnate}
+                          hideInnateBadge
                           leftSlot={innateToggle}
                           rightSlot={energyButton}
                           onDelete={showLibraryEditControls && onRemovePower ? () => onRemovePower(power.id || String(i)) : undefined}
@@ -840,6 +854,7 @@ export function LibrarySection({
                         costLabel: 'TP',
                         category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                         level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
+                        options: p.options,
                       }));
                       const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
                       
@@ -951,6 +966,7 @@ export function LibrarySection({
                       costLabel: 'TP',
                       category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
+                      options: p.options,
                     }));
                     const techTP = (tech as { tp?: number }).tp;
                     const totalTP = typeof techTP === 'number' ? techTP : (typeof techTP === 'string' ? parseFloat(techTP) : undefined);

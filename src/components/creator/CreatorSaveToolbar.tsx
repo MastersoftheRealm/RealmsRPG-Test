@@ -69,7 +69,7 @@ export function CreatorSaveToolbar({
             type="button"
             onClick={() => onSaveTargetChange('public')}
             className={toggleButtonClass(saveTarget === 'public')}
-            aria-label="Save to public library"
+            aria-label="Save to Realms Library"
             aria-pressed={saveTarget === 'public'}
           >
             Public library

@@ -23,6 +23,7 @@ import {
   PowersStep,
   FinalizeStep,
 } from '@/components/character-creator';
+import { STEP_ORDER } from '@/stores/character-creator-store';
 
 const STEP_COMPONENTS = {
   archetype: ArchetypeStep,
@@ -39,6 +40,8 @@ const STEP_COMPONENTS = {
 export default function CharacterCreatorPage() {
   const { loading } = useAuth();
   const { currentStep } = useCharacterCreatorStore();
+  const stepIndex = STEP_ORDER.indexOf(currentStep) + 1;
+  const totalSteps = STEP_ORDER.length;
   
   if (loading) {
     return (
@@ -56,7 +59,10 @@ export default function CharacterCreatorPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-text-primary">Create New Character</h1>
           <p className="text-text-secondary mt-1">
-            Follow the steps below to build your character
+            Step {stepIndex} of {totalSteps} — Follow the steps below to build your character
+          </p>
+          <p className="text-text-secondary text-sm mt-3 rounded-lg bg-muted/50 dark:bg-muted/30 px-3 py-2 border border-border-light">
+            <strong className="text-text-primary">Quick start:</strong> Ready-to-play Archetypes (e.g. Martial striker, Power caster) will be available soon in Realms Library. For now, choose from the Codex and Realms Library in each step below.
           </p>
         </div>
         

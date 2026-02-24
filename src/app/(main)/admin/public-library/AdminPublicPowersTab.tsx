@@ -167,7 +167,7 @@ export function AdminPublicPowersTab() {
           isOpen={true}
           itemName={deleteConfirm.name}
           itemType="power"
-          deleteContext="public library"
+          deleteContext="Realms Library"
           isDeleting={false}
           onConfirm={handleDeleteFromList}
           onClose={() => setDeleteConfirm(null)}

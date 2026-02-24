@@ -2,7 +2,7 @@
  * Species Creator Page
  * ====================
  * User-facing species creator: traits (species/ancestry/characteristic/flaw), base skills,
- * sizes, languages. Load from public codex or My Codex; save to private codex (user species).
+ * sizes, languages. Load from Realms Codex or My Codex; save to private codex (user species).
  */
 
 'use client';
@@ -358,7 +358,7 @@ export default function SpeciesCreatorPage() {
     <CreatorLayout
       icon={<Users className="w-8 h-8 text-primary-600" />}
       title="Species Creator"
-      description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Public Codex or My Codex; save to My Codex."
+      description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
       actions={
         <CreatorSaveToolbar
           saveTarget="private"
@@ -412,7 +412,7 @@ export default function SpeciesCreatorPage() {
           )}
 
           <Modal isOpen={showLoadModal} onClose={() => setShowLoadModal(false)} title="Load species" size="lg" fullScreenOnMobile>
-            <p className="text-sm text-text-muted mb-4">Load a species from Public Codex or My Codex to edit and save to your private codex.</p>
+            <p className="text-sm text-text-muted mb-4">Load a species from Realms Codex or My Codex to edit and save to your private codex.</p>
             {codexLoading ? (
               <LoadingState />
             ) : (
@@ -436,7 +436,7 @@ export default function SpeciesCreatorPage() {
                   </div>
                 )}
                 <div>
-                  <h3 className="font-semibold text-text-primary mb-2">Public Codex</h3>
+                  <h3 className="font-semibold text-text-primary mb-2">Realms Codex</h3>
                   <ul className="space-y-1">
                     {(codexSpecies as Species[]).map((s) => (
                       <li key={s.id}>

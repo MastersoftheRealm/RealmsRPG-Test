@@ -41,7 +41,7 @@ export { ConfirmActionModal } from './confirm-action-modal';
 // - Character sheet modals (add feat, add power, add technique)
 // - Creator pages (part selection)
 export { GridListRow } from './grid-list-row';
-export type { ColumnValue, ChipData, GridListRowProps } from './grid-list-row';
+export type { ColumnValue, ChipData, ChipOptionData, GridListRowProps } from './grid-list-row';
 
 // SectionHeader - UNIFIED section header with optional add button
 // Use for ALL section headers: Powers, Techniques, Weapons, Armor, Equipment, Feats, Skills
@@ -169,3 +169,6 @@ export type { InnateToggleProps } from './innate-toggle';
 // ImageUploadModal - Upload and crop images for portraits/profile pictures
 export { ImageUploadModal } from './image-upload-modal';
 export type { ImageUploadModalProps, CropShape } from './image-upload-modal';
+
+// OnboardingTour - Optional first-time guided tour (Codex → Library → Creator)
+export { OnboardingTour, getTourCompleted, setTourCompleted } from './onboarding-tour';

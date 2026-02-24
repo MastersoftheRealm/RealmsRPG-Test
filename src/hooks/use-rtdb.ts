@@ -146,10 +146,15 @@ export interface Trait {
   species?: string[];
   uses_per_rec?: number;
   rec_period?: string;
-   /** True if this trait is a flaw (schema: codex_traits.flaw) */
+  /** True if this trait is a flaw (schema: codex_traits.flaw) */
   flaw?: boolean;
   /** True if this trait is a characteristic (schema: codex_traits.characteristic) */
   characteristic?: boolean;
+  /**
+   * Choice trait: when non-empty, this trait is a "choice trait" — the player must pick one of these
+   * option traits. The chosen option trait ID is stored on the character (e.g. in selectedTraits).
+   */
+  option_trait_ids?: string[];
 }
 
 export interface EquipmentItem {

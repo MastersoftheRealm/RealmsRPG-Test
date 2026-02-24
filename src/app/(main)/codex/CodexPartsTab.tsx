@@ -127,7 +127,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
       <EmptyState
         size="lg"
         title="My Codex — Parts"
-        description="Custom parts are not available yet. For now, use Public Codex."
+        description="Custom parts are not available yet. For now, use Realms Codex."
       />
     );
   }

@@ -34,8 +34,10 @@ const POWER_MODAL_COLUMNS = [
   { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
   { key: 'Damage', label: 'DAMAGE', sortable: false, align: 'center' as const },
   { key: 'Area', label: 'AREA', sortable: false, align: 'center' as const },
+  { key: 'Range', label: 'RANGE', sortable: false, align: 'center' as const },
+  { key: 'Duration', label: 'DURATION', sortable: false, align: 'center' as const },
 ];
-const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.8fr 0.7fr';
+const POWER_GRID_COLUMNS = '1.4fr 0.7fr 0.7fr 0.6fr 0.7fr 0.7fr';
 
 const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
@@ -49,7 +51,7 @@ export function PowersStep() {
   const { draft, updateDraft, nextStep, prevStep } = useCharacterCreatorStore();
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
-  const [source, setSource] = useState<SourceFilterValue>('all');
+  const [source, setSource] = useState<SourceFilterValue>('public');
   
   // Fetch user's library and public library
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
@@ -137,6 +139,8 @@ export function PowersStep() {
         ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
         : '-';
       const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
+      const rangeStr = display.range || '-';
+      const durationStr = display.duration || '-';
       return {
         id: power.docId,
         name: power.name,
@@ -145,6 +149,8 @@ export function PowersStep() {
           { key: 'Action', value: capitalize(power.actionType), align: 'center' as const },
           { key: 'Damage', value: damageStr, align: 'center' as const },
           { key: 'Area', value: areaStr, align: 'center' as const },
+          { key: 'Range', value: rangeStr, align: 'center' as const },
+          { key: 'Duration', value: durationStr, align: 'center' as const },
         ],
         detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
         totalCost: display.tp > 0 ? display.tp : undefined,
@@ -347,7 +353,7 @@ export function PowersStep() {
           {selectedPowerItems.length > 0 ? (
             <div className="border border-border-light rounded-lg overflow-hidden">
               <ListHeader
-                columns={POWER_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : '0.8fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
+                columns={POWER_MODAL_COLUMNS.map(({ key, label }) => ({ key, label, width: key === 'name' ? '1.4fr' : '0.7fr', align: (key === 'name' ? 'left' : 'center') as 'left' | 'center' | 'right' }))}
                 gridColumns={POWER_GRID_COLUMNS}
                 compact
               />
@@ -360,6 +366,9 @@ export function PowersStep() {
                     description={power.description}
                     columns={power.columns}
                     gridColumns={POWER_GRID_COLUMNS}
+                    detailSections={power.detailSections}
+                    totalCost={power.totalCost}
+                    costLabel={power.costLabel}
                     rightSlot={
                       <IconButton
                         variant="danger"
@@ -431,6 +440,9 @@ export function PowersStep() {
                     description={tech.description}
                     columns={tech.columns}
                     gridColumns={TECHNIQUE_GRID_COLUMNS}
+                    detailSections={tech.detailSections}
+                    totalCost={tech.totalCost}
+                    costLabel={tech.costLabel}
                     rightSlot={
                       <IconButton
                         variant="danger"
@@ -484,7 +496,7 @@ export function PowersStep() {
         onConfirm={handlePowerSelect}
         items={availablePowers}
         title="Select Powers"
-        description="Choose powers from your library or public library. Click a row (or the + button) to select, then click Add Selected."
+        description="Choose from Realms Library or your library. Use the source filter to switch. You can also create your own in the Power or Technique Creator."
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder="Search powers..."
         itemLabel="power"
@@ -501,7 +513,7 @@ export function PowersStep() {
         onConfirm={handleTechniqueSelect}
         items={availableTechniques}
         title="Select Techniques"
-        description="Choose techniques from your library or public library. Click a row (or the + button) to select, then click Add Selected."
+        description="Choose from Realms Library or your library. Use the source filter to switch. You can also create your own in the Technique Creator."
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."
         itemLabel="technique"

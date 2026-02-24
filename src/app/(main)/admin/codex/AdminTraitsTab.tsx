@@ -14,11 +14,12 @@ import { Modal, Button, Input } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 
-const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 40px';
+const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 0.6fr 40px';
 const ADMIN_TRAIT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'uses_per_rec', label: 'USES' },
   { key: 'rec_period', label: 'RECOVERY' },
+  { key: 'choice', label: 'CHOICE' },
   { key: '_actions', label: '', sortable: false as const },
 ];
 import { useQueryClient } from '@tanstack/react-query';
@@ -44,6 +45,7 @@ export function AdminTraitsTab() {
     rec_period: '',
     flaw: false,
     characteristic: false,
+    option_trait_ids: [] as string[],
   });
 
   const filtered = sortItems<Trait>(
@@ -57,7 +59,7 @@ export function AdminTraitsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: '', description: '', uses_per_rec: '', rec_period: '', flaw: false, characteristic: false });
+    setForm({ name: '', description: '', uses_per_rec: '', rec_period: '', flaw: false, characteristic: false, option_trait_ids: [] });
     setModalOpen(true);
   };
 
@@ -68,9 +70,9 @@ export function AdminTraitsTab() {
       description: t.description || '',
       uses_per_rec: t.uses_per_rec != null ? String(t.uses_per_rec) : '',
       rec_period: t.rec_period || '',
-      // flaw/characteristic now come through from the codex API; fall back to false if missing
       flaw: t.flaw === true,
       characteristic: t.characteristic === true,
+      option_trait_ids: Array.isArray(t.option_trait_ids) ? [...t.option_trait_ids] : [],
     });
     setModalOpen(true);
   };
@@ -93,6 +95,7 @@ export function AdminTraitsTab() {
       rec_period,
       flaw: form.flaw,
       characteristic: form.characteristic,
+      option_trait_ids: form.option_trait_ids.length > 0 ? form.option_trait_ids : undefined,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `trait_${Date.now()}`;
@@ -173,10 +176,11 @@ export function AdminTraitsTab() {
                 id={t.id}
                 name={t.name}
                 description={t.description || ''}
-                gridColumns="1.5fr 0.6fr 0.6fr 40px"
+                gridColumns="1.5fr 0.6fr 0.6fr 0.6fr 40px"
                 columns={[
                   { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
                   { key: 'Recovery', value: t.rec_period || '-' },
+                  { key: 'Choice', value: t.option_trait_ids?.length ? `Yes (${t.option_trait_ids.length})` : '-' },
                 ]}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">
@@ -294,6 +298,33 @@ export function AdminTraitsTab() {
               />
               <span className="text-sm text-text-secondary">Characteristic</span>
             </label>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Choice trait options</label>
+            <p className="text-xs text-text-muted dark:text-text-secondary mb-2">
+              When set, this trait becomes a choice trait: the player selects it then picks one option from this list. Leave empty for a normal trait.
+            </p>
+            <div className="max-h-40 overflow-y-auto border border-border rounded-lg p-2 space-y-1 bg-surface-alt">
+              {(traits || []).filter((other: Trait) => other.id !== (editing?.id ?? '')).map((other: Trait) => {
+                const checked = form.option_trait_ids.includes(other.id);
+                return (
+                  <label key={other.id} className="flex items-center gap-2 cursor-pointer hover:bg-surface rounded px-2 py-1">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        if (e.target.checked) setForm((f) => ({ ...f, option_trait_ids: [...f.option_trait_ids, other.id] }));
+                        else setForm((f) => ({ ...f, option_trait_ids: f.option_trait_ids.filter((id) => id !== other.id) }));
+                      }}
+                    />
+                    <span className="text-sm text-text-primary">{other.name}</span>
+                  </label>
+                );
+              })}
+              {(traits || []).filter((other: Trait) => other.id !== (editing?.id ?? '')).length === 0 && (
+                <p className="text-xs text-text-muted py-2">No other traits to add as options. Create traits first.</p>
+              )}
+            </div>
           </div>
         </div>
       </Modal>

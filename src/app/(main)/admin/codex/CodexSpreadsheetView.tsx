@@ -98,7 +98,7 @@ function generateNewId(existingIds: Set<string>, baseName?: string): string {
 
 /** Preferred column order: id, name, description first, then known short/narrow columns, then rest alphabetically. */
 const PREFERRED_ORDER_AFTER_DESC = [
-  'flaw', 'characteristic', 'rec_period', 'uses_per_rec', 'uses_per_rec_per_tier',
+  'flaw', 'characteristic', 'option_trait_ids', 'rec_period', 'uses_per_rec', 'uses_per_rec_per_tier',
   'category', 'type', 'size', 'speed', 'skill_req', 'skill_req_val', 'ability_req', 'abil_req_val',
   'char_feat', 'state_feat', 'tags', 'lvl_req', 'mechanic', 'base_skill_id', 'base_skill_id_alt',
   'sizes', 'skills', 'species_traits', 'ancestry_traits', 'characteristics', 'flaws',

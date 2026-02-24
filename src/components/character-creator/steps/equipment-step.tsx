@@ -117,7 +117,7 @@ export function EquipmentStep() {
   
   const [activeTab, setActiveTab] = useState<EquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('all');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('public');
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
 
   const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');

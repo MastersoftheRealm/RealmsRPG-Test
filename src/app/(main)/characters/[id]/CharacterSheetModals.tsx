@@ -11,6 +11,7 @@ import {
   LevelUpModal,
   RecoveryModal,
   EditArchetypeModal,
+  EditSpeciesModal,
 } from '@/components/character-sheet';
 import type { EditArchetypeResult } from '@/components/character-sheet';
 import { DeleteConfirmModal, AddSkillModal, AddSubSkillModal } from '@/components/shared';
@@ -74,6 +75,9 @@ interface CharacterSheetModalsProps {
   showEditArchetypeModal: boolean;
   setShowEditArchetypeModal: (v: boolean) => void;
   onArchetypeSave: (result: EditArchetypeResult) => void;
+  showEditSpeciesModal: boolean;
+  setShowEditSpeciesModal: (v: boolean) => void;
+  onSpeciesSave: (updates: { ancestry: Character['ancestry']; skills: unknown }) => void;
 }
 
 export function CharacterSheetModals({
@@ -104,6 +108,9 @@ export function CharacterSheetModals({
   showEditArchetypeModal,
   setShowEditArchetypeModal,
   onArchetypeSave,
+  showEditSpeciesModal,
+  setShowEditSpeciesModal,
+  onSpeciesSave,
 }: CharacterSheetModalsProps) {
   return (
     <>
@@ -113,6 +120,15 @@ export function CharacterSheetModals({
           onClose={() => setShowEditArchetypeModal(false)}
           character={character}
           onSave={onArchetypeSave}
+        />
+      )}
+
+      {character && (
+        <EditSpeciesModal
+          isOpen={showEditSpeciesModal}
+          onClose={() => setShowEditSpeciesModal(false)}
+          character={character}
+          onSave={onSpeciesSave}
         />
       )}
 

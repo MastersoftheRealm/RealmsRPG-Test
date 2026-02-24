@@ -195,6 +195,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
               selectedSpeciesTraits: undefined,
               selectedFlawSpeciesId: undefined,
               mixedPhysical: undefined,
+              selectedSpeciesSkillIds: undefined,
             } as CharacterDraft['ancestry'],
           }
         });

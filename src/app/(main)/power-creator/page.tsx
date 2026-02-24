@@ -402,13 +402,13 @@ function PowerCreatorContent() {
     type: 'powers',
     getPayload,
     requirePublishConfirm: true,
-    publishConfirmTitle: 'Publish to Public Library',
+    publishConfirmTitle: 'Publish to Realms Library',
     publishConfirmDescription: (n, { existingInPublic }) =>
       existingInPublic
         ? `Are you sure you want to override "${n}" (power)? The existing public power with this name will be replaced.`
-        : `Are you sure you wish to publish this power "${n}" to the public library? All users will be able to see and use it.`,
+        : `Are you sure you wish to publish this power "${n}" to the Realms Library? All users will be able to see and use it.`,
     successMessage: 'Power saved successfully!',
-    publicSuccessMessage: 'Power saved to public library!',
+    publicSuccessMessage: 'Power saved to Realms Library!',
     onSaveSuccess: () => {
       setName('');
       setDescription('');

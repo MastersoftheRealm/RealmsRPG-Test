@@ -125,7 +125,7 @@ export function AdminPublicCreaturesTab() {
           isOpen={true}
           itemName={deleteConfirm.name}
           itemType="creature"
-          deleteContext="public library"
+          deleteContext="Realms Library"
           isDeleting={false}
           onConfirm={handleDeleteFromList}
           onClose={() => setDeleteConfirm(null)}

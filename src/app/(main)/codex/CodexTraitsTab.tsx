@@ -34,7 +34,7 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       <UiEmptyState
         size="lg"
         title="My Codex — Traits"
-        description="Custom traits are not available yet. For now, use Public Codex."
+        description="Custom traits are not available yet. For now, use Realms Codex."
       />
     );
   }

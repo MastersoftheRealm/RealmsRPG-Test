@@ -81,6 +81,7 @@
 | `rec_period` | string | Recovery period | Defines whether uses refresh on Full or Partial recovery. | "Full", "Partial" | "Full" |
 | `flaw` | boolean | Flaw flag | true if the trait is a flaw; used to categorize and enforce flaw selections. | true / false | false |
 | `characteristic` | boolean | Characteristic flag | true if the trait is a characteristic; used for cosmetic/flavor traits and selection UIs. | true / false | true |
+| `option_trait_ids` | string[] | Choice trait options | When non-empty, this trait is a **choice trait**: the player selects this trait then must pick one option from this list. The chosen option trait ID is stored on the character. Use for e.g. "Metallic affinity" with options ["copper","silver","gold"]. | Trait IDs from codex_traits | ["copper","silver","gold"] |
 
 ---
 
