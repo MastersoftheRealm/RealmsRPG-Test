@@ -91,6 +91,16 @@ See `ADMIN_SETUP.md` for current implementation.
 
 ---
 
+## Vercel free tier usage
+
+On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request).
+
+- **Proxy (Edge):** `src/proxy.ts` runs on every *matching* request. We exclude high-volume public APIs (`/api/codex`, `/api/public`) from the matcher so those routes don’t count as Edge Requests or Edge CPU.
+- **Caching:** `/api/codex` and `/api/public/[type]` GET responses use `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300` so browsers and CDN cache for 5–10 minutes and repeated requests don’t re-download the same payload (reduces Fast Data Transfer).
+- **Adding new public APIs:** Exclude them from the proxy matcher in `proxy.ts` if they don’t need session refresh, and set cache headers on GET if the response is cacheable.
+
+---
+
 ## Phase 7: Vercel Deployment
 
 ### Step 1: Connect repo

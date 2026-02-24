@@ -1,41 +1,36 @@
 /**
  * useGameData Hook
  * ==================
- * React Query hooks for game data (archetypes).
- *
- * NOTE: Legacy hooks for skills, feats, ancestries have been removed
- * (2026-02-13 audit). Use useCodexSkills, useCodexFeats, etc. from
- * use-codex.ts instead. Only useArchetypes remains until migrated.
+ * useArchetype(id) — single archetype by id. Shares codex fetch (queryKey ['codex']).
+ * useArchetypes: use CodexArchetypes from use-codex (re-exported in index).
  */
 
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getArchetypes, getArchetype } from '@/services/game-data-service';
+import { fetchCodex } from '@/lib/api-client';
+import type { Archetype } from '@/types';
 
 /** Query keys for game data */
 export const gameDataKeys = {
   all: ['gameData'] as const,
   archetypes: () => [...gameDataKeys.all, 'archetypes'] as const,
-  archetype: (id: string) => [...gameDataKeys.archetypes(), id] as const,
+  archetype: (id: string) => [...gameDataKeys.all, 'archetype', id] as const,
 };
 
 // =============================================================================
-// Archetypes
+// Single archetype by id — shares codex fetch so no duplicate full codex request
 // =============================================================================
-
-export function useArchetypes() {
-  return useQuery({
-    queryKey: gameDataKeys.archetypes(),
-    queryFn: getArchetypes,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-  });
-}
 
 export function useArchetype(id: string | undefined) {
   return useQuery({
-    queryKey: gameDataKeys.archetype(id || ''),
-    queryFn: () => getArchetype(id || ''),
+    queryKey: ['codex'],
+    queryFn: fetchCodex,
+    select: (data) => {
+      const list = (data.archetypes ?? []) as Array<Record<string, unknown> & { id?: string }>;
+      const found = list.find((a) => a.id === id);
+      return found ? ({ ...found, id: found.id } as Archetype) : null;
+    },
     enabled: !!id,
     staleTime: 10 * 60 * 1000,
   });

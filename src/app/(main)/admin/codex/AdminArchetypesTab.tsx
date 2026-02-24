@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useArchetypes } from '@/hooks/use-game-data';
+import { useCodexArchetypes } from '@/hooks/use-codex';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 export function AdminArchetypesTab() {
-  const { data: archetypes, isLoading, error } = useArchetypes();
+  const { data: archetypes, isLoading, error } = useCodexArchetypes();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);

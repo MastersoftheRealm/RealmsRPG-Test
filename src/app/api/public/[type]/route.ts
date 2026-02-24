@@ -69,7 +69,9 @@ export async function GET(
       return na.localeCompare(nb);
     });
 
-    return NextResponse.json(items);
+    // Cache 5 min browser, 10 min CDN — reduces Fast Data Transfer when public library is hit repeatedly.
+    const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+    return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     console.error('[API Error] GET /api/public/[type]:', err);
     return NextResponse.json({ error: 'Failed to load items' }, { status: 500 });

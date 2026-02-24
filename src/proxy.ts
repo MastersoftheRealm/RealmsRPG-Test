@@ -1,8 +1,12 @@
 /**
  * Next.js Proxy
  * ==============
- * Runs on every request. Refreshes Supabase session via @supabase/ssr.
+ * Runs on every matching request (Edge). Refreshes Supabase session via @supabase/ssr.
  * (Renamed from middleware.ts per Next.js 16 proxy convention.)
+ *
+ * Edge usage: Each matching request = 1 Vercel Edge Request. We exclude high-volume
+ * routes that don't need session refresh (public codex/public library API) to stay
+ * within free tier.
  */
 
 import { updateSession } from '@/lib/supabase/middleware';
@@ -13,7 +17,8 @@ export async function proxy(request: Request) {
 
 export const config = {
   matcher: [
-    // Exclude auth callback/confirm — proxy can interfere with PKCE code exchange (causes auth_callback on first OAuth attempt)
-    '/((?!_next/static|_next/image|favicon.ico|auth/callback|auth/confirm|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Exclude: static assets, auth callbacks, images, and high-volume public APIs (no session needed).
+    // Including api/codex and api/public reduces Edge Request count significantly.
+    '/((?!_next/static|_next/image|favicon.ico|auth/callback|auth/confirm|api/codex(?:/|$)|api/public(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

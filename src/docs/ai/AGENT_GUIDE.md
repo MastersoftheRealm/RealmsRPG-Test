@@ -68,6 +68,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | **Accessibility & contrast** | `src/docs/ACCESSIBILITY.md` — contrast tokens (success-700 + dark variant, power/martial-dark), form labels, headings, modals, touch targets; `src/docs/DESIGN_SYSTEM.md` — status and game-specific color tokens for light + dark mode. When editing UI, ensure new or changed text/controls follow these so both themes pass WCAG 2.1 AA. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |
 | Architecture | `src/docs/ARCHITECTURE.md` |
+| **Codex/library data** | `src/docs/DATA_HANDLING.md` — single codex fetch, query keys, cache headers, prefetch; read when adding or changing codex/library hooks or APIs |
 | **Character/creature math** | `src/lib/formulas.ts`, `src/lib/calculations.ts`, `src/lib/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
 
@@ -81,7 +82,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Codex reference data (parts, skills, feats, species) | `useCodexFeats`, `useCodexSkills`, `usePowerParts`, etc. (from `use-codex.ts`) |
 | Character CRUD | `character-service.ts` (via useCharacters) |
 
-**Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useCodexPowerParts()` / `useCodexTechniqueParts()` for correct EN/TP costs. See `ARCHITECTURE.md`.
+**Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useCodexPowerParts()` / `useCodexTechniqueParts()` for correct EN/TP costs. See `ARCHITECTURE.md`. **Codex/library:** Use `useCodex*` hooks (single `['codex']` fetch); avoid duplicate codex fetches. See `DATA_HANDLING.md`.
 
 ## Character Creator Step Order
 

@@ -97,6 +97,8 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 | Game constants | `src/lib/game/constants.ts` |
 | Progression | `src/lib/game/progression.ts` |
 
+**Data handling (codex, library, caching):** See `DATA_HANDLING.md` for single-source codex fetch, query keys, cache headers, and prefetch pattern.
+
 ---
 
 ## Type Definitions

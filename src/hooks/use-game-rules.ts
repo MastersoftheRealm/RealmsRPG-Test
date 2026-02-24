@@ -14,6 +14,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { CoreRulesMap } from '@/types/core-rules';
+import { fetchCodex } from '@/lib/api-client';
 
 // Import current hardcoded values as fallback defaults
 import {
@@ -201,38 +202,32 @@ const FALLBACK_RULES: CoreRulesMap = {
 };
 
 // =============================================================================
-// Fetch + merge logic
+// Merge logic (DB rules over fallback)
 // =============================================================================
 
-async function fetchCoreRules(): Promise<CoreRulesMap> {
-  try {
-    const res = await fetch('/api/codex');
-    if (!res.ok) throw new Error('Failed to fetch codex');
-    const data = await res.json();
-    const dbRules = data.coreRules || {};
-    
-    // Merge DB rules over fallback — any category present in DB replaces the fallback
-    const merged: Record<string, unknown> = { ...FALLBACK_RULES };
-    for (const key of Object.keys(FALLBACK_RULES)) {
-      if (dbRules[key]) {
-        merged[key] = dbRules[key];
-      }
+function mergeCoreRules(dbRules: Record<string, unknown>): CoreRulesMap {
+  const merged: Record<string, unknown> = { ...FALLBACK_RULES };
+  for (const key of Object.keys(FALLBACK_RULES)) {
+    if (dbRules[key]) {
+      merged[key] = dbRules[key];
     }
-    return merged as unknown as CoreRulesMap;
-  } catch {
-    // DB unavailable — use hardcoded fallback
-    return FALLBACK_RULES;
   }
+  return merged as unknown as CoreRulesMap;
 }
 
 // =============================================================================
-// Hook
+// Hook — shares codex fetch (queryKey ['codex']) so one request serves rules + other codex hooks
 // =============================================================================
 
-export function useGameRules() {
-  const query = useQuery<CoreRulesMap>({
-    queryKey: ['core-rules'],
-    queryFn: fetchCoreRules,
+export function useGameRules(): {
+  rules: CoreRulesMap;
+  isLoading: boolean;
+  error: Error | null;
+} {
+  const query = useQuery<Awaited<ReturnType<typeof fetchCodex>>, Error, CoreRulesMap, ['codex']>({
+    queryKey: ['codex'],
+    queryFn: fetchCodex,
+    select: (data) => mergeCoreRules((data?.coreRules as unknown as Record<string, unknown>) || {}),
     staleTime: 10 * 60 * 1000,   // 10 min — rules change infrequently
     gcTime: 60 * 60 * 1000,      // 1 hour cache
     retry: 1,
@@ -240,9 +235,9 @@ export function useGameRules() {
   });
 
   return {
-    rules: query.data ?? FALLBACK_RULES,
+    rules: (query.data ?? FALLBACK_RULES) as CoreRulesMap,
     isLoading: query.isLoading,
-    error: query.error,
+    error: query.error ?? null,
   };
 }
 

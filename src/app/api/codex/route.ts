@@ -253,20 +253,25 @@ export async function GET() {
     coreRules[row.id] = row.data;
   }
 
-  return NextResponse.json({
-    feats: codexFeats,
-    skills: codexSkills,
-    species: codexSpecies,
-    traits: codexTraits,
-    powerParts: codexPowerParts,
-    techniqueParts: codexTechniqueParts,
-    parts: allParts,
-    itemProperties: codexProperties,
-    equipment: codexEquipment,
-    archetypes: codexArchetypes,
-    creatureFeats: codexCreatureFeats,
-    coreRules,
-  });
+  // Cache 5 min browser, 10 min CDN — reduces Fast Data Transfer when codex is hit repeatedly (prefetch, hooks, tabs).
+  const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+  return NextResponse.json(
+    {
+      feats: codexFeats,
+      skills: codexSkills,
+      species: codexSpecies,
+      traits: codexTraits,
+      powerParts: codexPowerParts,
+      techniqueParts: codexTechniqueParts,
+      parts: allParts,
+      itemProperties: codexProperties,
+      equipment: codexEquipment,
+      archetypes: codexArchetypes,
+      creatureFeats: codexCreatureFeats,
+      coreRules,
+    },
+    { headers: { 'Cache-Control': cacheControl } }
+  );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
     const stack = err instanceof Error ? err.stack : undefined;
