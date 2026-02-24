@@ -141,7 +141,7 @@ export function DiceRoller({ className, onRoll }: DiceRollerProps) {
                 className={cn(
                   'flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-colors',
                   dieType === die
-                    ? 'bg-primary-600 text-white ring-2 ring-primary-400'
+                    ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white ring-2 ring-primary-400'
                     : 'bg-surface-alt text-text-secondary hover:bg-surface'
                 )}
                 title={`Select d${die}`}

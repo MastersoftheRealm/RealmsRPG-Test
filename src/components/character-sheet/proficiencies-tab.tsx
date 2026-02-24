@@ -428,7 +428,7 @@ export function ProficienciesTab({
                     >
                       <div className={cn(
                         'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
-                        isSelected ? 'bg-primary-600 text-white' : 'bg-surface-alt border border-border-light'
+                        isSelected ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'bg-surface-alt border border-border-light'
                       )}>
                         {isSelected && <Check className="w-3 h-3" />}
                       </div>

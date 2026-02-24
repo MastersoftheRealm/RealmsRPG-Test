@@ -232,6 +232,7 @@ export function NotesTab({
                     onChange={(e) => setWeightInput(e.target.value)}
                     onBlur={handleWeightBlur}
                     className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
+                    aria-label="Weight in kg"
                   />
                   <span className="text-sm text-text-muted dark:text-text-secondary">kg</span>
                 </div>
@@ -252,6 +253,7 @@ export function NotesTab({
                     onChange={(e) => setHeightInput(e.target.value)}
                     onBlur={handleHeightBlur}
                     className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-500 bg-white dark:bg-surface"
+                    aria-label="Height in cm"
                   />
                   <span className="text-sm text-text-muted dark:text-text-secondary">cm</span>
                 </div>

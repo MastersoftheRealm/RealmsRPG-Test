@@ -31,9 +31,9 @@ export interface SelectionToggleProps {
 }
 
 const SIZE_STYLES = {
-  sm: 'w-6 h-6',
-  md: 'w-8 h-8',
-  lg: 'w-10 h-10',
+  sm: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11',
+  md: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11',
+  lg: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-12 h-12',
 };
 
 const ICON_SIZES = {

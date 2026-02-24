@@ -84,7 +84,7 @@ export function MixedSpeciesModal({
                 onClick={() => setSource(opt)}
                 className={cn(
                   'px-2 py-1 rounded text-sm font-medium transition-colors',
-                  source === opt ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                  source === opt ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
                 )}
               >
                 {opt === 'all' ? 'All sources' : opt === 'public' ? 'Public species' : 'My species'}

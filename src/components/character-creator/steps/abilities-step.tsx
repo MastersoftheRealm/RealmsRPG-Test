@@ -46,8 +46,8 @@ export function AbilitiesStep() {
       <h2 className="text-2xl font-bold text-text-primary mb-2">Assign Abilities</h2>
       <p className="text-text-secondary mb-6">
         Distribute your ability points. You can reduce abilities below 0 to gain extra points.
-        {powerAbility && <span className="text-power-dark"> Power archetype ability highlighted.</span>}
-        {martialAbility && <span className="text-martial-dark"> Martial archetype ability highlighted.</span>}
+        {powerAbility && <span className="text-power-dark dark:text-power-300"> Power archetype ability highlighted.</span>}
+        {martialAbility && <span className="text-martial-dark dark:text-martial-300"> Martial archetype ability highlighted.</span>}
       </p>
       
       {/* Shared Ability Score Editor */}

@@ -279,10 +279,10 @@ export function PowersStep() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-2">
+            <h2 className="text-2xl font-bold text-text-primary mb-2">
               Powers & Techniques
             </h2>
-        <p className="text-muted-foreground">
+        <p className="text-text-muted dark:text-text-secondary">
           Select powers and techniques from your library for your character to know.
         </p>
       </div>
@@ -291,12 +291,12 @@ export function PowersStep() {
       {!powersLoading && !techniquesLoading && !hasContent && (
         <div className="bg-muted/30 border border-border rounded-xl p-8 text-center mb-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-            <Wand2 className="w-8 h-8 text-muted-foreground" />
+            <Wand2 className="w-8 h-8 text-text-muted dark:text-text-secondary" />
           </div>
-          <h3 className="text-lg font-medium text-foreground mb-2">
+          <h3 className="text-lg font-medium text-text-primary mb-2">
             No Powers or Techniques Yet
           </h3>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+          <p className="text-text-muted dark:text-text-secondary mb-6 max-w-md mx-auto">
             Create powers and techniques in your library first, then come back to add them to your character.
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -329,8 +329,8 @@ export function PowersStep() {
                 <Wand2 className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Powers</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-semibold text-text-primary">Powers</h3>
+                <p className="text-sm text-text-muted dark:text-text-secondary">
                   {selectedPowers.length} power{selectedPowers.length !== 1 ? 's' : ''} selected
                 </p>
               </div>
@@ -376,12 +376,12 @@ export function PowersStep() {
               </div>
             </div>
           ) : userPowers.length > 0 ? (
-            <div className="p-4 rounded-lg border border-dashed border-border text-center text-muted-foreground">
+            <div className="p-4 rounded-lg border border-dashed border-border text-center text-text-muted dark:text-text-secondary">
               No powers selected. Click &quot;Add Powers&quot; to choose from your library.
             </div>
           ) : (
             <div className="p-4 rounded-lg border border-dashed border-border text-center">
-              <span className="text-muted-foreground">No powers in your library. </span>
+              <span className="text-text-muted dark:text-text-secondary">No powers in your library. </span>
               <Link href="/power-creator" className="text-primary hover:underline inline-flex items-center gap-1">
                 Create one <ExternalLink className="w-3 h-3" />
               </Link>
@@ -396,11 +396,11 @@ export function PowersStep() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-martial-light flex items-center justify-center">
-                <Swords className="w-5 h-5 text-martial-dark" />
+                <Swords className="w-5 h-5 text-martial-dark dark:text-martial-300" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-foreground">Techniques</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-semibold text-text-primary">Techniques</h3>
+                <p className="text-sm text-text-muted dark:text-text-secondary">
                   {selectedTechniques.length} technique{selectedTechniques.length !== 1 ? 's' : ''} selected
                 </p>
               </div>
@@ -447,12 +447,12 @@ export function PowersStep() {
               </div>
             </div>
           ) : userTechniques.length > 0 ? (
-            <div className="p-4 rounded-lg border border-dashed border-border text-center text-muted-foreground">
+            <div className="p-4 rounded-lg border border-dashed border-border text-center text-text-muted dark:text-text-secondary">
               No techniques selected. Click &quot;Add Techniques&quot; to choose from your library.
             </div>
           ) : (
             <div className="p-4 rounded-lg border border-dashed border-border text-center">
-              <span className="text-muted-foreground">No techniques in your library. </span>
+              <span className="text-text-muted dark:text-text-secondary">No techniques in your library. </span>
               <Link href="/technique-creator" className="text-primary hover:underline inline-flex items-center gap-1">
                 Create one <ExternalLink className="w-3 h-3" />
               </Link>

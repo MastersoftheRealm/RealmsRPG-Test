@@ -34,17 +34,19 @@ const rollButtonVariants = cva(
   {
     variants: {
       variant: {
-        // Standard roll button - solid primary
+        // Standard roll button - solid primary; dark mode for contrast
         primary: [
           'text-white',
           'bg-primary-600 hover:bg-primary-700 focus-visible:ring-primary-accent',
+          'dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50',
           'hover:scale-105 active:scale-95',
         ].join(' '),
         
-        // Unproficient/disadvantage - solid gray
+        // Unproficient/disadvantage - solid gray; dark mode for contrast
         unproficient: [
           'text-white',
           'bg-neutral-500 hover:bg-neutral-600 focus-visible:ring-neutral-400',
+          'dark:bg-neutral-600 dark:hover:bg-neutral-500 dark:text-white',
           'hover:scale-105 active:scale-95',
         ].join(' '),
         
@@ -107,13 +109,15 @@ export interface RollButtonProps
 const RollButton = React.forwardRef<HTMLButtonElement, RollButtonProps>(
   ({ className, variant, size, value, displayValue, title, ...props }, ref) => {
     const display = displayValue ?? formatBonus(value);
+    const labelBase = title ?? `Roll ${display}`;
+    const accessibleLabel = title ? `${title}, ${display}` : `Roll ${display}`;
     
     return (
       <button
         ref={ref}
         className={cn(rollButtonVariants({ variant, size, className }))}
-        title={title ?? `Roll ${display}`}
-        aria-label={title ?? `Roll ${display}`}
+        title={labelBase}
+        aria-label={accessibleLabel}
         {...props}
       >
         {display}

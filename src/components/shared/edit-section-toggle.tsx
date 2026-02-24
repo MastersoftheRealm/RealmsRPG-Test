@@ -62,7 +62,7 @@ export function EditSectionToggle({
         onClick?.();
       }}
       className={cn(
-        'p-0.5 transition-all duration-200 hover:scale-110',
+        'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] flex items-center justify-center p-2 transition-all duration-200 hover:scale-110',
         colors.icon,
         colors.glow,
         isActive && 'scale-110',

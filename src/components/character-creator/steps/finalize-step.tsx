@@ -49,7 +49,7 @@ function ValidationModal({
       isValid ? 'bg-green-50 dark:bg-green-900/30' : hasErrors ? 'bg-red-50 dark:bg-red-900/30' : 'bg-amber-50 dark:bg-amber-900/30'
     )}>
       <span className="text-2xl">{isValid ? '✅' : hasErrors ? '⚠️' : '📋'}</span>
-      <h2 className="text-xl font-bold">
+      <h2 className="text-xl font-bold text-text-primary">
         {isValid ? 'Character Ready!' : hasErrors ? 'Issues Found' : 'Review Needed'}
       </h2>
     </div>
@@ -546,14 +546,14 @@ export function FinalizeStep() {
           {draft.pow_abil && (
             <div>
               <span className="text-text-muted dark:text-text-secondary">Power Ability:</span>
-              <span className="ml-2 font-medium capitalize text-power-dark">{draft.pow_abil}</span>
+              <span className="ml-2 font-medium capitalize text-power-dark dark:text-power-300">{draft.pow_abil}</span>
             </div>
           )}
           
           {draft.mart_abil && (
             <div>
               <span className="text-text-muted dark:text-text-secondary">Martial Ability:</span>
-              <span className="ml-2 font-medium capitalize text-martial-dark">{draft.mart_abil}</span>
+              <span className="ml-2 font-medium capitalize text-martial-dark dark:text-martial-300">{draft.mart_abil}</span>
             </div>
           )}
         </div>
@@ -571,8 +571,8 @@ export function FinalizeStep() {
                     key={ability}
                     className={cn(
                       'px-2 py-1 rounded text-sm font-medium',
-                      isPowerAbil ? 'bg-power-light text-power-dark' :
-                      isMartAbil ? 'bg-martial-light text-martial-dark' :
+                      isPowerAbil ? 'bg-power-light text-power-dark dark:bg-power-900/30 dark:text-power-300' :
+                      isMartAbil ? 'bg-martial-light text-martial-dark dark:bg-martial-900/30 dark:text-martial-300' :
                       value > 0 ? 'bg-green-100 text-green-700 dark:bg-success-900/30 dark:text-success-300' :
                       value < 0 ? 'bg-red-100 text-red-700 dark:bg-danger-900/30 dark:text-danger-300' :
                       'bg-surface-alt text-text-secondary'
@@ -612,7 +612,7 @@ export function FinalizeStep() {
             {draft.powers && draft.powers.length > 0 && (
               <div className="mb-2">
                 <span className="text-text-muted dark:text-text-secondary text-sm">Powers: </span>
-                <span className="text-sm text-power-dark">
+                <span className="text-sm text-power-dark dark:text-power-300">
                   {draft.powers.map(p => p.name).join(', ')}
                 </span>
               </div>
@@ -620,7 +620,7 @@ export function FinalizeStep() {
             {draft.techniques && draft.techniques.length > 0 && (
               <div>
                 <span className="text-text-muted dark:text-text-secondary text-sm">Techniques: </span>
-                <span className="text-sm text-martial-dark">
+                <span className="text-sm text-martial-dark dark:text-martial-300">
                   {draft.techniques.map(t => t.name).join(', ')}
                 </span>
               </div>

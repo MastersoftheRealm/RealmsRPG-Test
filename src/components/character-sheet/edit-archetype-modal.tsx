@@ -203,7 +203,7 @@ export function EditArchetypeModal({
           {selectedType === 'powered-martial' ? (
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <h4 className="text-xs font-medium text-category-power mb-2">Power Ability</h4>
+                <h4 className="text-xs font-medium text-category-power dark:text-violet-300 mb-2">Power Ability</h4>
                 <div className="flex flex-wrap gap-2">
                   {ABILITIES.map((ability) => (
                     <button
@@ -213,7 +213,7 @@ export function EditArchetypeModal({
                       className={cn(
                         'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                         selectedPowerAbility === ability
-                          ? 'bg-primary-600 text-white'
+                          ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white'
                           : selectedMartialAbility === ability
                             ? 'bg-surface-alt text-text-muted cursor-not-allowed'
                             : 'bg-surface border border-border-light hover:border-primary-400'
@@ -225,7 +225,7 @@ export function EditArchetypeModal({
                 </div>
               </div>
               <div>
-                <h4 className="text-xs font-medium text-category-technique mb-2">Martial Ability</h4>
+                <h4 className="text-xs font-medium text-category-technique dark:text-orange-300 mb-2">Martial Ability</h4>
                 <div className="flex flex-wrap gap-2">
                   {ABILITIES.map((ability) => (
                     <button
@@ -235,7 +235,7 @@ export function EditArchetypeModal({
                       className={cn(
                         'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
                         selectedMartialAbility === ability
-                          ? 'bg-primary-600 text-white'
+                          ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white'
                           : selectedPowerAbility === ability
                             ? 'bg-surface-alt text-text-muted cursor-not-allowed'
                             : 'bg-surface border border-border-light hover:border-primary-400'
@@ -260,7 +260,7 @@ export function EditArchetypeModal({
                   className={cn(
                     'px-4 py-2 rounded-lg font-medium transition-colors',
                     (selectedType === 'power' ? selectedPowerAbility === ability : selectedMartialAbility === ability)
-                      ? 'bg-primary-600 text-white'
+                      ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white'
                       : 'bg-surface border border-border-light hover:border-primary-400'
                   )}
                 >

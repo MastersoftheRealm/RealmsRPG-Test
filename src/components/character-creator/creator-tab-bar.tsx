@@ -79,7 +79,7 @@ export function CreatorTabBar() {
             disabled={!canNavigate}
             className={cn(
               'px-3 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0',
-              isActive && 'bg-primary-600 text-white shadow-md',
+              isActive && 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white shadow-md',
               !isActive && isComplete && 'bg-success-light text-success-700 hover:bg-success-200/80 dark:bg-success-900/30 dark:text-success-300 dark:hover:bg-success-800/40',
               !isActive && !isComplete && canNavigate && 'bg-surface text-text-secondary hover:bg-surface-alt',
               !isActive && !isComplete && !canNavigate && 'bg-surface text-text-muted cursor-not-allowed'

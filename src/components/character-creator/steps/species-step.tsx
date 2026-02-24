@@ -88,7 +88,7 @@ export function SpeciesStep() {
               onClick={() => setSource(opt)}
               className={cn(
                 'px-2 py-1 rounded text-sm font-medium transition-colors',
-                source === opt ? 'bg-primary-600 text-white' : 'text-text-muted hover:text-text-secondary'
+                source === opt ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
               )}
             >
               {opt === 'all' ? 'All sources' : opt === 'public' ? 'Public species' : 'My species'}
@@ -110,7 +110,7 @@ export function SpeciesStep() {
           <h3 className="font-bold text-text-primary">Mixed species</h3>
           <p className="text-sm text-text-secondary text-center mt-1">Combine two species</p>
           {isMixedSelected && (
-            <span className="text-xs px-2 py-0.5 bg-primary-600 text-white rounded mt-2">✓ Selected</span>
+            <span className="text-xs px-2 py-0.5 bg-primary-600 text-white dark:bg-primary-100 dark:text-white rounded mt-2">✓ Selected</span>
           )}
         </div>
 
@@ -134,7 +134,7 @@ export function SpeciesStep() {
                   </span>
                   {/* NO SPEED - species don't have speed values in RTDB */}
                   {isSelected && (
-                    <span className="text-xs px-2 py-0.5 bg-primary-600 text-white rounded">
+                    <span className="text-xs px-2 py-0.5 bg-primary-600 text-white dark:bg-primary-100 dark:text-white rounded">
                       ✓ Selected
                     </span>
                   )}

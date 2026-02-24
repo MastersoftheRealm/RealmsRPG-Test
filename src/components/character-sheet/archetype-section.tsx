@@ -776,8 +776,8 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'innate'
-                            ? 'bg-violet-500 text-white'
-                            : 'bg-violet-100 text-violet-600 hover:bg-violet-200'
+                            ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
+                            : 'bg-violet-100 text-violet-600 hover:bg-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-800/40'
                         )}
                         title="Gain +1 Innate Threshold & +1 Innate Pools"
                       >
@@ -788,8 +788,8 @@ export function ArchetypeSection({
                         className={cn(
                           'px-2 py-0.5 text-xs rounded transition-colors',
                           currentChoice === 'feat'
-                            ? 'bg-martial-dark text-white'
-                            : 'bg-martial-light text-martial-text hover:bg-martial-border/30'
+                            ? 'bg-martial-dark text-white dark:bg-martial-700 dark:text-white'
+                            : 'bg-martial-light text-martial-text hover:bg-martial-border/30 dark:bg-martial-900/30 dark:text-martial-300 dark:hover:bg-martial-800/40'
                         )}
                         title="Gain +1 Bonus Archetype Feat"
                       >
@@ -802,7 +802,7 @@ export function ArchetypeSection({
                       currentChoice === 'innate'
                         ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200'
                         : currentChoice === 'feat'
-                          ? 'bg-martial-light text-martial-dark'
+                          ? 'bg-martial-light text-martial-dark dark:bg-martial-900/30 dark:text-martial-300'
                           : 'bg-surface text-text-muted dark:text-text-secondary italic'
                     )}>
                       {currentChoice === 'innate' ? '✨ Innate' : 
@@ -825,7 +825,7 @@ export function ArchetypeSection({
           {martialProf > 0 && (
             <div className="flex-1 bg-martial-light dark:bg-martial-light rounded-lg px-3 py-2 flex items-center justify-between">
               <span className="text-sm font-medium text-martial-text dark:text-martial-border">Martial Potency</span>
-              <span className="text-lg font-bold text-martial-dark" title="10 + Martial Prof + Martial Ability">
+              <span className="text-lg font-bold text-martial-dark dark:text-martial-300" title="10 + Martial Prof + Martial Ability">
                 {martialPotency}
               </span>
             </div>

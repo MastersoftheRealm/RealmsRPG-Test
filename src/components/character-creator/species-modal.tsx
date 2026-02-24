@@ -72,9 +72,9 @@ function TraitSection({ title, traits, isFlaw = false, selectable = false }: Tra
   
   return (
     <div className="mb-4">
-      <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-text-secondary">
+      <h3 className="font-semibold text-sm uppercase tracking-wide mb-2 text-text-secondary">
         {title}
-      </h4>
+      </h3>
       <div className="space-y-2">
         {traits.map((trait, index) => (
           <div 
@@ -208,9 +208,9 @@ export function SpeciesModal({
           {/* Species Skills - Clickable to show description */}
           {speciesSkills.length > 0 && (
             <div>
-              <h4 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
+              <h3 className="font-semibold text-sm uppercase tracking-wide text-text-secondary mb-2">
                 Species Skills
-              </h4>
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {speciesSkills.map(skill => (
                   <Chip 

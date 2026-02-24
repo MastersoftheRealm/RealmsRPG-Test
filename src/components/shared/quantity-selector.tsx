@@ -44,14 +44,15 @@ export function QuantitySelector({
   className,
   disabled = false,
 }: QuantitySelectorProps) {
+  // Touch targets min 44px per MOBILE_UX.md
   const sizeClasses = {
     sm: {
-      button: 'w-5 h-5 text-xs',
+      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 text-xs',
       text: 'w-6 text-xs',
       icon: 'w-2.5 h-2.5',
     },
     md: {
-      button: 'w-6 h-6 text-sm',
+      button: 'min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] w-11 h-11 text-sm',
       text: 'w-8 text-sm',
       icon: 'w-3 h-3',
     },

@@ -619,11 +619,11 @@ export function SheetHeader({
                 {character.archetype?.name || (character.archetype?.type ? character.archetype.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'No Archetype')}
                 {(character.pow_abil || character.mart_abil) && ': '}
                 {character.pow_abil && (
-                  <span className="text-category-power capitalize">{character.pow_abil}</span>
+                  <span className="text-category-power dark:text-violet-300 capitalize">{character.pow_abil}</span>
                 )}
                 {character.pow_abil && character.mart_abil && ' / '}
                 {character.mart_abil && (
-                  <span className="text-category-technique capitalize">{character.mart_abil}</span>
+                  <span className="text-category-technique dark:text-orange-300 capitalize">{character.mart_abil}</span>
                 )}
               </span>
               {onEditArchetype && (
@@ -657,6 +657,7 @@ export function SheetHeader({
                     className="w-16 px-1 py-0 text-base border-2 border-primary-400 rounded focus:ring-2 focus:ring-primary-500"
                     min={0}
                     autoFocus
+                    aria-label="Experience points"
                   />
                 </div>
               ) : (

@@ -109,7 +109,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {speciesTraits.map((trait: Trait) => (
                   <div key={trait.id} className="p-2 bg-info-50 dark:bg-info-900/30 border border-info-200 dark:border-info-700/50 rounded">
-                    <span className="font-medium text-info-800">{trait.name}</span>
+                    <span className="font-medium text-info-800 dark:text-info-300">{trait.name}</span>
                     {trait.description && (
                       <p className="text-sm text-info-700 dark:text-info-300 mt-1">{trait.description}</p>
                     )}
@@ -125,7 +125,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {ancestryTraits.map((trait: Trait) => (
                   <div key={trait.id} className="p-2 bg-success-50 dark:bg-success-900/30 border border-success-200 dark:border-success-700/50 rounded">
-                    <span className="font-medium text-success-800">{trait.name}</span>
+                    <span className="font-medium text-success-800 dark:text-success-300">{trait.name}</span>
                     {trait.description && (
                       <p className="text-sm text-success-700 dark:text-success-300 mt-1">{trait.description}</p>
                     )}
@@ -141,7 +141,7 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {flaws.map((trait: Trait) => (
                   <div key={trait.id} className="p-2 bg-danger-50 dark:bg-danger-900/30 border border-danger-200 dark:border-danger-700/50 rounded">
-                    <span className="font-medium text-danger-800">{trait.name}</span>
+                    <span className="font-medium text-danger-800 dark:text-danger-300">{trait.name}</span>
                     {trait.description && (
                       <p className="text-sm text-danger-700 dark:text-danger-300 mt-1">{trait.description}</p>
                     )}
@@ -156,8 +156,8 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
               <h3 className="font-medium text-text-primary mb-2">Characteristics</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {characteristics.map((trait: Trait) => (
-                  <div key={trait.id} className="p-2 bg-power-light border border-power-border rounded">
-                    <span className="font-medium text-power-text">{trait.name}</span>
+                  <div key={trait.id} className="p-2 bg-power-light dark:bg-power-900/30 border border-power-border rounded">
+                    <span className="font-medium text-power-text dark:text-power-300">{trait.name}</span>
                     {trait.description && (
                       <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
                     )}

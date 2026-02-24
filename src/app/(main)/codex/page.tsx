@@ -102,7 +102,9 @@ export default function CodexPage() {
             onClick={() => setCodexMode('public')}
             className={cn(
               'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              codexMode === 'public' ? 'bg-primary-600 text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
+              codexMode === 'public'
+                ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
+                : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
             )}
           >
             Public Codex
@@ -112,7 +114,9 @@ export default function CodexPage() {
             onClick={() => setCodexMode('my')}
             className={cn(
               'px-3 py-1.5 rounded text-sm font-medium transition-colors',
-              codexMode === 'my' ? 'bg-primary-600 text-white' : 'text-text-muted dark:text-text-secondary hover:text-text-secondary'
+              codexMode === 'my'
+                ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
+                : 'text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary'
             )}
           >
             My Codex

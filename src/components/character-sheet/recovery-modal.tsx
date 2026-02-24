@@ -368,7 +368,7 @@ export function RecoveryModal({
             
             {/* Preview */}
             <div className="p-4 bg-warning-50 dark:bg-warning-900/30 rounded-lg border border-warning-200 dark:border-warning-700/50">
-              <h4 className="text-sm font-semibold text-warning-800 dark:text-warning-300 mb-3">Recovery Preview</h4>
+              <h3 className="text-sm font-semibold text-warning-800 dark:text-warning-300 mb-3">Recovery Preview</h3>
               
               <div className="grid grid-cols-2 gap-4">
                 {/* HP Recovery */}
@@ -427,7 +427,7 @@ export function RecoveryModal({
           <Button 
             variant="primary" 
             onClick={handleConfirm}
-            className={cn(mode === 'full' ? 'bg-primary-600 hover:bg-primary-700' : 'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600')}
+            className={cn(mode === 'full' ? 'bg-primary-600 hover:bg-primary-700 dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50' : 'bg-warning-600 hover:bg-warning-700 dark:bg-warning-600 dark:text-white dark:hover:bg-warning-700')}
           >
             {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
           </Button>

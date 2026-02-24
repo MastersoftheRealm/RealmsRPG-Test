@@ -66,10 +66,10 @@ export function ArchetypeStep() {
         <h2 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h2>
         
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-6 mb-6">
-          <h3 className="text-xl font-bold text-green-800 mb-2">
+          <h3 className="text-xl font-bold text-success-800 dark:text-success-300 mb-2">
             {ARCHETYPE_INFO[draft.archetype!.type].title}
           </h3>
-          <p className="text-green-700 mb-4">
+          <p className="text-success-700 dark:text-success-300 mb-4">
             {ARCHETYPE_INFO[draft.archetype!.type].description}
           </p>
           
@@ -154,7 +154,7 @@ export function ArchetypeStep() {
           {selectedType === 'powered-martial' ? (
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-sm font-medium text-violet-600 mb-2">Power Ability</h4>
+                <h4 className="text-sm font-medium text-violet-600 dark:text-violet-300 mb-2">Power Ability</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {ABILITIES.map((ability) => (
                     <button
@@ -164,9 +164,9 @@ export function ArchetypeStep() {
                       className={cn(
                         'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                         selectedAbility === ability
-                          ? 'bg-violet-500 text-white'
+                          ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
                           : selectedMartialAbility === ability
-                          ? 'bg-surface text-text-muted cursor-not-allowed'
+                          ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
                           : 'bg-surface border border-border-light hover:border-violet-400'
                       )}
                     >
@@ -177,7 +177,7 @@ export function ArchetypeStep() {
               </div>
               
               <div>
-                <h4 className="text-sm font-medium text-red-700 mb-2">Martial Ability</h4>
+                <h4 className="text-sm font-medium text-red-700 dark:text-red-300 mb-2">Martial Ability</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {ABILITIES.map((ability) => (
                     <button
@@ -187,9 +187,9 @@ export function ArchetypeStep() {
                       className={cn(
                         'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                         selectedMartialAbility === ability
-                          ? 'bg-red-600 text-white'
+                          ? 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
                           : selectedAbility === ability
-                          ? 'bg-surface text-text-muted cursor-not-allowed'
+                          ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
                           : 'bg-surface border border-border-light hover:border-red-400'
                       )}
                     >
@@ -209,8 +209,8 @@ export function ArchetypeStep() {
                     'px-4 py-3 rounded-lg font-medium transition-colors',
                     selectedAbility === ability
                       ? selectedType === 'power' 
-                        ? 'bg-violet-500 text-white'
-                        : 'bg-red-600 text-white'
+                        ? 'bg-violet-500 text-white dark:bg-violet-600 dark:text-white'
+                        : 'bg-red-600 text-white dark:bg-red-700 dark:text-white'
                       : 'bg-surface border border-border-light hover:border-border'
                   )}
                 >

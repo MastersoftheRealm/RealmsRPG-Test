@@ -1126,6 +1126,14 @@ Notes
 - Expected: btn-solid and footer links meet 4.5:1 (normal text) in both light and dark; outline buttons and about page links readable in dark mode.
 - Disposition: (1) globals.css: .btn-solid dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50 (dark blue bg so white text passes); .btn-outline-clean dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30. (2) footer.tsx: dark:bg-neutral-700 → dark:bg-neutral-800; dark:text-neutral-100 → dark:text-white, dark:hover:text-primary-400 → dark:hover:text-primary-300 (theme overrides made neutral-100 dark, so use explicit white). (3) about/page.tsx: carousel h2 dark:text-primary-300; all inline links and list icons text-primary-600 → dark:text-primary-400. npm run build passes.
 
+**Raw Feedback Log — 2026-02-23 (Trait add modal touch targets, spacing, a11y; global modal touch targets)**
+- Date: 2026-02-23
+- Context: Species creator trait add modal; production console
+- Priority: High
+- Feedback: (1) Trait add modal: touch targets 24px (should be 44px per MOBILE_UX.md) and extra spacing around them; likely global issue across modals. (2) Console: [DEPRECATED] zustand default export — use `import { create } from 'zustand'`. (3) Console: DialogContent requires DialogTitle for screen readers; missing Description or aria-describedby. (4) Console: div role="button" (small touch targets). (5) feedback.html "Could not fetch session" and "listener indicated asynchronous response" — extension/Vercel, not app code.
+- Expected: All tappable controls in modals ≥ 44px; reduced extra spacing; no a11y regressions. Dependency/extension warnings documented.
+- Disposition: (1) TraitListModal: row wrapper min-h-[44px], flex items-center, gap-0.5 p-1, aria-label on row button. (2) SelectionToggle: sm/md/lg use min 44px touch target (w-11 h-11). (3) ValueStepper: stepper buttons min 44px (base + size variants). (4) species-creator: added cn import. Zustand/DialogContent/feedback.html from dependencies or extensions; documented in ACCESSIBILITY.md. npm run build passes.
+
 **Raw Feedback Log — 2026-02-23 (Creature creator dark mode WCAG AA — contrast, labels, headings)**
 - Date: 2026-02-23
 - Context: Creature creator; production console and axe

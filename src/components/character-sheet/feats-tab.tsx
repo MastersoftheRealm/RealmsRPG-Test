@@ -603,7 +603,7 @@ export function FeatsTab({
                       className={cn(
                         'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
                         (stateUsesCurrent ?? stateUsesMax) > 0
-                          ? 'bg-primary-600 text-white hover:bg-primary-700'
+                          ? 'bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-100 dark:text-white dark:hover:bg-primary-50'
                           : 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
                       )}
                     >

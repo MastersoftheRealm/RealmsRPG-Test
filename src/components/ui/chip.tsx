@@ -30,7 +30,7 @@ const chipVariants = cva(
       variant: {
         // RECOMMENDED VARIANTS
         default: 'bg-surface-alt text-text-secondary border-border-light',
-        primary: 'bg-primary-700 text-primary-foreground border-primary-600',
+        primary: 'bg-primary-700 text-primary-foreground border-primary-600 dark:bg-primary-100 dark:text-white dark:border-primary-400',
         
         // Category-based colors for power/technique parts (KEEP - domain-specific)
         action: 'bg-category-action text-category-action-text border-category-action-border',
@@ -68,7 +68,7 @@ const chipVariants = cva(
         /** @deprecated Use 'default' - context provides meaning */
         feat: 'bg-pink-100 text-pink-800 border-pink-300',
         /** @deprecated Use 'default' - context provides meaning */
-        proficiency: 'bg-info-50 text-primary-600 border-info-200',
+        proficiency: 'bg-info-50 text-primary-600 border-info-200 dark:bg-info-900/30 dark:text-info-300 dark:border-info-700/50',
         /** @deprecated Use 'default' - context provides meaning */
         weakness: 'bg-danger-100 text-danger-700 border-danger-300',
         /** @deprecated Use 'default' - context provides meaning */

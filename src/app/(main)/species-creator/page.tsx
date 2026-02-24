@@ -32,6 +32,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
+import { cn } from '@/lib/utils/cn';
 
 const MAX_SPECIES_TRAITS = 3;
 const MAX_ANCESTRY_TRAITS = 6;
@@ -820,7 +821,7 @@ function TraitListModal({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-text-muted">
+      <p className="text-sm text-text-muted dark:text-text-secondary">
         {mode === 'species_ancestry' &&
           'Select one or more traits, then add as species traits or ancestry traits. Expand a row to see full description.'}
         {mode === 'flaw' && 'Select one or more flaws to add. Expand a row to see full description.'}
@@ -837,7 +838,7 @@ function TraitListModal({
         {filtered.length === 0 ? (
           <EmptyState title="No traits found" description="Try adjusting your search or check limits." size="sm" />
         ) : (
-          <div className="flex flex-col gap-1 p-2">
+          <div className="flex flex-col gap-0.5 p-1">
             {filtered.map((t) => {
               const idStr = String(t.id);
               const isSelected = selectedIds.has(idStr);
@@ -853,8 +854,12 @@ function TraitListModal({
                       toggleSelection(idStr);
                     }
                   }}
-                  className={isSelected ? 'ring-2 ring-primary-500 rounded-lg' : ''}
+                  className={cn(
+                    'min-h-[var(--touch-target-min,44px)] flex items-center rounded-lg',
+                    isSelected ? 'ring-2 ring-primary-500' : ''
+                  )}
                   aria-pressed={isSelected}
+                  aria-label={isSelected ? `Selected: ${t.name}. Click to deselect.` : `Select ${t.name}`}
                 >
                   <GridListRow
                   id={t.id}
@@ -876,7 +881,7 @@ function TraitListModal({
         )}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border-light pt-3">
-        <span className="text-sm text-text-muted">{selectedIds.size} selected</span>
+        <span className="text-sm text-text-muted dark:text-text-secondary">{selectedIds.size} selected</span>
         <div className="flex flex-wrap items-center justify-end gap-2">
         <Button variant="outline" onClick={onClose}>
           Cancel
