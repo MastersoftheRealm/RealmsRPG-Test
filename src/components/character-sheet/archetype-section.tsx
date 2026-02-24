@@ -724,40 +724,35 @@ export function ArchetypeSection({
             />
           </div>
         </>
-      ) : (martialProf > 0 || powerProf > 0) ? (
-        <div className={cn('flex gap-3 mb-4', (martialProf > 0) !== (powerProf > 0) && martialProf + powerProf > 0 && 'flex-1')}>
+      ) : null}
+      
+      {/* Archetype stats: one row per type (Power, Martial) — Prof and Potency on same line, same style/size */}
+      {(powerProf > 0 || martialProf > 0) && !showEditControls && (
+        <div className="flex gap-3 mb-4">
           {powerProf > 0 && (
             <div className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-50 dark:bg-violet-900/20',
-              martialProf === 0 && powerProf > 0 && 'flex-1'
+              'flex-1 rounded-lg px-3 py-2 flex flex-col gap-0.5 min-w-0',
+              'bg-violet-50 dark:bg-violet-900/20'
             )}>
-              <span className={cn(
-                'font-semibold text-violet-600 dark:text-violet-300',
-                martialProf === 0 ? 'text-base' : 'text-xs'
-              )}>Power Prof.</span>
-              <span className={cn(
-                'font-bold text-violet-700 dark:text-violet-200',
-                martialProf === 0 ? 'text-lg' : 'text-sm'
-              )}>{powerProf}</span>
+              <span className="text-sm font-medium text-violet-600 dark:text-violet-300">Power</span>
+              <span className="text-sm text-violet-700 dark:text-violet-200" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
+                Prof +{powerProf} · Potency {powerPotency}
+              </span>
             </div>
           )}
           {martialProf > 0 && (
             <div className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-lg bg-martial-light dark:bg-martial-light',
-              powerProf === 0 && martialProf > 0 && 'flex-1'
+              'flex-1 rounded-lg px-3 py-2 flex flex-col gap-0.5 min-w-0',
+              'bg-martial-light dark:bg-martial-light'
             )}>
-              <span className={cn(
-                'font-semibold text-martial-text dark:text-martial-border',
-                powerProf === 0 ? 'text-base' : 'text-xs'
-              )}>Martial Prof.</span>
-              <span className={cn(
-                'font-bold text-martial-dark dark:text-martial-border',
-                powerProf === 0 ? 'text-lg' : 'text-sm'
-              )}>{martialProf}</span>
+              <span className="text-sm font-medium text-martial-text dark:text-martial-border">Martial</span>
+              <span className="text-sm text-martial-dark dark:text-martial-300" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
+                Prof +{martialProf} · Potency {martialPotency}
+              </span>
             </div>
           )}
         </div>
-      ) : null}
+      )}
       
       {/* Mixed Archetype Milestone Choices */}
       {archetypeType === 'mixed' && milestoneLevels.length > 0 && (
@@ -816,28 +811,6 @@ export function ArchetypeSection({
           <p className="text-[10px] text-text-muted dark:text-text-secondary mt-2">
             Mixed archetypes choose at levels 4, 7, 10, etc.: +1 Innate (Threshold & Pools) OR +1 Bonus Feat
           </p>
-        </div>
-      )}
-      
-      {/* Potency displays - only show if character has corresponding proficiency */}
-      {(powerProf > 0 || martialProf > 0) && (
-        <div className="flex gap-3 mb-4">
-          {martialProf > 0 && (
-            <div className="flex-1 bg-martial-light dark:bg-martial-light rounded-lg px-3 py-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-martial-text dark:text-martial-border">Martial Potency</span>
-              <span className="text-lg font-bold text-martial-dark dark:text-martial-300" title="10 + Martial Prof + Martial Ability">
-                {martialPotency}
-              </span>
-            </div>
-          )}
-          {powerProf > 0 && (
-            <div className="flex-1 bg-violet-50 dark:bg-violet-900/30 rounded-lg px-3 py-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-violet-600 dark:text-violet-300">Power Potency</span>
-              <span className="text-lg font-bold text-violet-700 dark:text-violet-200" title="10 + Power Prof + Power Ability">
-                {powerPotency}
-              </span>
-            </div>
-          )}
         </div>
       )}
       
