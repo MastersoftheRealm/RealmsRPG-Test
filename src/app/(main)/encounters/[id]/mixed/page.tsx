@@ -11,7 +11,6 @@ import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, Cloud, CloudOff, Swords, Brain } from 'lucide-react';
-import { ProtectedRoute } from '@/components/layout';
 import { PageContainer, LoadingState, Alert } from '@/components/ui';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider, RollLog } from '@/components/character-sheet';
@@ -26,11 +25,7 @@ interface PageParams {
 }
 
 export default function MixedEncounterPage({ params }: PageParams) {
-  return (
-    <ProtectedRoute>
-      <MixedEncounterContent params={params} />
-    </ProtectedRoute>
-  );
+  return <MixedEncounterContent params={params} />;
 }
 
 function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) {

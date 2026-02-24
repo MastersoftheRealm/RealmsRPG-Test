@@ -85,7 +85,7 @@ Notes:
 - Creature creator: hide unarmed prowess options > level 1 for new characters; fix dropdown alignment; make summary scroll behavior consistent.
 - Powers/Techniques/Armaments: ensure RTDB enrichment computes and displays EN/TP/C in all list views.
 - **Power creator: option levels must not be negative.** Implemented 2026-02-23: PowerPartCard and PowerAdvancedMechanics ValueSteppers for op_1/2/3_lvl now use min={0}.
-- **Console: InvalidNodeTypeError (Range/selectNode — "the given Node has no parent").** Triggered on mouse up; likely React/dependency selection logic when a node was unmounted. TASK-268 to investigate.
+- **Console: InvalidNodeTypeError (Range/selectNode — "the given Node has no parent").** Triggered on mouse up; likely React/dependency selection logic when a node was unmounted. TASK-268 done: source is dependency (chunk 525.js); added SelectionGuard to clear selection when anchor node is detached; documented in ACCESSIBILITY.md.
 - **Rules page (embedded Google Doc): DOCS_timing is not defined.** Error is from inside the embedded Google Doc iframe; not fixable in our codebase.
 - **Resources page: Character Sheet PDF 404.** Link is `/Realms Character Sheet Alpha.pdf`; file must exist in `public/` or link updated. TASK-269.
 - **Zustand default export deprecation:** Our stores use named import; warning is from a dependency (noted in AI_CHANGELOG 2026-02-23).

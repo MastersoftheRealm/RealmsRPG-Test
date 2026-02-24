@@ -3,16 +3,16 @@
  * =============
  * My Library: user's personal library (powers, techniques, armaments, creatures).
  * Realms Library: official game content; browse and add items to your library (use as-is or customize).
- * Page title updates based on which library is shown.
+ * Guests can browse Realms Library read-only; sign in for My Library and to add items.
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Wand2, Swords, Shield, Users } from 'lucide-react';
+import { Plus, Wand2, Swords, Shield, Users, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/layout';
+import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
 import { DeleteConfirmModal, LoginPromptModal } from '@/components/shared';
 import {
@@ -53,19 +53,21 @@ const TABS: Tab[] = [
 type LibraryMode = 'my' | 'public';
 
 export default function LibraryPage() {
-  return (
-    <ProtectedRoute>
-      <LibraryContent />
-    </ProtectedRoute>
-  );
+  return <LibraryContent />;
 }
 
 function LibraryContent() {
+  const { user } = useAuth();
+  const isGuest = !user;
   const { showToast } = useToast();
-  const [libraryMode, setLibraryMode] = useState<LibraryMode>('my');
+  const [libraryMode, setLibraryMode] = useState<LibraryMode>('public');
   const [activeTab, setActiveTab] = useState<TabId>('powers');
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem } | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  useEffect(() => {
+    if (!isGuest) setLibraryMode('my');
+  }, [isGuest]);
 
   const { data: powers = [] } = useUserPowers();
   const { data: techniques = [] } = useUserTechniques();
@@ -138,11 +140,22 @@ function LibraryContent() {
 
   return (
     <PageContainer size="xl">
+      {isGuest && (
+        <div className="mb-4 flex items-center justify-between gap-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary">
+          <span>You&apos;re browsing the Realms Library. Sign in to see My Library and add items to your collection.</span>
+          <Link href="/login?returnTo=/library">
+            <Button variant="primary" size="sm">
+              <LogIn className="w-4 h-4" aria-hidden />
+              Sign in
+            </Button>
+          </Link>
+        </div>
+      )}
       <PageHeader
         title={isPublic ? 'Realms Library' : 'My Library'}
         description={isPublic ? 'Official Realms content. Add items to My Library to use as-is or customize.' : 'Your custom powers, techniques, armaments, and creatures'}
         actions={
-          !isPublic ? (
+          !isPublic && !isGuest ? (
             <Link href={currentTab.createHref}>
               <Button variant="primary">
                 <Plus className="w-4 h-4" />
@@ -155,8 +168,9 @@ function LibraryContent() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-4 min-w-0">
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt flex-shrink-0">
-          <button
+        {!isGuest && (
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-alt flex-shrink-0">
+            <button
             type="button"
             onClick={() => setLibraryMode('my')}
             className={cn(
@@ -177,6 +191,7 @@ function LibraryContent() {
             Realms Library
           </button>
         </div>
+        )}
       </div>
 
       <div className="min-w-0 mb-6">
@@ -192,6 +207,7 @@ function LibraryContent() {
         <LibraryPublicContent
           activeTab={activeTab as LibraryPublicTabId}
           onLoginRequired={() => setShowLoginPrompt(true)}
+          readOnly={isGuest}
         />
       ) : (
         <>

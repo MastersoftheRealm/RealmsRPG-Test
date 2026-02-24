@@ -10,7 +10,6 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
-import { ProtectedRoute } from '@/components/layout';
 import { PageContainer, LoadingState, Alert } from '@/components/ui';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/character-sheet';
@@ -23,11 +22,7 @@ interface PageParams {
 }
 
 export default function SkillEncounterPage({ params }: PageParams) {
-  return (
-    <ProtectedRoute>
-      <SkillEncounterContent params={params} />
-    </ProtectedRoute>
-  );
+  return <SkillEncounterContent params={params} />;
 }
 
 function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) {

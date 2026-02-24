@@ -13,6 +13,10 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { Swords, Sparkles, BookOpen, Users, Wand2, Shield, Skull, Sword, Zap, MessageCircle } from 'lucide-react';
+import { REALMS_MOTTO } from '@/lib/constants/site-copy';
+
+// Discord link (same as home/footer)
+const DISCORD_URL = 'https://discord.com/invite/WW7uVEEdpk';
 
 // Order: d10, d12, d20, d4(center on load), d6, d8, d10 — 7 dice; selected always centered; cycling wraps (leftmost moves to right)
 const DICE_IMAGES = [
@@ -91,7 +95,7 @@ const CAROUSEL_SLIDES: Array<{
           <Link href="/characters/new" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Character creation</Link> is the most exciting part of the game—a comprehensive guide for everything you need to create a unique Character. Whether you&apos;re a Realm Master crafting adventures for your party or a player bringing your dream Character to life, we&apos;re here to support your journey.
         </p>
         <p className="text-lg text-text-secondary leading-relaxed">
-          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the <Link href="/library" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Codex</Link>, build in the <Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creators</Link>, and adventure in a way only the imagination can picture.
+          Realms promises to reward you with immersive and satisfying Characters built on exactly what you envision. We invite you to explore the <Link href="/codex" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Codex</Link>, build in the <Link href="/power-creator" className="text-primary-600 dark:text-primary-400 hover:underline font-medium">Creators</Link>, and adventure in a way only the imagination can picture.
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
           <Link href="/characters/new" className="btn-solid">
@@ -292,7 +296,7 @@ const CAROUSEL_SLIDES: Array<{
         </p>
         <div className="mt-6 flex flex-wrap gap-4">
           <a
-            href="https://discord.com/invite/WW7uVEEdpk"
+            href={DISCORD_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-solid inline-flex items-center gap-2"
@@ -313,7 +317,7 @@ const CAROUSEL_SLIDES: Array<{
           <strong className="text-text-primary">Realms is better together.</strong> Connect with players, share house rules, find games.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <a href="https://discord.com/invite/WW7uVEEdpk" target="_blank" rel="noopener noreferrer" className="btn-solid text-sm inline-flex items-center gap-2">
+          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="btn-solid text-sm inline-flex items-center gap-2">
             <MessageCircle className="w-4 h-4" />
             Discord
           </a>
@@ -390,7 +394,7 @@ export default function AboutPage() {
     <PageContainer size="xl" padded>
       <PageHeader
         title="About Realms"
-        description="The tabletop RPG built for ultimate creative freedom—where fun comes first, flavor second, and rules third."
+        description={`${REALMS_MOTTO} — The tabletop RPG built for ultimate creative freedom, where fun comes first, flavor second, and rules third.`}
         size="lg"
       />
 
@@ -502,11 +506,26 @@ export default function AboutPage() {
         <p className="text-lg text-text-secondary leading-relaxed mb-4">
           Thank you for playing my game! I designed it with the hope that others would have as much fun with it as I do, and it means a lot to see people enjoying it. Realms is built to put <strong className="text-text-primary">fun first, flavor second, and rules third</strong>—so that your imagination can run free. I appreciate your time and enthusiasm.
         </p>
-        <p className="text-lg text-text-muted dark:text-text-secondary italic">
+        <p className="text-lg text-text-muted dark:text-text-secondary italic mb-6">
           Sincerely,<br />
           <span className="font-semibold text-text-primary">Kadin Brooksby</span><br />
           Creator of Realms
         </p>
+        {/* Primary CTAs for retention — clear next steps */}
+        <div className="flex flex-wrap gap-3 justify-center items-center pt-4 border-t border-border-light">
+          <Link href="/characters/new" className="btn-solid inline-flex items-center gap-2 min-h-[44px]">
+            <Sparkles className="w-5 h-5 shrink-0" />
+            Create a Character
+          </Link>
+          <Link href="/codex" className="btn-outline-clean inline-flex items-center gap-2 min-h-[44px]">
+            <BookOpen className="w-5 h-5 shrink-0" />
+            Browse Codex
+          </Link>
+          <a href={DISCORD_URL} target="_blank" rel="noopener noreferrer" className="btn-outline-clean inline-flex items-center gap-2 min-h-[44px]">
+            <MessageCircle className="w-5 h-5 shrink-0" />
+            Join the Community
+          </a>
+        </div>
       </section>
     </PageContainer>
   );

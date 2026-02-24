@@ -6270,18 +6270,22 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-268
   title: Investigate Range/selectNode InvalidNodeTypeError on mouse up
   priority: medium
-  status: not-started
+  status: done
   created_at: 2026-02-23
   created_by: agent
   description: |
     Console error: "Failed to execute 'selectNode' on 'Range': the given Node has no parent." Triggered during handleMouseUp; stack references 525.js (React/Next) and attributes. Likely selection/range logic running after a DOM node was unmounted. Search codebase and dependencies for getSelection/selectNode/Range usage; add guards or defer selection logic to avoid detached nodes.
-  related_files: []
+  related_files:
+    - src/components/layout/selection-guard.tsx
+    - src/app/layout.tsx
+    - src/docs/ACCESSIBILITY.md
   acceptance_criteria:
     - Identify source (our code vs dependency).
     - If our code: guard selection/range so it never runs on detached nodes.
     - If dependency: document and optionally report upstream.
     - npm run build passes.
-  notes: "Created from sitewide feedback 2026-02-23. No direct selectNode in src found in initial grep."
+  notes: |
+    Source: dependency (React/Next chunk 525.js). No getSelection/selectNode/Range in our src. Error occurs when selection's anchor node is detached before mouseup (e.g. modal/content unmount). Implemented SelectionGuard: capture-phase mouseup listener clears selection when anchorNode is not in document, preventing any code from using detached node. Mounted in root layout. Documented in ACCESSIBILITY.md. npm run build passes.
 
 - id: TASK-269
   title: Fix Resources page Character Sheet PDF 404

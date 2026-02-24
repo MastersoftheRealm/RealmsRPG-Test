@@ -6,11 +6,15 @@
  */
 
 import Link from 'next/link';
+import { REALMS_MOTTO } from '@/lib/constants/site-copy';
 
 export function Footer() {
   return (
     <footer className="w-full bg-neutral-400 dark:bg-neutral-800 border-t border-divider mt-auto">
       <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-24 py-4 sm:py-3">
+        <p className="text-center text-sm text-neutral-700 dark:text-neutral-300 mb-3 font-medium">
+          {REALMS_MOTTO}
+        </p>
         <nav className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 text-center" aria-label="Footer navigation">
           <Link href="/about" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">About</Link>
           <Link href="/rules" className="font-semibold text-sm sm:text-base text-neutral-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-300 transition-colors whitespace-nowrap min-h-[44px] flex items-center justify-center">Core Rulebook</Link>

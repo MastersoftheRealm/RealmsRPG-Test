@@ -3,6 +3,7 @@
  * ==============
  * Create, join, and manage campaigns. Campaigns are collections of characters
  * from multiple users, run by a Realm Master.
+ * Guests see a soft gate; sign in to create or join campaigns.
  */
 
 'use client';
@@ -18,7 +19,6 @@ import {
   UserPlus,
   ChevronRight,
 } from 'lucide-react';
-import { ProtectedRoute } from '@/components/layout';
 import {
   PageContainer,
   PageHeader,
@@ -33,11 +33,8 @@ import {
   useToast,
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { useCampaigns, useCharacters, useInvalidateCampaigns } from '@/hooks';
-import {
-  createCampaignAction,
-  joinCampaignAction,
-} from './actions';
+import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
+import { createCampaignAction, joinCampaignAction } from './actions';
 import type { CampaignSummary } from '@/types/campaign';
 
 type TabId = 'my-campaigns' | 'create' | 'join';
@@ -49,12 +46,38 @@ const TABS = [
 ];
 
 export default function CampaignsPage() {
+  const { user, loading: authLoading } = useAuth();
+  if (authLoading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <LoadingState message="Loading..." />
+      </div>
+    );
+  }
+  if (!user) {
+    return (
+      <PageContainer size="xl">
+        <PageHeader title="Campaigns" description="Create campaigns, invite players, and manage your Realm Master sessions." />
+        <div className="rounded-xl border border-border-light bg-surface-alt p-8 md:p-12 text-center max-w-lg mx-auto">
+          <Users className="w-14 h-14 mx-auto text-text-muted dark:text-text-secondary mb-4" aria-hidden />
+          <h2 className="text-xl font-bold text-text-primary mb-2">Sign in to create or join campaigns</h2>
+          <p className="text-text-secondary mb-6">
+            Campaigns let you run games as a Realm Master or join with your characters. Sign in to get started.
+          </p>
+          <Link href="/login?returnTo=/campaigns">
+            <Button variant="primary" size="lg">
+              <LogIn className="w-4 h-4" aria-hidden />
+              Sign in
+            </Button>
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
   return (
-    <ProtectedRoute>
-      <Suspense fallback={<div className="min-h-[400px] flex items-center justify-center"><LoadingState message="Loading..." /></div>}>
-        <CampaignsContent />
-      </Suspense>
-    </ProtectedRoute>
+    <Suspense fallback={<div className="min-h-[400px] flex items-center justify-center"><LoadingState message="Loading..." /></div>}>
+      <CampaignsContent />
+    </Suspense>
   );
 }
 

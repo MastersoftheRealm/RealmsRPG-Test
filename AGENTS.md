@@ -10,7 +10,7 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 2. **Read** `src/docs/ai/AGENT_GUIDE.md` — component locations, patterns, sources of truth.
 3. **Check** `src/docs/ALL_FEEDBACK_CLEAN.md` — raw owner feedback (convert new entries to tasks if needed).
 4. **When acting on owner feedback** (whether creating tasks or implementing directly): always append the raw feedback to `src/docs/ALL_FEEDBACK_CLEAN.md` under Raw Feedback Log (date, context, priority, feedback text). Do not skip logging when you implement on the spot.
-5. **Reference when needed:** `src/docs/GAME_RULES.md`, `src/docs/ARCHITECTURE.md` (terminology, formulas, data flow).
+5. **Reference when needed:** `src/docs/GAME_RULES.md`, `src/docs/ARCHITECTURE.md` (terminology, formulas, data flow). For **UX, onboarding, retention, or copy:** read `src/docs/USER_EXPERIENCE_GOALS.md` (goals, terminology, implemented vs backlog, AI checklist).
 
 ## Core Principles
 

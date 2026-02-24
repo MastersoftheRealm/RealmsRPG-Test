@@ -43,7 +43,6 @@ const navLinks: Array<{ href: string; label: string; external?: boolean } | { la
   },
   { href: '/campaigns', label: 'Campaigns' },
   { href: '/about', label: 'About' },
-  { href: 'https://discord.com/invite/WW7uVEEdpk', label: 'Join the Community', external: true },
 ];
 
 export function Header() {

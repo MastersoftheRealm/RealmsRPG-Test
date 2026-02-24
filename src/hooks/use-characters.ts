@@ -1,4 +1,4 @@
-﻿/**
+/**
  * useCharacters Hook
  * ====================
  * React Query hooks for character data
@@ -26,13 +26,20 @@ export const characterKeys = {
   detail: (id: string) => [...characterKeys.details(), id] as const,
 };
 
+export interface UseCharactersOptions {
+  /** When false, the query does not run (e.g. when user is not signed in). */
+  enabled?: boolean;
+}
+
 /**
  * Get all characters for the current user.
  */
-export function useCharacters() {
+export function useCharacters(options?: UseCharactersOptions) {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: characterKeys.list(),
     queryFn: getCharacters,
+    enabled,
   });
 }
 

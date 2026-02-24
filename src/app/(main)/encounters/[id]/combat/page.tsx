@@ -10,7 +10,6 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Cloud, CloudOff } from 'lucide-react';
-import { ProtectedRoute } from '@/components/layout';
 import { LoadingState, PageContainer, Alert } from '@/components/ui';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider } from '@/components/character-sheet';
@@ -22,11 +21,7 @@ interface PageParams {
 }
 
 export default function CombatEncounterPage({ params }: PageParams) {
-  return (
-    <ProtectedRoute>
-      <CombatEncounterContent params={params} />
-    </ProtectedRoute>
-  );
+  return <CombatEncounterContent params={params} />;
 }
 
 function CombatEncounterContent({ params }: { params: Promise<{ id: string }> }) {

@@ -8,6 +8,7 @@ import type { Metadata, Viewport } from 'next';
 import { Nunito, Nunito_Sans } from 'next/font/google';
 import { AuthProvider, QueryProvider, ThemeProvider } from '@/components/providers';
 import { ToastProvider } from '@/components/ui';
+import { SelectionGuard } from '@/components/layout';
 import './globals.css';
 
 // Primary font - Nunito for headings and brand text
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     default: 'RealmsRPG',
     template: '%s | RealmsRPG',
   },
-  description: 'Create and manage your tabletop RPG characters with RealmsRPG',
+  description: 'Your new favorite roleplaying game. Create and manage your tabletop RPG characters with RealmsRPG.',
   keywords: ['RPG', 'tabletop', 'character creator', 'character sheet', 'roleplaying'],
   authors: [{ name: 'RealmsRPG Team' }],
   creator: 'RealmsRPG',
@@ -74,6 +75,7 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <ToastProvider>
+                <SelectionGuard />
                 {children}
               </ToastProvider>
             </AuthProvider>

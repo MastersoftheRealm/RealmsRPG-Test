@@ -9,6 +9,7 @@
 
 import { useState, useMemo, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Swords,
   Brain,
@@ -19,7 +20,6 @@ import {
   Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ProtectedRoute } from '@/components/layout';
 import {
   PageContainer,
   PageHeader,
@@ -34,7 +34,7 @@ import {
   useToast,
 } from '@/components/ui';
 import { DeleteConfirmModal } from '@/components/shared';
-import { useEncounters, useCreateEncounter, useDeleteEncounter } from '@/hooks';
+import { useEncounters, useCreateEncounter, useDeleteEncounter, useAuth } from '@/hooks';
 import { createDefaultEncounter } from '@/types/encounter';
 import type { EncounterType, EncounterStatus, EncounterSummary } from '@/types/encounter';
 
@@ -73,22 +73,21 @@ const TABS: Array<{ id: TabId; label: string }> = [
 
 export default function EncountersPage() {
   return (
-    <ProtectedRoute>
-      <Suspense
-        fallback={
-          <PageContainer size="xl">
-            <LoadingState message="Loading encounters..." />
-          </PageContainer>
-        }
-      >
-        <EncountersContent />
-      </Suspense>
-    </ProtectedRoute>
+    <Suspense
+      fallback={
+        <PageContainer size="xl">
+          <LoadingState message="Loading encounters..." />
+        </PageContainer>
+      }
+    >
+      <EncountersContent />
+    </Suspense>
   );
 }
 
 function EncountersContent() {
   const router = useRouter();
+  const { user } = useAuth();
   const { showToast } = useToast();
   const { data: encounters = [], isLoading, error } = useEncounters();
   const createEncounter = useCreateEncounter();
@@ -171,6 +170,14 @@ function EncountersContent() {
 
   return (
     <PageContainer size="xl">
+      {!user && (
+        <div className="mb-4 rounded-lg bg-primary-600/10 border border-primary-600/20 px-4 py-3 text-text-primary text-sm">
+          You&apos;re using encounters locally. Sign in to save encounters to your account.
+          <Link href="/login?returnTo=/encounters" className="ml-2 font-medium text-primary-600 dark:text-primary-400 hover:underline">
+            Sign in
+          </Link>
+        </div>
+      )}
       <PageHeader
         title="Encounters"
         description="Create and manage combat, skill, and mixed encounters for your sessions."

@@ -1,33 +1,29 @@
 /**
  * Characters List Page
  * ======================
- * Displays user's characters with create/delete functionality
+ * Displays user's characters with create/delete functionality.
+ * Guests can view the page with an empty state and create a character (unsaved) to try the creator.
  */
 
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ProtectedRoute } from '@/components/layout';
 import { CharacterCard, AddCharacterCard } from '@/components/character';
 import { PageContainer, PageHeader, EmptyState } from '@/components/ui';
-import { Spinner } from '@/components/ui/spinner';
 import { Alert } from '@/components/ui/alert';
 import { DeleteConfirmModal } from '@/components/shared';
-import { useCharacters, useDeleteCharacter } from '@/hooks';
+import { useCharacters, useDeleteCharacter, useAuth } from '@/hooks';
 import { UserPlus } from 'lucide-react';
 
 export default function CharactersPage() {
-  return (
-    <ProtectedRoute>
-      <CharactersContent />
-    </ProtectedRoute>
-  );
+  return <CharactersContent />;
 }
 
 function CharactersContent() {
   const router = useRouter();
-  const { data: characters, isLoading, error } = useCharacters();
+  const { user } = useAuth();
+  const { data: characters = [], isLoading, error } = useCharacters({ enabled: !!user });
   const deleteCharacter = useDeleteCharacter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
@@ -74,7 +70,7 @@ function CharactersContent() {
     );
   }
 
-  if (error) {
+  if (error && user) {
     return (
       <PageContainer size="xl">
         <PageHeader title="Characters" />
@@ -115,11 +111,13 @@ function CharactersContent() {
           <AddCharacterCard onClick={handleCreateCharacter} />
         </div>
       ) : (
-        // Empty state when no characters
+        // Empty state when no characters (or guest)
         <EmptyState
           icon={<UserPlus className="w-10 h-10" />}
-          title="No characters yet"
-          description="Create your first character to begin your adventure in Realms RPG."
+          title={user ? 'No characters yet' : 'Characters'}
+          description={user
+            ? 'Create your first character to begin your adventure in Realms RPG.'
+            : 'Create a character to try the creator. Sign in to save characters to your account.'}
           action={{
             label: 'Create Character',
             onClick: handleCreateCharacter,

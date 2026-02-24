@@ -12,9 +12,10 @@ import type { ReactNode } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Sparkles, BookOpen, Sword, MessageCircle, X } from 'lucide-react';
+import { Sparkles, Sword, MessageCircle, X } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { OnboardingTour } from '@/components/shared';
+import { REALMS_MOTTO } from '@/lib/constants/site-copy';
 
 // Discord / community link (same as About page)
 const DISCORD_URL = 'https://discord.com/invite/WW7uVEEdpk';
@@ -108,7 +109,7 @@ function HomeContent() {
 
   return (
     <>
-      {/* Hero Banner - constrain on small screens */}
+      {/* Hero Banner - constrain on small screens; extra bottom padding so tagline doesn't crowd next section */}
       <section className="relative w-full h-[240px] sm:h-[320px] md:h-[400px] overflow-hidden">
         <Image
           src="/images/Banner.png"
@@ -118,7 +119,7 @@ function HomeContent() {
           priority
           suppressHydrationWarning
         />
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 gap-3 sm:gap-4">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 pb-10 sm:pb-12 md:pb-16 gap-4 sm:gap-5">
           <Image
             src="/images/LogoFullGrey.png"
             alt="Realms Logo"
@@ -129,7 +130,7 @@ function HomeContent() {
             suppressHydrationWarning
           />
           <p className="text-center text-sm sm:text-base md:text-lg text-white drop-shadow-md max-w-[520px] font-nunito">
-            Create your character your way — use what&apos;s in the game or build your own.
+            {REALMS_MOTTO}
           </p>
         </div>
       </section>
@@ -176,36 +177,37 @@ function HomeContent() {
 
       <OnboardingTour isOpen={showTour} onClose={() => setShowTour(false)} />
 
-      {/* Features Section - linked cards; mobile: stack single column, desktop: row */}
-      <section className="bg-neutral-300 dark:bg-neutral-800 py-8 sm:py-14 px-4 sm:px-6 lg:px-24 shadow-md">
+      {/* Features Section - linked cards; more top padding for breathing room from hero */}
+      <section className="bg-neutral-300 dark:bg-neutral-800 pt-10 sm:pt-14 pb-8 sm:pb-14 px-4 sm:px-6 lg:px-24 shadow-md">
         <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row justify-between items-stretch lg:items-start gap-8 lg:gap-[116px]">
           <FeatureCard
             href="/characters/new"
             title="CREATE A CHARACTER"
-            description="Use what's in the game or build your own. Choose species, feats, powers, and more."
+            description="Limitless options allow any dream character to come to life. Choose species, feats, powers, and more—from the game or build your own."
             icon={<Sparkles className="w-6 h-6" suppressHydrationWarning />}
           />
           <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
           <FeatureCard
-            href="/codex"
-            title="BROWSE CODEX"
-            description="Full reference: feats, skills, species, equipment, and parts for the Realms system."
-            icon={<BookOpen className="w-6 h-6" suppressHydrationWarning />}
+            href="/power-creator"
+            title="CREATE A POWER"
+            description="Design custom powers with infinite combinations of parts and effects. Build your character's unique toolset or content for your table."
+            icon={<Sword className="w-6 h-6" suppressHydrationWarning />}
           />
           <div className="hidden lg:block w-px h-[106px] bg-neutral-400 dark:bg-neutral-600 flex-shrink-0" />
           <FeatureCard
-            href="/browse"
-            title="BROWSE REALMS LIBRARY"
-            description="Official powers, techniques, armaments, and creatures. Add to your library to use as-is or customize."
-            icon={<Sword className="w-6 h-6" suppressHydrationWarning />}
+            href={DISCORD_URL}
+            title="JOIN DISCORD"
+            description="Connect with the Realms community, get help, share your builds, and find games. The best way to get the most out of Realms."
+            icon={<MessageCircle className="w-6 h-6" suppressHydrationWarning />}
+            external
           />
         </div>
       </section>
 
-      {/* Content Section: Reviews + Creator Message + CTAs; mobile: stack, no horizontal overflow */}
-      <section className="flex flex-col lg:flex-row bg-surface-alt min-h-[272px]">
+      {/* Content Section: Reviews + Creator Message + CTAs; compact height, equal-size CTAs */}
+      <section className="flex flex-col lg:flex-row bg-surface-alt">
         {/* Reviews Section */}
-        <div className="flex-1 py-6 sm:py-2 pl-4 sm:pl-6 lg:pl-24 pr-4 flex items-center justify-center min-w-0">
+        <div className="flex-1 py-6 sm:py-8 pl-4 sm:pl-6 lg:pl-24 pr-4 flex items-center justify-center min-w-0">
           <div className="flex items-center gap-3 sm:gap-6 w-full max-w-[781px]">
             <button
               type="button"
@@ -258,42 +260,42 @@ function HomeContent() {
           </div>
         </div>
 
-        {/* Creator Message + CTAs */}
-        <div className="w-full lg:w-[499px] py-6 sm:py-2 px-4 sm:pr-24 flex items-center justify-center gap-4 sm:gap-6 flex-shrink-0 border-t lg:border-t-0 border-border-light">
-          <div className="hidden lg:block w-px h-[225px] bg-divider flex-shrink-0" />
-          <div className="flex-1 max-w-[328px] min-w-0">
-            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3 sm:mb-4">
+        {/* Creator Message + CTAs — equal-height buttons so section isn't overly tall */}
+        <div className="w-full lg:w-[420px] py-6 sm:py-8 px-4 sm:pr-12 lg:pr-16 flex items-center justify-center gap-4 sm:gap-6 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border-light">
+          <div className="hidden lg:block w-px h-[200px] bg-divider flex-shrink-0" />
+          <div className="flex-1 max-w-[340px] min-w-0">
+            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3">
               Dear Realms Players,
             </p>
-            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3 sm:mb-4">
-              Thank you for playing my game! I designed it with the hope that others would have as much fun with it as I do, and it means a lot to see people enjoying it. I appreciate your time and enthusiasm.
+            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-3">
+              Thank you for playing my game! I designed it so others could have as much fun with it as I do. Realms is built to put <strong className="text-text-primary">fun first, flavor second, and rules third</strong>—so your imagination can run free.
             </p>
-            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-4 sm:mb-6">
-              Sincerely, Realms creator<br />Kadin Brooksby
+            <p className="font-nunito text-base sm:text-lg text-text-muted dark:text-text-secondary text-center italic mb-5">
+              Sincerely, <span className="font-semibold text-text-primary">Kadin Brooksby</span> — Creator of Realms
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center flex-wrap">
-              <Link
-                href="/about"
-                className="btn-outline-clean inline-flex items-center gap-2"
-              >
-                <BookOpen className="w-5 h-5" suppressHydrationWarning />
-                About Realms
-              </Link>
+            <div className="flex flex-row flex-wrap gap-4 sm:gap-6 justify-center items-stretch">
               <Link
                 href="/characters/new"
-                className="btn-solid inline-flex items-center gap-2"
+                className="btn-solid inline-flex items-center justify-center gap-2 min-h-[44px] flex-1 min-w-[140px] max-w-[200px]"
               >
-                <Sparkles className="w-5 h-5" suppressHydrationWarning />
+                <Sparkles className="w-5 h-5 shrink-0" suppressHydrationWarning />
                 Create a Character
+              </Link>
+              <Link
+                href="/power-creator"
+                className="btn-solid inline-flex items-center justify-center gap-2 min-h-[44px] flex-1 min-w-[140px] max-w-[200px]"
+              >
+                <Sword className="w-5 h-5 shrink-0" suppressHydrationWarning />
+                Create a Power
               </Link>
               <a
                 href={DISCORD_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-outline-clean inline-flex items-center gap-2"
+                className="btn-outline-clean inline-flex items-center justify-center gap-2 min-h-[44px] flex-1 min-w-[140px] max-w-[200px]"
               >
-                <MessageCircle className="w-5 h-5" suppressHydrationWarning />
-                Join the Community
+                <MessageCircle className="w-5 h-5 shrink-0" suppressHydrationWarning />
+                Join Discord
               </a>
             </div>
           </div>
@@ -320,17 +322,23 @@ function FeatureCard({
   title,
   description,
   icon,
+  external,
 }: {
   href: string;
   title: string;
   description: string;
   icon?: React.ReactNode;
+  external?: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      className="flex-1 max-w-full lg:max-w-[286px] group block transition-transform hover:-translate-y-1 min-w-0"
-    >
+    <>
+      {external ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 max-w-full lg:max-w-[286px] group block transition-transform hover:-translate-y-1 min-w-0"
+        >
       <div className="flex items-center gap-2 mb-3">
         {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:text-primary-300 transition-colors">{icon}</span>}
         <h3 className="font-display font-normal text-xl text-text-primary uppercase group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
@@ -340,6 +348,23 @@ function FeatureCard({
       <p className="font-nunito font-normal text-xl text-text-primary leading-relaxed">
         {description}
       </p>
+        </a>
+      ) : (
+        <Link
+          href={href}
+          className="flex-1 max-w-full lg:max-w-[286px] group block transition-transform hover:-translate-y-1 min-w-0"
+        >
+      <div className="flex items-center gap-2 mb-3">
+        {icon && <span className="text-primary-600 dark:text-primary-400 group-hover:text-primary-500 dark:group-hover:text-primary-300 transition-colors">{icon}</span>}
+        <h3 className="font-display font-normal text-xl text-text-primary uppercase group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+          {title}
+        </h3>
+      </div>
+      <p className="font-nunito font-normal text-xl text-text-primary leading-relaxed">
+        {description}
+      </p>
     </Link>
+      )}
+    </>
   );
 }
