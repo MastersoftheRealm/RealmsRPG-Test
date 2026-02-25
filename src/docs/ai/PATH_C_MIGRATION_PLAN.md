@@ -227,6 +227,35 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 
 ---
 
+### Phase 6b: Update all AI/agent rules and documentation (Path C alignment)
+
+**Goal:** Every doc and rule that mentions the stack or database correctly guides AI on: Supabase-only data access, raw SQL migrations, no Prisma, single `public` schema, Realtime best practices.
+
+**Files to update (checklist):**
+
+| Location | What to change |
+|----------|----------------|
+| **AGENTS.md** (repo root) | Stack: remove Prisma; add "Data access: Supabase server client only (`.from()`, `.rpc()`); types in `src/types/database.ts`; migrations = SQL only." |
+| **.cursor/rules/realms-project.mdc** | Stack line: "Supabase (PostgreSQL, Auth, Storage)" only; remove Prisma; add one line: "Database: Supabase client + raw SQL; all tables in `public`; no Prisma." |
+| **.cursor/rules/realms-tasks.mdc** | If it references Prisma or migrations, switch to "Supabase migrations / SQL files". |
+| **src/docs/ai/AGENT_GUIDE.md** | Key Files: remove Prisma row; add "Database types" → `src/types/database.ts`; "Codex API" → "fetches from Supabase". Hooks table: "from Supabase" not "from Prisma". |
+| **src/docs/ai/AI_TASK_QUEUE.md** | Header: "Stack: Supabase only (no Prisma)" and note that task text may still mention Prisma for historical context. |
+| **src/docs/ARCHITECTURE.md** | Full pass: data flow = Supabase only; remove all Prisma references; document `createClient` (server), `.from()`, `.rpc()`, Realtime tables in `public`. |
+| **src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md** | Remove Prisma from stack; DIRECT_URL only for migrations/SQL; deployment steps: run SQL files, not `prisma migrate`; Realtime checklist (tables in publication, RLS). |
+| **src/docs/DATABASE_CODEX_AUDIT.md** | Replace "Prisma schema" with "Supabase/public schema"; "Update Prisma + API" → "Update API and types (database.ts)". |
+| **src/docs/DATABASE_SCALABILITY_AUDIT.md** | Replace Prisma references with "public schema" / "Supabase"; Phase notes: "tables in public". |
+| **src/docs/CODEX_SCHEMA_REFERENCE.md** | Related: "table structure" → `src/types/database.ts` or Supabase; remove prisma/schema.prisma. |
+| **src/docs/ADMIN_SETUP.md** | Migrations: "Run SQL files in Supabase SQL Editor" (or `supabase db push`); remove `npx prisma migrate` / `prisma db seed`. |
+| **src/docs/README.md** | Stack: Supabase only; no Prisma. |
+| **src/docs/UNIFICATION_STATUS.md** | ARCHITECTURE ref: "Supabase (no Prisma)". |
+| **src/docs/ALL_FEEDBACK_CLEAN.md** | Any "Prisma" in disposition/notes can stay for history; ensure new entries say "Supabase". |
+
+**Verification:** Grep for `prisma` / `Prisma` in `src/docs/`, `AGENTS.md`, `.cursor/rules/`; only historical or "no Prisma" mentions should remain.
+
+**Deliverables:** All listed files updated; AI/agents are guided by current stack (Supabase + raw SQL, no Prisma).
+
+---
+
 ## 6. Realtime checklist (current + future)
 
 - **Tables in publication:** `public.campaign_rolls`, `public.characters`. Future: `public.encounters` or `public.campaign_messages` / `realm_prompts` for Realm master → player messaging.
@@ -247,10 +276,56 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 | **4** | [api/campaigns/](../../app/api/campaigns/), [campaigns/actions.ts](../../app/(main)/campaigns/actions.ts), [api/encounters/](../../app/api/encounters/), [use-campaign-rolls.ts](../../hooks/use-campaign-rolls.ts). |
 | **5** | [api/public/[type]/route.ts](../../app/api/public/[type]/route.ts), [api/upload/profile-picture/route.ts](../../app/api/upload/profile-picture/route.ts), [api/admin/users/](../../app/api/admin/users/), [auth/actions.ts](../../app/(auth)/actions.ts), [forgot-username/action.ts](../../app/(auth)/forgot-username/action.ts), [lib/prisma.ts](../../lib/prisma.ts) (delete). |
 | **6** | package.json, CI config, [ARCHITECTURE.md](../ARCHITECTURE.md), [DEPLOYMENT_AND_SECRETS_SUPABASE.md](../DEPLOYMENT_AND_SECRETS_SUPABASE.md), [AGENT_GUIDE.md](AGENT_GUIDE.md), [AGENTS.md](../../../AGENTS.md). |
+| **6b** | All AI/agent docs: AGENTS.md, .cursor/rules/*.mdc, AGENT_GUIDE.md, AI_TASK_QUEUE.md, ARCHITECTURE.md, DEPLOYMENT_AND_SECRETS_SUPABASE.md, DATABASE_*.md, CODEX_SCHEMA_REFERENCE.md, ADMIN_SETUP.md, README.md, UNIFICATION_STATUS.md, ALL_FEEDBACK_CLEAN.md (see Phase 6b checklist). |
 
 ---
 
-## 8. Risks and rollback
+## 8. Supabase operator guide (step-by-step)
+
+**Who this is for:** You (the project owner) running SQL in Supabase Dashboard → SQL Editor to align the database with Path C. Data can be deleted where necessary to fix structure (e.g. migrating from JSONB-only to columnar).
+
+### 8.1 Current database state (what you may have today)
+
+- **Schemas:** `users`, `campaigns`, `codex`, `encounters` (and `public`). Tables are split across these.
+- **Codex:** May be `id` + `data` (JSONB) only, or already columnar (if you ran `prisma/supabase-codex-tables-columnar.sql`).
+- **User library:** May be `id`, `user_id`, `data` (JSONB) or already columnar (if you ran `prisma/supabase-user-library-columnar.sql`).
+- **Public library:** `codex.public_powers`, `public_techniques`, `public_items`, `public_creatures` with `id` + `data` (JSONB).
+
+### 8.2 Order of operations (what to run and when)
+
+| Step | Action | File to run (paste in Supabase SQL Editor) | Notes |
+|------|--------|--------------------------------------------|--------|
+| **0.1** | Backup | — | Supabase Dashboard → Database → Backups, or export critical tables. |
+| **0.2** | Consolidate to `public` | `sql/path-c-phase0-consolidate-to-public.sql` | Moves all tables + enum to `public`; drops old schemas; updates RLS and Realtime. **Run once.** File is in repo at `sql/path-c-phase0-consolidate-to-public.sql`. |
+| **Optional A** | Codex columnar (if still id+data) | `prisma/supabase-codex-tables-columnar.sql` | **Only if** codex tables are still `id` + `data`. Drops and recreates codex_* in `codex` schema — use **updated version** that creates tables in `public` (see 8.3). |
+| **Optional B** | Official library columnar + rename | After Phase 5 in app | Create `official_powers` etc. in `public`; migrate data from `public_powers`; drop `public_*`. Or run a dedicated SQL file when provided. |
+
+**Important:** After step 0.2, **all** app tables live in `public`. The app still uses Prisma until Phases 1–5 are done in code; Prisma schema must be updated to `@@schema("public")` for all models so Prisma can still read/write until you remove it.
+
+### 8.3 SQL files provided in this repo
+
+| File | Purpose |
+|------|--------|
+| `sql/path-c-phase0-consolidate-to-public.sql` | **Path C Phase 0:** Move every table from `users`, `campaigns`, `codex`, `encounters` into `public`; move `UserRole` enum; recreate RLS for `public`; Realtime on `public.campaign_rolls` and `public.characters`; drop empty schemas. |
+| `prisma/supabase-rls-policies.sql` | Current RLS (pre–Phase 0) for multi-schema. After Phase 0, RLS is embedded in the consolidation script. |
+| `prisma/supabase-codex-tables-columnar.sql` | Codex tables with columns (not id+data). Creates in `codex` schema; for Path C you need a variant that creates in `public` or run after Phase 0 and then move codex tables to public (consolidation script does the move). |
+| `prisma/supabase-user-library-columnar.sql` | Adds columnar columns to user_* (run when tables are still in `users`; if already in `public`, adjust schema to `public`). |
+| `prisma/supabase-storage-policies.sql` | Storage RLS for `portraits` and `profile-pictures` buckets. Unchanged by Path C. |
+
+### 8.4 What you need to do in Supabase (minimal path)
+
+1. **Back up** the project (Supabase backups or export).
+2. Open **Supabase Dashboard → SQL Editor**.
+3. Paste and run **`sql/path-c-phase0-consolidate-to-public.sql`** in full (create the file from the plan; see section 10 / repo).
+4. Confirm in **Table Editor** that all tables now appear under **public** (no `users`, `campaigns`, `codex`, `encounters` schemas).
+5. If codex tables are still `id` + `data` and you want columnar: run an updated codex columnar script that targets `public` (or run the existing one and then run a small script to move those codex tables to `public` if Phase 0 already moved them).
+6. Run **`prisma/supabase-storage-policies.sql`** if you haven’t already (Storage RLS).
+
+After that, the codebase can proceed with Phases 1–6 (replace Prisma with Supabase client, then update docs/agents).
+
+---
+
+## 9. Risks and rollback
 
 - **Risk:** Consolidation migration (Phase 0) is large; one mistake can affect all tables. **Mitigation:** Run against a staging DB first; back up prod; consider doing consolidation in a maintenance window.
 - **Risk:** Realtime stops working if publication or RLS is wrong after move to public. **Mitigation:** Test roll log and character HP/EN/AP sync immediately after Phase 0 (or after the phase that switches schema in subscriptions).
@@ -258,7 +333,7 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 
 ---
 
-## 9. Success criteria
+## 10. Success criteria
 
 - All app table access goes through Supabase server client (`.from()` or `.rpc()`); no Prisma.
 - All tables live in `public`; no custom app schemas.
@@ -269,11 +344,12 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 
 ---
 
-## 10. References
+## 11. References
 
 - Prisma long-term assessment plan (sections 6.5 Option C, 6.6 Schema consolidation) — source for Path C and single public schema.
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — data flow and key files.
 - [DATABASE_SCALABILITY_AUDIT.md](../DATABASE_SCALABILITY_AUDIT.md) — columnar vs JSONB and phased layout.
 - [CODEX_SCHEMA_REFERENCE.md](../CODEX_SCHEMA_REFERENCE.md) — codex field definitions.
-- [prisma/supabase-rls-policies.sql](../../../prisma/supabase-rls-policies.sql) — current RLS and Realtime publication.
+- [prisma/supabase-rls-policies.sql](../../../prisma/supabase-rls-policies.sql) — current RLS and Realtime publication (pre–Phase 0).
 - [DEPLOYMENT_AND_SECRETS_SUPABASE.md](../DEPLOYMENT_AND_SECRETS_SUPABASE.md) — env and deployment; extend with Realtime checklist.
+- [SUPABASE_PATH_C_OPERATOR_GUIDE.md](../SUPABASE_PATH_C_OPERATOR_GUIDE.md) — **step-by-step operator guide**: what to run in Supabase and in what order (pastable SQL file paths).

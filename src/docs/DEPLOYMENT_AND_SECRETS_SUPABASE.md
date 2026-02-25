@@ -93,7 +93,7 @@ See `ADMIN_SETUP.md` for current implementation.
 
 ## Vercel free tier usage
 
-On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request).
+On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users), and **Edge Request CPU Duration** (charged when >10ms per request). For a full audit of CDN/query usage and optimization tips, see **`src/docs/ai/CDN_QUERY_AUDIT_2026-02-24.md`**.
 
 - **Proxy (Edge):** `src/proxy.ts` runs on every *matching* request. We exclude high-volume public APIs (`/api/codex`, `/api/public`) from the matcher so those routes don’t count as Edge Requests or Edge CPU.
 - **Caching:** `/api/codex` and `/api/public/[type]` GET responses use `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300` so browsers and CDN cache for 5–10 minutes and repeated requests don’t re-download the same payload (reduces Fast Data Transfer).

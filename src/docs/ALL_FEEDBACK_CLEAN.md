@@ -33,6 +33,7 @@ How to use
 - Ensure parts/properties load their TP/IP/C values from Codex and are used to compute EN/TP/C when rendering lists or summaries.
 - Wire option levels and part selections to update calculated costs (EN/TP/C) in UI immediately.
 - Consistent layout: fixed compact summary + scrolling inputs/values.
+- **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities — before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
 
 ### 3) Character Sheet & Library
 - Library tab order: Feats, Powers, Techniques, Inventory, Proficiencies, Notes (default open to Feats).
@@ -1167,3 +1168,18 @@ Notes
 - Feedback: Huge spike in Fast Data Transfer (4 GB) and Edge Request CPU Duration today, same day as Edge Request spike.
 - Expected: Reduce data transfer and Edge CPU so free tier is sustainable.
 - Implemented 2026-02-24: (1) Edge CPU: Already reduced by excluding api/codex and api/public from proxy (those requests no longer run on Edge). (2) Fast Data Transfer: /api/codex and /api/public GET had no cache headers; repeated fetches (prefetch, hooks, tabs) re-downloaded full payload every time. Added Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300 to both APIs so browser and CDN cache 5–10 min and repeated requests don't re-download. (3) DEPLOYMENT_AND_SECRETS_SUPABASE.md: added "Vercel free tier usage" section documenting proxy exclusions, cache headers, and guidance for new public APIs.
+
+**Raw Feedback Log — 2026-02-24 (Edge Requests spiked 10x — re-audit)**
+- Date: 2026-02-24
+- Context: Vercel Usage; Edge Requests spiked to 10x normal today. Edge Requests = all requests to the site (static assets + functions). Vercel guidance: optimize re-mounting (many images), excessive polling/refetch on focus (SWR/React Query).
+- Priority: High
+- Feedback: Re-audit roll-log and roll-context (and related hooks) for causes of Edge Request spike. Edge Requests recently spiked to 10x the normal amount today. Managing Edge Requests: count, projects, region. Optimizing: identify frequent re-mounting (304 on repeated paths); reduce excessive polling or data fetching (APIs polled for live updates, SWR/React Query reload on focus).
+- Expected: Identify and fix refetch-on-focus and aggressive polling that multiply requests; reduce Edge Request count.
+- Implemented 2026-02-24: (1) use-campaign-rolls: refetchOnWindowFocus set to false — Supabase Realtime (postgres_changes) already pushes campaign roll updates; refetch on every tab/window focus was redundant and multiplied API calls. (2) CombatEncounterView: removed window focus listener that called refetchCharacterResources (N API calls per tab switch, N = linked combatants); increased character-resource polling interval from 30s to 60s; Realtime still pushes character updates. Roll-log/roll-context: no polling; images are static Next/Image; no further change.
+
+**Raw Feedback Log — 2026-02-24 (Creature Creator: feat point costs, modals, skills, display)**
+- Date: 2026-02-24
+- Context: Creature Creator — damage modifiers, senses, movement, condition immunities, skills, feats, add power/technique/armament modals and lists
+- Priority: High
+- Feedback: (1) For damage modifiers, the cost of each type of resistance, immunity, weakness, etc should be clear before and after you add them (feat point cost). (2) When you add a sense or movement it should show the feat point cost of that thing perhaps with a chip with feat point cost or something like we use across the website. (3) Same with condition immunities as other damage modifiers — they should show how many feat points each condition immunity or damage modifier costs. (4) For skills use the add skill and add sub skill modals instead of a dropdown list. (5) Separate feats into add feat and add negative feat, where the add negative feat modal only has feats with negative feat point costs. (6) In the add power, technique, and armament modals the loaded things should show like all other parts of the site — parts, properties, options as chips as part of the parts, with other header-usual data detailed in the expanded view such as area, range, etc if not in the column headers. This is true for both the modals and the actual displayed lists in the creature creator. (7) Make sure we use the correct common logic that other parts of the site with similar/same functionality use.
+- Expected: Damage modifiers/senses/movement/condition immunities show feat point cost before and after adding (e.g. chip or label). Skills use AddSkillModal and AddSubSkillModal. Separate Add Feat and Add Negative Feat modals. Power/technique/armament modals and lists show parts, properties, options as chips; area, range, etc in expanded view; align with add-library-item-modal and library/codex display logic.

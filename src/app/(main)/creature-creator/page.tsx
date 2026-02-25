@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter, AddSkillModal, AddSubSkillModal } from '@/components/shared';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, useCreatorSave, usePublicLibrary, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
@@ -19,8 +19,6 @@ import {
   transformUserTechniqueToDisplayItem,
   transformCreatureFeatToDisplayItem,
   transformUserItemToDisplayItem,
-  creaturePowerToDisplayItem,
-  creatureTechniqueToDisplayItem,
   creatureFeatToDisplayItem,
   creatureArmamentToDisplayItem,
   displayItemToCreaturePower,
@@ -28,6 +26,11 @@ import {
   displayItemToCreatureFeat,
   displayItemToCreatureArmament,
 } from './transformers';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import type { PowerDocument } from '@/lib/calculators/power-calc';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import type { ChipData } from '@/components/shared/grid-list-row';
 import { 
   calculateCreatureTrainingPoints, 
   calculateCreatureCurrency,
@@ -107,8 +110,11 @@ function CreatureCreatorContent() {
   const [showPowerModal, setShowPowerModal] = useState(false);
   const [showTechniqueModal, setShowTechniqueModal] = useState(false);
   const [showFeatModal, setShowFeatModal] = useState(false);
+  const [showNegativeFeatModal, setShowNegativeFeatModal] = useState(false);
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showAddSkillModal, setShowAddSkillModal] = useState(false);
+  const [showAddSubSkillModal, setShowAddSubSkillModal] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>('all');
   
@@ -155,18 +161,33 @@ function CreatureCreatorContent() {
     [publicItems]
   );
   
-  // Transform library data (user + public by source) to DisplayItem[] for modals
-  const powerDisplayItems = useMemo(() => {
+  // Raw lists by source (for building selectable items with parts/properties chips)
+  const powerList = useMemo(() => {
     const my = (librarySource === 'my' || librarySource === 'all') ? userPowers : [];
     const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicPowers : [];
-    return [...my, ...pub].map((p: UserPower) => transformUserPowerToDisplayItem(p, powerPartsDb));
-  }, [userPowers, normalizedPublicPowers, librarySource, powerPartsDb]);
-  
-  const techniqueDisplayItems = useMemo(() => {
+    return [...my, ...pub] as UserPower[];
+  }, [userPowers, normalizedPublicPowers, librarySource]);
+  const techniqueList = useMemo(() => {
     const my = (librarySource === 'my' || librarySource === 'all') ? userTechniques : [];
     const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicTechniques : [];
-    return [...my, ...pub].map((t: UserTechnique) => transformUserTechniqueToDisplayItem(t, techniquePartsDb));
-  }, [userTechniques, normalizedPublicTechniques, librarySource, techniquePartsDb]);
+    return [...my, ...pub] as UserTechnique[];
+  }, [userTechniques, normalizedPublicTechniques, librarySource]);
+  const armamentList = useMemo(() => {
+    const my = (librarySource === 'my' || librarySource === 'all') ? userItems : [];
+    const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicItems : [];
+    const selectedIds = new Set(creature.armaments.map((a: { id: string }) => String(a.id)).filter((id) => id.length > 0));
+    return [...my, ...pub].filter((item: UserItem) => !selectedIds.has(item.docId)) as UserItem[];
+  }, [userItems, normalizedPublicItems, librarySource, creature.armaments]);
+
+  // Transform library data to DisplayItem[] (for onConfirm payload)
+  const powerDisplayItems = useMemo(() =>
+    powerList.map((p: UserPower) => transformUserPowerToDisplayItem(p, powerPartsDb)),
+    [powerList, powerPartsDb]
+  );
+  const techniqueDisplayItems = useMemo(() =>
+    techniqueList.map((t: UserTechnique) => transformUserTechniqueToDisplayItem(t, techniquePartsDb)),
+    [techniqueList, techniquePartsDb]
+  );
   
   const featDisplayItems = useMemo(() => {
     const selectedIds = new Set(
@@ -177,34 +198,118 @@ function CreatureCreatorContent() {
       .filter((f: DisplayItem | null): f is DisplayItem => f !== null);
   }, [creatureFeatsData, creature.feats]);
   
-  const armamentDisplayItems = useMemo(() => {
-    const selectedIds = new Set(
-      creature.armaments.map((a: { id: string }) => String(a.id)).filter((id) => id.length > 0)
-    );
-    const my = (librarySource === 'my' || librarySource === 'all') ? userItems : [];
-    const pub = (librarySource === 'public' || librarySource === 'all') ? normalizedPublicItems : [];
-    return [...my, ...pub]
-      .filter((item: UserItem) => !selectedIds.has(item.docId))
-      .map((item: UserItem) => transformUserItemToDisplayItem(item, itemPropertiesDb));
-  }, [userItems, normalizedPublicItems, librarySource, creature.armaments, itemPropertiesDb]);
+  const armamentDisplayItems = useMemo(() =>
+    armamentList.map((item: UserItem) => transformUserItemToDisplayItem(item, itemPropertiesDb)),
+    [armamentList, itemPropertiesDb]
+  );
 
-  // Convert to SelectableItem for UnifiedSelectionModal (GridListRow list style)
-  const powerSelectableItems = useMemo(() => 
-    powerDisplayItems.map((p: DisplayItem) => displayItemToSelectableItem(p, ['Action', 'Damage', 'Area'])),
-    [powerDisplayItems]
-  );
-  const techniqueSelectableItems = useMemo(() => 
-    techniqueDisplayItems.map((t: DisplayItem) => displayItemToSelectableItem(t, ['Energy', 'Weapon', 'Training Pts'])),
-    [techniqueDisplayItems]
-  );
+  // Build SelectableItems with detailSections (parts/properties chips) and area/range in expanded view — same logic as add-library-item-modal
+  const powerSelectableItems = useMemo(() => {
+    return powerList.map((power: UserPower) => {
+      const displayItem = transformUserPowerToDisplayItem(power, powerPartsDb);
+      const doc: PowerDocument = {
+        name: String(power.name ?? ''),
+        description: String(power.description ?? ''),
+        parts: Array.isArray(power.parts) ? (power.parts as PowerDocument['parts']) : [],
+        damage: power.damage as PowerDocument['damage'],
+        actionType: power.actionType,
+        isReaction: power.isReaction,
+        range: power.range as PowerDocument['range'],
+        area: power.area as PowerDocument['area'],
+        duration: power.duration as PowerDocument['duration'],
+      };
+      const display = derivePowerDisplay(doc, powerPartsDb);
+      const partChips: ChipData[] = display.partChips.map((chip) => ({
+        name: chip.text.split(' | TP:')[0].trim(),
+        description: chip.description,
+        cost: chip.finalTP,
+        costLabel: 'TP',
+        category: chip.finalTP && chip.finalTP > 0 ? ('cost' as const) : ('default' as const),
+      }));
+      const base = displayItemToSelectableItem(displayItem, ['Action', 'Damage', 'Area']);
+      return {
+        ...base,
+        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+        totalCost: display.tp > 0 ? display.tp : undefined,
+        costLabel: display.tp > 0 ? 'TP' : undefined,
+        data: displayItem,
+      };
+    });
+  }, [powerList, powerPartsDb]);
+  const techniqueSelectableItems = useMemo(() => {
+    return techniqueList.map((technique: UserTechnique) => {
+      const displayItem = transformUserTechniqueToDisplayItem(technique, techniquePartsDb);
+      const doc: TechniqueDocument = {
+        name: String(technique.name ?? ''),
+        description: String(technique.description ?? ''),
+        parts: Array.isArray(technique.parts) ? (technique.parts as TechniqueDocument['parts']) : [],
+        damage: Array.isArray(technique.damage) && technique.damage[0] ? technique.damage[0] : (technique.damage as TechniqueDocument['damage']),
+        weapon: technique.weapon as TechniqueDocument['weapon'],
+      };
+      const display = deriveTechniqueDisplay(doc, techniquePartsDb);
+      const partChips: ChipData[] = display.partChips.map((chip) => ({
+        name: chip.text.split(' | TP:')[0].trim(),
+        description: chip.description,
+        cost: chip.finalTP,
+        costLabel: 'TP',
+        category: chip.finalTP && chip.finalTP > 0 ? ('cost' as const) : ('default' as const),
+      }));
+      const base = displayItemToSelectableItem(displayItem, ['Energy', 'Weapon', 'Training Pts']);
+      return {
+        ...base,
+        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+        totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
+        costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
+        data: displayItem,
+      };
+    });
+  }, [techniqueList, techniquePartsDb]);
   const featSelectableItems = useMemo(() => 
-    featDisplayItems.map((f: DisplayItem) => displayItemToSelectableItem(f)),
+    featDisplayItems
+      .filter((f: DisplayItem) => Number(f.cost ?? 0) >= 0)
+      .map((f: DisplayItem) => displayItemToSelectableItem(f)),
     [featDisplayItems]
   );
-  const armamentSelectableItems = useMemo(() => 
-    armamentDisplayItems.map((a: DisplayItem) => displayItemToSelectableItem(a, ['Type', 'TP', 'Cost'])),
-    [armamentDisplayItems]
+  const featSelectableItemsNegative = useMemo(() => 
+    featDisplayItems
+      .filter((f: DisplayItem) => Number(f.cost ?? 0) < 0)
+      .map((f: DisplayItem) => displayItemToSelectableItem(f)),
+    [featDisplayItems]
   );
+  const armamentSelectableItems = useMemo(() => {
+    return armamentList.map((item: UserItem) => {
+      const displayItem = transformUserItemToDisplayItem(item, itemPropertiesDb);
+      const props = (Array.isArray(item.properties) ? item.properties : []) as Array<{ id?: string | number; name?: string; op_1_lvl?: number }>;
+      const propertyChips: ChipData[] = props.map((prop) => {
+        const propName = typeof prop === 'string' ? prop : (prop?.name ?? '');
+        const dbProp = itemPropertiesDb.find((p: { name?: string }) => p.name?.toLowerCase() === String(propName).toLowerCase());
+        const baseTp = dbProp?.base_tp ?? (dbProp as { tp_cost?: number })?.tp_cost ?? 0;
+        const optLevel = typeof prop === 'object' && prop?.op_1_lvl != null ? prop.op_1_lvl : 1;
+        const cost = baseTp * optLevel;
+        const baseDesc = dbProp?.description;
+        const descWithOpt = baseDesc?.trim()
+          ? (optLevel > 1 ? `${baseDesc.trim()}\n\nOption 1: Lv.${optLevel}` : baseDesc.trim())
+          : (optLevel > 1 ? `Option 1: Lv.${optLevel}` : undefined);
+        return {
+          name: dbProp?.name || propName,
+          description: descWithOpt,
+          cost: cost > 0 ? cost : undefined,
+          costLabel: 'TP',
+          category: cost > 0 ? ('cost' as const) : ('default' as const),
+          level: optLevel > 1 ? optLevel : undefined,
+        };
+      });
+      const totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
+      const base = displayItemToSelectableItem(displayItem, ['Type', 'TP', 'Cost']);
+      return {
+        ...base,
+        detailSections: propertyChips.length > 0 ? [{ label: 'Properties & Proficiencies', chips: propertyChips }] : undefined,
+        totalCost: totalCost ?? undefined,
+        costLabel: totalCost != null ? 'TP' : undefined,
+        data: displayItem,
+      };
+    });
+  }, [armamentList, itemPropertiesDb]);
 
   // Load cached state from localStorage on mount
   useEffect(() => {
@@ -261,11 +366,20 @@ function CreatureCreatorContent() {
     return map;
   }, [skillsData]);
   
-  // Create lookup map for skill ID to name (for base_skill_id lookups)
-  const skillIdToName = useMemo((): Map<string, string> => {
-    return new Map(skillsData.map((s: Skill) => [String(s.id), s.name] as [string, string]));
-  }, [skillsData]);
-  
+  // Feat point cost labels for senses/movement (varies by type)
+  const getSenseCostLabel = useCallback((sense: string) => {
+    const featId = SENSE_TO_FEAT_ID[sense];
+    if (featId == null) return undefined;
+    const cost = featPointsMap.get(String(featId));
+    return cost != null ? `${cost >= 0 ? '+' : ''}${cost} pt` : undefined;
+  }, [featPointsMap]);
+  const getMovementCostLabel = useCallback((movement: string) => {
+    const featId = MOVEMENT_TO_FEAT_ID[movement];
+    if (featId == null) return undefined;
+    const cost = featPointsMap.get(String(featId));
+    return cost != null ? `${cost >= 0 ? '+' : ''}${cost} pt` : undefined;
+  }, [featPointsMap]);
+
   // Create description maps for senses and movements
   const senseDescriptions = useMemo(() => {
     const map: Record<string, string> = {};
@@ -289,21 +403,6 @@ function CreatureCreatorContent() {
     return calculateSkillBonusWithProficiency(abilityName, skillValue, creature.abilities, proficient);
   }, [skillAbilityMap, creature.abilities]);
   
-  // Filter available skills: exclude sub-skills unless their base skill is already added
-  const availableSkills = useMemo(() => {
-    const addedSkillNames = creature.skills.map((s: CreatureSkill) => s.name);
-    
-    return skillsData.filter((skill: Skill) => {
-      // If this skill has a base_skill_id, only show it if the base skill is already added
-      if (skill.base_skill_id !== undefined) {
-        const baseSkillName = skillIdToName.get(String(skill.base_skill_id));
-        return typeof baseSkillName === 'string' ? addedSkillNames.includes(baseSkillName) : false;
-      }
-      // Otherwise, show all base skills
-      return true;
-    }).map((skill: Skill) => skill.name);
-  }, [skillsData, creature.skills, skillIdToName]);
-
   const updateCreature = useCallback((updates: Partial<CreatureState>) => {
     setCreature(prev => ({ ...prev, ...updates }));
   }, []);
@@ -450,6 +549,11 @@ function CreatureCreatorContent() {
       maxProficiencyPoints,
       proficiencySpent,
       proficiencyRemaining,
+      // Feat point costs for damage modifiers / condition immunities (for UI labels)
+      resistanceFeatCost,
+      immunityFeatCost,
+      weaknessFeatCost,
+      conditionImmunityFeatCost,
     };
   }, [creature, featPointsMap]);
 
@@ -553,15 +657,43 @@ function CreatureCreatorContent() {
     }
   };
 
-  const addSkill = (skillName: string) => {
-    if (!creature.skills.find(s => s.name === skillName)) {
-      // For creatures, all skills added are automatically proficient (spend that point)
-      setCreature(prev => ({
-        ...prev,
-        skills: [...prev.skills, { name: skillName, value: 0, proficient: true }]
+  const handleAddSkills = useCallback((skills: Skill[]) => {
+    setCreature(prev => {
+      const existing = new Set(prev.skills.map((s: CreatureSkill) => s.name.toLowerCase()));
+      const toAdd = skills.filter((s: Skill) => !existing.has(String(s.name ?? '').toLowerCase()));
+      if (toAdd.length === 0) return prev;
+      const newSkills: CreatureSkill[] = toAdd.map((s: Skill) => ({
+        name: String(s.name ?? ''),
+        value: 0,
+        proficient: true,
       }));
-    }
-  };
+      return { ...prev, skills: [...prev.skills, ...newSkills] };
+    });
+    setShowAddSkillModal(false);
+  }, []);
+
+  const handleAddSubSkills = useCallback((skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
+    setCreature(prev => {
+      const existing = new Set(prev.skills.map((s: CreatureSkill) => s.name.toLowerCase()));
+      const next = [...prev.skills];
+      skills.forEach((s: Skill & { autoAddBaseSkill?: Skill }) => {
+        if (s.autoAddBaseSkill) {
+          const baseName = String(s.autoAddBaseSkill.name ?? '');
+          if (baseName && !existing.has(baseName.toLowerCase())) {
+            next.push({ name: baseName, value: 0, proficient: true });
+            existing.add(baseName.toLowerCase());
+          }
+        }
+        const name = String(s.name ?? '');
+        if (name && !existing.has(name.toLowerCase())) {
+          next.push({ name, value: 1, proficient: true });
+          existing.add(name.toLowerCase());
+        }
+      });
+      return { ...prev, skills: next };
+    });
+    setShowAddSubSkillModal(false);
+  }, []);
 
   const updateSkill = (skillName: string, updates: Partial<CreatureSkill>) => {
     setCreature(prev => ({
@@ -703,8 +835,26 @@ function CreatureCreatorContent() {
               setCreature(prev => ({ ...prev, feats: [...prev.feats, ...feats] }));
             }}
             items={featSelectableItems}
-            title="Select Feats"
-            description="Choose creature feats to add. Click a row (or the + button) to select, then click Add Selected."
+            title="Add Feat"
+            description="Choose creature feats (positive or zero feat point cost). Click a row (or the + button) to select, then click Add Selected."
+            maxSelections={10}
+            itemLabel="feat"
+            searchPlaceholder="Search feats..."
+            columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Points', label: 'FEAT POINTS', sortable: true }]}
+            gridColumns="1.5fr 0.6fr"
+            size="xl"
+          />
+          <UnifiedSelectionModal
+            isOpen={showNegativeFeatModal}
+            onClose={() => setShowNegativeFeatModal(false)}
+            onConfirm={(selected) => {
+              const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
+              const feats = items.map(displayItemToCreatureFeat);
+              setCreature(prev => ({ ...prev, feats: [...prev.feats, ...feats] }));
+            }}
+            items={featSelectableItemsNegative}
+            title="Add Negative Feat"
+            description="Choose creature feats with negative feat point cost (e.g. weaknesses). Click a row (or the + button) to select, then click Add Selected."
             maxSelections={10}
             itemLabel="feat"
             searchPlaceholder="Search feats..."
@@ -730,6 +880,19 @@ function CreatureCreatorContent() {
             columns={[{ key: 'name', label: 'NAME', sortable: true }, { key: 'Type', label: 'TYPE', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Cost', label: 'COST', sortable: true }]}
             gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
             size="xl"
+          />
+          <AddSkillModal
+            isOpen={showAddSkillModal}
+            onClose={() => setShowAddSkillModal(false)}
+            existingSkillNames={creature.skills.map((s: CreatureSkill) => s.name)}
+            onAdd={handleAddSkills}
+          />
+          <AddSubSkillModal
+            isOpen={showAddSubSkillModal}
+            onClose={() => setShowAddSubSkillModal(false)}
+            characterSkills={creature.skills.map((s: CreatureSkill) => ({ id: s.name, name: s.name, prof: s.proficient }))}
+            existingSkillNames={creature.skills.map((s: CreatureSkill) => s.name)}
+            onAdd={handleAddSubSkills}
           />
           <LoadCreatureModal
             isOpen={showLoadModal}
@@ -909,47 +1072,63 @@ function CreatureCreatorContent() {
           {/* Resistances, Weaknesses, Immunities */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Damage Modifiers</h2>
+            <p className="text-sm text-text-muted dark:text-text-secondary mb-3">Each type costs feat points as shown. Resistances and immunities cost points; weaknesses grant points.</p>
             <div className="grid md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">Resistances</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Resistances <span className="font-normal text-primary-600 dark:text-primary-400">(+{stats.resistanceFeatCost} pt each)</span>
+                </label>
                 <ChipList 
                   items={creature.resistances} 
                   onRemove={(item) => removeFromArray('resistances', item)}
                   color="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                  costLabel={() => `+${stats.resistanceFeatCost} pt`}
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}
                   selectedItems={[...creature.resistances, ...creature.immunities]}
                   onAdd={(item) => addToArray('resistances', item)}
                   placeholder="Add resistance..."
+                  sectionCostLabel={`+${stats.resistanceFeatCost} pt each`}
+                  costForOption={() => stats.resistanceFeatCost}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">Weaknesses</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Weaknesses <span className="font-normal text-primary-600 dark:text-primary-400">({stats.weaknessFeatCost} pt each)</span>
+                </label>
                 <ChipList 
                   items={creature.weaknesses} 
                   onRemove={(item) => removeFromArray('weaknesses', item)}
                   color="bg-danger-light text-danger-700 dark:text-danger-400"
+                  costLabel={() => `${stats.weaknessFeatCost} pt`}
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}
                   selectedItems={creature.weaknesses}
                   onAdd={(item) => addToArray('weaknesses', item)}
                   placeholder="Add weakness..."
+                  sectionCostLabel={`${stats.weaknessFeatCost} pt each`}
+                  costForOption={() => stats.weaknessFeatCost}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">Immunities</label>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Immunities <span className="font-normal text-primary-600 dark:text-primary-400">(+{stats.immunityFeatCost} pt each)</span>
+                </label>
                 <ChipList 
                   items={creature.immunities} 
                   onRemove={(item) => removeFromArray('immunities', item)}
                   color="bg-power-light text-power-text dark:text-power-300"
+                  costLabel={() => `+${stats.immunityFeatCost} pt`}
                 />
                 <AddItemDropdown
                   options={DAMAGE_TYPES}
                   selectedItems={[...creature.resistances, ...creature.immunities]}
                   onAdd={(item) => addToArray('immunities', item)}
                   placeholder="Add immunity..."
+                  sectionCostLabel={`+${stats.immunityFeatCost} pt each`}
+                  costForOption={() => stats.immunityFeatCost}
                 />
               </div>
             </div>
@@ -958,6 +1137,7 @@ function CreatureCreatorContent() {
           {/* Senses & Movement */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Senses & Movement</h2>
+            <p className="text-sm text-text-muted dark:text-text-secondary mb-3">Each sense and movement type has a feat point cost shown when adding and on each row.</p>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-2">Senses</label>
@@ -967,12 +1147,14 @@ function CreatureCreatorContent() {
                   color="bg-info-light text-info-700 dark:text-info-300"
                   rowHoverClass="hover:bg-info-200 dark:hover:bg-info-900/40"
                   descriptions={senseDescriptions}
+                  costLabel={getSenseCostLabel}
                 />
                 <AddItemDropdown
                   options={SENSES}
                   selectedItems={creature.senses}
                   onAdd={(item) => addToArray('senses', item)}
                   placeholder="Add sense..."
+                  costForOption={(value) => getSenseCostLabel(value)?.replace(' pt', '')}
                 />
               </div>
               <div>
@@ -983,12 +1165,14 @@ function CreatureCreatorContent() {
                   color="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300"
                   rowHoverClass="hover:bg-amber-200 dark:hover:bg-amber-800/40"
                   descriptions={movementDescriptions}
+                  costLabel={getMovementCostLabel}
                 />
                 <AddItemDropdown
                   options={MOVEMENT_TYPES}
                   selectedItems={creature.movementTypes}
                   onAdd={(item) => addToArray('movementTypes', item)}
                   placeholder="Add movement..."
+                  costForOption={(value) => getMovementCostLabel(value)?.replace(' pt', '')}
                 />
               </div>
             </div>
@@ -997,16 +1181,22 @@ function CreatureCreatorContent() {
           {/* Condition Immunities */}
           <div className="bg-surface rounded-xl shadow-md p-6">
             <h2 className="text-lg font-bold text-text-primary mb-4">Condition Immunities</h2>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Conditions <span className="font-normal text-primary-600 dark:text-primary-400">(+{stats.conditionImmunityFeatCost} pt each)</span>
+            </label>
             <ChipList 
               items={creature.conditionImmunities} 
               onRemove={(item) => removeFromArray('conditionImmunities', item)}
               color="bg-surface-alt text-text-primary"
+              costLabel={() => `+${stats.conditionImmunityFeatCost} pt`}
             />
             <AddItemDropdown
               options={CONDITIONS}
               selectedItems={creature.conditionImmunities}
               onAdd={(item) => addToArray('conditionImmunities', item)}
               placeholder="Add condition immunity..."
+              sectionCostLabel={`+${stats.conditionImmunityFeatCost} pt each`}
+              costForOption={() => stats.conditionImmunityFeatCost}
             />
           </div>
 
@@ -1029,7 +1219,7 @@ function CreatureCreatorContent() {
             </div>
             
             {creature.skills.length === 0 ? (
-              <p className="text-sm text-text-muted dark:text-text-secondary italic py-4 text-center">No skills added. Use the dropdown below to add skills.</p>
+              <p className="text-sm text-text-muted dark:text-text-secondary italic py-4 text-center">No skills added. Use Add Skill or Add Sub Skill to add from the codex.</p>
             ) : (
               <div className="space-y-2 mb-4">
                 {creature.skills.map(skill => {
@@ -1053,13 +1243,25 @@ function CreatureCreatorContent() {
                 })}
               </div>
             )}
-            
-            <AddItemDropdown
-              options={availableSkills}
-              selectedItems={creature.skills.map((s: CreatureSkill) => s.name)}
-              onAdd={addSkill}
-              placeholder="Add skill..."
-            />
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Button
+                size="sm"
+                onClick={() => setShowAddSkillModal(true)}
+                disabled={stats.skillRemaining < 1}
+                title={stats.skillRemaining < 1 ? 'No skill points remaining' : 'Add base skill from codex'}
+              >
+                Add Skill
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setShowAddSubSkillModal(true)}
+                disabled={stats.skillRemaining < 1}
+                title={stats.skillRemaining < 1 ? 'No skill points remaining' : 'Add sub-skill from codex'}
+              >
+                Add Sub Skill
+              </Button>
+            </div>
           </div>
 
           {/* Languages */}
@@ -1118,11 +1320,14 @@ function CreatureCreatorContent() {
                 ))}
               </div>
             )}
-            <Button
-              onClick={() => setShowFeatModal(true)}
-            >
-              Add Feat
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setShowFeatModal(true)}>
+                Add Feat
+              </Button>
+              <Button variant="secondary" onClick={() => setShowNegativeFeatModal(true)}>
+                Add Negative Feat
+              </Button>
+            </div>
           </CollapsibleSection>
 
           {/* Powers - Optional */}

@@ -137,19 +137,38 @@ export default function CombatEncounterView({
     refetchCharacterResources();
   }, [encounter?.id, encounter?.campaignId, encounter?.combatants, refetchCharacterResources]);
 
-  useEffect(() => {
-    const onFocus = () => refetchCharacterResources();
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [refetchCharacterResources]);
-
   const hasLinkedCombatants = encounter?.combatants?.some(
     (c) => (c as TrackedCombatant).sourceType === 'campaign-character' && (c as TrackedCombatant).sourceId
   );
+  // Poll linked character HP/energy every 90s only when tab is visible. When tab is hidden (inactive or minimized),
+  // pause polling to avoid unnecessary API calls; when tab becomes visible again, refetch once then resume interval.
   useEffect(() => {
     if (!hasLinkedCombatants || !refetchCharacterResources) return;
-    const interval = setInterval(refetchCharacterResources, 30_000);
-    return () => clearInterval(interval);
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => {
+      if (intervalId) return;
+      intervalId = setInterval(refetchCharacterResources, 90_000);
+    };
+    const stopPolling = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetchCharacterResources();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+    if (document.visibilityState === 'visible') startPolling();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stopPolling();
+    };
   }, [hasLinkedCombatants, refetchCharacterResources]);
 
   const characterIdsForSync = useMemo(() => {

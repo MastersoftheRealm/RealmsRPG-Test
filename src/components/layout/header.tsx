@@ -282,6 +282,7 @@ function NavDropdown({ item, pathname }: { item: DropdownItem; pathname: string 
               <Link
                 key={subItem.href}
                 href={subItem.href}
+                prefetch={false}
                 className={cn(
                   'block px-5 py-3 text-primary-700 dark:text-primary-300 hover:bg-surface hover:text-primary-500 dark:hover:text-primary-200 transition-colors min-h-[44px] flex items-center',
                   pathname === subItem.href ? 'bg-surface-alt text-primary-500 dark:text-primary-400' : ''
@@ -319,6 +320,7 @@ function MobileDropdown({ item, pathname, onLinkClick }: { item: DropdownItem; p
             <Link
               key={subItem.href}
               href={subItem.href}
+              prefetch={false}
               className={cn(
                 'block py-3 text-primary-700 dark:text-primary-300 min-h-[44px] flex items-center',
                 pathname === subItem.href ? 'text-primary-500 dark:text-primary-400' : ''
