@@ -10,6 +10,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/supabase/session';
+import { rowToItem, bodyToColumnar } from '@/lib/library-columnar';
 
 // =============================================================================
 // Powers
@@ -25,13 +26,11 @@ export async function getUserPowersAction() {
     });
 
     const powers = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
-      return {
-        id: r.id,
-        ...d,
-        createdAt: r.createdAt?.toISOString() ?? null,
-        updatedAt: r.updatedAt?.toISOString() ?? null,
-      };
+      const row = r as unknown as Record<string, unknown>;
+      const item = rowToItem('powers', row, 'user');
+      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
+      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      return item;
     });
 
     return { powers, error: null };
@@ -55,17 +54,16 @@ export async function savePowerAction(data: {
 }) {
   try {
     const user = await requireAuth();
-
-    const powerData = {
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
+    const now = new Date();
+    const { scalars, payload } = bodyToColumnar('powers', { ...data, updatedAt: now });
     const created = await prisma.userPower.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.uid,
-        data: powerData as object,
+        ...scalars,
+        payload: payload as object,
+        createdAt: now,
+        updatedAt: now,
       },
     });
 
@@ -117,13 +115,11 @@ export async function getUserTechniquesAction() {
     });
 
     const techniques = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
-      return {
-        id: r.id,
-        ...d,
-        createdAt: r.createdAt?.toISOString() ?? null,
-        updatedAt: r.updatedAt?.toISOString() ?? null,
-      };
+      const row = r as unknown as Record<string, unknown>;
+      const item = rowToItem('techniques', row, 'user');
+      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
+      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      return item;
     });
 
     return { techniques, error: null };
@@ -145,17 +141,16 @@ export async function saveTechniqueAction(data: {
 }) {
   try {
     const user = await requireAuth();
-
-    const techniqueData = {
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
+    const now = new Date();
+    const { scalars, payload } = bodyToColumnar('techniques', { ...data, updatedAt: now });
     const created = await prisma.userTechnique.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.uid,
-        data: techniqueData as object,
+        ...scalars,
+        payload: payload as object,
+        createdAt: now,
+        updatedAt: now,
       },
     });
 
@@ -207,13 +202,11 @@ export async function getUserItemsAction() {
     });
 
     const items = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
-      return {
-        id: r.id,
-        ...d,
-        createdAt: r.createdAt?.toISOString() ?? null,
-        updatedAt: r.updatedAt?.toISOString() ?? null,
-      };
+      const row = r as unknown as Record<string, unknown>;
+      const item = rowToItem('items', row, 'user');
+      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
+      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      return item;
     });
 
     return { items, error: null };
@@ -234,17 +227,16 @@ export async function saveItemAction(data: {
 }) {
   try {
     const user = await requireAuth();
-
-    const itemData = {
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
+    const now = new Date();
+    const { scalars, payload } = bodyToColumnar('items', { ...data, updatedAt: now });
     const created = await prisma.userItem.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.uid,
-        data: itemData as object,
+        ...scalars,
+        payload: payload as object,
+        createdAt: now,
+        updatedAt: now,
       },
     });
 
@@ -296,13 +288,11 @@ export async function getUserCreaturesAction() {
     });
 
     const creatures = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
-      return {
-        id: r.id,
-        ...d,
-        createdAt: r.createdAt?.toISOString() ?? null,
-        updatedAt: r.updatedAt?.toISOString() ?? null,
-      };
+      const row = r as unknown as Record<string, unknown>;
+      const item = rowToItem('creatures', row, 'user');
+      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
+      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      return item;
     });
 
     return { creatures, error: null };
@@ -315,17 +305,16 @@ export async function getUserCreaturesAction() {
 export async function saveCreatureAction(data: Record<string, unknown>) {
   try {
     const user = await requireAuth();
-
-    const creatureData = {
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
+    const now = new Date();
+    const { scalars, payload } = bodyToColumnar('creatures', { ...data, updatedAt: now });
     const created = await prisma.userCreature.create({
       data: {
+        id: crypto.randomUUID(),
         userId: user.uid,
-        data: creatureData as object,
+        ...scalars,
+        payload: payload as object,
+        createdAt: now,
+        updatedAt: now,
       },
     });
 

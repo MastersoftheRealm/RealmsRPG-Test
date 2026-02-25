@@ -107,6 +107,7 @@ export async function joinCampaignAction(data: {
 
     const campaignRow = await prisma.campaign.findFirst({
       where: { inviteCode: code },
+      include: { members: { select: { userId: true } } },
     });
 
     if (!campaignRow) {
@@ -115,7 +116,7 @@ export async function joinCampaignAction(data: {
 
     const campaignData = (campaignRow.characters as unknown) as CampaignCharacter[];
     const campaignId = campaignRow.id;
-    const memberIds = ((campaignRow.memberIds as unknown) as string[]) || [];
+    const memberIds = campaignRow.members?.map((m) => m.userId) ?? ((campaignRow.memberIds as unknown) as string[]) ?? [];
 
     // Verify character belongs to user (Prisma)
     const charRow = await prisma.character.findFirst({
@@ -159,10 +160,17 @@ export async function joinCampaignAction(data: {
     const characters = [...(campaignData || []), newChar];
     const newMemberIds = [...new Set([...memberIds, user.uid])];
 
-    await prisma.campaign.update({
-      where: { id: campaignId },
-      data: { characters: characters as object, memberIds: newMemberIds as object },
-    });
+    await prisma.$transaction([
+      prisma.campaignMember.upsert({
+        where: { campaignId_userId: { campaignId, userId: user.uid } },
+        create: { campaignId, userId: user.uid },
+        update: {},
+      }),
+      prisma.campaign.update({
+        where: { id: campaignId },
+        data: { characters: characters as object, memberIds: newMemberIds as object },
+      }),
+    ]);
 
     // Set character visibility to campaign so RM and members can view it
     const charData = charRow.data as Record<string, unknown>;
@@ -193,6 +201,7 @@ export async function addCharacterToCampaignAction(data: {
 
     const campaignRow = await prisma.campaign.findUnique({
       where: { id: data.campaignId },
+      include: { members: { select: { userId: true } } },
     });
 
     if (!campaignRow) {
@@ -241,12 +250,20 @@ export async function addCharacterToCampaignAction(data: {
     };
 
     const characters = [...campaignData, newChar];
-    const memberIds = [...new Set([...((campaignRow.memberIds as unknown) as string[] || []), user.uid])];
+    const currentMemberIds = campaignRow.members?.map((m) => m.userId) ?? ((campaignRow.memberIds as unknown) as string[]) ?? [];
+    const memberIds = [...new Set([...currentMemberIds, user.uid])];
 
-    await prisma.campaign.update({
-      where: { id: data.campaignId },
-      data: { characters: characters as object, memberIds: memberIds as object },
-    });
+    await prisma.$transaction([
+      prisma.campaignMember.upsert({
+        where: { campaignId_userId: { campaignId: data.campaignId, userId: user.uid } },
+        create: { campaignId: data.campaignId, userId: user.uid },
+        update: {},
+      }),
+      prisma.campaign.update({
+        where: { id: data.campaignId },
+        data: { characters: characters as object, memberIds: memberIds as object },
+      }),
+    ]);
 
     // Set character visibility to campaign so RM and members can view it
     const charData = charRow.data as Record<string, unknown>;
@@ -292,10 +309,15 @@ export async function removeCharacterFromCampaignAction(data: {
     );
     const memberIds = [...new Set(characters.map((c) => c.userId))];
 
-    await prisma.campaign.update({
-      where: { id: data.campaignId },
-      data: { characters: characters as object, memberIds: memberIds as object },
-    });
+    await prisma.$transaction([
+      prisma.campaign.update({
+        where: { id: data.campaignId },
+        data: { characters: characters as object, memberIds: memberIds as object },
+      }),
+      prisma.campaignMember.deleteMany({
+        where: { campaignId: data.campaignId, userId: { notIn: memberIds } },
+      }),
+    ]);
 
     return { success: true };
   } catch (error) {

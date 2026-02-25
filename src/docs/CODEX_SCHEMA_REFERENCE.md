@@ -2,7 +2,7 @@
 
 > **Purpose:** Centralized reference for all codex entity schemas. Use when implementing validation, admin editors, display logic, or AI-assisted tasks. Each field includes name, type, description, valid values, and example.
 
-**Related:** `GAME_RULES.md` (terminology, formulas), `prisma/schema.prisma` (table structure), `Codex csv/` (CSV sources).
+**Related:** `GAME_RULES.md` (terminology, formulas), `prisma/schema.prisma` (table structure), `Codex csv/` or `codex_csv/` (CSV sources). **Database:** For columnar Supabase tables (CSV drag-and-drop), see `DATABASE_CODEX_AUDIT.md` and `prisma/supabase-codex-tables-columnar.sql`.
 
 ---
 

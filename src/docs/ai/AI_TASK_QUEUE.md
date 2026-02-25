@@ -1,8 +1,8 @@
 # AI Task Queue
 
-This file lists prioritized actionable tasks for AI agents. Agents should update `status` when progressing work and append PR/commit links to `notes`.
+Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Firestore/RTDB/Firebase in old task text).
 
-**Cursor workflow:** Read `AGENT_GUIDE.md` first. See root `AGENTS.md` and `.cursor/rules/` for session instructions.
+**Focus:** Pick a `status: not-started` (or `in-progress`) task; skip reading `done` tasks. Update `status` and add `notes` on completion. Read `AGENT_GUIDE.md` first; see `AGENTS.md` and `.cursor/rules/`.
 
 ---
 - id: TASK-001
@@ -39,48 +39,9 @@ This file lists prioritized actionable tasks for AI agents. Agents should update
     ⚠ Custom (justified): add-sub-skill-modal.tsx (unique base-skill selector UI), species-modal.tsx (detail view), level-up-modal.tsx (wizard), recovery-modal.tsx (specialized)
     CONCLUSION: All list pages and selection modals already use unified patterns (GridListRow or ItemCard). No changes needed.
 
-# How agents pick tasks
-- Prefer `priority: high` and `status: not-started` tasks
-- Update `status` to `in-progress` at start, and `done` when merged
-- Add `notes` with PR or commit links on completion
-
-# Creating new tasks dynamically
-Agents should **create new tasks** during their work when they discover additional work needed:
-
-**When to create tasks:**
-- During audits/code reviews: Found issues, inconsistencies, or improvement opportunities
-- During task implementation: Discovered related bugs, edge cases, or dependencies
-- After completing a task: Identified follow-up work or enhancements
-- When breaking down complex work: Create phase tasks with clear dependencies
-
-**Task creation guidelines:**
-- Use next available TASK-### ID (check last task in file)
-- Set appropriate `priority` based on impact (high/medium/low)
-- Mark as `status: not-started` (or `in-progress` if starting immediately)
-- Set `created_by: agent` and include current date in `created_at`
-- Include clear `description` and `acceptance_criteria`
-- List `related_files` to help future agents
-- Add context in `notes` about why task was created (e.g., "Created during TASK-002 audit - found inconsistency in...")
-
-**Example - Creating follow-up tasks from an audit:**
-```yaml
-- id: TASK-042
-  title: Fix inconsistent button styling in modals
-  priority: medium
-  status: not-started
-  created_at: 2026-02-05
-  created_by: agent
-  description: During TASK-002 audit, found 3 modals using custom button styles instead of shared Button component
-  related_files:
-    - src/components/modals/custom-modal.tsx
-  notes: "Created during TASK-002 audit. Affects: add-custom-item-modal, edit-profile-modal, delete-confirm-modal"
-```
-
-**Best practices:**
-- Create tasks immediately when discovering work - don't defer
-- Be specific about what needs to be done and why
-- Link to the parent task that led to discovery
-- Don't create duplicate tasks - check existing queue first
+# How to use
+- Pick `priority: high` then `medium`, `status: not-started` (or `in-progress`). Update to `done` when merged; add `notes` with PR/commit link.
+- **New tasks:** Use next TASK-### ID (see end of file), `AI_REQUEST_TEMPLATE.md` format. Add when audits or implementation reveal work. Check queue first to avoid duplicates.
 
 - id: TASK-003
   title: Show weapon damage in Library and wire Edit -> Item Creator
@@ -5651,7 +5612,7 @@ Agents should **create new tasks** during their work when they discover addition
   description: |
     Full 98-finding codebase audit. Phase 1 (security): remove NEXT_PUBLIC_ADMIN_UIDS, add security headers, fix auth race condition. Phase 2 (UI/UX): design token migration on critical shared components, feedback fixes (name edit gating, ability label). Phase 3 (dead code): extract shared apiFetch, remove legacy hooks/services, remove empty dirs, consolidate CSS vars. Phase 4 (performance): React.memo on GridListRow/SkillRow, ErrorBoundary component.
   related_files:
-    - src/docs/ai/CODEBASE_AUDIT_2026-02-13.md
+    - src/docs/ai/archive/CODEBASE_AUDIT_2026-02-13.md
     - src/lib/admin.ts
     - next.config.ts
     - src/hooks/use-auth.ts
@@ -5679,7 +5640,7 @@ Agents should **create new tasks** during their work when they discover addition
   created_at: 2026-02-13
   created_by: agent
   description: |
-    20+ components still use hardcoded blue-*, green-*, red-*, amber-* Tailwind classes instead of design tokens. This is the single biggest UI consistency issue. Audit finding UX-1 + UX-2 from CODEBASE_AUDIT_2026-02-13.md. Components to migrate: skill-row.tsx, sheet-header.tsx, recovery-modal.tsx, feats-step.tsx, abilities-section.tsx, archetype-section.tsx, add-sub-skill-modal.tsx, library-section.tsx, ancestry-step.tsx, finalize-step.tsx, health-energy-allocator.tsx, creature-stat-block.tsx, tab-summary-section.tsx, level-up-modal.tsx, skills-allocation-page.tsx, encounter tracker pages, item/technique/creature creators, admin pages.
+    20+ components still use hardcoded blue-*, green-*, red-*, amber-* Tailwind classes instead of design tokens. This is the single biggest UI consistency issue. Audit finding UX-1 + UX-2 from archive/CODEBASE_AUDIT_2026-02-13.md. Components to migrate: skill-row.tsx, sheet-header.tsx, recovery-modal.tsx, feats-step.tsx, abilities-section.tsx, archetype-section.tsx, add-sub-skill-modal.tsx, library-section.tsx, ancestry-step.tsx, finalize-step.tsx, health-energy-allocator.tsx, creature-stat-block.tsx, tab-summary-section.tsx, level-up-modal.tsx, skills-allocation-page.tsx, encounter tracker pages, item/technique/creature creators, admin pages.
   related_files:
     - src/components/character-sheet/
     - src/components/character-creator/steps/
@@ -6044,7 +6005,7 @@ Agents should **create new tasks** during their work when they discover addition
     - src/components/shared/item-card.tsx
     - src/components/creator/creator-summary-panel.tsx
     - src/components/character-sheet/roll-log.tsx
-    - src/docs/ACCESSIBILITY_AUDIT_2026-02-18.md
+    - src/docs/ai/archive/ACCESSIBILITY_AUDIT_2026-02-18.md
   acceptance_criteria:
     - Run axe-core color-contrast rule (or equivalent) across key pages
     - All text elements meet 4.5:1 (small) or 3:1 (large text) contrast ratio
@@ -6171,7 +6132,7 @@ Agents should **create new tasks** during their work when they discover addition
   description: |
     Implement recommendations from MODAL_UNIFICATION_AUDIT_2026-02-20.md. Unify logic, styles, and patterns across add-X modals, load modals, and selection modals; align with Codex/Library. Phases: (1) Use EmptyState/LoadingState in list modals; fix AddLibraryItemModal ListHeader wrapper; document list-modal shell in AGENT_GUIDE. (2) Use FilterSection in AddFeatModal/AddSkillModal; standardize padding/borders. (3) Refactor LoadCreatureModal to ListHeader+GridListRow+search; consider useModalListState and Add-X as UnifiedSelectionModal config.
   related_files:
-    - src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md
+    - src/docs/ai/archive/MODAL_UNIFICATION_AUDIT_2026-02-20.md
     - src/components/shared/unified-selection-modal.tsx
     - src/components/creator/LoadFromLibraryModal.tsx
     - src/components/character-sheet/add-feat-modal.tsx
@@ -6194,7 +6155,7 @@ Agents should **create new tasks** during their work when they discover addition
   created_at: 2026-02-21
   created_by: agent
   description: |
-    In modals that add powers, techniques, armor, weapons, equipment (character sheet, character creator, creature creator), add the same SourceFilter as the Library page (All sources / Public library / My library) so users can add public library items to characters. Use reference-based approach: when adding a public item to a character, do NOT copy it to the user's personal library; store only the reference (id + name) on the character. Enrichment resolves from user library first, then public library by id. Copy to personal library remains an explicit action on the Library page only. See src/docs/ai/PUBLIC_LIBRARY_IN_MODALS_DESIGN.md.
+    In modals that add powers, techniques, armor, weapons, equipment (character sheet, character creator, creature creator), add the same SourceFilter as the Library page (All sources / Public library / My library) so users can add public library items to characters. Use reference-based approach: when adding a public item to a character, do NOT copy it to the user's personal library; store only the reference (id + name) on the character. Enrichment resolves from user library first, then public library by id. Copy to personal library remains an explicit action on the Library page only. See src/docs/ai/archive/PUBLIC_LIBRARY_IN_MODALS_DESIGN.md.
   related_files:
     - src/components/shared/filters/source-filter.tsx
     - src/components/character-sheet/add-library-item-modal.tsx
@@ -6300,3 +6261,96 @@ Agents should **create new tasks** during their work when they discover addition
   acceptance_criteria:
     - Either PDF exists in public/ and link works, or link points to existing asset, or UI clearly indicates unavailability and does not 404.
   notes: "Created from sitewide feedback 2026-02-23. No PDF in public/ at repo; owner may need to add file."
+
+- id: TASK-270
+  title: Use columnar codex tables in Prisma and API (after DB migration)
+  priority: medium
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    After codex tables are migrated from id+data JSONB to proper columns (see DATABASE_CODEX_AUDIT.md and prisma/supabase-codex-tables-columnar.sql), update Prisma schema to match the new columnar structure and update src/app/api/codex/route.ts and src/lib/codex-server.ts to read from columns instead of r.data. Response shape to clients should remain the same so hooks/UI need no changes.
+  related_files:
+    - prisma/schema.prisma
+    - src/app/api/codex/route.ts
+    - src/lib/codex-server.ts
+    - src/app/(main)/admin/codex/actions.ts
+    - scripts/seed-to-supabase.js
+    - src/docs/DATABASE_CODEX_AUDIT.md
+    - prisma/supabase-codex-tables-columnar.sql
+  acceptance_criteria:
+    - Prisma codex models have explicit columns matching supabase-codex-tables-columnar.sql.
+    - Codex API and codex-server return the same JSON shape as today (feats, skills, species, etc.).
+    - npm run build passes; codex fetch and display work in app.
+  notes: |
+    Completed 2026-02-25. Owner had already run columnar SQL and imported CSV. (1) Prisma schema: all 9 codex models now have explicit columns (camelCase, Decimal for NUMERIC). (2) Codex API: reads from columns, builds same response shape with toStrArray/toNumArray for TEXT columns. (3) codex-server: row-to-record helpers per entity; getFeats/getSkills/etc. return id->record. (4) Admin actions: createCodexDoc/updateCodexDoc use toColumnarPayload (snake_to_camel, array->string) for columnar collections; core_rules still uses id+data. (5) Seed script: rowToColumnarPayload, upsert with create: { id, ...payload }, update: payload; supports codex_csv and "Realms Codex Test - Feats" style filenames. npm run build passes.
+
+- id: TASK-271
+  title: Rename public library to official + columnar official_* tables
+  priority: high
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Per DATABASE_SCALABILITY_AUDIT.md: (1) Rename "public" to "official" everywhere (tables, API, admin UI, hooks, labels). (2) Replace id+data JSONB with columnar official_powers, official_techniques, official_items, official_creatures: scalar columns (name, description, action_type, type, etc.) + one JSONB column for variable data (parts, damage, properties, etc.). Same shape as planned for user library so official and user content are interchangeable.
+  related_files:
+    - prisma/schema.prisma
+    - src/app/api/official/[type]/route.ts
+    - src/app/api/public/
+    - src/app/(main)/admin/public-library/
+    - src/services/library-service.ts
+    - src/hooks/use-public-library.ts
+    - src/hooks/use-creator-save.ts
+    - src/docs/DATABASE_SCALABILITY_AUDIT.md
+  acceptance_criteria:
+    - Tables renamed to official_* (or new tables created and public_* deprecated).
+    - Prisma models OfficialPower/OfficialTechnique/OfficialItem/OfficialCreature with columns + payload JSONB.
+    - API route /api/official/[type] (or /api/public redirects); read/write columnar.
+    - Admin "Public Library" → "Official Library"; all references updated.
+    - npm run build passes; official library load/add-to-library still works.
+  notes: "Done 2026-02-25. (1) supabase-official-library-columnar.sql + Prisma Official* models. (2) GET/POST/DELETE /api/official/[type] columnar read/write. (3) proxy.ts excludes api/official. (4) library-service: fetchOfficialLibrary, saveToOfficialLibrary, findOfficialLibraryItemByName (legacy names aliased). (5) use-public-library: useOfficialLibrary/useAddOfficialToLibrary + query key official-library; usePublicLibrary/useAddPublicToLibrary deprecated aliases. (6) use-creator-save uses saveToOfficialLibrary/findOfficialLibraryItemByName. (7) Admin public-library: useOfficialLibrary, DELETE /api/official, QUERY_KEY official-library, labels Official Library / Official Powers etc.; page title Official Library Editor. (8) Admin nav link Open Official Library Editor. Legacy /api/public unchanged for backward compat. npm run build passes."
+
+- id: TASK-272
+  title: User library columnar (same schema as official + user_id)
+  priority: medium
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Per DATABASE_SCALABILITY_AUDIT.md Phase 2: Migrate user_powers, user_techniques, user_items, user_creatures to columnar tables with same column set as official_* plus user_id. Enables copy official→user as row insert; query/filter by name/type; consistent validation.
+  related_files:
+    - prisma/schema.prisma
+    - prisma/supabase-user-library-columnar.sql
+    - src/app/api/user/library/
+    - src/lib/library-columnar.ts
+    - src/app/(main)/library/actions.ts
+    - src/lib/owner-library-for-view.ts
+    - src/docs/DATABASE_SCALABILITY_AUDIT.md
+  acceptance_criteria:
+    - User library tables have explicit columns (name, description, type, etc.) + one JSONB for parts/properties/damage.
+    - API and hooks read/write columnar; response shape unchanged for UI.
+    - "Add to my library" from official copies row into user table with user_id.
+    - npm run build passes.
+  notes: "Done 2026-02-25. (1) supabase-user-library-columnar.sql: ADD COLUMN + backfill from data (DO block if data exists) + DROP data; idempotent. (2) Prisma: UserPower, UserTechnique, UserItem, UserCreature columnar (name, description, ... + payload); UserSpecies unchanged. (3) src/lib/library-columnar.ts: rowToItem, bodyToColumnar, SCALAR_KEYS shared for official/user. (4) GET/POST /api/user/library/[type] and GET/PATCH/DELETE [type]/[id]: columnar for powers/techniques/items/creatures; species legacy. (5) Library server actions and getOwnerLibraryForView use rowToItem/bodyToColumnar. addOfficialItemToLibrary unchanged (POST body split by API). npm run build passes."
+
+- id: TASK-273
+  title: Campaign members as table (replace memberIds JSONB)
+  priority: low
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Per DATABASE_SCALABILITY_AUDIT.md Phase 3: Add campaign_members table (campaign_id, user_id, role?). Migrate memberIds JSONB into it; update RLS and API to use the table. Enables proper JOINs and indexing.
+  related_files:
+    - prisma/schema.prisma
+    - prisma/supabase-campaign-members.sql
+    - prisma/supabase-idempotent-full.sql
+    - src/app/api/campaigns/
+    - src/app/(main)/campaigns/actions.ts
+    - src/app/(auth)/actions.ts
+    - src/docs/DATABASE_SCALABILITY_AUDIT.md
+  acceptance_criteria:
+    - campaign_members table exists; membership read/write uses it.
+    - RLS and campaign API use campaign_members instead of memberIds.
+    - npm run build passes.
+  notes: "Done 2026-02-25. (1) supabase-campaign-members.sql: CREATE campaign_members (campaign_id, user_id PK), backfill from memberIds, RLS on campaign_members and campaigns/campaign_rolls using EXISTS campaign_members. (2) Prisma: CampaignMember model; Campaign.members relation. (3) GET /api/campaigns and GET /api/campaigns/[id]: findMany/findUnique with include members, memberIds = members.map(m=>m.userId). (4) joinCampaignAction/addCharacterToCampaignAction: upsert CampaignMember + update campaign.memberIds. removeCharacterFromCampaignAction: update campaign + deleteMany CampaignMember where userId notIn memberIds. (5) Rolls and campaign character view APIs check membership via CampaignMember. (6) characters/[id] campaign visibility: findMany where members.some(userId). (7) deleteAccountAction: update campaigns from CampaignMember.findMany(userId), then deleteMany CampaignMember. campaign.memberIds kept for backward compat; RLS uses campaign_members. npm run build passes."

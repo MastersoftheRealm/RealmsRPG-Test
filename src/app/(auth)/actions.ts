@@ -230,22 +230,27 @@ export async function deleteAccountAction() {
     const user = await requireAuth();
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Remove user from campaigns where they are a member (not owner); remove their characters from campaign
-    const campaigns = await prisma.campaign.findMany();
-    const memberCampaigns = campaigns.filter((c) => {
-      const ids = (c.memberIds as string[]) || [];
-      return ids.includes(user.uid) && c.ownerId !== user.uid;
+    // Remove user from campaigns where they are a member; remove their characters from campaign
+    const memberRows = await prisma.campaignMember.findMany({
+      where: { userId: user.uid },
+      select: { campaignId: true },
     });
-    for (const c of memberCampaigns) {
+    for (const { campaignId } of memberRows) {
+      const c = await prisma.campaign.findUnique({
+        where: { id: campaignId },
+        select: { memberIds: true, characters: true },
+      });
+      if (!c) continue;
       const members = ((c.memberIds as string[]) || []).filter((id) => id !== user.uid);
       const chars = ((c.characters as Array<{ userId: string; characterId: string }>) || []).filter(
         (cc) => cc.userId !== user.uid
       );
       await prisma.campaign.update({
-        where: { id: c.id },
-        data: { memberIds: members, characters: chars },
+        where: { id: campaignId },
+        data: { memberIds: members as object, characters: chars as object },
       });
     }
+    await prisma.campaignMember.deleteMany({ where: { userId: user.uid } });
 
     await prisma.$transaction([
       prisma.character.deleteMany({ where: { userId: user.uid } }),

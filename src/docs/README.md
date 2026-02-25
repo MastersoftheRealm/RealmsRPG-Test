@@ -14,6 +14,6 @@
 8. **UI_COMPONENT_REFERENCE.md** — Detailed component usage; includes component decision tree.
 9. **DEPLOYMENT_AND_SECRETS_SUPABASE.md** — Vercel/Supabase env vars, deployment, secrets.
 10. **ADMIN_SETUP.md** — Admin access (env vars only).
-11. **CODEBASE_AUDIT_2026-02-13.md** (`ai/`) — Full codebase audit findings and fix status.
+11. **ai/archive/** — Historical one-off audits and design docs (CODEBASE_AUDIT, UNIFICATION_AUDIT, MODAL_UNIFICATION_AUDIT, etc.). Reference only; active agent docs are AGENT_GUIDE, AI_TASK_QUEUE, AI_CHANGELOG, AI_REQUEST_TEMPLATE.
 
 Root `AGENTS.md` and `.cursor/rules/` provide session-level instructions.

@@ -1,5 +1,5 @@
 /**
- * Codex API — returns all game reference data
+ * Codex API — returns all game reference data (from columnar codex tables)
  */
 
 import { NextResponse } from 'next/server';
@@ -20,264 +20,248 @@ function toNumArray(val: unknown): number[] {
   return [];
 }
 
+function toNum(val: unknown): number | undefined {
+  if (val == null) return undefined;
+  if (typeof val === 'number' && !Number.isNaN(val)) return val;
+  const obj = val as { toNumber?: () => number };
+  if (typeof obj?.toNumber === 'function') return obj.toNumber();
+  const n = Number(val);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 export async function GET() {
   try {
     const [feats, skills, species, traits, parts, properties, equipment, archetypes, creatureFeats, coreRulesRows] = await Promise.all([
-    prisma.codexFeat.findMany(),
-    prisma.codexSkill.findMany(),
-    prisma.codexSpecies.findMany(),
-    prisma.codexTrait.findMany(),
-    prisma.codexPart.findMany(),
-    prisma.codexProperty.findMany(),
-    prisma.codexEquipment.findMany(),
-    prisma.codexArchetype.findMany(),
-    prisma.codexCreatureFeat.findMany(),
-    prisma.coreRules.findMany().catch(() => []), // Graceful fallback if table doesn't exist yet
-  ]);
+      prisma.codexFeat.findMany(),
+      prisma.codexSkill.findMany(),
+      prisma.codexSpecies.findMany(),
+      prisma.codexTrait.findMany(),
+      prisma.codexPart.findMany(),
+      prisma.codexProperty.findMany(),
+      prisma.codexEquipment.findMany(),
+      prisma.codexArchetype.findMany(),
+      prisma.codexCreatureFeat.findMany(),
+      prisma.coreRules.findMany().catch(() => []),
+    ]);
 
-  const codexFeats = feats.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    const lvlReq = d.lvl_req != null ? Number(d.lvl_req) : undefined;
-    const usesPerRec = d.uses_per_rec != null ? Number(d.uses_per_rec) : undefined;
-    const featLvl = d.feat_lvl != null ? Number(d.feat_lvl) : undefined;
-    return {
+    const codexFeats = feats.map((r) => ({
       id: r.id,
-      name: (d.name as string) || '',
-      description: (d.description as string) || '',
-      category: (d.category as string) || '',
-      ability: d.ability as string | undefined,
-      ability_req: toStrArray(d.ability_req),
-      abil_req_val: toNumArray(d.abil_req_val),
-      tags: toStrArray(d.tags),
-      skill_req: toStrArray(d.skill_req),
-      skill_req_val: toNumArray(d.skill_req_val),
-      lvl_req: lvlReq ?? 0,
-      uses_per_rec: usesPerRec ?? 0,
-      mart_abil_req: d.mart_abil_req != null ? Number(d.mart_abil_req) : undefined,
-      char_feat: Boolean(d.char_feat),
-      state_feat: Boolean(d.state_feat),
-      rec_period: d.rec_period as string | undefined,
-      req_desc: (d.req_desc as string) || undefined,
-      feat_cat_req: (d.feat_cat_req as string) || undefined,
-      pow_abil_req: d.pow_abil_req != null ? Number(d.pow_abil_req) : undefined,
-      pow_prof_req: d.pow_prof_req != null ? Number(d.pow_prof_req) : undefined,
-      speed_req: d.speed_req != null ? Number(d.speed_req) : undefined,
-      feat_lvl: featLvl,
-    };
-  });
+      name: r.name ?? '',
+      description: r.description ?? '',
+      category: r.category ?? '',
+      ability: r.ability ?? undefined,
+      ability_req: toStrArray(r.abilityReq),
+      abil_req_val: toNumArray(r.abilReqVal),
+      tags: toStrArray(r.tags),
+      skill_req: toStrArray(r.skillReq),
+      skill_req_val: toNumArray(r.skillReqVal),
+      lvl_req: toNum(r.lvlReq) ?? 0,
+      uses_per_rec: toNum(r.usesPerRec) ?? 0,
+      mart_abil_req: toNum(r.martAbilReq),
+      char_feat: Boolean(r.charFeat),
+      state_feat: Boolean(r.stateFeat),
+      rec_period: r.recPeriod ?? undefined,
+      req_desc: r.reqDesc ?? undefined,
+      feat_cat_req: r.featCatReq ?? undefined,
+      pow_abil_req: toNum(r.powAbilReq),
+      pow_prof_req: toNum(r.powProfReq),
+      speed_req: toNum(r.speedReq),
+      feat_lvl: toNum(r.featLvl),
+    }));
 
-  const codexSkills = skills.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    let ability = '';
-    if (Array.isArray(d.ability)) ability = (d.ability as string[]).join(', ');
-    else if (typeof d.ability === 'string') ability = d.ability;
-    const baseSkillId =
-      typeof d.base_skill_id === 'number'
-        ? d.base_skill_id
-        : typeof d.base_skill_id === 'string' && d.base_skill_id !== ''
-          ? parseInt(d.base_skill_id as string, 10)
+    const codexSkills = skills.map((r) => {
+      const ability = r.ability ?? '';
+      const baseSkillId =
+        r.baseSkill !== undefined && r.baseSkill !== null && r.baseSkill !== ''
+          ? parseInt(String(r.baseSkill), 10)
           : undefined;
-    return {
-      id: r.id,
-      name: (d.name as string) || '',
-      description: (d.description as string) || '',
-      ability,
-      base_skill_id: !isNaN(baseSkillId as number) ? baseSkillId : undefined,
-      success_desc: (d.success_desc as string) || undefined,
-      failure_desc: (d.failure_desc as string) || undefined,
-      ds_calc: (d.ds_calc as string) || undefined,
-      craft_success_desc: (d.craft_success_desc as string) || undefined,
-      craft_failure_desc: (d.craft_failure_desc as string) || undefined,
-    };
-  });
+      return {
+        id: r.id,
+        name: r.name ?? '',
+        description: r.description ?? '',
+        ability,
+        base_skill_id: !Number.isNaN(baseSkillId as number) ? baseSkillId : undefined,
+        success_desc: r.successDesc ?? undefined,
+        failure_desc: r.failureDesc ?? undefined,
+        ds_calc: r.dsCalc ?? undefined,
+        craft_success_desc: r.craftSuccessDesc ?? undefined,
+        craft_failure_desc: r.craftFailureDesc ?? undefined,
+      };
+    });
 
-  // Helper: prefer primary key, fallback to alternate names (supports both id arrays and name arrays)
-  const speciesArr = (primary: unknown, ...fallbacks: unknown[]): string[] => {
-    for (const v of [primary, ...fallbacks]) {
-      const arr = toStrArray(v);
-      if (arr.length > 0) return arr;
+    const speciesArr = (primary: unknown, ...fallbacks: unknown[]): string[] => {
+      for (const v of [primary, ...fallbacks]) {
+        const arr = toStrArray(v);
+        if (arr.length > 0) return arr;
+      }
+      return [];
+    };
+
+    const toAdulthoodLifespan = (val: unknown): number[] | undefined => {
+      if (val == null) return undefined;
+      if (typeof val === 'string') {
+        const arr = toNumArray(val);
+        return arr.length ? arr : undefined;
+      }
+      if (Array.isArray(val)) return val.length ? (val as number[]) : undefined;
+      if (typeof val === 'number' && !Number.isNaN(val)) return [val, val];
+      return undefined;
+    };
+
+    const codexSpecies = species.map((r) => {
+      const sizes: string[] = toStrArray(r.sizes);
+      const aveHeight = r.aveHgtCm != null ? toNum(r.aveHgtCm) : undefined;
+      const aveWeight = r.aveWgtKg != null ? toNum(r.aveWgtKg) : undefined;
+      return {
+        id: r.id,
+        name: r.name ?? '',
+        description: r.description ?? '',
+        type: r.type ?? '',
+        size: sizes[0] || 'Medium',
+        sizes,
+        speed: 6,
+        traits: speciesArr(r.speciesTraits),
+        species_traits: speciesArr(r.speciesTraits),
+        ancestry_traits: speciesArr(r.ancestryTraits),
+        flaws: speciesArr(r.flaws),
+        characteristics: speciesArr(r.characteristics),
+        skills: speciesArr(r.skills),
+        languages: toStrArray(r.languages),
+        ability_bonuses: undefined,
+        ave_height: aveHeight,
+        ave_weight: aveWeight,
+        adulthood_lifespan: toAdulthoodLifespan(r.adulthoodLifespan),
+      };
+    });
+
+    const codexTraits = traits.map((r) => ({
+      id: r.id,
+      name: r.name ?? '',
+      description: r.description ?? '',
+      species: [] as string[],
+      uses_per_rec: toNum(r.usesPerRec),
+      rec_period: r.recPeriod ?? undefined,
+      flaw: r.flaw === true,
+      characteristic: r.characteristic === true,
+      option_trait_ids: toStrArray(r.optionTraitIds),
+    }));
+
+    const allParts = parts.map((r) => {
+      const type = ((r.type ?? 'power').toLowerCase()) as 'power' | 'technique';
+      return {
+        id: r.id,
+        name: r.name ?? '',
+        description: r.description ?? '',
+        category: r.category ?? '',
+        type,
+        base_en: toNum(r.baseEn) ?? 0,
+        base_tp: toNum(r.baseTp) ?? 0,
+        op_1_desc: r.op1Desc ?? undefined,
+        op_1_en: toNum(r.op1En) ?? 0,
+        op_1_tp: toNum(r.op1Tp) ?? 0,
+        op_2_desc: r.op2Desc ?? undefined,
+        op_2_en: toNum(r.op2En) ?? 0,
+        op_2_tp: toNum(r.op2Tp) ?? 0,
+        op_3_desc: r.op3Desc ?? undefined,
+        op_3_en: toNum(r.op3En) ?? 0,
+        op_3_tp: toNum(r.op3Tp) ?? 0,
+        percentage: r.percentage === true,
+        mechanic: r.mechanic === true,
+        duration: r.duration === true,
+        base_stam: 0,
+        defense: toStrArray(r.defense),
+      };
+    });
+
+    const codexPowerParts = allParts.filter((p) => (p.type || 'power').toLowerCase() === 'power');
+    const codexTechniqueParts = allParts.filter((p) => (p.type || 'technique').toLowerCase() === 'technique');
+
+    const codexProperties = properties.map((r) => ({
+      id: r.id,
+      name: r.name ?? '',
+      description: r.description ?? '',
+      type: r.type ?? undefined,
+      tp_cost: 0,
+      gold_cost: 0,
+      base_ip: toNum(r.baseIp) ?? 0,
+      base_tp: toNum(r.baseTp) ?? 0,
+      base_c: toNum(r.baseC) ?? 0,
+      op_1_desc: r.op1Desc ?? undefined,
+      op_1_ip: toNum(r.op1Ip) ?? 0,
+      op_1_tp: toNum(r.op1Tp) ?? 0,
+      op_1_c: toNum(r.op1C) ?? 0,
+      mechanic: r.mechanic === true,
+    }));
+
+    const codexEquipment = equipment.map((r) => {
+      const cost = toNum(r.currency) ?? 0;
+      return {
+        id: r.id,
+        name: r.name ?? '',
+        type: 'equipment' as const,
+        subtype: undefined,
+        category: r.category ?? undefined,
+        description: r.description ?? '',
+        damage: undefined,
+        armor_value: undefined,
+        gold_cost: cost,
+        currency: cost,
+        properties: [] as string[],
+        rarity: r.rarity ?? undefined,
+        weight: undefined,
+      };
+    });
+
+    const codexArchetypes = archetypes.map((r) => ({
+      id: r.id,
+      name: r.name ?? '',
+      type: r.type ?? '',
+      description: r.description ?? '',
+    }));
+
+    const codexCreatureFeats = creatureFeats.map((r) => {
+      const pointsVal = toNum(r.featPoints) ?? 0;
+      return {
+        id: r.id,
+        name: r.name ?? '',
+        description: r.description ?? '',
+        points: pointsVal,
+        feat_points: pointsVal,
+        feat_lvl: toNum(r.featLvl),
+        lvl_req: toNum(r.lvlReq),
+        mechanic: r.mechanic === true,
+        tiers: undefined,
+        prereqs: [] as string[],
+      };
+    });
+
+    const coreRules: Record<string, unknown> = {};
+    for (const row of coreRulesRows) {
+      coreRules[row.id] = row.data;
     }
-    return [];
-  };
 
-  // Normalize adulthood_lifespan: DB may store number (e.g. 3) or [adult, max]
-  const toAdulthoodLifespan = (val: unknown): number[] | undefined => {
-    if (val == null) return undefined;
-    if (Array.isArray(val)) return val.length ? (val as number[]) : undefined;
-    if (typeof val === 'number' && !Number.isNaN(val)) return [val, val];
-    return undefined;
-  };
-
-  const codexSpecies = species.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    let sizes: string[] = [];
-    if (typeof d.sizes === 'string') sizes = d.sizes.split(',').map((s: string) => s.trim());
-    else if (Array.isArray(d.sizes)) sizes = d.sizes;
-    const ave_height = (d.ave_height as number | undefined) ?? (d.ave_hgt_cm as number | undefined);
-    const ave_weight = (d.ave_weight as number | undefined) ?? (d.ave_wgt_kg as number | undefined);
-    return {
-      id: r.id,
-      name: (d.name as string) || '',
-      description: (d.description as string) || '',
-      type: (d.type as string) || '',
-      size: sizes[0] || 'Medium',
-      sizes,
-      speed: parseInt(d.speed as string) || 6,
-      traits: speciesArr(d.traits, d.trait_ids, d.traitIds),
-      species_traits: speciesArr(d.species_traits, d.species_trait_ids, d.speciesTraitIds),
-      ancestry_traits: speciesArr(d.ancestry_traits, d.ancestry_trait_ids, d.ancestryTraitIds),
-      flaws: speciesArr(d.flaws, d.flaw_ids, d.flawIds),
-      characteristics: speciesArr(d.characteristics, d.characteristic_ids, d.characteristicIds),
-      skills: speciesArr(d.skills, d.skill_ids, d.skillIds),
-      languages: toStrArray(d.languages),
-      ability_bonuses: d.ability_bonuses as Record<string, number> | undefined,
-      ave_height: ave_height != null && !Number.isNaN(Number(ave_height)) ? Number(ave_height) : undefined,
-      ave_weight: ave_weight != null && !Number.isNaN(Number(ave_weight)) ? Number(ave_weight) : undefined,
-      adulthood_lifespan: toAdulthoodLifespan(d.adulthood_lifespan),
-    };
-  });
-
-  const codexTraits = traits.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    return {
-      id: r.id,
-      name: (d.name as string) || '',
-      description: (d.description as string) || '',
-      // Optional targeting / usage metadata
-      species: toStrArray(d.species),
-      uses_per_rec: d.uses_per_rec as number | undefined,
-      rec_period: d.rec_period as string | undefined,
-      // New booleans per CODEX_SCHEMA_REFERENCE
-      flaw: d.flaw === true || d.flaw === 'true',
-      characteristic: d.characteristic === true || d.characteristic === 'true',
-      // Choice trait: when non-empty, player must pick one of these option trait IDs
-      option_trait_ids: toStrArray(d.option_trait_ids),
-    };
-  });
-
-  const allParts = parts.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    const type = ((d.type as string)?.toLowerCase() || 'power') as 'power' | 'technique';
-    return {
-      id: r.id,
-      name: (d.name as string) || '',
-      description: (d.description as string) || '',
-      category: (d.category as string) || '',
-      type,
-      base_en: parseFloat(d.base_en as string) || 0,
-      base_tp: parseFloat(d.base_tp as string) || 0,
-      op_1_desc: d.op_1_desc as string | undefined,
-      op_1_en: parseFloat(d.op_1_en as string) || 0,
-      op_1_tp: parseFloat(d.op_1_tp as string) || 0,
-      op_2_desc: d.op_2_desc as string | undefined,
-      op_2_en: parseFloat(d.op_2_en as string) || 0,
-      op_2_tp: parseFloat(d.op_2_tp as string) || 0,
-      op_3_desc: d.op_3_desc as string | undefined,
-      op_3_en: parseFloat(d.op_3_en as string) || 0,
-      op_3_tp: parseFloat(d.op_3_tp as string) || 0,
-      percentage: d.percentage === true || d.percentage === 'true',
-      mechanic: d.mechanic === true || d.mechanic === 'true',
-      duration: d.duration === true || d.duration === 'true',
-      base_stam: parseFloat(d.base_stam as string) || 0,
-      defense: toStrArray(d.defense),
-    };
-  });
-
-  const codexPowerParts = allParts.filter((p) => (p.type || 'power').toLowerCase() === 'power');
-  const codexTechniqueParts = allParts.filter((p) => (p.type || 'technique').toLowerCase() === 'technique');
-
-  const codexProperties = properties.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    return {
-      id: r.id,
-      name: (d.name as string) || '',
-      description: (d.description as string) || '',
-      type: (d.type as string | undefined) || undefined,
-      tp_cost: parseFloat(d.tp_cost as string) || 0,
-      gold_cost: parseFloat(d.gold_cost as string) || 0,
-      base_ip: parseFloat(d.base_ip as string) || 0,
-      base_tp: parseFloat(d.base_tp as string) || 0,
-      base_c: parseFloat(d.base_c as string) || 0,
-      op_1_desc: d.op_1_desc as string | undefined,
-      op_1_ip: parseFloat(d.op_1_ip as string) || 0,
-      op_1_tp: parseFloat(d.op_1_tp as string) || 0,
-      op_1_c: parseFloat(d.op_1_c as string) || 0,
-      mechanic: d.mechanic === true || d.mechanic === 'true',
-    };
-  });
-
-  const codexEquipment = equipment.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    const currencyNum = typeof d.currency === 'number' ? d.currency : parseFloat(String(d.currency ?? ''));
-    const goldNum = typeof d.gold_cost === 'number' ? d.gold_cost : parseFloat(String(d.gold_cost ?? ''));
-    const cost = !Number.isNaN(currencyNum) && currencyNum > 0 ? currencyNum : !Number.isNaN(goldNum) ? goldNum : 0;
-    return {
-      id: r.id,
-      name: (d.name as string) || '',
-      type: ((d.type as string) || 'equipment') as 'weapon' | 'armor' | 'equipment',
-      subtype: d.subtype as string | undefined,
-      category: d.category as string | undefined,
-      description: (d.description as string) || '',
-      damage: d.damage as string | undefined,
-      armor_value: d.armor_value != null ? parseInt(String(d.armor_value)) : undefined,
-      gold_cost: cost,
-      currency: cost,
-      properties: toStrArray(d.properties),
-      rarity: d.rarity as string | undefined,
-      weight: d.weight != null ? parseFloat(String(d.weight)) : undefined,
-    };
-  });
-
-  const codexArchetypes = archetypes.map((r) => ({ id: r.id, ...(r.data as Record<string, unknown>) }));
-
-  const codexCreatureFeats = creatureFeats.map((r) => {
-    const d = r.data as Record<string, unknown>;
-    const pointsVal = Number(d.points ?? d.feat_points ?? d.cost ?? 0);
-    return {
-      id: r.id,
-      name: (d.name as string) || '',
-      description: (d.description as string) || '',
-      points: pointsVal,
-      feat_points: pointsVal,
-      feat_lvl: d.feat_lvl != null ? Number(d.feat_lvl) : undefined,
-      lvl_req: d.lvl_req != null ? Number(d.lvl_req) : undefined,
-      mechanic: d.mechanic === true || d.mechanic === 'true',
-      tiers: d.tiers ? Number(d.tiers) : undefined,
-      prereqs: toStrArray(d.prereqs),
-    };
-  });
-
-  // Build core_rules as a keyed object { CATEGORY_ID: data }
-  const coreRules: Record<string, unknown> = {};
-  for (const row of coreRulesRows) {
-    coreRules[row.id] = row.data;
-  }
-
-  // Cache 5 min browser, 10 min CDN — reduces Fast Data Transfer when codex is hit repeatedly (prefetch, hooks, tabs).
-  const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
-  return NextResponse.json(
-    {
-      feats: codexFeats,
-      skills: codexSkills,
-      species: codexSpecies,
-      traits: codexTraits,
-      powerParts: codexPowerParts,
-      techniqueParts: codexTechniqueParts,
-      parts: allParts,
-      itemProperties: codexProperties,
-      equipment: codexEquipment,
-      archetypes: codexArchetypes,
-      creatureFeats: codexCreatureFeats,
-      coreRules,
-    },
-    { headers: { 'Cache-Control': cacheControl } }
-  );
+    const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+    return NextResponse.json(
+      {
+        feats: codexFeats,
+        skills: codexSkills,
+        species: codexSpecies,
+        traits: codexTraits,
+        powerParts: codexPowerParts,
+        techniqueParts: codexTechniqueParts,
+        parts: allParts,
+        itemProperties: codexProperties,
+        equipment: codexEquipment,
+        archetypes: codexArchetypes,
+        creatureFeats: codexCreatureFeats,
+        coreRules,
+      },
+      { headers: { 'Cache-Control': cacheControl } }
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
     const stack = err instanceof Error ? err.stack : undefined;
-    // Always log full error server-side (visible in Vercel logs)
     console.error('[Codex API] Database error:', message, stack);
-    // In production, expose minimal hint for debugging (connection vs schema, etc.)
     const safeHint =
       process.env.NODE_ENV === 'development'
         ? message

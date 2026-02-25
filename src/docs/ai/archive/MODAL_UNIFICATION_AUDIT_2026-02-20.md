@@ -171,7 +171,7 @@ Unifying on the same components and a single “list modal” layout will make m
 
 ## 7. Reference
 
-- **Unification audit (general):** `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md`
+- **Unification audit (general):** `UNIFICATION_AUDIT_2026-02-20.md` (this archive)
 - **List components:** `src/components/shared/list-header.tsx`, `list-components.tsx`, `unified-selection-modal.tsx`
 - **Creator load modal:** `src/components/creator/LoadFromLibraryModal.tsx`
 - **Character sheet modals:** `src/components/character-sheet/add-feat-modal.tsx`, `add-library-item-modal.tsx`; `CharacterSheetModals.tsx`

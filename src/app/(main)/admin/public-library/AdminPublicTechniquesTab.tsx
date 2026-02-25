@@ -1,5 +1,5 @@
 /**
- * Admin Public Library — Techniques tab
+ * Admin Official Library — Techniques tab
  * List displayed like Library. Edit opens Technique Creator with item loaded; row delete remains.
  */
 
@@ -18,7 +18,7 @@ import {
   DeleteConfirmModal,
   type ChipData,
 } from '@/components/shared';
-import { usePublicLibrary, useTechniqueParts } from '@/hooks';
+import { useOfficialLibrary, useTechniqueParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
@@ -26,12 +26,12 @@ import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators
 import { Swords } from 'lucide-react';
 
 const TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
-const QUERY_KEY = ['public-library', 'techniques'] as const;
+const QUERY_KEY = ['official-library', 'techniques'] as const;
 
 export function AdminPublicTechniquesTab() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = usePublicLibrary('techniques');
+  const { data: items = [], isLoading, error } = useOfficialLibrary('techniques');
   const { data: partsDb = [] } = useTechniqueParts();
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -87,7 +87,7 @@ export function AdminPublicTechniquesTab() {
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/public/techniques?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      const res = await fetch(`/api/official/techniques?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error(res.statusText);
@@ -98,11 +98,11 @@ export function AdminPublicTechniquesTab() {
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load public techniques" />;
+  if (error) return <ErrorDisplay message="Failed to load official techniques" />;
 
   return (
     <div>
-      <SectionHeader title="Public Techniques" size="md" />
+      <SectionHeader title="Official Techniques" size="md" />
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search techniques..." />
       </div>
@@ -126,7 +126,7 @@ export function AdminPublicTechniquesTab() {
         ) : filtered.length === 0 ? (
           <ListEmptyState
             icon={<Swords className="w-8 h-8" />}
-            title="No public techniques"
+            title="No official techniques"
             message="Add one from the header or publish from a creator."
           />
         ) : (

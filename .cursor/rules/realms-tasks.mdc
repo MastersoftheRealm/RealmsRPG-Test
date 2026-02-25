@@ -18,31 +18,10 @@ alwaysApply: true
 
 **New tasks:** Use format in `src/docs/ai/AI_REQUEST_TEMPLATE.md`. Add to `AI_TASK_QUEUE.md` with next TASK-### ID.
 
-# Feedback Processing Protocol
+# Feedback Processing (when owner gives feedback)
 
-When the owner provides feedback (raw text, messages, or updates to `ALL_FEEDBACK_CLEAN.md`):
-
-**Step 0 — Always log raw feedback:** Before or while processing, append the raw feedback to `src/docs/ALL_FEEDBACK_CLEAN.md` under **Raw Feedback Log** using the Raw Entry Template (date, context, priority, feedback text, expected behavior). Do this whether you create new tasks, implement directly, or both. Every time the owner sends feedback that you act on, it must be recorded in the log.
-
-**Step 1 — Sentence-level extraction:** Split the raw feedback into individual, atomic actionable items. One sentence may contain 2-3 separate requests. Do NOT summarize or group prematurely. Create a numbered checklist of every discrete request.
-
-**Step 2 — Cross-reference:** For EACH extracted item, check:
-- Does an existing task in `AI_TASK_QUEUE.md` already cover this? (search by keyword)
-- Is it already in a curated section of `ALL_FEEDBACK_CLEAN.md`?
-- Has it already been implemented in the codebase? (verify with code search)
-- If it concerns terminology, formulas, or display: does `GAME_RULES.md` define the correct usage?
-
-**Step 3 — Gap identification:** Any item NOT covered by an existing task or verified as done gets:
-- A new curated section entry in `ALL_FEEDBACK_CLEAN.md`
-- A new task in `AI_TASK_QUEUE.md` with proper ID, priority, and description
-- Added to the High-Level Action Items checklist  
-Items that you implement directly (without a new task) still get the raw feedback appended in Step 0; no separate task is required for the log.
-
-**Step 4 — Verification summary:** Output a brief checklist showing: each extracted item, its disposition (existing task #, new task #, implemented directly, or already done), and confidence level.
-
-**Common pitfalls to avoid:**
-- Feedback often contains multiple requests per sentence (e.g., "rename X and also fix Y") — split these into separate items.
-- Longer feedback paragraphs about "the ideal" or "how it should work" contain specific requirements buried in prose — extract each one.
-- Repeated/rephrased feedback across sessions should be checked for NEW details in the latest version (the owner may have added specifics).
-- Section rename requests (e.g., "rename to Archetype & Attacks") are easily overlooked when adjacent to more complex requests.
-- UI label/title changes ("HP/EN Pool" → "Health/Energy Allocation") are easy to miss among functional changes.
+1. **Log:** Append raw feedback to `src/docs/ALL_FEEDBACK_CLEAN.md` under **Raw Feedback Log** (date, context, priority, text, expected behavior). Do this whether you create tasks or implement directly.
+2. **Extract:** Split into discrete actionable items (one sentence can be 2–3 items).
+3. **Cross-reference:** For each item, check `AI_TASK_QUEUE.md` (by keyword) and curated sections of `ALL_FEEDBACK_CLEAN.md`; verify in code if unsure.
+4. **Gaps:** Add new tasks to `AI_TASK_QUEUE.md` (next TASK-### ID, from `AI_REQUEST_TEMPLATE.md`) and/or curated entries; implement directly when appropriate.
+5. **Summary:** Brief checklist: item → disposition (existing task, new task, implemented, or already done).

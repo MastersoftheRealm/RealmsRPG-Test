@@ -75,12 +75,12 @@ export async function GET(
     }
 
     if (visibility === 'campaign' && user?.uid) {
-      const campaigns = await prisma.campaign.findMany({
-        select: { id: true, ownerId: true, memberIds: true, characters: true },
+      const userCampaigns = await prisma.campaign.findMany({
+        where: {
+          OR: [{ ownerId: user.uid }, { members: { some: { userId: user.uid } } }],
+        },
+        select: { id: true, ownerId: true, characters: true },
       });
-      const userCampaigns = campaigns.filter(
-        (c) => c.ownerId === user.uid || (c.memberIds as string[])?.includes(user.uid)
-      );
       const inCampaign = userCampaigns.some((c) => {
         const list = (c.characters as Array<{ userId: string; characterId: string }>) || [];
         return list.some((cc) => cc.userId === row.userId && cc.characterId === row.id);

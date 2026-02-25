@@ -3,23 +3,16 @@
  * =======================
  * Server-only: fetches a user's library (powers, techniques, items) for
  * read-only display when viewing another user's character (public or campaign).
+ * Uses columnar user_* tables (same shape as API).
  */
 
 import { prisma } from '@/lib/prisma';
+import { rowToItem } from '@/lib/library-columnar';
 
 export interface LibraryForView {
   powers: Array<Record<string, unknown>>;
   techniques: Array<Record<string, unknown>>;
   items: Array<Record<string, unknown>>;
-}
-
-function rowToItem(row: { id: string; data: unknown }): Record<string, unknown> {
-  const d = (row.data as Record<string, unknown>) || {};
-  return {
-    id: row.id,
-    docId: row.id,
-    ...d,
-  };
 }
 
 /**
@@ -30,21 +23,18 @@ export async function getOwnerLibraryForView(ownerUserId: string): Promise<Libra
   const [powerRows, techniqueRows, itemRows] = await Promise.all([
     prisma.userPower.findMany({
       where: { userId: ownerUserId },
-      select: { id: true, data: true },
     }),
     prisma.userTechnique.findMany({
       where: { userId: ownerUserId },
-      select: { id: true, data: true },
     }),
     prisma.userItem.findMany({
       where: { userId: ownerUserId },
-      select: { id: true, data: true },
     }),
   ]);
 
   return {
-    powers: powerRows.map(rowToItem),
-    techniques: techniqueRows.map(rowToItem),
-    items: itemRows.map(rowToItem),
+    powers: powerRows.map((r) => rowToItem('powers', r as unknown as Record<string, unknown>, 'user')),
+    techniques: techniqueRows.map((r) => rowToItem('techniques', r as unknown as Record<string, unknown>, 'user')),
+    items: itemRows.map((r) => rowToItem('items', r as unknown as Record<string, unknown>, 'user')),
   };
 }

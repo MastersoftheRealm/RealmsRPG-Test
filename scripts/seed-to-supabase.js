@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 /**
- * Seed Codex Data from CSV
- * ========================
- * Reads CSV files from scripts/seed-data/ and inserts into Supabase/Prisma codex tables.
- *
- * Expected files: feats.csv, parts.csv, properties.csv, species.csv, traits.csv,
- *                 skills.csv, archetypes.csv, creature_feats.csv, equipment.csv
+ * Seed Codex Data from CSV (columnar tables)
+ * ==========================================
+ * Reads CSV files from scripts/seed-data/ or codex_csv/ and inserts into Supabase
+ * codex tables using proper columns (no JSONB blob).
  *
  * Run: npm run db:seed
  * Or:  node scripts/seed-to-supabase.js
  *
- * This script always clears all codex tables before seeding so the database matches
- * the current CSVs exactly. Use with care against production data.
+ * This script always clears all codex tables before seeding. Use with care.
  */
 
 const fs = require('fs');
@@ -21,7 +18,8 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const SEED_DIR = path.join(__dirname, 'seed-data');
-const CODEX_CSV_DIR = path.join(__dirname, '..', 'Codex csv');
+const CODEX_CSV_DIR = path.join(__dirname, '..', 'codex_csv');
+const CODEX_CSV_DIR_LEGACY = path.join(__dirname, '..', 'Codex csv');
 
 // Columns that are intentionally comma-separated arrays in CSV.
 // All other columns (including descriptions with grammatical commas) stay as strings.
@@ -55,9 +53,10 @@ const FILE_TO_TABLE = {
   creature_feat: 'codex_creature_feats', // Codex - Creature_Feats.csv (singular)
 };
 
-// Map "Codex - Feats" -> "feats", "Codex - Items" -> "items"
+// Map "Codex - Feats" -> "feats", "Realms Codex Test - Feats" -> "feats", etc.
 function fileNameToTableKey(fileBase) {
-  const normalized = fileBase.replace(/^Codex\s*-\s*/i, '').toLowerCase().replace(/\s+/g, '_');
+  let normalized = fileBase.replace(/^Codex\s*-\s*/i, '').toLowerCase().replace(/\s+/g, '_');
+  if (normalized.includes('_-_')) normalized = normalized.split('_-_').pop() || normalized;
   if (normalized === 'creature_feats') return 'creature_feats';
   if (normalized === 'creature_feat') return 'creature_feats';
   if (normalized === 'items') return 'equipment';
@@ -105,19 +104,24 @@ function parseCSVLine(line) {
   return result;
 }
 
-function toJsonObject(row) {
-  const data = {};
+function snakeToCamel(s) {
+  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+/** Parse a CSV row into typed values; then build columnar payload (camelCase keys) for Prisma */
+function rowToColumnarPayload(tableName, row) {
+  const payload = {};
   for (const [k, v] of Object.entries(row)) {
-    if (v === '' || v === undefined) continue;
-    const lower = v.toLowerCase();
-    if (lower === 'true') data[k] = true;
-    else if (lower === 'false') data[k] = false;
-    else if (/^-?\d+$/.test(v)) data[k] = parseInt(v, 10);
-    else if (/^-?\d*\.\d+$/.test(v)) data[k] = parseFloat(v);
-    else if (ARRAY_COLUMNS.has(k) && v.includes(',')) data[k] = v.split(',').map((s) => s.trim()).filter(Boolean);
-    else data[k] = v;
+    if (k === 'id' || v === '' || v === undefined) continue;
+    const camel = snakeToCamel(k);
+    const lower = String(v).toLowerCase();
+    if (lower === 'true') payload[camel] = true;
+    else if (lower === 'false') payload[camel] = false;
+    else if (/^-?\d+$/.test(String(v).trim())) payload[camel] = parseInt(v, 10);
+    else if (/^-?\d*\.\d+$/.test(String(v).trim())) payload[camel] = parseFloat(v);
+    else payload[camel] = v;
   }
-  return data;
+  return payload;
 }
 
 function slugify(str) {
@@ -150,15 +154,17 @@ async function seedTable(tableName, rows, idColumn = 'id') {
   let count = 0;
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const data = toJsonObject(row);
-    const id = data[idColumn] || data.id || slugify(data.name || data.Name || `row-${i}`);
-    const idStr = String(id).trim() || `row-${i}`;
+    const id = (row[idColumn] || row.id || slugify(row.name || row.Name || `row-${i}`)).trim();
+    const idStr = id || `row-${i}`;
+    if (!idStr) continue;
+
+    const payload = rowToColumnarPayload(tableName, row);
 
     try {
       await prismaModel.upsert({
         where: { id: idStr },
-        create: { id: idStr, data },
-        update: { data },
+        create: { id: idStr, ...payload },
+        update: payload,
       });
       count++;
     } catch (err) {
@@ -201,8 +207,12 @@ async function main() {
   let seedDir = SEED_DIR;
   const seedCsvCount = fs.existsSync(SEED_DIR) ? fs.readdirSync(SEED_DIR).filter((f) => f.endsWith('.csv')).length : 0;
   const codexCsvCount = fs.existsSync(CODEX_CSV_DIR) ? fs.readdirSync(CODEX_CSV_DIR).filter((f) => f.endsWith('.csv')).length : 0;
+  const legacyCsvCount = fs.existsSync(CODEX_CSV_DIR_LEGACY) ? fs.readdirSync(CODEX_CSV_DIR_LEGACY).filter((f) => f.endsWith('.csv')).length : 0;
   if (seedCsvCount === 0 && codexCsvCount > 0) {
     seedDir = CODEX_CSV_DIR;
+    console.log('Using codex_csv folder\n');
+  } else if (seedCsvCount === 0 && legacyCsvCount > 0) {
+    seedDir = CODEX_CSV_DIR_LEGACY;
     console.log('Using Codex csv folder\n');
   } else if (seedCsvCount === 0) {
     if (!fs.existsSync(SEED_DIR)) fs.mkdirSync(SEED_DIR, { recursive: true });

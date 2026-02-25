@@ -779,7 +779,3 @@ id,name,description,req_desc,ability_req,abil_req_val,skill_req,skill_req_val,fe
 761,Wreathing Rampage,"At the beginning of your turn, enemies in the Melee Range take 1 damage for every finishing blow you had that combat (up to 5 damage per turn).",,,,,,,,,,,,1,,,,Offensive,,"Finishing Blow,Area of Effect,",false,false
 762,Zeal,"When you achieve a critical hit, gain 1 Action Point.",,,,,,,,,,,,1,,,,Utility,,"Action Point,Critical Hit,",false,false
 763,Zealous Presence,"As a quick action, choose up to 6 creatures within 8 spaces. These creatures get +2 to all defenses and attack rolls for one round.",,,,,,,,,,,,1,,1,Full,Support,,"Quick Action,Defense Bonus,Attack Bonus,Ally",false,false
-,,,,,,,,,,,,,,1,,,,,,,false,false
-,,,,,,,,,,,,,,1,,,,,,,false,false
-,,,,,,,,,,,,,,1,,,,,,,false,false
-,,,,,,,,,,,,,,1,,,,,,,false,false

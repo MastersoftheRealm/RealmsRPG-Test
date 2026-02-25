@@ -135,6 +135,12 @@ CREATE TABLE IF NOT EXISTS campaigns.campaigns (
   updated_at TIMESTAMP(3)
 );
 
+CREATE TABLE IF NOT EXISTS campaigns.campaign_members (
+  campaign_id TEXT NOT NULL REFERENCES campaigns.campaigns(id) ON DELETE CASCADE,
+  user_id     TEXT NOT NULL,
+  PRIMARY KEY (campaign_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS campaigns.campaign_rolls (
   id TEXT PRIMARY KEY,
   campaign_id TEXT NOT NULL REFERENCES campaigns.campaigns(id) ON DELETE CASCADE,
@@ -144,6 +150,8 @@ CREATE TABLE IF NOT EXISTS campaigns.campaign_rolls (
 
 CREATE INDEX IF NOT EXISTS campaigns_owner_id_idx ON campaigns.campaigns(owner_id);
 CREATE INDEX IF NOT EXISTS campaigns_invite_code_idx ON campaigns.campaigns(invite_code);
+CREATE INDEX IF NOT EXISTS campaign_members_user_id_idx ON campaigns.campaign_members(user_id);
+CREATE INDEX IF NOT EXISTS campaign_members_campaign_id_idx ON campaigns.campaign_members(campaign_id);
 CREATE INDEX IF NOT EXISTS campaign_rolls_campaign_id_idx ON campaigns.campaign_rolls(campaign_id);
 CREATE INDEX IF NOT EXISTS campaign_rolls_campaign_id_created_at_idx ON campaigns.campaign_rolls(campaign_id, created_at);
 

@@ -329,6 +329,6 @@ The codebase already has strong unification in several areas (e.g. `ValueStepper
 | 5.2–5.4 | Enrichment, API, security | Keep |
 | 6 Phases 1–3 | Save toolbar, header row, load rule, CreatorLayout, allocation audit, ListHeader, useCreatorLoad | Done |
 
-**Related audit:** Modals that contain lists (add-X, load, selection) are covered in a separate **Modal Unification Audit**: `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md`. That audit inventories list modals, compares layout/filter/empty/loading patterns, and recommends unifying logic and styles with Codex/Library (EmptyState/LoadingState, FilterSection, optional useModalListState, LoadCreatureModal refactor). See TASK-264.
+**Related audit:** Modals that contain lists (add-X, load, selection) are covered in a separate **Modal Unification Audit**: `MODAL_UNIFICATION_AUDIT_2026-02-20.md` (this archive). That audit inventories list modals, compares layout/filter/empty/loading patterns, and recommends unifying logic and styles with Codex/Library (EmptyState/LoadingState, FilterSection, optional useModalListState, LoadCreatureModal refactor). See TASK-264.
 
 This audit should be used to create or update tasks in `AI_TASK_QUEUE.md` and to guide future PRs so that new code uses the same patterns and centralized sources of truth described above.

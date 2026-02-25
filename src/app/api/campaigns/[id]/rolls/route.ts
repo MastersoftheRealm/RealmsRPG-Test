@@ -58,8 +58,8 @@ export async function GET(
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const memberIds = (campaign.memberIds as string[]) || [];
-    const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
+    const memberRow = await prisma.campaignMember.findUnique({ where: { campaignId_userId: { campaignId, userId: user.uid } } });
+    const isMember = campaign.ownerId === user.uid || !!memberRow;
     if (!isMember) {
       return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
     }
@@ -98,8 +98,8 @@ export async function POST(
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const memberIds = (campaign.memberIds as string[]) || [];
-    const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
+    const memberRow = await prisma.campaignMember.findUnique({ where: { campaignId_userId: { campaignId, userId: user.uid } } });
+    const isMember = campaign.ownerId === user.uid || !!memberRow;
     if (!isMember) {
       return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
     }

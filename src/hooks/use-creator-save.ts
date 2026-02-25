@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { saveToLibrary, saveToPublicLibrary, findLibraryItemByName, findPublicLibraryItemByName } from '@/services/library-service';
+import { saveToLibrary, saveToOfficialLibrary, findLibraryItemByName, findOfficialLibraryItemByName } from '@/services/library-service';
 
 export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
 
@@ -87,7 +87,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       const publicLibraryType = type === 'species' ? null : type;
       try {
         if (effectiveTarget === 'public' && publicLibraryType) {
-          await saveToPublicLibrary(publicLibraryType, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
+          await saveToOfficialLibrary(publicLibraryType, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
           setSaveMessage({ type: 'success', text: publicSuccessMessage });
         } else {
           const existing = await findLibraryItemByName(type, name.trim());
@@ -118,7 +118,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       return;
     }
     if (saveTarget === 'public' && requirePublishConfirm && type !== 'species') {
-      const existing = await findPublicLibraryItemByName(type, name.trim());
+      const existing = await findOfficialLibraryItemByName(type, name.trim());
       setPublishExistingId(existing?.id ?? null);
       setShowPublishConfirmState(true);
       return;

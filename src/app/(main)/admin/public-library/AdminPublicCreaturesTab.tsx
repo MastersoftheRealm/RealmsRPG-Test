@@ -1,5 +1,5 @@
 /**
- * Admin Public Library — Creatures tab
+ * Admin Official Library — Creatures tab
  * List (name, level, type). Edit opens Creature Creator with item loaded; row delete remains.
  */
 
@@ -17,18 +17,18 @@ import {
   ListEmptyState,
   DeleteConfirmModal,
 } from '@/components/shared';
-import { usePublicLibrary } from '@/hooks';
+import { useOfficialLibrary } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
 import { Users } from 'lucide-react';
 
 const CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
-const QUERY_KEY = ['public-library', 'creatures'] as const;
+const QUERY_KEY = ['official-library', 'creatures'] as const;
 
 export function AdminPublicCreaturesTab() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = usePublicLibrary('creatures');
+  const { data: items = [], isLoading, error } = useOfficialLibrary('creatures');
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
@@ -62,7 +62,7 @@ export function AdminPublicCreaturesTab() {
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/public/creatures?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      const res = await fetch(`/api/official/creatures?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error(res.statusText);
@@ -73,11 +73,11 @@ export function AdminPublicCreaturesTab() {
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load public creatures" />;
+  if (error) return <ErrorDisplay message="Failed to load official creatures" />;
 
   return (
     <div>
-      <SectionHeader title="Public Creatures" size="md" />
+      <SectionHeader title="Official Creatures" size="md" />
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search creatures..." />
       </div>
@@ -98,7 +98,7 @@ export function AdminPublicCreaturesTab() {
         ) : filtered.length === 0 ? (
           <ListEmptyState
             icon={<Users className="w-8 h-8" />}
-            title="No public creatures"
+            title="No official creatures"
             message="Add one from the header or publish from a creator."
           />
         ) : (

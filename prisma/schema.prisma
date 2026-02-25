@@ -76,16 +76,21 @@ model Character {
 }
 
 // =============================================================================
-// User Library
+// User Library (columnar) — same column set as official_* + user_id
 // =============================================================================
 
 model UserPower {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  data      Json     // name, description, parts, damage, actionType, etc.
-  createdAt DateTime? @map("created_at")
-  updatedAt DateTime? @map("updated_at")
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String?
+  description String?
+  actionType String?   @map("action_type")
+  isReaction Boolean? @default(false) @map("is_reaction")
+  innate     Boolean?  @default(false)
+  createdAt  DateTime? @map("created_at")
+  updatedAt  DateTime? @map("updated_at")
+  payload    Json      @default("{}")
 
   @@index([userId])
   @@map("user_powers")
@@ -93,12 +98,16 @@ model UserPower {
 }
 
 model UserTechnique {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  data      Json
-  createdAt DateTime? @map("created_at")
-  updatedAt DateTime? @map("updated_at")
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String?
+  description String?
+  actionType String?   @map("action_type")
+  weaponName String?   @map("weapon_name")
+  createdAt  DateTime? @map("created_at")
+  updatedAt  DateTime? @map("updated_at")
+  payload    Json      @default("{}")
 
   @@index([userId])
   @@map("user_techniques")
@@ -106,12 +115,18 @@ model UserTechnique {
 }
 
 model UserItem {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  data      Json
-  createdAt DateTime? @map("created_at")
-  updatedAt DateTime? @map("updated_at")
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  user            UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String?
+  description     String?
+  type            String?
+  rarity          String?
+  armorValue      Int?      @map("armor_value")
+  damageReduction Int?      @map("damage_reduction")
+  createdAt       DateTime? @map("created_at")
+  updatedAt       DateTime? @map("updated_at")
+  payload         Json      @default("{}")
 
   @@index([userId])
   @@map("user_items")
@@ -119,12 +134,19 @@ model UserItem {
 }
 
 model UserCreature {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
-  data      Json
-  createdAt DateTime? @map("created_at")
-  updatedAt DateTime? @map("updated_at")
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  user         UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String?
+  description  String?
+  level        Int?
+  type         String?
+  size         String?
+  hitPoints    Int?      @map("hit_points")
+  energyPoints Int?      @map("energy_points")
+  createdAt    DateTime? @map("created_at")
+  updatedAt    DateTime? @map("updated_at")
+  payload      Json      @default("{}")
 
   @@index([userId])
   @@map("user_creatures")
@@ -149,22 +171,34 @@ model UserSpecies {
 // =============================================================================
 
 model Campaign {
-  id          String   @id @default(uuid())
-  ownerId     String   @map("owner_id")
-  name        String
-  description String?
-  inviteCode  String   @map("invite_code")
-  characters  Json     // CampaignCharacter[]
-  memberIds   Json     // string[]
-  ownerUsername String? @map("owner_username")
-  createdAt   DateTime? @map("created_at")
-  updatedAt   DateTime? @map("updated_at")
+  id            String   @id @default(uuid())
+  ownerId       String   @map("owner_id")
+  name          String
+  description   String?
+  inviteCode    String   @map("invite_code")
+  characters    Json     // CampaignCharacter[]
+  memberIds     Json     // string[] — kept for backward compat; source of truth is campaign_members
+  ownerUsername String?  @map("owner_username")
+  createdAt     DateTime? @map("created_at")
+  updatedAt     DateTime? @map("updated_at")
 
-  rolls CampaignRoll[]
+  members CampaignMember[]
+  rolls   CampaignRoll[]
 
   @@index([ownerId])
   @@index([inviteCode])
   @@map("campaigns")
+  @@schema("campaigns")
+}
+
+model CampaignMember {
+  campaignId String   @map("campaign_id")
+  userId     String   @map("user_id")
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, userId])
+  @@index([userId])
+  @@map("campaign_members")
   @@schema("campaigns")
 }
 
@@ -199,68 +233,163 @@ model Encounter {
 }
 
 // =============================================================================
-// Codex / Game Reference Data (from Firestore codex_*)
+// Codex / Game Reference Data (columnar tables — CSV drag-and-drop ready)
 // =============================================================================
 
 model CodexFeat {
-  id     String @id // Document ID from Firestore/CSV
-  data   Json
+  id            String   @id
+  name          String?
+  description   String?
+  reqDesc       String?  @map("req_desc")
+  abilityReq    String?  @map("ability_req")
+  abilReqVal    String?  @map("abil_req_val")
+  skillReq      String?  @map("skill_req")
+  skillReqVal   String?  @map("skill_req_val")
+  featCatReq    String?  @map("feat_cat_req")
+  powAbilReq    Int?     @map("pow_abil_req")
+  martAbilReq   Int?     @map("mart_abil_req")
+  powProfReq    Int?     @map("pow_prof_req")
+  martProfReq   Int?     @map("mart_prof_req")
+  speedReq      Int?     @map("speed_req")
+  featLvl       Int?     @map("feat_lvl")
+  lvlReq        Int?     @map("lvl_req")
+  usesPerRec    Int?     @map("uses_per_rec")
+  recPeriod     String?  @map("rec_period")
+  category      String?
+  ability       String?
+  tags          String?
+  charFeat      Boolean? @map("char_feat")
+  stateFeat     Boolean? @map("state_feat")
+
   @@map("codex_feats")
   @@schema("codex")
 }
 
 model CodexSkill {
-  id     String @id
-  data   Json
+  id                 String  @id
+  name               String?
+  description        String?
+  ability            String?
+  baseSkill          String? @map("base_skill")
+  successDesc        String? @map("success_desc")
+  failureDesc        String? @map("failure_desc")
+  dsCalc             String? @map("ds_calc")
+  craftFailureDesc   String? @map("craft_failure_desc")
+  craftSuccessDesc   String? @map("craft_success_desc")
+
   @@map("codex_skills")
   @@schema("codex")
 }
 
 model CodexSpecies {
-  id     String @id
-  data   Json
+  id               String   @id
+  name             String?
+  description      String?
+  type             String?
+  sizes            String?
+  skills           String?
+  speciesTraits    String?  @map("species_traits")
+  ancestryTraits   String?  @map("ancestry_traits")
+  flaws            String?
+  characteristics  String?
+  aveHgtCm         Decimal? @map("ave_hgt_cm") @db.Decimal
+  aveWgtKg         Decimal? @map("ave_wgt_kg") @db.Decimal
+  adulthoodLifespan String? @map("adulthood_lifespan")
+  languages       String?
+
   @@map("codex_species")
   @@schema("codex")
 }
 
 model CodexTrait {
-  id     String @id
-  data   Json
+  id              String   @id
+  name            String?
+  description     String?
+  usesPerRec      Int?     @map("uses_per_rec")
+  recPeriod       String?  @map("rec_period")
+  flaw            Boolean?
+  characteristic  Boolean?
+  optionTraitIds  String?  @map("option_trait_ids")
+
   @@map("codex_traits")
   @@schema("codex")
 }
 
 model CodexPart {
-  id     String @id
-  data   Json   // type: 'power' | 'technique'
+  id          String   @id
+  name        String?
+  description String?
+  category    String?
+  baseEn      Decimal? @map("base_en") @db.Decimal
+  baseTp      Decimal? @map("base_tp") @db.Decimal
+  op1Desc     String?  @map("op_1_desc")
+  op1En       Decimal? @map("op_1_en") @db.Decimal
+  op1Tp       Decimal? @map("op_1_tp") @db.Decimal
+  op2Desc     String?  @map("op_2_desc")
+  op2En       Decimal? @map("op_2_en") @db.Decimal
+  op2Tp       Decimal? @map("op_2_tp") @db.Decimal
+  op3Desc     String?  @map("op_3_desc")
+  op3En       Decimal? @map("op_3_en") @db.Decimal
+  op3Tp       Decimal? @map("op_3_tp") @db.Decimal
+  type        String?  // 'power' | 'technique'
+  mechanic    Boolean?
+  percentage  Boolean?
+  duration    Boolean?
+  defense     String?
+
   @@map("codex_parts")
   @@schema("codex")
 }
 
 model CodexProperty {
-  id     String @id
-  data   Json
+  id          String   @id
+  name        String?
+  description String?
+  baseIp      Decimal? @map("base_ip") @db.Decimal
+  baseTp      Decimal? @map("base_tp") @db.Decimal
+  baseC       Decimal? @map("base_c") @db.Decimal
+  op1Desc     String?  @map("op_1_desc")
+  op1Ip       Decimal? @map("op_1_ip") @db.Decimal
+  op1Tp       Decimal? @map("op_1_tp") @db.Decimal
+  op1C        Decimal? @map("op_1_c") @db.Decimal
+  type        String?
+  mechanic    Boolean?
+
   @@map("codex_properties")
   @@schema("codex")
 }
 
 model CodexEquipment {
-  id     String @id
-  data   Json
+  id          String   @id
+  name        String?
+  description String?
+  category    String?
+  currency    Decimal? @db.Decimal
+  rarity      String?
+
   @@map("codex_equipment")
   @@schema("codex")
 }
 
 model CodexArchetype {
-  id     String @id
-  data   Json
+  id          String  @id
+  name        String?
+  type        String?
+  description String?
+
   @@map("codex_archetypes")
   @@schema("codex")
 }
 
 model CodexCreatureFeat {
-  id     String @id
-  data   Json
+  id          String   @id
+  name        String?
+  description String?
+  featPoints  Decimal? @map("feat_points") @db.Decimal
+  featLvl     Int?     @map("feat_lvl")
+  lvlReq      Int?     @map("lvl_req")
+  mechanic    Boolean?
+
   @@map("codex_creature_feats")
   @@schema("codex")
 }
@@ -274,13 +403,80 @@ model CoreRules {
 }
 
 // =============================================================================
-// Public Library (admin-curated, browsable by all users)
-// Structure mirrors user library; write via admin server actions only
+// Official Library (columnar) — admin-curated, browsable by all users
+// Same column set as user library (Phase 2) for interchangeability.
+// =============================================================================
+
+model OfficialPower {
+  id         String   @id @default(uuid())
+  name       String?
+  description String?
+  actionType String?  @map("action_type")
+  isReaction Boolean? @default(false) @map("is_reaction")
+  innate     Boolean? @default(false)
+  createdAt  DateTime? @map("created_at")
+  updatedAt  DateTime? @map("updated_at")
+  payload    Json     @default("{}")
+
+  @@map("official_powers")
+  @@schema("codex")
+}
+
+model OfficialTechnique {
+  id         String   @id @default(uuid())
+  name       String?
+  description String?
+  actionType String?  @map("action_type")
+  weaponName String? @map("weapon_name")
+  createdAt  DateTime? @map("created_at")
+  updatedAt  DateTime? @map("updated_at")
+  payload    Json     @default("{}")
+
+  @@map("official_techniques")
+  @@schema("codex")
+}
+
+model OfficialItem {
+  id               String   @id @default(uuid())
+  name             String?
+  description      String?
+  type             String?
+  rarity           String?
+  armorValue       Int?     @map("armor_value")
+  damageReduction  Int?     @map("damage_reduction")
+  createdAt        DateTime? @map("created_at")
+  updatedAt        DateTime? @map("updated_at")
+  payload          Json     @default("{}")
+
+  @@map("official_items")
+  @@schema("codex")
+}
+
+model OfficialCreature {
+  id           String   @id @default(uuid())
+  name         String?
+  description  String?
+  level        Int?
+  type         String?
+  size         String?
+  hitPoints    Int?     @map("hit_points")
+  energyPoints Int?     @map("energy_points")
+  createdAt    DateTime? @map("created_at")
+  updatedAt    DateTime? @map("updated_at")
+  payload      Json     @default("{}")
+
+  @@map("official_creatures")
+  @@schema("codex")
+}
+
+// =============================================================================
+// Public Library (legacy) — id + data JSONB; prefer official_* (columnar)
+// Kept for backward compatibility during migration; can be dropped after data migrated.
 // =============================================================================
 
 model PublicPower {
   id        String   @id @default(uuid())
-  data      Json     // Same shape as UserPower.data
+  data      Json
   createdAt DateTime? @map("created_at")
   updatedAt DateTime? @map("updated_at")
 

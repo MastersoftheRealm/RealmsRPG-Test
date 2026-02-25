@@ -27,15 +27,15 @@ export async function GET(
 
     const campaignRow = await prisma.campaign.findUnique({
       where: { id: campaignId },
+      include: { members: { select: { userId: true } } },
     });
 
     if (!campaignRow) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const memberIds = (campaignRow.memberIds as string[]) || [];
     const isRM = campaignRow.ownerId === user.uid;
-    const isMember = isRM || memberIds.includes(user.uid);
+    const isMember = isRM || campaignRow.members?.some((m) => m.userId === user.uid);
 
     const characters = (campaignRow.characters as Array<{ userId: string; characterId: string }>) || [];
     const isInCampaign = characters.some((c) => c.userId === userId && c.characterId === characterId);

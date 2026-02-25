@@ -1,7 +1,7 @@
 /**
  * Campaign by ID API
  * ==================
- * Get a single campaign. Uses Prisma. Requires Supabase session.
+ * Get a single campaign. Uses Prisma + campaign_members. Requires Supabase session.
  */
 
 import { NextResponse } from 'next/server';
@@ -9,20 +9,31 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/supabase/session';
 import type { Campaign } from '@/types/campaign';
 
-function rowToCampaign(row: { id: string; owner_id: string; name: string; description: string | null; invite_code: string; characters: unknown; member_ids: unknown; owner_username: string | null; created_at: Date | null; updated_at: Date | null }): Campaign {
-  const memberIds = Array.isArray(row.member_ids) ? row.member_ids : (typeof row.member_ids === 'string' ? JSON.parse(row.member_ids) : []) as string[];
-  const characters = Array.isArray(row.characters) ? row.characters : (typeof row.characters === 'string' ? JSON.parse(row.characters) : []) as Campaign['characters'];
+function rowToCampaign(row: {
+  id: string;
+  name: string;
+  description: string | null;
+  ownerId: string;
+  ownerUsername: string | null;
+  inviteCode: string;
+  characters: unknown;
+  members: { userId: string }[];
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}): Campaign {
+  const memberIds = row.members?.map((m) => m.userId) ?? [];
+  const characters = Array.isArray(row.characters) ? row.characters : (typeof row.characters === 'string' ? JSON.parse(row.characters as string) : []) as Campaign['characters'];
   return {
     id: row.id,
     name: row.name,
     description: row.description ?? undefined,
-    ownerId: row.owner_id,
-    ownerUsername: row.owner_username ?? undefined,
-    inviteCode: row.invite_code,
+    ownerId: row.ownerId,
+    ownerUsername: row.ownerUsername ?? undefined,
+    inviteCode: row.inviteCode,
     characters,
     memberIds,
-    createdAt: row.created_at ?? undefined,
-    updatedAt: row.updated_at ?? undefined,
+    createdAt: row.createdAt ?? undefined,
+    updatedAt: row.updatedAt ?? undefined,
   };
 }
 
@@ -42,28 +53,29 @@ export async function GET(
 
   const row = await prisma.campaign.findUnique({
     where: { id: id.trim() },
+    include: { members: { select: { userId: true } } },
   });
 
   if (!row) {
     return NextResponse.json(null, { status: 404 });
   }
 
-  const memberIds = (row.memberIds as string[]) || [];
-  if (row.ownerId !== user.uid && !memberIds.includes(user.uid)) {
+  const isMember = row.ownerId === user.uid || row.members?.some((m) => m.userId === user.uid);
+  if (!isMember) {
     return NextResponse.json(null, { status: 404 });
   }
 
   const campaign = rowToCampaign({
     id: row.id,
-    owner_id: row.ownerId,
     name: row.name,
     description: row.description,
-    invite_code: row.inviteCode,
+    ownerId: row.ownerId,
+    ownerUsername: row.ownerUsername,
+    inviteCode: row.inviteCode,
     characters: row.characters,
-    member_ids: row.memberIds,
-    owner_username: row.ownerUsername,
-    created_at: row.createdAt,
-    updated_at: row.updatedAt,
+    members: row.members,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   });
 
   return NextResponse.json(campaign);

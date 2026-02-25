@@ -49,7 +49,7 @@ Task queue `related_files` may reference outdated paths. When implementing, pref
 
 **List item actions:** GridListRow and ItemCard use the same action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see UI_COMPONENT_REFERENCE for details.
 
-**List modal layout (add-X, load, selection):** Use a consistent structure so modals match Codex/Library: (1) Header (title + close), (2) Search bar (`SearchInput`), (3) optional **FilterSection** for filters, (4) **ListHeader** (sortable), (5) scrollable list in a bordered container (`border border-border-light rounded-lg`) with **GridListRow** or selectable rows, (6) footer (selection count + Cancel + primary action). Use **EmptyState** and **LoadingState** (from `@/components/ui` or shared list-components) for empty and loading; avoid ad-hoc Spinner/divs. For search + sort state, **useModalListState** (`@/hooks/use-modal-list-state`) returns `search`, `setSearch`, `filteredItems`, `sortedItems`, `sortState`, `handleSort`, `reset` — use in load/add-X modals to reduce duplication. See `MODAL_UNIFICATION_AUDIT_2026-02-20.md`.
+**List modal layout (add-X, load, selection):** Use a consistent structure so modals match Codex/Library: (1) Header (title + close), (2) Search bar (`SearchInput`), (3) optional **FilterSection** for filters, (4) **ListHeader** (sortable), (5) scrollable list in a bordered container (`border border-border-light rounded-lg`) with **GridListRow** or selectable rows, (6) footer (selection count + Cancel + primary action). Use **EmptyState** and **LoadingState** (from `@/components/ui` or shared list-components) for empty and loading; avoid ad-hoc Spinner/divs. For search + sort state, **useModalListState** (`@/hooks/use-modal-list-state`) returns `search`, `setSearch`, `filteredItems`, `sortedItems`, `sortState`, `handleSort`, `reset` — use in load/add-X modals to reduce duplication.
 
 See `UI_COMPONENT_REFERENCE.md` for full component details.
 
@@ -156,9 +156,6 @@ Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.
 | Changelog | `src/docs/ai/AI_CHANGELOG.md` |
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
-| Codebase audit | `src/docs/ai/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
-| Unification audit | `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
-| **Modal unification audit** | `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
 | **Mobile UX** | `src/docs/MOBILE_UX.md` — breakpoints, touch targets, full-screen modals, dense-layout strategy (side-scroll vs collapse). When adding a new page or modal, follow MOBILE_UX.md and the Agent checklist there. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), implemented vs backlog, AI checklist for onboarding/retention/copy. Update Section 3/4 when completing UX tasks. |
 
