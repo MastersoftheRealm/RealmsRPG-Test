@@ -18,7 +18,8 @@ export function usePublicLibrary(type: 'powers' | 'techniques' | 'items' | 'crea
   return useQuery({
     queryKey: PUBLIC_LIBRARY_KEYS.byType(type),
     queryFn: () => fetchPublicLibrary(type),
-    refetchOnMount: true, // Refetch when add modals open so public library is fresh
+    staleTime: 5 * 60 * 1000, // 5 min — public library changes rarely; avoid refetch on every add-modal open
+    refetchOnMount: true, // Refetch when add modals open so public library is fresh (but only when stale)
   });
 }
 
