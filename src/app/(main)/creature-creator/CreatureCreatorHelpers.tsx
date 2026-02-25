@@ -24,29 +24,41 @@ export function ChipList({
   items,
   onRemove,
   color = 'bg-surface-alt text-text-secondary',
+  costLabel,
 }: {
   items: string[];
   onRemove: (item: string) => void;
   color?: string;
+  /** Optional: return feat point cost label per item (e.g. "+1 pt"). Shown as small chip. */
+  costLabel?: (item: string) => string | undefined;
 }) {
   if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
 
   return (
     <div className="flex flex-wrap gap-1">
-      {items.map(item => (
-        <span
-          key={item}
-          className={cn('px-2 py-1 rounded text-sm flex items-center gap-1', color)}
-        >
-          {item}
-          <button
-            onClick={() => onRemove(item)}
-            className="text-text-muted dark:text-text-secondary hover:text-danger-500 dark:hover:text-danger-400"
+      {items.map(item => {
+        const cost = costLabel?.(item);
+        return (
+          <span
+            key={item}
+            className={cn('px-2 py-1 rounded text-sm flex items-center gap-1.5', color)}
           >
-            ×
-          </button>
-        </span>
-      ))}
+            {item}
+            {cost != null && cost !== '' && (
+              <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300" title="Feat point cost">
+                {cost}
+              </span>
+            )}
+            <button
+              onClick={() => onRemove(item)}
+              className="text-text-muted dark:text-text-secondary hover:text-danger-500 dark:hover:text-danger-400"
+              aria-label={`Remove ${item}`}
+            >
+              ×
+            </button>
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -61,12 +73,15 @@ export function ExpandableChipList({
   color = 'bg-surface-alt text-text-secondary',
   rowHoverClass,
   descriptions,
+  costLabel,
 }: {
   items: string[];
   onRemove: (item: string) => void;
   color?: string;
   rowHoverClass?: string;
   descriptions: Record<string, string>;
+  /** Optional: return feat point cost label per item (e.g. "+1 pt"). Shown in rightSlot as chip. */
+  costLabel?: (item: string) => string | undefined;
 }) {
   if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
 
@@ -74,6 +89,7 @@ export function ExpandableChipList({
     <div className="flex flex-col gap-2">
       {items.map(item => {
         const description = descriptions[item];
+        const cost = costLabel?.(item);
 
         return (
           <GridListRow
@@ -85,6 +101,13 @@ export function ExpandableChipList({
             compact
             className={color}
             rowHoverClass={rowHoverClass}
+            rightSlot={
+              cost != null && cost !== '' ? (
+                <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 shrink-0" title="Feat point cost">
+                  {cost}
+                </span>
+              ) : undefined
+            }
           />
         );
       })}
@@ -101,11 +124,17 @@ export function AddItemDropdown({
   selectedItems,
   onAdd,
   placeholder,
+  costForOption,
+  sectionCostLabel,
 }: {
-  options: readonly { value: string; label: string }[] | readonly string[];
+  options: readonly { value: string; label: string; description?: string }[] | readonly string[];
   selectedItems: readonly string[];
   onAdd: (item: string) => void;
   placeholder: string;
+  /** Optional: return feat point cost to append to each option label (e.g. "+1 pt"). */
+  costForOption?: (value: string) => string | number | undefined;
+  /** Optional: short label for cost shown next to dropdown (e.g. "+1 pt each"). */
+  sectionCostLabel?: string;
 }) {
   const [selectedValue, setSelectedValue] = useState('');
 
@@ -123,23 +152,34 @@ export function AddItemDropdown({
   };
 
   return (
-    <div className="flex items-center gap-2 mt-2">
-      <select
-        value={selectedValue}
-        onChange={e => setSelectedValue(e.target.value)}
-        className="flex-1 min-w-0 px-3 py-2 border border-border-light rounded-lg text-sm bg-surface"
-        aria-label={placeholder || 'Selection'}
-      >
-        <option value="">{placeholder}</option>
-        {availableOptions.map(opt => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <Button size="sm" onClick={handleAdd} disabled={!selectedValue} className="flex-shrink-0">
-        Add
-      </Button>
+    <div className="flex flex-col gap-1 mt-2">
+      {sectionCostLabel && (
+        <span className="text-xs font-medium text-primary-600 dark:text-primary-400" title="Feat point cost">
+          {sectionCostLabel}
+        </span>
+      )}
+      <div className="flex items-center gap-2">
+        <select
+          value={selectedValue}
+          onChange={e => setSelectedValue(e.target.value)}
+          className="flex-1 min-w-0 px-3 py-2 border border-border-light rounded-lg text-sm bg-surface text-text-primary"
+          aria-label={placeholder || 'Selection'}
+        >
+          <option value="">{placeholder}</option>
+          {availableOptions.map(opt => {
+            const costStr = costForOption?.(opt.value);
+            const costSuffix = costStr != null && costStr !== '' ? ` (${typeof costStr === 'number' ? (costStr >= 0 ? '+' : '') + costStr : costStr} pt)` : '';
+            return (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}{costSuffix}
+              </option>
+            );
+          })}
+        </select>
+        <Button size="sm" onClick={handleAdd} disabled={!selectedValue} className="flex-shrink-0">
+          Add
+        </Button>
+      </div>
     </div>
   );
 }

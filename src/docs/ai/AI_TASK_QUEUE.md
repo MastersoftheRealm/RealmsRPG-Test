@@ -6304,7 +6304,7 @@ Agents should **create new tasks** during their work when they discover addition
 - id: TASK-270
   title: Creature Creator — Show feat point cost for damage modifiers, senses, movement, condition immunities
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-24
   created_by: agent
   description: |
@@ -6319,12 +6319,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Movement: show feat point cost when adding and on each movement type (chip or inline).
     - Condition immunities: show feat point cost per condition immunity (same pattern as damage modifiers).
     - Use creature feat codex data (feat_points) and CREATURE_FEAT_IDS / SENSE_TO_FEAT_ID / MOVEMENT_TO_FEAT_ID for costs; summary panel already computes mechanical feat points — surface costs in UI.
-  notes: "From Creature Creator feedback 2026-02-24. Cross-ref: page.tsx featPointsMap, resistanceFeatCost, immunityFeatCost, etc."
+  notes: "Done 2026-02-24. ChipList and ExpandableChipList accept costLabel(item); AddItemDropdown accepts costForOption and sectionCostLabel. Stats expose resistanceFeatCost, immunityFeatCost, weaknessFeatCost, conditionImmunityFeatCost. Senses/movement use getSenseCostLabel/getMovementCostLabel from featPointsMap."
 
 - id: TASK-271
   title: Creature Creator — Use AddSkillModal and AddSubSkillModal instead of skills dropdown
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-24
   created_by: agent
   description: |
@@ -6338,12 +6338,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Replace AddItemDropdown for skills with "Add Skill" and "Add Sub Skill" buttons that open AddSkillModal and AddSubSkillModal respectively.
     - Wire modal selection to creature state (add base skill or sub-skill with correct structure; creature skills use CreatureSkill shape).
     - Reuse shared AddSkillModal/AddSubSkillModal props and onConfirm handling; creature has no "character" so pass minimal required props (skills data, codex skills, selected IDs, onConfirm that adds to creature.skills).
-  notes: "From Creature Creator feedback 2026-02-24. See SkillsAllocationPage and CharacterSheetModals for modal usage."
+  notes: "Done 2026-02-24. Replaced dropdown with Add Skill / Add Sub Skill buttons; handleAddSkills adds base skills (value 0, proficient); handleAddSubSkills adds sub-skills (value 1, proficient) and autoAddBaseSkill when needed."
 
 - id: TASK-272
   title: Creature Creator — Separate Add Feat and Add Negative Feat modals
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-24
   created_by: agent
   description: |
@@ -6355,12 +6355,12 @@ Agents should **create new tasks** during their work when they discover addition
     - Two buttons: "Add Feat" (opens modal with feats where feat_points >= 0 or non-mechanical) and "Add Negative Feat" (opens modal with feats where feat_points < 0).
     - Filter feat list by creatureFeatsData / codex creature feats: points (feat_points) < 0 for negative feat modal; points >= 0 (and optionally exclude mechanical-only) for add feat modal.
     - Both modals use same UnifiedSelectionModal pattern; only data source filter differs.
-  notes: "From Creature Creator feedback 2026-02-24. Creature feats have points (feat_points); negative = weaknesses etc."
+  notes: "Done 2026-02-24. featSelectableItems filtered by Number(f.cost ?? 0) >= 0; featSelectableItemsNegative by < 0. Two modals and Add Feat / Add Negative Feat buttons."
 
 - id: TASK-273
   title: Creature Creator — Power/technique/armament modals and lists show parts, properties, options as chips; use site-wide display logic
   priority: high
-  status: not-started
+  status: done
   created_at: 2026-02-24
   created_by: agent
   description: |
@@ -6377,4 +6377,4 @@ Agents should **create new tasks** during their work when they discover addition
     - Add power/technique/armament modals: SelectableItem built with detailSections (Parts & Proficiencies / Properties chips) and optional totalCost/costLabel; area, range, duration, etc in expanded view or columns. Reuse part/property chip builders from add-library-item-modal or lib/calculators (derivePowerDisplay, deriveTechniqueDisplay, deriveItemDisplay; filterSavedItemPropertiesForList, part chips with TP).
     - Creature creator displayed lists (Powers, Techniques, Armaments sections): each row expandable with description, parts/properties as chips, area/range/damage/requirements in expanded view — same structure as library-section and character creator steps (GridListRow with detailSections, chips).
     - Do not duplicate chip-building logic; import or call shared helpers from lib/calculators and add-library-item-modal or equivalent.
-  notes: "From Creature Creator feedback 2026-02-24. displayItemToSelectableItem in CreatureCreatorHelpers currently only maps columns from stats; needs detailSections from parts/properties. Transformers need to pass through parts/properties for chip build."
+  notes: "Done 2026-02-24. powerSelectableItems, techniqueSelectableItems, armamentSelectableItems now built from powerList/techniqueList/armamentList using derivePowerDisplay, deriveTechniqueDisplay, and property chip logic (same as add-library-item-modal); each SelectableItem has detailSections, totalCost, costLabel. Displayed lists (Powers/Techniques/Armaments sections) still use simple columns; optional follow-up to add expandable detail from library lookup."
