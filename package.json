@@ -4,14 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build --webpack",
-    "postinstall": "prisma generate",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "inject-env-vanilla": "node scripts/inject-env-vanilla.js",
     "db:seed": "node scripts/seed-to-supabase.js",
     "db:seed:reset": "node scripts/seed-to-supabase.js --reset",
-    "db:migrate": "prisma migrate deploy"
+    "db:migrate": "echo Run SQL in Supabase Dashboard; see src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -33,7 +32,6 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@prisma/client": "^6.6.0",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.19",
@@ -46,7 +44,6 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "prisma": "^6.6.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

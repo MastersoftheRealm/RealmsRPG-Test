@@ -62,8 +62,8 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Character logic | `src/services/character-service.ts`, `src/hooks/use-characters.ts` |
 | Creator state | `src/stores/character-creator-store.ts` |
 | Supabase | `src/lib/supabase/` |
-| Prisma | `prisma/schema.prisma`, `src/lib/prisma.ts` |
-| Codex API | `src/app/api/codex/` |
+| Database types | `src/types/database.ts` (or Supabase-generated types) |
+| Codex API | `src/app/api/codex/` — fetches from Supabase |
 | **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |
 | **Accessibility & contrast** | `src/docs/ACCESSIBILITY.md` — contrast tokens (success-700 + dark variant, power/martial-dark), form labels, headings, modals, touch targets; `src/docs/DESIGN_SYSTEM.md` — status and game-specific color tokens for light + dark mode. When editing UI, ensure new or changed text/controls follow these so both themes pass WCAG 2.1 AA. |
 | **User experience goals** | `src/docs/USER_EXPERIENCE_GOALS.md` — UX goals, terminology (Realms Codex/Library, My Library), what’s implemented vs backlog, and AI checklist for onboarding/retention/copy. Read when changing landing, creator, library, or onboarding flows. |
@@ -79,7 +79,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Auth state | `useAuth` |
 | User's characters | `useCharacters` |
 | User's library (powers, techniques, items, creatures) | `useUserLibrary` |
-| Codex reference data (parts, skills, feats, species) | `useCodexFeats`, `useCodexSkills`, `usePowerParts`, etc. (from `use-codex.ts`) |
+| Codex reference data (parts, skills, feats, species) | `useCodexFeats`, `useCodexSkills`, `usePowerParts`, etc. (from `use-codex.ts`; data from Supabase) |
 | Character CRUD | `character-service.ts` (via useCharacters) |
 
 **Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useCodexPowerParts()` / `useCodexTechniqueParts()` for correct EN/TP costs. See `ARCHITECTURE.md`. **Codex/library:** Use `useCodex*` hooks (single `['codex']` fetch); avoid duplicate codex fetches. See `DATA_HANDLING.md`.

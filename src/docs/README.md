@@ -1,12 +1,12 @@
 # RealmsRPG Docs
 
-**Stack:** Next.js, React, Tailwind, Supabase (PostgreSQL, Auth, Storage), Prisma, Vercel
+**Stack:** Next.js, React, Tailwind, Supabase (PostgreSQL, Auth, Storage), Vercel. No Prisma.
 
 ## For AI Agents (Cursor)
 
 1. **AGENT_GUIDE.md** (`ai/`) — Component locations, key files, hooks, recording progress.
 2. **AI_TASK_QUEUE.md** (`ai/`) — Prioritized tasks; pick `not-started` high-priority items.
-3. **ARCHITECTURE.md** — Data flow, Supabase/Prisma structure, enrichment pipeline, hooks/services.
+3. **ARCHITECTURE.md** — Data flow, Supabase structure, enrichment pipeline, hooks/services.
 4. **GAME_RULES.md** — Terminology, formulas, display conventions; use when implementing validation, caps, tooltips.
 5. **UNIFICATION_STATUS.md** — Verified unification state; what's done, what remains.
 6. **DESIGN_SYSTEM.md** — Color tokens, component API, migration patterns.

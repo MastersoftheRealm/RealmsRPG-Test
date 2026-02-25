@@ -2,7 +2,7 @@
  * User Library Hooks
  * ===================
  * React Query hooks for user-specific library data (powers, techniques, items, creatures).
- * Uses /api/user/library (Prisma).
+ * Uses /api/user/library (Supabase).
  */
 
 'use client';

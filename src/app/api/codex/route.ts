@@ -1,9 +1,9 @@
 /**
- * Codex API — returns all game reference data (from columnar codex tables)
+ * Codex API — returns all game reference data (from public codex tables via Supabase)
  */
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
@@ -23,57 +23,91 @@ function toNumArray(val: unknown): number[] {
 function toNum(val: unknown): number | undefined {
   if (val == null) return undefined;
   if (typeof val === 'number' && !Number.isNaN(val)) return val;
-  const obj = val as { toNumber?: () => number };
-  if (typeof obj?.toNumber === 'function') return obj.toNumber();
   const n = Number(val);
   return Number.isNaN(n) ? undefined : n;
 }
 
+/** DB row shape (snake_case from Supabase) */
+type Row = Record<string, unknown>;
+
 export async function GET() {
   try {
-    const [feats, skills, species, traits, parts, properties, equipment, archetypes, creatureFeats, coreRulesRows] = await Promise.all([
-      prisma.codexFeat.findMany(),
-      prisma.codexSkill.findMany(),
-      prisma.codexSpecies.findMany(),
-      prisma.codexTrait.findMany(),
-      prisma.codexPart.findMany(),
-      prisma.codexProperty.findMany(),
-      prisma.codexEquipment.findMany(),
-      prisma.codexArchetype.findMany(),
-      prisma.codexCreatureFeat.findMany(),
-      prisma.coreRules.findMany().catch(() => []),
+    const supabase = await createClient();
+
+    const [
+      { data: feats, error: eFeats },
+      { data: skills, error: eSkills },
+      { data: species, error: eSpecies },
+      { data: traits, error: eTraits },
+      { data: parts, error: eParts },
+      { data: properties, error: eProps },
+      { data: equipment, error: eEquip },
+      { data: archetypes, error: eArch },
+      { data: creatureFeats, error: eCreature },
+      coreResult,
+    ] = await Promise.all([
+      supabase.from('codex_feats').select('*'),
+      supabase.from('codex_skills').select('*'),
+      supabase.from('codex_species').select('*'),
+      supabase.from('codex_traits').select('*'),
+      supabase.from('codex_parts').select('*'),
+      supabase.from('codex_properties').select('*'),
+      supabase.from('codex_equipment').select('*'),
+      supabase.from('codex_archetypes').select('*'),
+      supabase.from('codex_creature_feats').select('*'),
+      (async () => {
+        const r = await supabase.from('core_rules').select('id, data');
+        return r.error ? { data: [] as Row[], error: null } : r;
+      })(),
     ]);
 
-    const codexFeats = feats.map((r) => ({
+    const coreRulesRows = (coreResult as { data?: Row[] }).data ?? [];
+    if (eFeats ?? eSkills ?? eSpecies ?? eTraits ?? eParts ?? eProps ?? eEquip ?? eArch ?? eCreature) {
+      const msg = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature].find(Boolean) as { message?: string } | undefined;
+      throw new Error(msg?.message ?? 'Codex fetch failed');
+    }
+
+    const featRows = (feats ?? []) as Row[];
+    const skillRows = (skills ?? []) as Row[];
+    const speciesRows = (species ?? []) as Row[];
+    const traitRows = (traits ?? []) as Row[];
+    const partRows = (parts ?? []) as Row[];
+    const propRows = (properties ?? []) as Row[];
+    const equipRows = (equipment ?? []) as Row[];
+    const archRows = (archetypes ?? []) as Row[];
+    const creatureRows = (creatureFeats ?? []) as Row[];
+    const coreRows = coreRulesRows as Row[];
+
+    const codexFeats = featRows.map((r) => ({
       id: r.id,
       name: r.name ?? '',
       description: r.description ?? '',
       category: r.category ?? '',
       ability: r.ability ?? undefined,
-      ability_req: toStrArray(r.abilityReq),
-      abil_req_val: toNumArray(r.abilReqVal),
+      ability_req: toStrArray(r.ability_req),
+      abil_req_val: toNumArray(r.abil_req_val),
       tags: toStrArray(r.tags),
-      skill_req: toStrArray(r.skillReq),
-      skill_req_val: toNumArray(r.skillReqVal),
-      lvl_req: toNum(r.lvlReq) ?? 0,
-      uses_per_rec: toNum(r.usesPerRec) ?? 0,
-      mart_abil_req: toNum(r.martAbilReq),
-      char_feat: Boolean(r.charFeat),
-      state_feat: Boolean(r.stateFeat),
-      rec_period: r.recPeriod ?? undefined,
-      req_desc: r.reqDesc ?? undefined,
-      feat_cat_req: r.featCatReq ?? undefined,
-      pow_abil_req: toNum(r.powAbilReq),
-      pow_prof_req: toNum(r.powProfReq),
-      speed_req: toNum(r.speedReq),
-      feat_lvl: toNum(r.featLvl),
+      skill_req: toStrArray(r.skill_req),
+      skill_req_val: toNumArray(r.skill_req_val),
+      lvl_req: toNum(r.lvl_req) ?? 0,
+      uses_per_rec: toNum(r.uses_per_rec) ?? 0,
+      mart_abil_req: toNum(r.mart_abil_req),
+      char_feat: Boolean(r.char_feat),
+      state_feat: Boolean(r.state_feat),
+      rec_period: r.rec_period ?? undefined,
+      req_desc: r.req_desc ?? undefined,
+      feat_cat_req: r.feat_cat_req ?? undefined,
+      pow_abil_req: toNum(r.pow_abil_req),
+      pow_prof_req: toNum(r.pow_prof_req),
+      speed_req: toNum(r.speed_req),
+      feat_lvl: toNum(r.feat_lvl),
     }));
 
-    const codexSkills = skills.map((r) => {
-      const ability = r.ability ?? '';
+    const codexSkills = skillRows.map((r) => {
+      const ability = (r.ability ?? '') as string;
       const baseSkillId =
-        r.baseSkill !== undefined && r.baseSkill !== null && r.baseSkill !== ''
-          ? parseInt(String(r.baseSkill), 10)
+        r.base_skill !== undefined && r.base_skill !== null && r.base_skill !== ''
+          ? parseInt(String(r.base_skill), 10)
           : undefined;
       return {
         id: r.id,
@@ -81,11 +115,11 @@ export async function GET() {
         description: r.description ?? '',
         ability,
         base_skill_id: !Number.isNaN(baseSkillId as number) ? baseSkillId : undefined,
-        success_desc: r.successDesc ?? undefined,
-        failure_desc: r.failureDesc ?? undefined,
-        ds_calc: r.dsCalc ?? undefined,
-        craft_success_desc: r.craftSuccessDesc ?? undefined,
-        craft_failure_desc: r.craftFailureDesc ?? undefined,
+        success_desc: r.success_desc ?? undefined,
+        failure_desc: r.failure_desc ?? undefined,
+        ds_calc: r.ds_calc ?? undefined,
+        craft_success_desc: r.craft_success_desc ?? undefined,
+        craft_failure_desc: r.craft_failure_desc ?? undefined,
       };
     });
 
@@ -108,10 +142,10 @@ export async function GET() {
       return undefined;
     };
 
-    const codexSpecies = species.map((r) => {
+    const codexSpecies = speciesRows.map((r) => {
       const sizes: string[] = toStrArray(r.sizes);
-      const aveHeight = r.aveHgtCm != null ? toNum(r.aveHgtCm) : undefined;
-      const aveWeight = r.aveWgtKg != null ? toNum(r.aveWgtKg) : undefined;
+      const aveHeight = r.ave_hgt_cm != null ? toNum(r.ave_hgt_cm) : undefined;
+      const aveWeight = r.ave_wgt_kg != null ? toNum(r.ave_wgt_kg) : undefined;
       return {
         id: r.id,
         name: r.name ?? '',
@@ -120,9 +154,9 @@ export async function GET() {
         size: sizes[0] || 'Medium',
         sizes,
         speed: 6,
-        traits: speciesArr(r.speciesTraits),
-        species_traits: speciesArr(r.speciesTraits),
-        ancestry_traits: speciesArr(r.ancestryTraits),
+        traits: speciesArr(r.species_traits),
+        species_traits: speciesArr(r.species_traits),
+        ancestry_traits: speciesArr(r.ancestry_traits),
         flaws: speciesArr(r.flaws),
         characteristics: speciesArr(r.characteristics),
         skills: speciesArr(r.skills),
@@ -130,41 +164,41 @@ export async function GET() {
         ability_bonuses: undefined,
         ave_height: aveHeight,
         ave_weight: aveWeight,
-        adulthood_lifespan: toAdulthoodLifespan(r.adulthoodLifespan),
+        adulthood_lifespan: toAdulthoodLifespan(r.adulthood_lifespan),
       };
     });
 
-    const codexTraits = traits.map((r) => ({
+    const codexTraits = traitRows.map((r) => ({
       id: r.id,
       name: r.name ?? '',
       description: r.description ?? '',
       species: [] as string[],
-      uses_per_rec: toNum(r.usesPerRec),
-      rec_period: r.recPeriod ?? undefined,
+      uses_per_rec: toNum(r.uses_per_rec),
+      rec_period: r.rec_period ?? undefined,
       flaw: r.flaw === true,
       characteristic: r.characteristic === true,
-      option_trait_ids: toStrArray(r.optionTraitIds),
+      option_trait_ids: toStrArray(r.option_trait_ids),
     }));
 
-    const allParts = parts.map((r) => {
-      const type = ((r.type ?? 'power').toLowerCase()) as 'power' | 'technique';
+    const allParts = partRows.map((r) => {
+      const type = ((r.type ?? 'power') as string).toLowerCase() as 'power' | 'technique';
       return {
         id: r.id,
         name: r.name ?? '',
         description: r.description ?? '',
         category: r.category ?? '',
         type,
-        base_en: toNum(r.baseEn) ?? 0,
-        base_tp: toNum(r.baseTp) ?? 0,
-        op_1_desc: r.op1Desc ?? undefined,
-        op_1_en: toNum(r.op1En) ?? 0,
-        op_1_tp: toNum(r.op1Tp) ?? 0,
-        op_2_desc: r.op2Desc ?? undefined,
-        op_2_en: toNum(r.op2En) ?? 0,
-        op_2_tp: toNum(r.op2Tp) ?? 0,
-        op_3_desc: r.op3Desc ?? undefined,
-        op_3_en: toNum(r.op3En) ?? 0,
-        op_3_tp: toNum(r.op3Tp) ?? 0,
+        base_en: toNum(r.base_en) ?? 0,
+        base_tp: toNum(r.base_tp) ?? 0,
+        op_1_desc: r.op_1_desc ?? undefined,
+        op_1_en: toNum(r.op_1_en) ?? 0,
+        op_1_tp: toNum(r.op_1_tp) ?? 0,
+        op_2_desc: r.op_2_desc ?? undefined,
+        op_2_en: toNum(r.op_2_en) ?? 0,
+        op_2_tp: toNum(r.op_2_tp) ?? 0,
+        op_3_desc: r.op_3_desc ?? undefined,
+        op_3_en: toNum(r.op_3_en) ?? 0,
+        op_3_tp: toNum(r.op_3_tp) ?? 0,
         percentage: r.percentage === true,
         mechanic: r.mechanic === true,
         duration: r.duration === true,
@@ -176,24 +210,24 @@ export async function GET() {
     const codexPowerParts = allParts.filter((p) => (p.type || 'power').toLowerCase() === 'power');
     const codexTechniqueParts = allParts.filter((p) => (p.type || 'technique').toLowerCase() === 'technique');
 
-    const codexProperties = properties.map((r) => ({
+    const codexProperties = propRows.map((r) => ({
       id: r.id,
       name: r.name ?? '',
       description: r.description ?? '',
       type: r.type ?? undefined,
       tp_cost: 0,
       gold_cost: 0,
-      base_ip: toNum(r.baseIp) ?? 0,
-      base_tp: toNum(r.baseTp) ?? 0,
-      base_c: toNum(r.baseC) ?? 0,
-      op_1_desc: r.op1Desc ?? undefined,
-      op_1_ip: toNum(r.op1Ip) ?? 0,
-      op_1_tp: toNum(r.op1Tp) ?? 0,
-      op_1_c: toNum(r.op1C) ?? 0,
+      base_ip: toNum(r.base_ip) ?? 0,
+      base_tp: toNum(r.base_tp) ?? 0,
+      base_c: toNum(r.base_c) ?? 0,
+      op_1_desc: r.op_1_desc ?? undefined,
+      op_1_ip: toNum(r.op_1_ip) ?? 0,
+      op_1_tp: toNum(r.op_1_tp) ?? 0,
+      op_1_c: toNum(r.op_1_c) ?? 0,
       mechanic: r.mechanic === true,
     }));
 
-    const codexEquipment = equipment.map((r) => {
+    const codexEquipment = equipRows.map((r) => {
       const cost = toNum(r.currency) ?? 0;
       return {
         id: r.id,
@@ -212,23 +246,23 @@ export async function GET() {
       };
     });
 
-    const codexArchetypes = archetypes.map((r) => ({
+    const codexArchetypes = archRows.map((r) => ({
       id: r.id,
       name: r.name ?? '',
       type: r.type ?? '',
       description: r.description ?? '',
     }));
 
-    const codexCreatureFeats = creatureFeats.map((r) => {
-      const pointsVal = toNum(r.featPoints) ?? 0;
+    const codexCreatureFeats = creatureRows.map((r) => {
+      const pointsVal = toNum(r.feat_points) ?? 0;
       return {
         id: r.id,
         name: r.name ?? '',
         description: r.description ?? '',
         points: pointsVal,
         feat_points: pointsVal,
-        feat_lvl: toNum(r.featLvl),
-        lvl_req: toNum(r.lvlReq),
+        feat_lvl: toNum(r.feat_lvl),
+        lvl_req: toNum(r.lvl_req),
         mechanic: r.mechanic === true,
         tiers: undefined,
         prereqs: [] as string[],
@@ -236,8 +270,9 @@ export async function GET() {
     });
 
     const coreRules: Record<string, unknown> = {};
-    for (const row of coreRulesRows) {
-      coreRules[row.id] = row.data;
+    for (const row of coreRows) {
+      const id = row.id as string;
+      if (id != null) coreRules[id] = row.data;
     }
 
     const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
@@ -268,7 +303,7 @@ export async function GET() {
         : message.includes('connect') || message.includes('connection')
           ? 'Database connection failed. Check DATABASE_URL and ?pgbouncer=true in Vercel env vars.'
           : message.includes('exist') || message.includes('relation')
-            ? 'Codex tables may be missing. Run: npx prisma migrate deploy'
+            ? 'Codex tables may be missing. Run Supabase SQL migrations.'
             : undefined;
     return NextResponse.json(
       { error: 'Failed to load codex', ...(safeHint && { hint: safeHint }) },

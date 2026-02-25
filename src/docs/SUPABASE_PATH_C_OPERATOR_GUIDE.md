@@ -35,10 +35,10 @@ Phase 0 is split into **four SQL files** so each run is short and stays under th
 
 If your codex tables are still **two columns** (`id` + `data` JSONB) and you want **proper columns** (for CSV drag-and-drop and filtering):
 
-- The file **`prisma/supabase-codex-tables-columnar.sql`** creates columnar codex tables in the **`codex`** schema. After Phase 0, those schemas are gone and codex tables are already in **`public`**.
+- The file **`sql/supabase-codex-tables-columnar.sql`** creates columnar codex tables in the **`codex`** schema. After Phase 0, those schemas are gone and codex tables are already in **`public`**.
 - So you have two options:
   - **Option A:** Run the columnar script **before** Step 1 (while codex tables are still in `codex`), then run Step 1 — the script moves tables by name, so you’d move the already-columnar codex tables to `public`.
-  - **Option B:** Run Step 1 first (so codex is in `public` as id+data), then use a **modified** columnar script that creates/alters tables in **`public`** (not `codex`). That modified script is not in the repo yet; an agent can generate it from `prisma/supabase-codex-tables-columnar.sql` by replacing `codex.` with `public.` and dropping/recreating the codex_* tables in `public` (you may lose existing codex data unless you backfill from CSV).
+  - **Option B:** Run Step 1 first (so codex is in `public` as id+data), then use a **modified** columnar script that creates/alters tables in **`public`** (not `codex`). That modified script is not in the repo yet; an agent can generate it from `sql/supabase-codex-tables-columnar.sql` by replacing `codex.` with `public.` and dropping/recreating the codex_* tables in `public` (you may lose existing codex data unless you backfill from CSV).
 
 **If you already made codex columnar** (e.g. parts, properties, creature feats, traits, species, skills, feats) via CSV drag-and-drop in a previous session, skip this step; Phase 0 will move those columnar tables to `public` as-is.
 
@@ -48,7 +48,7 @@ If your codex tables are still **two columns** (`id` + `data` JSONB) and you wan
 
 If you use **Storage** for portraits or profile pictures:
 
-1. Open **`prisma/supabase-storage-policies.sql`** in this repo.
+1. Open **`sql/supabase-storage-policies.sql`** in this repo.
 2. Copy the entire file and run it in Supabase **SQL Editor**.
 
 This is independent of Path C; run once per project.
@@ -57,8 +57,7 @@ This is independent of Path C; run once per project.
 
 ## Step 4: After the database is aligned
 
-- **Prisma (temporary):** So the app keeps working until Prisma is removed, update **`prisma/schema.prisma`**: set **every** model to `@@schema("public")` and set the datasource to a single schema, e.g. `schemas = ["public"]`. Then run `npx prisma generate`. The app will keep using Prisma against `public` until Phases 1–5 replace it with the Supabase client.
-- **Realtime in the app:** When you implement Phase 0 in code (or right after), update Realtime subscriptions to use `schema: 'public'` and `table: 'campaign_rolls'` or `table: 'characters'` (see PATH_C_MIGRATION_PLAN.md Phase 0 / Phase 2).
+- **Realtime in the app:** Realtime subscriptions use `schema: 'public'` and `table: 'campaign_rolls'` or `table: 'characters'` (see PATH_C_MIGRATION_PLAN.md). The app uses Supabase only (no Prisma).
 
 ---
 
@@ -72,8 +71,8 @@ This is independent of Path C; run once per project.
 | 1c2a | **`sql/path-c-phase0-consolidate-to-public-part1c2.sql`** | Move public_powers + public_techniques only (core_rules skipped — see below). Run after 1c. |
 | 1c2b | **`sql/path-c-phase0-consolidate-to-public-part1c2b.sql`** | Move public_items + public_creatures (2). Run after 1c2a. |
 | 2 | **`sql/path-c-phase0-consolidate-to-public-part2.sql`** | RLS, Realtime add, drop schemas. Run after 1c2b. |
-| 2 (optional) | **`prisma/supabase-codex-tables-columnar.sql`** | Only if you want columnar codex and haven’t run it yet; run **before** Step 1 if you want columnar tables moved to public. |
-| 3 | **`prisma/supabase-storage-policies.sql`** | Once per project for Storage RLS. |
+| 2 (optional) | **`sql/supabase-codex-tables-columnar.sql`** | Only if you want columnar codex and haven’t run it yet; run **before** Step 1 if you want columnar tables moved to public. |
+| 3 | **`sql/supabase-storage-policies.sql`** | Once per project for Storage RLS. |
 
 ---
 
@@ -100,7 +99,7 @@ This is independent of Path C; run once per project.
 1. **Create the table in public:** Run **`sql/create-public-core-rules.sql`** in Supabase SQL Editor. This creates `public.core_rules` (id TEXT, data JSONB, updated_at) and RLS (anyone can read).
 2. **Re-seed from saved data:** Core rules data is saved in two places:
    - **`data/core-rules/*.json`** — one JSON file per category (13 files). Generate/refresh with: `node scripts/seed-core-rules.js --export-json`.
-   - **Embedded in `scripts/seed-core-rules.js`** — the same CORE_RULES object. Seed the DB with: `node scripts/seed-core-rules.js` (requires Prisma pointing at `public` schema).
+   - **Embedded in `scripts/seed-core-rules.js`** — the same CORE_RULES object. Seed the DB with: `node scripts/seed-core-rules.js` (writes to Supabase `public.core_rules`).
 
 **Structure:** One row per category (`id` = e.g. `PROGRESSION_PLAYER`, `ABILITY_RULES`; `data` = JSONB). App and admin use this shape; see `src/types/core-rules.ts` and admin core-rules page.
 

@@ -6,6 +6,7 @@ Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
 - Top: curated, grouped, actionable guidance for engineers.
 - Bottom: an appendable "Raw Feedback Log" where new raw entries can be pasted verbatim each time new feedback is issued.
+- **Stack:** Supabase only (no Prisma). New feedback entries should refer to Supabase; historical Prisma mentions in the log can remain.
 
 How to use
 - **Curated sections** (below): priorities and intent. **Raw Feedback Log** (bottom): append new raw feedback with date, context, priority, text. Chronological order.
@@ -820,7 +821,7 @@ Notes
 - Priority: High
 - Feedback: Character portrait isn't loading and errors when uploading. Console: "Portrait upload error: Error: new row violates row-level security policy"; /api/upload/portrait 500; image 400. (Other console messages — slow network, message channel closed, express-utils.js, Adobe extension — are from browser extensions, not the app.)
 - Expected: Portrait upload succeeds; portrait loads on character sheet.
-- Implemented 2026-02-20: Added prisma/supabase-storage-policies.sql with full RLS for portraits bucket (SELECT, INSERT, UPDATE, DELETE) and profile-pictures; API needs UPDATE/DELETE for list+remove+upsert flow. Deployment doc updated to point to this file and to troubleshoot "new row violates row-level security policy" by running the storage policies. User must run the SQL in Supabase Dashboard → SQL Editor. See AI_CHANGELOG.md.
+- Implemented 2026-02-20: Added sql/supabase-storage-policies.sql with full RLS for portraits bucket (SELECT, INSERT, UPDATE, DELETE) and profile-pictures; API needs UPDATE/DELETE for list+remove+upsert flow. Deployment doc updated to point to this file and to troubleshoot "new row violates row-level security policy" by running the storage policies. User must run the SQL in Supabase Dashboard → SQL Editor. See AI_CHANGELOG.md.
 
 **Raw Feedback Log — 2/20/2026 (Unarmed prowess damage = Attack Bonus + dice)**
 - Date: 2026-02-20
@@ -962,7 +963,7 @@ Notes
 - Priority: High  
 - Feedback: Character Talavas rolled four times on his character sheet while part of a campaign; the campaign roll log didn't update until page refresh. Console/backend showed PoolingReplicationError: permission denied for schema campaigns, permission denied for schema users (realtime.apply_rls / list_changes, insufficient_privilege 42501).  
 - Expected: Campaign roll log (and character/encounter realtime sync) update in real time without refresh.  
-- Disposition: Root cause is Realtime service lacking USAGE on custom schemas (campaigns, users). prisma/supabase-rls-policies.sql updated with GRANT USAGE ON SCHEMA for campaigns and users (anon, authenticated, service_role, authenticator). DEPLOYMENT_AND_SECRETS_SUPABASE.md updated with troubleshooting and optional supabase_realtime grant. Owner must run the updated SQL in Supabase SQL Editor for the fix to take effect.
+- Disposition: Root cause is Realtime service lacking USAGE on custom schemas (campaigns, users). sql/supabase-rls-policies.sql updated with GRANT USAGE ON SCHEMA for campaigns and users (anon, authenticated, service_role, authenticator). DEPLOYMENT_AND_SECRETS_SUPABASE.md updated with troubleshooting and optional supabase_realtime grant. Owner must run the updated SQL in Supabase SQL Editor for the fix to take effect.
 
 **Raw Feedback Log — 2026-02-21 (Dark mode: currency cost/training point, advanced mechanics, creators)**
 - Date: 2026-02-21

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { inviteCodeLimiter } from '@/lib/rate-limit';
 
 export async function GET(
@@ -25,10 +25,12 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid invite code' }, { status: 400 });
     }
 
-    const row = await prisma.campaign.findFirst({
-      where: { inviteCode },
-      select: { id: true, name: true },
-    });
+    const supabase = await createClient();
+    const { data: row } = await supabase
+      .from('campaigns')
+      .select('id, name')
+      .eq('invite_code', inviteCode)
+      .maybeSingle();
 
     if (!row) {
       return NextResponse.json(null, { status: 404 });

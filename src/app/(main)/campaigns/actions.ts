@@ -2,12 +2,12 @@
  * Campaign Server Actions
  * ========================
  * Server actions for campaign CRUD, join, and character management.
- * Uses Prisma + Supabase session.
+ * Uses Supabase + session.
  */
 
 'use server';
 
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
@@ -24,19 +24,16 @@ function generateInviteCode(): string {
 }
 
 async function getUsernameByUid(uid: string): Promise<string | undefined> {
-  const profile = await prisma.userProfile.findUnique({
-    where: { id: uid },
-    select: { username: true },
-  });
-  return profile?.username ?? undefined;
+  const supabase = await createClient();
+  const { data } = await supabase.from('user_profiles').select('username').eq('id', uid).maybeSingle();
+  return (data as { username?: string } | null)?.username ?? undefined;
 }
 
 async function ensureUniqueInviteCode(): Promise<string> {
+  const supabase = await createClient();
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateInviteCode();
-    const existing = await prisma.campaign.findFirst({
-      where: { inviteCode: code },
-    });
+    const { data: existing } = await supabase.from('campaigns').select('id').eq('invite_code', code).maybeSingle();
     if (!existing) return code;
   }
   throw new Error('Failed to generate unique invite code');
@@ -54,7 +51,6 @@ function getArchetypeDisplayName(archetypeType?: string): ArchetypeDisplayName |
 export async function createCampaignAction(data: { name: string; description?: string }) {
   try {
     const user = await requireAuth();
-
     const name = data.name?.trim();
     if (!name || name.length < 2) {
       return { success: false, error: 'Campaign name must be at least 2 characters' };
@@ -62,24 +58,24 @@ export async function createCampaignAction(data: { name: string; description?: s
 
     const ownerUsername = await getUsernameByUid(user.uid);
     const inviteCode = await ensureUniqueInviteCode();
+    const supabase = await createClient();
 
-    await prisma.userProfile.upsert({
-      where: { id: user.uid },
-      create: { id: user.uid },
-      update: {},
-    });
+    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
 
-    const campaign = await prisma.campaign.create({
-      data: {
+    const { data: campaign, error } = await supabase
+      .from('campaigns')
+      .insert({
         name,
         description: data.description?.trim() || '',
-        ownerId: user.uid,
-        ownerUsername: ownerUsername || user.name || 'Realm Master',
-        inviteCode,
+        owner_id: user.uid,
+        owner_username: ownerUsername || user.name || 'Realm Master',
+        invite_code: inviteCode,
         characters: [],
         memberIds: [],
-      },
-    });
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
 
     return { success: true, campaignId: campaign.id, inviteCode };
   } catch (error) {
@@ -99,46 +95,49 @@ export async function joinCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
-
     const code = data.inviteCode?.trim().toUpperCase();
     if (!code) {
       return { success: false, error: 'Please enter an invite code' };
     }
 
-    const campaignRow = await prisma.campaign.findFirst({
-      where: { inviteCode: code },
-      include: { members: { select: { userId: true } } },
-    });
-
+    const supabase = await createClient();
+    const { data: campaignRow } = await supabase
+      .from('campaigns')
+      .select('id, owner_id, characters, memberIds')
+      .eq('invite_code', code)
+      .maybeSingle();
     if (!campaignRow) {
       return { success: false, error: 'Invalid invite code. No campaign found.' };
     }
 
-    const campaignData = (campaignRow.characters as unknown) as CampaignCharacter[];
+    const { data: memberRows } = await supabase
+      .from('campaign_members')
+      .select('user_id')
+      .eq('campaign_id', campaignRow.id);
+    const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
+    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
     const campaignId = campaignRow.id;
-    const memberIds = campaignRow.members?.map((m) => m.userId) ?? ((campaignRow.memberIds as unknown) as string[]) ?? [];
 
-    // Verify character belongs to user (Prisma)
-    const charRow = await prisma.character.findFirst({
-      where: { id: data.characterId, userId: user.uid },
-    });
+    const { data: charRow } = await supabase
+      .from('characters')
+      .select('id, data')
+      .eq('id', data.characterId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
     if (!charRow) {
       return { success: false, error: 'Character not found. You can only add your own characters.' };
     }
 
-    const alreadyIn = campaignData?.some(
-      (c) => c.userId === user.uid && c.characterId === data.characterId
-    );
+    const alreadyIn = campaignData?.some((c) => c.userId === user.uid && c.characterId === data.characterId);
     if (alreadyIn) {
       return { success: false, error: 'This character is already in the campaign.' };
     }
 
-    const currentCount = campaignData?.length ?? 0;
-    if (currentCount >= MAX_CAMPAIGN_CHARACTERS) {
+    if (campaignData?.length >= MAX_CAMPAIGN_CHARACTERS) {
       return { success: false, error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.` };
     }
 
-    if (campaignRow.ownerId !== user.uid) {
+    if (campaignRow.owner_id !== user.uid) {
       const userChars = campaignData?.filter((c) => c.userId === user.uid) ?? [];
       if (userChars.length >= 1) {
         return { success: false, error: 'You can only have one character per campaign.' };
@@ -160,25 +159,18 @@ export async function joinCampaignAction(data: {
     const characters = [...(campaignData || []), newChar];
     const newMemberIds = [...new Set([...memberIds, user.uid])];
 
-    await prisma.$transaction([
-      prisma.campaignMember.upsert({
-        where: { campaignId_userId: { campaignId, userId: user.uid } },
-        create: { campaignId, userId: user.uid },
-        update: {},
-      }),
-      prisma.campaign.update({
-        where: { id: campaignId },
-        data: { characters: characters as object, memberIds: newMemberIds as object },
-      }),
-    ]);
+    await supabase.from('campaign_members').upsert(
+      { campaign_id: campaignId, user_id: user.uid },
+      { onConflict: 'campaign_id,user_id' }
+    );
+    await supabase
+      .from('campaigns')
+      .update({ characters, memberIds: newMemberIds })
+      .eq('id', campaignId);
 
-    // Set character visibility to campaign so RM and members can view it
-    const charData = charRow.data as Record<string, unknown>;
+    const charData = (charRow.data as Record<string, unknown>) ?? {};
     const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
-    await prisma.character.update({
-      where: { id: data.characterId },
-      data: { data: merged as object },
-    });
+    await supabase.from('characters').update({ data: merged }).eq('id', data.characterId).eq('user_id', user.uid);
 
     return { success: true, campaignId, visibilityUpdated: true };
   } catch (error) {
@@ -198,45 +190,48 @@ export async function addCharacterToCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const campaignRow = await prisma.campaign.findUnique({
-      where: { id: data.campaignId },
-      include: { members: { select: { userId: true } } },
-    });
-
+    const { data: campaignRow } = await supabase
+      .from('campaigns')
+      .select('id, owner_id, characters')
+      .eq('id', data.campaignId)
+      .maybeSingle();
     if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
-
-    if (campaignRow.ownerId !== user.uid) {
+    if (campaignRow.owner_id !== user.uid) {
       return { success: false, error: 'Only the Realm Master can add characters to their campaign' };
     }
 
-    const charRow = await prisma.character.findFirst({
-      where: { id: data.characterId, userId: user.uid },
-    });
+    const { data: charRow } = await supabase
+      .from('characters')
+      .select('id, data')
+      .eq('id', data.characterId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
     if (!charRow) {
       return { success: false, error: 'Character not found' };
     }
 
-    const campaignData = ((campaignRow.characters as unknown) as CampaignCharacter[]) || [];
-    const currentCount = campaignData.length;
-    if (currentCount >= MAX_CAMPAIGN_CHARACTERS) {
+    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    if (campaignData.length >= MAX_CAMPAIGN_CHARACTERS) {
       return { success: false, error: `This campaign has reached the maximum of ${MAX_CAMPAIGN_CHARACTERS} characters.` };
     }
-
     const ownerChars = campaignData.filter((c) => c.userId === user.uid);
     if (ownerChars.length >= OWNER_MAX_CHARACTERS) {
       return { success: false, error: `You can add up to ${OWNER_MAX_CHARACTERS} of your own characters.` };
     }
-
-    const alreadyIn = campaignData.some(
-      (c) => c.userId === user.uid && c.characterId === data.characterId
-    );
+    const alreadyIn = campaignData.some((c) => c.userId === user.uid && c.characterId === data.characterId);
     if (alreadyIn) {
       return { success: false, error: 'This character is already in the campaign.' };
     }
 
+    const { data: memberRows } = await supabase
+      .from('campaign_members')
+      .select('user_id')
+      .eq('campaign_id', data.campaignId);
+    const currentMemberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
     const ownerUsername = await getUsernameByUid(user.uid);
     const newChar: CampaignCharacter = {
       userId: user.uid,
@@ -248,30 +243,18 @@ export async function addCharacterToCampaignAction(data: {
       archetype: getArchetypeDisplayName(data.archetypeType),
       ownerUsername: ownerUsername || undefined,
     };
-
     const characters = [...campaignData, newChar];
-    const currentMemberIds = campaignRow.members?.map((m) => m.userId) ?? ((campaignRow.memberIds as unknown) as string[]) ?? [];
     const memberIds = [...new Set([...currentMemberIds, user.uid])];
 
-    await prisma.$transaction([
-      prisma.campaignMember.upsert({
-        where: { campaignId_userId: { campaignId: data.campaignId, userId: user.uid } },
-        create: { campaignId: data.campaignId, userId: user.uid },
-        update: {},
-      }),
-      prisma.campaign.update({
-        where: { id: data.campaignId },
-        data: { characters: characters as object, memberIds: memberIds as object },
-      }),
-    ]);
+    await supabase.from('campaign_members').upsert(
+      { campaign_id: data.campaignId, user_id: user.uid },
+      { onConflict: 'campaign_id,user_id' }
+    );
+    await supabase.from('campaigns').update({ characters, memberIds }).eq('id', data.campaignId);
 
-    // Set character visibility to campaign so RM and members can view it
-    const charData = charRow.data as Record<string, unknown>;
+    const charData = (charRow.data as Record<string, unknown>) ?? {};
     const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
-    await prisma.character.update({
-      where: { id: data.characterId },
-      data: { data: merged as object },
-    });
+    await supabase.from('characters').update({ data: merged }).eq('id', data.characterId).eq('user_id', user.uid);
 
     return { success: true, visibilityUpdated: true };
   } catch (error) {
@@ -287,17 +270,19 @@ export async function removeCharacterFromCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const campaignRow = await prisma.campaign.findUnique({
-      where: { id: data.campaignId },
-    });
-
+    const { data: campaignRow } = await supabase
+      .from('campaigns')
+      .select('id, owner_id, characters')
+      .eq('id', data.campaignId)
+      .maybeSingle();
     if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
 
-    const campaignData = (campaignRow.characters as unknown) as CampaignCharacter[];
-    const isOwner = campaignRow.ownerId === user.uid;
+    const campaignData = (campaignRow.characters as CampaignCharacter[]) ?? [];
+    const isOwner = campaignRow.owner_id === user.uid;
     const isRemovingOwn = data.userId === user.uid;
 
     if (!isOwner && !isRemovingOwn) {
@@ -309,15 +294,15 @@ export async function removeCharacterFromCampaignAction(data: {
     );
     const memberIds = [...new Set(characters.map((c) => c.userId))];
 
-    await prisma.$transaction([
-      prisma.campaign.update({
-        where: { id: data.campaignId },
-        data: { characters: characters as object, memberIds: memberIds as object },
-      }),
-      prisma.campaignMember.deleteMany({
-        where: { campaignId: data.campaignId, userId: { notIn: memberIds } },
-      }),
-    ]);
+    await supabase.from('campaigns').update({ characters, memberIds }).eq('id', data.campaignId);
+
+    if (!memberIds.includes(data.userId)) {
+      await supabase
+        .from('campaign_members')
+        .delete()
+        .eq('campaign_id', data.campaignId)
+        .eq('user_id', data.userId);
+    }
 
     return { success: true };
   } catch (error) {
@@ -332,20 +317,21 @@ export async function updateCampaignAction(
 ) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const campaignRow = await prisma.campaign.findUnique({
-      where: { id: campaignId },
-    });
-
+    const { data: campaignRow } = await supabase
+      .from('campaigns')
+      .select('id, owner_id')
+      .eq('id', campaignId)
+      .maybeSingle();
     if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
-
-    if (campaignRow.ownerId !== user.uid) {
+    if (campaignRow.owner_id !== user.uid) {
       return { success: false, error: 'Only the Realm Master can update the campaign' };
     }
 
-    const updates: { name?: string; description?: string | null } = {};
+    const updates: Record<string, unknown> = {};
     if (data.name !== undefined) {
       const name = data.name.trim();
       if (name.length < 2) {
@@ -356,16 +342,12 @@ export async function updateCampaignAction(
     if (data.description !== undefined) {
       updates.description = data.description.trim() || null;
     }
-
     if (Object.keys(updates).length === 0) {
       return { success: true };
     }
 
-    await prisma.campaign.update({
-      where: { id: campaignId },
-      data: updates,
-    });
-
+    const { error } = await supabase.from('campaigns').update(updates).eq('id', campaignId).eq('owner_id', user.uid);
+    if (error) throw error;
     return { success: true };
   } catch (error) {
     console.error('Update campaign error:', error);
@@ -376,23 +358,22 @@ export async function updateCampaignAction(
 export async function deleteCampaignAction(campaignId: string) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const campaignRow = await prisma.campaign.findUnique({
-      where: { id: campaignId },
-    });
-
+    const { data: campaignRow } = await supabase
+      .from('campaigns')
+      .select('id, owner_id')
+      .eq('id', campaignId)
+      .maybeSingle();
     if (!campaignRow) {
       return { success: false, error: 'Campaign not found' };
     }
-
-    if (campaignRow.ownerId !== user.uid) {
+    if (campaignRow.owner_id !== user.uid) {
       return { success: false, error: 'Only the Realm Master can delete the campaign' };
     }
 
-    await prisma.campaign.delete({
-      where: { id: campaignId },
-    });
-
+    const { error } = await supabase.from('campaigns').delete().eq('id', campaignId);
+    if (error) throw error;
     return { success: true };
   } catch (error) {
     console.error('Delete campaign error:', error);

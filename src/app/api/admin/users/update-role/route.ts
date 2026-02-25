@@ -2,13 +2,12 @@
  * Admin Update User Role API
  * ==========================
  * Update a user's role by username. Allowed roles: new_player, playtester, developer.
- * Admin role can only be set via env ADMIN_UIDS.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 
 const ALLOWED_ROLES = ['new_player', 'playtester', 'developer'] as const;
 
@@ -38,17 +37,20 @@ export async function PATCH(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const profile = await prisma.userProfile.findFirst({
-      where: { username: { equals: username, mode: 'insensitive' } },
-    });
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .ilike('username', username)
+      .maybeSingle();
     if (!profile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    await prisma.userProfile.update({
-      where: { id: profile.id },
-      data: { role: role as 'new_player' | 'playtester' | 'developer' },
-    });
+    await supabase
+      .from('user_profiles')
+      .update({ role: role as 'new_player' | 'playtester' | 'developer' })
+      .eq('id', (profile as { id: string }).id);
 
     return NextResponse.json({ success: true, username, role });
   } catch (err) {

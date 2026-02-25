@@ -2,7 +2,7 @@
 
 **Purpose:** Identify all JSONB/document-style storage, recommend columnar or normalized patterns for consistency, scalability, and interchangeability with the codex. Align naming (e.g. "public" → "official") and table shapes so official and user library content use the same schema.
 
-**Related:** `DATABASE_CODEX_AUDIT.md`, `prisma/schema.prisma`, `src/hooks/use-user-library.ts` (type shapes), `src/lib/calculators/` (power/technique/item display logic).
+**Related:** `DATABASE_CODEX_AUDIT.md`, Supabase/public schema, `src/hooks/use-user-library.ts` (type shapes), `src/lib/calculators/` (power/technique/item display logic).
 
 ---
 
@@ -101,9 +101,9 @@ These shapes keep **official** and **user** tables aligned: same columns, so cop
 
 | Phase | Scope | Deliverables |
 |-------|--------|--------------|
-| **1** | Rename public → official; add columnar official_* | New tables official_powers/techniques/items/creatures (scalar columns + one JSONB). Rename in Prisma, API, UI. Migration: create new tables, backfill from public_* data, switch reads/writes, drop public_*. |
-| **2** | User library columnar | ✅ **Done.** user_powers, user_techniques, user_items, user_creatures columnar (same columns as official + user_id); user_species unchanged. See prisma/supabase-user-library-columnar.sql, TASK-272. |
-| **3** | Campaign members | ✅ **Done.** campaign_members table; backfill from memberIds; RLS and API use campaign_members. See prisma/supabase-campaign-members.sql, TASK-273. campaign_characters not done. |
+| **1** | Rename public → official; add columnar official_* | New tables official_powers/techniques/items/creatures (scalar columns + one JSONB). Rename in API, UI. Migration: create new tables, backfill from public_* data, switch reads/writes, drop public_*. |
+| **2** | User library columnar | ✅ **Done.** user_powers, user_techniques, user_items, user_creatures columnar (same columns as official + user_id); user_species unchanged. See sql/ or Supabase migrations (tables in public), TASK-272. |
+| **3** | Campaign members | ✅ **Done.** campaign_members table; backfill from memberIds; RLS and API use campaign_members. See sql/ or Supabase (campaign_members in public), TASK-273. campaign_characters not done. |
 | **4** | (Optional) Character index | If product needs “list characters by level/archetype”, add character_index or JSONB GIN index. |
 | **5** | (Optional) Encounter list columns | Add name, type, status columns to encounters for filtering without parsing JSONB. |
 
@@ -123,19 +123,19 @@ These shapes keep **official** and **user** tables aligned: same columns, so cop
 ## 7. Files to touch (by phase)
 
 **Phase 1 (official rename + columnar)**  
-- Prisma: new models OfficialPower, OfficialTechnique, OfficialItem, OfficialCreature (columnar); or rename Public* and add columns.  
+- Schema: official_* tables in `public` (columnar); or rename public_* and add columns.  
 - SQL: create official_* tables (or rename public_* and add columns); RLS.  
 - API: `/api/public/[type]` → `/api/official/[type]` (or keep route with 302/alias); read/write columnar.  
 - Admin: public-library → official-library; labels “Official”.  
 - Hooks / components: any reference to “public” library → “official”.
 
 **Phase 2 (user library columnar)**  
-- Prisma: UserPower, UserTechnique, UserItem, UserCreature (and optionally UserSpecies) with explicit columns + one JSONB.  
+- Schema: user_powers, user_techniques, user_items, user_creatures in `public` with explicit columns + one JSONB.  
 - API: user library GET/POST/PATCH to use new columns; map payload to columns.  
 - Seed/copy: “Add from official” = read row from official_*, insert into user_* with user_id.
 
 **Phase 3 (campaign members)**  
-- Prisma: CampaignMember model; Campaign.memberIds removed or deprecated.  
+- Schema: campaign_members table in `public`; campaigns.memberIds kept in sync or deprecated.  
 - API and RLS: use campaign_members for membership checks.
 
 This doc should be updated as phases are completed and any schema decisions change.

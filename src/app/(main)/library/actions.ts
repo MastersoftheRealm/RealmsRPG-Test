@@ -2,15 +2,71 @@
  * Library Server Actions
  * =======================
  * Server actions for user's library items (powers, techniques, items, creatures).
- * Uses Prisma + Supabase session.
+ * Uses Supabase + session.
  */
 
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
-import { rowToItem, bodyToColumnar } from '@/lib/library-columnar';
+import { rowToItem, bodyToColumnar, toDbRow } from '@/lib/library-columnar';
+
+const TABLE: Record<string, string> = {
+  powers: 'user_powers',
+  techniques: 'user_techniques',
+  items: 'user_items',
+  creatures: 'user_creatures',
+};
+
+async function getList(type: 'powers' | 'techniques' | 'items' | 'creatures') {
+  const user = await requireAuth();
+  const supabase = await createClient();
+  const table = TABLE[type];
+  const { data: rows } = await supabase
+    .from(table)
+    .select('*')
+    .eq('user_id', user.uid)
+    .order('created_at', { ascending: false });
+  return (rows ?? []) as Record<string, unknown>[];
+}
+
+async function saveColumnar(
+  type: 'powers' | 'techniques' | 'items' | 'creatures',
+  data: Record<string, unknown>
+) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+  const now = new Date();
+  const { scalars, payload } = bodyToColumnar(type, { ...data, updatedAt: now });
+  const row = toDbRow({
+    id: crypto.randomUUID(),
+    userId: user.uid,
+    ...scalars,
+    payload,
+    createdAt: now,
+    updatedAt: now,
+  });
+  const { data: created, error } = await supabase.from(TABLE[type]).insert(row).select('id').single();
+  if (error) throw error;
+  return created.id;
+}
+
+async function deleteColumnar(type: 'powers' | 'techniques' | 'items' | 'creatures', id: string) {
+  const user = await requireAuth();
+  const supabase = await createClient();
+  const { data: existing } = await supabase.from(TABLE[type]).select('id').eq('id', id).eq('user_id', user.uid).maybeSingle();
+  if (!existing) return false;
+  const { error } = await supabase.from(TABLE[type]).delete().eq('id', id).eq('user_id', user.uid);
+  if (error) throw error;
+  return true;
+}
+
+function normDate(item: Record<string, unknown>, key: string) {
+  const v = item[key];
+  if (v && typeof v === 'object' && 'toISOString' in (v as object))
+    (item as Record<string, unknown>)[key] = (v as Date).toISOString?.() ?? null;
+}
 
 // =============================================================================
 // Powers
@@ -18,21 +74,13 @@ import { rowToItem, bodyToColumnar } from '@/lib/library-columnar';
 
 export async function getUserPowersAction() {
   try {
-    const user = await requireAuth();
-
-    const rows = await prisma.userPower.findMany({
-      where: { userId: user.uid },
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const rows = await getList('powers');
     const powers = rows.map((r) => {
-      const row = r as unknown as Record<string, unknown>;
-      const item = rowToItem('powers', row, 'user');
-      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
-      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      const item = rowToItem('powers', r, 'user');
+      normDate(item, 'createdAt');
+      normDate(item, 'updatedAt');
       return item;
     });
-
     return { powers, error: null };
   } catch (error) {
     console.error('Error fetching powers:', error);
@@ -53,23 +101,9 @@ export async function savePowerAction(data: {
   totalTP?: number;
 }) {
   try {
-    const user = await requireAuth();
-    const now = new Date();
-    const { scalars, payload } = bodyToColumnar('powers', { ...data, updatedAt: now });
-    const created = await prisma.userPower.create({
-      data: {
-        id: crypto.randomUUID(),
-        userId: user.uid,
-        ...scalars,
-        payload: payload as object,
-        createdAt: now,
-        updatedAt: now,
-      },
-    });
-
+    const id = await saveColumnar('powers', { ...data });
     revalidatePath('/library');
-
-    return { id: created.id, error: null };
+    return { id, error: null };
   } catch (error) {
     console.error('Error saving power:', error);
     return { id: null, error: 'Failed to save power' };
@@ -78,23 +112,9 @@ export async function savePowerAction(data: {
 
 export async function deletePowerAction(powerId: string) {
   try {
-    const user = await requireAuth();
-
-    const existing = await prisma.userPower.findFirst({
-      where: { id: powerId, userId: user.uid },
-    });
-
-    if (!existing) {
-      return { success: false, error: 'Power not found' };
-    }
-
-    await prisma.userPower.delete({
-      where: { id: powerId },
-    });
-
+    const ok = await deleteColumnar('powers', powerId);
     revalidatePath('/library');
-
-    return { success: true, error: null };
+    return { success: ok, error: null };
   } catch (error) {
     console.error('Error deleting power:', error);
     return { success: false, error: 'Failed to delete power' };
@@ -107,21 +127,13 @@ export async function deletePowerAction(powerId: string) {
 
 export async function getUserTechniquesAction() {
   try {
-    const user = await requireAuth();
-
-    const rows = await prisma.userTechnique.findMany({
-      where: { userId: user.uid },
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const rows = await getList('techniques');
     const techniques = rows.map((r) => {
-      const row = r as unknown as Record<string, unknown>;
-      const item = rowToItem('techniques', row, 'user');
-      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
-      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      const item = rowToItem('techniques', r, 'user');
+      normDate(item, 'createdAt');
+      normDate(item, 'updatedAt');
       return item;
     });
-
     return { techniques, error: null };
   } catch (error) {
     console.error('Error fetching techniques:', error);
@@ -140,23 +152,9 @@ export async function saveTechniqueAction(data: {
   totalTP?: number;
 }) {
   try {
-    const user = await requireAuth();
-    const now = new Date();
-    const { scalars, payload } = bodyToColumnar('techniques', { ...data, updatedAt: now });
-    const created = await prisma.userTechnique.create({
-      data: {
-        id: crypto.randomUUID(),
-        userId: user.uid,
-        ...scalars,
-        payload: payload as object,
-        createdAt: now,
-        updatedAt: now,
-      },
-    });
-
+    const id = await saveColumnar('techniques', { ...data });
     revalidatePath('/library');
-
-    return { id: created.id, error: null };
+    return { id, error: null };
   } catch (error) {
     console.error('Error saving technique:', error);
     return { id: null, error: 'Failed to save technique' };
@@ -165,23 +163,9 @@ export async function saveTechniqueAction(data: {
 
 export async function deleteTechniqueAction(techniqueId: string) {
   try {
-    const user = await requireAuth();
-
-    const existing = await prisma.userTechnique.findFirst({
-      where: { id: techniqueId, userId: user.uid },
-    });
-
-    if (!existing) {
-      return { success: false, error: 'Technique not found' };
-    }
-
-    await prisma.userTechnique.delete({
-      where: { id: techniqueId },
-    });
-
+    const ok = await deleteColumnar('techniques', techniqueId);
     revalidatePath('/library');
-
-    return { success: true, error: null };
+    return { success: ok, error: null };
   } catch (error) {
     console.error('Error deleting technique:', error);
     return { success: false, error: 'Failed to delete technique' };
@@ -194,21 +178,13 @@ export async function deleteTechniqueAction(techniqueId: string) {
 
 export async function getUserItemsAction() {
   try {
-    const user = await requireAuth();
-
-    const rows = await prisma.userItem.findMany({
-      where: { userId: user.uid },
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const rows = await getList('items');
     const items = rows.map((r) => {
-      const row = r as unknown as Record<string, unknown>;
-      const item = rowToItem('items', row, 'user');
-      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
-      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      const item = rowToItem('items', r, 'user');
+      normDate(item, 'createdAt');
+      normDate(item, 'updatedAt');
       return item;
     });
-
     return { items, error: null };
   } catch (error) {
     console.error('Error fetching items:', error);
@@ -226,23 +202,9 @@ export async function saveItemAction(data: {
   armorValue?: number;
 }) {
   try {
-    const user = await requireAuth();
-    const now = new Date();
-    const { scalars, payload } = bodyToColumnar('items', { ...data, updatedAt: now });
-    const created = await prisma.userItem.create({
-      data: {
-        id: crypto.randomUUID(),
-        userId: user.uid,
-        ...scalars,
-        payload: payload as object,
-        createdAt: now,
-        updatedAt: now,
-      },
-    });
-
+    const id = await saveColumnar('items', { ...data });
     revalidatePath('/library');
-
-    return { id: created.id, error: null };
+    return { id, error: null };
   } catch (error) {
     console.error('Error saving item:', error);
     return { id: null, error: 'Failed to save item' };
@@ -251,23 +213,9 @@ export async function saveItemAction(data: {
 
 export async function deleteItemAction(itemId: string) {
   try {
-    const user = await requireAuth();
-
-    const existing = await prisma.userItem.findFirst({
-      where: { id: itemId, userId: user.uid },
-    });
-
-    if (!existing) {
-      return { success: false, error: 'Item not found' };
-    }
-
-    await prisma.userItem.delete({
-      where: { id: itemId },
-    });
-
+    const ok = await deleteColumnar('items', itemId);
     revalidatePath('/library');
-
-    return { success: true, error: null };
+    return { success: ok, error: null };
   } catch (error) {
     console.error('Error deleting item:', error);
     return { success: false, error: 'Failed to delete item' };
@@ -280,21 +228,13 @@ export async function deleteItemAction(itemId: string) {
 
 export async function getUserCreaturesAction() {
   try {
-    const user = await requireAuth();
-
-    const rows = await prisma.userCreature.findMany({
-      where: { userId: user.uid },
-      orderBy: { createdAt: 'desc' },
-    });
-
+    const rows = await getList('creatures');
     const creatures = rows.map((r) => {
-      const row = r as unknown as Record<string, unknown>;
-      const item = rowToItem('creatures', row, 'user');
-      if (item.createdAt && typeof item.createdAt === 'object') (item as Record<string, unknown>).createdAt = (item.createdAt as Date).toISOString?.() ?? null;
-      if (item.updatedAt && typeof item.updatedAt === 'object') (item as Record<string, unknown>).updatedAt = (item.updatedAt as Date).toISOString?.() ?? null;
+      const item = rowToItem('creatures', r, 'user');
+      normDate(item, 'createdAt');
+      normDate(item, 'updatedAt');
       return item;
     });
-
     return { creatures, error: null };
   } catch (error) {
     console.error('Error fetching creatures:', error);
@@ -304,23 +244,9 @@ export async function getUserCreaturesAction() {
 
 export async function saveCreatureAction(data: Record<string, unknown>) {
   try {
-    const user = await requireAuth();
-    const now = new Date();
-    const { scalars, payload } = bodyToColumnar('creatures', { ...data, updatedAt: now });
-    const created = await prisma.userCreature.create({
-      data: {
-        id: crypto.randomUUID(),
-        userId: user.uid,
-        ...scalars,
-        payload: payload as object,
-        createdAt: now,
-        updatedAt: now,
-      },
-    });
-
+    const id = await saveColumnar('creatures', { ...data });
     revalidatePath('/library');
-
-    return { id: created.id, error: null };
+    return { id, error: null };
   } catch (error) {
     console.error('Error saving creature:', error);
     return { id: null, error: 'Failed to save creature' };
@@ -329,23 +255,9 @@ export async function saveCreatureAction(data: Record<string, unknown>) {
 
 export async function deleteCreatureAction(creatureId: string) {
   try {
-    const user = await requireAuth();
-
-    const existing = await prisma.userCreature.findFirst({
-      where: { id: creatureId, userId: user.uid },
-    });
-
-    if (!existing) {
-      return { success: false, error: 'Creature not found' };
-    }
-
-    await prisma.userCreature.delete({
-      where: { id: creatureId },
-    });
-
+    const ok = await deleteColumnar('creatures', creatureId);
     revalidatePath('/library');
-
-    return { success: true, error: null };
+    return { success: ok, error: null };
   } catch (error) {
     console.error('Error deleting creature:', error);
     return { success: false, error: 'Failed to delete creature' };

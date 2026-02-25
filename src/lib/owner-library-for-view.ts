@@ -1,18 +1,19 @@
 /**
  * Owner Library for View
  * =======================
- * Server-only: fetches a user's library (powers, techniques, items) for
+ * Server-only: fetches a user's library (powers, techniques, items, creatures) for
  * read-only display when viewing another user's character (public or campaign).
- * Uses columnar user_* tables (same shape as API).
+ * Uses Supabase (public.user_powers, user_techniques, user_items, user_creatures).
  */
 
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { rowToItem } from '@/lib/library-columnar';
 
 export interface LibraryForView {
   powers: Array<Record<string, unknown>>;
   techniques: Array<Record<string, unknown>>;
   items: Array<Record<string, unknown>>;
+  creatures: Array<Record<string, unknown>>;
 }
 
 /**
@@ -20,21 +21,23 @@ export interface LibraryForView {
  * Used by GET /api/characters/[id] and GET /api/campaigns/[id]/characters/[userId]/[characterId].
  */
 export async function getOwnerLibraryForView(ownerUserId: string): Promise<LibraryForView> {
-  const [powerRows, techniqueRows, itemRows] = await Promise.all([
-    prisma.userPower.findMany({
-      where: { userId: ownerUserId },
-    }),
-    prisma.userTechnique.findMany({
-      where: { userId: ownerUserId },
-    }),
-    prisma.userItem.findMany({
-      where: { userId: ownerUserId },
-    }),
+  const supabase = await createClient();
+  const [powerRes, techniqueRes, itemRes, creatureRes] = await Promise.all([
+    supabase.from('user_powers').select('*').eq('user_id', ownerUserId),
+    supabase.from('user_techniques').select('*').eq('user_id', ownerUserId),
+    supabase.from('user_items').select('*').eq('user_id', ownerUserId),
+    supabase.from('user_creatures').select('*').eq('user_id', ownerUserId),
   ]);
 
+  const powerRows = (powerRes.data ?? []) as Record<string, unknown>[];
+  const techniqueRows = (techniqueRes.data ?? []) as Record<string, unknown>[];
+  const itemRows = (itemRes.data ?? []) as Record<string, unknown>[];
+  const creatureRows = (creatureRes.data ?? []) as Record<string, unknown>[];
+
   return {
-    powers: powerRows.map((r) => rowToItem('powers', r as unknown as Record<string, unknown>, 'user')),
-    techniques: techniqueRows.map((r) => rowToItem('techniques', r as unknown as Record<string, unknown>, 'user')),
-    items: itemRows.map((r) => rowToItem('items', r as unknown as Record<string, unknown>, 'user')),
+    powers: powerRows.map((r) => rowToItem('powers', r, 'user')),
+    techniques: techniqueRows.map((r) => rowToItem('techniques', r, 'user')),
+    items: itemRows.map((r) => rowToItem('items', r, 'user')),
+    creatures: creatureRows.map((r) => rowToItem('creatures', r, 'user')),
   };
 }

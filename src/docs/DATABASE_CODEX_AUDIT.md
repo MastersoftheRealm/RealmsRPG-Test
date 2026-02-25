@@ -2,13 +2,13 @@
 
 **Purpose:** Document why codex tables are currently `id` + `data` (JSONB) only, and how to move to proper columns so you can drag-and-drop CSV in Supabase and query/filter by column.
 
-**Related:** `CODEX_SCHEMA_REFERENCE.md` (field definitions), `prisma/schema.prisma`, `codex_csv/` or `Codex csv/` (CSV sources), `scripts/seed-to-supabase.js`.
+**Related:** `CODEX_SCHEMA_REFERENCE.md` (field definitions), Supabase/public schema (table structure), `codex_csv/` or `Codex csv/` (CSV sources), `scripts/seed-to-supabase.js`.
 
 ---
 
 ## 1. Current state (why only two columns?)
 
-- **Historical:** The codex was migrated from Firestore/document-style storage. The simplest 1:1 mapping was one row per document: `id` (document ID) + `data` (entire document as JSONB). That’s what `prisma/supabase-idempotent-full.sql` and the Prisma schema still create.
+- **Historical:** The codex was migrated from Firestore/document-style storage. The simplest 1:1 mapping was one row per document: `id` (document ID) + `data` (entire document as JSONB). That’s what `sql/supabase-idempotent-full.sql` and the Supabase/public schema create or reflect this.
 - **Result:** All codex tables in the `codex` schema look like:
   - `codex_feats(id TEXT PRIMARY KEY, data JSONB NOT NULL)`
   - Same for `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`.
@@ -38,7 +38,7 @@
 - **Array-like fields** (e.g. `ability_req`, `tags`, `skills`, `species_traits`): stored as **TEXT** (comma-separated in CSV). The app already parses these (see `src/app/api/codex/route.ts` helpers `toStrArray` / `toNumArray`). This keeps CSV import 1:1 with no extra mapping.
 - **Scalar fields:** TEXT, INTEGER, NUMERIC, BOOLEAN as appropriate. Empty CSV cells → NULL.
 
-The file **`prisma/supabase-codex-tables-columnar.sql`** contains:
+The file **`sql/supabase-codex-tables-columnar.sql`** contains:
 
 - DDL for all codex tables with proper columns (names match CSV headers where applicable).
 - Optional steps: rename existing tables to `*_legacy`, create new tables, then either import CSV in the UI or run the existing seed script against the new structure (seed script would need to be updated to insert into columns instead of `data`).
@@ -54,8 +54,8 @@ The file **`prisma/supabase-codex-tables-columnar.sql`** contains:
    - Drops the existing codex tables (or renames them to `codex_feats_legacy`, etc.).
    - Creates the new columnar tables (same names: `codex_feats`, `codex_skills`, …).
 3. In Supabase Table Editor, use **Import data from CSV** for each table and map your CSV columns to the new columns (names should align).
-4. Update **Prisma schema** to the new columnar models (see below).
-5. Update **API and codex-server** to read from columns instead of `data` (or add a thin layer that builds the same response shape from columns so the rest of the app stays unchanged).
+4. Ensure **Supabase/public schema** has the new columnar tables (see below).
+5. Update **API and codex-server** (and types in `src/types/database.ts` if used) to read from columns instead of `data` (or add a thin layer that builds the same response shape from columns so the rest of the app stays unchanged).
 
 ### Option B — Migrate in place (keep existing data)
 
@@ -65,14 +65,14 @@ The file **`prisma/supabase-codex-tables-columnar.sql`** contains:
    - Reads each row from `*_legacy` (e.g. `codex_feats_legacy`),
    - Expands `data` JSONB into columns,
    - Inserts into the new `codex_feats` (etc.).
-4. Then update Prisma + API as in Option A, and later drop `*_legacy` when no longer needed.
+4. Then update API and types (e.g. `src/types/database.ts`) as in Option A, and later drop `*_legacy` when no longer needed.
 
 ---
 
 ## 5. After switching to columns
 
-- **Prisma:** Replace `model CodexFeat { id String @id; data Json }` with explicit fields (e.g. `name String`, `description String?`, …). Same for all codex models.
-- **API route** (`src/app/api/codex/route.ts`): Use Prisma’s column names and build the same JSON response shape so existing hooks and UI keep working.
+- **Schema:** Columnar tables in Supabase `public` have explicit columns (e.g. `name`, `description`). Same for all codex tables.
+- **API route** (`src/app/api/codex/route.ts`): Use Supabase column names and build the same JSON response shape so existing hooks and UI keep working.
 - **Seed script:** Either:
   - Point Supabase at CSV import only (no script), or
   - Update `seed-to-supabase.js` to insert into the new columns instead of a single `data` blob.
@@ -86,4 +86,4 @@ The file **`prisma/supabase-codex-tables-columnar.sql`** contains:
 | Why are codex tables only `id` + `data`? | Legacy from Firestore-style migration; simplest mapping was one row = one document. |
 | Do we have the proper column definitions? | Yes — in `CODEX_SCHEMA_REFERENCE.md` and in the CSVs in `codex_csv/` (or `Codex csv/`). |
 | Do you need to send the codex reference again? | No. |
-| How to fix? | Use `prisma/supabase-codex-tables-columnar.sql` to create columnar tables, then import CSV in Supabase (or migrate from existing JSONB). Then update Prisma schema and codex API to use columns. |
+| How to fix? | Use `sql/supabase-codex-tables-columnar.sql` (or equivalent SQL) to create columnar tables in `public`, then import CSV in Supabase (or migrate from existing JSONB). Then update API and types (`src/types/database.ts`) to use columns. |

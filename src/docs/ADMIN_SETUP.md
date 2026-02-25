@@ -34,8 +34,9 @@ ADMIN_UIDS=uid1,uid2,uid3
 
 | Step | Command / Action |
 |------|-------------------|
-| Run migrations | `npx prisma migrate deploy` (production) or `npx prisma migrate dev` (local) |
-| Seed Codex data | `npx prisma db seed` (if seed script exists) |
+| Run schema/RLS | Run SQL files in Supabase Dashboard → SQL Editor (see `DEPLOYMENT_AND_SECRETS_SUPABASE.md`) |
+| Seed Codex data | `npm run db:seed` (node script using Supabase client; requires `.env` with `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) |
+| Seed core rules | `node scripts/seed-core-rules.js` |
 | Deploy to Vercel | Push to `main` (auto-deploy) or `vercel --prod` from CLI |
 
 See `DEPLOYMENT_AND_SECRETS_SUPABASE.md` for full deployment steps and env vars.

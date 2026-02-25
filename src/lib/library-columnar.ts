@@ -15,7 +15,7 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints'],
 };
 
-const BODY_TO_PRISMA: Record<string, string> = {
+const BODY_TO_CAMEL: Record<string, string> = {
   action_type: 'actionType',
   is_reaction: 'isReaction',
   weapon_name: 'weaponName',
@@ -25,7 +25,35 @@ const BODY_TO_PRISMA: Record<string, string> = {
   energy_points: 'energyPoints',
 };
 
-/** Build client-shaped item from a columnar row (official or user). */
+const CAMEL_TO_SNAKE: Record<string, string> = {
+  actionType: 'action_type',
+  isReaction: 'is_reaction',
+  weaponName: 'weapon_name',
+  armorValue: 'armor_value',
+  damageReduction: 'damage_reduction',
+  hitPoints: 'hit_points',
+  energyPoints: 'energy_points',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  userId: 'user_id',
+};
+
+/** Convert camelCase object to snake_case for Supabase columnar insert/update. */
+export function toDbRow(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const snake = CAMEL_TO_SNAKE[k] ?? k.replace(/([A-Z])/g, (_, c) => `_${c.toLowerCase()}`);
+    out[snake] = v;
+  }
+  return out;
+}
+
+/** Get value from row (camel or snake_case for Supabase compatibility). */
+function v(row: Record<string, unknown>, camel: string, snake?: string): unknown {
+  return row[camel] ?? (snake ? row[snake] : undefined);
+}
+
+/** Build client-shaped item from a columnar row (official or user). Row may be camelCase or snake_case (Supabase). */
 export function rowToItem(
   type: ColumnarLibraryType,
   row: Record<string, unknown>,
@@ -40,30 +68,31 @@ export function rowToItem(
   };
   if (source) base._source = source;
   if (type === 'powers') {
-    base.actionType = row.actionType;
-    base.isReaction = row.isReaction;
-    base.innate = row.innate;
+    base.actionType = v(row, 'actionType', 'action_type');
+    base.isReaction = v(row, 'isReaction', 'is_reaction');
+    base.innate = v(row, 'innate');
   }
   if (type === 'techniques') {
-    base.actionType = row.actionType;
-    base.weaponName = row.weaponName;
-    if (row.weaponName && !payload.weapon) base.weapon = { name: row.weaponName };
+    base.actionType = v(row, 'actionType', 'action_type');
+    const weaponName = v(row, 'weaponName', 'weapon_name');
+    base.weaponName = weaponName;
+    if (weaponName && !payload.weapon) base.weapon = { name: weaponName };
   }
   if (type === 'items') {
-    base.type = row.type;
-    base.rarity = row.rarity;
-    base.armorValue = row.armorValue;
-    base.damageReduction = row.damageReduction;
+    base.type = v(row, 'type');
+    base.rarity = v(row, 'rarity');
+    base.armorValue = v(row, 'armorValue', 'armor_value');
+    base.damageReduction = v(row, 'damageReduction', 'damage_reduction');
   }
   if (type === 'creatures') {
-    base.level = row.level;
-    base.type = row.type;
-    base.size = row.size;
-    base.hitPoints = row.hitPoints;
-    base.energyPoints = row.energyPoints;
+    base.level = v(row, 'level');
+    base.type = v(row, 'type');
+    base.size = v(row, 'size');
+    base.hitPoints = v(row, 'hitPoints', 'hit_points');
+    base.energyPoints = v(row, 'energyPoints', 'energy_points');
   }
-  base.createdAt = row.createdAt;
-  base.updatedAt = row.updatedAt;
+  base.createdAt = v(row, 'createdAt', 'created_at');
+  base.updatedAt = v(row, 'updatedAt', 'updated_at');
   return { ...base, ...payload };
 }
 
@@ -77,7 +106,7 @@ export function bodyToColumnar(
   const payload: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
-    const camel = BODY_TO_PRISMA[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    const camel = BODY_TO_CAMEL[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     if (scalarKeys.has(camel) || scalarKeys.has(k)) {
       scalars[camel] = v;
     } else {

@@ -1,6 +1,6 @@
 # AI Task Queue
 
-Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Firestore/RTDB/Firebase in old task text).
+Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text may still mention Prisma for historical context; data access is Supabase only. Ignore Firestore/RTDB/Firebase in old task text.
 
 **Focus:** Pick a `status: not-started` (or `in-progress`) task; skip reading `done` tasks. Update `status` and add `notes` on completion. Read `AGENT_GUIDE.md` first; see `AGENTS.md` and `.cursor/rules/`.
 
@@ -3475,14 +3475,14 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
     Rolls should sync in real time between characters, campaigns, and other users. Replace polling with Supabase Realtime subscription on campaign_rolls (and personal rolls if stored). Update database, Supabase settings, and hooks.
   related_files:
     - src/hooks/use-campaign-rolls.ts
-    - prisma/supabase-rls-policies.sql
+    - sql/supabase-rls-policies.sql
   acceptance_criteria:
     - Campaign rolls update in real time for all viewers (no 5s poll)
     - Supabase Realtime enabled for campaign_rolls table
     - RLS policies allow SELECT for campaign members
     - npm run build passes
   notes: |
-    Done 2026-02-09: use-campaign-rolls uses postgres_changes on schema campaigns, table campaign_rolls with filter campaign_id=eq.; invalidates query on any change. prisma/supabase-rls-policies.sql: ALTER PUBLICATION supabase_realtime ADD TABLE campaigns.campaign_rolls; GRANT SELECT to authenticated.
+    Done 2026-02-09: use-campaign-rolls uses postgres_changes on schema campaigns, table campaign_rolls with filter campaign_id=eq.; invalidates query on any change. sql/supabase-rls-policies.sql: ALTER PUBLICATION supabase_realtime ADD TABLE campaigns.campaign_rolls; GRANT SELECT to authenticated.
 
 - id: TASK-166
   title: Health/Energy real-time sync between encounters and characters
@@ -3496,7 +3496,7 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
     - src/types/encounter.ts
     - src/app/(main)/encounters/[id]/combat/page.tsx
     - src/components/shared/add-combatant-modal.tsx
-    - prisma/supabase-rls-policies.sql
+    - sql/supabase-rls-policies.sql
   acceptance_criteria:
     - Combatant HP/EN edits sync to character when sourceType is campaign-character
     - Character HP/EN edits sync to encounter combatants
@@ -5135,7 +5135,7 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
     - Add RLS policy to supabase-rls-policies.sql
   related_files:
     - prisma/schema.prisma
-    - prisma/supabase-rls-policies.sql
+    - sql/supabase-rls-policies.sql
     - src/app/(main)/admin/codex/actions.ts
   acceptance_criteria:
     - CoreRules model exists in Prisma schema
@@ -6269,7 +6269,7 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
   created_at: 2026-02-25
   created_by: agent
   description: |
-    After codex tables are migrated from id+data JSONB to proper columns (see DATABASE_CODEX_AUDIT.md and prisma/supabase-codex-tables-columnar.sql), update Prisma schema to match the new columnar structure and update src/app/api/codex/route.ts and src/lib/codex-server.ts to read from columns instead of r.data. Response shape to clients should remain the same so hooks/UI need no changes.
+    After codex tables are migrated from id+data JSONB to proper columns (see DATABASE_CODEX_AUDIT.md and sql/supabase-codex-tables-columnar.sql), update Prisma schema to match the new columnar structure and update src/app/api/codex/route.ts and src/lib/codex-server.ts to read from columns instead of r.data. Response shape to clients should remain the same so hooks/UI need no changes.
   related_files:
     - prisma/schema.prisma
     - src/app/api/codex/route.ts
@@ -6277,7 +6277,7 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
     - src/app/(main)/admin/codex/actions.ts
     - scripts/seed-to-supabase.js
     - src/docs/DATABASE_CODEX_AUDIT.md
-    - prisma/supabase-codex-tables-columnar.sql
+    - sql/supabase-codex-tables-columnar.sql
   acceptance_criteria:
     - Prisma codex models have explicit columns matching supabase-codex-tables-columnar.sql.
     - Codex API and codex-server return the same JSON shape as today (feats, skills, species, etc.).
@@ -6320,7 +6320,7 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
     Per DATABASE_SCALABILITY_AUDIT.md Phase 2: Migrate user_powers, user_techniques, user_items, user_creatures to columnar tables with same column set as official_* plus user_id. Enables copy official→user as row insert; query/filter by name/type; consistent validation.
   related_files:
     - prisma/schema.prisma
-    - prisma/supabase-user-library-columnar.sql
+    - sql/supabase-user-library-columnar.sql
     - src/app/api/user/library/
     - src/lib/library-columnar.ts
     - src/app/(main)/library/actions.ts
@@ -6343,8 +6343,8 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
     Per DATABASE_SCALABILITY_AUDIT.md Phase 3: Add campaign_members table (campaign_id, user_id, role?). Migrate memberIds JSONB into it; update RLS and API to use the table. Enables proper JOINs and indexing.
   related_files:
     - prisma/schema.prisma
-    - prisma/supabase-campaign-members.sql
-    - prisma/supabase-idempotent-full.sql
+    - sql/supabase-campaign-members.sql
+    - sql/supabase-idempotent-full.sql
     - src/app/api/campaigns/
     - src/app/(main)/campaigns/actions.ts
     - src/app/(auth)/actions.ts

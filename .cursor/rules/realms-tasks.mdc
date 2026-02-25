@@ -17,6 +17,7 @@ alwaysApply: true
 - Append entry to `src/docs/ai/AI_CHANGELOG.md`.
 
 **New tasks:** Use format in `src/docs/ai/AI_REQUEST_TEMPLATE.md`. Add to `AI_TASK_QUEUE.md` with next TASK-### ID.
+**Schema/migrations:** Run SQL in Supabase Dashboard (see `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md`); no Prisma migrate.
 
 # Feedback Processing (when owner gives feedback)
 

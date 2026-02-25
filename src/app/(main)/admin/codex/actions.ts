@@ -2,7 +2,7 @@
 
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 
 type CodexCollection =
@@ -44,6 +44,12 @@ function snakeToCamel(s: string): string {
   return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
 
+function camelToSnake(s: string): string {
+  return s
+    .replace(/([a-zA-Z])(\d)/g, '$1_$2')
+    .replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+}
+
 /** Serialize value for columnar TEXT columns: arrays become comma-separated */
 function toColumnValue(val: unknown): unknown {
   if (val == null) return null;
@@ -65,7 +71,7 @@ const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
   core_rules: [],
 };
 
-/** Build Prisma create/update payload from admin payload (snake_case, arrays) */
+/** Build create/update payload from admin payload (snake_case, arrays). Output camelCase for toDbPayload. */
 function toColumnarPayload(collection: CodexCollection, data: Record<string, unknown>): Record<string, unknown> {
   const allowed = new Set(COLUMNAR_FIELDS[collection] ?? []);
   const out: Record<string, unknown> = {};
@@ -78,34 +84,24 @@ function toColumnarPayload(collection: CodexCollection, data: Record<string, unk
   return out;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type CodexDelegate = { findUnique: (args: any) => Promise<unknown>; create: (args: any) => Promise<unknown>; update: (args: any) => Promise<unknown>; delete: (args: any) => Promise<unknown> };
-
-function getCodexDelegates(collection: CodexCollection): CodexDelegate {
-  switch (collection) {
-    case 'codex_feats':
-      return prisma.codexFeat as CodexDelegate;
-    case 'codex_skills':
-      return prisma.codexSkill as CodexDelegate;
-    case 'codex_species':
-      return prisma.codexSpecies as CodexDelegate;
-    case 'codex_traits':
-      return prisma.codexTrait as CodexDelegate;
-    case 'codex_parts':
-      return prisma.codexPart as CodexDelegate;
-    case 'codex_properties':
-      return prisma.codexProperty as CodexDelegate;
-    case 'codex_equipment':
-      return prisma.codexEquipment as CodexDelegate;
-    case 'codex_archetypes':
-      return prisma.codexArchetype as CodexDelegate;
-    case 'codex_creature_feats':
-      return prisma.codexCreatureFeat as CodexDelegate;
-    case 'core_rules':
-      return prisma.coreRules as CodexDelegate;
-    default:
-      throw new Error(`Unknown collection: ${collection}`);
+/** Convert camelCase payload to snake_case for Supabase (DB columns). */
+function toDbPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    out[camelToSnake(key)] = value;
   }
+  return out;
+}
+
+function getTableName(collection: CodexCollection): string {
+  return collection;
+}
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase admin env not configured');
+  return createClient(url, key);
 }
 
 export async function createCodexDoc(
@@ -116,22 +112,22 @@ export async function createCodexDoc(
   try {
     await requireAdmin();
     const docId = sanitizeId(id) || `doc_${Date.now()}`;
-    const delegate = getCodexDelegates(collection);
+    const supabase = getSupabaseAdmin();
+    const table = getTableName(collection);
 
-    const existing = await delegate.findUnique({ where: { id: docId } });
+    const { data: existing } = await supabase.from(table).select('id').eq('id', docId).maybeSingle();
     if (existing) {
       return { success: false, error: `Document ${docId} already exists` };
     }
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
-      const payload = toColumnarPayload(collection, data) as Record<string, unknown>;
-      await delegate.create({
-        data: { id: docId, ...payload },
-      });
+      const payload = toColumnarPayload(collection, data);
+      const dbPayload = toDbPayload({ id: docId, ...payload });
+      const { error } = await supabase.from(table).insert(dbPayload);
+      if (error) throw new Error(error.message);
     } else {
-      await delegate.create({
-        data: { id: docId, data },
-      });
+      const { error } = await supabase.from(table).insert({ id: docId, data });
+      if (error) throw new Error(error.message);
     }
 
     revalidatePath('/admin/codex');
@@ -149,24 +145,22 @@ export async function updateCodexDoc(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireAdmin();
-    const delegate = getCodexDelegates(collection);
+    const supabase = getSupabaseAdmin();
+    const table = getTableName(collection);
 
-    const existing = await delegate.findUnique({ where: { id } });
+    const { data: existing } = await supabase.from(table).select('id').eq('id', id).maybeSingle();
     if (!existing) {
       return { success: false, error: 'Document not found' };
     }
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
-      const payload = toColumnarPayload(collection, data) as Record<string, unknown>;
-      await delegate.update({
-        where: { id },
-        data: payload,
-      });
+      const payload = toColumnarPayload(collection, data);
+      const dbPayload = toDbPayload(payload);
+      const { error } = await supabase.from(table).update(dbPayload).eq('id', id);
+      if (error) throw new Error(error.message);
     } else {
-      await delegate.update({
-        where: { id },
-        data: { data },
-      });
+      const { error } = await supabase.from(table).update({ data }).eq('id', id);
+      if (error) throw new Error(error.message);
     }
 
     revalidatePath('/admin/codex');
@@ -183,11 +177,11 @@ export async function deleteCodexDoc(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireAdmin();
-    const delegate = getCodexDelegates(collection);
+    const supabase = getSupabaseAdmin();
+    const table = getTableName(collection);
 
-    await delegate.delete({
-      where: { id },
-    });
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) throw new Error(error.message);
 
     revalidatePath('/admin/codex');
     revalidatePath('/codex');

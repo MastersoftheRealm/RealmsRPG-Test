@@ -1,7 +1,7 @@
 /**
  * Combat Encounter Page
  * ======================
- * Prisma-backed combat tracker for a specific encounter.
+ * Supabase-backed combat tracker for a specific encounter.
  * Ported from encounter-tracker with persistence via encounter-service.
  */
 

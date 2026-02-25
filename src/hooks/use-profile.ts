@@ -33,8 +33,8 @@ export function useProfile(): { profile: ProfileDisplay | null; loading: boolean
       .then(({ profile: p }) => {
         if (cancelled || !p) return;
         setProfile({
-          username: p.username ?? null,
-          photoUrl: p.photoUrl ?? null,
+          username: (p.username as string | null | undefined) ?? null,
+          photoUrl: (p.photoUrl as string | null | undefined) ?? null,
         });
       })
       .catch(() => {

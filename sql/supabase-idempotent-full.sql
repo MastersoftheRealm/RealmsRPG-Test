@@ -13,12 +13,12 @@
 --   • Recreates RLS policies (drops then creates so re-run is safe)
 --   • Grants Realtime publication and USAGE on schemas
 --
--- After this, run prisma/supabase-storage-policies.sql once for Storage RLS
+-- After this, run sql/supabase-storage-policies.sql once for Storage RLS
 -- (portraits and profile-pictures buckets).
 --
 -- If your DB previously had tables in the "public" schema only, this creates
 -- the correct structure in users/campaigns/codex/encounters; it does not move
--- or copy data from public. Use Prisma migrations or a one-off migration to
+-- or copy data from public. Use a one-off migration to
 -- move data if needed.
 -- =============================================================================
 
@@ -394,5 +394,5 @@ END $$;
 GRANT SELECT ON users.characters TO authenticated;
 
 -- -----------------------------------------------------------------------------
--- DONE. Run prisma/supabase-storage-policies.sql for Storage RLS (portraits, profile-pictures).
+-- DONE. Run sql/supabase-storage-policies.sql for Storage RLS (portraits, profile-pictures).
 -- -----------------------------------------------------------------------------

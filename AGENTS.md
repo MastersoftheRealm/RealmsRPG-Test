@@ -1,8 +1,9 @@
 # RealmsRPG — Agent Instructions
 
-You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Prisma**, and **Vercel**.
+You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), and **Vercel**.
 
-> **Stack:** Supabase (PostgreSQL, Auth, Storage), Prisma, Next.js, Vercel. No Firebase.
+> **Stack:** Supabase (PostgreSQL, Auth, Storage), Next.js, Vercel. No Prisma; no Firebase.
+> **Data access:** Supabase server client only (`.from()`, `.rpc()`); types in `src/types/database.ts`; migrations = SQL only.
 
 ## Session Start
 

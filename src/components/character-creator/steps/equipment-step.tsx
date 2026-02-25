@@ -4,7 +4,7 @@
  * Select starting equipment with real data from Codex.
  * Uses ListHeader, GridListRow, design tokens, and steppers on the right
  * to match Library/Codex and the rest of the site.
- * - Weapons and Armor come from user's item library (Prisma)
+ * - Weapons and Armor come from user's item library (Supabase)
  * - General equipment comes from Codex items
  * Supports quantity selection for equipment items
  */

@@ -1,11 +1,11 @@
 /**
  * Encounter API
  * ==============
- * Get, update, delete single encounter. Uses Prisma.
+ * Get, update, delete single encounter. Uses Supabase.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, encounterUpdateSchema } from '@/lib/api-validation';
@@ -23,15 +23,19 @@ export async function GET(
     }
 
     const { id } = await params;
-    const row = await prisma.encounter.findFirst({
-      where: { id, userId: user.uid },
-    });
+    const supabase = await createClient();
+    const { data: row } = await supabase
+      .from('encounters')
+      .select('id, user_id, data, created_at, updated_at')
+      .eq('id', id)
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!row) {
       return NextResponse.json({ error: 'Encounter not found' }, { status: 404 });
     }
 
-    const d = row.data as Record<string, unknown>;
+    const d = (row.data as Record<string, unknown>) ?? {};
     const encounter: Encounter = {
       id: row.id,
       name: (d.name as string) || 'Unnamed Encounter',
@@ -45,8 +49,8 @@ export async function GET(
       isActive: (d.isActive as boolean) ?? false,
       applySurprise: (d.applySurprise as boolean) ?? false,
       skillEncounter: d.skillEncounter as Encounter['skillEncounter'],
-      createdAt: (d.createdAt as string) ?? row.createdAt?.toISOString(),
-      updatedAt: (d.updatedAt as string) ?? row.updatedAt?.toISOString(),
+      createdAt: (d.createdAt as string) ?? row.created_at ?? undefined,
+      updatedAt: (d.updatedAt as string) ?? row.updated_at ?? undefined,
     };
 
     return NextResponse.json(encounter);
@@ -73,9 +77,13 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const row = await prisma.encounter.findFirst({
-      where: { id, userId: user.uid },
-    });
+    const supabase = await createClient();
+    const { data: row } = await supabase
+      .from('encounters')
+      .select('id, data')
+      .eq('id', id)
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!row) {
       return NextResponse.json({ error: 'Encounter not found' }, { status: 404 });
@@ -87,13 +95,15 @@ export async function PATCH(
     const cleaned = removeUndefined(updates as Record<string, unknown>);
     cleaned.updatedAt = new Date().toISOString();
 
-    const current = row.data as Record<string, unknown>;
+    const current = (row.data as Record<string, unknown>) ?? {};
     const merged = { ...current, ...cleaned };
 
-    await prisma.encounter.update({
-      where: { id },
-      data: { data: merged as object },
-    });
+    const { error: updateErr } = await supabase
+      .from('encounters')
+      .update({ data: merged })
+      .eq('id', id)
+      .eq('user_id', user.uid);
+    if (updateErr) throw updateErr;
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
@@ -119,17 +129,24 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const row = await prisma.encounter.findFirst({
-      where: { id, userId: user.uid },
-    });
+    const supabase = await createClient();
+    const { data: row } = await supabase
+      .from('encounters')
+      .select('id')
+      .eq('id', id)
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!row) {
       return NextResponse.json({ error: 'Encounter not found' }, { status: 404 });
     }
 
-    await prisma.encounter.delete({
-      where: { id },
-    });
+    const { error: delErr } = await supabase
+      .from('encounters')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.uid);
+    if (delErr) throw delErr;
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {

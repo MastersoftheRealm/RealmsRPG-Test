@@ -4,10 +4,10 @@
  * Tool for creating custom powers using the power parts system.
  * 
  * Features:
- * - Select power parts from Codex API (Prisma/Supabase)
+ * - Select power parts from Codex API (Supabase)
  * - Configure option levels for each part
  * - Calculate energy and training point costs
- * - Save to user's library (Prisma)
+ * - Save to user's library (Supabase)
  */
 
 'use client';
@@ -476,7 +476,7 @@ function PowerCreatorContent() {
     setName(power.name || '');
     setDescription(power.description || '');
     
-    // Load parts - the data structure from Prisma may vary
+    // Load parts - the data structure from API may vary
     const savedParts = (power.parts || power.powerParts || []) as Array<{
       id?: number | string;
       name?: string;

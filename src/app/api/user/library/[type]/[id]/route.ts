@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, libraryItemUpdateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
@@ -14,6 +14,7 @@ import {
   COLUMNAR_LIBRARY_TYPES,
   rowToItem,
   bodyToColumnar,
+  toDbRow,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 
@@ -23,32 +24,12 @@ type LibraryType = (typeof VALID_TYPES)[number];
 const isColumnar = (t: string): t is ColumnarLibraryType =>
   COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
 
-const PRISMA_COLUMNAR = {
-  powers: 'userPower',
-  techniques: 'userTechnique',
-  items: 'userItem',
-  creatures: 'userCreature',
-} as const;
-
-type ColumnarDelegate = {
-  findFirst: (args: { where: { id: string; userId: string } }) => Promise<Record<string, unknown> | null>;
-  update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<{ id: string }>;
-  delete: (args: { where: { id: string } }) => Promise<{ id: string }>;
+const TABLE: Record<ColumnarLibraryType, string> = {
+  powers: 'user_powers',
+  techniques: 'user_techniques',
+  items: 'user_items',
+  creatures: 'user_creatures',
 };
-
-function getColumnarDelegate(type: ColumnarLibraryType): ColumnarDelegate {
-  return prisma[PRISMA_COLUMNAR[type]] as unknown as ColumnarDelegate;
-}
-
-type LegacyDelegate = {
-  findFirst: (args: { where: { id: string; userId: string } }) => Promise<{ id: string; data: unknown } | null>;
-  update: (args: { where: { id: string }; data: { data: object } }) => Promise<{ id: string }>;
-  delete: (args: { where: { id: string } }) => Promise<{ id: string }>;
-};
-
-function getLegacyDelegate(type: 'species'): LegacyDelegate {
-  return prisma.userSpecies as unknown as LegacyDelegate;
-}
 
 export async function GET(
   _request: NextRequest,
@@ -65,21 +46,27 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
+    const supabase = await createClient();
+
     if (isColumnar(type)) {
-      const delegate = getColumnarDelegate(type);
-      const row = await delegate.findFirst({
-        where: { id: id.trim(), userId: user.uid },
-      });
+      const { data: row } = await supabase
+        .from(TABLE[type])
+        .select('*')
+        .eq('id', id.trim())
+        .eq('user_id', user.uid)
+        .maybeSingle();
       if (!row) return NextResponse.json(null, { status: 404 });
-      return NextResponse.json(rowToItem(type, row, 'user'));
+      return NextResponse.json(rowToItem(type, row as Record<string, unknown>, 'user'));
     }
 
-    const delegate = getLegacyDelegate('species');
-    const row = await delegate.findFirst({
-      where: { id: id.trim(), userId: user.uid },
-    });
+    const { data: row } = await supabase
+      .from('user_species')
+      .select('id, data')
+      .eq('id', id.trim())
+      .eq('user_id', user.uid)
+      .maybeSingle();
     if (!row) return NextResponse.json(null, { status: 404 });
-    const d = row.data as Record<string, unknown>;
+    const d = (row.data as Record<string, unknown>) ?? {};
     return NextResponse.json({ id: row.id, docId: row.id, ...d });
   } catch (err) {
     console.error('[API Error] GET /api/user/library/[type]/[id]:', err);
@@ -108,48 +95,59 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
+    const supabase = await createClient();
+
     if (isColumnar(type)) {
-      const delegate = getColumnarDelegate(type);
-      const existing = await delegate.findFirst({
-        where: { id: id.trim(), userId: user.uid },
-      });
+      const { data: existing } = await supabase
+        .from(TABLE[type])
+        .select('*')
+        .eq('id', id.trim())
+        .eq('user_id', user.uid)
+        .maybeSingle();
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
       const validation = await validateJson(request, libraryItemUpdateSchema);
       if (!validation.success) return validation.error;
       const data = validation.data as Record<string, unknown>;
-      const currentItem = rowToItem(type, existing, 'user');
+      const currentItem = rowToItem(type, existing as Record<string, unknown>, 'user');
       const merged = { ...currentItem, ...data };
       delete (merged as Record<string, unknown>).id;
       delete (merged as Record<string, unknown>).docId;
       delete (merged as Record<string, unknown>)._source;
       merged.updatedAt = new Date();
       const { scalars, payload } = bodyToColumnar(type, merged);
-      await delegate.update({
-        where: { id: id.trim() },
-        data: { ...scalars, payload: payload as object, updatedAt: new Date() },
-      });
+      const updateRow = toDbRow({ ...scalars, payload, updatedAt: new Date() });
+      const { error: updateErr } = await supabase
+        .from(TABLE[type])
+        .update(updateRow)
+        .eq('id', id.trim())
+        .eq('user_id', user.uid);
+      if (updateErr) throw updateErr;
       return NextResponse.json({ ok: true });
     }
 
-    const delegate = getLegacyDelegate('species');
-    const existing = await delegate.findFirst({
-      where: { id: id.trim(), userId: user.uid },
-    });
+    const { data: existing } = await supabase
+      .from('user_species')
+      .select('id, data')
+      .eq('id', id.trim())
+      .eq('user_id', user.uid)
+      .maybeSingle();
     if (!existing) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
     const validation = await validateJson(request, libraryItemUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Record<string, unknown>;
-    const currentData = existing.data as Record<string, unknown>;
+    const currentData = (existing.data as Record<string, unknown>) ?? {};
     const merged = { ...currentData, ...data };
     merged.updatedAt = new Date().toISOString();
-    await delegate.update({
-      where: { id: id.trim() },
-      data: { data: merged as object },
-    });
+    const { error: updateErr } = await supabase
+      .from('user_species')
+      .update({ data: merged })
+      .eq('id', id.trim())
+      .eq('user_id', user.uid);
+    if (updateErr) throw updateErr;
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[API Error] PATCH /api/user/library/[type]/[id]:', err);
@@ -178,26 +176,42 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 
+    const supabase = await createClient();
+
     if (isColumnar(type)) {
-      const delegate = getColumnarDelegate(type);
-      const existing = await delegate.findFirst({
-        where: { id: id.trim(), userId: user.uid },
-      });
+      const { data: existing } = await supabase
+        .from(TABLE[type])
+        .select('id')
+        .eq('id', id.trim())
+        .eq('user_id', user.uid)
+        .maybeSingle();
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
-      await delegate.delete({ where: { id: id.trim() } });
+      const { error: delErr } = await supabase
+        .from(TABLE[type])
+        .delete()
+        .eq('id', id.trim())
+        .eq('user_id', user.uid);
+      if (delErr) throw delErr;
       return NextResponse.json({ ok: true });
     }
 
-    const delegate = getLegacyDelegate('species');
-    const existing = await delegate.findFirst({
-      where: { id: id.trim(), userId: user.uid },
-    });
+    const { data: existing } = await supabase
+      .from('user_species')
+      .select('id')
+      .eq('id', id.trim())
+      .eq('user_id', user.uid)
+      .maybeSingle();
     if (!existing) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
-    await delegate.delete({ where: { id: id.trim() } });
+    const { error: delErr } = await supabase
+      .from('user_species')
+      .delete()
+      .eq('id', id.trim())
+      .eq('user_id', user.uid);
+    if (delErr) throw delErr;
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[API Error] DELETE /api/user/library/[type]/[id]:', err);

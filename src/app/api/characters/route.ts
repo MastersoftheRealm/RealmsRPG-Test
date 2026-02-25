@@ -1,11 +1,11 @@
 /**
  * Characters API
  * ==============
- * List and create characters. Uses Prisma. Requires Supabase session.
+ * List and create characters. Uses Supabase. Requires Supabase session.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
@@ -16,7 +16,6 @@ function prepareForSave(data: Partial<Character>): Record<string, unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, createdAt, updatedAt, ...dataToSave } = data;
 
-  // Remove display-only properties
   const cleaned = { ...dataToSave } as Record<string, unknown>;
   delete cleaned._displayFeats;
   delete cleaned.allTraits;
@@ -40,13 +39,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const rows = await prisma.character.findMany({
-      where: { userId: user.uid },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const supabase = await createClient();
+    const { data: rows } = await supabase
+      .from('characters')
+      .select('id, user_id, data, updated_at')
+      .eq('user_id', user.uid)
+      .order('updated_at', { ascending: false });
 
-    const characters: CharacterSummary[] = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
+    const list = (rows ?? []) as { id: string; data: unknown; updated_at: string | null }[];
+    const characters: CharacterSummary[] = list.map((r) => {
+      const d = (r.data as Record<string, unknown>) ?? {};
       return {
         id: r.id,
         name: (d.name as string) || 'Unnamed',
@@ -57,7 +59,7 @@ export async function GET() {
         ancestryName: (d.ancestry as { name?: string })?.name || (d.species as string),
         status: d.status as CharacterSummary['status'],
         visibility: (d.visibility as CharacterSummary['visibility']) ?? 'private',
-        updatedAt: r.updatedAt ?? undefined,
+        updatedAt: r.updated_at ?? undefined,
       };
     });
 
@@ -86,15 +88,19 @@ export async function POST(request: NextRequest) {
     const { duplicateOf, ...rest } = validation.data;
     const data = rest as Partial<Character>;
 
+    const supabase = await createClient();
+
     if (duplicateOf) {
-      // Duplicate existing character
-      const existing = await prisma.character.findFirst({
-        where: { id: duplicateOf, userId: user.uid },
-      });
+      const { data: existing } = await supabase
+        .from('characters')
+        .select('id, data')
+        .eq('id', duplicateOf)
+        .eq('user_id', user.uid)
+        .maybeSingle();
       if (!existing) {
         return NextResponse.json({ error: 'Character not found' }, { status: 404 });
       }
-      const d = existing.data as Record<string, unknown>;
+      const d = (existing.data as Record<string, unknown>) ?? {};
       const baseData = { ...d };
       delete baseData.createdAt;
       delete baseData.updatedAt;
@@ -105,38 +111,26 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
 
-      await prisma.userProfile.upsert({
-        where: { id: user.uid },
-        create: { id: user.uid },
-        update: {},
-      });
+      await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
 
-      const created = await prisma.character.create({
-        data: {
-          userId: user.uid,
-          data: newData as object,
-        },
-      });
-
+      const { data: created, error: insertErr } = await supabase
+        .from('characters')
+        .insert({ user_id: user.uid, data: newData })
+        .select('id')
+        .single();
+      if (insertErr) throw insertErr;
       return NextResponse.json({ id: created.id });
     }
 
-    // Create new character
     const cleanedData = prepareForCreate(data);
+    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
 
-    await prisma.userProfile.upsert({
-      where: { id: user.uid },
-      create: { id: user.uid },
-      update: {},
-    });
-
-    const created = await prisma.character.create({
-      data: {
-        userId: user.uid,
-        data: cleanedData as object,
-      },
-    });
-
+    const { data: created, error: insertErr } = await supabase
+      .from('characters')
+      .insert({ user_id: user.uid, data: cleanedData })
+      .select('id')
+      .single();
+    if (insertErr) throw insertErr;
     return NextResponse.json({ id: created.id });
   } catch (err) {
     console.error('[API Error] POST /api/characters:', err);

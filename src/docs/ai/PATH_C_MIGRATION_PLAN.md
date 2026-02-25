@@ -4,7 +4,7 @@
 
 **Source:** Derived from the Prisma long-term assessment plan (sections 6.5, 6.6) and current codebase (ARCHITECTURE.md, DATABASE_SCALABILITY_AUDIT.md, realtime usage, RLS, migrations).
 
-**Status:** Phase 0 (SQL) complete — all tables and enums in `public`; RLS and Realtime on `public`; Prisma schema updated to `@@schema("public")`. Next: Phase 0 in code (Realtime subscriptions → `schema: 'public'`), then Phases 1–6 (replace Prisma with Supabase client).
+**Status:** Phases 0–6 and 6b complete. All app data uses Supabase; Prisma removed; seed scripts and docs updated. AI/agent docs aligned with Path C (Supabase-only, SQL migrations, no Prisma).
 
 ---
 
@@ -28,10 +28,12 @@
 ### 2.1 Stack
 
 - **Runtime:** Next.js 16 (App Router), React 19, Vercel.
-- **Database:** Supabase PostgreSQL. **Auth + Storage** via Supabase client; **all table access** via Prisma (until Phases 1–5).
-- **Schemas:** Single **`public`** schema (Phase 0 SQL complete). Tables formerly in `users`, `campaigns`, `codex`, `encounters` are now in `public`. Prisma schema uses `@@schema("public")` for all models.
+- **Database:** Supabase PostgreSQL. **Auth + Storage** and **all table access** via Supabase client (Phases 1–6 complete). No Prisma.
+- **Schemas:** Single **`public`** schema (Phase 0 SQL complete). All app tables live in `public`.
 
 ### 2.2 Table layout (as of plan date)
+
+After Phase 0, all tables live in the **`public`** schema. The "Schema" column is logical/domain.
 
 | Domain | Schema | Table(s) | Shape | Notes |
 |--------|--------|----------|--------|-------|
@@ -46,13 +48,13 @@
 
 ### 2.3 Realtime usage today
 
-- **Campaign roll log:** [use-campaign-rolls.ts](../../hooks/use-campaign-rolls.ts) — `postgres_changes` on `campaigns.campaign_rolls` filter `campaign_id=eq.{id}`; refetches query on event. Roll data from API `/api/campaigns/[id]/rolls` (Prisma).
-- **Character HP/EN/AP sync:** [characters/[id]/page.tsx](../../app/(main)/characters/[id]/page.tsx) — `postgres_changes` on `users.characters` filter `id=eq.{characterId}`; merges payload into local state. [CombatEncounterView.tsx](../../app/(main)/encounters/[id]/_components/CombatEncounterView.tsx) — same table, filter `id=in.(id1,id2,...)` for combatants; updates encounter combatant HP/EN/AP from payload.
-- **RLS:** Realtime needs USAGE on schema + SELECT on table; [prisma/supabase-rls-policies.sql](../../../prisma/supabase-rls-policies.sql) has GRANT USAGE ON SCHEMA campaigns/users and ADD TABLE for campaign_rolls and characters.
+- **Campaign roll log:** [use-campaign-rolls.ts](../../hooks/use-campaign-rolls.ts) — `postgres_changes` on `public.campaign_rolls` filter `campaign_id=eq.{id}`; refetches query on event. Roll data from API `/api/campaigns/[id]/rolls` (Supabase).
+- **Character HP/EN/AP sync:** [characters/[id]/page.tsx](../../app/(main)/characters/[id]/page.tsx) — `postgres_changes` on `public.characters` filter `id=eq.{characterId}`; merges payload into local state. [CombatEncounterView.tsx](../../app/(main)/encounters/[id]/_components/CombatEncounterView.tsx) — same table, filter `id=in.(id1,id2,...)` for combatants; updates encounter combatant HP/EN/AP from payload.
+- **RLS:** Realtime needs USAGE on schema + SELECT on table; [sql/supabase-rls-policies.sql](../../../sql/supabase-rls-policies.sql) has GRANT USAGE ON SCHEMA campaigns/users and ADD TABLE for campaign_rolls and characters.
 
 ### 2.4 Prisma touchpoints (to remove)
 
-- [src/lib/prisma.ts](../../lib/prisma.ts) — singleton; delete.
+- ~~[src/lib/prisma.ts](../../lib/prisma.ts)~~ — deleted (Phase 5).
 - [src/app/api/codex/route.ts](../../app/api/codex/route.ts), [src/lib/codex-server.ts](../../lib/codex-server.ts) — codex read.
 - [src/app/(main)/admin/codex/actions.ts](../../app/(main)/admin/codex/actions.ts) — codex admin CRUD.
 - [src/app/api/characters/](../../app/api/characters/), [src/app/(main)/characters/actions.ts](../../app/(main)/characters/actions.ts), [src/lib/character-server.ts](../../lib/character-server.ts) — characters.
@@ -269,7 +271,7 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 
 | Phase | Files to touch |
 |-------|----------------|
-| **0** | New SQL migration; [prisma/supabase-rls-policies.sql](../../../prisma/supabase-rls-policies.sql) (or new RLS file for public); Realtime subscription params in [use-campaign-rolls.ts](../../hooks/use-campaign-rolls.ts), [characters/[id]/page.tsx](../../app/(main)/characters/[id]/page.tsx), [CombatEncounterView.tsx](../../app/(main)/encounters/[id]/_components/CombatEncounterView.tsx). |
+| **0** | New SQL migration; [sql/supabase-rls-policies.sql](../../../sql/supabase-rls-policies.sql) (or new RLS file for public); Realtime subscription params in [use-campaign-rolls.ts](../../hooks/use-campaign-rolls.ts), [characters/[id]/page.tsx](../../app/(main)/characters/[id]/page.tsx), [CombatEncounterView.tsx](../../app/(main)/encounters/[id]/_components/CombatEncounterView.tsx). |
 | **1** | [api/codex/route.ts](../../app/api/codex/route.ts), [lib/codex-server.ts](../../lib/codex-server.ts), [admin/codex/actions.ts](../../app/(main)/admin/codex/actions.ts). |
 | **2** | [api/characters/](../../app/api/characters/), [characters/actions.ts](../../app/(main)/characters/actions.ts), [character-server.ts](../../lib/character-server.ts); Realtime schema/table if not in Phase 0. |
 | **3** | [library/actions.ts](../../app/(main)/library/actions.ts), [api/user/library/[type]/route.ts](../../app/api/user/library/[type]/route.ts), [owner-library-for-view.ts](../../lib/owner-library-for-view.ts). |
@@ -287,8 +289,8 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 ### 8.1 Current database state (what you may have today)
 
 - **Schemas:** `users`, `campaigns`, `codex`, `encounters` (and `public`). Tables are split across these.
-- **Codex:** May be `id` + `data` (JSONB) only, or already columnar (if you ran `prisma/supabase-codex-tables-columnar.sql`).
-- **User library:** May be `id`, `user_id`, `data` (JSONB) or already columnar (if you ran `prisma/supabase-user-library-columnar.sql`).
+- **Codex:** May be `id` + `data` (JSONB) only, or already columnar (if you ran `sql/supabase-codex-tables-columnar.sql`).
+- **User library:** May be `id`, `user_id`, `data` (JSONB) or already columnar (if you ran `sql/supabase-user-library-columnar.sql`).
 - **Public library:** `codex.public_powers`, `public_techniques`, `public_items`, `public_creatures` with `id` + `data` (JSONB).
 
 ### 8.2 Order of operations (what to run and when)
@@ -297,7 +299,7 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 |------|--------|--------------------------------------------|--------|
 | **0.1** | Backup | — | Supabase Dashboard → Database → Backups, or export critical tables. |
 | **0.2** | Consolidate to `public` | `sql/path-c-phase0-consolidate-to-public.sql` | Moves all tables + enum to `public`; drops old schemas; updates RLS and Realtime. **Run once.** File is in repo at `sql/path-c-phase0-consolidate-to-public.sql`. |
-| **Optional A** | Codex columnar (if still id+data) | `prisma/supabase-codex-tables-columnar.sql` | **Only if** codex tables are still `id` + `data`. Drops and recreates codex_* in `codex` schema — use **updated version** that creates tables in `public` (see 8.3). |
+| **Optional A** | Codex columnar (if still id+data) | `sql/supabase-codex-tables-columnar.sql` | **Only if** codex tables are still `id` + `data`. Drops and recreates codex_* in `codex` schema — use **updated version** that creates tables in `public` (see 8.3). |
 | **Optional B** | Official library columnar + rename | After Phase 5 in app | Create `official_powers` etc. in `public`; migrate data from `public_powers`; drop `public_*`. Or run a dedicated SQL file when provided. |
 
 **Important:** After step 0.2, **all** app tables live in `public`. The app still uses Prisma until Phases 1–5 are done in code; Prisma schema must be updated to `@@schema("public")` for all models so Prisma can still read/write until you remove it.
@@ -307,10 +309,10 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 | File | Purpose |
 |------|--------|
 | `sql/path-c-phase0-consolidate-to-public.sql` | **Path C Phase 0:** Move every table from `users`, `campaigns`, `codex`, `encounters` into `public`; move `UserRole` enum; recreate RLS for `public`; Realtime on `public.campaign_rolls` and `public.characters`; drop empty schemas. |
-| `prisma/supabase-rls-policies.sql` | Current RLS (pre–Phase 0) for multi-schema. After Phase 0, RLS is embedded in the consolidation script. |
-| `prisma/supabase-codex-tables-columnar.sql` | Codex tables with columns (not id+data). Creates in `codex` schema; for Path C you need a variant that creates in `public` or run after Phase 0 and then move codex tables to public (consolidation script does the move). |
-| `prisma/supabase-user-library-columnar.sql` | Adds columnar columns to user_* (run when tables are still in `users`; if already in `public`, adjust schema to `public`). |
-| `prisma/supabase-storage-policies.sql` | Storage RLS for `portraits` and `profile-pictures` buckets. Unchanged by Path C. |
+| `sql/supabase-rls-policies.sql` | Current RLS (pre–Phase 0) for multi-schema. After Phase 0, RLS is embedded in the consolidation script. |
+| `sql/supabase-codex-tables-columnar.sql` | Codex tables with columns (not id+data). Creates in `codex` schema; for Path C you need a variant that creates in `public` or run after Phase 0 and then move codex tables to public (consolidation script does the move). |
+| `sql/supabase-user-library-columnar.sql` | Adds columnar columns to user_* (run when tables are still in `users`; if already in `public`, adjust schema to `public`). |
+| `sql/supabase-storage-policies.sql` | Storage RLS for `portraits` and `profile-pictures` buckets. Unchanged by Path C. |
 
 ### 8.4 What you need to do in Supabase (minimal path)
 
@@ -319,7 +321,7 @@ Implement official rename + columnar (audit Phase 1) either before or as part of
 3. Paste and run **`sql/path-c-phase0-consolidate-to-public.sql`** in full (create the file from the plan; see section 10 / repo).
 4. Confirm in **Table Editor** that all tables now appear under **public** (no `users`, `campaigns`, `codex`, `encounters` schemas).
 5. If codex tables are still `id` + `data` and you want columnar: run an updated codex columnar script that targets `public` (or run the existing one and then run a small script to move those codex tables to `public` if Phase 0 already moved them).
-6. Run **`prisma/supabase-storage-policies.sql`** if you haven’t already (Storage RLS).
+6. Run **`sql/supabase-storage-policies.sql`** if you haven’t already (Storage RLS).
 
 After that, the codebase can proceed with Phases 1–6 (replace Prisma with Supabase client, then update docs/agents).
 
@@ -350,6 +352,6 @@ After that, the codebase can proceed with Phases 1–6 (replace Prisma with Supa
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — data flow and key files.
 - [DATABASE_SCALABILITY_AUDIT.md](../DATABASE_SCALABILITY_AUDIT.md) — columnar vs JSONB and phased layout.
 - [CODEX_SCHEMA_REFERENCE.md](../CODEX_SCHEMA_REFERENCE.md) — codex field definitions.
-- [prisma/supabase-rls-policies.sql](../../../prisma/supabase-rls-policies.sql) — current RLS and Realtime publication (pre–Phase 0).
+- [sql/supabase-rls-policies.sql](../../../sql/supabase-rls-policies.sql) — current RLS and Realtime publication (pre–Phase 0).
 - [DEPLOYMENT_AND_SECRETS_SUPABASE.md](../DEPLOYMENT_AND_SECRETS_SUPABASE.md) — env and deployment; extend with Realtime checklist.
 - [SUPABASE_PATH_C_OPERATOR_GUIDE.md](../SUPABASE_PATH_C_OPERATOR_GUIDE.md) — **step-by-step operator guide**: what to run in Supabase and in what order (pastable SQL file paths).

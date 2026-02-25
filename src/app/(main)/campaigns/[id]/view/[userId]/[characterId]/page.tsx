@@ -52,7 +52,7 @@ function CampaignCharacterViewContent() {
   const characterId = params.characterId as string;
 
   const [character, setCharacter] = useState<Character | null>(null);
-  const [libraryForView, setLibraryForView] = useState<{ powers: unknown[]; techniques: unknown[]; items: unknown[] } | undefined>(undefined);
+  const [libraryForView, setLibraryForView] = useState<{ powers: unknown[]; techniques: unknown[]; items: unknown[]; creatures: unknown[] } | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
