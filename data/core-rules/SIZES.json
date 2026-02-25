@@ -1,0 +1,77 @@
+{
+  "categories": [
+    {
+      "value": "miniscule",
+      "label": "Miniscule",
+      "height": "Under 1 ft",
+      "spaces": 0.125,
+      "baseCarry": 10,
+      "perStrCarry": 5,
+      "minCarry": 5
+    },
+    {
+      "value": "tiny",
+      "label": "Tiny",
+      "height": "1-2 ft",
+      "spaces": 0.25,
+      "baseCarry": 25,
+      "perStrCarry": 10,
+      "minCarry": 10
+    },
+    {
+      "value": "small",
+      "label": "Small",
+      "height": "2-4 ft",
+      "spaces": 1,
+      "baseCarry": 50,
+      "perStrCarry": 25,
+      "minCarry": 25
+    },
+    {
+      "value": "medium",
+      "label": "Medium",
+      "height": "5-7 ft",
+      "spaces": 1,
+      "baseCarry": 100,
+      "perStrCarry": 50,
+      "minCarry": 50
+    },
+    {
+      "value": "large",
+      "label": "Large",
+      "height": "7-10 ft",
+      "spaces": 2,
+      "baseCarry": 200,
+      "perStrCarry": 100,
+      "minCarry": 100
+    },
+    {
+      "value": "huge",
+      "label": "Huge",
+      "height": "10-15 ft",
+      "spaces": 4,
+      "baseCarry": 400,
+      "perStrCarry": 200,
+      "minCarry": 200
+    },
+    {
+      "value": "humongous",
+      "label": "Humongous",
+      "height": "15-25 ft",
+      "spaces": 9,
+      "baseCarry": 800,
+      "perStrCarry": 400,
+      "minCarry": 400
+    },
+    {
+      "value": "gargantuan",
+      "label": "Gargantuan",
+      "height": "25+ ft",
+      "spaces": 16,
+      "baseCarry": 1600,
+      "perStrCarry": 800,
+      "minCarry": 800
+    }
+  ],
+  "halfCapacitySpeedPenalty": "Movement speed halved"
+}

@@ -4,7 +4,7 @@
 
 **Source:** Derived from the Prisma long-term assessment plan (sections 6.5, 6.6) and current codebase (ARCHITECTURE.md, DATABASE_SCALABILITY_AUDIT.md, realtime usage, RLS, migrations).
 
-**Status:** Planning. Update this doc as phases complete.
+**Status:** Phase 0 (SQL) complete — all tables and enums in `public`; RLS and Realtime on `public`; Prisma schema updated to `@@schema("public")`. Next: Phase 0 in code (Realtime subscriptions → `schema: 'public'`), then Phases 1–6 (replace Prisma with Supabase client).
 
 ---
 
@@ -28,8 +28,8 @@
 ### 2.1 Stack
 
 - **Runtime:** Next.js 16 (App Router), React 19, Vercel.
-- **Database:** Supabase PostgreSQL. **Auth + Storage** via Supabase client; **all table access** via Prisma.
-- **Schemas:** Five — `public`, `users`, `campaigns`, `codex`, `encounters`. Tables split across the last four.
+- **Database:** Supabase PostgreSQL. **Auth + Storage** via Supabase client; **all table access** via Prisma (until Phases 1–5).
+- **Schemas:** Single **`public`** schema (Phase 0 SQL complete). Tables formerly in `users`, `campaigns`, `codex`, `encounters` are now in `public`. Prisma schema uses `@@schema("public")` for all models.
 
 ### 2.2 Table layout (as of plan date)
 

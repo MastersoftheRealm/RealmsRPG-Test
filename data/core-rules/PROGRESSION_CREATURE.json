@@ -1,0 +1,16 @@
+{
+  "baseAbilityPoints": 7,
+  "abilityPointsEveryNLevels": 3,
+  "skillPointsAtLevel1": 5,
+  "skillPointsPerLevel": 3,
+  "baseHitEnergyPool": 26,
+  "hitEnergyPerLevel": 12,
+  "baseProficiency": 2,
+  "proficiencyEveryNLevels": 5,
+  "baseTrainingPoints": 22,
+  "tpPerLevelMultiplier": 2,
+  "baseFeatPoints": 4,
+  "featPointsPerLevel": 1,
+  "baseCurrency": 200,
+  "currencyGrowthRate": 1.45
+}

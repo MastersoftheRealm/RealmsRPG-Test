@@ -1,0 +1,2 @@
+id,data,created_at,updated_at
+e27d74ff-fffb-4ea9-a8ec-4645ce8fc697,"{""name"":""Unarmed Barrage"",""parts"":[{""id"":42,""name"":""Unarmed Hit(s)"",""op_1_lvl"":0,""op_2_lvl"":0,""op_3_lvl"":0},{""id"":4,""name"":""Quick or Free Action"",""op_1_lvl"":0,""op_2_lvl"":0,""op_3_lvl"":0}],""damage"":[],""weapon"":null,""createdAt"":""2026-02-20T21:16:02.621Z"",""updatedAt"":""2026-02-20T21:16:02.621Z"",""actionType"":""quick"",""isReaction"":false,""description"":""Make two unarmed prowess attacks against a target in melee range as a quick action.""}",,

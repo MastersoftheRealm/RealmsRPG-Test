@@ -37,7 +37,7 @@ export function useCampaignRolls(campaignId: string | undefined) {
         'postgres_changes',
         {
           event: '*',
-          schema: 'campaigns',
+          schema: 'public',
           table: 'campaign_rolls',
           filter: `campaign_id=eq.${stableId}`,
         },

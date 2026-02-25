@@ -4,12 +4,15 @@
  * ==============================
  * Populates the core_rules table with all configurable game rules.
  * Each row is a category (e.g., PROGRESSION_PLAYER, CONDITIONS, SIZES).
- * 
+ *
  * Run: node scripts/seed-core-rules.js
- * 
+ * Export JSON (backup / re-seed source): node scripts/seed-core-rules.js --export-json
+ *
  * This script is idempotent — it upserts all rows safely.
  */
 
+const fs = require('fs');
+const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
@@ -350,6 +353,18 @@ async function seedCoreRules() {
   }
 
   console.log(`\nDone. ${upserted} categories upserted, ${errors} errors.`);
+}
+
+// --export-json: write one JSON file per category to data/core-rules/ (backup / re-seed source)
+if (process.argv.includes('--export-json')) {
+  const dir = path.join(__dirname, '..', 'data', 'core-rules');
+  fs.mkdirSync(dir, { recursive: true });
+  for (const [id, data] of Object.entries(CORE_RULES)) {
+    fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify(data, null, 2), 'utf8');
+    console.log('  ' + id + '.json');
+  }
+  console.log('Exported ' + Object.keys(CORE_RULES).length + ' categories to data/core-rules/');
+  process.exit(0);
 }
 
 seedCoreRules()

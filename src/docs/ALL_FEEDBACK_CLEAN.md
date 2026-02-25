@@ -1183,3 +1183,10 @@ Notes
 - Priority: High
 - Feedback: (1) For damage modifiers, the cost of each type of resistance, immunity, weakness, etc should be clear before and after you add them (feat point cost). (2) When you add a sense or movement it should show the feat point cost of that thing perhaps with a chip with feat point cost or something like we use across the website. (3) Same with condition immunities as other damage modifiers — they should show how many feat points each condition immunity or damage modifier costs. (4) For skills use the add skill and add sub skill modals instead of a dropdown list. (5) Separate feats into add feat and add negative feat, where the add negative feat modal only has feats with negative feat point costs. (6) In the add power, technique, and armament modals the loaded things should show like all other parts of the site — parts, properties, options as chips as part of the parts, with other header-usual data detailed in the expanded view such as area, range, etc if not in the column headers. This is true for both the modals and the actual displayed lists in the creature creator. (7) Make sure we use the correct common logic that other parts of the site with similar/same functionality use.
 - Expected: Damage modifiers/senses/movement/condition immunities show feat point cost before and after adding (e.g. chip or label). Skills use AddSkillModal and AddSubSkillModal. Separate Add Feat and Add Negative Feat modals. Power/technique/armament modals and lists show parts, properties, options as chips; area, range, etc in expanded view; align with add-library-item-modal and library/codex display logic.
+
+**Raw Feedback Log — 2026-02-25 (Username change reverts to Player###)**
+- Date: 2026-02-25
+- Context: My Account — change username
+- Priority: Medium (task for later)
+- Feedback: When changing account username, it saves the new one but then creates a new "Player###" username and replaces the chosen one instead of keeping the new username.
+- Expected: After changing username, the profile should keep the new username; it should not be overwritten by a generated Player### default.

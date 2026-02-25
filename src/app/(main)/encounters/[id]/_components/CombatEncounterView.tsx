@@ -189,7 +189,7 @@ export default function CombatEncounterView({
         'postgres_changes',
         {
           event: 'UPDATE',
-          schema: 'users',
+          schema: 'public',
           table: 'characters',
           filter,
         },

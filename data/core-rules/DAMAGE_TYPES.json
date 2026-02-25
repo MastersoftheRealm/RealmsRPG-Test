@@ -1,0 +1,24 @@
+{
+  "all": [
+    "magic",
+    "fire",
+    "ice",
+    "lightning",
+    "spiritual",
+    "sonic",
+    "poison",
+    "necrotic",
+    "acid",
+    "psychic",
+    "light",
+    "bludgeoning",
+    "piercing",
+    "slashing"
+  ],
+  "armorExceptions": [
+    "psychic",
+    "spiritual",
+    "sonic"
+  ],
+  "note": "No physical vs magic split. All damage types are equal categories. Only distinction is armor exceptions."
+}

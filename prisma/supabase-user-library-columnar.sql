@@ -58,7 +58,15 @@ ALTER TABLE users.user_items
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'users' AND table_name = 'user_items' AND column_name = 'data') THEN
-    UPDATE users.user_items SET name = data->>'name', description = data->>'description', type = data->>'type', rarity = data->>'rarity', armor_value = (data->>'armorValue')::integer, damage_reduction = (data->>'damageReduction')::integer, payload = COALESCE(data - 'name' - 'description' - 'type' - 'rarity' - 'armorValue' - 'damageReduction' - 'createdAt' - 'updatedAt', '{}'::jsonb) WHERE data IS NOT NULL;
+    UPDATE users.user_items SET
+      name = data->>'name',
+      description = data->>'description',
+      type = data->>'type',
+      rarity = data->>'rarity',
+      armor_value = CASE WHEN data->>'armorValue' IS NULL OR data->>'armorValue' = '' THEN NULL ELSE ((data->>'armorValue')::numeric)::integer END,
+      damage_reduction = CASE WHEN data->>'damageReduction' IS NULL OR data->>'damageReduction' = '' THEN NULL ELSE ((data->>'damageReduction')::numeric)::integer END,
+      payload = COALESCE(data - 'name' - 'description' - 'type' - 'rarity' - 'armorValue' - 'damageReduction' - 'createdAt' - 'updatedAt', '{}'::jsonb)
+    WHERE data IS NOT NULL;
     ALTER TABLE users.user_items DROP COLUMN data;
   END IF;
 END $$;
@@ -76,10 +84,20 @@ ALTER TABLE users.user_creatures
   ADD COLUMN IF NOT EXISTS energy_points INTEGER,
   ADD COLUMN IF NOT EXISTS payload JSONB DEFAULT '{}';
 
+-- Safe integer cast: JSON sometimes has decimals (e.g. "0.5"); cast via numeric then truncate to integer.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'users' AND table_name = 'user_creatures' AND column_name = 'data') THEN
-    UPDATE users.user_creatures SET name = data->>'name', description = data->>'description', level = (data->>'level')::integer, type = data->>'type', size = data->>'size', hit_points = (data->>'hitPoints')::integer, energy_points = (data->>'energyPoints')::integer, payload = COALESCE(data - 'name' - 'description' - 'level' - 'type' - 'size' - 'hitPoints' - 'energyPoints' - 'createdAt' - 'updatedAt', '{}'::jsonb) WHERE data IS NOT NULL;
+    UPDATE users.user_creatures SET
+      name = data->>'name',
+      description = data->>'description',
+      level = CASE WHEN data->>'level' IS NULL OR data->>'level' = '' THEN NULL ELSE ((data->>'level')::numeric)::integer END,
+      type = data->>'type',
+      size = data->>'size',
+      hit_points = CASE WHEN data->>'hitPoints' IS NULL OR data->>'hitPoints' = '' THEN NULL ELSE ((data->>'hitPoints')::numeric)::integer END,
+      energy_points = CASE WHEN data->>'energyPoints' IS NULL OR data->>'energyPoints' = '' THEN NULL ELSE ((data->>'energyPoints')::numeric)::integer END,
+      payload = COALESCE(data - 'name' - 'description' - 'level' - 'type' - 'size' - 'hitPoints' - 'energyPoints' - 'createdAt' - 'updatedAt', '{}'::jsonb)
+    WHERE data IS NOT NULL;
     ALTER TABLE users.user_creatures DROP COLUMN data;
   END IF;
 END $$;

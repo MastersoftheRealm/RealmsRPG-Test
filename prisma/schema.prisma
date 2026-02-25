@@ -9,7 +9,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["public", "users", "campaigns", "codex", "encounters"]
+  schemas   = ["public"]
 }
 
 // =============================================================================
@@ -22,7 +22,7 @@ enum UserRole {
   developer
   admin
 
-  @@schema("users")
+  @@schema("public")
 }
 
 model UserProfile {
@@ -45,7 +45,7 @@ model UserProfile {
   usernameLookups  UsernameLookup[]
 
   @@map("user_profiles")
-  @@schema("users")
+  @@schema("public")
 }
 
 model UsernameLookup {
@@ -54,7 +54,7 @@ model UsernameLookup {
   user     UserProfile  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("usernames")
-  @@schema("users")
+  @@schema("public")
 }
 
 // =============================================================================
@@ -72,7 +72,7 @@ model Character {
   @@index([userId])
   @@index([userId, updatedAt])
   @@map("characters")
-  @@schema("users")
+  @@schema("public")
 }
 
 // =============================================================================
@@ -94,7 +94,7 @@ model UserPower {
 
   @@index([userId])
   @@map("user_powers")
-  @@schema("users")
+  @@schema("public")
 }
 
 model UserTechnique {
@@ -111,7 +111,7 @@ model UserTechnique {
 
   @@index([userId])
   @@map("user_techniques")
-  @@schema("users")
+  @@schema("public")
 }
 
 model UserItem {
@@ -130,7 +130,7 @@ model UserItem {
 
   @@index([userId])
   @@map("user_items")
-  @@schema("users")
+  @@schema("public")
 }
 
 model UserCreature {
@@ -150,7 +150,7 @@ model UserCreature {
 
   @@index([userId])
   @@map("user_creatures")
-  @@schema("users")
+  @@schema("public")
 }
 
 model UserSpecies {
@@ -163,7 +163,7 @@ model UserSpecies {
 
   @@index([userId])
   @@map("user_species")
-  @@schema("users")
+  @@schema("public")
 }
 
 // =============================================================================
@@ -188,7 +188,7 @@ model Campaign {
   @@index([ownerId])
   @@index([inviteCode])
   @@map("campaigns")
-  @@schema("campaigns")
+  @@schema("public")
 }
 
 model CampaignMember {
@@ -199,7 +199,7 @@ model CampaignMember {
   @@id([campaignId, userId])
   @@index([userId])
   @@map("campaign_members")
-  @@schema("campaigns")
+  @@schema("public")
 }
 
 model CampaignRoll {
@@ -212,7 +212,7 @@ model CampaignRoll {
   @@index([campaignId])
   @@index([campaignId, createdAt])
   @@map("campaign_rolls")
-  @@schema("campaigns")
+  @@schema("public")
 }
 
 // =============================================================================
@@ -229,7 +229,7 @@ model Encounter {
   @@index([userId])
   @@index([userId, updatedAt])
   @@map("encounters")
-  @@schema("encounters")
+  @@schema("public")
 }
 
 // =============================================================================
@@ -262,7 +262,7 @@ model CodexFeat {
   stateFeat     Boolean? @map("state_feat")
 
   @@map("codex_feats")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexSkill {
@@ -278,7 +278,7 @@ model CodexSkill {
   craftSuccessDesc   String? @map("craft_success_desc")
 
   @@map("codex_skills")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexSpecies {
@@ -298,7 +298,7 @@ model CodexSpecies {
   languages       String?
 
   @@map("codex_species")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexTrait {
@@ -312,7 +312,7 @@ model CodexTrait {
   optionTraitIds  String?  @map("option_trait_ids")
 
   @@map("codex_traits")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexPart {
@@ -338,7 +338,7 @@ model CodexPart {
   defense     String?
 
   @@map("codex_parts")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexProperty {
@@ -356,7 +356,7 @@ model CodexProperty {
   mechanic    Boolean?
 
   @@map("codex_properties")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexEquipment {
@@ -368,7 +368,7 @@ model CodexEquipment {
   rarity      String?
 
   @@map("codex_equipment")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexArchetype {
@@ -378,7 +378,7 @@ model CodexArchetype {
   description String?
 
   @@map("codex_archetypes")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CodexCreatureFeat {
@@ -391,7 +391,7 @@ model CodexCreatureFeat {
   mechanic    Boolean?
 
   @@map("codex_creature_feats")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model CoreRules {
@@ -399,7 +399,7 @@ model CoreRules {
   data      Json      // Category-specific JSON structure
   updatedAt DateTime? @map("updated_at")
   @@map("core_rules")
-  @@schema("codex")
+  @@schema("public")
 }
 
 // =============================================================================
@@ -419,7 +419,7 @@ model OfficialPower {
   payload    Json     @default("{}")
 
   @@map("official_powers")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model OfficialTechnique {
@@ -433,7 +433,7 @@ model OfficialTechnique {
   payload    Json     @default("{}")
 
   @@map("official_techniques")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model OfficialItem {
@@ -449,7 +449,7 @@ model OfficialItem {
   payload          Json     @default("{}")
 
   @@map("official_items")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model OfficialCreature {
@@ -466,7 +466,7 @@ model OfficialCreature {
   payload      Json     @default("{}")
 
   @@map("official_creatures")
-  @@schema("codex")
+  @@schema("public")
 }
 
 // =============================================================================
@@ -481,7 +481,7 @@ model PublicPower {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_powers")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model PublicTechnique {
@@ -491,7 +491,7 @@ model PublicTechnique {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_techniques")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model PublicItem {
@@ -501,7 +501,7 @@ model PublicItem {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_items")
-  @@schema("codex")
+  @@schema("public")
 }
 
 model PublicCreature {
@@ -511,5 +511,5 @@ model PublicCreature {
   updatedAt DateTime? @map("updated_at")
 
   @@map("public_creatures")
-  @@schema("codex")
+  @@schema("public")
 }

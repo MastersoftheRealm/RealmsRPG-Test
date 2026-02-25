@@ -6432,3 +6432,19 @@ Prioritized tasks for AI agents. **Stack: Supabase + Prisma only** (ignore Fires
     - Creature creator displayed lists (Powers, Techniques, Armaments sections): each row expandable with description, parts/properties as chips, area/range/damage/requirements in expanded view — same structure as library-section and character creator steps (GridListRow with detailSections, chips).
     - Do not duplicate chip-building logic; import or call shared helpers from lib/calculators and add-library-item-modal or equivalent.
   notes: "Done 2026-02-24. powerSelectableItems, techniqueSelectableItems, armamentSelectableItems now built from powerList/techniqueList/armamentList using derivePowerDisplay, deriveTechniqueDisplay, and property chip logic (same as add-library-item-modal); each SelectableItem has detailSections, totalCost, costLabel. Displayed lists (Powers/Techniques/Armaments sections) still use simple columns; optional follow-up to add expandable detail from library lookup."
+
+- id: TASK-278
+  title: Fix username change — new username replaced by Player### instead of kept
+  priority: medium
+  status: not-started
+  created_at: 2026-02-25
+  created_by: owner
+  description: |
+    Owner feedback: When changing account username in My Account, the new username is saved but then something creates a new "Player###" username and replaces the chosen one. The profile should keep the new username.
+  related_files:
+    - src/app/(auth)/actions.ts
+    - My Account page / profile update flow
+  acceptance_criteria:
+    - After changing username via My Account, the displayed and stored username is the one the user entered, not a generated Player###.
+    - No automatic overwrite of username by generateDefaultUsername or similar after a successful change.
+  notes: ""
