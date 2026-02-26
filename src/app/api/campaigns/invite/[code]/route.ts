@@ -6,22 +6,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { inviteCodeLimiter } from '@/lib/rate-limit';
+import { buildRateLimitKey, inviteCodeLimiter, resolveClientIp } from '@/lib/rate-limit';
+
+const INVITE_CODE_REGEX = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/;
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ code: string }> }
 ) {
   try {
-    const ip = (_request as unknown as NextRequest).headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = inviteCodeLimiter.check(`invite:${ip}`);
+    const ip = resolveClientIp((_request as unknown as NextRequest).headers);
+    const key = buildRateLimitKey('invite', { ip });
+    const { success } = inviteCodeLimiter.check(key);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { code } = await params;
     const inviteCode = code?.trim().toUpperCase();
-    if (!inviteCode || inviteCode.length < 4) {
+    if (!inviteCode || !INVITE_CODE_REGEX.test(inviteCode)) {
       return NextResponse.json({ error: 'Invalid invite code' }, { status: 400 });
     }
 

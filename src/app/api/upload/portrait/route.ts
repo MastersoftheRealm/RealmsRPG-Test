@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateImageMagicBytes } from '@/lib/validate-image';
+import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 
 const BUCKET = 'portraits';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -17,6 +18,15 @@ export async function POST(request: NextRequest) {
   const { user, error } = await getSession();
   if (error || !user?.uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const key = buildRateLimitKey('upload-portrait', {
+    userId: user.uid,
+    ip: resolveClientIp(request.headers),
+  });
+  const { success } = uploadLimiter.check(key);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
   }
 
   const formData = await request.formData();
