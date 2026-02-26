@@ -321,10 +321,12 @@ export async function GET() {
       process.env.NODE_ENV === 'development'
         ? message
         : message.includes('connect') || message.includes('connection')
-          ? 'Database connection failed. Check DATABASE_URL and ?pgbouncer=true in Vercel env vars.'
+          ? 'Database connection failed. Check NEXT_PUBLIC_SUPABASE_URL and keys in Vercel.'
           : message.includes('exist') || message.includes('relation')
-            ? 'Codex tables may be missing. Run Supabase SQL migrations.'
-            : undefined;
+            ? 'Codex tables may be missing in public. Run Supabase SQL migrations.'
+            : message.includes('permission') || message.includes('policy') || message.includes('row-level') || message.includes('denied')
+              ? 'Permission denied: RLS may be blocking reads. Run sql/supabase-codex-rls-public.sql in Supabase Dashboard → SQL Editor.'
+              : undefined;
     return NextResponse.json(
       { error: 'Failed to load codex', ...(safeHint && { hint: safeHint }) },
       { status: 500 }

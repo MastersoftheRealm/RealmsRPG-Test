@@ -170,13 +170,14 @@ Schema and RLS are applied by running SQL in the Dashboard; the app does **not**
 
 ### GET /api/codex 500 or codex data empty
 
-All **codex_*** tables live in **public** (there is no `codex` schema). If you get 500 or empty codex:
+All **codex_*** tables live in **public**. If you get 500:
 
-1. **Tables in public:** In Supabase Table Editor, confirm `public.codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`, and `core_rules` exist.
-2. **RLS:** Ensure RLS policies allow **SELECT** for the role used by the API (e.g. anon or service role). If RLS denies SELECT, the API will error.
-3. **Connection / env:** Check `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (or anon key) in Vercel; wrong or missing keys can cause 500.
+1. **RLS (most common):** The API uses the anon key. If RLS is enabled on codex_* or core_rules but there is **no SELECT policy for anon**, you get permission denied → 500.  
+   **Fix:** Run **`sql/supabase-codex-rls-public.sql`** in Supabase Dashboard → SQL Editor. It enables RLS and adds “Anyone can read” (SELECT TO public) on all codex_* tables and core_rules.
+2. **Tables in public:** In Table Editor, confirm `public.codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`, and `core_rules` exist.
+3. **Connection / env:** Check `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (anon key) in Vercel.
 
-The codex API treats “table does not exist” (42P01) as empty for that table so the site can still load; other errors (e.g. RLS) still return 500.
+The API returns a `hint` in the 500 body when it detects permission/RLS errors; use that to confirm and run the RLS script.
 
 ---
 

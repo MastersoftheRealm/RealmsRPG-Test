@@ -23,19 +23,15 @@
 | **path-c-phase0-consolidate-to-public-part2.sql** | Part 2: RLS, Realtime add, drop empty schemas | One-time |
 | **create-public-core-rules.sql** | Create `public.core_rules` (id, data, updated_at) | Run after Part 2 if core_rules was dropped |
 | **supabase-storage-policies.sql** | RLS for Storage buckets (portraits, profile-pictures) | Run once per project |
-| **supabase-rls-policies.sql** | Historical multi-schema RLS | Reference only; Part 2 embeds public RLS |
-| **supabase-codex-tables-columnar.sql** | Creates columnar codex_* in **codex** schema | **Legacy.** Creates in `codex`; current layout is public-only. Use only before consolidation or adapt to create in `public`. |
-| **supabase-official-library-columnar.sql** | Creates official_* in **codex** schema | **Legacy.** Creates in `codex`; use supabase-official-library-public-schema.sql for public. |
 | **supabase-official-library-public-schema.sql** | Official library in **public** (columnar) + backfill from public_* | Run to create official_* in public and backfill from public_* (id+data). GET /api/public prefers official_*. |
-| **supabase-user-library-columnar.sql** | User library columnar columns | Historical; user_* already columnar in public per SUPABASE_SCHEMA.md |
 | **supabase-user-species-columnar.sql** | user_species columnar (codex_species columns + user_id + payload) | Run once; backfill from data, then drop data. |
 | **supabase-encounters-list-columns.sql** | Encounters: add name, type, status columns; backfill from data | Optional; list/filter by columns. |
 | **supabase-characters-list-columns.sql** | Characters: add name, level, archetype_name, ancestry_name, status, visibility; backfill from data | Hybrid list columns (TASK-282). |
 | **supabase-campaign-rolls-list-columns.sql** | Campaign rolls: add character_id, user_id, type, title; backfill from data | Hybrid list columns (TASK-283). |
+| **supabase-codex-rls-public.sql** | RLS for codex_* and core_rules in public (SELECT TO public) | Run if GET /api/codex returns 500 (permission denied). |
 | **supabase-campaign-members.sql** | campaign_members table | May already exist from consolidation |
-| **supabase-idempotent-full.sql** | Large idempotent setup (multi-schema) | **Legacy.** Pre–Path C; do not run on current single-schema DB. |
-| **force-drop-codex-core-rules-part-a-terminate.sql** | Terminate sessions locking codex.core_rules | One-time fix if Part 2 hung |
-| **force-drop-codex-core-rules-part-b-drop.sql** | Drop codex.core_rules | One-time fix |
+
+**Legacy scripts (do not run on current public-only DB)** are in [sql/archive/](archive/): codex-schema columnar, official-library in codex, user-library in users, multi-schema RLS, idempotent-full, force-drop-codex scripts.
 
 ---
 
