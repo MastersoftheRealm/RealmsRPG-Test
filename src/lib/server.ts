@@ -2,7 +2,7 @@
  * Server-Side Data Fetching Utilities
  * =====================================
  * Helper functions for fetching data in Server Components.
- * Uses Supabase session and Prisma.
+ * Uses Supabase session and server data helpers.
  */
 
 import { getSession, type SessionUser } from '@/lib/supabase/session';
@@ -48,7 +48,7 @@ export async function getServerCharacter(userId: string, characterId: string) {
 }
 
 // =============================================================================
-// Game Data (Prisma)
+// Game Data (Codex / Supabase)
 // =============================================================================
 
 export async function getServerGameData() {

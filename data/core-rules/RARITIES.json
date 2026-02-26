@@ -1,0 +1,53 @@
+{
+  "tiers": [
+    {
+      "name": "Common",
+      "currencyMin": 0,
+      "currencyMax": 99,
+      "levelMin": 1,
+      "levelMax": 4
+    },
+    {
+      "name": "Uncommon",
+      "currencyMin": 100,
+      "currencyMax": 499,
+      "levelMin": 5,
+      "levelMax": 9
+    },
+    {
+      "name": "Rare",
+      "currencyMin": 500,
+      "currencyMax": 1499,
+      "levelMin": 10,
+      "levelMax": 14
+    },
+    {
+      "name": "Epic",
+      "currencyMin": 1500,
+      "currencyMax": 9999,
+      "levelMin": 15,
+      "levelMax": 19
+    },
+    {
+      "name": "Legendary",
+      "currencyMin": 10000,
+      "currencyMax": 49999,
+      "levelMin": 20,
+      "levelMax": 24
+    },
+    {
+      "name": "Mythic",
+      "currencyMin": 50000,
+      "currencyMax": 99999,
+      "levelMin": 25,
+      "levelMax": 29
+    },
+    {
+      "name": "Ascended",
+      "currencyMin": 100000,
+      "currencyMax": null,
+      "levelMin": 30,
+      "levelMax": null
+    }
+  ]
+}

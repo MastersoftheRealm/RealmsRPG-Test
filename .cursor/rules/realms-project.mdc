@@ -5,7 +5,7 @@ alwaysApply: true
 
 # RealmsRPG Project
 
-**Stack:** Next.js (App Router), React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Prisma**, **Vercel**
+**Stack:** Next.js (App Router), React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Vercel**. Database: Supabase client + raw SQL; all tables in `public`; no Prisma.
 
 **Key directories:**
 - `src/app/` — Routes: `(main)/` (characters, library, codex, creators), `(auth)/` (login, register)

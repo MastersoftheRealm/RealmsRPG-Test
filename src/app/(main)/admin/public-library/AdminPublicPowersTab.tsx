@@ -1,5 +1,5 @@
 /**
- * Admin Public Library — Powers tab
+ * Admin Official Library — Powers tab
  * List displayed like Library. Edit opens Power Creator with item loaded; row delete remains.
  */
 
@@ -18,7 +18,7 @@ import {
   DeleteConfirmModal,
   type ChipData,
 } from '@/components/shared';
-import { usePublicLibrary, usePowerParts } from '@/hooks';
+import { useOfficialLibrary, usePowerParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
@@ -26,12 +26,12 @@ import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { Wand2 } from 'lucide-react';
 
 const POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
-const QUERY_KEY = ['public-library', 'powers'] as const;
+const QUERY_KEY = ['official-library', 'powers'] as const;
 
 export function AdminPublicPowersTab() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = usePublicLibrary('powers');
+  const { data: items = [], isLoading, error } = useOfficialLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -92,7 +92,7 @@ export function AdminPublicPowersTab() {
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/public/powers?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      const res = await fetch(`/api/official/powers?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error(res.statusText);
@@ -103,11 +103,11 @@ export function AdminPublicPowersTab() {
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load public powers" />;
+  if (error) return <ErrorDisplay message="Failed to load official powers" />;
 
   return (
     <div>
-      <SectionHeader title="Public Powers" size="md" />
+      <SectionHeader title="Official Powers" size="md" />
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search powers..." />
       </div>
@@ -132,7 +132,7 @@ export function AdminPublicPowersTab() {
         ) : filtered.length === 0 ? (
           <ListEmptyState
             icon={<Wand2 className="w-8 h-8" />}
-            title="No public powers"
+            title="No official powers"
             message="Add one from the header or publish from a creator."
           />
         ) : (

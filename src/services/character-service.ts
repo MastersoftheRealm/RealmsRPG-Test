@@ -1,7 +1,7 @@
 /**
  * Character Service
  * ==================
- * Client-side API calls for character data. Uses /api/characters (Prisma).
+ * Client-side API calls for character data. Uses /api/characters (Supabase).
  */
 
 import type { Character, CharacterSummary } from '@/types';
@@ -14,6 +14,7 @@ export interface LibraryForView {
   powers: Array<Record<string, unknown>>;
   techniques: Array<Record<string, unknown>>;
   items: Array<Record<string, unknown>>;
+  creatures: Array<Record<string, unknown>>;
 }
 
 export interface GetCharacterResult {

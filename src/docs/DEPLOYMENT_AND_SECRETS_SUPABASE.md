@@ -1,7 +1,7 @@
 # Deployment & Secrets — Supabase + Vercel
 
 > **Replaces:** `DEPLOYMENT_SECRETS.md`, `SECRETS_SETUP.md`, `ADMIN_SDK_SECRETS_SETUP.md`  
-> **Stack:** Next.js, Supabase (PostgreSQL, Auth, Storage), Prisma, Vercel
+> **Stack:** Next.js, Supabase (PostgreSQL, Auth, Storage), Vercel. No Prisma — all table access via Supabase client.
 
 ---
 
@@ -21,11 +21,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=<anon/public_key>
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 
-# Database (from Supabase → Settings → Database)
-# Session Pooler (port 6543) for serverless — append ?pgbouncer=true (required for Prisma + PgBouncer)
-DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
-# Direct (port 5432) for migrations — no pgbouncer param
-DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+# Optional: only if you run external DB tools (migrations are run as SQL in Supabase Dashboard)
+# DATABASE_URL="postgresql://..."
+# DIRECT_URL="postgresql://..."
 ```
 
 ### Production (Vercel Dashboard)
@@ -37,10 +35,8 @@ In Vercel → Project → Settings → Environment Variables, add:
 | `NEXT_PUBLIC_SUPABASE_URL` | All | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | All | Anon/public key (safe for client) |
 | `SUPABASE_SERVICE_ROLE_KEY` | All | **Server-only** — never expose to client |
-| `DATABASE_URL` | All | Session Pooler (port 6543), **must end with `?pgbouncer=true`** |
-| `DIRECT_URL` | All | Direct connection (port 5432) for Prisma migrations |
 
-**Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY` or `DATABASE_URL`.
+**Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional (only for external migration tools); the app uses the Supabase client only.
 
 ---
 
@@ -55,15 +51,15 @@ The app uses two buckets for image uploads. **Create these in Supabase Dashboard
 
 ### RLS Policies
 
-Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`prisma/supabase-storage-policies.sql`** — run that file in Supabase Dashboard → SQL Editor.
+Enable RLS on each bucket. The app needs **SELECT, INSERT, UPDATE, and DELETE** for portrait uploads (list existing, remove old file, then upload/upsert). The canonical policy set is in **`sql/supabase-storage-policies.sql`** — run that file in Supabase Dashboard → SQL Editor.
 
 - **Read (SELECT):** Public or own path
 - **Insert/Update/Delete:** Only the user’s own path (`portraits`: first folder = `auth.uid()`; `profile-pictures`: filename prefix = `auth.uid()`)
 
-**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`prisma/supabase-storage-policies.sql`** in the SQL Editor.
+**Create buckets:** In Supabase Dashboard → Storage → New bucket, create `portraits` and `profile-pictures`. Enable public access if you want public URLs (the app uses `getPublicUrl`). Then run **`sql/supabase-storage-policies.sql`** in the SQL Editor.
 
 **Portrait upload fails with "new row violates row-level security policy"?**  
-Run `prisma/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
+Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + SELECT (e.g. from an older snippet), add the UPDATE and DELETE policies for the `portraits` bucket from that file.
 
 **Portrait uploads to the bucket but won’t load (400 or 403, “Failed to load resource”)?**  
 1. **Make the bucket public** — The app uses **public** URLs for portraits. In Supabase Dashboard → **Storage** → select the **portraits** bucket → **Configuration** (or bucket settings) → turn **Public bucket** on. If it’s off, image requests often get **400** or **403** and the sheet shows no portrait. Do the same for **profile-pictures** if profile avatars don’t load.  
@@ -84,7 +80,7 @@ Run `prisma/supabase-storage-policies.sql`. If you previously only added INSERT 
 Admins are configured via one of:
 
 1. **Supabase `auth.users` metadata** — Add `role: 'admin'` to user metadata
-2. **Database table** — `admins` table with `user_id`; check via Prisma
+2. **Database table** — `admins` table with `user_id` (if used)
 3. **Environment variable** — `ADMIN_UIDS` (comma-separated user IDs)
 
 See `ADMIN_SETUP.md` for current implementation.
@@ -120,11 +116,9 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | Supabase → Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | `eyJ...` (anon key) | Supabase → Settings → API → anon public |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJ...` (service_role key) | Supabase → Settings → API → service_role |
-| `DATABASE_URL` | `postgresql://...` **+ `?pgbouncer=true`** | Supabase → Database → Session Pooler (port 6543); append `?pgbouncer=true` |
-| `DIRECT_URL` | `postgresql://...` | Supabase → Database → Direct connection (port 5432) |
 | `ADMIN_UIDS` | `uid1,uid2` | Your Supabase Auth user IDs (optional, for admin) |
 
-**Never** use `NEXT_PUBLIC_` for `SUPABASE_SERVICE_ROLE_KEY` or `DATABASE_URL`.
+**Never** use `NEXT_PUBLIC_` for `SUPABASE_SERVICE_ROLE_KEY`.
 
 ### Step 3: Deploy
 
@@ -157,11 +151,9 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 If you want to set (or fix) schemas, tables, RLS, and Realtime in one go without tracking what’s already applied:
 
 1. Open **Supabase Dashboard → SQL Editor**.
-2. Paste and run the entire contents of **`prisma/supabase-idempotent-full.sql`**.
+2. Paste and run the schema/RLS SQL files as needed (e.g. **`sql/path-c-phase0-consolidate-to-public.sql`** for full Path C setup, or **`sql/supabase-idempotent-full.sql`** if that file exists and matches your target state).
 
-That script is safe to run multiple times. It creates missing schemas and tables, adds missing columns (e.g. `user_profiles.role`), (re)creates all RLS policies, and applies Realtime grants. It does **not** drop or overwrite existing data.
-
-After that, run **`prisma/supabase-storage-policies.sql`** once if you need Storage RLS for the `portraits` and `profile-pictures` buckets.
+Schema and RLS are applied by running SQL in the Dashboard; the app does **not** use Prisma or `prisma migrate`. After schema setup, run **`sql/supabase-storage-policies.sql`** once if you need Storage RLS for the `portraits` and `profile-pictures` buckets.
 
 ---
 
@@ -176,39 +168,18 @@ After that, run **`prisma/supabase-storage-policies.sql`** once if you need Stor
 
 ### "column user_profiles.role does not exist"
 
-After adding user roles, the database must have the `role` column on `user_profiles`. If you see this error (e.g. when changing username, loading profile, or using "Add to my library"):
-
-1. **Apply pending Prisma migrations** (recommended):
-   ```bash
-   npx prisma migrate deploy
-   ```
-   This uses `DIRECT_URL` and applies the `20260214000000_add_user_role` migration, which adds `users.UserRole` and `user_profiles.role` with default `'new_player'`. Existing rows get the default automatically.
-
-2. **Or run the SQL manually** (e.g. in Supabase SQL Editor):
-   ```sql
-   CREATE TYPE "users"."UserRole" AS ENUM ('new_player', 'playtester', 'developer', 'admin');
-   ALTER TABLE "users"."user_profiles" ADD COLUMN IF NOT EXISTS "role" "users"."UserRole" NOT NULL DEFAULT 'new_player';
-   ```
-
-Until this migration is applied, any code that reads or writes `UserProfile` (username change, profile load, admin users list, add-to-library) will fail.
+After adding user roles, the database must have the `role` column on `user_profiles`. Run SQL in Supabase Dashboard → SQL Editor (e.g. add `role` to `public.user_profiles` with type matching your enum and default `'new_player'`). Until applied, profile and admin features that read/write role may fail.
 
 ---
 
 ### Realtime: "permission denied for schema campaigns" / "permission denied for schema users" (PoolingReplicationError)
 
-If campaign roll log or character **HP/EN/AP** don’t update in real time and you see `PoolingReplicationError` with `insufficient_privilege` / `permission denied for schema campaigns` or `permission denied for schema users`, the Realtime service can’t access those custom schemas when applying RLS. The same fix enables:
+If campaign roll log or character **HP/EN/AP** don’t update in real time and you see `PoolingReplicationError` or `permission denied for schema`, the Realtime publication and RLS may need to be applied for `public` (all tables are in `public` after Path C). The same fix enables:
 
 - **Campaign roll log** (campaigns.campaign_rolls)
 - **HP, EN, and AP sync** between encounter combat and character sheets (users.characters)
 
-**Fix:** Run the Realtime-related block from **`prisma/supabase-rls-policies.sql`** in Supabase Dashboard → SQL Editor. It must include:
-
-```sql
-GRANT USAGE ON SCHEMA campaigns TO anon, authenticated, service_role, authenticator;
-GRANT USAGE ON SCHEMA users TO anon, authenticated, service_role, authenticator;
-```
-
-(Do **not** grant to a role like `supabase_realtime` unless your project explicitly has that role; it does not exist in standard Supabase projects and will cause "role does not exist" errors.)
+**Fix:** Run the Realtime/RLS block from your schema SQL (e.g. **`sql/supabase-rls-policies.sql`** or the Path C consolidation script) in Supabase Dashboard → SQL Editor. After Path C, all tables are in `public`; ensure Realtime publication includes `public.campaign_rolls` and `public.characters` and that RLS allows SELECT for the roles that need live updates.
 
 ---
 

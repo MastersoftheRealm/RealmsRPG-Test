@@ -1,0 +1,32 @@
+{
+  "table": [
+    {
+      "martialProf": 0,
+      "armamentMax": 3
+    },
+    {
+      "martialProf": 1,
+      "armamentMax": 8
+    },
+    {
+      "martialProf": 2,
+      "armamentMax": 12
+    },
+    {
+      "martialProf": 3,
+      "armamentMax": 15
+    },
+    {
+      "martialProf": 4,
+      "armamentMax": 18
+    },
+    {
+      "martialProf": 5,
+      "armamentMax": 21
+    },
+    {
+      "martialProf": 6,
+      "armamentMax": 24
+    }
+  ]
+}

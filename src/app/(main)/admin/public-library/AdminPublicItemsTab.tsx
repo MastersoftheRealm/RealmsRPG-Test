@@ -1,5 +1,5 @@
 /**
- * Admin Public Library — Armaments (items) tab
+ * Admin Official Library — Armaments (items) tab
  * List displayed like Library. Edit opens Item Creator with item loaded; row delete remains.
  */
 
@@ -18,7 +18,7 @@ import {
   DeleteConfirmModal,
   type ChipData,
 } from '@/components/shared';
-import { usePublicLibrary, useItemProperties } from '@/hooks';
+import { useOfficialLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSort } from '@/hooks/use-sort';
 import type { ItemPropertyPayload, ItemDamage } from '@/lib/calculators/item-calc';
@@ -31,7 +31,7 @@ import {
 import { Shield } from 'lucide-react';
 
 const ITEM_GRID = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
-const QUERY_KEY = ['public-library', 'items'] as const;
+const QUERY_KEY = ['official-library', 'items'] as const;
 
 const TYPE_MAP: Record<string, string> = {
   weapon: 'Weapon',
@@ -43,7 +43,7 @@ const TYPE_MAP: Record<string, string> = {
 export function AdminPublicItemsTab() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: items = [], isLoading, error } = usePublicLibrary('items');
+  const { data: items = [], isLoading, error } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const [search, setSearch] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -99,7 +99,7 @@ export function AdminPublicItemsTab() {
   const handleDeleteFromList = async () => {
     if (!deleteConfirm) return;
     try {
-      const res = await fetch(`/api/public/items?id=${encodeURIComponent(deleteConfirm.id)}`, {
+      const res = await fetch(`/api/official/items?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error(res.statusText);
@@ -110,11 +110,11 @@ export function AdminPublicItemsTab() {
     }
   };
 
-  if (error) return <ErrorDisplay message="Failed to load public armaments" />;
+  if (error) return <ErrorDisplay message="Failed to load official armaments" />;
 
   return (
     <div>
-      <SectionHeader title="Public Armaments" size="md" />
+      <SectionHeader title="Official Armaments" size="md" />
       <div className="mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search armaments..." />
       </div>
@@ -139,7 +139,7 @@ export function AdminPublicItemsTab() {
         ) : filtered.length === 0 ? (
           <ListEmptyState
             icon={<Shield className="w-8 h-8" />}
-            title="No public armaments"
+            title="No official armaments"
             message="Add one from the header or publish from a creator."
           />
         ) : (

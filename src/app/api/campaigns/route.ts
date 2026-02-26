@@ -1,21 +1,31 @@
 /**
  * Campaigns API
  * =============
- * List campaigns for current user. Uses Prisma. Requires Supabase session.
+ * List campaigns for current user. Uses Supabase + campaign_members.
  * ?full=true returns full Campaign objects (with characters); otherwise returns summaries.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 
-type CampaignRow = { id: string; owner_id: string; name: string; description: string | null; invite_code: string; characters: unknown; memberIds: unknown; owner_username: string | null; created_at: Date | null; updated_at: Date | null };
+type CampaignRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  owner_id: string;
+  owner_username: string | null;
+  invite_code: string;
+  characters: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+};
 
-function rowToCampaign(row: CampaignRow): Campaign {
-  const memberIds = Array.isArray(row.memberIds) ? row.memberIds : (typeof row.memberIds === 'string' ? JSON.parse(row.memberIds) : []) as string[];
-  const characters = Array.isArray(row.characters) ? row.characters : (typeof row.characters === 'string' ? JSON.parse(row.characters) : []) as Campaign['characters'];
+function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
+  const characters = Array.isArray(row.characters)
+    ? row.characters
+    : (typeof row.characters === 'string' ? JSON.parse(row.characters as string) : []) as Campaign['characters'];
   return {
     id: row.id,
     name: row.name,
@@ -39,16 +49,37 @@ export async function GET(request: NextRequest) {
 
     const userId = user.uid;
     const full = request.nextUrl.searchParams.get('full') === 'true';
+    const supabase = await createClient();
 
-    const rows = await prisma.$queryRaw<CampaignRow[]>(Prisma.sql`
-      SELECT id, owner_id, name, description, invite_code, characters, "memberIds", owner_username, created_at, updated_at
-      FROM campaigns.campaigns
-      WHERE owner_id = ${userId}
-      OR "memberIds"::jsonb @> jsonb_build_array(${userId})
-      ORDER BY updated_at DESC NULLS LAST
-    `);
+    const { data: memberRows } = await supabase
+      .from('campaign_members')
+      .select('campaign_id')
+      .eq('user_id', userId);
+    const memberCampaignIds = (memberRows ?? []).map((r: { campaign_id: string }) => r.campaign_id);
+    const { data: ownedRows } = await supabase.from('campaigns').select('id').eq('owner_id', userId);
+    const ownedIds = (ownedRows ?? []).map((r: { id: string }) => r.id);
+    const allIds = [...new Set([...memberCampaignIds, ...ownedIds])];
 
-    const campaigns: Campaign[] = rows.map(rowToCampaign);
+    if (allIds.length === 0) {
+      return NextResponse.json(full ? [] : []);
+    }
+
+    const { data: campaignRows } = await supabase
+      .from('campaigns')
+      .select('id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at')
+      .in('id', allIds)
+      .order('updated_at', { ascending: false });
+
+    const campaigns: Campaign[] = [];
+    for (const row of campaignRows ?? []) {
+      const r = row as CampaignRow;
+      const { data: members } = await supabase
+        .from('campaign_members')
+        .select('user_id')
+        .eq('campaign_id', r.id);
+      const memberIds = (members ?? []).map((m: { user_id: string }) => m.user_id);
+      campaigns.push(rowToCampaign(r, memberIds));
+    }
 
     if (full) {
       return NextResponse.json(campaigns);

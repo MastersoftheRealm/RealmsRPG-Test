@@ -91,7 +91,7 @@ export {
 } from './use-rtdb';
 
 // Public Library (browse, add to my library)
-export { usePublicLibrary, useAddPublicToLibrary } from './use-public-library';
+export { useOfficialLibrary, useAddOfficialToLibrary, usePublicLibrary, useAddPublicToLibrary } from './use-public-library';
 
 // User Library (user-specific content)
 export {

@@ -1,0 +1,17 @@
+{
+  "baseAbilityPoints": 7,
+  "abilityPointsEveryNLevels": 3,
+  "abilityPointsPerIncrease": 1,
+  "skillPointsPerLevel": 3,
+  "baseHitEnergyPool": 18,
+  "hitEnergyPerLevel": 12,
+  "baseProficiency": 2,
+  "proficiencyEveryNLevels": 5,
+  "proficiencyPerIncrease": 1,
+  "baseTrainingPoints": 22,
+  "tpPerLevelMultiplier": 2,
+  "baseHealth": 8,
+  "xpToLevelFormula": "level * 4",
+  "startingCurrency": 200,
+  "characterFeatsPerLevel": 1
+}

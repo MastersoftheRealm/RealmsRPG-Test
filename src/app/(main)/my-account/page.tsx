@@ -86,12 +86,12 @@ function AccountContent() {
         if (p) {
           const rawPhoto = (p.photoUrl as string) ?? undefined;
           const photoURL = rawPhoto
-            ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt).getTime() : Date.now()}`
+            ? `${rawPhoto}?t=${p.updatedAt ? new Date(p.updatedAt as string | number | Date).getTime() : Date.now()}`
             : (user.photoURL ?? undefined);
           setProfile({
-            username: p.username ?? undefined,
-            email: p.email ?? user.email ?? undefined,
-            createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt) : undefined,
+            username: (p.username as string | undefined) ?? undefined,
+            email: (p.email as string | undefined) ?? user.email ?? undefined,
+            createdAt: p.createdAt instanceof Date ? p.createdAt : p.createdAt ? new Date(p.createdAt as string | number | Date) : undefined,
             photoURL,
           });
         } else {

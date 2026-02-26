@@ -1,29 +1,16 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-02-18
+Last updated: 2026-02-25
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
 - Top: curated, grouped, actionable guidance for engineers.
 - Bottom: an appendable "Raw Feedback Log" where new raw entries can be pasted verbatim each time new feedback is issued.
+- **Stack:** Supabase only (no Prisma). New feedback entries should refer to Supabase; historical Prisma mentions in the log can remain.
 
 How to use
-- Read the curated sections for priorities and intent.
-- Append new raw feedback to the bottom under "Raw Feedback Log" using the provided template.
-- Keep raw entries chronological (oldest first), newest at the bottom.
-
-Agent Integration
-- Read `src/docs/ai/AGENT_GUIDE.md` for workflow and sources of truth.
-- For data flow and game rules: `ARCHITECTURE.md`, `GAME_RULES.md`.
-- Workflow:
-	1. Human sends feedback (or appends raw feedback to this file using the Raw Entry Template).
-	2. AI agent **always** appends that raw feedback to this file under "Raw Feedback Log" (date, context, priority, feedback text)—whether the agent will create a task or implement it directly.
-	3. Agent runs extraction/cross-reference; creates tasks in `AI_TASK_QUEUE.md` for items that need future work; implements directly when appropriate.
-	4. For tasks: implement, create PRs with `ai/` branch prefix, append to `src/docs/ai/AI_CHANGELOG.md`. On merge, mark task `done` in `AI_TASK_QUEUE.md` with PR link and summary.
-	5. For direct implementation (no new task): still append raw feedback per step 2; optionally add a curated note or "Implemented YYYY-MM-DD" in the raw entry.
-
-Notes:
-- Do NOT place secrets or service account keys in these docs. Use `src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md` for deployment env vars.
+- **Curated sections** (below): priorities and intent. **Raw Feedback Log** (bottom): append new raw feedback with date, context, priority, text. Chronological order.
+- **Agents:** Log raw feedback here when owner gives it. Extract items; cross-ref `AI_TASK_QUEUE.md` and curated sections; add tasks or implement. See `.cursor/rules/realms-tasks.mdc` for feedback steps. No secrets here; use `DEPLOYMENT_AND_SECRETS_SUPABASE.md` for env vars.
 
 ---
 
@@ -40,11 +27,11 @@ Notes:
 ### 1) Architecture & Unification
 - Consolidate duplicate components and logic across the project (character sheet, creators, library, codex).
 - Create and enforce shared list/header/modal patterns (sortable headers, consistent spacing, rounded modal edges).
-- **Modals with lists:** Unify add-X modals (add feat/skill/library item), load modals (Load from Library, Load Creature), and selection modals — same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. See `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md` and TASK-264.
+- **Modals with lists:** Unify add-X modals, load modals, and selection modals — same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. TASK-264 (done).
 - Find and remove true dead code.
 
 ### 2) Creators (Power / Technique / Armament / Creature)
-- Ensure parts/properties load their TP/IP/C values from RTDB and are used to compute EN/TP/C when rendering lists or summaries.
+- Ensure parts/properties load their TP/IP/C values from Codex and are used to compute EN/TP/C when rendering lists or summaries.
 - Wire option levels and part selections to update calculated costs (EN/TP/C) in UI immediately.
 - Consistent layout: fixed compact summary + scrolling inputs/values.
 - **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities — before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
@@ -84,15 +71,15 @@ Notes:
 - Login redirect: return user to the page that initiated login.
 - Character creator: persist skill allocations automatically when switching tabs.
 - Creature creator: hide unarmed prowess options > level 1 for new characters; fix dropdown alignment; make summary scroll behavior consistent.
-- Powers/Techniques/Armaments: ensure RTDB enrichment computes and displays EN/TP/C in all list views.
+- Powers/Techniques/Armaments: ensure Codex enrichment computes and displays EN/TP/C in all list views.
 - **Power creator: option levels must not be negative.** Implemented 2026-02-23: PowerPartCard and PowerAdvancedMechanics ValueSteppers for op_1/2/3_lvl now use min={0}.
 - **Console: InvalidNodeTypeError (Range/selectNode — "the given Node has no parent").** Triggered on mouse up; likely React/dependency selection logic when a node was unmounted. TASK-268 done: source is dependency (chunk 525.js); added SelectionGuard to clear selection when anchor node is detached; documented in ACCESSIBILITY.md.
 - **Rules page (embedded Google Doc): DOCS_timing is not defined.** Error is from inside the embedded Google Doc iframe; not fixable in our codebase.
 - **Resources page: Character Sheet PDF 404.** Link is `/Realms Character Sheet Alpha.pdf`; file must exist in `public/` or link updated. TASK-269.
 - **Zustand default export deprecation:** Our stores use named import; warning is from a dependency (noted in AI_CHANGELOG 2026-02-23).
 
-### 8) RTDB & Data Guidance
-- Enrich saved items by resolving saved IDs against RTDB entries to obtain base_en/base_tp/op_* values.
+### 8) Codex & Data Guidance
+- Enrich saved items by resolving saved IDs against Codex (parts, properties) to obtain base_en/base_tp/op_* values.
 - Parts and properties must have their costs applied during display and item calculations.
 
 ### 9) Naming & Terminology
@@ -178,7 +165,7 @@ Notes:
 ## High-Level Action Items
 - [x] Audit lists/modals to use shared `ListHeader`/`GridListRow` components.
 - [x] Unify skills into `SkillRow` and replace inline implementations.
-- [x] Ensure RTDB enrichment pipeline correctly computes EN/TP/C for powers/techniques/armaments.
+- [x] Ensure Codex enrichment pipeline correctly computes EN/TP/C for powers/techniques/armaments.
 - [x] Standardize SelectionToggle and equip persistence outside edit mode.
 - [x] Replace chevrons causing layout shifts; ensure expanders do not break grid flow.
 - [x] Enforce consistent "Abilities" naming (not "Ability Scores") everywhere. (TASK-055)
@@ -193,7 +180,7 @@ Notes:
 - [x] Health/Energy edit: bump current with max when at full and increasing. (TASK-072)
 - [x] Speed/Evasion: pencil icon, hide base edit by default, red/green validation. (TASK-073)
 - [x] Dark mode: soften chip, stepper, health/energy, hover colors. (TASK-074)
-- [x] Fix /api/session 500 and Firebase Storage 403 for portraits/profile. (TASK-075, TASK-076)
+- [x] Fix /api/session 500 and Supabase Storage 403 for portraits/profile. (TASK-075, TASK-076)
 - [x] Fix username regex invalid character class. (TASK-077)
 - [x] Enable hold-to-repeat for creature creator Health/Energy allocation. (TASK-065)
 - [x] Remove hold-to-repeat from creature creator defense steppers. (TASK-066)
@@ -264,7 +251,7 @@ Items below are the only feedback/tasks that remain **not implemented** (or expl
 - "The armaments (weapons/shields with damage) don't display their weapon damage in the library page. Edit should open creator with item loaded. Duplicate should copy item without redirecting."
 
 2/3/2026 21:00 — Creators / UI
-- RTDB enrichment: saved powers/techniques store part IDs but not computed EN/TP; list views must resolve parts from RTDB and compute costs when rendering.
+- Codex enrichment: saved powers/techniques store part IDs; list views resolve parts from Codex and compute costs when rendering.
 
 2/4/2026 16:00 — Character Sheet
 - "Innate star doesn't toggle in the UI (hit area/centering)."
@@ -535,7 +522,7 @@ Notes
 2/5/2026 — Portrait / Session / Storage Errors
 - Context: Character portrait upload, profile picture
 - Priority: High
-- "/api/session 500 Internal Server Error; Firebase Storage 403 for portraits/ and profile-pictures/ (User does not have permission)."
+- "/api/session 500 Internal Server Error; Supabase Storage 403 for portraits/ and profile-pictures/ (User does not have permission)."
 - Extracted to: TASK-075 (session), TASK-076 (storage rules)
 
 2/5/2026 — My Account / Username Regex
@@ -834,7 +821,7 @@ Notes
 - Priority: High
 - Feedback: Character portrait isn't loading and errors when uploading. Console: "Portrait upload error: Error: new row violates row-level security policy"; /api/upload/portrait 500; image 400. (Other console messages — slow network, message channel closed, express-utils.js, Adobe extension — are from browser extensions, not the app.)
 - Expected: Portrait upload succeeds; portrait loads on character sheet.
-- Implemented 2026-02-20: Added prisma/supabase-storage-policies.sql with full RLS for portraits bucket (SELECT, INSERT, UPDATE, DELETE) and profile-pictures; API needs UPDATE/DELETE for list+remove+upsert flow. Deployment doc updated to point to this file and to troubleshoot "new row violates row-level security policy" by running the storage policies. User must run the SQL in Supabase Dashboard → SQL Editor. See AI_CHANGELOG.md.
+- Implemented 2026-02-20: Added sql/supabase-storage-policies.sql with full RLS for portraits bucket (SELECT, INSERT, UPDATE, DELETE) and profile-pictures; API needs UPDATE/DELETE for list+remove+upsert flow. Deployment doc updated to point to this file and to troubleshoot "new row violates row-level security policy" by running the storage policies. User must run the SQL in Supabase Dashboard → SQL Editor. See AI_CHANGELOG.md.
 
 **Raw Feedback Log — 2/20/2026 (Unarmed prowess damage = Attack Bonus + dice)**
 - Date: 2026-02-20
@@ -976,7 +963,7 @@ Notes
 - Priority: High  
 - Feedback: Character Talavas rolled four times on his character sheet while part of a campaign; the campaign roll log didn't update until page refresh. Console/backend showed PoolingReplicationError: permission denied for schema campaigns, permission denied for schema users (realtime.apply_rls / list_changes, insufficient_privilege 42501).  
 - Expected: Campaign roll log (and character/encounter realtime sync) update in real time without refresh.  
-- Disposition: Root cause is Realtime service lacking USAGE on custom schemas (campaigns, users). prisma/supabase-rls-policies.sql updated with GRANT USAGE ON SCHEMA for campaigns and users (anon, authenticated, service_role, authenticator). DEPLOYMENT_AND_SECRETS_SUPABASE.md updated with troubleshooting and optional supabase_realtime grant. Owner must run the updated SQL in Supabase SQL Editor for the fix to take effect.
+- Disposition: Root cause is Realtime service lacking USAGE on custom schemas (campaigns, users). sql/supabase-rls-policies.sql updated with GRANT USAGE ON SCHEMA for campaigns and users (anon, authenticated, service_role, authenticator). DEPLOYMENT_AND_SECRETS_SUPABASE.md updated with troubleshooting and optional supabase_realtime grant. Owner must run the updated SQL in Supabase SQL Editor for the fix to take effect.
 
 **Raw Feedback Log — 2026-02-21 (Dark mode: currency cost/training point, advanced mechanics, creators)**
 - Date: 2026-02-21
@@ -1197,3 +1184,10 @@ Notes
 - Priority: High
 - Feedback: (1) For damage modifiers, the cost of each type of resistance, immunity, weakness, etc should be clear before and after you add them (feat point cost). (2) When you add a sense or movement it should show the feat point cost of that thing perhaps with a chip with feat point cost or something like we use across the website. (3) Same with condition immunities as other damage modifiers — they should show how many feat points each condition immunity or damage modifier costs. (4) For skills use the add skill and add sub skill modals instead of a dropdown list. (5) Separate feats into add feat and add negative feat, where the add negative feat modal only has feats with negative feat point costs. (6) In the add power, technique, and armament modals the loaded things should show like all other parts of the site — parts, properties, options as chips as part of the parts, with other header-usual data detailed in the expanded view such as area, range, etc if not in the column headers. This is true for both the modals and the actual displayed lists in the creature creator. (7) Make sure we use the correct common logic that other parts of the site with similar/same functionality use.
 - Expected: Damage modifiers/senses/movement/condition immunities show feat point cost before and after adding (e.g. chip or label). Skills use AddSkillModal and AddSubSkillModal. Separate Add Feat and Add Negative Feat modals. Power/technique/armament modals and lists show parts, properties, options as chips; area, range, etc in expanded view; align with add-library-item-modal and library/codex display logic.
+
+**Raw Feedback Log — 2026-02-25 (Username change reverts to Player###)**
+- Date: 2026-02-25
+- Context: My Account — change username
+- Priority: Medium (task for later)
+- Feedback: When changing account username, it saves the new one but then creates a new "Player###" username and replaces the chosen one instead of keeping the new username.
+- Expected: After changing username, the profile should keep the new username; it should not be overwritten by a generated Player### default.

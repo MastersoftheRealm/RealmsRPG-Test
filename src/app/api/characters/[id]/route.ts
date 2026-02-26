@@ -1,13 +1,12 @@
 /**
  * Character by ID API
  * ===================
- * Get, update, delete a single character. Uses Prisma.
+ * Get, update, delete a single character. Uses Supabase.
  * GET: Owner always; unauthenticated or other users when visibility is 'public';
  *      when visibility is 'campaign', any campaign member who shares a campaign with this character can read.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
@@ -30,16 +29,18 @@ function prepareForSave(data: Partial<Character>): Record<string, unknown> {
   return removeUndefined(cleaned);
 }
 
-function rowToCharacter(row: { id: string; userId: string; data: unknown; createdAt: Date | null; updatedAt: Date | null }): Character {
-  const d = row.data as Record<string, unknown>;
+type CharRow = { id: string; user_id: string; data: unknown; created_at: string | null; updated_at: string | null };
+
+function rowToCharacter(row: CharRow): Character {
+  const d = (row.data as Record<string, unknown>) ?? {};
   return {
     id: row.id,
-    userId: row.userId,
+    userId: row.user_id,
     name: (d.name as string) || 'Unnamed',
     level: (d.level as number) || 1,
     ...d,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   } as Character;
 }
 
@@ -54,40 +55,57 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
     }
 
-    const row = await prisma.character.findFirst({
-      where: { id: id.trim() },
-    });
+    const supabase = await createClient();
+    const { data: row } = await supabase
+      .from('characters')
+      .select('id, user_id, data, created_at, updated_at')
+      .eq('id', id.trim())
+      .maybeSingle();
 
     if (!row) {
       return NextResponse.json(null, { status: 404 });
     }
 
-    const isOwner = user?.uid === row.userId;
+    const charRow = row as CharRow;
+    const isOwner = user?.uid === charRow.user_id;
     if (isOwner) {
-      const character = rowToCharacter(row);
-      return NextResponse.json({ character });
+      return NextResponse.json({ character: rowToCharacter(charRow) });
     }
 
-    const visibility = ((row.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';
+    const visibility = ((charRow.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';
     if (visibility === 'public') {
-      const libraryForView = await getOwnerLibraryForView(row.userId);
-      return NextResponse.json({ character: rowToCharacter(row), libraryForView });
+      const libraryForView = await getOwnerLibraryForView(charRow.user_id);
+      return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
     }
 
     if (visibility === 'campaign' && user?.uid) {
-      const campaigns = await prisma.campaign.findMany({
-        select: { id: true, ownerId: true, memberIds: true, characters: true },
-      });
-      const userCampaigns = campaigns.filter(
-        (c) => c.ownerId === user.uid || (c.memberIds as string[])?.includes(user.uid)
-      );
-      const inCampaign = userCampaigns.some((c) => {
-        const list = (c.characters as Array<{ userId: string; characterId: string }>) || [];
-        return list.some((cc) => cc.userId === row.userId && cc.characterId === row.id);
-      });
-      if (inCampaign) {
-        const libraryForView = await getOwnerLibraryForView(row.userId);
-        return NextResponse.json({ character: rowToCharacter(row), libraryForView });
+      const { data: memberRows } = await supabase
+        .from('campaign_members')
+        .select('campaign_id')
+        .eq('user_id', user.uid);
+      const memberCampaignIds = (memberRows ?? []).map((m: { campaign_id: string }) => m.campaign_id);
+      const { data: ownedCampaigns } = await supabase
+        .from('campaigns')
+        .select('id')
+        .eq('owner_id', user.uid);
+      const ownedIds = (ownedCampaigns ?? []).map((c: { id: string }) => c.id);
+      const allCampaignIds = [...new Set([...memberCampaignIds, ...ownedIds])];
+      if (allCampaignIds.length > 0) {
+        const { data: campaigns } = await supabase
+          .from('campaigns')
+          .select('id, characters')
+          .in('id', allCampaignIds);
+        const list = (campaigns ?? []) as { id: string; characters: unknown }[];
+        const inCampaign = list.some((c) => {
+          const arr = (c.characters as Array<{ user_id?: string; character_id?: string; userId?: string; characterId?: string }>) ?? [];
+          return arr.some(
+            (cc) => (cc.user_id ?? cc.userId) === charRow.user_id && (cc.character_id ?? cc.characterId) === charRow.id
+          );
+        });
+        if (inCampaign) {
+          const libraryForView = await getOwnerLibraryForView(charRow.user_id);
+          return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
+        }
       }
     }
 
@@ -124,21 +142,27 @@ export async function PATCH(
     const data = validation.data as Partial<Character>;
     const cleanedData = prepareForSave(data);
 
-    const existing = await prisma.character.findFirst({
-      where: { id: id.trim(), userId: user.uid },
-    });
+    const supabase = await createClient();
+    const { data: existing } = await supabase
+      .from('characters')
+      .select('id, data')
+      .eq('id', id.trim())
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    const currentData = existing.data as Record<string, unknown>;
-    const mergedData = { ...currentData, ...cleanedData } as Record<string, unknown>;
+    const currentData = (existing.data as Record<string, unknown>) ?? {};
+    const mergedData = { ...currentData, ...cleanedData };
 
-    await prisma.character.update({
-      where: { id: id.trim() },
-      data: { data: mergedData as object },
-    });
+    const { error: updateErr } = await supabase
+      .from('characters')
+      .update({ data: mergedData })
+      .eq('id', id.trim())
+      .eq('user_id', user.uid);
+    if (updateErr) throw updateErr;
 
     return NextResponse.json({ ok: true });
   } catch (err) {
@@ -168,17 +192,19 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid character ID' }, { status: 400 });
     }
 
-    const existing = await prisma.character.findFirst({
-      where: { id: id.trim(), userId: user.uid },
-    });
+    const supabase = await createClient();
+    const { data: existing } = await supabase
+      .from('characters')
+      .select('id')
+      .eq('id', id.trim())
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    // Remove portrait from storage before deleting character
     try {
-      const supabase = await createClient();
       const { data: files } = await supabase.storage.from('portraits').list(user.uid);
       if (files?.length) {
         const toRemove = files
@@ -192,9 +218,12 @@ export async function DELETE(
       console.warn('[API] Could not delete portrait from storage:', storageErr);
     }
 
-    await prisma.character.delete({
-      where: { id: id.trim() },
-    });
+    const { error: delErr } = await supabase
+      .from('characters')
+      .delete()
+      .eq('id', id.trim())
+      .eq('user_id', user.uid);
+    if (delErr) throw delErr;
 
     return NextResponse.json({ ok: true });
   } catch (err) {

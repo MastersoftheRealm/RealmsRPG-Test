@@ -1,18 +1,20 @@
 /**
  * Campaign Rolls API
  * ==================
- * List and add campaign rolls. Uses Prisma. Requires Supabase session.
+ * List and add campaign rolls. Uses Supabase.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, campaignRollCreateSchema } from '@/lib/api-validation';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
-function toEntry(row: { id: string; data: unknown; createdAt: Date | null }): CampaignRollEntry {
-  const d = row.data as Record<string, unknown>;
+type RollRow = { id: string; data: unknown; created_at: string | null };
+
+function toEntry(row: RollRow): CampaignRollEntry {
+  const d = (row.data as Record<string, unknown>) ?? {};
   const ts = d.timestamp;
   return {
     id: row.id,
@@ -49,28 +51,32 @@ export async function GET(
     }
 
     const { id: campaignId } = await params;
+    const supabase = await createClient();
 
-    const campaign = await prisma.campaign.findUnique({
-      where: { id: campaignId },
-    });
-
+    const { data: campaign } = await supabase.from('campaigns').select('id, owner_id').eq('id', campaignId).maybeSingle();
     if (!campaign) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const memberIds = (campaign.memberIds as string[]) || [];
-    const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
+    const { data: memberRow } = await supabase
+      .from('campaign_members')
+      .select('user_id')
+      .eq('campaign_id', campaignId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
+    const isMember = campaign.owner_id === user.uid || !!memberRow;
     if (!isMember) {
       return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
     }
 
-    const rows = await prisma.campaignRoll.findMany({
-      where: { campaignId },
-      orderBy: { createdAt: 'desc' },
-      take: MAX_CAMPAIGN_ROLLS,
-    });
+    const { data: rows } = await supabase
+      .from('campaign_rolls')
+      .select('id, data, created_at')
+      .eq('campaign_id', campaignId)
+      .order('created_at', { ascending: false })
+      .limit(MAX_CAMPAIGN_ROLLS);
 
-    const rolls = rows.map(toEntry);
+    const rolls = (rows ?? []).map((r) => toEntry(r as RollRow));
     return NextResponse.json(rolls);
   } catch (err) {
     console.error('[API Error] GET /api/campaigns/[id]/rolls:', err);
@@ -89,17 +95,20 @@ export async function POST(
     }
 
     const { id: campaignId } = await params;
+    const supabase = await createClient();
 
-    const campaign = await prisma.campaign.findUnique({
-      where: { id: campaignId },
-    });
-
+    const { data: campaign } = await supabase.from('campaigns').select('id, owner_id').eq('id', campaignId).maybeSingle();
     if (!campaign) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const memberIds = (campaign.memberIds as string[]) || [];
-    const isMember = campaign.ownerId === user.uid || memberIds.includes(user.uid);
+    const { data: memberRow } = await supabase
+      .from('campaign_members')
+      .select('user_id')
+      .eq('campaign_id', campaignId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
+    const isMember = campaign.owner_id === user.uid || !!memberRow;
     if (!isMember) {
       return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
     }
@@ -123,27 +132,24 @@ export async function POST(
       timestamp: new Date().toISOString(),
     };
 
-    await prisma.campaignRoll.create({
-      data: {
-        campaignId,
-        data: rollData as object,
-      },
-    });
+    await supabase.from('campaign_rolls').insert({ campaign_id: campaignId, data: rollData });
 
-    const count = await prisma.campaignRoll.count({
-      where: { campaignId },
-    });
+    const { count } = await supabase
+      .from('campaign_rolls')
+      .select('id', { count: 'exact', head: true })
+      .eq('campaign_id', campaignId);
 
-    if (count > MAX_CAMPAIGN_ROLLS) {
-      const toDelete = await prisma.campaignRoll.findMany({
-        where: { campaignId },
-        orderBy: { createdAt: 'asc' },
-        take: count - MAX_CAMPAIGN_ROLLS,
-        select: { id: true },
-      });
-      await prisma.campaignRoll.deleteMany({
-        where: { id: { in: toDelete.map((r) => r.id) } },
-      });
+    if ((count ?? 0) > MAX_CAMPAIGN_ROLLS) {
+      const { data: oldRows } = await supabase
+        .from('campaign_rolls')
+        .select('id')
+        .eq('campaign_id', campaignId)
+        .order('created_at', { ascending: true })
+        .limit((count ?? 0) - MAX_CAMPAIGN_ROLLS);
+      const idsToDelete = (oldRows ?? []).map((r: { id: string }) => r.id);
+      if (idsToDelete.length) {
+        await supabase.from('campaign_rolls').delete().in('id', idsToDelete);
+      }
     }
 
     return NextResponse.json({ success: true });

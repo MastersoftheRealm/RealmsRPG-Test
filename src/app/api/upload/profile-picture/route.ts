@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { prisma } from '@/lib/prisma';
 import { validateImageMagicBytes } from '@/lib/validate-image';
 
 const BUCKET = 'profile-pictures';
@@ -35,7 +34,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Image must be less than 5MB' }, { status: 400 });
   }
 
-  // Validate file content matches a real image format (prevents spoofed MIME types)
   const isValidImage = await validateImageMagicBytes(file);
   if (!isValidImage) {
     return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
@@ -47,7 +45,6 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
 
-    // Delete any existing profile picture before upload (removes old files when updating)
     const { data: existing } = await supabase.storage.from(BUCKET).list('', { limit: 100 });
     if (existing?.length) {
       const toRemove = existing
@@ -69,11 +66,10 @@ export async function POST(request: NextRequest) {
 
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
 
-    await prisma.userProfile.upsert({
-      where: { id: user.uid },
-      create: { id: user.uid, photoUrl: publicUrl },
-      update: { photoUrl: publicUrl },
-    });
+    await supabase.from('user_profiles').upsert(
+      { id: user.uid, photo_url: publicUrl },
+      { onConflict: 'id' }
+    );
 
     return NextResponse.json({ url: publicUrl });
   } catch (err) {

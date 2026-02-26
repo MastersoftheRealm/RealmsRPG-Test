@@ -72,7 +72,7 @@ export interface SkillEncounterState {
   requiredFailures?: number;
 }
 
-/** Full encounter document stored in Prisma */
+/** Full encounter document stored in Supabase */
 export interface Encounter {
   id: string;
   name: string;

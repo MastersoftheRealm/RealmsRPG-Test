@@ -1,6 +1,6 @@
 # Unification Status — Verified State
 
-Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consistent UI across Library, Codex, Character Sheet, Creators. List/sort headers use **Option B** (full migration to ListHeader; single source of truth). See `src/docs/ai/UNIFICATION_AUDIT_2026-02-20.md` for full audit and compliance table.
+Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consistent UI across Library, Codex, Character Sheet, Creators. List/sort headers use **Option B** (ListHeader; single source of truth).
 
 ## Unified (Verified)
 
@@ -29,7 +29,7 @@ Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consiste
 ## Modal unification (TASK-264, complete)
 
 - **List modals** use EmptyState, LoadingState, ListHeader, GridListRow; AddFeat/AddSkill use FilterSection; search/filter bar padding standardized. LoadCreatureModal refactored to list pattern. **useModalListState** hook used in LoadFromLibraryModal and LoadCreatureModal.
-- **Add-X modals as UnifiedSelectionModal:** AddFeatModal, AddSkillModal, and AddLibraryItemModal are implemented as thin wrappers that build SelectableItem[] and render UnifiedSelectionModal (single implementation, aligned with Codex/Library). See `src/docs/ai/MODAL_UNIFICATION_AUDIT_2026-02-20.md`.
+- **Add-X modals as UnifiedSelectionModal:** AddFeatModal, AddSkillModal, and AddLibraryItemModal are thin wrappers that build SelectableItem[] and render UnifiedSelectionModal (aligned with Codex/Library).
 
 ## Known Gaps
 
@@ -38,7 +38,7 @@ Verified against codebase Feb 2026. Goal: "Learn once, use forever" — consiste
 
 ## Reference Docs
 
-- `ARCHITECTURE.md` — Data flow, Supabase/Prisma, enrichment, hooks/services.
+- `ARCHITECTURE.md` — Data flow, Supabase (no Prisma), enrichment, hooks/services.
 - `GAME_RULES.md` — Skill caps, defense caps, progression rules.
 - `DESIGN_SYSTEM.md` — Color tokens, component API, migration patterns.
 - `UI_COMPONENT_REFERENCE.md` — Detailed component usage; includes component decision tree.

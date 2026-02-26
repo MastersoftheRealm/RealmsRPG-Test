@@ -1,7 +1,7 @@
 /**
  * useEncounters Hook
  * ===================
- * React Query hooks for encounter data (Prisma persistence).
+ * React Query hooks for encounter data (Supabase persistence).
  * When user is not signed in, encounters use localStorage (guest mode).
  */
 

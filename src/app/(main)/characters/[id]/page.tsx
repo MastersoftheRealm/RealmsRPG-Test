@@ -236,7 +236,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
         'postgres_changes',
         {
           event: 'UPDATE',
-          schema: 'users',
+          schema: 'public',
           table: 'characters',
           filter: `id=eq.${character.id}`,
         },

@@ -1,0 +1,26 @@
+{
+  "baseSpeed": 6,
+  "baseEvasion": 10,
+  "baseDefense": 10,
+  "apPerRound": 4,
+  "actionCosts": {
+    "basic": 2,
+    "quick": 1,
+    "free": 0,
+    "movement": 1,
+    "interaction": 1,
+    "abilityRoll": 1,
+    "skillEncounterAction": 2,
+    "evade": 1,
+    "brace": 1,
+    "focus": 1,
+    "search": 1,
+    "overcome": 1
+  },
+  "multipleActionPenalty": -5,
+  "criticalHitThreshold": 10,
+  "natural20Bonus": 2,
+  "natural1Penalty": -2,
+  "rangedMeleePenalty": -5,
+  "longRangePenalty": -5
+}

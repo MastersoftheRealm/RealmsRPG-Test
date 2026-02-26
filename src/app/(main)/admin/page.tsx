@@ -32,7 +32,7 @@ export default function AdminPage() {
             Edit published Realms Library items: powers, techniques, armaments, and creatures. Same list + modal format as the Codex editor. Changes are visible to all users on the Library page (Realms Library).
           </p>
           <Button asChild>
-            <Link href="/admin/public-library">Open Realms Library Editor</Link>
+            <Link href="/admin/public-library">Open Official Library Editor</Link>
           </Button>
         </section>
 

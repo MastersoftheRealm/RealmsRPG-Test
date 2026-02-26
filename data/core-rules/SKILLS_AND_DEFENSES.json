@@ -1,0 +1,12 @@
+{
+  "maxSkillValue": 3,
+  "baseSkillPastCapCost": 3,
+  "subSkillPastCapCost": 2,
+  "defenseIncreaseCost": 2,
+  "speciesSkillCount": 2,
+  "gainProficiencyCost": 1,
+  "unproficientRules": {
+    "positive": "half ability (round up)",
+    "negative": "double the negative"
+  }
+}

@@ -2,13 +2,13 @@
  * Character Server Actions
  * =========================
  * Server actions for character CRUD operations.
- * Uses Prisma + Supabase session.
+ * Uses Supabase + session.
  */
 
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils';
 import type { Character } from '@/types';
@@ -30,14 +30,17 @@ function prepareForSave(data: Partial<Character>): Record<string, unknown> {
 export async function getCharactersAction() {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const rows = await prisma.character.findMany({
-      where: { userId: user.uid },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const { data: rows } = await supabase
+      .from('characters')
+      .select('id, user_id, data, updated_at')
+      .eq('user_id', user.uid)
+      .order('updated_at', { ascending: false });
 
-    const characters = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
+    const list = (rows ?? []) as { id: string; data: unknown; updated_at: string | null }[];
+    const characters = list.map((r) => {
+      const d = (r.data as Record<string, unknown>) ?? {};
       return {
         id: r.id,
         name: (d.name as string) || 'Unnamed',
@@ -47,7 +50,7 @@ export async function getCharactersAction() {
           || ((d.archetype as { type?: string })?.type?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
         ancestryName: (d.ancestry as { name?: string })?.name || (d.species as string),
         status: d.status as string | undefined,
-        updatedAt: r.updatedAt?.toISOString() ?? null,
+        updatedAt: r.updated_at ?? null,
       };
     });
 
@@ -61,21 +64,25 @@ export async function getCharactersAction() {
 export async function getCharacterAction(characterId: string) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const row = await prisma.character.findFirst({
-      where: { id: characterId, userId: user.uid },
-    });
+    const { data: row } = await supabase
+      .from('characters')
+      .select('id, user_id, data, created_at, updated_at')
+      .eq('id', characterId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!row) {
       return { character: null, error: 'Character not found' };
     }
 
-    const d = row.data as Record<string, unknown>;
+    const d = (row.data as Record<string, unknown>) ?? {};
     const character = {
       id: row.id,
       ...d,
-      createdAt: (d.createdAt as string) ?? row.createdAt?.toISOString() ?? null,
-      updatedAt: (d.updatedAt as string) ?? row.updatedAt?.toISOString() ?? null,
+      createdAt: (d.createdAt as string) ?? row.created_at ?? null,
+      updatedAt: (d.updatedAt as string) ?? row.updated_at ?? null,
     };
 
     return { character, error: null };
@@ -88,25 +95,21 @@ export async function getCharacterAction(characterId: string) {
 export async function createCharacterAction(data: Partial<Character>) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
     const cleanedData = prepareForSave(data);
-    cleanedData.createdAt = new Date().toISOString();
+    (cleanedData as Record<string, unknown>).createdAt = new Date().toISOString();
 
-    await prisma.userProfile.upsert({
-      where: { id: user.uid },
-      create: { id: user.uid },
-      update: {},
-    });
+    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
 
-    const created = await prisma.character.create({
-      data: {
-        userId: user.uid,
-        data: cleanedData as object,
-      },
-    });
+    const { data: created, error } = await supabase
+      .from('characters')
+      .insert({ user_id: user.uid, data: cleanedData })
+      .select('id')
+      .single();
+    if (error) throw error;
 
     revalidatePath('/characters');
-
     return { id: created.id, error: null };
   } catch (error) {
     console.error('Error creating character:', error);
@@ -117,12 +120,16 @@ export async function createCharacterAction(data: Partial<Character>) {
 export async function updateCharacterAction(characterId: string, data: Partial<Character>) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
     const cleanedData = prepareForSave(data);
 
-    const existing = await prisma.character.findFirst({
-      where: { id: characterId, userId: user.uid },
-    });
+    const { data: existing } = await supabase
+      .from('characters')
+      .select('id, data')
+      .eq('id', characterId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!existing) {
       return { success: false, error: 'Character not found' };
@@ -131,14 +138,15 @@ export async function updateCharacterAction(characterId: string, data: Partial<C
     const currentData = (existing.data as Record<string, unknown>) ?? {};
     const merged = { ...currentData, ...cleanedData };
 
-    await prisma.character.update({
-      where: { id: characterId },
-      data: { data: merged as object },
-    });
+    const { error } = await supabase
+      .from('characters')
+      .update({ data: merged })
+      .eq('id', characterId)
+      .eq('user_id', user.uid);
+    if (error) throw error;
 
     revalidatePath('/characters');
     revalidatePath(`/characters/${characterId}`);
-
     return { success: true, error: null };
   } catch (error) {
     console.error('Error updating character:', error);
@@ -149,21 +157,27 @@ export async function updateCharacterAction(characterId: string, data: Partial<C
 export async function deleteCharacterAction(characterId: string) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const existing = await prisma.character.findFirst({
-      where: { id: characterId, userId: user.uid },
-    });
+    const { data: existing } = await supabase
+      .from('characters')
+      .select('id')
+      .eq('id', characterId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!existing) {
       return { success: false, error: 'Character not found' };
     }
 
-    await prisma.character.delete({
-      where: { id: characterId },
-    });
+    const { error } = await supabase
+      .from('characters')
+      .delete()
+      .eq('id', characterId)
+      .eq('user_id', user.uid);
+    if (error) throw error;
 
     revalidatePath('/characters');
-
     return { success: true, error: null };
   } catch (error) {
     console.error('Error deleting character:', error);
@@ -174,16 +188,20 @@ export async function deleteCharacterAction(characterId: string) {
 export async function duplicateCharacterAction(characterId: string) {
   try {
     const user = await requireAuth();
+    const supabase = await createClient();
 
-    const existing = await prisma.character.findFirst({
-      where: { id: characterId, userId: user.uid },
-    });
+    const { data: existing } = await supabase
+      .from('characters')
+      .select('id, data')
+      .eq('id', characterId)
+      .eq('user_id', user.uid)
+      .maybeSingle();
 
     if (!existing) {
       return { id: null, error: 'Character not found' };
     }
 
-    const d = existing.data as Record<string, unknown>;
+    const d = (existing.data as Record<string, unknown>) ?? {};
     const baseData = { ...d };
     delete baseData.createdAt;
     delete baseData.updatedAt;
@@ -194,15 +212,14 @@ export async function duplicateCharacterAction(characterId: string) {
       updatedAt: new Date().toISOString(),
     };
 
-    const created = await prisma.character.create({
-      data: {
-        userId: user.uid,
-        data: newData as object,
-      },
-    });
+    const { data: created, error } = await supabase
+      .from('characters')
+      .insert({ user_id: user.uid, data: newData })
+      .select('id')
+      .single();
+    if (error) throw error;
 
     revalidatePath('/characters');
-
     return { id: created.id, error: null };
   } catch (error) {
     console.error('Error duplicating character:', error);

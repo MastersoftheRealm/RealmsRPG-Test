@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
@@ -25,20 +25,30 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const campaignRow = await prisma.campaign.findUnique({
-      where: { id: campaignId },
-    });
+    const supabase = await createClient();
+
+    const { data: campaignRow } = await supabase
+      .from('campaigns')
+      .select('id, owner_id, characters')
+      .eq('id', campaignId)
+      .maybeSingle();
 
     if (!campaignRow) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const memberIds = (campaignRow.memberIds as string[]) || [];
-    const isRM = campaignRow.ownerId === user.uid;
+    const { data: memberRows } = await supabase
+      .from('campaign_members')
+      .select('user_id')
+      .eq('campaign_id', campaignId);
+    const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
+    const isRM = campaignRow.owner_id === user.uid;
     const isMember = isRM || memberIds.includes(user.uid);
 
-    const characters = (campaignRow.characters as Array<{ userId: string; characterId: string }>) || [];
-    const isInCampaign = characters.some((c) => c.userId === userId && c.characterId === characterId);
+    const characters = (campaignRow.characters as Array<{ user_id?: string; character_id?: string; userId?: string; characterId?: string }>) ?? [];
+    const isInCampaign = characters.some(
+      (c) => (c.user_id ?? c.userId) === userId && (c.character_id ?? c.characterId) === characterId
+    );
     if (!isInCampaign) {
       return NextResponse.json({ error: 'Character not found in campaign' }, { status: 404 });
     }
@@ -52,15 +62,18 @@ export async function GET(
       return NextResponse.json({ error: 'Only the Realm Master can view player character sheets' }, { status: 403 });
     }
 
-    const charRow = await prisma.character.findFirst({
-      where: { id: characterId, userId },
-    });
+    const { data: charRow } = await supabase
+      .from('characters')
+      .select('id, user_id, data, created_at, updated_at')
+      .eq('id', characterId)
+      .eq('user_id', userId)
+      .maybeSingle();
 
     if (!charRow) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    const charData = charRow.data as Record<string, unknown>;
+    const charData = (charRow.data as Record<string, unknown>) ?? {};
 
     if (!forEncounter) {
       const visibility = (charData?.visibility as CharacterVisibility) || 'private';
@@ -104,8 +117,8 @@ export async function GET(
     const character = {
       id: charRow.id,
       ...charData,
-      createdAt: charData?.createdAt ?? charRow.createdAt?.toISOString(),
-      updatedAt: charData?.updatedAt ?? charRow.updatedAt?.toISOString(),
+      createdAt: charData?.createdAt ?? charRow.created_at,
+      updatedAt: charData?.updatedAt ?? charRow.updated_at,
     };
 
     const libraryForView = await getOwnerLibraryForView(userId);

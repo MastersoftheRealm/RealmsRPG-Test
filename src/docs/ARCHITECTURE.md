@@ -1,6 +1,6 @@
 # RealmsRPG Architecture
 
-> **Purpose:** Single reference for data flow, Supabase/Prisma structure, and service/hook usage. For AI agents and engineers.
+> **Purpose:** Single reference for data flow, Supabase structure, and service/hook usage. For AI agents and engineers.
 
 **Last verified:** Feb 2026
 
@@ -8,18 +8,18 @@
 
 ## Overview
 
-RealmsRPG uses Next.js (App Router), React, Tailwind, Supabase (PostgreSQL, Auth, Storage), and Prisma. Data flows through:
+RealmsRPG uses Next.js (App Router), React, Tailwind, and Supabase (PostgreSQL, Auth, Storage). Data flows through:
 
-1. **Supabase/Prisma** — All data: Codex reference data via `/api/codex`; characters, library, campaigns, encounters via Prisma
+1. **Supabase** — All data: Codex via `/api/codex`; characters, library, campaigns, encounters, profile, admin via Supabase server client (`createClient` from `@/lib/supabase/server`).
 2. **Hooks** — React Query + custom hooks for fetching and caching (`useCodexFeats`, `useCodexPowerParts`, etc.)
 3. **Enrichment** — `data-enrichment.ts` resolves saved IDs against Codex parts and user library to compute display values
 4. **Services** — Character CRUD, Codex API
 
 ---
 
-## Codex Data (Prisma / PostgreSQL)
+## Codex Data (Supabase / PostgreSQL)
 
-Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexFeats`, `useCodexSkills` fetch from the Codex API.
+Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexFeats`, `useCodexSkills` fetch from the Codex API.
 
 | Data | Purpose |
 |------|---------|
@@ -69,7 +69,7 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 | `useAuth` | Auth state, user | `{ user, loading, signOut, ... }` |
 | `useCharacters` | User's characters | `{ characters, loading, createCharacter, updateCharacter, deleteCharacter }` |
 | `useUserLibrary` | User's powers, techniques, items, creatures | `{ powers, techniques, items, creatures, loading }` |
-| `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexFeats`, `useCodexSkills`, etc. | Codex reference data | Parts, feats, skills, species from Prisma |
+| `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexFeats`, `useCodexSkills`, etc. | Codex reference data | Parts, feats, skills, species from Supabase |
 | `useGameData` | Combined game data (Codex + optional library) | `{ gameData, loading }` |
 | `useAutoSave` | Auto-save character on change | Used in character sheet |
 
@@ -78,7 +78,7 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 | Service | Purpose |
 |---------|---------|
 | `character-service.ts` | CRUD for characters (create, update, delete, load) |
-| Codex API | `src/app/api/codex/` — fetches from Prisma |
+| Codex API | `src/app/api/codex/` — fetches from Supabase |
 
 **Use hooks in components.** Services are called by hooks or server actions.
 
@@ -89,7 +89,6 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 | Purpose | File |
 |---------|------|
 | Supabase client | `src/lib/supabase/` |
-| Prisma | `prisma/schema.prisma`, `src/lib/prisma.ts` |
 | Codex API | `src/app/api/codex/` |
 | Data enrichment | `src/lib/data-enrichment.ts` |
 | Character CRUD | `src/services/character-service.ts` |
@@ -109,7 +108,7 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 | `src/types/items.ts` | UserItem, SavedDamage |
 | `src/types/abilities.ts` | Abilities, Defenses |
 | `src/types/skills.ts` | Skill, SubSkill |
-| `src/hooks/use-rtdb.ts` | PowerPart, TechniquePart, ItemProperty, CreatureFeat (legacy filename — originally "RTDB" for Firebase Realtime DB, now fetches from Codex API via React Query; rename candidate for a future cleanup pass) |
+| `src/hooks/use-rtdb.ts` | PowerPart, TechniquePart, ItemProperty, CreatureFeat (fetches from Codex API; filename is legacy) |
 
 ---
 
@@ -117,4 +116,4 @@ Codex reference data comes from Prisma via `/api/codex`. Hooks like `useCodexPow
 
 1. **List views with costs:** Load library + Codex parts, then enrich before rendering. Do not block render on `!partsDb.length` — show data as soon as library loads; costs update when parts are available.
 2. **Character sheet:** Uses `useCharacters`, `useUserLibrary`, Codex hooks. Enrichment happens in `library-section.tsx` and similar components.
-3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUserLibrary` mutations (Prisma).
+3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUserLibrary` mutations.

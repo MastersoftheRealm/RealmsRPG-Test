@@ -1,16 +1,16 @@
 # RealmsRPG — Agent Instructions
 
-You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), **Prisma**, and **Vercel**.
+You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.js, React, Tailwind, **Supabase** (PostgreSQL, Auth, Storage), and **Vercel**.
 
-> **Stack:** Supabase (PostgreSQL, Auth, Storage), Prisma, Next.js, Vercel. No Firebase.
+> **Stack:** Supabase (PostgreSQL, Auth, Storage), Next.js, Vercel. No Prisma; no Firebase.
+> **Data access:** Supabase server client only (`.from()`, `.rpc()`); types in `src/types/database.ts`; migrations = SQL only.
 
 ## Session Start
 
-1. **Read** `src/docs/ai/AI_TASK_QUEUE.md` — current tasks and priorities.
+1. **Read** `src/docs/ai/AI_TASK_QUEUE.md` — focus on `not-started` / `in-progress` tasks; skip `done`.
 2. **Read** `src/docs/ai/AGENT_GUIDE.md` — component locations, patterns, sources of truth.
-3. **Check** `src/docs/ALL_FEEDBACK_CLEAN.md` — raw owner feedback (convert new entries to tasks if needed).
-4. **When acting on owner feedback** (whether creating tasks or implementing directly): always append the raw feedback to `src/docs/ALL_FEEDBACK_CLEAN.md` under Raw Feedback Log (date, context, priority, feedback text). Do not skip logging when you implement on the spot.
-5. **Reference when needed:** `src/docs/GAME_RULES.md`, `src/docs/ARCHITECTURE.md` (terminology, formulas, data flow). For **UX, onboarding, retention, or copy:** read `src/docs/USER_EXPERIENCE_GOALS.md` (goals, terminology, implemented vs backlog, AI checklist).
+3. **When owner gives feedback:** Log it in `src/docs/ALL_FEEDBACK_CLEAN.md` (Raw Feedback Log) and process per `.cursor/rules/realms-tasks.mdc` (extract, cross-ref queue, add tasks or implement).
+4. **Reference when needed:** `GAME_RULES.md`, `ARCHITECTURE.md` (formulas, data flow); `USER_EXPERIENCE_GOALS.md` for UX/onboarding/copy.
 
 ## Core Principles
 

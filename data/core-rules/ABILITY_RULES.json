@@ -1,0 +1,60 @@
+{
+  "min": -2,
+  "maxStarting": 3,
+  "maxAbsoluteCharacter": 10,
+  "maxAbsoluteCreature": 20,
+  "costIncreaseThreshold": 4,
+  "normalCost": 1,
+  "increasedCost": 2,
+  "maxTotalNegative": -3,
+  "standardArrays": {
+    "basic": [
+      3,
+      2,
+      2,
+      1,
+      0,
+      -1
+    ],
+    "skewed": [
+      3,
+      3,
+      2,
+      2,
+      -1,
+      -2
+    ],
+    "even": [
+      2,
+      2,
+      1,
+      1,
+      1,
+      0
+    ]
+  },
+  "abilities": [
+    "strength",
+    "vitality",
+    "agility",
+    "acuity",
+    "intelligence",
+    "charisma"
+  ],
+  "defenses": [
+    "might",
+    "fortitude",
+    "reflexes",
+    "discernment",
+    "mentalFortitude",
+    "resolve"
+  ],
+  "abilityDefenseMap": {
+    "strength": "might",
+    "vitality": "fortitude",
+    "agility": "reflexes",
+    "acuity": "discernment",
+    "intelligence": "mentalFortitude",
+    "charisma": "resolve"
+  }
+}

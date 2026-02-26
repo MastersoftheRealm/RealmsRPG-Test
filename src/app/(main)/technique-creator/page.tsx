@@ -4,10 +4,10 @@
  * Tool for creating custom martial techniques using the technique parts system.
  * 
  * Features:
- * - Select technique parts from Codex API (Prisma/Supabase)
+ * - Select technique parts from Codex API (Supabase)
  * - Configure option levels for each part
  * - Calculate energy and training point costs
- * - Save to user's library (Prisma)
+ * - Save to user's library (Supabase)
  */
 
 'use client';

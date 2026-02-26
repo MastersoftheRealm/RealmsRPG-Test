@@ -1,17 +1,30 @@
 /**
  * Campaign by ID API
  * ==================
- * Get a single campaign. Uses Prisma. Requires Supabase session.
+ * Get a single campaign. Uses Supabase + campaign_members.
  */
 
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import type { Campaign } from '@/types/campaign';
 
-function rowToCampaign(row: { id: string; owner_id: string; name: string; description: string | null; invite_code: string; characters: unknown; member_ids: unknown; owner_username: string | null; created_at: Date | null; updated_at: Date | null }): Campaign {
-  const memberIds = Array.isArray(row.member_ids) ? row.member_ids : (typeof row.member_ids === 'string' ? JSON.parse(row.member_ids) : []) as string[];
-  const characters = Array.isArray(row.characters) ? row.characters : (typeof row.characters === 'string' ? JSON.parse(row.characters) : []) as Campaign['characters'];
+type CampaignRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  owner_id: string;
+  owner_username: string | null;
+  invite_code: string;
+  characters: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
+  const characters = Array.isArray(row.characters)
+    ? row.characters
+    : (typeof row.characters === 'string' ? JSON.parse(row.characters as string) : []) as Campaign['characters'];
   return {
     id: row.id,
     name: row.name,
@@ -40,31 +53,28 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid campaign ID' }, { status: 400 });
   }
 
-  const row = await prisma.campaign.findUnique({
-    where: { id: id.trim() },
-  });
+  const supabase = await createClient();
+  const { data: row } = await supabase
+    .from('campaigns')
+    .select('id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at')
+    .eq('id', id.trim())
+    .maybeSingle();
 
   if (!row) {
     return NextResponse.json(null, { status: 404 });
   }
 
-  const memberIds = (row.memberIds as string[]) || [];
-  if (row.ownerId !== user.uid && !memberIds.includes(user.uid)) {
+  const { data: members } = await supabase
+    .from('campaign_members')
+    .select('user_id')
+    .eq('campaign_id', row.id);
+  const memberIds = (members ?? []).map((m: { user_id: string }) => m.user_id);
+
+  const isMember = row.owner_id === user.uid || memberIds.includes(user.uid);
+  if (!isMember) {
     return NextResponse.json(null, { status: 404 });
   }
 
-  const campaign = rowToCampaign({
-    id: row.id,
-    owner_id: row.ownerId,
-    name: row.name,
-    description: row.description,
-    invite_code: row.inviteCode,
-    characters: row.characters,
-    member_ids: row.memberIds,
-    owner_username: row.ownerUsername,
-    created_at: row.createdAt,
-    updated_at: row.updatedAt,
-  });
-
+  const campaign = rowToCampaign(row as CampaignRow, memberIds);
   return NextResponse.json(campaign);
 }

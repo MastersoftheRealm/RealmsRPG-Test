@@ -1,0 +1,17 @@
+{
+  "partial": {
+    "duration": "2, 4, or 6 hours",
+    "effect": "Each 2 hours: regain 1/4 of both max Energy and Health, OR 1/2 of one.",
+    "interruptionGrace": "10 minutes to resume without losing block"
+  },
+  "full": {
+    "duration": "8-10 hours",
+    "effect": "Fully restore Energy and Health, remove most temporary effects."
+  },
+  "requirements": "Adequate nutrition/hydration, temperate conditions, bedding if needed. Must doff armor.",
+  "withoutFullRecovery": "Max HP and EN reduce by 1/4 each 24 hours without full recovery (accumulates, min 1).",
+  "featUses": {
+    "partial": "Resets \"Partial\" recovery feats only",
+    "full": "Resets all feat uses"
+  }
+}

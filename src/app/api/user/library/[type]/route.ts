@@ -1,37 +1,35 @@
 /**
  * User Library API
  * ================
- * List and create user library items (powers, techniques, items, creatures).
- * Uses Prisma. Requires Supabase session.
+ * List and create user library items. Powers, techniques, items, creatures use
+ * columnar tables (Supabase). Species uses legacy id+data.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, libraryItemCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
+import {
+  COLUMNAR_LIBRARY_TYPES,
+  rowToItem,
+  bodyToColumnar,
+  toDbRow,
+  type ColumnarLibraryType,
+} from '@/lib/library-columnar';
 
 const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures', 'species'] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
 
-const PRISMA_MAP: Record<LibraryType, { model: 'userPower' | 'userTechnique' | 'userItem' | 'userCreature' | 'userSpecies'; orderBy: string }> = {
-  powers: { model: 'userPower', orderBy: 'name' },
-  techniques: { model: 'userTechnique', orderBy: 'name' },
-  items: { model: 'userItem', orderBy: 'name' },
-  creatures: { model: 'userCreature', orderBy: 'name' },
-  species: { model: 'userSpecies', orderBy: 'name' },
-};
+const isColumnar = (t: string): t is ColumnarLibraryType =>
+  COLUMNAR_LIBRARY_TYPES.includes(t as ColumnarLibraryType);
 
-type ListDelegate = {
-  findMany: (args: { where: { userId: string } }) => Promise<Array<{ id: string; data: unknown }>>;
-  findFirst: (args: { where: { id: string; userId: string } }) => Promise<{ id: string; data: unknown } | null>;
-  create: (args: { data: { userId: string; data: object } }) => Promise<{ id: string }>;
+const TABLE: Record<ColumnarLibraryType, string> = {
+  powers: 'user_powers',
+  techniques: 'user_techniques',
+  items: 'user_items',
+  creatures: 'user_creatures',
 };
-
-function getDelegate(type: LibraryType): ListDelegate {
-  const model = PRISMA_MAP[type].model;
-  return prisma[model] as unknown as ListDelegate;
-}
 
 export async function GET(
   _request: NextRequest,
@@ -48,27 +46,34 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid library type' }, { status: 400 });
     }
 
-    const delegate = getDelegate(type as LibraryType);
-    const rows = await delegate.findMany({
-      where: { userId: user.uid },
-    });
+    const supabase = await createClient();
 
-    const items = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
-      return {
-        id: r.id,
-        docId: r.id,
-        ...d,
-      };
-    });
+    if (isColumnar(type)) {
+      const { data: rows } = await supabase
+        .from(TABLE[type])
+        .select('*')
+        .eq('user_id', user.uid);
+      const list = (rows ?? []) as Record<string, unknown>[];
+      const items = list.map((r) => rowToItem(type, r, 'user'));
+      items.sort((a, b) => {
+        const na = String((a as Record<string, unknown>).name ?? '');
+        const nb = String((b as Record<string, unknown>).name ?? '');
+        return na.localeCompare(nb);
+      });
+      return NextResponse.json(items);
+    }
 
-    // Sort by name (Prisma doesn't support orderBy on JSON) - null-safe
+    const { data: rows } = await supabase.from('user_species').select('id, data').eq('user_id', user.uid);
+    const list = (rows ?? []) as { id: string; data: unknown }[];
+    const items = list.map((r) => {
+      const d = (r.data as Record<string, unknown>) ?? {};
+      return { id: r.id, docId: r.id, ...d };
+    });
     items.sort((a, b) => {
       const na = String((a as Record<string, unknown>).name ?? '');
       const nb = String((b as Record<string, unknown>).name ?? '');
       return na.localeCompare(nb);
     });
-
     return NextResponse.json(items);
   } catch (err) {
     console.error('[API Error] GET /api/user/library/[type]:', err);
@@ -99,38 +104,85 @@ export async function POST(
 
     const validation = await validateJson(request, libraryItemCreateSchema);
     if (!validation.success) return validation.error;
-    const body = validation.data;
+    const body = validation.data as Record<string, unknown>;
     const duplicateOf = body.duplicateOf as string | undefined;
 
-    await prisma.userProfile.upsert({
-      where: { id: user.uid },
-      create: { id: user.uid },
-      update: {},
-    });
+    const supabase = await createClient();
+    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
 
-    const delegate = getDelegate(type as LibraryType);
+    if (isColumnar(type)) {
+      const table = TABLE[type];
+      const now = new Date();
+
+      if (duplicateOf) {
+        const { data: existing } = await supabase
+          .from(table)
+          .select('*')
+          .eq('id', duplicateOf)
+          .eq('user_id', user.uid)
+          .maybeSingle();
+        if (!existing) {
+          return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+        }
+        const item = rowToItem(type, existing as Record<string, unknown>, 'user');
+        const baseName = String((item.name as string) || 'Item').trim();
+        const copyData = { ...item, name: `${baseName} (Copy)` };
+        delete (copyData as Record<string, unknown>).id;
+        delete (copyData as Record<string, unknown>).docId;
+        delete (copyData as Record<string, unknown>)._source;
+        const { scalars, payload } = bodyToColumnar(type, { ...copyData, updatedAt: now });
+        const newId = crypto.randomUUID();
+        const row = toDbRow({
+          id: newId,
+          userId: user.uid,
+          ...scalars,
+          payload,
+          createdAt: now,
+          updatedAt: now,
+        });
+        const { error: insertErr } = await supabase.from(table).insert(row);
+        if (insertErr) throw insertErr;
+        return NextResponse.json({ id: newId });
+      }
+
+      const { scalars, payload } = bodyToColumnar(type, { ...body, updatedAt: now });
+      const newId = crypto.randomUUID();
+      const row = toDbRow({
+        id: newId,
+        userId: user.uid,
+        ...scalars,
+        payload,
+        createdAt: now,
+        updatedAt: now,
+      });
+      const { error: insertErr } = await supabase.from(table).insert(row);
+      if (insertErr) throw insertErr;
+      return NextResponse.json({ id: newId });
+    }
 
     if (duplicateOf) {
-      const existing = await delegate.findFirst({
-        where: { id: duplicateOf, userId: user.uid },
-      });
+      const { data: existing } = await supabase
+        .from('user_species')
+        .select('id, data')
+        .eq('id', duplicateOf)
+        .eq('user_id', user.uid)
+        .maybeSingle();
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
-      const d = existing.data as Record<string, unknown>;
-      const baseData = { ...d };
-      delete baseData.createdAt;
-      delete baseData.updatedAt;
+      const d = (existing.data as Record<string, unknown>) ?? {};
       const newData = {
-        ...baseData,
-        name: `${(baseData.name as string) || 'Item'} (Copy)`,
+        ...d,
+        name: `${(d.name as string) || 'Item'} (Copy)`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-
-      const created = await delegate.create({
-        data: { userId: user.uid, data: newData as object },
-      });
+      const { data: created, error: insertErr } = await supabase
+        .from('user_species')
+        .insert({ user_id: user.uid, data: newData })
+        .select('id')
+        .single();
+      if (insertErr) throw insertErr;
       return NextResponse.json({ id: created.id });
     }
 
@@ -138,10 +190,12 @@ export async function POST(
     const cleaned = { ...data };
     cleaned.createdAt = new Date().toISOString();
     cleaned.updatedAt = new Date().toISOString();
-
-    const created = await delegate.create({
-      data: { userId: user.uid, data: cleaned as object },
-    });
+    const { data: created, error: insertErr } = await supabase
+      .from('user_species')
+      .insert({ user_id: user.uid, data: cleaned })
+      .select('id')
+      .single();
+    if (insertErr) throw insertErr;
     return NextResponse.json({ id: created.id });
   } catch (err) {
     console.error('[API Error] POST /api/user/library/[type]:', err);

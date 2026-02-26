@@ -1,0 +1,90 @@
+{
+  "xpToLevelUp": "level * 4",
+  "levelTable": [
+    {
+      "level": 1,
+      "xpThreshold": 4
+    },
+    {
+      "level": 2,
+      "xpThreshold": 8
+    },
+    {
+      "level": 3,
+      "xpThreshold": 12
+    },
+    {
+      "level": 4,
+      "xpThreshold": 16
+    },
+    {
+      "level": 5,
+      "xpThreshold": 20
+    },
+    {
+      "level": 6,
+      "xpThreshold": 24
+    },
+    {
+      "level": 7,
+      "xpThreshold": 28
+    },
+    {
+      "level": 8,
+      "xpThreshold": 32
+    },
+    {
+      "level": 9,
+      "xpThreshold": 36
+    },
+    {
+      "level": 10,
+      "xpThreshold": 40
+    },
+    {
+      "level": 11,
+      "xpThreshold": 44
+    },
+    {
+      "level": 12,
+      "xpThreshold": 48
+    },
+    {
+      "level": 13,
+      "xpThreshold": 52
+    },
+    {
+      "level": 14,
+      "xpThreshold": 56
+    },
+    {
+      "level": 15,
+      "xpThreshold": 60
+    },
+    {
+      "level": 16,
+      "xpThreshold": 64
+    },
+    {
+      "level": 17,
+      "xpThreshold": 68
+    },
+    {
+      "level": 18,
+      "xpThreshold": 72
+    },
+    {
+      "level": 19,
+      "xpThreshold": 76
+    },
+    {
+      "level": 20,
+      "xpThreshold": 80
+    }
+  ],
+  "combatXp": "Sum of defeated enemy levels * 2",
+  "skillEncounterXp": "Party avg level * # Characters (adjusted by DS)",
+  "skillEncounterDS": "10 + half party level",
+  "skillEncounterSuccesses": "Number of participating characters + 1",
+  "divideXp": "Split evenly among participating Characters"
+}

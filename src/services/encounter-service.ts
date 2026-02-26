@@ -1,7 +1,7 @@
 /**
  * Encounter Service
  * ==================
- * Client-side API calls for encounter data. Uses /api/encounters (Prisma).
+ * Client-side API calls for encounter data. Uses /api/encounters (Supabase).
  */
 
 import type { Encounter, EncounterSummary } from '@/types/encounter';

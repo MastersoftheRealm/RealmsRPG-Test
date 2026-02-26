@@ -19,6 +19,6 @@ export const config = {
   matcher: [
     // Exclude: static assets, auth callbacks, images, and high-volume public APIs (no session needed).
     // Including api/codex and api/public reduces Edge Request count significantly.
-    '/((?!_next/static|_next/image|favicon.ico|auth/callback|auth/confirm|api/codex(?:/|$)|api/public(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|auth/callback|auth/confirm|api/codex(?:/|$)|api/public(?:/|$)|api/official(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

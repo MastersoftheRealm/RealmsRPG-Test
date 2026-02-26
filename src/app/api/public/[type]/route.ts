@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { validateJson, publicItemSchema } from '@/lib/api-validation';
@@ -13,22 +13,12 @@ import { validateJson, publicItemSchema } from '@/lib/api-validation';
 const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures'] as const;
 type PublicType = (typeof VALID_TYPES)[number];
 
-const PRISMA_MAP: Record<PublicType, 'publicPower' | 'publicTechnique' | 'publicItem' | 'publicCreature'> = {
-  powers: 'publicPower',
-  techniques: 'publicTechnique',
-  items: 'publicItem',
-  creatures: 'publicCreature',
+const TABLE_MAP: Record<PublicType, string> = {
+  powers: 'public_powers',
+  techniques: 'public_techniques',
+  items: 'public_items',
+  creatures: 'public_creatures',
 };
-
-type ListDelegate = {
-  findMany: () => Promise<Array<{ id: string; data: unknown }>>;
-  create: (args: { data: { data: object } }) => Promise<{ id: string }>;
-  update: (args: { where: { id: string }; data: { data: object } }) => Promise<{ id: string }>;
-};
-
-function getDelegate(type: PublicType): ListDelegate {
-  return prisma[PRISMA_MAP[type]] as unknown as ListDelegate;
-}
 
 export async function GET(
   _request: NextRequest,
@@ -40,21 +30,20 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
 
-    const delegate = getDelegate(type as PublicType);
-    let rows: Array<{ id: string; data: unknown }>;
-    try {
-      rows = await delegate.findMany();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('does not exist') || (err as { code?: string })?.code === 'P2021') {
-        console.warn('[API] Public library table not found for type:', type, msg);
+    const supabase = await createClient();
+    const table = TABLE_MAP[type as PublicType];
+    const { data: rows, error } = await supabase.from(table).select('id, data');
+
+    if (error) {
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        console.warn('[API] Public library table not found for type:', type, error.message);
         return NextResponse.json([]);
       }
-      throw err;
+      throw error;
     }
 
-    const items = rows.map((r) => {
-      const d = r.data as Record<string, unknown>;
+    const items = (rows ?? []).map((r: { id: string; data: unknown }) => {
+      const d = (r.data as Record<string, unknown>) ?? {};
       return {
         ...d,
         id: r.id,
@@ -63,13 +52,12 @@ export async function GET(
       };
     });
 
-    items.sort((a, b) => {
-      const na = String((a as Record<string, unknown>).name ?? '');
-      const nb = String((b as Record<string, unknown>).name ?? '');
+    items.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+      const na = String(a.name ?? '');
+      const nb = String(b.name ?? '');
       return na.localeCompare(nb);
     });
 
-    // Cache 5 min browser, 10 min CDN — reduces Fast Data Transfer when public library is hit repeatedly.
     const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
     return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
@@ -100,24 +88,22 @@ export async function POST(
     if (!validation.success) return validation.error;
     const body = validation.data as Record<string, unknown>;
 
-    const delegate = getDelegate(type as PublicType);
-
     const existingId = body.id as string | undefined;
     const data = { ...body, updatedAt: new Date().toISOString() };
     delete (data as Record<string, unknown>).id;
 
+    const supabase = await createClient();
+    const table = TABLE_MAP[type as PublicType];
+
     if (existingId) {
-      await delegate.update({
-        where: { id: existingId },
-        data: { data: data as object },
-      });
+      await supabase.from(table).update({ data: data as object }).eq('id', existingId);
       return NextResponse.json({ id: existingId });
     }
 
-    const created = await delegate.create({
-      data: { data: { ...data, createdAt: new Date().toISOString() } as object },
-    });
-    return NextResponse.json({ id: created.id });
+    const id = crypto.randomUUID();
+    const insert = { id, data: { ...data, createdAt: new Date().toISOString() } as object };
+    await supabase.from(table).insert(insert);
+    return NextResponse.json({ id });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[API Error] POST /api/public/[type]:', err);
@@ -129,7 +115,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ type: string }> }
 ) {
   try {
@@ -146,14 +132,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
 
-    const url = new URL(_request.url);
+    const url = new URL(request.url);
     const id = url.searchParams.get('id');
     if (!id) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    const delegate = getDelegate(type as PublicType) as unknown as { delete: (args: { where: { id: string } }) => Promise<unknown> };
-    await delegate.delete({ where: { id } });
+    const supabase = await createClient();
+    await supabase.from(TABLE_MAP[type as PublicType]).delete().eq('id', id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

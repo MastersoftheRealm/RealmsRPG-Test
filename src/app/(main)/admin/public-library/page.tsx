@@ -1,9 +1,9 @@
 /**
- * Admin Public Library Editor
- * ============================
- * Browse and manage published public library items. Edit opens the corresponding
- * creator with the item loaded; save with the same name overwrites the public item.
- * Admin only.
+ * Admin Official Library Editor
+ * =============================
+ * Browse and manage published official library items. Edit opens the corresponding
+ * creator with the item loaded; save with the same name overwrites the official item.
+ * Admin only. Uses /api/official (columnar tables).
  */
 
 'use client';
@@ -31,8 +31,8 @@ export default function AdminPublicLibraryPage() {
   return (
     <PageContainer size="xl">
       <PageHeader
-        title="Realms Library Editor"
-        description="Edit published items via the creators (Edit opens Power/Technique/Item/Creature Creator with the item loaded). Save with the same name to overwrite. Changes are visible to all users on the Library page."
+        title="Official Library Editor"
+        description="Edit published official items via the creators (Edit opens Power/Technique/Item/Creature Creator with the item loaded). Save with the same name to overwrite. Changes are visible to all users on the Library page."
       />
 
       <TabNavigation

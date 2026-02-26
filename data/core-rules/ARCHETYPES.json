@@ -1,0 +1,335 @@
+{
+  "types": [
+    "power",
+    "powered-martial",
+    "martial"
+  ],
+  "configs": {
+    "power": {
+      "featLimit": 0,
+      "armamentMax": 3,
+      "innateEnergy": 16,
+      "innateThreshold": 8,
+      "innatePools": 2,
+      "proficiency": {
+        "martial": 0,
+        "power": 2
+      },
+      "trainingPointBonus": 0
+    },
+    "powered-martial": {
+      "featLimit": 1,
+      "armamentMax": 8,
+      "innateEnergy": 6,
+      "innateThreshold": 6,
+      "innatePools": 1,
+      "proficiency": {
+        "martial": 1,
+        "power": 1
+      },
+      "trainingPointBonus": 0
+    },
+    "martial": {
+      "featLimit": 2,
+      "armamentMax": 12,
+      "innateEnergy": 0,
+      "innateThreshold": 0,
+      "innatePools": 0,
+      "proficiency": {
+        "martial": 2,
+        "power": 0
+      },
+      "trainingPointBonus": 0
+    }
+  },
+  "martialBonusFeatsBase": 2,
+  "martialBonusFeatsInterval": 3,
+  "martialBonusFeatsStartLevel": 4,
+  "poweredMartialMilestoneInterval": 3,
+  "poweredMartialMilestoneStartLevel": 4,
+  "proficiencyIncreaseInterval": 5,
+  "powerProgression": [
+    {
+      "level": 1,
+      "innateThreshold": 8,
+      "innateEnergy": 16,
+      "innatePools": 2,
+      "powerProf": 2
+    },
+    {
+      "level": 2,
+      "innateThreshold": 8,
+      "innateEnergy": 16,
+      "innatePools": 2,
+      "powerProf": 2
+    },
+    {
+      "level": 3,
+      "innateThreshold": 8,
+      "innateEnergy": 16,
+      "innatePools": 2,
+      "powerProf": 2
+    },
+    {
+      "level": 4,
+      "innateThreshold": 9,
+      "innateEnergy": 27,
+      "innatePools": 3,
+      "powerProf": 2
+    },
+    {
+      "level": 5,
+      "innateThreshold": 9,
+      "innateEnergy": 27,
+      "innatePools": 3,
+      "powerProf": 3
+    },
+    {
+      "level": 6,
+      "innateThreshold": 9,
+      "innateEnergy": 27,
+      "innatePools": 3,
+      "powerProf": 3
+    },
+    {
+      "level": 7,
+      "innateThreshold": 10,
+      "innateEnergy": 40,
+      "innatePools": 4,
+      "powerProf": 3
+    },
+    {
+      "level": 8,
+      "innateThreshold": 10,
+      "innateEnergy": 40,
+      "innatePools": 4,
+      "powerProf": 3
+    },
+    {
+      "level": 9,
+      "innateThreshold": 10,
+      "innateEnergy": 40,
+      "innatePools": 4,
+      "powerProf": 3
+    },
+    {
+      "level": 10,
+      "innateThreshold": 11,
+      "innateEnergy": 55,
+      "innatePools": 5,
+      "powerProf": 4
+    },
+    {
+      "level": 11,
+      "innateThreshold": 11,
+      "innateEnergy": 55,
+      "innatePools": 5,
+      "powerProf": 4
+    },
+    {
+      "level": 12,
+      "innateThreshold": 11,
+      "innateEnergy": 55,
+      "innatePools": 5,
+      "powerProf": 4
+    },
+    {
+      "level": 13,
+      "innateThreshold": 12,
+      "innateEnergy": 72,
+      "innatePools": 6,
+      "powerProf": 4
+    },
+    {
+      "level": 14,
+      "innateThreshold": 12,
+      "innateEnergy": 72,
+      "innatePools": 6,
+      "powerProf": 4
+    },
+    {
+      "level": 15,
+      "innateThreshold": 12,
+      "innateEnergy": 72,
+      "innatePools": 6,
+      "powerProf": 5
+    },
+    {
+      "level": 16,
+      "innateThreshold": 13,
+      "innateEnergy": 91,
+      "innatePools": 7,
+      "powerProf": 5
+    },
+    {
+      "level": 17,
+      "innateThreshold": 13,
+      "innateEnergy": 91,
+      "innatePools": 7,
+      "powerProf": 5
+    },
+    {
+      "level": 18,
+      "innateThreshold": 13,
+      "innateEnergy": 91,
+      "innatePools": 7,
+      "powerProf": 5
+    },
+    {
+      "level": 19,
+      "innateThreshold": 14,
+      "innateEnergy": 112,
+      "innatePools": 8,
+      "powerProf": 5
+    },
+    {
+      "level": 20,
+      "innateThreshold": 14,
+      "innateEnergy": 112,
+      "innatePools": 8,
+      "powerProf": 6
+    }
+  ],
+  "martialProgression": [
+    {
+      "level": 1,
+      "bonusFeats": 2,
+      "totalFeats": 3,
+      "armamentProf": 12,
+      "martialProf": 2
+    },
+    {
+      "level": 2,
+      "bonusFeats": 0,
+      "totalFeats": 4,
+      "armamentProf": 12,
+      "martialProf": 2
+    },
+    {
+      "level": 3,
+      "bonusFeats": 0,
+      "totalFeats": 5,
+      "armamentProf": 12,
+      "martialProf": 2
+    },
+    {
+      "level": 4,
+      "bonusFeats": 1,
+      "totalFeats": 7,
+      "armamentProf": 12,
+      "martialProf": 2
+    },
+    {
+      "level": 5,
+      "bonusFeats": 0,
+      "totalFeats": 8,
+      "armamentProf": 15,
+      "martialProf": 3
+    },
+    {
+      "level": 6,
+      "bonusFeats": 0,
+      "totalFeats": 9,
+      "armamentProf": 15,
+      "martialProf": 3
+    },
+    {
+      "level": 7,
+      "bonusFeats": 1,
+      "totalFeats": 11,
+      "armamentProf": 15,
+      "martialProf": 3
+    },
+    {
+      "level": 8,
+      "bonusFeats": 0,
+      "totalFeats": 12,
+      "armamentProf": 15,
+      "martialProf": 3
+    },
+    {
+      "level": 9,
+      "bonusFeats": 0,
+      "totalFeats": 13,
+      "armamentProf": 15,
+      "martialProf": 3
+    },
+    {
+      "level": 10,
+      "bonusFeats": 1,
+      "totalFeats": 15,
+      "armamentProf": 18,
+      "martialProf": 4
+    },
+    {
+      "level": 11,
+      "bonusFeats": 0,
+      "totalFeats": 16,
+      "armamentProf": 18,
+      "martialProf": 4
+    },
+    {
+      "level": 12,
+      "bonusFeats": 0,
+      "totalFeats": 17,
+      "armamentProf": 18,
+      "martialProf": 4
+    },
+    {
+      "level": 13,
+      "bonusFeats": 1,
+      "totalFeats": 19,
+      "armamentProf": 18,
+      "martialProf": 4
+    },
+    {
+      "level": 14,
+      "bonusFeats": 0,
+      "totalFeats": 20,
+      "armamentProf": 18,
+      "martialProf": 4
+    },
+    {
+      "level": 15,
+      "bonusFeats": 0,
+      "totalFeats": 21,
+      "armamentProf": 21,
+      "martialProf": 5
+    },
+    {
+      "level": 16,
+      "bonusFeats": 1,
+      "totalFeats": 23,
+      "armamentProf": 21,
+      "martialProf": 5
+    },
+    {
+      "level": 17,
+      "bonusFeats": 0,
+      "totalFeats": 24,
+      "armamentProf": 21,
+      "martialProf": 5
+    },
+    {
+      "level": 18,
+      "bonusFeats": 0,
+      "totalFeats": 25,
+      "armamentProf": 21,
+      "martialProf": 5
+    },
+    {
+      "level": 19,
+      "bonusFeats": 1,
+      "totalFeats": 27,
+      "armamentProf": 21,
+      "martialProf": 5
+    },
+    {
+      "level": 20,
+      "bonusFeats": 0,
+      "totalFeats": 28,
+      "armamentProf": 24,
+      "martialProf": 6
+    }
+  ]
+}
