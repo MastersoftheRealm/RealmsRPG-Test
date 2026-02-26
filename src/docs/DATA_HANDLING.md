@@ -79,6 +79,21 @@
 
 ---
 
+## Admin data sources (in sync with DB)
+
+Admin pages read/write the same tables as the app; schema reference: `src/docs/SUPABASE_SCHEMA.md`.
+
+| Admin page | Data source | Tables / API |
+|------------|-------------|--------------|
+| **Codex Editor** (list + spreadsheet) | GET /api/codex, server actions | public.codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
+| **Official Library Editor** | GET/POST/DELETE /api/official/[type] | public.official_powers, official_techniques, official_items, official_creatures (run sql/supabase-official-library-public-schema.sql if empty) |
+| **Core Rules Editor** | useGameRules + codex actions | public.core_rules (id, data, updated_at) |
+| **User Management** | GET /api/admin/users, PATCH /api/admin/users/update-role | public.user_profiles (id, username, role) |
+
+Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc` / `updateCodexDoc` / `deleteCodexDoc` (service role); columnar fields match DB columns (snake_case); API response keys (e.g. base_skill_id, ave_height) are mapped in actions so edits round-trip correctly.
+
+---
+
 ## Files
 
 | Purpose           | File |
@@ -91,3 +106,5 @@
 | User library hooks | `src/hooks/use-user-library.ts` |
 | Public library    | `src/hooks/use-public-library.ts`, `src/app/api/public/[type]/route.ts` |
 | Library service   | `src/services/library-service.ts` |
+| Admin codex actions | `src/app/(main)/admin/codex/actions.ts` — create/update/delete codex + core_rules |
+| Admin official library | `src/app/(main)/admin/public-library/` — uses /api/official (official_* tables) |
