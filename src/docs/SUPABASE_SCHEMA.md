@@ -10,11 +10,11 @@
 
 | Item | Value |
 |------|--------|
-| **Schema** | Single schema: `public`. No `codex`, `users`, `campaigns`, or `encounters` schemas. |
-| **Data access** | Supabase server client: `createClient()` from `@/lib/supabase/server`; all reads/writes use `supabase.from('table_name')`. |
+| **Schema** | Single schema: **`public`** only. There is **no `codex` schema** — all tables (including `codex_feats`, `codex_skills`, etc.) live in `public`. |
+| **Data access** | Supabase server client: `createClient()` from `@/lib/supabase/server`; all reads/writes use `supabase.from('table_name')` and hit `public`. |
 | **Migrations** | SQL only (run in Supabase Dashboard or CI). No Prisma. |
 
-**Shape convention:** Prefer **columnar** (scalar columns ± one JSONB for variable payload) where possible. Some tables remain **id + data (JSONB)** for historical or document-style use; see table list below.
+**Shape convention:** Prefer **columnar** (scalar columns ± one JSONB for variable payload) where possible. Some tables remain **id + data (JSONB)** or hybrid (list columns + data); see table list below.
 
 ---
 
@@ -39,17 +39,17 @@ Tables are listed in dependency-friendly order. **Columnar** = proper columns; *
 
 ---
 
-### 2.3 Codex (reference data)
+### 2.3 Codex (reference data) — all in `public`
 
-All codex tables are **columnar**. Field semantics: see `CODEX_SCHEMA_REFERENCE.md`.
+All codex tables are **columnar** and live in **public** (no `codex` schema). Array-like fields are stored as TEXT (comma-sep). Field semantics: see `CODEX_SCHEMA_REFERENCE.md`.
 
-| Table | Shape | Key columns (summary) |
+| Table | Shape | Key columns (public schema) |
 |-------|--------|------------------------|
-| `codex_feats` | Columnar | id (PK), name, description, req_desc, ability_req, abil_req_val, skill_req, skill_req_val, feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags, char_feat, state_feat |
-| `codex_skills` | Columnar | id (PK), name, description, ability, base_skill, success_desc, failure_desc, ds_calc, craft_failure_desc, craft_success_desc |
-| `codex_species` | Columnar | id (PK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages |
-| `codex_traits` | Columnar | id (PK), name, description, uses_per_rec, rec_period, flaw, characteristic, option_trait_ids |
-| `codex_parts` | Columnar | id (PK), name, description, category, base_en, base_tp, op_1_desc, op_1_en, op_1_tp, op_2_desc, op_2_en, op_2_tp, op_3_desc, op_3_en, op_3_tp, type, mechanic, percentage, duration, defense |
+| `codex_feats` | Columnar | id (PK), name, description, req_desc, ability_req (TEXT), abil_req_val (TEXT), skill_req (TEXT), skill_req_val (TEXT), feat_cat_req, pow_abil_req, mart_abil_req, pow_prof_req, mart_prof_req, speed_req, feat_lvl, lvl_req, uses_per_rec, rec_period, category, ability, tags (TEXT), char_feat, state_feat |
+| `codex_skills` | Columnar | id (PK), name, description, ability, base_skill (TEXT), success_desc, failure_desc, ds_calc, craft_failure_desc, craft_success_desc |
+| `codex_species` | Columnar | id (PK), name, description, type, sizes (TEXT), skills (TEXT), species_traits (TEXT), ancestry_traits (TEXT), flaws (TEXT), characteristics (TEXT), ave_hgt_cm, ave_wgt_kg, adulthood_lifespan (TEXT), languages (TEXT) |
+| `codex_traits` | Columnar | id (PK), name, description, uses_per_rec, rec_period, flaw, characteristic, option_trait_ids (TEXT) |
+| `codex_parts` | Columnar | id (PK), name, description, category, base_en, base_tp, op_1_desc, op_1_en, op_1_tp, op_2_desc, op_2_en, op_2_tp, op_3_desc, op_3_en, op_3_tp, type, mechanic, percentage, duration, defense (TEXT) |
 | `codex_properties` | Columnar | id (PK), name, description, base_ip, base_tp, base_c, op_1_desc, op_1_ip, op_1_tp, op_1_c, type, mechanic |
 | `codex_equipment` | Columnar | id (PK), name, description, category, currency, rarity |
 | `codex_archetypes` | Columnar | id (PK), name, type, description |
@@ -75,7 +75,7 @@ Currently **id + data (JSONB)**. Optional future: migrate to columnar (e.g. `off
 
 ### 2.5 User library
 
-Powers, techniques, items, creatures: **columnar** (scalars + `payload` JSONB). Species: **JSONB**.
+All **columnar** (scalars + `payload` JSONB). Species matches codex_species columns + user_id + payload.
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
@@ -83,7 +83,7 @@ Powers, techniques, items, creatures: **columnar** (scalars + `payload` JSONB). 
 | `user_techniques` | Columnar | id (PK), user_id (FK), name, description, action_type, weapon_name, created_at, updated_at, payload (JSONB) |
 | `user_items` | Columnar | id (PK), user_id (FK), name, description, type, rarity, armor_value, damage_reduction, created_at, updated_at, payload (JSONB) |
 | `user_creatures` | Columnar | id (PK), user_id (FK), name, description, level, type, size, hit_points, energy_points, created_at, updated_at, payload (JSONB) |
-| `user_species` | JSONB | id (PK), user_id (FK), data (JSONB), created_at, updated_at |
+| `user_species` | Columnar | id (PK), user_id (FK), name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages, created_at, updated_at, payload (JSONB) |
 
 **API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, items, creatures, species.
 
@@ -93,9 +93,9 @@ Powers, techniques, items, creatures: **columnar** (scalars + `payload` JSONB). 
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `characters` | JSONB | id (PK), user_id (FK → user_profiles), data (JSONB), created_at, updated_at |
+| `characters` | Hybrid | id (PK), user_id (FK → user_profiles), data (JSONB), created_at, updated_at; list columns: name, level, archetype_name, ancestry_name, status, visibility |
 
-Single document per character; variable nested structure. Realtime: `public.characters`.
+Single document in `data`; list columns for list/filter. Realtime: `public.characters`.
 
 ---
 
@@ -105,7 +105,7 @@ Single document per character; variable nested structure. Realtime: `public.char
 |-------|--------|-------------|
 | `campaigns` | Scalar + JSONB | id (PK), owner_id, name, description, invite_code, characters (JSONB), memberIds (JSONB), owner_username, created_at, updated_at |
 | `campaign_members` | Columnar | campaign_id (PK), user_id (PK); FK campaign_id → campaigns(id) |
-| `campaign_rolls` | JSONB | id (PK), campaign_id (FK), data (JSONB), created_at |
+| `campaign_rolls` | Hybrid | id (PK), campaign_id (FK), data (JSONB), created_at; list columns: character_id, user_id, type, title |
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
 
@@ -115,7 +115,7 @@ Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `encounters` | JSONB | id (PK), user_id, data (JSONB), created_at, updated_at |
+| `encounters` | Hybrid | id (PK), user_id, data (JSONB), created_at, updated_at; list columns: name, type, status |
 
 ---
 

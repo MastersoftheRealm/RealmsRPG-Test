@@ -61,22 +61,36 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
   ]);
 
   const coreRulesRows = (coreResult as { data?: Row[] }).data ?? [];
-  const firstError = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature].find(Boolean) as { message?: string; code?: string } | undefined;
-  if (firstError) {
-    const err = new Error(firstError.message ?? 'Codex fetch failed') as Error & { code?: string };
-    err.code = firstError.code;
+
+  /** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. Run sql/path-c-phase0-consolidate-to-public-part1c.sql to move codex_* to public. */
+  function isTableMissing(e: { message?: string; code?: string } | null): boolean {
+    if (!e) return false;
+    return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
+  }
+
+  const tableNames = ['codex_feats', 'codex_skills', 'codex_species', 'codex_traits', 'codex_parts', 'codex_properties', 'codex_equipment', 'codex_archetypes', 'codex_creature_feats'];
+  const errors = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature];
+  errors.forEach((e, i) => {
+    if (e && isTableMissing(e)) {
+      console.warn('[Codex API] Table missing (use empty):', tableNames[i], e.message);
+    }
+  });
+  const firstRealError = errors.find((e) => e && !isTableMissing(e)) as { message?: string; code?: string } | undefined;
+  if (firstRealError) {
+    const err = new Error(firstRealError.message ?? 'Codex fetch failed') as Error & { code?: string };
+    err.code = firstRealError.code;
     throw err;
   }
 
-  const featRows = (feats ?? []) as Row[];
-    const skillRows = (skills ?? []) as Row[];
-    const speciesRows = (species ?? []) as Row[];
-    const traitRows = (traits ?? []) as Row[];
-    const partRows = (parts ?? []) as Row[];
-    const propRows = (properties ?? []) as Row[];
-    const equipRows = (equipment ?? []) as Row[];
-    const archRows = (archetypes ?? []) as Row[];
-    const creatureRows = (creatureFeats ?? []) as Row[];
+  const featRows = ((isTableMissing(eFeats) ? [] : feats) ?? []) as Row[];
+    const skillRows = ((isTableMissing(eSkills) ? [] : skills) ?? []) as Row[];
+    const speciesRows = ((isTableMissing(eSpecies) ? [] : species) ?? []) as Row[];
+    const traitRows = ((isTableMissing(eTraits) ? [] : traits) ?? []) as Row[];
+    const partRows = ((isTableMissing(eParts) ? [] : parts) ?? []) as Row[];
+    const propRows = ((isTableMissing(eProps) ? [] : properties) ?? []) as Row[];
+    const equipRows = ((isTableMissing(eEquip) ? [] : equipment) ?? []) as Row[];
+    const archRows = ((isTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
+    const creatureRows = ((isTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
     const coreRows = coreRulesRows as Row[];
 
     const codexFeats = featRows.map((r) => ({

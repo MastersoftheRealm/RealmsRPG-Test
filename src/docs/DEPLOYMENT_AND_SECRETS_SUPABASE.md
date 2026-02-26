@@ -168,6 +168,18 @@ Schema and RLS are applied by running SQL in the Dashboard; the app does **not**
 
 ## Troubleshooting
 
+### GET /api/codex 500 or codex data empty
+
+All **codex_*** tables live in **public** (there is no `codex` schema). If you get 500 or empty codex:
+
+1. **Tables in public:** In Supabase Table Editor, confirm `public.codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`, and `core_rules` exist.
+2. **RLS:** Ensure RLS policies allow **SELECT** for the role used by the API (e.g. anon or service role). If RLS denies SELECT, the API will error.
+3. **Connection / env:** Check `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (or anon key) in Vercel; wrong or missing keys can cause 500.
+
+The codex API treats “table does not exist” (42P01) as empty for that table so the site can still load; other errors (e.g. RLS) still return 500.
+
+---
+
 ### "column user_profiles.role does not exist"
 
 After adding user roles, the database must have the `role` column on `user_profiles`. Run SQL in Supabase Dashboard → SQL Editor (e.g. add `role` to `public.user_profiles` with type matching your enum and default `'new_player'`). Until applied, profile and admin features that read/write role may fail.
