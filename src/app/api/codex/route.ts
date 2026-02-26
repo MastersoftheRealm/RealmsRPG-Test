@@ -308,13 +308,16 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
 
 const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const debug = url.searchParams.get('debug') === '1';
   try {
     const supabase = await createClient();
     const body = await fetchCodexFromClient(supabase);
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
+    const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: string }).code) : undefined;
     const stack = err instanceof Error ? err.stack : undefined;
     console.error('[Codex API] Database error:', message, stack);
     const safeHint =
@@ -328,7 +331,11 @@ export async function GET() {
               ? 'Permission denied: RLS may be blocking reads. Run sql/supabase-codex-rls-public.sql in Supabase Dashboard → SQL Editor.'
               : undefined;
     return NextResponse.json(
-      { error: 'Failed to load codex', ...(safeHint && { hint: safeHint }) },
+      {
+        error: 'Failed to load codex',
+        ...(safeHint && { hint: safeHint }),
+        ...(debug && { debug: { message, code } }),
+      },
       { status: 500 }
     );
   }

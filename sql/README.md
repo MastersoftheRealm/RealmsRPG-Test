@@ -55,3 +55,4 @@ After deploying app code that uses the new columnar or list-column schema, run t
 2. **Run in order** when doing full consolidation (1a → 1b → 1c → 1c2a → 1c2b → 2); wait for Success between parts.
 3. **Do not** run path-c-phase0-* again if your DB already has only `public` schema.
 4. **Drop legacy table:** `DROP TABLE IF EXISTS public._prisma_migrations;` — safe if Prisma was removed (see SUPABASE_SCHEMA.md).
+5. **Supabase permissions:** Tables created or moved by raw SQL do **not** get automatic GRANTs. For the app (anon/authenticated) to access a table you need **both** (1) `GRANT SELECT` (or INSERT/UPDATE/DELETE) `ON public.<table> TO anon, authenticated` (as needed) and (2) RLS enabled with policies. See `supabase-codex-rls-public.sql` for the pattern.

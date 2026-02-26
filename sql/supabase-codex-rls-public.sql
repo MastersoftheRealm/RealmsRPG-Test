@@ -2,8 +2,25 @@
 -- RLS for codex and core_rules in PUBLIC schema
 -- =============================================================================
 -- Run in Supabase Dashboard → SQL Editor if GET /api/codex returns 500
--- (permission denied). Enables RLS and allows SELECT for everyone (anon + authenticated).
+-- (permission denied). Grants table-level SELECT to anon/authenticated, enables
+-- RLS, and adds "Anyone can read" policies so the Data API and anon key can read.
+--
+-- Best practice (Supabase): Table access needs BOTH (1) GRANT and (2) RLS policy.
+-- Raw SQL that creates tables does not auto-grant to anon/authenticated; add
+-- GRANT SELECT (or INSERT/UPDATE/DELETE) explicitly. RLS then filters rows.
 -- =============================================================================
+
+-- Table-level grants (required for anon/authenticated to access tables at all)
+GRANT SELECT ON public.codex_feats TO anon, authenticated;
+GRANT SELECT ON public.codex_skills TO anon, authenticated;
+GRANT SELECT ON public.codex_species TO anon, authenticated;
+GRANT SELECT ON public.codex_traits TO anon, authenticated;
+GRANT SELECT ON public.codex_parts TO anon, authenticated;
+GRANT SELECT ON public.codex_properties TO anon, authenticated;
+GRANT SELECT ON public.codex_equipment TO anon, authenticated;
+GRANT SELECT ON public.codex_archetypes TO anon, authenticated;
+GRANT SELECT ON public.codex_creature_feats TO anon, authenticated;
+GRANT SELECT ON public.core_rules TO anon, authenticated;
 
 -- codex_feats
 ALTER TABLE public.codex_feats ENABLE ROW LEVEL SECURITY;
