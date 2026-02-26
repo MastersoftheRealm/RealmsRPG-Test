@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
+import { getCharacterListColumns } from '@/lib/character-list-columns';
 import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
 
@@ -170,7 +171,8 @@ export async function joinCampaignAction(data: {
 
     const charData = (charRow.data as Record<string, unknown>) ?? {};
     const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
-    await supabase.from('characters').update({ data: merged }).eq('id', data.characterId).eq('user_id', user.uid);
+    const listCols = getCharacterListColumns(merged);
+    await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
 
     return { success: true, campaignId, visibilityUpdated: true };
   } catch (error) {
@@ -254,7 +256,8 @@ export async function addCharacterToCampaignAction(data: {
 
     const charData = (charRow.data as Record<string, unknown>) ?? {};
     const merged = { ...charData, visibility: 'campaign', updatedAt: new Date().toISOString() };
-    await supabase.from('characters').update({ data: merged }).eq('id', data.characterId).eq('user_id', user.uid);
+    const listCols = getCharacterListColumns(merged);
+    await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
 
     return { success: true, visibilityUpdated: true };
   } catch (error) {

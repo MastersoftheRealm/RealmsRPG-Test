@@ -1,23 +1,24 @@
-# Database Scalability & Best-Practices Audit
+# Database Scalability & Best-Practices Audit (rationale / future work)
 
-**Purpose:** Identify all JSONB/document-style storage, recommend columnar or normalized patterns for consistency, scalability, and interchangeability with the codex. Align naming (e.g. "public" → "official") and table shapes so official and user library content use the same schema.
+**Purpose:** Rationale for columnar vs JSONB and naming (e.g. public → official). **For current table layout use [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md)** — single source of truth.
 
-**Related:** `DATABASE_CODEX_AUDIT.md`, Supabase/public schema, `src/hooks/use-user-library.ts` (type shapes), `src/lib/calculators/` (power/technique/item display logic).
+**Related:** `SUPABASE_SCHEMA.md` (current schema), `DATABASE_CODEX_AUDIT.md`, `src/hooks/use-user-library.ts`, `src/lib/calculators/`.
 
 ---
 
 ## 1. Current JSONB usage (summary)
 
-| Location | Table(s) | Current shape | Issues |
-|----------|----------|---------------|--------|
-| **Codex** | codex_feats, skills, species, … | ✅ **Now columnar** (migrated) | — |
-| **Official library** (named "public") | codex.public_powers, public_techniques, public_items, public_creatures | id + data (JSONB) | No columns to query; name inconsistent with "official"; not interchangeable with codex-style tables |
-| **User library** | users.user_powers, user_techniques, user_items, user_creatures (columnar); user_species | ✅ **Powers/techniques/items/creatures columnar** (Phase 2); user_species still id+data | — |
-| **Characters** | users.characters | id, user_id, data (JSONB) | Single document per character; no indexing on name/level/archetype; complex nested structure |
-| **Campaigns** | campaigns.campaigns | characters (JSONB), memberIds (JSONB) | Cannot JOIN or index members; character list is opaque blob |
-| **Campaign rolls** | campaigns.campaign_rolls | data (JSONB) | Roll metadata; acceptable as blob if no query needs |
-| **Encounters** | encounters.encounters | id, user_id, data (JSONB) | Name, type, status, combatants, round, skillEncounter in one blob |
-| **Core rules** | codex.core_rules | id, data (JSONB) | Category-specific structure; keep as JSONB unless we normalize per category |
+**Authoritative table list:** [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md). Summary below for audit context only.
+
+| Location | Current shape (per SUPABASE_SCHEMA) | Notes |
+|----------|-------------------------------------|--------|
+| **Codex** | Columnar | codex_* in public |
+| **Public library** | id + data (JSONB) | public_powers, public_techniques, public_items, public_creatures; optional future: columnar official_* |
+| **User library** | Columnar (scalars + payload) except user_species (id+data) | user_powers, user_techniques, user_items, user_creatures, user_species |
+| **Characters** | id, user_id, data (JSONB) | Single document |
+| **Campaigns** | campaigns (JSONB cols) + campaign_members + campaign_rolls (data JSONB) | |
+| **Encounters** | id, user_id, data (JSONB) | |
+| **Core rules** | id, data (JSONB) | |
 
 ---
 
@@ -79,8 +80,8 @@ These shapes keep **official** and **user** tables aligned: same columns, so cop
 
 ### 4.2 Characters
 
-- **Recommendation:** Keep **single JSONB document** per character for now.
-- **Rationale:** Character is a large, highly variable document (abilities, skills, feats, powers, techniques, equipment, ancestry, conditions, etc.). Access pattern is “load by id” or “list by user_id”; we rarely need to query inside the document. Migrating to full columnar would be a very large change for limited immediate benefit. Later, if we need “all characters with feat X” or “all characters level 5+”, we can add a **character_index** table (character_id, level, archetype_name, …) or use Postgres JSONB indexes (GIN) on selected keys.
+- **Short-term (current):** Single JSONB document per character; list by user_id parses `data` for name, level, archetype, etc.
+- **Long-term (recommended):** **Hybrid** — do **not** go full columnar (that would require many tables and every save touching many rows). Do add **list/index columns** on `characters`: e.g. `name`, `level`, `archetype_name`, `ancestry_name`, `status`, `visibility` (plus existing `id`, `user_id`, `updated_at`). Keep `data` (JSONB) for the full document. On every create/update, write these scalars from the document into columns. **Benefits:** List and filter without parsing JSONB; sort by level/name; future "characters level 5+", "by archetype"; analytics; one table, one write path. See **TASK-282**.
 
 ### 4.3 Encounters
 
@@ -89,7 +90,8 @@ These shapes keep **official** and **user** tables aligned: same columns, so cop
 
 ### 4.4 Campaign rolls
 
-- **Recommendation:** Keep **data (JSONB)** unless we need to query rolls by type or character.
+- **Short-term (current):** id, campaign_id, data (JSONB), created_at; list parses `data` for characterId, userId, type, title, etc.
+- **Long-term (recommended):** **Hybrid** — add **list columns** to `campaign_rolls`: `character_id`, `user_id`, `type`, `title` (plus existing `id`, `campaign_id`, `created_at`). Keep `data` (JSONB) for dice, modifier, total, isCrit, etc. On every insert, set columns from payload. **Benefits:** Filter by type or character; sort/paginate by column; no JSONB parse for list views. See **TASK-283**.
 
 ### 4.5 Core rules
 
@@ -104,10 +106,11 @@ These shapes keep **official** and **user** tables aligned: same columns, so cop
 | **1** | Rename public → official; add columnar official_* | New tables official_powers/techniques/items/creatures (scalar columns + one JSONB). Rename in API, UI. Migration: create new tables, backfill from public_* data, switch reads/writes, drop public_*. |
 | **2** | User library columnar | ✅ **Done.** user_powers, user_techniques, user_items, user_creatures columnar (same columns as official + user_id); user_species unchanged. See sql/ or Supabase migrations (tables in public), TASK-272. |
 | **3** | Campaign members | ✅ **Done.** campaign_members table; backfill from memberIds; RLS and API use campaign_members. See sql/ or Supabase (campaign_members in public), TASK-273. campaign_characters not done. |
-| **4** | (Optional) Character index | If product needs “list characters by level/archetype”, add character_index or JSONB GIN index. |
-| **5** | (Optional) Encounter list columns | Add name, type, status columns to encounters for filtering without parsing JSONB. |
+| **4** | Character list columns (long-term) | If product needs “list characters by level/archetype”, **TASK-282:** Add name, level, archetype_name, ancestry_name, status, visibility to `characters`; keep data JSONB; backfill and update on save. |
+| **5** | Campaign rolls list columns (long-term) | **TASK-283:** Add character_id, user_id, type, title to `campaign_rolls`; keep data JSONB; set on insert. |
+| **6** | (Optional) Encounter list columns | **TASK-281:** Add name, type, status columns to encounters for filtering without parsing JSONB. |
 
-**Queue:** Phase 1 = TASK-271, Phase 2 = TASK-272, Phase 3 = TASK-273 (see AI_TASK_QUEUE.md).
+**Queue:** Phase 1 = TASK-271, Phase 2 = TASK-272, Phase 3 = TASK-273, Phase 4 = TASK-282, Phase 5 = TASK-283, Phase 6 = TASK-281 (see AI_TASK_QUEUE.md).
 
 ---
 

@@ -83,6 +83,7 @@
 
 | Purpose           | File |
 |-------------------|------|
+| **DB schema (tables/columns)** | `src/docs/SUPABASE_SCHEMA.md` — single source of truth for public schema |
 | Codex API         | `src/app/api/codex/route.ts` |
 | Codex hooks       | `src/hooks/use-codex.ts` |
 | Codex fetch       | `src/lib/api-client.ts` (`fetchCodex`) |

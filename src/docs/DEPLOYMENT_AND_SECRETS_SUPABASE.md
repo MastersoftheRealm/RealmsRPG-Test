@@ -38,6 +38,8 @@ In Vercel → Project → Settings → Environment Variables, add:
 
 **Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional (only for external migration tools); the app uses the Supabase client only.
 
+All app tables live in the **public** schema. **Schema reference:** [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md). **Which SQL to run and in what order:** [sql/README.md](../../sql/README.md). Run SQL in Supabase Dashboard → SQL Editor.
+
 ---
 
 ## Supabase Storage Buckets

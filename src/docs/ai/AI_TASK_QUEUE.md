@@ -6448,3 +6448,121 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - After changing username via My Account, the displayed and stored username is the one the user entered, not a generated Player###.
     - No automatic overwrite of username by generateDefaultUsername or similar after a successful change.
   notes: ""
+
+- id: TASK-279
+  title: Public library columnar as primary (official_* preferred over public_*)
+  priority: high
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Make the public/official library fully columnar: (1) Ensure official_powers, official_techniques, official_items, official_creatures exist in public schema (see sql/ e.g. supabase-official-library-columnar.sql). (2) If public_* tables still have rows, add a one-time migration/backfill that copies id+data into official_* columnar rows (scalars extracted + payload). (3) Change GET /api/public/[type] to read from official_* first (or only), returning the same client shape; keep POST/DELETE writing to official_* for admin. (4) Optionally deprecate or drop public_* after backfill. Goal: all library content queryable by columns; no remaining id+data for powers/techniques/items/creatures in public library.
+  related_files:
+    - src/app/api/public/[type]/route.ts
+    - src/app/api/official/[type]/route.ts
+    - src/services/library-service.ts
+    - src/hooks/use-public-library.ts
+    - src/app/(main)/admin/public-library/
+    - sql/ (official_* creation and backfill from public_*)
+    - src/docs/SUPABASE_SCHEMA.md
+  acceptance_criteria:
+    - official_* tables exist in public; any existing public_* data is backfilled into official_* (scalars + payload).
+    - GET /api/public/[type] uses official_* as primary (or only) source; response shape unchanged for UI.
+    - Admin public-library UI continues to read/write official_*; no reliance on public_* for new data.
+    - SUPABASE_SCHEMA.md and API table list updated to reflect official_* as primary for public library.
+    - npm run build passes.
+  notes: |
+    Done 2026-02-25. sql/supabase-official-library-public-schema.sql (official_* in public + backfill from public_*). GET /api/public prefers official_*, falls back to public_*; POST/DELETE write to official_* (columnar). npm run build passes.
+
+- id: TASK-280
+  title: User species columnar (same columns as codex_species + user_id)
+  priority: medium
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Migrate user_species from id+data (JSONB) to columnar: same column set as codex_species (name, description, type, sizes, skills, species_traits, ancestry_traits, flaws, characteristics, ave_hgt_cm, ave_wgt_kg, adulthood_lifespan, languages) plus user_id, with one payload JSONB for any variable/extras. Enables consistent validation, filtering by name/type, and interchange with codex species shape. SQL: add columns to user_species (or new table), backfill from data, then drop data column or switch reads. API: GET/POST/PATCH/DELETE /api/user/library/[type] and [type]/[id] for species to read/write columnar; extend library-columnar or add species rowToItem/bodyToColumnar helpers.
+  related_files:
+    - src/app/api/user/library/[type]/route.ts
+    - src/app/api/user/library/[type]/[id]/route.ts
+    - src/lib/library-columnar.ts
+    - sql/ (user_species columnar migration)
+    - src/docs/CODEX_SCHEMA_REFERENCE.md
+    - src/docs/SUPABASE_SCHEMA.md
+  acceptance_criteria:
+    - user_species has scalar columns matching codex_species + user_id; one payload JSONB; existing data migrated.
+    - API and hooks return same client shape for species; UI (species creator, library, character creator) unchanged.
+    - SUPABASE_SCHEMA.md updated: user_species columnar.
+    - npm run build passes.
+  notes: |
+    Done 2026-02-25. sql/supabase-user-species-columnar.sql; library-columnar rowToItemSpecies, bodyToColumnarSpecies, toDbRowSpecies; user library API GET/POST/PATCH/DELETE species use columnar with legacy fallback. npm run build passes.
+
+- id: TASK-281
+  title: Encounters — add list columns (name, type, status) for filtering
+  priority: low
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Add real columns to encounters for list/filter without parsing JSONB: name, type, status (and optionally user_id if not already columnar). Backfill from data JSONB; keep data for full document. Update encounters list API and use-load hooks to select/sort by these columns where useful.
+  related_files:
+    - src/app/api/encounters/route.ts
+    - src/app/api/encounters/[id]/route.ts
+    - src/hooks/use-encounters.ts
+    - src/services/encounter-service.ts
+    - sql/ (ALTER encounters ADD COLUMN + backfill)
+    - src/docs/SUPABASE_SCHEMA.md
+  acceptance_criteria:
+    - encounters has name, type, status (and user_id if missing) as columns; data JSONB retained.
+    - Backfill from data; list/filter can use columns.
+    - SUPABASE_SCHEMA.md updated (encounters: scalar + JSONB).
+    - npm run build passes.
+  notes: |
+    Done 2026-02-25. sql/supabase-encounters-list-columns.sql; GET list selects name,type,status; POST/PATCH set columns. npm run build passes.
+
+- id: TASK-282
+  title: Characters — add list columns (name, level, archetype_name, etc.); keep data JSONB
+  priority: medium
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Long-term hybrid for characters: add columns to `characters` for list/filter/sort without parsing JSONB — name, level, archetype_name, ancestry_name, status, visibility (plus existing id, user_id, updated_at). Keep `data` (JSONB) for the full document. On every create/update, write these scalars from the document into columns. SQL: ADD COLUMN + backfill from data; API GET list selects columns (optionally still fallback from data for legacy rows); POST/PATCH write columns from payload. Benefits: list/filter/sort by level or name; future "characters level 5+", "by archetype"; analytics.
+  related_files:
+    - src/app/api/characters/route.ts
+    - src/app/api/characters/[id]/route.ts
+    - src/app/(main)/characters/actions.ts
+    - sql/ (ALTER characters ADD COLUMN + backfill)
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/DATABASE_SCALABILITY_AUDIT.md
+  acceptance_criteria:
+    - characters has name, level, archetype_name, ancestry_name, status, visibility as columns; data JSONB retained.
+    - Backfill existing rows from data; create/update write columns from document.
+    - GET list uses columns for summary (same response shape); single-character load still uses data.
+    - SUPABASE_SCHEMA.md updated (characters: scalar list columns + JSONB).
+    - npm run build passes.
+  notes: |
+    Done 2026-02-25. sql/supabase-characters-list-columns.sql; src/lib/character-list-columns.ts getCharacterListColumns; characters API GET list uses columns; POST/PATCH and campaigns actions update list columns. npm run build passes.
+
+- id: TASK-283
+  title: Campaign rolls — add list columns (character_id, user_id, type, title); keep data JSONB
+  priority: medium
+  status: done
+  created_at: 2026-02-25
+  created_by: agent
+  description: |
+    Long-term hybrid for campaign_rolls: add columns for list/filter without parsing JSONB — character_id, user_id, type, title (plus existing id, campaign_id, created_at). Keep `data` (JSONB) for dice, modifier, total, isCrit, etc. On every insert, set columns from payload. SQL: ADD COLUMN + backfill from data; API GET list selects columns; POST sets columns from body. Benefits: filter by type or character; sort/paginate by column.
+  related_files:
+    - src/app/api/campaigns/[id]/rolls/route.ts
+    - src/hooks/use-campaign-rolls.ts
+    - sql/ (ALTER campaign_rolls ADD COLUMN + backfill)
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/DATABASE_SCALABILITY_AUDIT.md
+  acceptance_criteria:
+    - campaign_rolls has character_id, user_id, type, title as columns; data JSONB retained.
+    - Backfill existing rows from data; new inserts set columns from payload.
+    - GET list uses columns where available (same response shape).
+    - SUPABASE_SCHEMA.md updated (campaign_rolls: scalar list columns + JSONB).
+    - npm run build passes.
+  notes: |
+    Done 2026-02-25. sql/supabase-campaign-rolls-list-columns.sql; GET list selects character_id, user_id, type, title; POST insert sets columns. npm run build passes.

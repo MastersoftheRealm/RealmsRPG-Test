@@ -10,6 +10,7 @@ import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
+import { getCharacterListColumns } from '@/lib/character-list-columns';
 import type { Character, CharacterSummary } from '@/types';
 
 function prepareForSave(data: Partial<Character>): Record<string, unknown> {
@@ -42,23 +43,36 @@ export async function GET() {
     const supabase = await createClient();
     const { data: rows } = await supabase
       .from('characters')
-      .select('id, user_id, data, updated_at')
+      .select('id, user_id, data, name, level, archetype_name, ancestry_name, status, visibility, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
 
-    const list = (rows ?? []) as { id: string; data: unknown; updated_at: string | null }[];
+    const list = (rows ?? []) as {
+      id: string;
+      data: unknown;
+      updated_at: string | null;
+      name?: string | null;
+      level?: number | null;
+      archetype_name?: string | null;
+      ancestry_name?: string | null;
+      status?: string | null;
+      visibility?: string | null;
+    }[];
     const characters: CharacterSummary[] = list.map((r) => {
       const d = (r.data as Record<string, unknown>) ?? {};
+      const archName =
+        r.archetype_name ??
+        (d.archetype as { name?: string; type?: string })?.name ??
+        ((d.archetype as { type?: string })?.type?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
       return {
         id: r.id,
-        name: (d.name as string) || 'Unnamed',
-        level: (d.level as number) || 1,
+        name: r.name ?? (d.name as string) ?? 'Unnamed',
+        level: r.level ?? (d.level as number) ?? 1,
         portrait: d.portrait as string | undefined,
-        archetypeName: (d.archetype as { name?: string; type?: string })?.name
-          || ((d.archetype as { type?: string })?.type?.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
-        ancestryName: (d.ancestry as { name?: string })?.name || (d.species as string),
-        status: d.status as CharacterSummary['status'],
-        visibility: (d.visibility as CharacterSummary['visibility']) ?? 'private',
+        archetypeName: archName ?? undefined,
+        ancestryName: r.ancestry_name ?? (d.ancestry as { name?: string })?.name ?? (d.species as string),
+        status: (r.status as CharacterSummary['status']) ?? (d.status as CharacterSummary['status']),
+        visibility: (r.visibility as CharacterSummary['visibility']) ?? (d.visibility as CharacterSummary['visibility']) ?? 'private',
         updatedAt: r.updated_at ?? undefined,
       };
     });
@@ -110,12 +124,13 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+      const listCols = getCharacterListColumns(newData as Record<string, unknown>);
 
       await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
 
       const { data: created, error: insertErr } = await supabase
         .from('characters')
-        .insert({ user_id: user.uid, data: newData })
+        .insert({ user_id: user.uid, data: newData, ...listCols })
         .select('id')
         .single();
       if (insertErr) throw insertErr;
@@ -123,11 +138,12 @@ export async function POST(request: NextRequest) {
     }
 
     const cleanedData = prepareForCreate(data);
+    const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>);
     await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
 
     const { data: created, error: insertErr } = await supabase
       .from('characters')
-      .insert({ user_id: user.uid, data: cleanedData })
+      .insert({ user_id: user.uid, data: cleanedData, ...listCols })
       .select('id')
       .single();
     if (insertErr) throw insertErr;

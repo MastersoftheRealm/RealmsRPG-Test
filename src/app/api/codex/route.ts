@@ -1,5 +1,7 @@
 /**
- * Codex API — returns all game reference data (from public codex tables via Supabase)
+ * Codex API — returns all game reference data from Supabase (public schema).
+ * All codex tables (codex_feats, codex_skills, …) and core_rules live in public;
+ * columnar tables (see src/docs/SUPABASE_SCHEMA.md).
  */
 
 import { NextResponse } from 'next/server';
@@ -30,44 +32,43 @@ function toNum(val: unknown): number | undefined {
 /** DB row shape (snake_case from Supabase) */
 type Row = Record<string, unknown>;
 
-export async function GET() {
-  try {
-    const supabase = await createClient();
+async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const [
+    { data: feats, error: eFeats },
+    { data: skills, error: eSkills },
+    { data: species, error: eSpecies },
+    { data: traits, error: eTraits },
+    { data: parts, error: eParts },
+    { data: properties, error: eProps },
+    { data: equipment, error: eEquip },
+    { data: archetypes, error: eArch },
+    { data: creatureFeats, error: eCreature },
+    coreResult,
+  ] = await Promise.all([
+    supabase.from('codex_feats').select('*'),
+    supabase.from('codex_skills').select('*'),
+    supabase.from('codex_species').select('*'),
+    supabase.from('codex_traits').select('*'),
+    supabase.from('codex_parts').select('*'),
+    supabase.from('codex_properties').select('*'),
+    supabase.from('codex_equipment').select('*'),
+    supabase.from('codex_archetypes').select('*'),
+    supabase.from('codex_creature_feats').select('*'),
+    (async () => {
+      const r = await supabase.from('core_rules').select('id, data');
+      return r.error ? { data: [] as Row[], error: null } : r;
+    })(),
+  ]);
 
-    const [
-      { data: feats, error: eFeats },
-      { data: skills, error: eSkills },
-      { data: species, error: eSpecies },
-      { data: traits, error: eTraits },
-      { data: parts, error: eParts },
-      { data: properties, error: eProps },
-      { data: equipment, error: eEquip },
-      { data: archetypes, error: eArch },
-      { data: creatureFeats, error: eCreature },
-      coreResult,
-    ] = await Promise.all([
-      supabase.from('codex_feats').select('*'),
-      supabase.from('codex_skills').select('*'),
-      supabase.from('codex_species').select('*'),
-      supabase.from('codex_traits').select('*'),
-      supabase.from('codex_parts').select('*'),
-      supabase.from('codex_properties').select('*'),
-      supabase.from('codex_equipment').select('*'),
-      supabase.from('codex_archetypes').select('*'),
-      supabase.from('codex_creature_feats').select('*'),
-      (async () => {
-        const r = await supabase.from('core_rules').select('id, data');
-        return r.error ? { data: [] as Row[], error: null } : r;
-      })(),
-    ]);
+  const coreRulesRows = (coreResult as { data?: Row[] }).data ?? [];
+  const firstError = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature].find(Boolean) as { message?: string; code?: string } | undefined;
+  if (firstError) {
+    const err = new Error(firstError.message ?? 'Codex fetch failed') as Error & { code?: string };
+    err.code = firstError.code;
+    throw err;
+  }
 
-    const coreRulesRows = (coreResult as { data?: Row[] }).data ?? [];
-    if (eFeats ?? eSkills ?? eSpecies ?? eTraits ?? eParts ?? eProps ?? eEquip ?? eArch ?? eCreature) {
-      const msg = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature].find(Boolean) as { message?: string } | undefined;
-      throw new Error(msg?.message ?? 'Codex fetch failed');
-    }
-
-    const featRows = (feats ?? []) as Row[];
+  const featRows = (feats ?? []) as Row[];
     const skillRows = (skills ?? []) as Row[];
     const speciesRows = (species ?? []) as Row[];
     const traitRows = (traits ?? []) as Row[];
@@ -269,30 +270,35 @@ export async function GET() {
       };
     });
 
-    const coreRules: Record<string, unknown> = {};
-    for (const row of coreRows) {
-      const id = row.id as string;
-      if (id != null) coreRules[id] = row.data;
-    }
+  const coreRules: Record<string, unknown> = {};
+  for (const row of coreRows) {
+    const id = row.id as string;
+    if (id != null) coreRules[id] = row.data;
+  }
 
-    const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
-    return NextResponse.json(
-      {
-        feats: codexFeats,
-        skills: codexSkills,
-        species: codexSpecies,
-        traits: codexTraits,
-        powerParts: codexPowerParts,
-        techniqueParts: codexTechniqueParts,
-        parts: allParts,
-        itemProperties: codexProperties,
-        equipment: codexEquipment,
-        archetypes: codexArchetypes,
-        creatureFeats: codexCreatureFeats,
-        coreRules,
-      },
-      { headers: { 'Cache-Control': cacheControl } }
-    );
+  return {
+    feats: codexFeats,
+    skills: codexSkills,
+    species: codexSpecies,
+    traits: codexTraits,
+    powerParts: codexPowerParts,
+    techniqueParts: codexTechniqueParts,
+    parts: allParts,
+    itemProperties: codexProperties,
+    equipment: codexEquipment,
+    archetypes: codexArchetypes,
+    creatureFeats: codexCreatureFeats,
+    coreRules,
+  };
+}
+
+const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+
+export async function GET() {
+  try {
+    const supabase = await createClient();
+    const body = await fetchCodexFromClient(supabase);
+    return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
     const stack = err instanceof Error ? err.stack : undefined;

@@ -1,17 +1,15 @@
-# Codex Database Audit — JSONB vs Columnar Tables
+# Codex Database Audit — JSONB vs Columnar (historical / rationale)
 
-**Purpose:** Document why codex tables are currently `id` + `data` (JSONB) only, and how to move to proper columns so you can drag-and-drop CSV in Supabase and query/filter by column.
+**Purpose:** Rationale for codex columnar layout and seeding. **For current table structure use [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md)** — single source of truth.
 
-**Related:** `CODEX_SCHEMA_REFERENCE.md` (field definitions), Supabase/public schema (table structure), `codex_csv/` or `Codex csv/` (CSV sources), `scripts/seed-to-supabase.js`.
+**Related:** `SUPABASE_SCHEMA.md` (current schema), `CODEX_SCHEMA_REFERENCE.md` (field definitions), `codex_csv/` or `Codex csv/` (CSV sources), `scripts/seed-to-supabase.js`.
 
 ---
 
 ## 1. Current state (why only two columns?)
 
-- **Historical:** The codex was migrated from Firestore/document-style storage. The simplest 1:1 mapping was one row per document: `id` (document ID) + `data` (entire document as JSONB). That’s what `sql/supabase-idempotent-full.sql` and the Supabase/public schema create or reflect this.
-- **Result:** All codex tables in the `codex` schema look like:
-  - `codex_feats(id TEXT PRIMARY KEY, data JSONB NOT NULL)`
-  - Same for `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`.
+- **Historical:** The codex was migrated from Firestore/document-style storage. The simplest 1:1 mapping was one row per document: `id` + `data` (JSONB).
+- **Current:** All codex tables are in **public** and **columnar**; `core_rules` remains id+data (JSONB). See [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md) for the canonical table/column list.
 - **Seeding:** `scripts/seed-to-supabase.js` reads your CSVs, builds a JSON object per row, and upserts `{ id, data }` into these tables. So the *source* of truth is CSV, but the *database* stores only JSONB.
 - **Downsides:** You can’t drag-and-drop CSV into Supabase (no columns to map to), and you can’t index or filter by specific fields in SQL without using JSONB operators.
 
