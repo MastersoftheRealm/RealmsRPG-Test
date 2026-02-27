@@ -1,3 +1,8 @@
+#!/usr/bin/env node
+/**
+ * Optional/dev: Check for duplicate feat IDs in codex CSV.
+ * Not in npm scripts. Run: node scripts/check-feats-ids.js
+ */
 const fs = require('fs');
 const path = require('path');
 const filePath = path.join(__dirname, '..', 'codex_csv', 'Realms Codex Test - Feats.csv');

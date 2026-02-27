@@ -98,9 +98,14 @@ export async function PATCH(
     const current = (row.data as Record<string, unknown>) ?? {};
     const merged = { ...current, ...cleaned };
 
+    const updatePayload: Record<string, unknown> = { data: merged };
+    if (merged.name !== undefined) updatePayload.name = merged.name;
+    if (merged.type !== undefined) updatePayload.type = merged.type;
+    if (merged.status !== undefined) updatePayload.status = merged.status;
+
     const { error: updateErr } = await supabase
       .from('encounters')
-      .update({ data: merged })
+      .update(updatePayload)
       .eq('id', id)
       .eq('user_id', user.uid);
     if (updateErr) throw updateErr;

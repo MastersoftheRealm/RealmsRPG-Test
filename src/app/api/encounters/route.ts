@@ -12,7 +12,15 @@ import { validateJson, encounterCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 import type { Encounter, EncounterSummary } from '@/types/encounter';
 
-type Row = { id: string; data: unknown; updated_at: string | null; created_at: string | null };
+type Row = {
+  id: string;
+  data: unknown;
+  updated_at: string | null;
+  created_at: string | null;
+  name?: string | null;
+  type?: string | null;
+  status?: string | null;
+};
 
 function toSummary(row: Row): EncounterSummary {
   const d = (row.data as Record<string, unknown>) ?? {};
@@ -20,10 +28,10 @@ function toSummary(row: Row): EncounterSummary {
   const participants = (d.skillEncounter as { participants?: unknown[] })?.participants ?? [];
   return {
     id: row.id,
-    name: (d.name as string) || 'Unnamed Encounter',
+    name: row.name ?? (d.name as string) ?? 'Unnamed Encounter',
     description: d.description as string | undefined,
-    type: (d.type as EncounterSummary['type']) || 'combat',
-    status: (d.status as EncounterSummary['status']) || 'preparing',
+    type: (row.type as EncounterSummary['type']) ?? (d.type as EncounterSummary['type']) ?? 'combat',
+    status: (row.status as EncounterSummary['status']) ?? (d.status as EncounterSummary['status']) ?? 'preparing',
     combatantCount: combatants.length,
     participantCount: participants.length,
     round: (d.round as number) ?? 0,
@@ -42,7 +50,7 @@ export async function GET() {
     const supabase = await createClient();
     const { data: rows } = await supabase
       .from('encounters')
-      .select('id, data, created_at, updated_at')
+      .select('id, data, name, type, status, created_at, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
 
@@ -78,9 +86,16 @@ export async function POST(request: NextRequest) {
     } as Record<string, unknown>);
 
     const supabase = await createClient();
+    const insertRow: Record<string, unknown> = {
+      user_id: user.uid,
+      data: cleaned,
+      name: (cleaned.name as string) ?? 'Unnamed Encounter',
+      type: (cleaned.type as string) ?? 'combat',
+      status: (cleaned.status as string) ?? 'preparing',
+    };
     const { data: created, error: insertErr } = await supabase
       .from('encounters')
-      .insert({ user_id: user.uid, data: cleaned })
+      .insert(insertRow)
       .select('id')
       .single();
     if (insertErr) throw insertErr;

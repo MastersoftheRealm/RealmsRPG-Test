@@ -115,3 +115,98 @@ export function bodyToColumnar(
   }
   return { scalars, payload };
 }
+
+// -----------------------------------------------------------------------------
+// Species (user_species columnar — same shape as codex_species + user_id)
+// -----------------------------------------------------------------------------
+
+const SPECIES_ARRAY_KEYS = [
+  'sizes',
+  'skills',
+  'species_traits',
+  'ancestry_traits',
+  'flaws',
+  'characteristics',
+  'languages',
+] as const;
+
+function toStrArray(val: unknown): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.map(String);
+  if (typeof val === 'string') return val.split(',').map((s) => s.trim()).filter(Boolean);
+  return [];
+}
+
+/** Build client-shaped species from columnar row (user_species). */
+export function rowToItemSpecies(row: Record<string, unknown>): Record<string, unknown> {
+  const payload = (row.payload as Record<string, unknown>) ?? {};
+  const base: Record<string, unknown> = {
+    id: row.id,
+    docId: row.id,
+    name: row.name ?? '',
+    description: row.description ?? '',
+    type: row.type ?? '',
+    sizes: toStrArray(row.sizes),
+    skills: toStrArray(row.skills),
+    species_traits: toStrArray(row.species_traits),
+    ancestry_traits: toStrArray(row.ancestry_traits),
+    flaws: toStrArray(row.flaws),
+    characteristics: toStrArray(row.characteristics),
+    ave_hgt_cm: row.ave_hgt_cm != null ? Number(row.ave_hgt_cm) : undefined,
+    ave_wgt_kg: row.ave_wgt_kg != null ? Number(row.ave_wgt_kg) : undefined,
+    adulthood_lifespan: row.adulthood_lifespan ?? undefined,
+    languages: toStrArray(row.languages),
+    _source: 'user',
+  };
+  if (typeof base.adulthood_lifespan === 'string' && base.adulthood_lifespan.includes(',')) {
+    base.adulthood_lifespan = (base.adulthood_lifespan as string)
+      .split(',')
+      .map((s) => parseFloat(s.trim()))
+      .filter((n) => !Number.isNaN(n));
+  }
+  return { ...base, ...payload };
+}
+
+/** Split species body into scalars (for columns; arrays → comma-sep) and payload. */
+export function bodyToColumnarSpecies(body: Record<string, unknown>): {
+  scalars: Record<string, unknown>;
+  payload: Record<string, unknown>;
+} {
+  const scalarKeys = new Set([
+    'name',
+    'description',
+    'type',
+    'sizes',
+    'skills',
+    'species_traits',
+    'ancestry_traits',
+    'flaws',
+    'characteristics',
+    'ave_hgt_cm',
+    'ave_wgt_kg',
+    'adulthood_lifespan',
+    'languages',
+  ]);
+  const scalars: Record<string, unknown> = {};
+  const payload: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(body)) {
+    if (k === 'id' || k === 'docId' || k === '_source') continue;
+    if (scalarKeys.has(k)) {
+      if (SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) && Array.isArray(v)) {
+        scalars[k] = (v as unknown[]).map(String).join(',');
+      } else if (k === 'adulthood_lifespan' && Array.isArray(v)) {
+        scalars[k] = (v as unknown[]).map(String).join(',');
+      } else {
+        scalars[k] = v;
+      }
+    } else {
+      payload[k] = v;
+    }
+  }
+  return { scalars, payload };
+}
+
+/** Species row for DB: snake_case, arrays already comma-sep. */
+export function toDbRowSpecies(obj: Record<string, unknown>): Record<string, unknown> {
+  return toDbRow(obj);
+}

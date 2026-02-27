@@ -2,7 +2,7 @@
 
 **Purpose:** You (the project owner) run SQL in Supabase to align the database with Path C (single `public` schema, no Prisma, raw SQL). Use this as the single place for **what to run, in what order, and what to expect.**
 
-**Context:** See [PATH_C_MIGRATION_PLAN.md](ai/PATH_C_MIGRATION_PLAN.md) for the full migration plan. This guide is the **operator checklist** only.
+**Context:** Current schema: [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md). SQL file list and run order: [sql/README.md](../sql/README.md). Historical migration plan: [ai/archive/PATH_C_MIGRATION_PLAN.md](ai/archive/PATH_C_MIGRATION_PLAN.md). This guide is the **operator checklist** only.
 
 ---
 
@@ -35,12 +35,9 @@ Phase 0 is split into **four SQL files** so each run is short and stays under th
 
 If your codex tables are still **two columns** (`id` + `data` JSONB) and you want **proper columns** (for CSV drag-and-drop and filtering):
 
-- The file **`sql/supabase-codex-tables-columnar.sql`** creates columnar codex tables in the **`codex`** schema. After Phase 0, those schemas are gone and codex tables are already in **`public`**.
-- So you have two options:
-  - **Option A:** Run the columnar script **before** Step 1 (while codex tables are still in `codex`), then run Step 1 — the script moves tables by name, so you’d move the already-columnar codex tables to `public`.
-  - **Option B:** Run Step 1 first (so codex is in `public` as id+data), then use a **modified** columnar script that creates/alters tables in **`public`** (not `codex`). That modified script is not in the repo yet; an agent can generate it from `sql/supabase-codex-tables-columnar.sql` by replacing `codex.` with `public.` and dropping/recreating the codex_* tables in `public` (you may lose existing codex data unless you backfill from CSV).
-
-**If you already made codex columnar** (e.g. parts, properties, creature feats, traits, species, skills, feats) via CSV drag-and-drop in a previous session, skip this step; Phase 0 will move those columnar tables to `public` as-is.
+- **Post–Path C:** All tables are in **`public`** only; there is no `codex` schema. The repo’s **`sql/supabase-codex-tables-columnar.sql`** was written for a `codex` schema; for current layout you need a variant that creates/alters tables in **`public`** (e.g. replace `codex.` with `public.` and run in `public`). Running the script as-is would create tables in `codex`; after Phase 0 that schema is dropped, so use a public-only variant.
+- **If you have not yet run Phase 0:** You could run the columnar script (creates in `codex`), then run Step 1 — Part 1c moves those tables into `public` by name.
+- **If you already have columnar codex tables in `public`** (e.g. from a previous migration or seed), skip this step.
 
 ---
 
@@ -57,7 +54,7 @@ This is independent of Path C; run once per project.
 
 ## Step 4: After the database is aligned
 
-- **Realtime in the app:** Realtime subscriptions use `schema: 'public'` and `table: 'campaign_rolls'` or `table: 'characters'` (see PATH_C_MIGRATION_PLAN.md). The app uses Supabase only (no Prisma).
+- **Realtime in the app:** Realtime subscriptions use `schema: 'public'` and `table: 'campaign_rolls'` or `table: 'characters'`. See [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md).
 
 ---
 
@@ -124,10 +121,9 @@ This is independent of Path C; run once per project.
 3. Run **Part 1c** (codex reference tables) → wait Success.
 4. Run **Part 1c2a** (public_powers + public_techniques; core_rules skipped) → wait Success.
 5. Run **Part 1c2b** (public_items + public_creatures) → wait Success.
-6. Run **Part 2** → wait Success (this drops the codex schema and the stuck core_rules table). If Part 2 hangs on codex, run **`sql/force-drop-codex-core-rules.sql`** first, then Part 2 again.
+6. Run **Part 2** → wait Success (RLS, Realtime add, drop empty schemas including codex). If Part 2 hangs on codex, run **`sql/force-drop-codex-core-rules.sql`** first, then Part 2 again.
 7. Run **`sql/create-public-core-rules.sql`** → creates `public.core_rules`. Then seed: `node scripts/seed-core-rules.js` (or use data from `data/core-rules/*.json`).
-8. Confirm all tables are under **public** in Table Editor.
+8. Confirm all tables are under **public** in Table Editor (no codex/users/campaigns/encounters schemas).
 9. (Optional) Codex columnar if needed; (required) Storage RLS if you use Storage.
-10. Update Prisma schema to `@@schema("public")` and `schemas = ["public"]`.
 
-**Phase 0 SQL complete.** Next: (1) Update Realtime subscriptions in code to `schema: 'public'` and `table: 'campaign_rolls'` / `table: 'characters'` (see PATH_C_MIGRATION_PLAN.md Phase 0 / file touch list). (2) Proceed with Path C Phases 1–6 (replace Prisma with Supabase client, then update docs and agent rules).
+**Phase 0 SQL complete.** Realtime uses `schema: 'public'`, `table: 'campaign_rolls'` / `table: 'characters'`. Schema reference: [SUPABASE_SCHEMA.md](SUPABASE_SCHEMA.md).

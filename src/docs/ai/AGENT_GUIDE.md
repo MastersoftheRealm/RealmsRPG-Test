@@ -62,6 +62,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | Character logic | `src/services/character-service.ts`, `src/hooks/use-characters.ts` |
 | Creator state | `src/stores/character-creator-store.ts` |
 | Supabase | `src/lib/supabase/` |
+| **Database schema (single source of truth)** | `src/docs/SUPABASE_SCHEMA.md` — all public tables, columnar vs JSONB, API→tables; do not duplicate elsewhere |
 | Database types | `src/types/database.ts` (or Supabase-generated types) |
 | Codex API | `src/app/api/codex/` — fetches from Supabase |
 | **Game rules** | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions; use when implementing validation, caps, tooltips, calculations |

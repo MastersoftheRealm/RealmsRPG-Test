@@ -11,18 +11,26 @@ import { validateJson, campaignRollCreateSchema } from '@/lib/api-validation';
 import { MAX_CAMPAIGN_ROLLS } from '@/app/(main)/campaigns/constants';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 
-type RollRow = { id: string; data: unknown; created_at: string | null };
+type RollRow = {
+  id: string;
+  data: unknown;
+  created_at: string | null;
+  character_id?: string | null;
+  user_id?: string | null;
+  type?: string | null;
+  title?: string | null;
+};
 
 function toEntry(row: RollRow): CampaignRollEntry {
   const d = (row.data as Record<string, unknown>) ?? {};
   const ts = d.timestamp;
   return {
     id: row.id,
-    characterId: d.characterId as string,
+    characterId: (row.character_id ?? d.characterId) as string,
     characterName: d.characterName as string,
-    userId: d.userId as string,
-    type: d.type as CampaignRollEntry['type'],
-    title: d.title as string,
+    userId: (row.user_id ?? d.userId) as string,
+    type: (row.type ?? d.type) as CampaignRollEntry['type'],
+    title: (row.title ?? d.title) as string,
     dice: (d.dice as CampaignRollEntry['dice']) || [],
     modifier: (d.modifier as number) ?? 0,
     total: (d.total as number) ?? 0,
@@ -71,7 +79,7 @@ export async function GET(
 
     const { data: rows } = await supabase
       .from('campaign_rolls')
-      .select('id, data, created_at')
+      .select('id, data, character_id, user_id, type, title, created_at')
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
       .limit(MAX_CAMPAIGN_ROLLS);
@@ -132,7 +140,14 @@ export async function POST(
       timestamp: new Date().toISOString(),
     };
 
-    await supabase.from('campaign_rolls').insert({ campaign_id: campaignId, data: rollData });
+    await supabase.from('campaign_rolls').insert({
+      campaign_id: campaignId,
+      data: rollData,
+      character_id: characterId,
+      user_id: user.uid,
+      type: roll.type,
+      title: roll.title ?? '',
+    });
 
     const { count } = await supabase
       .from('campaign_rolls')

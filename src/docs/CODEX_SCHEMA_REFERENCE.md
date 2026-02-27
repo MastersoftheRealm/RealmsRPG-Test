@@ -2,7 +2,7 @@
 
 > **Purpose:** Centralized reference for all codex entity schemas. Use when implementing validation, admin editors, display logic, or AI-assisted tasks. Each field includes name, type, description, valid values, and example.
 
-**Related:** `GAME_RULES.md` (terminology, formulas), `Codex csv/` or `codex_csv/` (CSV sources). **Database:** Table structure is in `public` schema (Supabase); for columnar codex tables see `sql/` and `DATABASE_CODEX_AUDIT.md`.
+**Related:** `GAME_RULES.md` (terminology, formulas), `Codex csv/` or `codex_csv/` (CSV sources). **Database:** All codex tables live in the **public** schema (Path C); columnar tables (codex_feats, codex_skills, etc.). See `sql/` and `DATABASE_CODEX_AUDIT.md`.
 
 ---
 

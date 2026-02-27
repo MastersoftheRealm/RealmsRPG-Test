@@ -31,26 +31,15 @@
 - **Database:** Supabase PostgreSQL. **Auth + Storage** and **all table access** via Supabase client (Phases 1–6 complete). No Prisma.
 - **Schemas:** Single **`public`** schema (Phase 0 SQL complete). All app tables live in `public`.
 
-### 2.2 Table layout (as of plan date)
+### 2.2 Table layout
 
-After Phase 0, all tables live in the **`public`** schema. The "Schema" column is logical/domain.
-
-| Domain | Schema | Table(s) | Shape | Notes |
-|--------|--------|----------|--------|-------|
-| **Codex** | codex | codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules | Columnar (codex_*); core_rules id+data | Done; reference [CODEX_SCHEMA_REFERENCE.md](../CODEX_SCHEMA_REFERENCE.md). |
-| **Official library** | codex | public_powers, public_techniques, public_items, public_creatures | id + data (JSONB) | To rename to official_* and make columnar (Phase 1 in [DATABASE_SCALABILITY_AUDIT.md](../DATABASE_SCALABILITY_AUDIT.md)). |
-| **User library** | users | user_powers, user_techniques, user_items, user_creatures, user_species | Columnar + payload (powers/techniques/items/creatures); user_species id+data | Phase 2 done per audit. |
-| **User profile** | users | user_profiles, usernames | Columnar | user_profiles has role (UserRole enum). |
-| **Characters** | users | characters | id, user_id, data (JSONB) | Single document; keep JSONB per audit. |
-| **Campaigns** | campaigns | campaigns, campaign_rolls | campaigns: characters + memberIds JSONB; campaign_rolls: data JSONB | campaign_members table exists per audit Phase 3; RLS may still use memberIds. |
-| **Encounters** | encounters | encounters | id, user_id, data (JSONB) | Keep JSONB; optional list columns later. |
-| **Realtime** | — | campaign_rolls, characters | — | In publication `supabase_realtime`; schema USAGE granted for campaigns, users. |
+**Single source of truth:** [SUPABASE_SCHEMA.md](../SUPABASE_SCHEMA.md). All tables live in `public`; codex tables are columnar; public library is `public_*` (id+data JSONB); user library is columnar (scalars + payload) except user_species (id+data). Do not duplicate the table list elsewhere.
 
 ### 2.3 Realtime usage today
 
 - **Campaign roll log:** [use-campaign-rolls.ts](../../hooks/use-campaign-rolls.ts) — `postgres_changes` on `public.campaign_rolls` filter `campaign_id=eq.{id}`; refetches query on event. Roll data from API `/api/campaigns/[id]/rolls` (Supabase).
 - **Character HP/EN/AP sync:** [characters/[id]/page.tsx](../../app/(main)/characters/[id]/page.tsx) — `postgres_changes` on `public.characters` filter `id=eq.{characterId}`; merges payload into local state. [CombatEncounterView.tsx](../../app/(main)/encounters/[id]/_components/CombatEncounterView.tsx) — same table, filter `id=in.(id1,id2,...)` for combatants; updates encounter combatant HP/EN/AP from payload.
-- **RLS:** Realtime needs USAGE on schema + SELECT on table; [sql/supabase-rls-policies.sql](../../../sql/supabase-rls-policies.sql) has GRANT USAGE ON SCHEMA campaigns/users and ADD TABLE for campaign_rolls and characters.
+- **RLS:** Realtime needs SELECT on table; all tables are in `public`; RLS policies reference `public` (see path-c-phase0 Part 2 and [sql/supabase-rls-policies.sql](../../../sql/supabase-rls-policies.sql) for historical multi-schema version).
 
 ### 2.4 Prisma touchpoints (to remove)
 

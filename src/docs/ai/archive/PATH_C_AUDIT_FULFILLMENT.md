@@ -22,22 +22,9 @@
 
 ---
 
-## 2. Database Layout (Columnar vs JSONB)
+## 2. Database layout
 
-| Area | Shape | Implementation |
-|------|--------|----------------|
-| **Codex** | Columnar | `codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats` — `codex-server.ts` and `/api/codex` read columns, build same response shape. |
-| **Core rules** | id + data (JSONB) | `core_rules` — `/api/codex` and seed script use it. |
-| **Official library** | Columnar (scalars + payload) | `official_powers`, `official_techniques`, `official_items`, `official_creatures` — `/api/official/[type]` uses Supabase, snake_case in DB, camelCase in API. |
-| **Public library** | id + data (JSONB) | `public_powers`, etc. — `/api/public/[type]` uses Supabase. |
-| **User library** | Columnar (powers/techniques/items/creatures); id+data (species) | `user_powers`, `user_techniques`, `user_items`, `user_creatures` — columnar via `library-columnar.ts` (rowToItem, toDbRow). `user_species` — id + data in `/api/user/library/[type]`. |
-| **Characters** | id, user_id, data (JSONB) | Single document; API and character-server read/write `data`. |
-| **Campaigns** | Scalar + characters (JSONB) + memberIds (JSONB); campaign_members table | Membership source of truth: `campaign_members`; campaigns also keep `memberIds` in sync. |
-| **Campaign rolls** | campaign_id, data (JSONB) | `/api/campaigns/[id]/rolls` uses Supabase. |
-| **Encounters** | id, user_id, data (JSONB) | `/api/encounters` uses Supabase. |
-| **User profile** | user_profiles, usernames | Auth actions and profile APIs use Supabase. |
-
-Columnar usage is consistent: codex and user/official library use scalar columns + payload (or full columnar for codex); rowToItem/toDbRow in `library-columnar.ts` handle both camel and snake_case for Supabase.
+**For current schema (tables, columns, columnar vs JSONB):** see [SUPABASE_SCHEMA.md](../SUPABASE_SCHEMA.md) — the single source of truth. This audit is a one-time fulfillment snapshot; do not use it as the canonical schema reference.
 
 ---
 
