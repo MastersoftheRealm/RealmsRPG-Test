@@ -17,8 +17,8 @@ export async function proxy(request: Request) {
 
 export const config = {
   matcher: [
-    // Exclude: static assets, auth callbacks, images, and high-volume public APIs (no session needed).
-    // Including api/codex and api/public reduces Edge Request count significantly.
-    '/((?!_next/static|_next/image|favicon.ico|auth/callback|auth/confirm|api/codex(?:/|$)|api/public(?:/|$)|api/official(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Exclude: static assets, auth callbacks, images (incl. /images/ e.g. placeholder-portrait.png), high-volume APIs, bot paths.
+    // /images/ is requested heavily (placeholder on every character card/sheet); exclude so proxy never runs for it.
+    '/((?!_next/static|_next/image|images/|favicon\\.ico|robots\\.txt(?:/|$)|sitemap\\.xml(?:/|$)|auth/callback|auth/confirm|api/codex(?:/|$)|api/public(?:/|$)|api/official(?:/|$)|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|eot)$).*)',
   ],
 };
