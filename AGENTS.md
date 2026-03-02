@@ -10,7 +10,7 @@ You are working on RealmsRPG, a D&D Beyond–like TTRPG web app built with Next.
 1. **Read** `src/docs/ai/AI_TASK_QUEUE.md` — focus on `not-started` / `in-progress` tasks; skip `done`.
 2. **Read** `src/docs/ai/AGENT_GUIDE.md` — component locations, patterns, sources of truth.
 3. **When owner gives feedback:** Log it in `src/docs/ALL_FEEDBACK_CLEAN.md` (Raw Feedback Log) and process per `.cursor/rules/realms-tasks.mdc` (extract, cross-ref queue, add tasks or implement).
-4. **Reference when needed:** `GAME_RULES.md`, `ARCHITECTURE.md` (formulas, data flow); `USER_EXPERIENCE_GOALS.md` for UX/onboarding/copy.
+4. **Reference when needed:** `GAME_RULES.md`, `ARCHITECTURE.md` (formulas, data flow); `USER_EXPERIENCE_GOALS.md` for UX/onboarding/copy. **DB layout:** `src/docs/SUPABASE_SCHEMA.md` — single source of truth for Supabase tables/columns; do not use PATH_C_AUDIT_FULFILLMENT or other docs for schema.
 
 ## Core Principles
 

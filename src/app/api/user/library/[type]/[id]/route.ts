@@ -15,6 +15,9 @@ import {
   rowToItem,
   bodyToColumnar,
   toDbRow,
+  rowToItemSpecies,
+  bodyToColumnarSpecies,
+  toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 
@@ -61,13 +64,17 @@ export async function GET(
 
     const { data: row } = await supabase
       .from('user_species')
-      .select('id, data')
+      .select('*')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
     if (!row) return NextResponse.json(null, { status: 404 });
-    const d = (row.data as Record<string, unknown>) ?? {};
-    return NextResponse.json({ id: row.id, docId: row.id, ...d });
+    const r = row as Record<string, unknown>;
+    if (r.data !== undefined && r.data !== null) {
+      const d = (r.data as Record<string, unknown>) ?? {};
+      return NextResponse.json({ id: r.id, docId: r.id, ...d });
+    }
+    return NextResponse.json(rowToItemSpecies(r));
   } catch (err) {
     console.error('[API Error] GET /api/user/library/[type]/[id]:', err);
     return NextResponse.json({ error: 'Failed to load library item' }, { status: 500 });
@@ -129,7 +136,7 @@ export async function PATCH(
 
     const { data: existing } = await supabase
       .from('user_species')
-      .select('id, data')
+      .select('*')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
@@ -139,15 +146,36 @@ export async function PATCH(
     const validation = await validateJson(request, libraryItemUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Record<string, unknown>;
-    const currentData = (existing.data as Record<string, unknown>) ?? {};
-    const merged = { ...currentData, ...data };
+    const existingRow = existing as Record<string, unknown>;
+    let merged: Record<string, unknown>;
+    if (existingRow.data !== undefined && existingRow.data !== null) {
+      merged = { ...(existingRow.data as Record<string, unknown>), ...data };
+    } else {
+      merged = { ...rowToItemSpecies(existingRow), ...data };
+    }
+    delete (merged as Record<string, unknown>).id;
+    delete (merged as Record<string, unknown>).docId;
+    delete (merged as Record<string, unknown>)._source;
     merged.updatedAt = new Date().toISOString();
+    const { scalars, payload } = bodyToColumnarSpecies(merged);
+    const updateRow = toDbRowSpecies({ ...scalars, payload, updated_at: merged.updatedAt });
     const { error: updateErr } = await supabase
       .from('user_species')
-      .update({ data: merged })
+      .update(updateRow)
       .eq('id', id.trim())
       .eq('user_id', user.uid);
-    if (updateErr) throw updateErr;
+    if (updateErr) {
+      if (updateErr.message?.includes('column')) {
+        const { error: legErr } = await supabase
+          .from('user_species')
+          .update({ data: merged })
+          .eq('id', id.trim())
+          .eq('user_id', user.uid);
+        if (legErr) throw legErr;
+        return NextResponse.json({ ok: true });
+      }
+      throw updateErr;
+    }
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[API Error] PATCH /api/user/library/[type]/[id]:', err);

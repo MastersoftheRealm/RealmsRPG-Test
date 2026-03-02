@@ -10,10 +10,9 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "inject-env-vanilla": "node scripts/inject-env-vanilla.js",
     "db:seed": "node scripts/seed-to-supabase.js",
     "db:seed:reset": "node scripts/seed-to-supabase.js --reset",
-    "db:migrate": "echo Run SQL in Supabase Dashboard; see src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md"
+    "db:migrate": "echo Run SQL in Supabase Dashboard. See sql/README.md and src/docs/SUPABASE_SCHEMA.md."
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

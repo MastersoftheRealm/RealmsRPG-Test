@@ -60,8 +60,8 @@ function toColumnValue(val: unknown): unknown {
 
 const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
   codex_feats: ['name', 'description', 'reqDesc', 'abilityReq', 'abilReqVal', 'skillReq', 'skillReqVal', 'featCatReq', 'powAbilReq', 'martAbilReq', 'powProfReq', 'martProfReq', 'speedReq', 'featLvl', 'lvlReq', 'usesPerRec', 'recPeriod', 'category', 'ability', 'tags', 'charFeat', 'stateFeat'],
-  codex_skills: ['name', 'description', 'ability', 'baseSkill', 'successDesc', 'failureDesc', 'dsCalc', 'craftFailureDesc', 'craftSuccessDesc'],
-  codex_species: ['name', 'description', 'type', 'sizes', 'skills', 'speciesTraits', 'ancestryTraits', 'flaws', 'characteristics', 'aveHgtCm', 'aveWgtKg', 'adulthoodLifespan', 'languages'],
+  codex_skills: ['name', 'description', 'ability', 'baseSkill', 'baseSkillId', 'successDesc', 'failureDesc', 'dsCalc', 'craftFailureDesc', 'craftSuccessDesc'],
+  codex_species: ['name', 'description', 'type', 'sizes', 'skills', 'speciesTraits', 'ancestryTraits', 'flaws', 'characteristics', 'aveHgtCm', 'aveWgtKg', 'aveHeight', 'aveWeight', 'adulthoodLifespan', 'languages'],
   codex_traits: ['name', 'description', 'usesPerRec', 'recPeriod', 'flaw', 'characteristic', 'optionTraitIds'],
   codex_parts: ['name', 'description', 'category', 'baseEn', 'baseTp', 'op1Desc', 'op1En', 'op1Tp', 'op2Desc', 'op2En', 'op2Tp', 'op3Desc', 'op3En', 'op3Tp', 'type', 'mechanic', 'percentage', 'duration', 'defense'],
   codex_properties: ['name', 'description', 'baseIp', 'baseTp', 'baseC', 'op1Desc', 'op1Ip', 'op1Tp', 'op1C', 'type', 'mechanic'],
@@ -84,10 +84,24 @@ function toColumnarPayload(collection: CodexCollection, data: Record<string, unk
   return out;
 }
 
-/** Convert camelCase payload to snake_case for Supabase (DB columns). */
-function toDbPayload(payload: Record<string, unknown>): Record<string, unknown> {
+/** Convert camelCase payload to snake_case for Supabase (DB columns). Collection-specific aliases so API response keys round-trip to correct DB columns. */
+function toDbPayload(collection: CodexCollection, payload: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(payload)) {
+    if (collection === 'codex_skills' && key === 'baseSkillId') {
+      out.base_skill = value != null ? String(value) : null;
+      continue;
+    }
+    if (collection === 'codex_species') {
+      if (key === 'aveHeight') {
+        out.ave_hgt_cm = value != null ? (typeof value === 'number' ? value : Number(value)) : null;
+        continue;
+      }
+      if (key === 'aveWeight') {
+        out.ave_wgt_kg = value != null ? (typeof value === 'number' ? value : Number(value)) : null;
+        continue;
+      }
+    }
     out[camelToSnake(key)] = value;
   }
   return out;
@@ -122,7 +136,7 @@ export async function createCodexDoc(
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
       const payload = toColumnarPayload(collection, data);
-      const dbPayload = toDbPayload({ id: docId, ...payload });
+      const dbPayload = toDbPayload(collection, { id: docId, ...payload });
       const { error } = await supabase.from(table).insert(dbPayload);
       if (error) throw new Error(error.message);
     } else {
@@ -155,11 +169,14 @@ export async function updateCodexDoc(
 
     if (COLUMNAR_COLLECTIONS.includes(collection)) {
       const payload = toColumnarPayload(collection, data);
-      const dbPayload = toDbPayload(payload);
+      const dbPayload = toDbPayload(collection, payload);
       const { error } = await supabase.from(table).update(dbPayload).eq('id', id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabase.from(table).update({ data }).eq('id', id);
+      const { error } = await supabase
+        .from(table)
+        .update({ data, updated_at: new Date().toISOString() })
+        .eq('id', id);
       if (error) throw new Error(error.message);
     }
 

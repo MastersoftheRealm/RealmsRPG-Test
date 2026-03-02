@@ -1,7 +1,8 @@
 /**
  * Public Library API
  * ==================
- * GET: Public read, no auth. POST: Admin only, create/update public items.
+ * GET: Public read, no auth. Prefers official_* (columnar) in public schema;
+ * falls back to public_* (id+data) if official_* empty or missing. POST/DELETE: Admin only; write to official_* (columnar).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,16 +10,34 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { validateJson, publicItemSchema } from '@/lib/api-validation';
+import {
+  rowToItem,
+  bodyToColumnar,
+  toDbRow,
+  type ColumnarLibraryType,
+} from '@/lib/library-columnar';
 
 const VALID_TYPES = ['powers', 'techniques', 'items', 'creatures'] as const;
 type PublicType = (typeof VALID_TYPES)[number];
 
-const TABLE_MAP: Record<PublicType, string> = {
+const PUBLIC_TABLE_MAP: Record<PublicType, string> = {
   powers: 'public_powers',
   techniques: 'public_techniques',
   items: 'public_items',
   creatures: 'public_creatures',
 };
+
+const OFFICIAL_TABLE_MAP: Record<PublicType, string> = {
+  powers: 'official_powers',
+  techniques: 'official_techniques',
+  items: 'official_items',
+  creatures: 'official_creatures',
+};
+
+function isTableNotFound(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === '42P01' || /does not exist|relation.*not found/i.test(error.message ?? '');
+}
 
 export async function GET(
   _request: NextRequest,
@@ -31,18 +50,33 @@ export async function GET(
     }
 
     const supabase = await createClient();
-    const table = TABLE_MAP[type as PublicType];
-    const { data: rows, error } = await supabase.from(table).select('id, data');
+    const officialTable = OFFICIAL_TABLE_MAP[type as PublicType];
+    let result = await supabase.from(officialTable).select('*');
 
-    if (error) {
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
-        console.warn('[API] Public library table not found for type:', type, error.message);
-        return NextResponse.json([]);
-      }
-      throw error;
+    if (!result.error && result.data && result.data.length > 0) {
+      const items = (result.data as Record<string, unknown>[]).map((r) => {
+        const item = rowToItem(type as ColumnarLibraryType, r, 'official');
+        (item as Record<string, unknown>)._source = 'public';
+        return item;
+      });
+      items.sort((a, b) => {
+        const na = String((a as Record<string, unknown>).name ?? '');
+        const nb = String((b as Record<string, unknown>).name ?? '');
+        return na.localeCompare(nb);
+      });
+      const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+      return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
     }
 
-    const items = (rows ?? []).map((r: { id: string; data: unknown }) => {
+    const table = PUBLIC_TABLE_MAP[type as PublicType];
+    const legacyResult = await supabase.from(table).select('id, data');
+    if (legacyResult.error && isTableNotFound(legacyResult.error)) {
+      return NextResponse.json([]);
+    }
+    if (legacyResult.error) throw legacyResult.error;
+
+    const rows = (legacyResult.data ?? []) as { id: string; data?: unknown }[];
+    const items = rows.map((r) => {
       const d = (r.data as Record<string, unknown>) ?? {};
       return {
         ...d,
@@ -51,13 +85,11 @@ export async function GET(
         _source: 'public' as const,
       };
     });
-
     items.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
       const na = String(a.name ?? '');
       const nb = String(b.name ?? '');
       return na.localeCompare(nb);
     });
-
     const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
     return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
@@ -88,21 +120,26 @@ export async function POST(
     if (!validation.success) return validation.error;
     const body = validation.data as Record<string, unknown>;
 
-    const existingId = body.id as string | undefined;
-    const data = { ...body, updatedAt: new Date().toISOString() };
-    delete (data as Record<string, unknown>).id;
+    const now = new Date().toISOString();
+    const { scalars, payload } = bodyToColumnar(type as ColumnarLibraryType, { ...body, updatedAt: now });
+    const row = toDbRow({ ...scalars, payload, updatedAt: now });
 
+    const existingId = body.id as string | undefined;
     const supabase = await createClient();
-    const table = TABLE_MAP[type as PublicType];
+    const table = OFFICIAL_TABLE_MAP[type as PublicType];
 
     if (existingId) {
-      await supabase.from(table).update({ data: data as object }).eq('id', existingId);
+      await supabase.from(table).update(row).eq('id', existingId);
       return NextResponse.json({ id: existingId });
     }
 
     const id = crypto.randomUUID();
-    const insert = { id, data: { ...data, createdAt: new Date().toISOString() } as object };
-    await supabase.from(table).insert(insert);
+    await supabase.from(table).insert({
+      id,
+      ...row,
+      created_at: now,
+      updated_at: now,
+    });
     return NextResponse.json({ id });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -139,7 +176,7 @@ export async function DELETE(
     }
 
     const supabase = await createClient();
-    await supabase.from(TABLE_MAP[type as PublicType]).delete().eq('id', id);
+    await supabase.from(OFFICIAL_TABLE_MAP[type as PublicType]).delete().eq('id', id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

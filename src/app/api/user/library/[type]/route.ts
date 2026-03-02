@@ -15,6 +15,9 @@ import {
   rowToItem,
   bodyToColumnar,
   toDbRow,
+  rowToItemSpecies,
+  bodyToColumnarSpecies,
+  toDbRowSpecies,
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 
@@ -63,11 +66,14 @@ export async function GET(
       return NextResponse.json(items);
     }
 
-    const { data: rows } = await supabase.from('user_species').select('id, data').eq('user_id', user.uid);
-    const list = (rows ?? []) as { id: string; data: unknown }[];
+    const { data: rows } = await supabase.from('user_species').select('*').eq('user_id', user.uid);
+    const list = (rows ?? []) as Record<string, unknown>[];
     const items = list.map((r) => {
-      const d = (r.data as Record<string, unknown>) ?? {};
-      return { id: r.id, docId: r.id, ...d };
+      if (r.data !== undefined && r.data !== null) {
+        const d = (r.data as Record<string, unknown>) ?? {};
+        return { id: r.id, docId: r.id, ...d };
+      }
+      return rowToItemSpecies(r);
     });
     items.sort((a, b) => {
       const na = String((a as Record<string, unknown>).name ?? '');
@@ -160,43 +166,66 @@ export async function POST(
       return NextResponse.json({ id: newId });
     }
 
+    const now = new Date().toISOString();
     if (duplicateOf) {
       const { data: existing } = await supabase
         .from('user_species')
-        .select('id, data')
+        .select('*')
         .eq('id', duplicateOf)
         .eq('user_id', user.uid)
         .maybeSingle();
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
-      const d = (existing.data as Record<string, unknown>) ?? {};
-      const newData = {
-        ...d,
-        name: `${(d.name as string) || 'Item'} (Copy)`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      const { data: created, error: insertErr } = await supabase
-        .from('user_species')
-        .insert({ user_id: user.uid, data: newData })
-        .select('id')
-        .single();
-      if (insertErr) throw insertErr;
-      return NextResponse.json({ id: created.id });
+      const existingRow = existing as Record<string, unknown>;
+      const copyItem =
+        existingRow.data !== undefined && existingRow.data !== null
+          ? { id: existingRow.id, docId: existingRow.id, ...(existingRow.data as Record<string, unknown>) }
+          : rowToItemSpecies(existingRow);
+      const baseName = String((copyItem.name as string) || 'Item').trim();
+      const copyData = { ...copyItem, name: `${baseName} (Copy)` };
+      delete (copyData as Record<string, unknown>).id;
+      delete (copyData as Record<string, unknown>).docId;
+      delete (copyData as Record<string, unknown>)._source;
+      const { scalars, payload } = bodyToColumnarSpecies({ ...copyData, updatedAt: now });
+      const newId = crypto.randomUUID();
+      const row = toDbRowSpecies({ id: newId, user_id: user.uid, ...scalars, payload, created_at: now, updated_at: now });
+      const { error: insertErr } = await supabase.from('user_species').insert(row);
+      if (insertErr) {
+        if (insertErr.message?.includes('column') && existingRow.data !== undefined) {
+          const d = (existingRow.data as Record<string, unknown>) ?? {};
+          const newData = { ...d, name: `${(d.name as string) || 'Item'} (Copy)`, createdAt: now, updatedAt: now };
+          const { data: created, error: legErr } = await supabase
+            .from('user_species')
+            .insert({ id: newId, user_id: user.uid, data: newData })
+            .select('id')
+            .single();
+          if (legErr) throw legErr;
+          return NextResponse.json({ id: created.id });
+        }
+        throw insertErr;
+      }
+      return NextResponse.json({ id: newId });
     }
 
-    const data = body as Record<string, unknown>;
-    const cleaned = { ...data };
-    cleaned.createdAt = new Date().toISOString();
-    cleaned.updatedAt = new Date().toISOString();
-    const { data: created, error: insertErr } = await supabase
-      .from('user_species')
-      .insert({ user_id: user.uid, data: cleaned })
-      .select('id')
-      .single();
-    if (insertErr) throw insertErr;
-    return NextResponse.json({ id: created.id });
+    const { scalars, payload } = bodyToColumnarSpecies({ ...body, updatedAt: now });
+    const newId = crypto.randomUUID();
+    const row = toDbRowSpecies({ id: newId, user_id: user.uid, ...scalars, payload, created_at: now, updated_at: now });
+    const { error: insertErr } = await supabase.from('user_species').insert(row);
+    if (insertErr) {
+      if (insertErr.message?.includes('column')) {
+        const cleaned = { ...body, createdAt: now, updatedAt: now } as Record<string, unknown>;
+        const { data: created, error: legErr } = await supabase
+          .from('user_species')
+          .insert({ id: newId, user_id: user.uid, data: cleaned })
+          .select('id')
+          .single();
+        if (legErr) throw legErr;
+        return NextResponse.json({ id: created.id });
+      }
+      throw insertErr;
+    }
+    return NextResponse.json({ id: newId });
   } catch (err) {
     console.error('[API Error] POST /api/user/library/[type]:', err);
     return NextResponse.json({ error: 'Failed to create library item' }, { status: 500 });

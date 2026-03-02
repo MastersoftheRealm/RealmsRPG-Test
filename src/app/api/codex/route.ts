@@ -1,5 +1,7 @@
 /**
- * Codex API — returns all game reference data (from public codex tables via Supabase)
+ * Codex API — returns all game reference data from Supabase (public schema).
+ * All codex tables (codex_feats, codex_skills, …) and core_rules live in public;
+ * columnar tables (see src/docs/SUPABASE_SCHEMA.md).
  */
 
 import { NextResponse } from 'next/server';
@@ -30,52 +32,65 @@ function toNum(val: unknown): number | undefined {
 /** DB row shape (snake_case from Supabase) */
 type Row = Record<string, unknown>;
 
-export async function GET() {
-  try {
-    const supabase = await createClient();
+async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const [
+    { data: feats, error: eFeats },
+    { data: skills, error: eSkills },
+    { data: species, error: eSpecies },
+    { data: traits, error: eTraits },
+    { data: parts, error: eParts },
+    { data: properties, error: eProps },
+    { data: equipment, error: eEquip },
+    { data: archetypes, error: eArch },
+    { data: creatureFeats, error: eCreature },
+    coreResult,
+  ] = await Promise.all([
+    supabase.from('codex_feats').select('*'),
+    supabase.from('codex_skills').select('*'),
+    supabase.from('codex_species').select('*'),
+    supabase.from('codex_traits').select('*'),
+    supabase.from('codex_parts').select('*'),
+    supabase.from('codex_properties').select('*'),
+    supabase.from('codex_equipment').select('*'),
+    supabase.from('codex_archetypes').select('*'),
+    supabase.from('codex_creature_feats').select('*'),
+    (async () => {
+      const r = await supabase.from('core_rules').select('id, data');
+      return r.error ? { data: [] as Row[], error: null } : r;
+    })(),
+  ]);
 
-    const [
-      { data: feats, error: eFeats },
-      { data: skills, error: eSkills },
-      { data: species, error: eSpecies },
-      { data: traits, error: eTraits },
-      { data: parts, error: eParts },
-      { data: properties, error: eProps },
-      { data: equipment, error: eEquip },
-      { data: archetypes, error: eArch },
-      { data: creatureFeats, error: eCreature },
-      coreResult,
-    ] = await Promise.all([
-      supabase.from('codex_feats').select('*'),
-      supabase.from('codex_skills').select('*'),
-      supabase.from('codex_species').select('*'),
-      supabase.from('codex_traits').select('*'),
-      supabase.from('codex_parts').select('*'),
-      supabase.from('codex_properties').select('*'),
-      supabase.from('codex_equipment').select('*'),
-      supabase.from('codex_archetypes').select('*'),
-      supabase.from('codex_creature_feats').select('*'),
-      (async () => {
-        const r = await supabase.from('core_rules').select('id, data');
-        return r.error ? { data: [] as Row[], error: null } : r;
-      })(),
-    ]);
+  const coreRulesRows = (coreResult as { data?: Row[] }).data ?? [];
 
-    const coreRulesRows = (coreResult as { data?: Row[] }).data ?? [];
-    if (eFeats ?? eSkills ?? eSpecies ?? eTraits ?? eParts ?? eProps ?? eEquip ?? eArch ?? eCreature) {
-      const msg = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature].find(Boolean) as { message?: string } | undefined;
-      throw new Error(msg?.message ?? 'Codex fetch failed');
+  /** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. Run sql/path-c-phase0-consolidate-to-public-part1c.sql to move codex_* to public. */
+  function isTableMissing(e: { message?: string; code?: string } | null): boolean {
+    if (!e) return false;
+    return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
+  }
+
+  const tableNames = ['codex_feats', 'codex_skills', 'codex_species', 'codex_traits', 'codex_parts', 'codex_properties', 'codex_equipment', 'codex_archetypes', 'codex_creature_feats'];
+  const errors = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature];
+  errors.forEach((e, i) => {
+    if (e && isTableMissing(e)) {
+      console.warn('[Codex API] Table missing (use empty):', tableNames[i], e.message);
     }
+  });
+  const firstRealError = errors.find((e) => e && !isTableMissing(e)) as { message?: string; code?: string } | undefined;
+  if (firstRealError) {
+    const err = new Error(firstRealError.message ?? 'Codex fetch failed') as Error & { code?: string };
+    err.code = firstRealError.code;
+    throw err;
+  }
 
-    const featRows = (feats ?? []) as Row[];
-    const skillRows = (skills ?? []) as Row[];
-    const speciesRows = (species ?? []) as Row[];
-    const traitRows = (traits ?? []) as Row[];
-    const partRows = (parts ?? []) as Row[];
-    const propRows = (properties ?? []) as Row[];
-    const equipRows = (equipment ?? []) as Row[];
-    const archRows = (archetypes ?? []) as Row[];
-    const creatureRows = (creatureFeats ?? []) as Row[];
+  const featRows = ((isTableMissing(eFeats) ? [] : feats) ?? []) as Row[];
+    const skillRows = ((isTableMissing(eSkills) ? [] : skills) ?? []) as Row[];
+    const speciesRows = ((isTableMissing(eSpecies) ? [] : species) ?? []) as Row[];
+    const traitRows = ((isTableMissing(eTraits) ? [] : traits) ?? []) as Row[];
+    const partRows = ((isTableMissing(eParts) ? [] : parts) ?? []) as Row[];
+    const propRows = ((isTableMissing(eProps) ? [] : properties) ?? []) as Row[];
+    const equipRows = ((isTableMissing(eEquip) ? [] : equipment) ?? []) as Row[];
+    const archRows = ((isTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
+    const creatureRows = ((isTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
     const coreRows = coreRulesRows as Row[];
 
     const codexFeats = featRows.map((r) => ({
@@ -269,44 +284,58 @@ export async function GET() {
       };
     });
 
-    const coreRules: Record<string, unknown> = {};
-    for (const row of coreRows) {
-      const id = row.id as string;
-      if (id != null) coreRules[id] = row.data;
-    }
+  const coreRules: Record<string, unknown> = {};
+  for (const row of coreRows) {
+    const id = row.id as string;
+    if (id != null) coreRules[id] = row.data;
+  }
 
-    const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
-    return NextResponse.json(
-      {
-        feats: codexFeats,
-        skills: codexSkills,
-        species: codexSpecies,
-        traits: codexTraits,
-        powerParts: codexPowerParts,
-        techniqueParts: codexTechniqueParts,
-        parts: allParts,
-        itemProperties: codexProperties,
-        equipment: codexEquipment,
-        archetypes: codexArchetypes,
-        creatureFeats: codexCreatureFeats,
-        coreRules,
-      },
-      { headers: { 'Cache-Control': cacheControl } }
-    );
+  return {
+    feats: codexFeats,
+    skills: codexSkills,
+    species: codexSpecies,
+    traits: codexTraits,
+    powerParts: codexPowerParts,
+    techniqueParts: codexTechniqueParts,
+    parts: allParts,
+    itemProperties: codexProperties,
+    equipment: codexEquipment,
+    archetypes: codexArchetypes,
+    creatureFeats: codexCreatureFeats,
+    coreRules,
+  };
+}
+
+const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const debug = url.searchParams.get('debug') === '1';
+  try {
+    const supabase = await createClient();
+    const body = await fetchCodexFromClient(supabase);
+    return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
+    const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: string }).code) : undefined;
     const stack = err instanceof Error ? err.stack : undefined;
     console.error('[Codex API] Database error:', message, stack);
     const safeHint =
       process.env.NODE_ENV === 'development'
         ? message
         : message.includes('connect') || message.includes('connection')
-          ? 'Database connection failed. Check DATABASE_URL and ?pgbouncer=true in Vercel env vars.'
+          ? 'Database connection failed. Check NEXT_PUBLIC_SUPABASE_URL and keys in Vercel.'
           : message.includes('exist') || message.includes('relation')
-            ? 'Codex tables may be missing. Run Supabase SQL migrations.'
-            : undefined;
+            ? 'Codex tables may be missing in public. Run Supabase SQL migrations.'
+            : message.includes('permission') || message.includes('policy') || message.includes('row-level') || message.includes('denied')
+              ? 'Permission denied: RLS may be blocking reads. Run sql/supabase-codex-rls-public.sql in Supabase Dashboard → SQL Editor.'
+              : undefined;
     return NextResponse.json(
-      { error: 'Failed to load codex', ...(safeHint && { hint: safeHint }) },
+      {
+        error: 'Failed to load codex',
+        ...(safeHint && { hint: safeHint }),
+        ...(debug && { debug: { message, code } }),
+      },
       { status: 500 }
     );
   }

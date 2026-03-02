@@ -3,6 +3,7 @@
  * ======================
  * For use in Server Components and Server Actions.
  * Cookie-aware for session handling.
+ * All app tables live in the public schema (Path C); no custom schemas.
  */
 
 import { createServerClient } from '@supabase/ssr';

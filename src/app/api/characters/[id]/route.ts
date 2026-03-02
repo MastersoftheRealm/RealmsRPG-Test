@@ -13,6 +13,7 @@ import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterUpdateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
+import { getCharacterListColumns } from '@/lib/character-list-columns';
 import type { Character, CharacterVisibility } from '@/types';
 
 function prepareForSave(data: Partial<Character>): Record<string, unknown> {
@@ -156,10 +157,11 @@ export async function PATCH(
 
     const currentData = (existing.data as Record<string, unknown>) ?? {};
     const mergedData = { ...currentData, ...cleanedData };
+    const listCols = getCharacterListColumns(mergedData);
 
     const { error: updateErr } = await supabase
       .from('characters')
-      .update({ data: mergedData })
+      .update({ data: mergedData, ...listCols })
       .eq('id', id.trim())
       .eq('user_id', user.uid);
     if (updateErr) throw updateErr;
