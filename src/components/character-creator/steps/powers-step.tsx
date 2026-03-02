@@ -203,13 +203,20 @@ export function PowersStep() {
     return availableTechniques.filter(t => selectedTechniqueIds.has(t.id));
   }, [availableTechniques, selectedTechniqueIds]);
   
-  // Handle power selection - include full parts data for TP calculation (works for user or public)
-  const handlePowerSelect = useCallback((items: SelectableItem[]) => {
-    const powers = items.map(item => {
+  // Ids of items currently in the modal list (depends on source filter: my/public/all)
+  const availablePowerIds = useMemo(() => new Set(availablePowers.map((p) => p.id)), [availablePowers]);
+  const availableTechniqueIds = useMemo(() => new Set(availableTechniques.map((t) => t.id)), [availableTechniques]);
+
+  // Handle power selection - merge: keep draft powers not in current list, replace with modal selection for those in list
+  const handlePowerSelect = useCallback((selectedItems: SelectableItem[]) => {
+    const keptFromDraft = (draft.powers || []).filter(
+      (p: { id: string | number }) => !availablePowerIds.has(String(p.id))
+    );
+    const fromModal = selectedItems.map(item => {
       const userPower = (item.data as UserPower | undefined) ?? userPowers.find((p: UserPower) => p.docId === item.id) ?? normalizedPublicPowers.find((p: UserPower) => p.docId === item.id);
       const partsWithTP = (userPower?.parts || []).map((savedPart: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }) => {
-        const codexPart = powerParts?.find((rp: PowerPart) => 
-          String(rp.id) === String(savedPart.id) || 
+        const codexPart = powerParts?.find((rp: PowerPart) =>
+          String(rp.id) === String(savedPart.id) ||
           rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
         );
         return {
@@ -231,17 +238,20 @@ export function PowersStep() {
         parts: partsWithTP,
       };
     });
-    updateDraft({ powers });
+    updateDraft({ powers: [...keptFromDraft, ...fromModal] });
     setShowPowerModal(false);
-  }, [updateDraft, userPowers, normalizedPublicPowers, powerParts]);
+  }, [draft.powers, availablePowerIds, updateDraft, userPowers, normalizedPublicPowers, powerParts]);
   
-  // Handle technique selection - include full parts data for TP calculation (works for user or public)
-  const handleTechniqueSelect = useCallback((items: SelectableItem[]) => {
-    const techniques = items.map(item => {
+  // Handle technique selection - merge: keep draft techniques not in current list, replace with modal selection for those in list
+  const handleTechniqueSelect = useCallback((selectedItems: SelectableItem[]) => {
+    const keptFromDraft = (draft.techniques || []).filter(
+      (t: { id: string | number }) => !availableTechniqueIds.has(String(t.id))
+    );
+    const fromModal = selectedItems.map(item => {
       const userTech = (item.data as UserTechnique | undefined) ?? userTechniques.find((t: UserTechnique) => t.docId === item.id) ?? normalizedPublicTechniques.find((t: UserTechnique) => t.docId === item.id);
       const partsWithTP = (userTech?.parts || []).map((savedPart: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }) => {
-        const codexPart = techniqueParts?.find((rp: TechniquePart) => 
-          String(rp.id) === String(savedPart.id) || 
+        const codexPart = techniqueParts?.find((rp: TechniquePart) =>
+          String(rp.id) === String(savedPart.id) ||
           rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
         );
         return {
@@ -263,9 +273,9 @@ export function PowersStep() {
         parts: partsWithTP,
       };
     });
-    updateDraft({ techniques });
+    updateDraft({ techniques: [...keptFromDraft, ...fromModal] });
     setShowTechniqueModal(false);
-  }, [updateDraft, userTechniques, normalizedPublicTechniques, techniqueParts]);
+  }, [draft.techniques, availableTechniqueIds, updateDraft, userTechniques, normalizedPublicTechniques, techniqueParts]);
   
   // Remove a power
   const removePower = useCallback((powerId: string) => {

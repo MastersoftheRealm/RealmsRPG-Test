@@ -1191,3 +1191,11 @@ Notes
 - Priority: Medium (task for later)
 - Feedback: When changing account username, it saves the new one but then creates a new "Player###" username and replaces the chosen one instead of keeping the new username.
 - Expected: After changing username, the profile should keep the new username; it should not be overwritten by a generated Player### default.
+
+**Raw Feedback Log — 2026-03-02 (Admin official library save + character creator power/technique selection)**
+- Date: 2026-03-02
+- Context: Admin saving to official library (power, technique, armament, creature, species); character creator add powers/techniques
+- Priority: High
+- Feedback: (1) When admin saves something into the official library it says it saved but it isn't in the database (perhaps old JSONB styles or not saving right). (2) When making a character, add power/technique modal: if you close the modal after adding some, then open again to add more, previously added powers are removed and replaced by whatever new ones you selected (likely same for techniques, armaments).
+- Expected: (1) Official library saves persist to official_* tables; API returns real errors if insert/update fails; RLS allows admin writes. (2) Confirming the add-power/add-technique modal merges with existing selections (keeps items not in current list, adds/replaces from modal selection).
+- Disposition: Implemented 2026-03-02. (1) Official API: check insert/update/delete result and return 500 with details on failure; added RLS policies (Admin can insert/update/delete) for official_* tables using user_profiles.role = 'admin'. Admin users must have role = 'admin' in user_profiles. (2) powers-step: handlePowerSelect/handleTechniqueSelect now merge — keep draft powers/techniques whose ids are not in the current modal list (e.g. from other source tab), then add powers/techniques from the modal selection so reopening and adding more does not replace previous selections.

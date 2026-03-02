@@ -163,17 +163,31 @@ export async function POST(
     const table = TABLE_MAP[type as OfficialType];
 
     if (existingId) {
-      await supabase.from(table).update(dbRow).eq('id', existingId);
+      const { error: updateError } = await supabase.from(table).update(dbRow).eq('id', existingId).select('id').single();
+      if (updateError) {
+        console.error('[API] Official library update failed:', updateError);
+        return NextResponse.json(
+          { error: 'Failed to update item', details: updateError.message },
+          { status: 500 }
+        );
+      }
       return NextResponse.json({ id: existingId });
     }
 
     const id = crypto.randomUUID();
-    await supabase.from(table).insert({
+    const { error: insertError } = await supabase.from(table).insert({
       id,
       ...dbRow,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }).select('id').single();
+    if (insertError) {
+      console.error('[API] Official library insert failed:', insertError);
+      return NextResponse.json(
+        { error: 'Failed to save item', details: insertError.message },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ id });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -210,7 +224,14 @@ export async function DELETE(
     }
 
     const supabase = await createClient();
-    await supabase.from(TABLE_MAP[type as OfficialType]).delete().eq('id', id);
+    const { error: deleteError } = await supabase.from(TABLE_MAP[type as OfficialType]).delete().eq('id', id).select('id').maybeSingle();
+    if (deleteError) {
+      console.error('[API] Official library delete failed:', deleteError);
+      return NextResponse.json(
+        { error: 'Failed to delete item', details: deleteError.message },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
