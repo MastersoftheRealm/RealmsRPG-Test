@@ -24,6 +24,7 @@
 | **create-public-core-rules.sql** | Create `public.core_rules` (id, data, updated_at) | Run after Part 2 if core_rules was dropped |
 | **supabase-storage-policies.sql** | RLS for Storage buckets (portraits, profile-pictures) | Run once per project |
 | **supabase-official-library-public-schema.sql** | Official library in **public** (columnar) + backfill from public_* | Run to create official_* in public and backfill from public_* (id+data). GET /api/public prefers official_*. |
+| **supabase-official-library-columnar-expansion.sql** | Official powers: add range_steps, duration_*, area_*, damage columns; backfill from payload | Run after official-library-public-schema; see [OFFICIAL_LIBRARY_COLUMNAR_PLAN.md](../src/docs/OFFICIAL_LIBRARY_COLUMNAR_PLAN.md). |
 | **supabase-user-species-columnar.sql** | user_species columnar (codex_species columns + user_id + payload) | Run once; backfill from data, then drop data. |
 | **supabase-encounters-list-columns.sql** | Encounters: add name, type, status columns; backfill from data | Optional; list/filter by columns. |
 | **supabase-characters-list-columns.sql** | Characters: add name, level, archetype_name, ancestry_name, status, visibility; backfill from data | Hybrid list columns (TASK-282). |
@@ -40,10 +41,11 @@
 After deploying app code that uses the new columnar or list-column schema, run the corresponding SQL in **Supabase Dashboard → SQL Editor** to create tables/columns and **backfill existing data**. Recommended order:
 
 1. **supabase-official-library-public-schema.sql** — Creates `official_*` in public and backfills from `public_*`. Run if you want GET /api/public to prefer official_*.
-2. **supabase-user-species-columnar.sql** — Adds columnar columns to `user_species`, backfills, drops `data`. Run once per environment.
-3. **supabase-encounters-list-columns.sql** — Adds `name`, `type`, `status` to `encounters`; backfills. Optional.
-4. **supabase-characters-list-columns.sql** — Adds list columns to `characters`; backfills. Optional but recommended for list/filter.
-5. **supabase-campaign-rolls-list-columns.sql** — Adds list columns to `campaign_rolls`; backfills. Optional.
+2. **supabase-official-library-columnar-expansion.sql** — Adds range/duration/area/damage columns to `official_powers`; backfills from payload. Run after (1) for more columnar powers; optional.
+3. **supabase-user-species-columnar.sql** — Adds columnar columns to `user_species`, backfills, drops `data`. Run once per environment.
+4. **supabase-encounters-list-columns.sql** — Adds `name`, `type`, `status` to `encounters`; backfills. Optional.
+5. **supabase-characters-list-columns.sql** — Adds list columns to `characters`; backfills. Optional but recommended for list/filter.
+6. **supabase-campaign-rolls-list-columns.sql** — Adds list columns to `campaign_rolls`; backfills. Optional.
 
 **Back up** before running. Each script is idempotent where possible (ADD COLUMN IF NOT EXISTS, ON CONFLICT, or conditional backfill). See [SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md) §4 for status and task refs.
 

@@ -21,7 +21,7 @@ const TABLE_MAP: Record<OfficialType, string> = {
   creatures: 'official_creatures',
 };
 
-/** Row from Supabase may use snake_case columns */
+/** Row from Supabase may use snake_case columns. Prefer columnar columns over payload when present. */
 function rowToItem(type: OfficialType, row: Record<string, unknown>): Record<string, unknown> {
   const r = row as Record<string, unknown>;
   const payload = (r.payload as Record<string, unknown>) || {};
@@ -41,6 +41,21 @@ function rowToItem(type: OfficialType, row: Record<string, unknown>): Record<str
     base.actionType = actionType;
     base.isReaction = r.is_reaction ?? r.isReaction;
     base.innate = r.innate;
+    const rangeSteps = r.range_steps as number | undefined | null;
+    const durationType = r.duration_type as string | undefined | null;
+    const durationValue = r.duration_value as number | undefined | null;
+    const areaType = r.area_type as string | undefined | null;
+    const areaLevel = r.area_level as number | undefined | null;
+    const damageCol = r.damage as unknown[] | undefined;
+    const payRange = payload.range as Record<string, unknown> | undefined;
+    const payDuration = payload.duration as Record<string, unknown> | undefined;
+    const payArea = payload.area as Record<string, unknown> | undefined;
+    if (rangeSteps != null) base.range = { ...payRange, steps: rangeSteps };
+    if (durationType != null || durationValue != null)
+      base.duration = { ...payDuration, type: durationType ?? payDuration?.type, value: durationValue ?? payDuration?.value };
+    if (areaType != null || areaLevel != null)
+      base.area = { ...payArea, type: areaType ?? payArea?.type, level: areaLevel ?? payArea?.level };
+    if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
   }
   if (type === 'techniques') {
     base.actionType = actionType;
@@ -78,14 +93,33 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   damageReduction: 'damage_reduction',
   hitPoints: 'hit_points',
   energyPoints: 'energy_points',
+  rangeSteps: 'range_steps',
+  durationType: 'duration_type',
+  durationValue: 'duration_value',
+  areaType: 'area_type',
+  areaLevel: 'area_level',
 };
 
 function bodyToDb(type: OfficialType, body: Record<string, unknown>): Record<string, unknown> {
   const scalarKeys = new Set(SCALAR_KEYS[type]);
   const scalars: Record<string, unknown> = {};
   const payload: Record<string, unknown> = {};
+
+  if (type === 'powers') {
+    const range = body.range as { steps?: number } | undefined;
+    const duration = body.duration as { type?: string; value?: number } | undefined;
+    const area = body.area as { type?: string; level?: number } | undefined;
+    if (range?.steps != null) scalars.range_steps = range.steps;
+    if (duration?.type != null) scalars.duration_type = duration.type;
+    if (duration?.value != null) scalars.duration_value = duration.value;
+    if (area?.type != null) scalars.area_type = area.type;
+    if (area?.level != null) scalars.area_level = area.level;
+    if (Array.isArray(body.damage) && body.damage.length > 0) scalars.damage = body.damage;
+  }
+
   for (const [k, v] of Object.entries(body)) {
     if (k === 'id' || k === 'docId' || k === '_source') continue;
+    if (type === 'powers' && (k === 'range' || k === 'duration' || k === 'area' || k === 'damage')) continue;
     const camel = k.startsWith('_') ? k : k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     const key = scalarKeys.has(camel) ? camel : scalarKeys.has(k) ? k : null;
     if (key) {
@@ -108,7 +142,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const { data: rows, error } = await supabase.from(TABLE_MAP[type as OfficialType]).select('*');
 
     if (error) {
