@@ -11,9 +11,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Security headers for all responses
+  // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)
   async headers() {
     return [
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       {
         source: '/:path*',
         headers: [
