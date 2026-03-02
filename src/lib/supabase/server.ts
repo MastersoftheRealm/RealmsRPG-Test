@@ -6,6 +6,7 @@
  * All app tables live in the public schema (Path C); no custom schemas.
  */
 
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -31,4 +32,15 @@ export async function createClient() {
       },
     },
   });
+}
+
+/**
+ * Service-role client — bypasses RLS. Use only for admin-only operations
+ * after the request has been authorized (e.g. isAdmin() check).
+ * Requires SUPABASE_SERVICE_ROLE_KEY in env.
+ */
+export function createServiceRoleClient() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !key) throw new Error('Supabase service role not configured');
+  return createSupabaseClient(supabaseUrl, key);
 }

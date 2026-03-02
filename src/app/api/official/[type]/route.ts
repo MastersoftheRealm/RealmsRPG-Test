@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { validateJson, publicItemSchema } from '@/lib/api-validation';
@@ -159,7 +159,7 @@ export async function POST(
     const withUpdated = { ...body, updatedAt: new Date().toISOString() };
     const dbRow = bodyToDb(type as OfficialType, withUpdated);
     const existingId = body.id as string | undefined;
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const table = TABLE_MAP[type as OfficialType];
 
     if (existingId) {
@@ -223,7 +223,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const { error: deleteError } = await supabase.from(TABLE_MAP[type as OfficialType]).delete().eq('id', id).select('id').maybeSingle();
     if (deleteError) {
       console.error('[API] Official library delete failed:', deleteError);
