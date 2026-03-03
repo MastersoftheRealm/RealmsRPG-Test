@@ -137,8 +137,6 @@ export function AdminEquipmentTab() {
     const data = {
       name: form.name.trim(),
       description: form.description.trim(),
-      // Equipment items are generic equipment, not weapons/armor
-      type: 'equipment',
       category: form.category.trim() || undefined,
       currency: form.currency,
       rarity: form.rarity.trim() || undefined,

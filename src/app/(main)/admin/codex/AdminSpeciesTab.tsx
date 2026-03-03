@@ -178,8 +178,6 @@ export function AdminSpeciesTab() {
       name: form.name.trim(),
       description: form.description.trim(),
       type: form.type.trim(),
-      // Primary size is derived from sizes; do not treat it as a separate editable field
-      size: sizes[0] || form.size.trim() || 'Medium',
       sizes: sizes.length ? sizes : [sizes[0] || form.size || 'Medium'],
       skills: form.skillIds,
       species_traits: form.speciesTraitIds,

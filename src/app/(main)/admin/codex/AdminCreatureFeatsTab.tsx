@@ -90,8 +90,6 @@ export function AdminCreatureFeatsTab() {
     const data: Record<string, unknown> = {
       name: form.name.trim(),
       description: form.description.trim(),
-      // Store both points and feat_points for compatibility with existing data/CSV
-      points: form.points ?? undefined,
       feat_points: form.points ?? undefined,
       feat_lvl: form.feat_lvl ?? undefined,
       lvl_req: form.lvl_req ?? undefined,
