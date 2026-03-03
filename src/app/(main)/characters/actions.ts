@@ -10,6 +10,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
+import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { removeUndefined } from '@/lib/utils';
 import type { Character } from '@/types';
 
@@ -100,7 +101,7 @@ export async function createCharacterAction(data: Partial<Character>) {
     const cleanedData = prepareForSave(data);
     (cleanedData as Record<string, unknown>).createdAt = new Date().toISOString();
 
-    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
+    await ensureUserProfile(supabase, user.uid);
 
     const { data: created, error } = await supabase
       .from('characters')
