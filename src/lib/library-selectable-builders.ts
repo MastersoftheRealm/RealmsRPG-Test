@@ -67,7 +67,7 @@ export function getItemColumns(
       { key: 'Training Pts', value: '-', align: 'center' as const },
     ];
   }
-  if (itemType === 'weapon' || (itemType === 'item' && (item as EqItem).type === 'weapon')) {
+  if (itemType === 'weapon' || (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'weapon')) {
     const weapon = item as UserItem | EqItem;
     const val = weapon.damage ? formatDamageDisplay(weapon.damage) : null;
     return itemType === 'item' && val
@@ -76,7 +76,7 @@ export function getItemColumns(
         ? [{ key: 'Damage', value: val, highlight: true }]
         : [];
   }
-  if (itemType === 'armor' || (itemType === 'item' && (item as EqItem).type === 'armor')) {
+  if (itemType === 'armor' || (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'armor')) {
     const armor = item as UserItem | EqItem;
     const val = armor.armorValue ? `+${armor.armorValue}` : null;
     return itemType === 'item' && val
@@ -85,7 +85,7 @@ export function getItemColumns(
         ? [{ key: 'Armor', value: val, highlight: true }]
         : [];
   }
-  if (itemType === 'shield' || (itemType === 'item' && (item as EqItem).type === 'shield')) {
+  if (itemType === 'shield' || (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'shield')) {
     const shield = item as UserItem | EqItem;
     const props = (shield.properties || []) as Array<{ id?: number; name?: string; op_1_lvl?: number }>;
     const block = deriveShieldAmountFromProperties(props);

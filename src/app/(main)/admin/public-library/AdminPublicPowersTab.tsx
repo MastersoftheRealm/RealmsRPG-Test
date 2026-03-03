@@ -95,8 +95,12 @@ export function AdminPublicPowersTab() {
       const res = await fetch(`/api/official/powers?id=${encodeURIComponent(deleteConfirm.id)}`, {
         method: 'DELETE',
       });
-      if (!res.ok) throw new Error(res.statusText);
+      if (!res.ok) {
+        const msg = res.status === 404 ? 'Item not found or already deleted.' : res.statusText;
+        throw new Error(msg);
+      }
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed to delete');

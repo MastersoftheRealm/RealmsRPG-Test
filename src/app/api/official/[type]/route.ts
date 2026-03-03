@@ -258,13 +258,20 @@ export async function DELETE(
     }
 
     const supabase = createServiceRoleClient();
-    const { error: deleteError } = await supabase.from(TABLE_MAP[type as OfficialType]).delete().eq('id', id).select('id').maybeSingle();
+    const { data: deleted, error: deleteError } = await supabase
+      .from(TABLE_MAP[type as OfficialType])
+      .delete()
+      .eq('id', id)
+      .select('id');
     if (deleteError) {
       console.error('[API] Official library delete failed:', deleteError);
       return NextResponse.json(
         { error: 'Failed to delete item', details: deleteError.message },
         { status: 500 }
       );
+    }
+    if (!deleted || deleted.length === 0) {
+      return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
