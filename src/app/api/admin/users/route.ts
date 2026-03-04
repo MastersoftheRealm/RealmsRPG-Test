@@ -1,7 +1,7 @@
 /**
  * Admin Users API
  * ===============
- * List users (id, username, role only).
+ * List users (id, username, email, display_name, role).
  * Only users with role=admin can access.
  */
 
@@ -35,14 +35,22 @@ export async function GET() {
     const supabase = getSupabaseAdmin();
     const { data: profiles } = await supabase
       .from('user_profiles')
-      .select('id, username, role')
+      .select('id, username, email, display_name, role')
       .order('username');
 
-    const list = (profiles ?? []) as { id: string; username: string | null; role: string }[];
+    const list = (profiles ?? []) as {
+      id: string;
+      username: string | null;
+      email: string | null;
+      display_name: string | null;
+      role: string;
+    }[];
     return NextResponse.json(
       list.map((p) => ({
         id: p.id,
         username: p.username ?? '',
+        email: p.email ?? '',
+        displayName: p.display_name ?? '',
         role: p.role,
       }))
     );
