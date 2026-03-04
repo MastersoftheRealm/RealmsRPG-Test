@@ -10,7 +10,7 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -20,8 +20,10 @@ const ABILITY_OPTIONS_SKILLS = ABILITIES_AND_DEFENSES.slice(0, 6);
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+
+const COPY_NAME_SUFFIX = ' copy';
 
 const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
 
@@ -58,6 +60,7 @@ export function AdminSkillsTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -166,6 +169,7 @@ export function AdminSkillsTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
     setForm({
       name: '',
       description: '',
@@ -180,8 +184,39 @@ export function AdminSkillsTab() {
     setModalOpen(true);
   };
 
+  const openDuplicate = (s: Skill) => {
+    setEditing(null);
+    setCopySourceName(s.name);
+    let baseSkillName = '';
+    if (s.base_skill_id != null) {
+      if (s.base_skill_id === 0) {
+        baseSkillName = 'Any';
+      } else {
+        const match = baseSkillOptions.find((opt) => String(opt.id) === String(s.base_skill_id));
+        baseSkillName = match?.name ?? '';
+      }
+    }
+    const abilityArr =
+      typeof s.ability === 'string' && s.ability.length > 0
+        ? s.ability.split(',').map((a: string) => a.trim()).filter(Boolean)
+        : [];
+    setForm({
+      name: (s.name || '').trim() + COPY_NAME_SUFFIX,
+      description: s.description || '',
+      abilities: abilityArr,
+      baseSkillName,
+      success_desc: s.success_desc ?? '',
+      failure_desc: s.failure_desc ?? '',
+      ds_calc: s.ds_calc ?? '',
+      craft_success_desc: s.craft_success_desc ?? '',
+      craft_failure_desc: s.craft_failure_desc ?? '',
+    });
+    setModalOpen(true);
+  };
+
   const openEdit = (s: Skill) => {
     setEditing(s);
+    setCopySourceName(null);
     // Resolve base skill name from id (including 0 meaning "Any")
     let baseSkillName = '';
     if (s.base_skill_id != null) {
@@ -213,6 +248,7 @@ export function AdminSkillsTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
   };
 
@@ -399,8 +435,11 @@ export function AdminSkillsTab() {
                       </div>
                     ) : (
                       <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit" aria-label="Edit">
                           <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(s)} label="Duplicate" aria-label="Duplicate">
+                          <Copy className="w-4 h-4" />
                         </IconButton>
                         <IconButton
                           variant="ghost"
@@ -426,6 +465,7 @@ export function AdminSkillsTab() {
         onClose={closeModal}
         title={editing ? 'Edit Skill' : 'Add Skill'}
         size="lg"
+        fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -445,33 +485,38 @@ export function AdminSkillsTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new skill.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Skill name" />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Skill description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Skill description" className="min-h-[120px] resize-y" rows={4} />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Success outcome description</label>
-            <textarea value={form.success_desc} onChange={(e) => setForm((f) => ({ ...f, success_desc: e.target.value }))} placeholder="What happens on successes (expandable chip)" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+            <Textarea value={form.success_desc} onChange={(e) => setForm((f) => ({ ...f, success_desc: e.target.value }))} placeholder="What happens on successes (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Failure outcome description</label>
-            <textarea value={form.failure_desc} onChange={(e) => setForm((f) => ({ ...f, failure_desc: e.target.value }))} placeholder="What happens on failures (expandable chip)" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+            <Textarea value={form.failure_desc} onChange={(e) => setForm((f) => ({ ...f, failure_desc: e.target.value }))} placeholder="What happens on failures (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty score (DS) guidance</label>
-            <textarea value={form.ds_calc} onChange={(e) => setForm((f) => ({ ...f, ds_calc: e.target.value }))} placeholder="RM guidance for DS calculation (expandable chip)" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+            <Textarea value={form.ds_calc} onChange={(e) => setForm((f) => ({ ...f, ds_calc: e.target.value }))} placeholder="RM guidance for DS calculation (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Craft success description (Craft sub-skills)</label>
-            <textarea value={form.craft_success_desc} onChange={(e) => setForm((f) => ({ ...f, craft_success_desc: e.target.value }))} placeholder="Crafting success results" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+            <Textarea value={form.craft_success_desc} onChange={(e) => setForm((f) => ({ ...f, craft_success_desc: e.target.value }))} placeholder="Crafting success results" className="min-h-[100px] resize-y" rows={3} />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Craft failure description (Craft sub-skills)</label>
-            <textarea value={form.craft_failure_desc} onChange={(e) => setForm((f) => ({ ...f, craft_failure_desc: e.target.value }))} placeholder="Crafting failure results" className="w-full min-h-[60px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={2} />
+            <Textarea value={form.craft_failure_desc} onChange={(e) => setForm((f) => ({ ...f, craft_failure_desc: e.target.value }))} placeholder="Crafting failure results" className="min-h-[100px] resize-y" rows={3} />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>

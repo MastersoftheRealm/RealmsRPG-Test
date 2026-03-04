@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   SectionHeader,
   SearchInput,
@@ -10,11 +10,17 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
+import { useModalListState } from '@/hooks/use-modal-list-state';
+import { useQueryClient } from '@tanstack/react-query';
+import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { Pencil, Copy, X, Plus } from 'lucide-react';
+import { IconButton } from '@/components/ui';
 
 const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 0.6fr 40px';
+const CHOICE_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 80px';
 const ADMIN_TRAIT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'uses_per_rec', label: 'USES' },
@@ -22,10 +28,7 @@ const ADMIN_TRAIT_COLUMNS = [
   { key: 'choice', label: 'CHOICE' },
   { key: '_actions', label: '', sortable: false as const },
 ];
-import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, X } from 'lucide-react';
-import { IconButton } from '@/components/ui';
+const COPY_NAME_SUFFIX = ' copy';
 
 export function AdminTraitsTab() {
   const { data: traits, isLoading, error } = useTraits();
@@ -37,6 +40,7 @@ export function AdminTraitsTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -46,6 +50,25 @@ export function AdminTraitsTab() {
     flaw: false,
     characteristic: false,
     option_trait_ids: [] as string[],
+  });
+  const [createTraitOpen, setCreateTraitOpen] = useState(false);
+  const [createTraitForm, setCreateTraitForm] = useState({ name: '', description: '' });
+  const [creatingTrait, setCreatingTrait] = useState(false);
+
+  const choiceTraitCandidates = useMemo(
+    () => (traits || []).filter((t: Trait) => t.id !== (editing?.id ?? '')),
+    [traits, editing?.id],
+  );
+  const {
+    search: choiceSearch,
+    setSearch: setChoiceSearch,
+    sortedItems: sortedChoiceTraits,
+    sortState: choiceSortState,
+    handleSort: handleChoiceSort,
+  } = useModalListState({
+    items: choiceTraitCandidates,
+    searchFields: ['name', 'description'],
+    initialSortKey: 'name',
   });
 
   const filtered = sortItems<Trait>(
@@ -59,12 +82,29 @@ export function AdminTraitsTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
     setForm({ name: '', description: '', uses_per_rec: '', rec_period: '', flaw: false, characteristic: false, option_trait_ids: [] });
+    setModalOpen(true);
+  };
+
+  const openDuplicate = (t: Trait) => {
+    setEditing(null);
+    setCopySourceName(t.name);
+    setForm({
+      name: (t.name || '').trim() + COPY_NAME_SUFFIX,
+      description: t.description || '',
+      uses_per_rec: t.uses_per_rec != null ? String(t.uses_per_rec) : '',
+      rec_period: t.rec_period || '',
+      flaw: t.flaw === true,
+      characteristic: t.characteristic === true,
+      option_trait_ids: Array.isArray(t.option_trait_ids) ? [...t.option_trait_ids] : [],
+    });
     setModalOpen(true);
   };
 
   const openEdit = (t: Trait) => {
     setEditing(t);
+    setCopySourceName(null);
     setForm({
       name: t.name,
       description: t.description || '',
@@ -80,7 +120,28 @@ export function AdminTraitsTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
+    setCreateTraitOpen(false);
+  };
+
+  const handleCreateTraitAndAdd = async () => {
+    if (!createTraitForm.name.trim()) return;
+    setCreatingTrait(true);
+    const id = createTraitForm.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `trait_${Date.now()}`;
+    const result = await createCodexDoc('codex_traits', id, {
+      name: createTraitForm.name.trim(),
+      description: createTraitForm.description.trim(),
+    });
+    setCreatingTrait(false);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setForm((f) => ({ ...f, option_trait_ids: [...f.option_trait_ids, id] }));
+      setCreateTraitForm({ name: '', description: '' });
+      setCreateTraitOpen(false);
+    } else {
+      alert(result.error);
+    }
   };
 
   const handleSave = async () => {
@@ -192,8 +253,11 @@ export function AdminTraitsTab() {
                       </div>
                     ) : (
                       <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Edit">
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(t)} label="Edit" aria-label="Edit">
                           <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(t)} label="Duplicate" aria-label="Duplicate">
+                          <Copy className="w-4 h-4" />
                         </IconButton>
                         <IconButton
                           variant="ghost"
@@ -219,6 +283,7 @@ export function AdminTraitsTab() {
         onClose={closeModal}
         title={editing ? 'Edit Trait' : 'Add Trait'}
         size="lg"
+        fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -242,18 +307,23 @@ export function AdminTraitsTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new trait.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Trait name" />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea
+            <Textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="Trait description"
-              className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-              rows={3}
+              className="min-h-[120px] resize-y"
+              rows={4}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -300,31 +370,102 @@ export function AdminTraitsTab() {
             </label>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Choice trait options</label>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <label className="block text-sm font-medium text-text-secondary">Choice trait options</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCreateTraitOpen(true)}
+                aria-label="Create trait and add to options"
+              >
+                <Plus className="w-4 h-4 mr-1 inline" />
+                Create trait and add
+              </Button>
+            </div>
             <p className="text-xs text-text-muted dark:text-text-secondary mb-2">
-              When set, this trait becomes a choice trait: the player selects it then picks one option from this list. Leave empty for a normal trait.
+              When set, this trait becomes a choice trait: the player selects it then picks one option from this list. Expand rows to see descriptions.
             </p>
-            <div className="max-h-40 overflow-y-auto border border-border rounded-lg p-2 space-y-1 bg-surface-alt">
-              {(traits || []).filter((other: Trait) => other.id !== (editing?.id ?? '')).map((other: Trait) => {
-                const checked = form.option_trait_ids.includes(other.id);
-                return (
-                  <label key={other.id} className="flex items-center gap-2 cursor-pointer hover:bg-surface rounded px-2 py-1">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => {
-                        if (e.target.checked) setForm((f) => ({ ...f, option_trait_ids: [...f.option_trait_ids, other.id] }));
-                        else setForm((f) => ({ ...f, option_trait_ids: f.option_trait_ids.filter((id) => id !== other.id) }));
+            <SearchInput
+              value={choiceSearch}
+              onChange={setChoiceSearch}
+              placeholder="Search traits to add as options..."
+              className="mb-2"
+            />
+            <ListHeader
+              columns={[
+                { key: 'name', label: 'NAME' },
+                { key: 'uses_per_rec', label: 'USES' },
+                { key: 'rec_period', label: 'RECOVERY' },
+                { key: '_sel', label: '', sortable: false as const },
+              ]}
+              gridColumns={CHOICE_TRAIT_GRID}
+              sortState={choiceSortState}
+              onSort={handleChoiceSort}
+            />
+            <div className="max-h-48 overflow-y-auto border border-border rounded-lg mt-1 bg-surface-alt">
+              {sortedChoiceTraits.length === 0 ? (
+                <p className="text-sm text-text-muted p-4 text-center">No other traits to add. Create traits first or adjust search.</p>
+              ) : (
+                sortedChoiceTraits.map((t: Trait) => {
+                  const isSelected = form.option_trait_ids.includes(t.id);
+                  return (
+                    <GridListRow
+                      key={t.id}
+                      id={t.id}
+                      name={t.name}
+                      description={t.description || ''}
+                      gridColumns={CHOICE_TRAIT_GRID}
+                      columns={[
+                        { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
+                        { key: 'Recovery', value: t.rec_period || '-' },
+                      ]}
+                      selectable
+                      isSelected={isSelected}
+                      onSelect={() => {
+                        if (isSelected) setForm((f) => ({ ...f, option_trait_ids: f.option_trait_ids.filter((id) => id !== t.id) }));
+                        else setForm((f) => ({ ...f, option_trait_ids: [...f.option_trait_ids, t.id] }));
                       }}
                     />
-                    <span className="text-sm text-text-primary">{other.name}</span>
-                  </label>
-                );
-              })}
-              {(traits || []).filter((other: Trait) => other.id !== (editing?.id ?? '')).length === 0 && (
-                <p className="text-xs text-text-muted py-2">No other traits to add as options. Create traits first.</p>
+                  );
+                })
               )}
             </div>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={createTraitOpen}
+        onClose={() => setCreateTraitOpen(false)}
+        title="Create trait and add to options"
+        size="md"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setCreateTraitOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateTraitAndAdd} disabled={creatingTrait || !createTraitForm.name.trim()}>
+              {creatingTrait ? 'Creating...' : 'Create and add'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+            <Input
+              value={createTraitForm.name}
+              onChange={(e) => setCreateTraitForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Trait name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+            <Textarea
+              value={createTraitForm.description}
+              onChange={(e) => setCreateTraitForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Trait description"
+              className="min-h-[100px] resize-y"
+              rows={3}
+            />
           </div>
         </div>
       </Modal>

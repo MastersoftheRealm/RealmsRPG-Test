@@ -10,14 +10,16 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { SelectFilter, FilterSection } from '@/components/codex';
 import { useEquipment } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+
+const COPY_NAME_SUFFIX = ' copy';
 
 const EQUIPMENT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr 40px';
 
@@ -52,6 +54,7 @@ export function AdminEquipmentTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -105,13 +108,31 @@ export function AdminEquipmentTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
     setForm({ name: '', description: '', category: '', currency: 0, rarity: 'Common' });
     setCategoryIsNew(false);
     setModalOpen(true);
   };
 
+  const openDuplicate = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
+    setEditing(null);
+    setCopySourceName(e.name);
+    const cat = e.category || '';
+    setForm({
+      name: (e.name || '').trim() + COPY_NAME_SUFFIX,
+      description: e.description || '',
+      category: cat,
+      currency: e.currency ?? e.gold_cost ?? 0,
+      rarity: e.rarity || 'Common',
+    });
+    const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
+    setCategoryIsNew(cat !== '' && !existingCats.has(cat));
+    setModalOpen(true);
+  };
+
   const openEdit = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
     setEditing(e);
+    setCopySourceName(null);
     const cat = e.category || '';
     setForm({
       name: e.name,
@@ -128,12 +149,14 @@ export function AdminEquipmentTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    // No type column in codex_equipment; do not send type.
     const data = {
       name: form.name.trim(),
       description: form.description.trim(),
@@ -263,8 +286,11 @@ export function AdminEquipmentTab() {
                       </div>
                     ) : (
                       <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit">
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(e)} label="Edit" aria-label="Edit">
                           <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(e)} label="Duplicate" aria-label="Duplicate">
+                          <Copy className="w-4 h-4" />
                         </IconButton>
                         <IconButton
                           variant="ghost"
@@ -285,7 +311,7 @@ export function AdminEquipmentTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Equipment' : 'Add Equipment'} size="lg"
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Equipment' : 'Add Equipment'} size="lg" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -305,6 +331,11 @@ export function AdminEquipmentTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new equipment.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input
@@ -315,12 +346,12 @@ export function AdminEquipmentTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea
+            <Textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               placeholder="Equipment description"
-              className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-              rows={3}
+              className="min-h-[120px] resize-y"
+              rows={4}
             />
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -356,7 +387,7 @@ export function AdminEquipmentTab() {
               <Input
                 type="number"
                 min={0}
-                step={0.01}
+                step="any"
                 value={form.currency}
                 onChange={(e) => setForm((f) => ({ ...f, currency: parseFloat(e.target.value) || 0 }))}
               />

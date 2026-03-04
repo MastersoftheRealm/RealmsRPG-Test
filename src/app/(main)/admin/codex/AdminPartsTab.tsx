@@ -18,26 +18,61 @@ const ADMIN_PART_COLUMNS = [
   { key: '_tp', label: 'TP', sortable: false as const },
   { key: '_actions', label: '', sortable: false as const },
 ];
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { ChipSelect, SelectFilter, FilterSection } from '@/components/codex';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, Copy, X, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
+const COPY_NAME_SUFFIX = ' copy';
+
 const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+
+/** Format number preserving decimals (no rounding); strip trailing zeros. */
+function formatDecimalPreserve(n: number, maxDecimals = 10): string {
+  if (n === 0) return '0';
+  const s = n.toFixed(maxDecimals);
+  return s.replace(/\.?0+$/, '') || '0';
+}
 
 function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {
   if (en === undefined || en === 0) return '-';
   if (isPercentage) {
     const percentChange = (en - 1) * 100;
     const sign = percentChange >= 0 ? '+' : '';
-    return `${sign}${percentChange.toFixed(percentChange % 1 === 0 ? 0 : 1)}%`;
+    return `${sign}${formatDecimalPreserve(percentChange)}%`;
   }
-  return String(en);
+  return formatDecimalPreserve(en);
+}
+
+/** Base EN when percentage: backend 1.125 = +12.5%, 0.875 = -12.5%. Display as percent (full precision). */
+function baseEnToPercent(backend: number | undefined): string {
+  if (backend == null) return '';
+  const p = (backend - 1) * 100;
+  return formatDecimalPreserve(p);
+}
+function percentToBaseEn(percentStr: string): number | undefined {
+  if (percentStr === '') return undefined;
+  const p = parseFloat(percentStr);
+  if (Number.isNaN(p)) return undefined;
+  return 1 + p / 100;
+}
+
+/** Option EN when percentage: backend -0.03125 = -3.125% modifier. Display as percent (full precision). */
+function optionEnToPercent(backend: number | undefined): string {
+  if (backend == null) return '';
+  const p = (backend ?? 0) * 100;
+  return formatDecimalPreserve(p);
+}
+function percentToOptionEn(percentStr: string): number | undefined {
+  if (percentStr === '') return undefined;
+  const p = parseFloat(percentStr);
+  if (Number.isNaN(p)) return undefined;
+  return p / 100;
 }
 
 interface PartFilters {
@@ -62,29 +97,52 @@ export function AdminPartsTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
+  /** Number of option rows to show (0 = none until user clicks +). */
+  const [optionSlotCount, setOptionSlotCount] = useState(0);
 
   const DEFENSES = useMemo(() => ABILITIES_AND_DEFENSES.slice(6), []);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    name: string;
+    description: string;
+    category: string;
+    type: 'power' | 'technique';
+    base_en: number | undefined;
+    base_tp: number | undefined;
+    mechanic: boolean;
+    percentage: boolean;
+    duration: boolean;
+    defense: string[];
+    op_1_desc: string;
+    op_1_en: number | undefined;
+    op_1_tp: number | undefined;
+    op_2_desc: string;
+    op_2_en: number | undefined;
+    op_2_tp: number | undefined;
+    op_3_desc: string;
+    op_3_en: number | undefined;
+    op_3_tp: number | undefined;
+  }>({
     name: '',
     description: '',
     category: '',
-    type: 'power' as 'power' | 'technique',
-    base_en: 0,
-    base_tp: 0,
+    type: 'power',
+    base_en: undefined,
+    base_tp: undefined,
     mechanic: false,
     percentage: false,
     duration: false,
-    defense: [] as string[],
+    defense: [],
     op_1_desc: '',
-    op_1_en: 0,
-    op_1_tp: 0,
+    op_1_en: undefined,
+    op_1_tp: undefined,
     op_2_desc: '',
-    op_2_en: 0,
-    op_2_tp: 0,
+    op_2_en: undefined,
+    op_2_tp: undefined,
     op_3_desc: '',
-    op_3_en: 0,
-    op_3_tp: 0,
+    op_3_en: undefined,
+    op_3_tp: undefined,
   });
 
   const filterOptions = useMemo(() => {
@@ -125,52 +183,92 @@ export function AdminPartsTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
+    setOptionSlotCount(0);
     setForm({
       name: '',
       description: '',
       category: '',
       type: 'power',
-      base_en: 0,
-      base_tp: 0,
+      base_en: undefined,
+      base_tp: undefined,
       mechanic: false,
       percentage: false,
       duration: false,
       defense: [],
       op_1_desc: '',
-      op_1_en: 0,
-      op_1_tp: 0,
+      op_1_en: undefined,
+      op_1_tp: undefined,
       op_2_desc: '',
-      op_2_en: 0,
-      op_2_tp: 0,
+      op_2_en: undefined,
+      op_2_tp: undefined,
       op_3_desc: '',
-      op_3_en: 0,
-      op_3_tp: 0,
+      op_3_en: undefined,
+      op_3_tp: undefined,
+    });
+    setModalOpen(true);
+  };
+
+  const openDuplicate = (p: Part & { defense?: string[] }) => {
+    setEditing(null);
+    setCopySourceName(p.name);
+    const raw = (v: unknown) => (v != null && v !== '' ? v : undefined);
+    const op1 = (p as any).op_1_desc?.trim();
+    const op2 = (p as any).op_2_desc?.trim();
+    const op3 = (p as any).op_3_desc?.trim();
+    setOptionSlotCount([op1, op2, op3].filter(Boolean).length || 0);
+    setForm({
+      name: (p.name || '').trim() + COPY_NAME_SUFFIX,
+      description: p.description || '',
+      category: p.category || '',
+      type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
+      base_en: p.base_en,
+      base_tp: p.base_tp,
+      mechanic: Boolean((p as any).mechanic),
+      percentage: Boolean((p as any).percentage),
+      duration: Boolean((p as any).duration),
+      defense: Array.isArray(p.defense) ? [...p.defense] : [],
+      op_1_desc: op1 || '',
+      op_1_en: op1 ? raw((p as any).op_1_en) as number | undefined : undefined,
+      op_1_tp: op1 ? raw((p as any).op_1_tp) as number | undefined : undefined,
+      op_2_desc: op2 || '',
+      op_2_en: op2 ? raw((p as any).op_2_en) as number | undefined : undefined,
+      op_2_tp: op2 ? raw((p as any).op_2_tp) as number | undefined : undefined,
+      op_3_desc: op3 || '',
+      op_3_en: op3 ? raw((p as any).op_3_en) as number | undefined : undefined,
+      op_3_tp: op3 ? raw((p as any).op_3_tp) as number | undefined : undefined,
     });
     setModalOpen(true);
   };
 
   const openEdit = (p: Part & { defense?: string[] }) => {
     setEditing(p);
+    setCopySourceName(null);
+    const raw = (v: unknown) => (v != null && v !== '' ? v : undefined);
+    const op1 = (p as any).op_1_desc?.trim();
+    const op2 = (p as any).op_2_desc?.trim();
+    const op3 = (p as any).op_3_desc?.trim();
+    setOptionSlotCount([op1, op2, op3].filter(Boolean).length || 0);
     setForm({
       name: p.name,
       description: p.description || '',
       category: p.category || '',
       type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
-      base_en: p.base_en ?? 0,
-      base_tp: p.base_tp ?? 0,
+      base_en: p.base_en,
+      base_tp: p.base_tp,
       mechanic: Boolean((p as any).mechanic),
       percentage: Boolean((p as any).percentage),
       duration: Boolean((p as any).duration),
       defense: Array.isArray(p.defense) ? [...p.defense] : [],
-      op_1_desc: (p as any).op_1_desc || '',
-      op_1_en: (p as any).op_1_en ?? 0,
-      op_1_tp: (p as any).op_1_tp ?? 0,
-      op_2_desc: (p as any).op_2_desc || '',
-      op_2_en: (p as any).op_2_en ?? 0,
-      op_2_tp: (p as any).op_2_tp ?? 0,
-      op_3_desc: (p as any).op_3_desc || '',
-      op_3_en: (p as any).op_3_en ?? 0,
-      op_3_tp: (p as any).op_3_tp ?? 0,
+      op_1_desc: op1 || '',
+      op_1_en: op1 ? raw((p as any).op_1_en) as number | undefined : undefined,
+      op_1_tp: op1 ? raw((p as any).op_1_tp) as number | undefined : undefined,
+      op_2_desc: op2 || '',
+      op_2_en: op2 ? raw((p as any).op_2_en) as number | undefined : undefined,
+      op_2_tp: op2 ? raw((p as any).op_2_tp) as number | undefined : undefined,
+      op_3_desc: op3 || '',
+      op_3_en: op3 ? raw((p as any).op_3_en) as number | undefined : undefined,
+      op_3_tp: op3 ? raw((p as any).op_3_tp) as number | undefined : undefined,
     });
     setModalOpen(true);
   };
@@ -178,6 +276,7 @@ export function AdminPartsTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
   };
 
@@ -189,21 +288,21 @@ export function AdminPartsTab() {
       description: form.description.trim(),
       category: form.category.trim(),
       type: form.type,
-      base_en: form.base_en,
-      base_tp: form.base_tp,
+      base_en: form.base_en ?? undefined,
+      base_tp: form.base_tp ?? undefined,
       mechanic: form.mechanic,
       percentage: form.percentage,
       duration: form.duration,
       defense: form.defense.length > 0 ? form.defense : undefined,
       op_1_desc: form.op_1_desc.trim() || undefined,
-      op_1_en: form.op_1_desc.trim() ? form.op_1_en || 0 : 0,
-      op_1_tp: form.op_1_desc.trim() ? form.op_1_tp || 0 : 0,
+      op_1_en: form.op_1_desc.trim() ? (form.op_1_en ?? undefined) : undefined,
+      op_1_tp: form.op_1_desc.trim() ? (form.op_1_tp ?? undefined) : undefined,
       op_2_desc: form.op_2_desc.trim() || undefined,
-      op_2_en: form.op_2_desc.trim() ? form.op_2_en || 0 : 0,
-      op_2_tp: form.op_2_desc.trim() ? form.op_2_tp || 0 : 0,
+      op_2_en: form.op_2_desc.trim() ? (form.op_2_en ?? undefined) : undefined,
+      op_2_tp: form.op_2_desc.trim() ? (form.op_2_tp ?? undefined) : undefined,
       op_3_desc: form.op_3_desc.trim() || undefined,
-      op_3_en: form.op_3_desc.trim() ? form.op_3_en || 0 : 0,
-      op_3_tp: form.op_3_desc.trim() ? form.op_3_tp || 0 : 0,
+      op_3_en: form.op_3_desc.trim() ? (form.op_3_en ?? undefined) : undefined,
+      op_3_tp: form.op_3_desc.trim() ? (form.op_3_tp ?? undefined) : undefined,
     };
 
     const id = form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `part_${Date.now()}`;
@@ -391,8 +490,11 @@ export function AdminPartsTab() {
                         </div>
                       ) : (
                         <>
-                          <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit">
+                          <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit" aria-label="Edit">
                             <Pencil className="w-4 h-4" />
+                          </IconButton>
+                          <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(p)} label="Duplicate" aria-label="Duplicate">
+                            <Copy className="w-4 h-4" />
                           </IconButton>
                           <IconButton
                             variant="ghost"
@@ -414,7 +516,7 @@ export function AdminPartsTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Part' : 'Add Part'} size="lg"
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Part' : 'Add Part'} size="lg" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -434,18 +536,46 @@ export function AdminPartsTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new part.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Part name" />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Part description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Part description" className="min-h-[120px] resize-y" rows={4} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-              <Input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} placeholder="e.g. Damage" />
+              <select
+                value={form.category && filterOptions.categories.includes(form.category) ? form.category : (form.category ? '__new__' : '')}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '__new__') setForm((f) => ({ ...f, category: f.category || '' }));
+                  else setForm((f) => ({ ...f, category: v }));
+                }}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Part category"
+              >
+                <option value="">— None —</option>
+                {filterOptions.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+                <option value="__new__">Add new category...</option>
+              </select>
+              {form.category && !filterOptions.categories.includes(form.category) && (
+                <Input
+                  value={form.category}
+                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                  placeholder="Type new category"
+                  className="mt-2"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
@@ -457,12 +587,33 @@ export function AdminPartsTab() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Base EN</label>
-              <Input type="number" min={0} step={0.5} value={form.base_en} onChange={(e) => setForm((f) => ({ ...f, base_en: parseFloat(e.target.value) || 0 }))} />
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Base EN {form.percentage ? '(%)' : ''}
+              </label>
+              {form.percentage ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    step="any"
+                    value={baseEnToPercent(form.base_en)}
+                    onChange={(e) => setForm((f) => ({ ...f, base_en: percentToBaseEn(e.target.value) }))}
+                    placeholder="e.g. -12.5 or 12.5"
+                  />
+                  <span className="text-sm text-text-muted shrink-0">%</span>
+                </div>
+              ) : (
+                <Input
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={form.base_en ?? ''}
+                  onChange={(e) => setForm((f) => ({ ...f, base_en: e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0) }))}
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Base TP</label>
-              <Input type="number" min={0} step={0.5} value={form.base_tp} onChange={(e) => setForm((f) => ({ ...f, base_tp: parseFloat(e.target.value) || 0 }))} />
+              <Input type="number" min={0} step="any" value={form.base_tp ?? ''} onChange={(e) => setForm((f) => ({ ...f, base_tp: e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0) }))} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -505,82 +656,112 @@ export function AdminPartsTab() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold text-text-secondary">Options</h4>
-              <span className="text-xs text-text-muted">Leave empty to omit</span>
+              {optionSlotCount < 3 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOptionSlotCount((n) => Math.min(3, n + 1))}
+                  aria-label="Add option"
+                >
+                  <Plus className="w-4 h-4 mr-1 inline" />
+                  Add option
+                </Button>
+              )}
             </div>
-            <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-3 items-center">
-                <Input
-                  value={form.op_1_desc}
-                  onChange={(e) => setForm((f) => ({ ...f, op_1_desc: e.target.value }))}
-                  placeholder="Option 1 description"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.op_1_en}
-                  onChange={(e) => setForm((f) => ({ ...f, op_1_en: parseFloat(e.target.value) || 0 }))}
-                  placeholder="EN"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.op_1_tp}
-                  onChange={(e) => setForm((f) => ({ ...f, op_1_tp: parseFloat(e.target.value) || 0 }))}
-                  placeholder="TP"
-                />
+            {optionSlotCount === 0 ? (
+              <p className="text-sm text-text-muted">No options. Click &quot;Add option&quot; to add cost options for this part.</p>
+            ) : (
+              <div className="space-y-4">
+                {[1, 2, 3].slice(0, optionSlotCount).map((n) => (
+                  <div key={n} className="rounded-lg border border-border-light bg-surface-alt/50 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-text-secondary">Option {n}</span>
+                      {n === optionSlotCount && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-text-muted hover:text-danger"
+                          onClick={() => setOptionSlotCount((prev) => Math.max(0, prev - 1))}
+                          aria-label={`Remove option ${n}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+                      <textarea
+                        value={n === 1 ? form.op_1_desc : n === 2 ? form.op_2_desc : form.op_3_desc}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (n === 1) setForm((f) => ({ ...f, op_1_desc: val }));
+                          else if (n === 2) setForm((f) => ({ ...f, op_2_desc: val }));
+                          else setForm((f) => ({ ...f, op_3_desc: val }));
+                        }}
+                        placeholder={`What option ${n} does`}
+                        className="w-full min-h-[80px] resize-y px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 max-w-xs">
+                      <div>
+                        <label className="block text-sm font-medium text-text-secondary mb-1">
+                          EN cost {form.percentage ? '(±% modifier)' : ''}
+                        </label>
+                        {form.percentage ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              step="any"
+                              value={n === 1 ? optionEnToPercent(form.op_1_en) : n === 2 ? optionEnToPercent(form.op_2_en) : optionEnToPercent(form.op_3_en)}
+                              onChange={(e) => {
+                                const v = percentToOptionEn(e.target.value);
+                                if (n === 1) setForm((f) => ({ ...f, op_1_en: v }));
+                                else if (n === 2) setForm((f) => ({ ...f, op_2_en: v }));
+                                else setForm((f) => ({ ...f, op_3_en: v }));
+                              }}
+                              className="w-full"
+                              placeholder="e.g. -12.5"
+                            />
+                            <span className="text-sm text-text-muted shrink-0">%</span>
+                          </div>
+                        ) : (
+                          <Input
+                            type="number"
+                            step="any"
+                            value={n === 1 ? (form.op_1_en ?? '') : n === 2 ? (form.op_2_en ?? '') : (form.op_3_en ?? '')}
+                            onChange={(e) => {
+                              const v = e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0);
+                              if (n === 1) setForm((f) => ({ ...f, op_1_en: v }));
+                              else if (n === 2) setForm((f) => ({ ...f, op_2_en: v }));
+                              else setForm((f) => ({ ...f, op_3_en: v }));
+                            }}
+                            className="w-full"
+                            placeholder="—"
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-text-secondary mb-1">TP cost</label>
+                        <Input
+                          type="number"
+                          step="any"
+                          value={n === 1 ? (form.op_1_tp ?? '') : n === 2 ? (form.op_2_tp ?? '') : (form.op_3_tp ?? '')}
+                          onChange={(e) => {
+                            const v = e.target.value === '' ? undefined : (parseFloat(e.target.value) || 0);
+                            if (n === 1) setForm((f) => ({ ...f, op_1_tp: v }));
+                            else if (n === 2) setForm((f) => ({ ...f, op_2_tp: v }));
+                            else setForm((f) => ({ ...f, op_3_tp: v }));
+                          }}
+                          className="w-full"
+                          placeholder="—"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="grid grid-cols-3 gap-3 items-center">
-                <Input
-                  value={form.op_2_desc}
-                  onChange={(e) => setForm((f) => ({ ...f, op_2_desc: e.target.value }))}
-                  placeholder="Option 2 description"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.op_2_en}
-                  onChange={(e) => setForm((f) => ({ ...f, op_2_en: parseFloat(e.target.value) || 0 }))}
-                  placeholder="EN"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.op_2_tp}
-                  onChange={(e) => setForm((f) => ({ ...f, op_2_tp: parseFloat(e.target.value) || 0 }))}
-                  placeholder="TP"
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-3 items-center">
-                <Input
-                  value={form.op_3_desc}
-                  onChange={(e) => setForm((f) => ({ ...f, op_3_desc: e.target.value }))}
-                  placeholder="Option 3 description"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.op_3_en}
-                  onChange={(e) => setForm((f) => ({ ...f, op_3_en: parseFloat(e.target.value) || 0 }))}
-                  placeholder="EN"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.5}
-                  value={form.op_3_tp}
-                  onChange={(e) => setForm((f) => ({ ...f, op_3_tp: parseFloat(e.target.value) || 0 }))}
-                  placeholder="TP"
-                />
-              </div>
-              <p className="text-xs text-text-muted">
-                Only options with a description are saved; leave rows blank if this part has fewer options.
-              </p>
-            </div>
+            )}
           </div>
         </div>
       </Modal>

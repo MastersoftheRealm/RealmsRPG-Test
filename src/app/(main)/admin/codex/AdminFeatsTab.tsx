@@ -18,13 +18,15 @@ import {
   GridListRow,
   ListEmptyState as EmptyState,
 } from '@/components/shared';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Plus, X } from 'lucide-react';
+import { Pencil, Plus, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+
+const COPY_NAME_SUFFIX = ' copy';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatAbilityList } from '@/lib/utils';
 
@@ -61,6 +63,7 @@ export function AdminFeatsTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
     maxLevel: null,
@@ -189,6 +192,7 @@ export function AdminFeatsTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
     setForm(formDefaults);
     setModalOpen(true);
   };
@@ -198,8 +202,41 @@ export function AdminFeatsTab() {
     const n = Number(v);
     return Number.isNaN(n) ? undefined : n;
   };
+  const openDuplicate = (feat: Feat) => {
+    setEditing(null);
+    setCopySourceName(feat.name);
+    const ext = feat as unknown as Record<string, unknown>;
+    const abilityArr = Array.isArray(feat.ability) ? feat.ability : (feat.ability ? [String(feat.ability)] : []);
+    setForm({
+      name: (feat.name || '').trim() + COPY_NAME_SUFFIX,
+      description: feat.description || '',
+      req_desc: String(ext.req_desc || ''),
+      category: feat.category || '',
+      ability: abilityArr,
+      ability_req: feat.ability_req || [],
+      abil_req_val: feat.abil_req_val || [],
+      tags: feat.tags || [],
+      skill_req: feat.skill_req || [],
+      skill_req_val: feat.skill_req_val || [],
+      feat_cat_req: String(ext.feat_cat_req || ''),
+      pow_abil_req: toOptNum(ext.pow_abil_req),
+      mart_abil_req: toOptNum(ext.mart_abil_req),
+      pow_prof_req: toOptNum(ext.pow_prof_req),
+      mart_prof_req: toOptNum(ext.mart_prof_req),
+      speed_req: toOptNum(ext.speed_req),
+      feat_lvl: toOptNum(ext.feat_lvl),
+      lvl_req: toOptNum(feat.lvl_req),
+      uses_per_rec: toOptNum(feat.uses_per_rec),
+      rec_period: feat.rec_period || '',
+      char_feat: feat.char_feat ?? false,
+      state_feat: feat.state_feat ?? false,
+    });
+    setModalOpen(true);
+  };
+
   const openEdit = (feat: Feat) => {
     setEditing(feat);
+    setCopySourceName(null);
     const ext = feat as unknown as Record<string, unknown>;
     const abilityArr = Array.isArray(feat.ability) ? feat.ability : (feat.ability ? [String(feat.ability)] : []);
     setForm({
@@ -232,6 +269,7 @@ export function AdminFeatsTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
   };
 
@@ -454,8 +492,11 @@ export function AdminFeatsTab() {
                       </div>
                     ) : (
                       <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(feat)} label="Edit">
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(feat)} label="Edit" aria-label="Edit">
                           <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(feat)} label="Duplicate" aria-label="Duplicate">
+                          <Copy className="w-4 h-4" />
                         </IconButton>
                         <IconButton
                           variant="ghost"
@@ -481,6 +522,7 @@ export function AdminFeatsTab() {
         onClose={closeModal}
         title={editing ? 'Edit Feat' : 'Add Feat'}
         size="xl"
+        fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -504,6 +546,11 @@ export function AdminFeatsTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new feat.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input
@@ -514,12 +561,12 @@ export function AdminFeatsTab() {
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea
+            <Textarea
               value={form.description}
               onChange={(e) => scheduleFormUpdate((f) => ({ ...f, description: e.target.value }))}
               placeholder="Feat description"
-              className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary"
-              rows={3}
+              className="min-h-[120px] resize-y"
+              rows={4}
             />
           </div>
           <div>
@@ -533,19 +580,57 @@ export function AdminFeatsTab() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-              <Input
-                value={form.category}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, category: e.target.value }))}
-                placeholder="e.g. Combat"
-              />
+              <select
+                value={form.category && filterOptions.categories.includes(form.category) ? form.category : (form.category ? '__new__' : '')}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '__new__') scheduleFormUpdate((f) => ({ ...f, category: f.category || '' }));
+                  else scheduleFormUpdate((f) => ({ ...f, category: v }));
+                }}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Feat category"
+              >
+                <option value="">— None —</option>
+                {filterOptions.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+                <option value="__new__">Add new category...</option>
+              </select>
+              {form.category && !filterOptions.categories.includes(form.category) && (
+                <Input
+                  value={form.category}
+                  onChange={(e) => scheduleFormUpdate((f) => ({ ...f, category: e.target.value }))}
+                  placeholder="Type new category"
+                  className="mt-2"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Feat Category Required (feat_cat_req)</label>
-              <Input
-                value={form.feat_cat_req}
-                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_cat_req: e.target.value }))}
-                placeholder="e.g. Defense"
-              />
+              <select
+                value={form.feat_cat_req && filterOptions.categories.includes(form.feat_cat_req) ? form.feat_cat_req : (form.feat_cat_req ? '__new__' : '')}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '__new__') scheduleFormUpdate((f) => ({ ...f, feat_cat_req: f.feat_cat_req || '' }));
+                  else scheduleFormUpdate((f) => ({ ...f, feat_cat_req: v }));
+                }}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Feat category required"
+              >
+                <option value="">— None —</option>
+                {filterOptions.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+                <option value="__new__">Add new category...</option>
+              </select>
+              {form.feat_cat_req && !filterOptions.categories.includes(form.feat_cat_req) && (
+                <Input
+                  value={form.feat_cat_req}
+                  onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_cat_req: e.target.value }))}
+                  placeholder="Type new category"
+                  className="mt-2"
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">Character Level Required (lvl_req)</label>
@@ -778,17 +863,66 @@ export function AdminFeatsTab() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Tags (comma-separated)</label>
-            <Input
-              value={form.tags.join(', ')}
-              onChange={(e) =>
-                scheduleFormUpdate((f) => ({
-                  ...f,
-                  tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean),
-                }))
-              }
-              placeholder="Combat, Melee, ..."
-            />
+            <label className="block text-sm font-medium text-text-secondary mb-1">Tags</label>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {form.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-alt border border-border-light text-sm"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => scheduleFormUpdate((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }))}
+                    className="p-0.5 rounded hover:bg-surface text-text-muted hover:text-text-primary"
+                    aria-label={`Remove tag ${tag}`}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2 flex-wrap items-center">
+              <select
+                defaultValue=""
+                onChange={(e) => {
+                  const v = e.target.value;
+                  e.target.value = '';
+                  if (v && !form.tags.includes(v)) scheduleFormUpdate((f) => ({ ...f, tags: [...f.tags, v] }));
+                }}
+                className="px-3 py-2 rounded-md border border-border bg-background text-text-primary text-sm"
+                aria-label="Add tag from existing"
+              >
+                <option value="">Add tag from list...</option>
+                {filterOptions.tags.filter((t) => !form.tags.includes(t)).map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div className="mt-2">
+              <label htmlFor="new-tag-input" className="sr-only">New tag name</label>
+              <Input
+                id="new-tag-input"
+                placeholder="Or type new tag and press Enter"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const v = (e.target as HTMLInputElement).value.trim();
+                    if (v && !form.tags.includes(v)) {
+                      scheduleFormUpdate((f) => ({ ...f, tags: [...f.tags, v] }));
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }
+                }}
+                onBlur={(e) => {
+                  const v = e.target.value.trim();
+                  if (v && !form.tags.includes(v)) {
+                    scheduleFormUpdate((f) => ({ ...f, tags: [...f.tags, v] }));
+                    e.target.value = '';
+                  }
+                }}
+              />
+            </div>
           </div>
           <div className="flex gap-6">
             <label className="flex items-center gap-2">

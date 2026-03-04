@@ -6,8 +6,10 @@ import { Modal, Button, Input } from '@/components/ui';
 import { useCodexArchetypes } from '@/hooks/use-codex';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+
+const COPY_NAME_SUFFIX = ' copy';
 
 export function AdminArchetypesTab() {
   const { data: archetypes, isLoading, error } = useCodexArchetypes();
@@ -19,6 +21,7 @@ export function AdminArchetypesTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
   const [form, setForm] = useState({ name: '', type: 'power' as 'power' | 'powered-martial' | 'martial', description: '' });
 
@@ -31,12 +34,25 @@ export function AdminArchetypesTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
     setForm({ name: '', type: 'power', description: '' });
+    setModalOpen(true);
+  };
+
+  const openDuplicate = (a: ArchetypeItem) => {
+    setEditing(null);
+    setCopySourceName(a.name || '');
+    setForm({
+      name: ((a.name || '').trim() || 'Archetype') + COPY_NAME_SUFFIX,
+      type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
+      description: a.description || '',
+    });
     setModalOpen(true);
   };
 
   const openEdit = (a: ArchetypeItem) => {
     setEditing(a);
+    setCopySourceName(null);
     setForm({
       name: a.name || '',
       type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
@@ -48,6 +64,7 @@ export function AdminArchetypesTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
   };
 
@@ -125,8 +142,11 @@ export function AdminArchetypesTab() {
                   </div>
                 ) : (
                   <>
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(a)} label="Edit">
+                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(a)} label="Edit" aria-label="Edit">
                       <Pencil className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(a)} label="Duplicate" aria-label="Duplicate">
+                      <Copy className="w-4 h-4" />
                     </IconButton>
                     <IconButton
                       variant="ghost"
@@ -148,7 +168,7 @@ export function AdminArchetypesTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Archetype' : 'Add Archetype'} size="lg"
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Archetype' : 'Add Archetype'} size="lg" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -168,6 +188,11 @@ export function AdminArchetypesTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new archetype.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Archetype name" />
