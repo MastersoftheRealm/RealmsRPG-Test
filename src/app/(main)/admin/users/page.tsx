@@ -1,8 +1,7 @@
 /**
  * Admin User Management
  * =====================
- * List users by username and change role (New Player, Playtester, Developer).
- * Admin role can only be set via ADMIN_UIDS env.
+ * List users by username and change role.
  */
 
 'use client';
@@ -55,7 +54,6 @@ export default function AdminUsersPage() {
   }, []);
 
   const handleRoleChange = async (username: string, newRole: UserRole) => {
-    if (newRole === 'admin') return;
     setUpdating(username);
     setMessage(null);
     try {
@@ -84,7 +82,7 @@ export default function AdminUsersPage() {
     <PageContainer size="xl">
       <PageHeader
         title="User Management"
-        description="Change user roles by username. Admin can only be set via environment variables."
+        description="Change user roles by username."
       />
       <div className="mb-4">
         <Button variant="secondary" asChild>
@@ -122,21 +120,18 @@ export default function AdminUsersPage() {
                   <td className="py-3 px-4 font-medium text-text-primary">{u.username || '(none)'}</td>
                   <td className="py-3 px-4 text-text-secondary">{ROLE_LABELS[u.role]}</td>
                   <td className="py-3 px-4">
-                    {u.role === 'admin' ? (
-                      <span className="text-text-muted dark:text-text-secondary">Admin</span>
-                    ) : (
-                      <select
-                        value={u.role}
-                        onChange={(e) => handleRoleChange(u.username, e.target.value as UserRole)}
-                        disabled={updating === u.username}
-                        className="rounded border border-border bg-background px-2 py-1 text-sm"
-                        aria-label={`Role for ${u.username || 'user'}`}
-                      >
-                        <option value="new_player">New Player</option>
-                        <option value="playtester">Playtester</option>
-                        <option value="developer">Developer</option>
-                      </select>
-                    )}
+                    <select
+                      value={u.role}
+                      onChange={(e) => handleRoleChange(u.username, e.target.value as UserRole)}
+                      disabled={updating === u.username}
+                      className="rounded border border-border bg-background px-2 py-1 text-sm"
+                      aria-label={`Role for ${u.username || 'user'}`}
+                    >
+                      <option value="new_player">New Player</option>
+                      <option value="playtester">Playtester</option>
+                      <option value="developer">Developer</option>
+                      <option value="admin">Admin</option>
+                    </select>
                   </td>
                 </tr>
               ))}

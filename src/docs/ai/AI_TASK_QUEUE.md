@@ -43,6 +43,36 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
 - Pick `priority: high` then `medium`, `status: not-started` (or `in-progress`). Update to `done` when merged; add `notes` with PR/commit link.
 - **New tasks:** Use next TASK-### ID (see end of file), `AI_REQUEST_TEMPLATE.md` format. Add when audits or implementation reveal work. Check queue first to avoid duplicates.
 
+- id: TASK-284
+  title: Migrate admin authorization from ADMIN_UIDS env to Supabase role-based admin
+  priority: high
+  status: done
+  related_files:
+    - src/lib/admin.ts
+    - src/app/api/admin/users/route.ts
+    - src/app/api/admin/users/update-role/route.ts
+    - src/app/(main)/admin/users/page.tsx
+    - src/app/(main)/admin/page.tsx
+    - src/lib/role-limits.ts
+    - src/docs/ADMIN_SETUP.md
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - .env.example
+  created_at: 2026-03-04
+  created_by: agent
+  description: |
+    Replace env-based admin authorization (`ADMIN_UIDS`) with Supabase role-based authorization using `public.user_profiles.role = 'admin'`.
+    Update admin checks, admin role management endpoints/UI, and setup docs.
+  acceptance_criteria:
+    - `isAdmin(uid)` checks `user_profiles.role` in Supabase.
+    - Admin routes/actions no longer depend on `ADMIN_UIDS`.
+    - Admin role can be granted/revoked through role updates (admin UI/API) or direct DB updates.
+    - Docs and `.env.example` no longer instruct `ADMIN_UIDS` usage.
+    - `npm run build` passes (or blocked external-network cause is documented).
+  notes: |
+    DONE 2026-03-04: `isAdmin` migrated to Supabase role query. Admin users list/update now use DB role as source of truth and allow `admin` role updates.
+    Admin UI copy/select options updated. Docs updated (ADMIN_SETUP and DEPLOYMENT) to role-based admin grant flow; `.env.example` removed ADMIN_UIDS.
+    Build attempt failed in sandbox due external font fetch (`fonts.googleapis.com`) restriction; targeted eslint for changed TS/TSX files passed.
+
 - id: TASK-003
   title: Show weapon damage in Library and wire Edit -> Item Creator
   priority: high

@@ -39,7 +39,7 @@ export default function AdminPage() {
         <section className="rounded-lg border border-border bg-surface p-6">
           <h2 className="text-lg font-semibold text-text-primary mb-2">User Management</h2>
           <p className="text-text-secondary mb-4">
-            Change user roles (New Player, Playtester, Developer) by username. Admin can only be set via environment variables.
+            Change user roles (New Player, Playtester, Developer, Admin) by username.
           </p>
           <Button asChild>
             <Link href="/admin/users">Open User Management</Link>

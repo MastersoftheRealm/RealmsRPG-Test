@@ -79,11 +79,10 @@ Run `sql/supabase-storage-policies.sql`. If you previously only added INSERT + S
 
 ## Admin Setup
 
-Admins are configured via one of:
+Admins are configured in `public.user_profiles`:
 
-1. **Supabase `auth.users` metadata** — Add `role: 'admin'` to user metadata
-2. **Database table** — `admins` table with `user_id` (if used)
-3. **Environment variable** — `ADMIN_UIDS` (comma-separated user IDs)
+1. Find user ID in Supabase Authentication → Users.
+2. Set `user_profiles.role = 'admin'` for that user (SQL Editor or admin UI).
 
 See `ADMIN_SETUP.md` for current implementation.
 
@@ -118,7 +117,6 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` | Supabase → Settings → API → Project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | `eyJ...` (anon key) | Supabase → Settings → API → anon public |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJ...` (service_role key) | Supabase → Settings → API → service_role |
-| `ADMIN_UIDS` | `uid1,uid2` | Your Supabase Auth user IDs (optional, for admin) |
 
 **Never** use `NEXT_PUBLIC_` for `SUPABASE_SERVICE_ROLE_KEY`.
 

@@ -1,17 +1,26 @@
 /**
  * Admin Update User Role API
  * ==========================
- * Update a user's role by username. Allowed roles: new_player, playtester, developer.
+ * Update a user's role by username.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { createClient } from '@/lib/supabase/server';
 
-const ALLOWED_ROLES = ['new_player', 'playtester', 'developer'] as const;
+const ALLOWED_ROLES = ['new_player', 'playtester', 'developer', 'admin'] as const;
 
 export const dynamic = 'force-dynamic';
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Supabase admin env not configured');
+  }
+  return createSupabaseAdminClient(url, key);
+}
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -33,11 +42,11 @@ export async function PATCH(request: NextRequest) {
     }
     if (!role || !ALLOWED_ROLES.includes(role as (typeof ALLOWED_ROLES)[number])) {
       return NextResponse.json({
-        error: 'Role must be one of: new_player, playtester, developer. Admin can only be set via environment.',
+        error: 'Role must be one of: new_player, playtester, developer, admin.',
       }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = getSupabaseAdmin();
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('id')
@@ -49,7 +58,7 @@ export async function PATCH(request: NextRequest) {
 
     await supabase
       .from('user_profiles')
-      .update({ role: role as 'new_player' | 'playtester' | 'developer' })
+      .update({ role: role as 'new_player' | 'playtester' | 'developer' | 'admin' })
       .eq('id', (profile as { id: string }).id);
 
     return NextResponse.json({ success: true, username, role });

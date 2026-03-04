@@ -2,7 +2,7 @@
  * Role Limits
  * ============
  * Per-role limits for characters, library items, campaigns, and campaign members.
- * Admin: no limits (and only assignable via env ADMIN_UIDS).
+ * Admin: no limits.
  */
 
 export type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';
@@ -64,14 +64,4 @@ export const ROLE_LIMITS: Record<UserRole, RoleLimits> = {
 export function getLimitsForRole(role: UserRole | string | null): RoleLimits {
   const r = (role ?? 'new_player') as UserRole;
   return ROLE_LIMITS[r] ?? ROLE_LIMITS.new_player;
-}
-
-/** Resolve effective role: if uid is in ADMIN_UIDS, treat as admin for limits. */
-export function getEffectiveRole(
-  role: UserRole | string | null,
-  uid: string | null,
-  adminUids: string[]
-): UserRole {
-  if (uid && adminUids.includes(uid)) return 'admin';
-  return (role as UserRole) ?? 'new_player';
 }
