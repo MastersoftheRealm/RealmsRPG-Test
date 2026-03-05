@@ -11,12 +11,16 @@ import {
   ListEmptyState as EmptyState,
   ListHeader,
 } from '@/components/shared';
-import { Modal, Button, Input } from '@/components/ui';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, Copy, X, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import { useModalListState } from '@/hooks/use-modal-list-state';
+
+const COPY_NAME_SUFFIX = ' copy';
+const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr 60px';
 import { useSort } from '@/hooks/use-sort';
 
 export function AdminSpeciesTab() {
@@ -31,6 +35,7 @@ export function AdminSpeciesTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -71,6 +76,15 @@ export function AdminSpeciesTab() {
 
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [sizeFilters, setSizeFilters] = useState<string[]>([]);
+  const [traitPickerFor, setTraitPickerFor] = useState<null | 'speciesTraitIds' | 'ancestryTraitIds' | 'flawIds' | 'characteristicIds'>(null);
+
+  const traitPickerList = useModalListState({
+    items: (traits as Trait[]) || [],
+    searchFields: ['name', 'description'],
+    initialSortKey: 'name',
+  });
+
+  const traitIdToTrait = useMemo(() => new Map((traits as Trait[]).map((t) => [String(t.id), t])), [traits]);
 
   const filterOptions = useMemo(() => {
     if (!species) return { types: [] as string[], sizes: [] as string[] };
@@ -103,6 +117,7 @@ export function AdminSpeciesTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
     setForm({
       name: '',
       description: '',
@@ -123,8 +138,41 @@ export function AdminSpeciesTab() {
     setModalOpen(true);
   };
 
+  const openDuplicate = (s: Species) => {
+    setEditing(null);
+    setCopySourceName(s.name);
+    const allSkillsArr = skills as Skill[];
+    const allTraitsArr = traits as Trait[];
+    const skillIds = normalizeIds((s.skills || []) as string[], allSkillsArr);
+    const speciesTraitIds = normalizeIds((s.species_traits || []) as string[], allTraitsArr);
+    const ancestryTraitIds = normalizeIds((s.ancestry_traits || []) as string[], allTraitsArr);
+    const flawIds = normalizeIds((s.flaws || []) as string[], allTraitsArr);
+    const characteristicIds = normalizeIds((s.characteristics || []) as string[], allTraitsArr);
+    const adult = s.adulthood_lifespan && s.adulthood_lifespan[0] != null ? String(s.adulthood_lifespan[0]) : '';
+    const max = s.adulthood_lifespan && s.adulthood_lifespan[1] != null ? String(s.adulthood_lifespan[1]) : '';
+    setForm({
+      name: (s.name || '').trim() + COPY_NAME_SUFFIX,
+      description: s.description || '',
+      type: s.type || '',
+      size: s.size || (s.sizes && s.sizes[0]) || 'Medium',
+      sizes: (s.sizes || []).join(', ') || s.size || 'Medium',
+      skillIds,
+      speciesTraitIds,
+      ancestryTraitIds,
+      flawIds,
+      characteristicIds,
+      aveHeight: s.ave_height != null ? String(s.ave_height) : '',
+      aveWeight: s.ave_weight != null ? String(s.ave_weight) : '',
+      adultAge: adult,
+      maxAge: max,
+      languages: (s.languages || []).join(', '),
+    });
+    setModalOpen(true);
+  };
+
   const openEdit = (s: Species) => {
     setEditing(s);
+    setCopySourceName(null);
     const allSkillsArr = skills as Skill[];
     const allTraitsArr = traits as Trait[];
     const skillIds = normalizeIds((s.skills || []) as string[], allSkillsArr);
@@ -158,7 +206,18 @@ export function AdminSpeciesTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
+    setTraitPickerFor(null);
+  };
+
+  const addTraitTo = (traitId: string) => {
+    if (!traitPickerFor) return;
+    setForm((f) => {
+      const arr = f[traitPickerFor];
+      if (arr.includes(traitId)) return f;
+      return { ...f, [traitPickerFor]: [...arr, traitId] };
+    });
   };
 
   const handleSave = async () => {
@@ -174,6 +233,7 @@ export function AdminSpeciesTab() {
       .split(',')
       .map((l) => l.trim())
       .filter(Boolean);
+    // Only sizes is stored in DB; size is form-only fallback. Do not send size.
     const data = {
       name: form.name.trim(),
       description: form.description.trim(),
@@ -377,8 +437,11 @@ export function AdminSpeciesTab() {
                         </div>
                       ) : (
                         <>
-                          <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit">
+                          <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit" aria-label="Edit">
                             <Pencil className="w-4 h-4" />
+                          </IconButton>
+                          <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(s)} label="Duplicate" aria-label="Duplicate">
+                            <Copy className="w-4 h-4" />
                           </IconButton>
                           <IconButton
                             variant="ghost"
@@ -400,7 +463,7 @@ export function AdminSpeciesTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Species' : 'Add Species'} size="lg"
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Species' : 'Add Species'} size="lg" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -420,13 +483,18 @@ export function AdminSpeciesTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new species.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Species name" />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Species description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Species description" className="min-h-[120px] resize-y" rows={4} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -495,53 +563,115 @@ export function AdminSpeciesTab() {
               onRemove={(v) => setForm((f) => ({ ...f, skillIds: f.skillIds.filter((id) => id !== v) }))}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Species Traits</label>
-              <ChipSelect
-                label=""
-                placeholder="Choose traits"
-                options={traitOptions}
-                selectedValues={form.speciesTraitIds}
-                onSelect={(v) => setForm((f) => ({ ...f, speciesTraitIds: [...f.speciesTraitIds, v] }))}
-                onRemove={(v) => setForm((f) => ({ ...f, speciesTraitIds: f.speciesTraitIds.filter((id) => id !== v) }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Ancestry Traits</label>
-              <ChipSelect
-                label=""
-                placeholder="Choose traits"
-                options={traitOptions}
-                selectedValues={form.ancestryTraitIds}
-                onSelect={(v) => setForm((f) => ({ ...f, ancestryTraitIds: [...f.ancestryTraitIds, v] }))}
-                onRemove={(v) => setForm((f) => ({ ...f, ancestryTraitIds: f.ancestryTraitIds.filter((id) => id !== v) }))}
-              />
-            </div>
+          {(['speciesTraitIds', 'ancestryTraitIds', 'flawIds', 'characteristicIds'] as const).map((key) => {
+            const label = key === 'speciesTraitIds' ? 'Species Traits' : key === 'ancestryTraitIds' ? 'Ancestry Traits' : key === 'flawIds' ? 'Flaws' : 'Characteristics';
+            const ids = form[key];
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <label className="block text-sm font-medium text-text-secondary">{label}</label>
+                  <Button variant="outline" size="sm" onClick={() => setTraitPickerFor(key)} aria-label={`Add ${label}`}>
+                    <Plus className="w-4 h-4 mr-1 inline" />
+                    Add
+                  </Button>
+                </div>
+                <div className="border border-border-light rounded-lg overflow-hidden bg-surface-alt min-h-[44px]">
+                  {ids.length === 0 ? (
+                    <p className="text-sm text-text-muted p-3">None. Click Add to choose traits.</p>
+                  ) : (
+                    ids.map((id) => {
+                      const t = traitIdToTrait.get(id);
+                      return (
+                        <GridListRow
+                          key={id}
+                          id={id}
+                          name={t?.name ?? id}
+                          description={t?.description ?? ''}
+                          gridColumns="1fr 44px"
+                          columns={[]}
+                          rightSlot={
+                            <IconButton
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setForm((f) => ({ ...f, [key]: f[key].filter((x) => x !== id) }))}
+                              label={`Remove ${t?.name ?? id}`}
+                              aria-label={`Remove ${t?.name ?? id}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </IconButton>
+                          }
+                        />
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={traitPickerFor !== null}
+        onClose={() => setTraitPickerFor(null)}
+        title={traitPickerFor === 'speciesTraitIds' ? 'Add Species Trait' : traitPickerFor === 'ancestryTraitIds' ? 'Add Ancestry Trait' : traitPickerFor === 'flawIds' ? 'Add Flaw' : 'Add Characteristic'}
+        size="lg"
+        fullScreenOnMobile
+        footer={
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setTraitPickerFor(null)}>Done</Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Flaws</label>
-              <ChipSelect
-                label=""
-                placeholder="Choose flaw traits"
-                options={traitOptions}
-                selectedValues={form.flawIds}
-                onSelect={(v) => setForm((f) => ({ ...f, flawIds: [...f.flawIds, v] }))}
-                onRemove={(v) => setForm((f) => ({ ...f, flawIds: f.flawIds.filter((id) => id !== v) }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Characteristics</label>
-              <ChipSelect
-                label=""
-                placeholder="Choose characteristic traits"
-                options={traitOptions}
-                selectedValues={form.characteristicIds}
-                onSelect={(v) => setForm((f) => ({ ...f, characteristicIds: [...f.characteristicIds, v] }))}
-                onRemove={(v) => setForm((f) => ({ ...f, characteristicIds: f.characteristicIds.filter((id) => id !== v) }))}
-              />
-            </div>
+        }
+      >
+        <div className="space-y-2">
+          <SearchInput
+            value={traitPickerList.search}
+            onChange={traitPickerList.setSearch}
+            placeholder="Search traits..."
+          />
+          <ListHeader
+            columns={[
+              { key: 'name', label: 'NAME' },
+              { key: 'uses_per_rec', label: 'USES' },
+              { key: 'rec_period', label: 'RECOVERY' },
+              { key: '_actions', label: '', sortable: false as const },
+            ]}
+            gridColumns={TRAIT_PICKER_GRID}
+            sortState={traitPickerList.sortState}
+            onSort={traitPickerList.handleSort}
+          />
+          <div className="max-h-64 overflow-y-auto border border-border rounded-lg">
+            {traitPickerList.sortedItems.length === 0 ? (
+              <p className="text-sm text-text-muted p-4 text-center">No traits match. Adjust search.</p>
+            ) : (
+              traitPickerList.sortedItems.map((t: Trait) => {
+                const alreadyAdded = traitPickerFor ? form[traitPickerFor].includes(t.id) : false;
+                return (
+                  <GridListRow
+                    key={t.id}
+                    id={t.id}
+                    name={t.name}
+                    description={t.description || ''}
+                    gridColumns={TRAIT_PICKER_GRID}
+                    columns={[
+                      { key: 'Uses', value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-' },
+                      { key: 'Recovery', value: t.rec_period || '-' },
+                    ]}
+                    rightSlot={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={alreadyAdded}
+                        onClick={() => addTraitTo(t.id)}
+                        aria-label={alreadyAdded ? 'Already added' : `Add ${t.name}`}
+                      >
+                        {alreadyAdded ? 'Added' : 'Add'}
+                      </Button>
+                    }
+                  />
+                );
+              })
+            )}
           </div>
         </div>
       </Modal>
