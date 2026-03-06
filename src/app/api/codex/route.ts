@@ -116,6 +116,7 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
       pow_prof_req: toNum(r.pow_prof_req),
       speed_req: toNum(r.speed_req),
       feat_lvl: toNum(r.feat_lvl),
+      base_feat_id: r.base_feat_id != null && r.base_feat_id !== '' ? String(r.base_feat_id) : undefined,
     }));
 
     const codexSkills = skillRows.map((r) => {

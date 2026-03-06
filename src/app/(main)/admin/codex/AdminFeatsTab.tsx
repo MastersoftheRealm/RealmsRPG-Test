@@ -23,7 +23,7 @@ import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Plus, Copy, X } from 'lucide-react';
+import { Pencil, Plus, Copy, X, Layers } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 
 const COPY_NAME_SUFFIX = ' copy';
@@ -171,6 +171,7 @@ export function AdminFeatsTab() {
     rec_period: '',
     char_feat: false,
     state_feat: false,
+    base_feat_id: '' as string,
   };
 
   const ABILITY_OPTIONS = ABILITIES_AND_DEFENSES.map(a => ({ value: a, label: a }));
@@ -230,6 +231,7 @@ export function AdminFeatsTab() {
       rec_period: feat.rec_period || '',
       char_feat: feat.char_feat ?? false,
       state_feat: feat.state_feat ?? false,
+      base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
     });
     setModalOpen(true);
   };
@@ -262,6 +264,42 @@ export function AdminFeatsTab() {
       rec_period: feat.rec_period || '',
       char_feat: feat.char_feat ?? false,
       state_feat: feat.state_feat ?? false,
+      base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
+    });
+    setModalOpen(true);
+  };
+
+  /** Open add modal pre-filled to add the next level of this feat (level-1 base). */
+  const openAddLevel = (baseFeat: Feat) => {
+    setEditing(null);
+    setCopySourceName(null);
+    const ext = baseFeat as unknown as Record<string, unknown>;
+    const abilityArr = Array.isArray(baseFeat.ability) ? baseFeat.ability : (baseFeat.ability ? [String(baseFeat.ability)] : []);
+    const nextLevel = (baseFeat.feat_lvl ?? 1) + 1;
+    setForm({
+      name: (baseFeat.name || '').trim(),
+      description: baseFeat.description || '',
+      req_desc: String(ext.req_desc || ''),
+      category: baseFeat.category || '',
+      ability: abilityArr,
+      ability_req: baseFeat.ability_req || [],
+      abil_req_val: baseFeat.abil_req_val || [],
+      tags: baseFeat.tags || [],
+      skill_req: baseFeat.skill_req || [],
+      skill_req_val: baseFeat.skill_req_val || [],
+      feat_cat_req: String(ext.feat_cat_req || ''),
+      pow_abil_req: toOptNum(ext.pow_abil_req),
+      mart_abil_req: toOptNum(ext.mart_abil_req),
+      pow_prof_req: toOptNum(ext.pow_prof_req),
+      mart_prof_req: toOptNum(ext.mart_prof_req),
+      speed_req: toOptNum(ext.speed_req),
+      feat_lvl: nextLevel,
+      lvl_req: toOptNum(baseFeat.lvl_req),
+      uses_per_rec: toOptNum(baseFeat.uses_per_rec),
+      rec_period: baseFeat.rec_period || '',
+      char_feat: baseFeat.char_feat ?? false,
+      state_feat: baseFeat.state_feat ?? false,
+      base_feat_id: String(baseFeat.id),
     });
     setModalOpen(true);
   };
@@ -299,6 +337,7 @@ export function AdminFeatsTab() {
       rec_period: form.rec_period.trim() || undefined,
       char_feat: form.char_feat,
       state_feat: form.state_feat,
+      base_feat_id: form.base_feat_id.trim() || undefined,
     };
 
     const id = (form.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '') || `feat_${Date.now()}`).slice(0, 100);
@@ -492,6 +531,11 @@ export function AdminFeatsTab() {
                       </div>
                     ) : (
                       <>
+                        {!(feat as Feat & { base_feat_id?: string }).base_feat_id && (feat.feat_lvl == null || feat.feat_lvl === 1) && (
+                          <IconButton variant="ghost" size="sm" onClick={() => openAddLevel(feat)} label="Add level" aria-label="Add level">
+                            <Layers className="w-4 h-4" />
+                          </IconButton>
+                        )}
                         <IconButton variant="ghost" size="sm" onClick={() => openEdit(feat)} label="Edit" aria-label="Edit">
                           <Pencil className="w-4 h-4" />
                         </IconButton>
@@ -651,6 +695,24 @@ export function AdminFeatsTab() {
                 onChange={(e) => scheduleFormUpdate((f) => ({ ...f, feat_lvl: e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined }))}
                 placeholder="No value"
               />
+            </div>
+            <div>
+              <label htmlFor="admin-feat-base-feat-id" className="block text-sm font-medium text-text-secondary mb-1">Base feat (level 1)</label>
+              <select
+                id="admin-feat-base-feat-id"
+                value={form.base_feat_id}
+                onChange={(e) => scheduleFormUpdate((f) => ({ ...f, base_feat_id: e.target.value }))}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                aria-label="Base feat (level 1) — leave empty for level-1 feats"
+              >
+                <option value="">None (this is level 1)</option>
+                {(feats ?? [])
+                  .filter((f) => !(f as Feat & { base_feat_id?: string }).base_feat_id && ((f as Feat).feat_lvl == null || (f as Feat).feat_lvl === 1))
+                  .map((f) => (
+                    <option key={f.id} value={String(f.id)}>{f.name} (id: {f.id})</option>
+                  ))}
+              </select>
+              <p className="text-xs text-text-muted dark:text-text-secondary mt-1">For level 2+ feats, select the level-1 feat. Same name as base; ids differentiate levels.</p>
             </div>
           </div>
           <div>
