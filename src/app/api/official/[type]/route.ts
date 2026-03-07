@@ -105,16 +105,13 @@ function bodyToDb(type: OfficialType, body: Record<string, unknown>): Record<str
   const scalars: Record<string, unknown> = {};
   const payload: Record<string, unknown> = {};
 
+  // Store power-specific fields in payload only so base schema (without columnar expansion) works.
+  // GET rowToItem reads range/duration/area/damage from payload when columns are absent.
   if (type === 'powers') {
-    const range = body.range as { steps?: number } | undefined;
-    const duration = body.duration as { type?: string; value?: number } | undefined;
-    const area = body.area as { type?: string; level?: number } | undefined;
-    if (range?.steps != null) scalars.range_steps = range.steps;
-    if (duration?.type != null) scalars.duration_type = duration.type;
-    if (duration?.value != null) scalars.duration_value = duration.value;
-    if (area?.type != null) scalars.area_type = area.type;
-    if (area?.level != null) scalars.area_level = area.level;
-    if (Array.isArray(body.damage) && body.damage.length > 0) scalars.damage = body.damage;
+    if (body.range != null) payload.range = body.range;
+    if (body.duration != null) payload.duration = body.duration;
+    if (body.area != null) payload.area = body.area;
+    if (body.damage != null) payload.damage = body.damage;
   }
 
   for (const [k, v] of Object.entries(body)) {

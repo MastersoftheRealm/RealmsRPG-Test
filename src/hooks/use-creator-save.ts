@@ -8,7 +8,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { saveToLibrary, saveToOfficialLibrary, findLibraryItemByName, findOfficialLibraryItemByName } from '@/services/library-service';
+
+const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
 
 export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
 
@@ -66,6 +69,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     publicSuccessMessage = DEFAULT_PUBLIC_SUCCESS,
   } = options;
 
+  const queryClient = useQueryClient();
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [saving, setSaving] = useState(false);
@@ -88,6 +92,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       try {
         if (effectiveTarget === 'public' && publicLibraryType) {
           await saveToOfficialLibrary(publicLibraryType, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
+          queryClient.invalidateQueries({ queryKey: OFFICIAL_LIBRARY_KEY });
           setSaveMessage({ type: 'success', text: publicSuccessMessage });
         } else {
           const existing = await findLibraryItemByName(type, name.trim());

@@ -1,6 +1,6 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-02-25
+Last updated: 2026-03-07
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -35,6 +35,7 @@ How to use
 - Wire option levels and part selections to update calculated costs (EN/TP/C) in UI immediately.
 - Consistent layout: fixed compact summary + scrolling inputs/values.
 - **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities — before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
+- **2026-03-07 (barfight):** Power creator: allow multiple damage types per power (add row; save/load array). TASK-286. Creators: show explicit energy (EN) per item. TASK-287. Remove "(optional)" from damage in creators. TASK-288.
 
 ### 3) Character Sheet & Library
 - Library tab order: Feats, Powers, Techniques, Inventory, Proficiencies, Notes (default open to Feats).
@@ -70,7 +71,7 @@ How to use
 ### 7) Bugs / Behavior to Prioritize
 - **user_profiles / user_items after migration:** Ensure user_profiles row exists (with created_at/updated_at) before any insert into user_items, user_powers, etc. Fix "null value in column updated_at" and "user_items_user_id_fkey" by upserting profile with timestamps and ensuring profile before library writes. ✅ Implemented 2026-03-02 (ensureUserProfile, auth/API/actions/profile-picture; SQL default script).
 - Login redirect: return user to the page that initiated login.
-- Character creator: persist skill allocations automatically when switching tabs.
+- Character creator: persist skill allocations automatically when switching tabs. Species steps: deduplicate list items (flaws, traits, characteristics) when mixed. TASK-284. Species steps: sticky Continue button so user doesn't have to scroll. TASK-285.
 - Creature creator: hide unarmed prowess options > level 1 for new characters; fix dropdown alignment; make summary scroll behavior consistent.
 - Powers/Techniques/Armaments: ensure Codex enrichment computes and displays EN/TP/C in all list views.
 - **Power creator: option levels must not be negative.** Implemented 2026-02-23: PowerPartCard and PowerAdvancedMechanics ValueSteppers for op_1/2/3_lvl now use min={0}.
@@ -78,6 +79,8 @@ How to use
 - **Rules page (embedded Google Doc): DOCS_timing is not defined.** Error is from inside the embedded Google Doc iframe; not fixable in our codebase.
 - **Resources page: Character Sheet PDF 404.** Link is `/Realms Character Sheet Alpha.pdf`; file must exist in `public/` or link updated. TASK-269.
 - **Zustand default export deprecation:** Our stores use named import; warning is from a dependency (noted in AI_CHANGELOG 2026-02-23).
+- **Official library not saving:** Powers, techniques, armaments do not persist when admin saves to official library. TASK-289 (critical).
+- **Range display spacing:** Range shows different spacing for powers vs armaments depending on view (e.g. more spaces in lists/libraries). Unify formatting. TASK-290.
 
 ### 8) Codex & Data Guidance
 - Enrich saved items by resolving saved IDs against Codex (parts, properties) to obtain base_en/base_tp/op_* values.
@@ -1208,3 +1211,11 @@ Notes
 - Feedback: Post-migration errors: (1) "insert or update on table user_items violates foreign key constraint user_items_user_id_fkey — Key is not present in table user_profiles". (2) "null value in column updated_at of relation user_profiles violates not-null constraint". Cannot add items to public library, save armaments from public to personal, or save admin armaments to admin official library.
 - Expected: user_profiles row exists before any user_* insert; created_at/updated_at never null. All library and profile flows work.
 - Disposition: Implemented 2026-03-02. Added ensureUserProfile helper and fixed all user_profiles upserts to include created_at/updated_at; ensure profile before user library inserts (API + library actions); profile-picture upload upsert includes timestamps. SQL migration added: supabase-user-profiles-timestamps-default.sql (DEFAULT now() on created_at/updated_at). See AI_CHANGELOG.
+
+**Raw Feedback Log — 2026-03-07 (barfight)**
+- Date: 2026-03-07
+- Context: Character creator (species steps), Power Creator, Creators (energy display), Library (public/official), range display
+- Priority: Mixed (high for bugs; medium for UX)
+- Feedback: (1) Duplicate list items for species when mixed — e.g. flaws, etc. (2) Continue button should be sticky on species steps so you don't need to wait. (3) Power creator: allow multiple damage types to be added to a power (add another row of damage types; may need to change the save data setup and load data). (4) Creators: explicit energy displays per each thing. (5) Remove "(optional)" from damage — everything is optional so we don't need to specify it. (6) The public library isn't saving powers, techniques, armaments, etc. (7) Spaces for range seems to display differently for powers and maybe armaments depending on what view you're in (more spaces in lists/libraries).
+- Expected: (1) No duplicate traits/flaws/characteristics in species mixed lists. (2) Continue button sticky (e.g. footer) on species steps. (3) Power can have multiple damage types; schema/save/load supports array. (4) Each power/technique/armament in creators shows EN explicitly. (5) No "(optional)" label on damage. (6) Official/public library save persists powers, techniques, armaments. (7) Range spacing consistent across list vs detail views for powers and armaments.
+- Disposition: (1) TASK-284 done 2026-03-07. (2) TASK-285 done 2026-03-07: sticky Continue on species/ancestry steps. (3) TASK-286 done 2026-03-07: power creator multiple damage types. (4) TASK-287 done 2026-03-07: verified EN per part/property already shown. (5) TASK-288 done 2026-03-07: removed "(optional)" from damage labels. (6) TASK-289 done 2026-03-07. (7) TASK-290 done 2026-03-07: normalizeRangeDisplay + item formatRange consistency.

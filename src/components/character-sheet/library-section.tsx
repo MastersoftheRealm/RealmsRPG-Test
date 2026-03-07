@@ -9,7 +9,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { cn, formatDamageDisplay } from '@/lib/utils';
+import { cn, formatDamageDisplay, normalizeRangeDisplay } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab, type CharacterNote } from './notes-tab';
@@ -795,7 +795,7 @@ export function LibrarySection({
                           costLabel="TP"
                           requirements={power.range ? (
                             <div className="text-sm text-text-secondary">
-                              <span className="font-medium">Range:</span> {power.range}
+                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(power.range)}
                             </div>
                           ) : undefined}
                           innate={isInnate}
@@ -912,7 +912,7 @@ export function LibrarySection({
                           costLabel="TP"
                           requirements={power.range ? (
                             <div className="text-sm text-text-secondary">
-                              <span className="font-medium">Range:</span> {power.range}
+                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(power.range)}
                             </div>
                           ) : undefined}
                           innate={isInnate}
@@ -995,7 +995,7 @@ export function LibrarySection({
                     const rangeOrDamage = (tech.range || tech.damage) && (
                       <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
                         {tech.range && (
-                          <span><span className="font-medium">Range:</span> {tech.range}</span>
+                          <span><span className="font-medium">Range:</span> {normalizeRangeDisplay(tech.range)}</span>
                         )}
                         {tech.damage && (
                           <span><span className="font-medium">Damage:</span> {tech.damage}</span>
@@ -1116,7 +1116,7 @@ export function LibrarySection({
                     const columns: ColumnValue[] = [
                       { key: 'attack', value: attackDisplay, className: 'font-medium', align: 'center' },
                       { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-danger-600 dark:text-danger-400 font-medium', align: 'center' },
-                      { key: 'range', value: (item as Item & { range?: string }).range || 'Melee', align: 'center' },
+                      { key: 'range', value: normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee', align: 'center' },
                     ];
                     
                     return (

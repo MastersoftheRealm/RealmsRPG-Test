@@ -271,7 +271,8 @@ export function formatRange(properties: ItemPropertyPayload[]): string {
   });
   if (!prop) return 'Melee';
   const lvl = prop.op_1_lvl || 0;
-  return `${8 + lvl * 8} Spaces`;
+  const n = 8 + lvl * 8;
+  return `${n} ${n === 1 ? 'space' : 'spaces'}`;
 }
 
 /**

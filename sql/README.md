@@ -1,6 +1,6 @@
 # SQL — Migrations & One-Off Scripts
 
-**Current schema reference:** [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). All app tables live in the `public` schema. Do not duplicate table layout here.
+**Current schema reference:** [src/docs/SUPABASE_SCHEMA.md](../src/docs/SUPABASE_SCHEMA.md). All app tables live in the `public` schema. Do not duplicate table layout here. **Owner checklist for DB consistency:** [src/docs/DATABASE_CONSISTENCY_CHECKLIST.md](../src/docs/DATABASE_CONSISTENCY_CHECKLIST.md).
 
 ---
 

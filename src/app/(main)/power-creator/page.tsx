@@ -14,7 +14,7 @@
 
 import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Wand2, Zap, Target, Info } from 'lucide-react';
+import { Plus, Wand2, Zap, Target, Info, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePowerParts, useAdmin, useCreatorSave, useLoadModalLibrary, type PowerPart } from '@/hooks';
 import { useAuthStore } from '@/stores';
@@ -74,7 +74,7 @@ interface PowerCreatorCache {
   }>;
   actionType: string;
   isReaction: boolean;
-  damage: DamageConfig;
+  damage: DamageConfig | DamageConfig[];
   range: RangeConfig;
   area: AreaConfig;
   duration: DurationConfig;
@@ -96,7 +96,8 @@ function PowerCreatorContent() {
   const [selectedAdvancedParts, setSelectedAdvancedParts] = useState<AdvancedPart[]>([]);
   const [actionType, setActionType] = useState('basic');
   const [isReaction, setIsReaction] = useState(false);
-  const [damage, setDamage] = useState<DamageConfig>({ amount: 0, size: 6, type: 'none' });
+  const [damages, setDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none' }]);
+  const damage = damages[0] ?? { amount: 0, size: 6, type: 'none' };
   // Range state (0 = melee/1 space, 1+ = ranged increments)
   const [range, setRange] = useState<RangeConfig>({ steps: 0 });
   // Area of effect state
@@ -132,7 +133,8 @@ function PowerCreatorContent() {
           setDescription(parsed.description || '');
           setActionType(parsed.actionType || 'basic');
           setIsReaction(parsed.isReaction || false);
-          setDamage(parsed.damage || { amount: 0, size: 6, type: 'none' });
+          const d = parsed.damage;
+          setDamages(Array.isArray(d) && d.length > 0 ? d : (d && !Array.isArray(d) ? [d] : [{ amount: 0, size: 6, type: 'none' }]));
           setRange(parsed.range || { steps: 0 });
           setArea(parsed.area || { type: 'none', level: 1, applyDuration: false });
           setDuration(parsed.duration || {
@@ -216,7 +218,7 @@ function PowerCreatorContent() {
         })),
         actionType,
         isReaction,
-        damage,
+        damage: damages,
         range,
         area,
         duration,
@@ -226,7 +228,7 @@ function PowerCreatorContent() {
     } catch (e) {
       console.error('Failed to save power creator cache:', e);
     }
-  }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damage, range, area, duration]);
+  }, [isInitialized, name, description, selectedParts, selectedAdvancedParts, actionType, isReaction, damages, range, area, duration]);
 
   // Filter out mechanic parts for the "Add Part" dropdown
   // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
@@ -378,10 +380,9 @@ function PowerCreatorContent() {
         isMechanic: true,
       })),
     ];
-    const damageToSave =
-      damage.type !== 'none' && damage.amount > 0
-        ? [{ amount: damage.amount, size: damage.size, type: damage.type }]
-        : [];
+    const damageToSave = damages
+      .filter((d) => d.type !== 'none' && d.amount > 0)
+      .map((d) => ({ amount: d.amount, size: d.size, type: d.type }));
     return {
       name: name.trim(),
       data: {
@@ -396,7 +397,7 @@ function PowerCreatorContent() {
         duration,
       },
     };
-  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, damage, actionType, isReaction, range, area, duration]);
+  }, [name, description, selectedParts, selectedAdvancedParts, mechanicParts, damages, actionType, isReaction, range, area, duration]);
 
   const save = useCreatorSave({
     type: 'powers',
@@ -416,7 +417,7 @@ function PowerCreatorContent() {
       setSelectedAdvancedParts([]);
       setActionType('basic');
       setIsReaction(false);
-      setDamage({ amount: 0, size: 6, type: 'none' });
+      setDamages([{ amount: 0, size: 6, type: 'none' }]);
       setRange({ steps: 0 });
       setArea({ type: 'none', level: 1, applyDuration: false });
       setDuration({
@@ -446,7 +447,7 @@ function PowerCreatorContent() {
     setSelectedAdvancedParts([]);
     setActionType('basic');
     setIsReaction(false);
-    setDamage({ amount: 0, size: 6, type: 'none' });
+    setDamages([{ amount: 0, size: 6, type: 'none' }]);
     setRange({ steps: 0 });
     setArea({ type: 'none', level: 1, applyDuration: false });
     setDuration({
@@ -540,14 +541,15 @@ function PowerCreatorContent() {
     }
     
     if (damageData.length > 0) {
-      const dmg = damageData[0];
-      setDamage({
-        amount: dmg.amount || 0,
-        size: dmg.size || 6,
-        type: dmg.type || 'none',
-      });
+      setDamages(
+        damageData.map((dmg) => ({
+          amount: dmg.amount ?? 0,
+          size: dmg.size ?? 6,
+          type: dmg.type ?? 'none',
+        }))
+      );
     } else {
-      setDamage({ amount: 0, size: 6, type: 'none' });
+      setDamages([{ amount: 0, size: 6, type: 'none' }]);
     }
     
     // Load action type and reaction
@@ -992,48 +994,91 @@ function PowerCreatorContent() {
             onUpdate={updateAdvancedPart}
           />
 
-          {/* Damage (Optional) */}
+          {/* Damage — multiple rows (TASK-286) */}
           <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Damage (Optional)</h2>
-            <div className="flex flex-wrap items-center gap-4">
-              <ValueStepper
-                value={damage.amount}
-                onChange={(v) => setDamage((d) => ({ ...d, amount: v }))}
-                label="Dice:"
-                min={0}
-                max={20}
-              />
-              <div className="flex items-center gap-1">
-                <span className="font-bold text-lg">d</span>
+            <h2 className="text-lg font-bold text-text-primary mb-4">Damage</h2>
+            {damages.map((d, index) => (
+              <div key={index} className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light">
+                <ValueStepper
+                  value={d.amount}
+                  onChange={(v) =>
+                    setDamages((prev) =>
+                      prev.map((x, i) => (i === index ? { ...x, amount: v } : x))
+                    )
+                  }
+                  label="Dice:"
+                  min={0}
+                  max={20}
+                />
+                <div className="flex items-center gap-1">
+                  <span className="font-bold text-lg">d</span>
+                  <select
+                    aria-label={`Damage die size, row ${index + 1}`}
+                    value={d.size}
+                    onChange={(e) =>
+                      setDamages((prev) =>
+                        prev.map((x, i) =>
+                          i === index ? { ...x, size: parseInt(e.target.value) } : x
+                        )
+                      )
+                    }
+                    className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                  >
+                    {DIE_SIZES.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <select
-                  aria-label="Damage die size"
-                  value={damage.size}
-                  onChange={(e) => setDamage((d) => ({ ...d, size: parseInt(e.target.value) }))}
+                  aria-label={`Damage type, row ${index + 1}`}
+                  value={d.type}
+                  onChange={(e) =>
+                    setDamages((prev) =>
+                      prev.map((x, i) => (i === index ? { ...x, type: e.target.value } : x))
+                    )
+                  }
                   className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
                 >
-                  {DIE_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
+                  {DAMAGE_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type === 'none' ? 'No damage' : type.charAt(0).toUpperCase() + type.slice(1)}
                     </option>
                   ))}
                 </select>
+                {damages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDamages((prev) => prev.filter((_, i) => i !== index))
+                    }
+                    className="p-2 rounded-lg text-danger-600 hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    aria-label={`Remove damage type row ${index + 1}`}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
               </div>
-              <select
-                aria-label="Damage type"
-                value={damage.type}
-                onChange={(e) => setDamage((d) => ({ ...d, type: e.target.value }))}
-                className="px-3 py-2 border border-border-light rounded-lg"
-              >
-                {DAMAGE_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type === 'none' ? 'No damage' : type.charAt(0).toUpperCase() + type.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {damage.type !== 'none' && damage.amount > 0 && (
+            ))}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                setDamages((prev) => [...prev, { amount: 0, size: 6, type: 'none' }])
+              }
+              className="mt-2 min-h-[44px]"
+            >
+              <Plus className="w-4 h-4 mr-1 inline" aria-hidden />
+              Add damage type
+            </Button>
+            {damages.some((d) => d.type !== 'none' && d.amount > 0) && (
               <p className="mt-2 text-sm text-text-secondary">
-                Damage: <strong>{damage.amount}d{damage.size} {damage.type}</strong>
+                {damages
+                  .filter((d) => d.type !== 'none' && d.amount > 0)
+                  .map((d) => `${d.amount}d${d.size} ${d.type}`)
+                  .join(', ')}
               </p>
             )}
           </div>

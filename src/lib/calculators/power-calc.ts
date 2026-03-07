@@ -635,15 +635,14 @@ export function derivePowerDisplay(
 // =============================================================================
 
 /**
- * Format power damage as [amount]d[size] [type]
+ * Format power damage as [amount]d[size] [type]. Supports multiple damage types (e.g. "2d6 slashing, 1d4 fire").
  */
 export function formatPowerDamage(
   damageArr?: Array<{ amount?: number | string; size?: number | string; type?: string }>
 ): string {
   if (!Array.isArray(damageArr)) return '';
-  const dmg = damageArr.find(
-    (d) => d && d.amount && d.size && d.type && d.type !== 'none'
-  );
-  if (dmg) return `${dmg.amount}d${dmg.size} ${dmg.type}`;
-  return '';
+  const parts = damageArr
+    .filter((d) => d && d.amount && d.size && d.type && d.type !== 'none')
+    .map((d) => `${d.amount}d${d.size} ${d.type}`);
+  return parts.join(', ') || '';
 }

@@ -1331,14 +1331,14 @@ function ItemCreatorContent() {
                 <p className="text-xs text-text-muted dark:text-text-secondary mt-2">Damage blocked when using Shield reaction</p>
               </div>
 
-              {/* Shield Damage (Optional) */}
+              {/* Shield Damage */}
               <div className="bg-surface rounded-xl shadow-md p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Checkbox
                     id="hasShieldDamage"
                     checked={hasShieldDamage}
                     onChange={(e) => setHasShieldDamage(e.target.checked)}
-                    label="Shield Damage (Optional)"
+                    label="Shield Damage"
                     className="text-lg font-bold"
                   />
                 </div>

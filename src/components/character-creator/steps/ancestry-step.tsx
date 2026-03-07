@@ -104,17 +104,15 @@ export function AncestryStep() {
     }
 
     if (speciesA && speciesB) {
+      // Deduplicate by ID so shared traits between the two species appear once (TASK-284)
+      const uniqueAncestryIds = Array.from(new Set([...(speciesA.ancestry_traits || []), ...(speciesB.ancestry_traits || [])].map(String)));
+      const uniqueFlawIds = Array.from(new Set([...(speciesA.flaws || []), ...(speciesB.flaws || [])].map(String)));
+      const uniqueCharIds = Array.from(new Set([...(speciesA.characteristics || []), ...(speciesB.characteristics || [])].map(String)));
       return {
         speciesTraits: [], // mixed uses selectedSpeciesTraits UI
-        ancestryTraits: resolve([
-          ...(speciesA.ancestry_traits || []),
-          ...(speciesB.ancestry_traits || []),
-        ]),
-        flaws: resolve([...(speciesA.flaws || []), ...(speciesB.flaws || [])]),
-        characteristics: resolve([
-          ...(speciesA.characteristics || []),
-          ...(speciesB.characteristics || []),
-        ]),
+        ancestryTraits: resolve(uniqueAncestryIds),
+        flaws: resolve(uniqueFlawIds),
+        characteristics: resolve(uniqueCharIds),
       };
     }
 
@@ -419,9 +417,10 @@ export function AncestryStep() {
             </Button>
           </div>
         </Alert>
-        <div className="flex justify-between">
-          <Button variant="secondary" onClick={prevStep}>← Back</Button>
-          <Button disabled>Continue →</Button>
+        {/* Sticky footer (TASK-285) */}
+        <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+          <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
+          <Button disabled className="min-h-[44px] min-w-[44px]">Continue →</Button>
         </div>
       </div>
     );
@@ -630,9 +629,10 @@ export function AncestryStep() {
           </div>
         )}
 
-        <div className="flex justify-between mt-8">
-          <Button variant="secondary" onClick={prevStep}>← Back</Button>
-          <Button onClick={nextStep} disabled={!canContinue}>Continue →</Button>
+        {/* Sticky footer (TASK-285) */}
+        <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+          <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
+          <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
         </div>
       </div>
     );
@@ -645,9 +645,10 @@ export function AncestryStep() {
         <Alert variant="warning" className="mb-8">
           Species data could not be loaded. Try changing species.
         </Alert>
-        <div className="flex justify-between">
-          <Button variant="secondary" onClick={prevStep}>← Back</Button>
-          <Button onClick={() => setStep('species')}>Change Species</Button>
+        {/* Sticky footer (TASK-285) */}
+        <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+          <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
+          <Button onClick={() => setStep('species')} className="min-h-[44px] min-w-[44px]">Change Species</Button>
         </div>
       </div>
     );
@@ -881,15 +882,10 @@ export function AncestryStep() {
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="flex justify-between mt-8">
-        <Button variant="secondary" onClick={prevStep}>← Back</Button>
-        <Button
-          onClick={nextStep}
-          disabled={!canContinue}
-        >
-          Continue →
-        </Button>
+      {/* Sticky footer (TASK-285) */}
+      <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+        <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
+        <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
       </div>
     </div>
   );
