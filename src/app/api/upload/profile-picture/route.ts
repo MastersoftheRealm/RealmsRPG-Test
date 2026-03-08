@@ -76,8 +76,9 @@ export async function POST(request: NextRequest) {
 
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
 
+    const now = new Date().toISOString();
     await supabase.from('user_profiles').upsert(
-      { id: user.uid, photo_url: publicUrl },
+      { id: user.uid, photo_url: publicUrl, created_at: now, updated_at: now },
       { onConflict: 'id' }
     );
 

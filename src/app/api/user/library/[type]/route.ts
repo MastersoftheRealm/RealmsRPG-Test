@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { validateJson, libraryItemCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 import {
@@ -114,7 +115,7 @@ export async function POST(
     const duplicateOf = body.duplicateOf as string | undefined;
 
     const supabase = await createClient();
-    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
+    await ensureUserProfile(supabase, user.uid);
 
     if (isColumnar(type)) {
       const table = TABLE[type];

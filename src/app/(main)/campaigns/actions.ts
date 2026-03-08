@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
+import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import type { Campaign, CampaignCharacter, ArchetypeDisplayName } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
@@ -61,7 +62,7 @@ export async function createCampaignAction(data: { name: string; description?: s
     const inviteCode = await ensureUniqueInviteCode();
     const supabase = await createClient();
 
-    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
+    await ensureUserProfile(supabase, user.uid);
 
     const { data: campaign, error } = await supabase
       .from('campaigns')

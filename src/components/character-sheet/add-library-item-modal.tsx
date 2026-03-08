@@ -175,19 +175,19 @@ export function AddLibraryItemModal({
         return { rawItems: merged, isLoading: techniquesLoading || publicTechniquesLoading };
       }
       case 'weapon': {
-        const my = userItems.filter((i: UserItem) => i.type === 'weapon').map((i): WithSource<UserItem> => ({ ...i, _source: 'my' } as WithSource<UserItem>));
+        const my = userItems.filter((i: UserItem) => (i.type || '').toString().toLowerCase() === 'weapon').map((i): WithSource<UserItem> => ({ ...i, _source: 'my' } as WithSource<UserItem>));
         const pub = (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || '').toString().toLowerCase() === 'weapon').map((i): WithSource<UserItem> => ({ ...normalizePublicItem(i), _source: 'public' } as WithSource<UserItem>));
         const merged = [...my, ...pub];
         return { rawItems: merged, isLoading: itemsLoading || publicItemsLoading };
       }
       case 'armor': {
-        const my = userItems.filter((i: UserItem) => i.type === 'armor').map((i): WithSource<UserItem> => ({ ...i, _source: 'my' } as WithSource<UserItem>));
+        const my = userItems.filter((i: UserItem) => (i.type || '').toString().toLowerCase() === 'armor').map((i): WithSource<UserItem> => ({ ...i, _source: 'my' } as WithSource<UserItem>));
         const pub = (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || '').toString().toLowerCase() === 'armor').map((i): WithSource<UserItem> => ({ ...normalizePublicItem(i), _source: 'public' } as WithSource<UserItem>));
         const merged = [...my, ...pub];
         return { rawItems: merged, isLoading: itemsLoading || publicItemsLoading };
       }
       case 'shield': {
-        const my = userItems.filter((i: UserItem) => i.type === 'shield').map((i): WithSource<UserItem> => ({ ...i, _source: 'my' } as WithSource<UserItem>));
+        const my = userItems.filter((i: UserItem) => (i.type || '').toString().toLowerCase() === 'shield').map((i): WithSource<UserItem> => ({ ...i, _source: 'my' } as WithSource<UserItem>));
         const pub = (publicItems as Record<string, unknown>[]).filter((i: Record<string, unknown>) => (i.type || '').toString().toLowerCase() === 'shield').map((i): WithSource<UserItem> => ({ ...normalizePublicItem(i), _source: 'public' } as WithSource<UserItem>));
         const merged = [...my, ...pub];
         return { rawItems: merged, isLoading: itemsLoading || publicItemsLoading };

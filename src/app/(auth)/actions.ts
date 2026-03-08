@@ -43,6 +43,7 @@ export async function createUserProfileAction(data: {
     if (!username) username = await generateDefaultUsername();
     const normalized = username.toLowerCase();
     const supabase = await createServerClient();
+    const now = new Date().toISOString();
 
     await supabase.from('user_profiles').upsert(
       {
@@ -50,6 +51,8 @@ export async function createUserProfileAction(data: {
         email: data.email,
         display_name: data.displayName ?? null,
         username: normalized,
+        created_at: now,
+        updated_at: now,
       },
       { onConflict: 'id' }
     );

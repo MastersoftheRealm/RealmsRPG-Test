@@ -168,13 +168,24 @@ Schema and RLS are applied by running SQL in the Dashboard; the app does **not**
 
 ### GET /api/codex 500 or codex data empty
 
-All **codex_*** tables live in **public** (there is no `codex` schema). If you get 500 or empty codex:
+All **codex_*** tables live in **public**. If you get 500:
 
-1. **Tables in public:** In Supabase Table Editor, confirm `public.codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`, and `core_rules` exist.
-2. **RLS:** Ensure RLS policies allow **SELECT** for the role used by the API (e.g. anon or service role). If RLS denies SELECT, the API will error.
-3. **Connection / env:** Check `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (or anon key) in Vercel; wrong or missing keys can cause 500.
+1. **GRANTs + RLS (most common):** The API uses the anon key. You need **table-level GRANT SELECT** for anon/authenticated and **RLS policies**. Without GRANTs you get `42501: permission denied for table codex_feats`.  
+   **Fix:** Run **`sql/supabase-codex-rls-public.sql`** in Supabase Dashboard → SQL Editor. It enables RLS and adds “Anyone can read” (SELECT TO public) on all codex_* and core_rules (and grants SELECT to anon/authenticated).
+2. **Tables in public:** In Table Editor, confirm `public.codex_feats`, `codex_skills`, `codex_species`, `codex_traits`, `codex_parts`, `codex_properties`, `codex_equipment`, `codex_archetypes`, `codex_creature_feats`, and `core_rules` exist.
+3. **Connection / env:** Check `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` (anon key) in Vercel.
 
-The codex API treats “table does not exist” (42P01) as empty for that table so the site can still load; other errors (e.g. RLS) still return 500.
+The API returns a `hint` in the 500 body when it detects permission/RLS errors; use that to confirm and run the RLS script.
+
+**How to get the exact error (to tell support or debug):**
+
+- **Response body:** Call `GET https://realmsrpg.com/api/codex?debug=1`. The 500 JSON will include `debug: { message, code }` with the real Postgres/Supabase error (e.g. `"permission denied for table codex_feats"`, or `"42P01"` for relation not found). Paste that when asking for help.
+- **Vercel:** Project → Logs → filter by `/api/codex`. Look for `[Codex API] Database error:` and the message that follows.
+- **Supabase:** Dashboard → **Logs** → Postgres (or API). Look for failed queries or RLS violations around the time of the request.
+- **RLS check:** In Supabase SQL Editor run:  
+  `SET ROLE anon; SELECT * FROM public.codex_feats LIMIT 1;`  
+  If that returns "permission denied" or 0 rows when the table has data, RLS is blocking anon. Re-run `sql/supabase-codex-rls-public.sql` and confirm each table has a policy (Table Editor → table → RLS policies).
+- **Script errors:** If the RLS script failed partway (e.g. a table name typo or missing table), later policies may not have been created. Re-run the script and note any red error lines; fix missing tables first, then run the script again.
 
 ---
 

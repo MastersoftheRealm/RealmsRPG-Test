@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
+import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
@@ -125,12 +126,13 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
       const listCols = getCharacterListColumns(newData as Record<string, unknown>);
+      const newId = crypto.randomUUID();
 
-      await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
+      await ensureUserProfile(supabase, user.uid);
 
       const { data: created, error: insertErr } = await supabase
         .from('characters')
-        .insert({ user_id: user.uid, data: newData, ...listCols })
+        .insert({ id: newId, user_id: user.uid, data: newData, ...listCols })
         .select('id')
         .single();
       if (insertErr) throw insertErr;
@@ -139,11 +141,13 @@ export async function POST(request: NextRequest) {
 
     const cleanedData = prepareForCreate(data);
     const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>);
-    await supabase.from('user_profiles').upsert({ id: user.uid }, { onConflict: 'id' });
+    const newId = crypto.randomUUID();
+
+    await ensureUserProfile(supabase, user.uid);
 
     const { data: created, error: insertErr } = await supabase
       .from('characters')
-      .insert({ user_id: user.uid, data: cleanedData, ...listCols })
+      .insert({ id: newId, user_id: user.uid, data: cleanedData, ...listCols })
       .select('id')
       .single();
     if (insertErr) throw insertErr;

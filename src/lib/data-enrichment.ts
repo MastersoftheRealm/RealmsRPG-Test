@@ -486,19 +486,21 @@ export function enrichCharacterData(
     items?: UserItem[];
   }
 ): EnrichedCharacterData {
+  // Normalize item type for comparison (official/codex may use 'Shield' vs 'shield')
+  const itemTypeIs = (i: { type?: string }, t: string) => (i.type || '').toLowerCase() === t;
   // Split items by type
-  const weaponItems = userItems.filter(i => i.type === 'weapon');
-  const shieldItems = userItems.filter(i => i.type === 'shield');
-  const armorItems = userItems.filter(i => i.type === 'armor');
-  const equipmentItems = userItems.filter(i => i.type === 'equipment');
-  const codexWeapons = codexEquipment?.filter(i => i.type === 'weapon');
-  const codexShields = codexEquipment?.filter(i => i.type === 'shield');
-  const codexArmor = codexEquipment?.filter(i => i.type === 'armor');
-  const codexItems = codexEquipment?.filter(i => i.type === 'equipment');
-  const publicWeaponItems = publicLibraries?.items?.filter(i => i.type === 'weapon');
-  const publicShieldItems = publicLibraries?.items?.filter(i => i.type === 'shield');
-  const publicArmorItems = publicLibraries?.items?.filter(i => i.type === 'armor');
-  const publicEquipmentItems = publicLibraries?.items?.filter(i => (i.type || 'equipment') === 'equipment');
+  const weaponItems = userItems.filter(i => itemTypeIs(i, 'weapon'));
+  const shieldItems = userItems.filter(i => itemTypeIs(i, 'shield'));
+  const armorItems = userItems.filter(i => itemTypeIs(i, 'armor'));
+  const equipmentItems = userItems.filter(i => itemTypeIs(i, 'equipment'));
+  const codexWeapons = codexEquipment?.filter(i => itemTypeIs(i, 'weapon'));
+  const codexShields = codexEquipment?.filter(i => itemTypeIs(i, 'shield'));
+  const codexArmor = codexEquipment?.filter(i => itemTypeIs(i, 'armor'));
+  const codexItems = codexEquipment?.filter(i => itemTypeIs(i, 'equipment'));
+  const publicWeaponItems = publicLibraries?.items?.filter(i => itemTypeIs(i, 'weapon'));
+  const publicShieldItems = publicLibraries?.items?.filter(i => itemTypeIs(i, 'shield'));
+  const publicArmorItems = publicLibraries?.items?.filter(i => itemTypeIs(i, 'armor'));
+  const publicEquipmentItems = publicLibraries?.items?.filter(i => itemTypeIs(i, 'equipment') || !String(i.type || '').trim());
 
   return {
     powers: enrichPowers(character.powers, userPowers, powerPartsDb || [], publicLibraries?.powers),

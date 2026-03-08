@@ -16,7 +16,7 @@ import { useState, useMemo, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Plus, ChevronDown, ChevronUp, Swords, Zap, Target, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTechniqueParts, useUserItems, useAdmin, useCreatorSave, useLoadModalLibrary, type TechniquePart } from '@/hooks';
+import { useTechniqueParts, useUserItems, useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type TechniquePart } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
@@ -31,6 +31,8 @@ import {
   formatTechniqueDamage,
   type TechniquePartPayload,
 } from '@/lib/calculators';
+import { calculateItemCosts } from '@/lib/calculators/item-calc';
+import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 
 // =============================================================================
 // Types
@@ -370,22 +372,30 @@ function TechniqueCreatorContent() {
   
   // Fetch user's saved techniques for loading (only if user is logged in)
 
-  // Fetch user's saved items (weapons)
+  // Fetch user's saved items (weapons) and codex properties (for weapon TP calculation)
   const { data: userItems = [] } = useUserItems();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
 
-  // Combine default weapons with user's saved weapons
+  // Combine default weapons with user's saved weapons; compute each weapon's TP from its properties
   const allWeaponOptions = useMemo(() => {
     const userWeapons: WeaponConfig[] = userItems
-      .filter((item) => item.type === 'weapon')
-      .map((item) => ({
-        id: item.docId,
-        name: item.name,
-        tp: 1, // Default TP for user weapons; could calculate from properties
-        isUserWeapon: true,
-      }));
-    
+      .filter((item) => (item.type || '').toLowerCase() === 'weapon')
+      .map((item) => {
+        const props = (item.properties || []) as ItemPropertyPayload[];
+        const costs = itemPropertiesDb.length
+          ? calculateItemCosts(props, itemPropertiesDb)
+          : { totalTP: 1 };
+        const tp = Math.max(0, Math.round(costs.totalTP));
+        return {
+          id: item.docId,
+          name: item.name,
+          tp: tp || 1, // Minimum 1 TP for non-unarmed weapons so Add Weapon Attack applies
+          isUserWeapon: true,
+        };
+      });
+
     return [...DEFAULT_WEAPON_OPTIONS, ...userWeapons];
-  }, [userItems]);
+  }, [userItems, itemPropertiesDb]);
 
   // Load cached state from localStorage on mount (only once when parts are available)
   useEffect(() => {

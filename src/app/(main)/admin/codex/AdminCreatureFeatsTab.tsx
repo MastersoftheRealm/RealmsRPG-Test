@@ -15,8 +15,10 @@ import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, X } from 'lucide-react';
+import { Pencil, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+
+const COPY_NAME_SUFFIX = ' copy';
 
 export function AdminCreatureFeatsTab() {
   const { data: creatureFeats, isLoading, error } = useCreatureFeats();
@@ -28,6 +30,7 @@ export function AdminCreatureFeatsTab() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [copySourceName, setCopySourceName] = useState<string | null>(null);
 
   const [form, setForm] = useState<{
     name: string;
@@ -56,7 +59,22 @@ export function AdminCreatureFeatsTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setCopySourceName(null);
     setForm({ name: '', description: '', points: undefined, feat_lvl: undefined, lvl_req: undefined, mechanic: false });
+    setModalOpen(true);
+  };
+
+  const openDuplicate = (f: CreatureFeat) => {
+    setEditing(null);
+    setCopySourceName(f.name);
+    setForm({
+      name: (f.name || '').trim() + COPY_NAME_SUFFIX,
+      description: f.description || '',
+      points: toOptNum(f.points),
+      feat_lvl: toOptNum(f.feat_lvl),
+      lvl_req: toOptNum(f.lvl_req),
+      mechanic: f.mechanic === true,
+    });
     setModalOpen(true);
   };
 
@@ -67,6 +85,7 @@ export function AdminCreatureFeatsTab() {
   };
   const openEdit = (f: CreatureFeat) => {
     setEditing(f);
+    setCopySourceName(null);
     setForm({
       name: f.name,
       description: f.description || '',
@@ -81,17 +100,17 @@ export function AdminCreatureFeatsTab() {
   const closeModal = () => {
     setModalOpen(false);
     setEditing(null);
+    setCopySourceName(null);
     setDeleteConfirm(null);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    // Send only feat_points (DB column); form uses points for UX. Do not add redundant points key.
     const data: Record<string, unknown> = {
       name: form.name.trim(),
       description: form.description.trim(),
-      // Store both points and feat_points for compatibility with existing data/CSV
-      points: form.points ?? undefined,
       feat_points: form.points ?? undefined,
       feat_lvl: form.feat_lvl ?? undefined,
       lvl_req: form.lvl_req ?? undefined,
@@ -198,8 +217,11 @@ export function AdminCreatureFeatsTab() {
                       </div>
                     ) : (
                       <>
-                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(f)} label="Edit">
+                        <IconButton variant="ghost" size="sm" onClick={() => openEdit(f)} label="Edit" aria-label="Edit">
                           <Pencil className="w-4 h-4" />
+                        </IconButton>
+                        <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(f)} label="Duplicate" aria-label="Duplicate">
+                          <Copy className="w-4 h-4" />
                         </IconButton>
                         <IconButton
                           variant="ghost"
@@ -220,7 +242,7 @@ export function AdminCreatureFeatsTab() {
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Creature Feat' : 'Add Creature Feat'} size="lg"
+      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Creature Feat' : 'Add Creature Feat'} size="lg" fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
@@ -240,6 +262,11 @@ export function AdminCreatureFeatsTab() {
         }
       >
         <div className="space-y-4">
+          {copySourceName && (
+            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new creature feat.
+            </p>
+          )}
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
             <Input

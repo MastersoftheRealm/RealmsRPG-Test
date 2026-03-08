@@ -104,8 +104,8 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
       tags: toStrArray(r.tags),
       skill_req: toStrArray(r.skill_req),
       skill_req_val: toNumArray(r.skill_req_val),
-      lvl_req: toNum(r.lvl_req) ?? 0,
-      uses_per_rec: toNum(r.uses_per_rec) ?? 0,
+      lvl_req: toNum(r.lvl_req),
+      uses_per_rec: toNum(r.uses_per_rec),
       mart_abil_req: toNum(r.mart_abil_req),
       char_feat: Boolean(r.char_feat),
       state_feat: Boolean(r.state_feat),
@@ -203,17 +203,17 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
         description: r.description ?? '',
         category: r.category ?? '',
         type,
-        base_en: toNum(r.base_en) ?? 0,
-        base_tp: toNum(r.base_tp) ?? 0,
+        base_en: toNum(r.base_en),
+        base_tp: toNum(r.base_tp),
         op_1_desc: r.op_1_desc ?? undefined,
-        op_1_en: toNum(r.op_1_en) ?? 0,
-        op_1_tp: toNum(r.op_1_tp) ?? 0,
+        op_1_en: toNum(r.op_1_en),
+        op_1_tp: toNum(r.op_1_tp),
         op_2_desc: r.op_2_desc ?? undefined,
-        op_2_en: toNum(r.op_2_en) ?? 0,
-        op_2_tp: toNum(r.op_2_tp) ?? 0,
+        op_2_en: toNum(r.op_2_en),
+        op_2_tp: toNum(r.op_2_tp),
         op_3_desc: r.op_3_desc ?? undefined,
-        op_3_en: toNum(r.op_3_en) ?? 0,
-        op_3_tp: toNum(r.op_3_tp) ?? 0,
+        op_3_en: toNum(r.op_3_en),
+        op_3_tp: toNum(r.op_3_tp),
         percentage: r.percentage === true,
         mechanic: r.mechanic === true,
         duration: r.duration === true,
@@ -232,13 +232,13 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
       type: r.type ?? undefined,
       tp_cost: 0,
       gold_cost: 0,
-      base_ip: toNum(r.base_ip) ?? 0,
-      base_tp: toNum(r.base_tp) ?? 0,
-      base_c: toNum(r.base_c) ?? 0,
+      base_ip: toNum(r.base_ip),
+      base_tp: toNum(r.base_tp),
+      base_c: toNum(r.base_c),
       op_1_desc: r.op_1_desc ?? undefined,
-      op_1_ip: toNum(r.op_1_ip) ?? 0,
-      op_1_tp: toNum(r.op_1_tp) ?? 0,
-      op_1_c: toNum(r.op_1_c) ?? 0,
+      op_1_ip: toNum(r.op_1_ip),
+      op_1_tp: toNum(r.op_1_tp),
+      op_1_c: toNum(r.op_1_c),
       mechanic: r.mechanic === true,
     }));
 
@@ -269,7 +269,7 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
     }));
 
     const codexCreatureFeats = creatureRows.map((r) => {
-      const pointsVal = toNum(r.feat_points) ?? 0;
+      const pointsVal = toNum(r.feat_points);
       return {
         id: r.id,
         name: r.name ?? '',
@@ -308,25 +308,34 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
 
 const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const debug = url.searchParams.get('debug') === '1';
   try {
     const supabase = await createClient();
     const body = await fetchCodexFromClient(supabase);
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
+    const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: string }).code) : undefined;
     const stack = err instanceof Error ? err.stack : undefined;
     console.error('[Codex API] Database error:', message, stack);
     const safeHint =
       process.env.NODE_ENV === 'development'
         ? message
         : message.includes('connect') || message.includes('connection')
-          ? 'Database connection failed. Check DATABASE_URL and ?pgbouncer=true in Vercel env vars.'
+          ? 'Database connection failed. Check NEXT_PUBLIC_SUPABASE_URL and keys in Vercel.'
           : message.includes('exist') || message.includes('relation')
-            ? 'Codex tables may be missing. Run Supabase SQL migrations.'
-            : undefined;
+            ? 'Codex tables may be missing in public. Run Supabase SQL migrations.'
+            : message.includes('permission') || message.includes('policy') || message.includes('row-level') || message.includes('denied')
+              ? 'Permission denied: RLS may be blocking reads. Run sql/supabase-codex-rls-public.sql in Supabase Dashboard → SQL Editor.'
+              : undefined;
     return NextResponse.json(
-      { error: 'Failed to load codex', ...(safeHint && { hint: safeHint }) },
+      {
+        error: 'Failed to load codex',
+        ...(safeHint && { hint: safeHint }),
+        ...(debug && { debug: { message, code } }),
+      },
       { status: 500 }
     );
   }

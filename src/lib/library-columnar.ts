@@ -71,6 +71,21 @@ export function rowToItem(
     base.actionType = v(row, 'actionType', 'action_type');
     base.isReaction = v(row, 'isReaction', 'is_reaction');
     base.innate = v(row, 'innate');
+    const rangeSteps = v(row, 'rangeSteps', 'range_steps') as number | undefined | null;
+    const durationType = v(row, 'durationType', 'duration_type') as string | undefined | null;
+    const durationValue = v(row, 'durationValue', 'duration_value') as number | undefined | null;
+    const areaType = v(row, 'areaType', 'area_type') as string | undefined | null;
+    const areaLevel = v(row, 'areaLevel', 'area_level') as number | undefined | null;
+    const damageCol = row.damage as unknown[] | undefined;
+    const payRange = payload.range as Record<string, unknown> | undefined;
+    const payDuration = payload.duration as Record<string, unknown> | undefined;
+    const payArea = payload.area as Record<string, unknown> | undefined;
+    if (rangeSteps != null) base.range = { ...payRange, steps: rangeSteps };
+    if (durationType != null || durationValue != null)
+      base.duration = { ...payDuration, type: durationType ?? payDuration?.type, value: durationValue ?? payDuration?.value };
+    if (areaType != null || areaLevel != null)
+      base.area = { ...payArea, type: areaType ?? payArea?.type, level: areaLevel ?? payArea?.level };
+    if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
   }
   if (type === 'techniques') {
     base.actionType = v(row, 'actionType', 'action_type');

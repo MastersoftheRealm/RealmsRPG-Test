@@ -87,6 +87,58 @@ DROP POLICY IF EXISTS "Anyone can read official creatures" ON public.official_cr
 CREATE POLICY "Anyone can read official creatures" ON public.official_creatures FOR SELECT TO public USING (true);
 
 -- -----------------------------------------------------------------------------
+-- Admin write policies (INSERT/UPDATE/DELETE) — require user_profiles.role = 'admin'
+-- Run this block if admin saves to official library are blocked by RLS.
+-- Ensure admin users have role = 'admin' in public.user_profiles (e.g. via Admin > Users).
+-- -----------------------------------------------------------------------------
+DO $$
+BEGIN
+  -- official_powers
+  DROP POLICY IF EXISTS "Admin can insert official powers" ON public.official_powers;
+  CREATE POLICY "Admin can insert official powers" ON public.official_powers FOR INSERT TO authenticated
+    WITH CHECK (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can update official powers" ON public.official_powers;
+  CREATE POLICY "Admin can update official powers" ON public.official_powers FOR UPDATE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can delete official powers" ON public.official_powers;
+  CREATE POLICY "Admin can delete official powers" ON public.official_powers FOR DELETE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+
+  -- official_techniques
+  DROP POLICY IF EXISTS "Admin can insert official techniques" ON public.official_techniques;
+  CREATE POLICY "Admin can insert official techniques" ON public.official_techniques FOR INSERT TO authenticated
+    WITH CHECK (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can update official techniques" ON public.official_techniques;
+  CREATE POLICY "Admin can update official techniques" ON public.official_techniques FOR UPDATE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can delete official techniques" ON public.official_techniques;
+  CREATE POLICY "Admin can delete official techniques" ON public.official_techniques FOR DELETE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+
+  -- official_items
+  DROP POLICY IF EXISTS "Admin can insert official items" ON public.official_items;
+  CREATE POLICY "Admin can insert official items" ON public.official_items FOR INSERT TO authenticated
+    WITH CHECK (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can update official items" ON public.official_items;
+  CREATE POLICY "Admin can update official items" ON public.official_items FOR UPDATE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can delete official items" ON public.official_items;
+  CREATE POLICY "Admin can delete official items" ON public.official_items FOR DELETE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+
+  -- official_creatures
+  DROP POLICY IF EXISTS "Admin can insert official creatures" ON public.official_creatures;
+  CREATE POLICY "Admin can insert official creatures" ON public.official_creatures FOR INSERT TO authenticated
+    WITH CHECK (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can update official creatures" ON public.official_creatures;
+  CREATE POLICY "Admin can update official creatures" ON public.official_creatures FOR UPDATE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+  DROP POLICY IF EXISTS "Admin can delete official creatures" ON public.official_creatures;
+  CREATE POLICY "Admin can delete official creatures" ON public.official_creatures FOR DELETE TO authenticated
+    USING (EXISTS (SELECT 1 FROM public.user_profiles WHERE id = auth.uid()::text AND role = 'admin'));
+END $$;
+
+-- -----------------------------------------------------------------------------
 -- Backfill from public_* (id+data) into official_* columnar
 -- Run once when migrating; safe to run multiple times (upsert by id).
 -- -----------------------------------------------------------------------------

@@ -68,6 +68,7 @@ How to use
 - **Site-wide accessibility (Vercel audit 2026-02-23):** (1) Minimum color contrast in light mode: home feature text (text-neutral-600 → text-neutral-700 or semantic token), auth password toggle icon, primary buttons, status text (e.g. green-600). (2) Buttons must have discernable text: icon-only buttons need aria-label (e.g. password show/hide, dice roller history, campaign edit name/description). (3) Select elements must have an accessible name: use <label htmlFor> + id on select, or aria-label. (4) Heading levels must only increase by one: page h1 → next section h2 (not h3); fix campaigns list, campaign detail, encounter combat/skill views. (5) Image alt text must not duplicate adjacent visible text: dice images with "d4"/"d6" etc. next to them should use alt="". (6) Set up eslint-plugin-jsx-a11y and Cursor rule so future code complies. TASK-267.
 
 ### 7) Bugs / Behavior to Prioritize
+- **user_profiles / user_items after migration:** Ensure user_profiles row exists (with created_at/updated_at) before any insert into user_items, user_powers, etc. Fix "null value in column updated_at" and "user_items_user_id_fkey" by upserting profile with timestamps and ensuring profile before library writes. ✅ Implemented 2026-03-02 (ensureUserProfile, auth/API/actions/profile-picture; SQL default script).
 - Login redirect: return user to the page that initiated login.
 - Character creator: persist skill allocations automatically when switching tabs.
 - Creature creator: hide unarmed prowess options > level 1 for new characters; fix dropdown alignment; make summary scroll behavior consistent.
@@ -1191,3 +1192,19 @@ Notes
 - Priority: Medium (task for later)
 - Feedback: When changing account username, it saves the new one but then creates a new "Player###" username and replaces the chosen one instead of keeping the new username.
 - Expected: After changing username, the profile should keep the new username; it should not be overwritten by a generated Player### default.
+
+**Raw Feedback Log — 2026-03-02 (Admin official library save + character creator power/technique selection)**
+- Date: 2026-03-02
+- Context: Admin saving to official library (power, technique, armament, creature, species); character creator add powers/techniques
+- Priority: High
+- Feedback: (1) When admin saves something into the official library it says it saved but it isn't in the database (perhaps old JSONB styles or not saving right). (2) When making a character, add power/technique modal: if you close the modal after adding some, then open again to add more, previously added powers are removed and replaced by whatever new ones you selected (likely same for techniques, armaments).
+- Expected: (1) Official library saves persist to official_* tables; API returns real errors if insert/update fails; RLS allows admin writes. (2) Confirming the add-power/add-technique modal merges with existing selections (keeps items not in current list, adds/replaces from modal selection).
+- Disposition: Implemented 2026-03-02. (1) Official API: check insert/update/delete result and return 500 with details on failure; added RLS policies (Admin can insert/update/delete) for official_* tables using user_profiles.role = 'admin'. Admin users must have role = 'admin' in user_profiles. (2) powers-step: handlePowerSelect/handleTechniqueSelect now merge — keep draft powers/techniques whose ids are not in the current modal list (e.g. from other source tab), then add powers/techniques from the modal selection so reopening and adding more does not replace previous selections.
+
+**Raw Feedback Log — 2026-03-02 (user_profiles / user_items DB errors after migration)**
+- Date: 2026-03-02
+- Context: Database migration; adding items to public library, saving armaments from public to personal, saving admin armaments to admin official library
+- Priority: Critical
+- Feedback: Post-migration errors: (1) "insert or update on table user_items violates foreign key constraint user_items_user_id_fkey — Key is not present in table user_profiles". (2) "null value in column updated_at of relation user_profiles violates not-null constraint". Cannot add items to public library, save armaments from public to personal, or save admin armaments to admin official library.
+- Expected: user_profiles row exists before any user_* insert; created_at/updated_at never null. All library and profile flows work.
+- Disposition: Implemented 2026-03-02. Added ensureUserProfile helper and fixed all user_profiles upserts to include created_at/updated_at; ensure profile before user library inserts (API + library actions); profile-picture upload upsert includes timestamps. SQL migration added: supabase-user-profiles-timestamps-default.sql (DEFAULT now() on created_at/updated_at). See AI_CHANGELOG.

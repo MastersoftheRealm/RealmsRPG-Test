@@ -105,16 +105,30 @@ export function getValidationIssuesForStep(
     }
 
     case 'skills': {
-      if (!draft.ancestry?.id) break;
-      const species = allSpecies.find(
-        (s) => s.id === draft.ancestry?.id || String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase()
-      );
-      const speciesSkillIds = new Set<string>((species?.skills || []).map((id) => String(id)));
+      const ancestry = draft.ancestry;
+      if (!ancestry?.id && !ancestry?.speciesIds?.length) break;
+      let speciesSkillIds: Set<string>;
+      const isMixed = ancestry?.mixed === true && ancestry?.speciesIds?.length === 2;
+      if (isMixed && Array.isArray(ancestry?.selectedSpeciesSkillIds) && ancestry.selectedSpeciesSkillIds.length === 2) {
+        speciesSkillIds = new Set(ancestry.selectedSpeciesSkillIds.map((id) => String(id)));
+      } else if (isMixed && ancestry?.speciesIds?.length === 2) {
+        const a = allSpecies.find((s) => s.id === ancestry.speciesIds![0]);
+        const b = allSpecies.find((s) => s.id === ancestry.speciesIds![1]);
+        const combined = new Set<string>();
+        (a?.skills || []).forEach((id: string | number) => combined.add(String(id)));
+        (b?.skills || []).forEach((id: string | number) => combined.add(String(id)));
+        speciesSkillIds = combined;
+      } else {
+        const species = allSpecies.find(
+          (s) => s.id === ancestry?.id || String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase()
+        );
+        speciesSkillIds = new Set<string>((species?.skills || []).map((id) => String(id)));
+      }
       const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
       const maxSkillPoints = calculateSkillPointsForEntity(level, 'character') + extraSkillPoints;
       const skillMeta = new Map<string, { isSubSkill: boolean }>();
       (codexSkills || []).forEach((s) => {
-        skillMeta.set(s.id, { isSubSkill: s.base_skill_id !== undefined });
+        skillMeta.set(String(s.id), { isSubSkill: s.base_skill_id !== undefined });
       });
       const totalUsedSkillPoints = calculateSimpleSkillPointsSpent(
         (draft.skills || {}) as Record<string, number>,

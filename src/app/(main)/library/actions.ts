@@ -10,6 +10,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
+import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { rowToItem, bodyToColumnar, toDbRow } from '@/lib/library-columnar';
 
 const TABLE: Record<string, string> = {
@@ -37,6 +38,7 @@ async function saveColumnar(
 ) {
   const user = await requireAuth();
   const supabase = await createClient();
+  await ensureUserProfile(supabase, user.uid);
   const now = new Date();
   const { scalars, payload } = bodyToColumnar(type, { ...data, updatedAt: now });
   const row = toDbRow({
