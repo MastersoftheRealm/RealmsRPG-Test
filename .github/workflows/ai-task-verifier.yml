@@ -24,6 +24,7 @@ jobs:
       - name: Build
         run: npm run build --if-present
 
+      # Report-only: generates task-reconcile-report.json; use --strict locally to fail when done tasks have no matching commits
       - name: Run reconcile (dry-run)
         run: |
           node scripts/reconcile_tasks.js
