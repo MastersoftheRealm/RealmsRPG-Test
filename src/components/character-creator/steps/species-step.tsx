@@ -173,10 +173,11 @@ export function SpeciesStep() {
           No species in this source. Try &quot;All sources&quot; or create species in the Species Creator (My species).
         </Alert>
       )}
-      
-      <div className="flex justify-between">
-        <Button variant="secondary" onClick={prevStep}>← Back</Button>
-        <Button onClick={nextStep} disabled={!canContinue}>Continue →</Button>
+
+      {/* Sticky footer so Continue is always visible (TASK-285) — min-h for tap target */}
+      <div className="sticky bottom-0 left-0 right-0 mt-8 flex justify-between gap-4 border-t border-border bg-background/95 py-3 px-4 -mx-4 -mb-4 md:-mx-0 md:-mb-0 md:px-0 md:rounded-b-xl md:border md:border-t">
+        <Button variant="secondary" onClick={prevStep} className="min-h-[44px] min-w-[44px]">← Back</Button>
+        <Button onClick={nextStep} disabled={!canContinue} className="min-h-[44px] min-w-[44px]">Continue →</Button>
       </div>
 
       <MixedSpeciesModal

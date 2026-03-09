@@ -330,6 +330,7 @@
     --color-text-muted: #8b949e; /* WCAG AA contrast on dark surfaces */
     --color-border: #30363d;
     --color-border-light: #21262d;
+    --color-border-subtle: #21262d; /* Softer internal dividers; matches border-light in dark */
     --color-neutral-50: #21262d;
     --color-neutral-100: #161b22;
     --color-neutral-200: #21262d;

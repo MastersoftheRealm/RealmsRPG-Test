@@ -20,9 +20,9 @@ import { cn } from '@/lib/utils';
 import { useItemProperties, useAdmin, useCreatorSave, useLoadModalLibrary, type ItemProperty, type UserItem } from '@/hooks';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Alert, PageContainer } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import { useAuthStore } from '@/stores';
 import {
@@ -580,14 +580,53 @@ function ItemCreatorContent() {
     return `${rangeLevel * 8} spaces`;
   }, [rangeLevel]);
 
+  // Collapsed summaries for collapsible sections
+  const weaponShieldConfigSummary = useMemo(() => {
+    const handed = isTwoHanded ? 'Two-Handed' : 'One-Handed';
+    if (armamentType === 'Weapon') return `${handed} • ${rangeDisplay}`;
+    return handed;
+  }, [armamentType, isTwoHanded, rangeDisplay]);
+  const baseDamageSummary = useMemo(
+    () => `${damage.amount}d${damage.size} ${damage.type}`,
+    [damage.amount, damage.size, damage.type]
+  );
+  const armorConfigSummary = useMemo(
+    () => `DR ${damageReduction}, AGI -${agilityReduction}, Crit +${criticalRangeIncrease}`,
+    [damageReduction, agilityReduction, criticalRangeIncrease]
+  );
+  const shieldBlockSummary = useMemo(
+    () => `${shieldDR.amount}d${shieldDR.size} blocked`,
+    [shieldDR.amount, shieldDR.size]
+  );
+  const shieldDamageSummary = useMemo(
+    () => (hasShieldDamage ? `${shieldDamage.amount}d${shieldDamage.size} bludgeoning` : 'None'),
+    [hasShieldDamage, shieldDamage.amount, shieldDamage.size]
+  );
+  const abilityReqSummary = useMemo(() => {
+    if (!abilityRequirement) return 'None';
+    const reqs = armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS;
+    const req = reqs.find((r) => r.id === abilityRequirement.id);
+    return req ? `${req.label} ${abilityRequirement.level}` : 'None';
+  }, [abilityRequirement, armamentType]);
+  const propertiesSummary = useMemo(() => {
+    if (selectedProperties.length === 0) return 'No properties';
+    const names = selectedProperties.slice(0, 5).map((sp) => sp.property.name);
+    const more = selectedProperties.length > 5 ? ` +${selectedProperties.length - 5} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [selectedProperties]);
+
   // Convert selected properties to payload format for calculator
   // Including auto-generated properties for Weapon, Armor, and Shield
+  // Exclude Range from selectedProperties so it is driven only by rangeLevel (avoids acuity when ticked down to melee)
   const propertiesPayload: ItemPropertyPayload[] = useMemo(() => {
-    const baseProps = selectedProperties.map((sp) => ({
-      id: Number(sp.property.id),
-      name: sp.property.name,
-      op_1_lvl: sp.op_1_lvl,
-    }));
+    const rangeId = Number(PROPERTY_IDS.RANGE);
+    const baseProps = selectedProperties
+      .filter((sp) => Number(sp.property.id) !== rangeId && sp.property.name?.toLowerCase() !== 'range')
+      .map((sp) => ({
+        id: Number(sp.property.id),
+        name: sp.property.name,
+        op_1_lvl: sp.op_1_lvl,
+      }));
     
     // === WEAPON / SHIELD PROPERTIES ===
     // Add Two-Handed property if weapon/shield and selected
@@ -717,6 +756,36 @@ function ItemCreatorContent() {
     () => calculateItemCosts(propertiesPayload, itemProperties),
     [propertiesPayload, itemProperties]
   );
+
+  // Section costs for display (IP/TP/C contribution per section)
+  const itemSectionCosts = useMemo(() => {
+    const byId = (id: number) => propertiesPayload.filter((p) => Number(p.id) === id);
+    return {
+      handedness: calculateItemCosts(byId(PROPERTY_IDS.TWO_HANDED), itemProperties),
+      range: calculateItemCosts(byId(PROPERTY_IDS.RANGE), itemProperties),
+      damage: calculateItemCosts(
+        [...byId(PROPERTY_IDS.WEAPON_DAMAGE), ...byId(PROPERTY_IDS.SPLIT_DAMAGE_DICE)],
+        itemProperties
+      ),
+      abilityReq: calculateItemCosts(
+        abilityRequirement
+          ? [
+              {
+                id: abilityRequirement.id,
+                name: abilityRequirement.name,
+                op_1_lvl: (abilityRequirement.level || 1) - 1,
+              },
+            ]
+          : [],
+        itemProperties
+      ),
+      criticalRange: calculateItemCosts(byId(PROPERTY_IDS.CRITICAL_RANGE_PLUS_1), itemProperties),
+      damageReduction: calculateItemCosts(byId(PROPERTY_IDS.DAMAGE_REDUCTION), itemProperties),
+      agilityReduction: calculateItemCosts(byId(PROPERTY_IDS.AGILITY_REDUCTION), itemProperties),
+      shieldDR: calculateItemCosts(byId(PROPERTY_IDS.SHIELD_AMOUNT), itemProperties),
+      shieldDamage: calculateItemCosts(byId(PROPERTY_IDS.SHIELD_DAMAGE), itemProperties),
+    };
+  }, [propertiesPayload, itemProperties, abilityRequirement]);
 
   // Calculate rarity and currency cost
   const { currencyCost, rarity } = useMemo(
@@ -1142,14 +1211,20 @@ function ItemCreatorContent() {
 
           {/* Weapon / Shield Configuration - Handedness & (Weapon) Range */}
           {(armamentType === 'Weapon' || armamentType === 'Shield') && (
-            <div className="bg-surface rounded-xl shadow-md p-6">
-              <h2 className="text-lg font-bold text-text-primary mb-4">
-                {armamentType === 'Weapon' ? 'Weapon Configuration' : 'Shield Configuration'}
-              </h2>
+            <CollapsibleSection
+              title={armamentType === 'Weapon' ? 'Weapon Configuration' : 'Shield Configuration'}
+              collapsedSummary={weaponShieldConfigSummary}
+              defaultExpanded={true}
+            >
               <div className="flex flex-wrap items-center gap-6">
                 {/* Handedness Toggle */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="text-sm font-medium text-text-secondary">Handedness:</span>
+                  <SectionCostBadge
+                    ip={itemSectionCosts.handedness.totalIP}
+                    tp={itemSectionCosts.handedness.totalTP}
+                    currency={itemSectionCosts.handedness.totalCurrency}
+                  />
                   <div className="flex rounded-lg border border-border-light overflow-hidden">
                     <button
                       type="button"
@@ -1180,9 +1255,14 @@ function ItemCreatorContent() {
 
                 {/* Range Control (Weapons only) */}
                 {armamentType === 'Weapon' && (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-sm font-medium text-text-secondary">Range:</span>
                     <span className="font-medium text-tp-text min-w-[80px]">{rangeDisplay}</span>
+                    <SectionCostBadge
+                      ip={itemSectionCosts.range.totalIP}
+                      tp={itemSectionCosts.range.totalTP}
+                      currency={itemSectionCosts.range.totalCurrency}
+                    />
                     <ValueStepper
                       value={rangeLevel}
                       onChange={setRangeLevel}
@@ -1196,13 +1276,23 @@ function ItemCreatorContent() {
                   </div>
                 )}
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
           {/* Weapon Damage */}
           {armamentType === 'Weapon' && (
-            <div className="bg-surface rounded-xl shadow-md p-6">
-              <h2 className="text-lg font-bold text-text-primary mb-4">Base Damage</h2>
+            <CollapsibleSection
+              title="Base Damage"
+              collapsedSummary={baseDamageSummary}
+              defaultExpanded={true}
+              rightSlot={
+                <SectionCostBadge
+                  ip={itemSectionCosts.damage.totalIP}
+                  tp={itemSectionCosts.damage.totalTP}
+                  currency={itemSectionCosts.damage.totalCurrency}
+                />
+              }
+            >
               <div className="flex flex-wrap items-center gap-4">
                 <ValueStepper
                   value={damage.amount}
@@ -1239,19 +1329,29 @@ function ItemCreatorContent() {
                   ))}
                 </select>
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
           {/* Armor Configuration */}
           {armamentType === 'Armor' && (
-            <div className="bg-surface rounded-xl shadow-md p-6">
-              <h2 className="text-lg font-bold text-text-primary mb-4">Armor Configuration</h2>
+            <CollapsibleSection
+              title="Armor Configuration"
+              collapsedSummary={armorConfigSummary}
+              defaultExpanded={true}
+            >
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Damage Reduction */}
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Damage Reduction
-                  </label>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <label className="text-sm font-medium text-text-secondary">
+                      Damage Reduction
+                    </label>
+                    <SectionCostBadge
+                      ip={itemSectionCosts.damageReduction.totalIP}
+                      tp={itemSectionCosts.damageReduction.totalTP}
+                      currency={itemSectionCosts.damageReduction.totalCurrency}
+                    />
+                  </div>
                   <ValueStepper
                     value={damageReduction}
                     onChange={setDamageReduction}
@@ -1264,9 +1364,16 @@ function ItemCreatorContent() {
                 
                 {/* Agility Reduction */}
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Agility Reduction
-                  </label>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <label className="text-sm font-medium text-text-secondary">
+                      Agility Reduction
+                    </label>
+                    <SectionCostBadge
+                      ip={itemSectionCosts.agilityReduction.totalIP}
+                      tp={itemSectionCosts.agilityReduction.totalTP}
+                      currency={itemSectionCosts.agilityReduction.totalCurrency}
+                    />
+                  </div>
                   <ValueStepper
                     value={agilityReduction}
                     onChange={setAgilityReduction}
@@ -1279,9 +1386,16 @@ function ItemCreatorContent() {
                 
                 {/* Critical Range Increase */}
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-2">
-                    Critical Range Increase
-                  </label>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <label className="text-sm font-medium text-text-secondary">
+                      Critical Range Increase
+                    </label>
+                    <SectionCostBadge
+                      ip={itemSectionCosts.criticalRange.totalIP}
+                      tp={itemSectionCosts.criticalRange.totalTP}
+                      currency={itemSectionCosts.criticalRange.totalCurrency}
+                    />
+                  </div>
                   <ValueStepper
                     value={criticalRangeIncrease}
                     onChange={setCriticalRangeIncrease}
@@ -1292,15 +1406,25 @@ function ItemCreatorContent() {
                   <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Increases critical hit range</p>
                 </div>
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
           {/* Shield Configuration */}
           {armamentType === 'Shield' && (
             <>
               {/* Shield Damage Reduction */}
-              <div className="bg-surface rounded-xl shadow-md p-6">
-                <h2 className="text-lg font-bold text-text-primary mb-4">Shield Block (Damage Reduction)</h2>
+              <CollapsibleSection
+                title="Shield Block (Damage Reduction)"
+                collapsedSummary={shieldBlockSummary}
+                defaultExpanded={true}
+                rightSlot={
+                  <SectionCostBadge
+                    ip={itemSectionCosts.shieldDR.totalIP}
+                    tp={itemSectionCosts.shieldDR.totalTP}
+                    currency={itemSectionCosts.shieldDR.totalCurrency}
+                  />
+                }
+              >
                 <div className="flex flex-wrap items-center gap-4">
                   <ValueStepper
                     value={shieldDR.amount}
@@ -1329,16 +1453,27 @@ function ItemCreatorContent() {
                   </span>
                 </div>
                 <p className="text-xs text-text-muted dark:text-text-secondary mt-2">Damage blocked when using Shield reaction</p>
-              </div>
+              </CollapsibleSection>
 
-              {/* Shield Damage (Optional) */}
-              <div className="bg-surface rounded-xl shadow-md p-6">
-                <div className="flex items-center gap-3 mb-4">
+              {/* Shield Damage */}
+              <CollapsibleSection
+                title="Shield Damage"
+                collapsedSummary={shieldDamageSummary}
+                defaultExpanded={true}
+                rightSlot={
+                  <SectionCostBadge
+                    ip={itemSectionCosts.shieldDamage.totalIP}
+                    tp={itemSectionCosts.shieldDamage.totalTP}
+                    currency={itemSectionCosts.shieldDamage.totalCurrency}
+                  />
+                }
+              >
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <Checkbox
                     id="hasShieldDamage"
                     checked={hasShieldDamage}
                     onChange={(e) => setHasShieldDamage(e.target.checked)}
-                    label="Shield Damage (Optional)"
+                    label="Shield Damage"
                     className="text-lg font-bold"
                   />
                 </div>
@@ -1375,13 +1510,23 @@ function ItemCreatorContent() {
                 {!hasShieldDamage && (
                   <p className="text-sm text-text-muted dark:text-text-secondary">Enable to allow this shield to be used as a weapon</p>
                 )}
-              </div>
+              </CollapsibleSection>
             </>
           )}
 
           {/* Ability Requirement (Optional) */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Ability Requirement</h2>
+          <CollapsibleSection
+            title="Ability Requirement"
+            collapsedSummary={abilityReqSummary}
+            defaultExpanded={true}
+            rightSlot={
+              <SectionCostBadge
+                ip={itemSectionCosts.abilityReq.totalIP}
+                tp={itemSectionCosts.abilityReq.totalTP}
+                currency={itemSectionCosts.abilityReq.totalCurrency}
+              />
+            }
+          >
             <p className="text-sm text-text-secondary mb-4">
               Require a minimum Ability to use this {armamentType.toLowerCase()} effectively.
             </p>
@@ -1423,25 +1568,20 @@ function ItemCreatorContent() {
                 </div>
               )}
             </div>
-          </div>
+          </CollapsibleSection>
 
           {/* Item Properties */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-text-primary">
-                Properties ({selectedProperties.length})
-              </h2>
-              <Button
-                type="button"
-                variant="primary"
-                className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-white"
-                onClick={addProperty}
-              >
+          <CollapsibleSection
+            title={`Properties (${selectedProperties.length})`}
+            collapsedSummary={propertiesSummary}
+            defaultExpanded={true}
+            rightSlot={
+              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-600 text-white" onClick={addProperty}>
                 <Plus className="w-4 h-4" />
                 Add Property
               </Button>
-            </div>
-
+            }
+          >
             {selectedProperties.length === 0 ? (
               <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -1461,7 +1601,7 @@ function ItemCreatorContent() {
                 ))}
               </div>
             )}
-          </div>
+          </CollapsibleSection>
     </CreatorLayout>
   );
 }

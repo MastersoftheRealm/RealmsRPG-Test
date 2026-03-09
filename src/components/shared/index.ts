@@ -43,6 +43,10 @@ export { ConfirmActionModal } from './confirm-action-modal';
 export { GridListRow } from './grid-list-row';
 export type { ColumnValue, ChipData, ChipOptionData, GridListRowProps } from './grid-list-row';
 
+// SectionCostBadge - EN/TP/IP cost display next to section labels
+export { SectionCostBadge } from './section-cost-badge';
+export type { SectionCostBadgeProps } from './section-cost-badge';
+
 // SectionHeader - UNIFIED section header with optional add button
 // Use for ALL section headers: Powers, Techniques, Weapons, Armor, Equipment, Feats, Skills
 export { SectionHeader } from './section-header';

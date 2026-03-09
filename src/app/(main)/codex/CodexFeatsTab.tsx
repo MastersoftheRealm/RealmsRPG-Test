@@ -51,7 +51,29 @@ interface FeatFilters {
   stateFeatMode: 'all' | 'only' | 'hide';
 }
 
-function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<string, string> }) {
+/** Group feats by family: level-1 (base_feat_id null) or by base_feat_id. Each family sorted by feat_lvl. */
+function groupFeatsByFamily(feats: Feat[]): { main: Feat; higherLevels: Feat[] }[] {
+  const byFamily = new Map<string, Feat[]>();
+  feats.forEach((f) => {
+    const key = f.base_feat_id ?? String(f.id);
+    if (!byFamily.has(key)) byFamily.set(key, []);
+    byFamily.get(key)!.push(f);
+  });
+  return [...byFamily.values()].map((group) => {
+    const sorted = [...group].sort((a, b) => (a.feat_lvl ?? 1) - (b.feat_lvl ?? 1));
+    return { main: sorted[0], higherLevels: sorted.slice(1) };
+  });
+}
+
+function FeatCard({
+  feat,
+  skillIdToName,
+  higherLevels = [],
+}: {
+  feat: Feat;
+  skillIdToName: Map<string, string>;
+  higherLevels?: Feat[];
+}) {
   const detailSections: Array<{ label: string; chips: { name: string; category?: 'default' | 'tag' | 'skill' | 'archetype' }[]; hideLabelIfSingle?: boolean }> = [];
 
   const typeChips: { name: string; category: 'skill' | 'archetype' }[] = [];
@@ -88,6 +110,28 @@ function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<stri
     detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
   }
 
+  const expandedContent =
+    higherLevels.length > 0 ? (
+      <div className="pt-2 border-t border-border-subtle mt-2">
+        <h4 className="text-xs font-semibold text-text-secondary mb-2">Higher levels</h4>
+        <ul className="space-y-2">
+          {higherLevels.map((f) => (
+            <li key={f.id} className="text-sm">
+              <span className="font-medium text-text-primary">
+                {f.name} (Level {f.feat_lvl ?? 2})
+              </span>
+              {f.lvl_req != null && f.lvl_req > 0 && (
+                <span className="text-text-muted dark:text-text-secondary ml-1">— Req. level {f.lvl_req}</span>
+              )}
+              {f.description && (
+                <p className="text-text-secondary text-xs mt-0.5 line-clamp-2">{f.description}</p>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ) : undefined;
+
   return (
     <GridListRow
       id={feat.id}
@@ -105,6 +149,7 @@ function FeatCard({ feat, skillIdToName }: { feat: Feat; skillIdToName: Map<stri
         { key: 'Recovery', value: feat.rec_period || '-' },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
+      expandedContent={expandedContent}
     />
   );
 }
@@ -175,7 +220,6 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
 
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
-
     const filtered = feats.filter((f: Feat) => {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
@@ -231,6 +275,11 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     });
     return sortItems<Feat>(filtered);
   }, [feats, filters, sortItems]);
+
+  const featFamilies = useMemo(
+    () => groupFeatsByFamily(filteredFeats),
+    [filteredFeats]
+  );
 
   if (error) {
     return <ErrorState message="Failed to load feats" />;
@@ -344,11 +393,16 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
-        ) : filteredFeats.length === 0 ? (
+        ) : featFamilies.length === 0 ? (
           <div className="p-8 text-center text-text-muted dark:text-text-secondary">No feats match your filters.</div>
         ) : (
-          filteredFeats.map(feat => (
-            <FeatCard key={feat.id} feat={feat} skillIdToName={skillIdToName} />
+          featFamilies.map(({ main, higherLevels }) => (
+            <FeatCard
+              key={main.id}
+              feat={main}
+              skillIdToName={skillIdToName}
+              higherLevels={higherLevels}
+            />
           ))
         )}
       </div>

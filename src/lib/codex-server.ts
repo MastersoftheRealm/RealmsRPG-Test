@@ -55,6 +55,7 @@ function featToRecord(r: Row): Record<string, unknown> {
     tags: toStrArray(r.tags),
     char_feat: r.char_feat ?? false,
     state_feat: r.state_feat ?? false,
+    base_feat_id: r.base_feat_id != null && r.base_feat_id !== '' ? String(r.base_feat_id) : undefined,
   };
 }
 
