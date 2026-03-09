@@ -42,6 +42,11 @@ interface TokenBucket {
   timestamps: number[];
 }
 
+interface RateLimitKeyInput {
+  userId?: string | null;
+  ip?: string | null;
+}
+
 /**
  * Create a rate limiter instance with a sliding window.
  */
@@ -101,6 +106,29 @@ export function rateLimit({ interval, limit }: RateLimitOptions) {
   };
 }
 
+/**
+ * Extract the most useful client IP value from request headers.
+ * Prefers first value from x-forwarded-for, then x-real-ip.
+ */
+export function resolveClientIp(headers: Headers): string {
+  const forwarded = headers.get('x-forwarded-for');
+  const realIp = headers.get('x-real-ip');
+  const raw = forwarded?.split(',')[0]?.trim() || realIp?.trim() || 'unknown';
+  return raw.slice(0, 64);
+}
+
+/**
+ * Build a stable limiter key. Uses authenticated user when available, else IP.
+ */
+export function buildRateLimitKey(prefix: string, input: RateLimitKeyInput): string {
+  const userId = input.userId?.trim();
+  if (userId) {
+    return `${prefix}:uid:${userId}`;
+  }
+  const ip = input.ip?.trim() || 'unknown';
+  return `${prefix}:ip:${ip}`;
+}
+
 // =============================================================================
 // Pre-configured limiters for different endpoint types
 // =============================================================================
@@ -113,3 +141,6 @@ export const strictLimiter = rateLimit({ interval: 60_000, limit: 10 });
 
 /** Invite code lookup: 5 per minute (prevent brute-force) */
 export const inviteCodeLimiter = rateLimit({ interval: 60_000, limit: 5 });
+
+/** Upload limiter: 12 uploads per minute */
+export const uploadLimiter = rateLimit({ interval: 60_000, limit: 12 });

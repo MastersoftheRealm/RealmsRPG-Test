@@ -1,16 +1,25 @@
 /**
  * Admin Users API
  * ===============
- * List users (id, username, role only).
- * Only admins (ADMIN_UIDS env) can access.
+ * List users (id, username, email, display_name, role).
+ * Only users with role=admin can access.
  */
 
 import { NextResponse } from 'next/server';
+import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error('Supabase admin env not configured');
+  }
+  return createSupabaseAdminClient(url, key);
+}
 
 export async function GET() {
   try {
@@ -23,21 +32,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const supabase = await createClient();
+    const supabase = getSupabaseAdmin();
     const { data: profiles } = await supabase
       .from('user_profiles')
-      .select('id, username, role')
+      .select('id, username, email, display_name, role')
       .order('username');
 
-    const list = (profiles ?? []) as { id: string; username: string | null; role: string }[];
-    const withAdmin = await Promise.all(
-      list.map(async (p) => ({ ...p, isAdminUid: await isAdmin(p.id) }))
-    );
+    const list = (profiles ?? []) as {
+      id: string;
+      username: string | null;
+      email: string | null;
+      display_name: string | null;
+      role: string;
+    }[];
     return NextResponse.json(
-      withAdmin.map(({ isAdminUid, ...p }) => ({
+      list.map((p) => ({
         id: p.id,
         username: p.username ?? '',
-        role: isAdminUid ? ('admin' as const) : p.role,
+        email: p.email ?? '',
+        displayName: p.display_name ?? '',
+        role: p.role,
       }))
     );
   } catch (err) {

@@ -2,22 +2,32 @@
 
 How to configure admin access for the RealmsRPG admin tools (Codex Editor, etc.).
 
-**Stack:** Supabase Auth + env vars (no Firestore).
+**Stack:** Supabase Auth + `user_profiles.role` (no Firestore).
 
 ---
 
 ## Configuration
 
-Set `ADMIN_UIDS` or `NEXT_PUBLIC_ADMIN_UIDS` (comma-separated Supabase Auth UIDs):
+Admin access is controlled by `user_profiles.role = 'admin'` in Supabase.
 
+To grant admin:
+
+1. Find the user's UID in Supabase Dashboard → Authentication → Users.
+2. In Supabase SQL Editor, run:
+
+```sql
+update public.user_profiles
+set role = 'admin'
+where id = '<user-uid>';
 ```
-ADMIN_UIDS=uid1,uid2,uid3
+
+To remove admin:
+
+```sql
+update public.user_profiles
+set role = 'developer' -- or new_player / playtester
+where id = '<user-uid>';
 ```
-
-- **Local:** Add to `.env.local`
-- **Production:** Add to Vercel Dashboard → Project → Settings → Environment Variables
-
-**To find your UID:** Supabase Dashboard → Authentication → Users → click your user → copy the UUID.
 
 ---
 
@@ -51,5 +61,5 @@ The app has a **Codex** (reference data) and **user Library** (private items). A
 
 ## Implementation
 
-- `src/lib/admin.ts` — `isAdmin(uid)` reads from env
+- `src/lib/admin.ts` — `isAdmin(uid)` reads `user_profiles.role`
 - `src/app/api/admin/check/route.ts` — Client-side admin check via API

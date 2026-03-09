@@ -51,7 +51,7 @@ export async function GET(
 
     const supabase = await createClient();
     const officialTable = OFFICIAL_TABLE_MAP[type as PublicType];
-    let result = await supabase.from(officialTable).select('*');
+    const result = await supabase.from(officialTable).select('*');
 
     if (!result.error && result.data && result.data.length > 0) {
       const items = (result.data as Record<string, unknown>[]).map((r) => {
@@ -142,12 +142,8 @@ export async function POST(
     });
     return NextResponse.json({ id });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     console.error('[API Error] POST /api/public/[type]:', err);
-    return NextResponse.json(
-      { error: 'Failed to save item', details: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to save item' }, { status: 500 });
   }
 }
 
@@ -179,11 +175,7 @@ export async function DELETE(
     await supabase.from(OFFICIAL_TABLE_MAP[type as PublicType]).delete().eq('id', id);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     console.error('[API Error] DELETE /api/public/[type]:', err);
-    return NextResponse.json(
-      { error: 'Failed to delete item', details: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 });
   }
 }

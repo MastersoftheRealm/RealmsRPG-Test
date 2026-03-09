@@ -2,23 +2,28 @@
  * Admin Helpers
  * ==============
  * Server-side utilities for admin role checks.
- * Uses env ADMIN_UIDS (server-only, comma-separated user IDs).
- *
- * SECURITY: Never use NEXT_PUBLIC_ADMIN_UIDS — that exposes admin IDs
- * in the client JS bundle. Only server-side ADMIN_UIDS is read.
+ * Source of truth: user_profiles.role in Supabase.
  */
+
+import { createClient } from '@/lib/supabase/server';
 
 /**
  * Check if a user ID is an admin.
- * Reads from server-only env ADMIN_UIDS (comma-separated).
+ * Reads from user_profiles.role in Supabase.
  * Client-side: use /api/admin/check endpoint via useAdmin hook.
  */
 export async function isAdmin(uid: string | null | undefined): Promise<boolean> {
   if (!uid) return false;
 
-  const envUids = process.env.ADMIN_UIDS;
-  if (!envUids) return false;
-
-  const list = envUids.split(',').map((s) => s.trim()).filter(Boolean);
-  return list.includes(uid);
+  try {
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', uid)
+      .maybeSingle();
+    return (profile as { role?: string } | null)?.role === 'admin';
+  } catch {
+    return false;
+  }
 }

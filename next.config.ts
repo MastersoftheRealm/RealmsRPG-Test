@@ -13,6 +13,20 @@ const nextConfig: NextConfig = {
   },
   // Security headers for all responses; long cache for static images to cut edge requests (e.g. placeholder-portrait.png)
   async headers() {
+    const csp = [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'self'",
+      "object-src 'none'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "frame-src 'self'",
+    ].join('; ');
+
     return [
       {
         source: '/images/:path*',
@@ -26,6 +40,10 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: csp,
+          },
           {
             key: 'X-DNS-Prefetch-Control',
             value: 'on',
