@@ -48,6 +48,7 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           currentFailures: 0,
           additionalSuccesses: 0,
           additionalFailures: 0,
+          useInitiative: true, // mixed encounter: default to initiative so turn order can sync with combat
         };
       } else {
         const sk = enc.skillEncounter as unknown as Record<string, unknown>;
@@ -55,6 +56,8 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
         delete sk.requiredFailures;
         if (sk.additionalSuccesses == null) sk.additionalSuccesses = 0;
         if (sk.additionalFailures == null) sk.additionalFailures = 0;
+        // Mixed encounter: default useInitiative to true so skill tab can sync with combat order
+        if (sk.useInitiative == null) sk.useInitiative = true;
       }
       setEncounter(enc);
       setIsInitialized(true);
@@ -173,6 +176,7 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
             setEncounter={setEncounter}
             campaignsFull={campaignsFull}
             showRollLog={false}
+            isMixedEncounter
           />
         </div>
 

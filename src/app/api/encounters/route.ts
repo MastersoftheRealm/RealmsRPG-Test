@@ -79,28 +79,37 @@ export async function POST(request: NextRequest) {
     if (!validation.success) return validation.error;
     const data = validation.data as Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>;
 
+    const now = new Date().toISOString();
     const cleaned = removeUndefined({
       ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
     } as Record<string, unknown>);
 
     const supabase = await createClient();
-    const insertRow: Record<string, unknown> = {
+    const id = crypto.randomUUID();
+    // Build row with id first so the primary key is never omitted (encounters table has no default for id)
+    const row = {
+      id: id as string,
       user_id: user.uid,
       data: cleaned,
       name: (cleaned.name as string) ?? 'Unnamed Encounter',
       type: (cleaned.type as string) ?? 'combat',
       status: (cleaned.status as string) ?? 'preparing',
+      created_at: now,
+      updated_at: now,
     };
-    const { data: created, error: insertErr } = await supabase
-      .from('encounters')
-      .insert(insertRow)
-      .select('id')
-      .single();
-    if (insertErr) throw insertErr;
+    const { error: insertErr } = await supabase.from('encounters').insert(row);
+    if (insertErr) {
+      console.error('[API Error] POST /api/encounters insert:', insertErr.message, insertErr.details);
+      const message = insertErr.message ?? 'Database error';
+      return NextResponse.json(
+        { error: `Failed to create encounter: ${message}` },
+        { status: 500 }
+      );
+    }
 
-    return NextResponse.json({ id: created.id });
+    return NextResponse.json({ id });
   } catch (err) {
     console.error('[API Error] POST /api/encounters:', err);
     return NextResponse.json({ error: 'Failed to create encounter' }, { status: 500 });

@@ -14,8 +14,8 @@ import {
 const ADMIN_PART_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
-  { key: '_en', label: 'ENERGY', sortable: false as const },
-  { key: '_tp', label: 'TP', sortable: false as const },
+  { key: '_en', label: 'ENERGY' },
+  { key: '_tp', label: 'TP' },
   { key: '_actions', label: '', sortable: false as const },
 ];
 import { Modal, Button, Input, Textarea } from '@/components/ui';
@@ -85,7 +85,7 @@ interface PartFilters {
 export function AdminPartsTab() {
   const { data: parts, isLoading, error } = useParts();
   const queryClient = useQueryClient();
-  const { sortState, handleSort, sortItems } = useSort('name');
+  const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
     search: '',
     categoryFilter: '',
@@ -178,8 +178,16 @@ export function AdminPartsTab() {
     });
 
     type FilteredPart = Part & { category: string };
-    return sortItems<FilteredPart>(filtered.map((p: Part) => ({ ...p, category: p.category || '' })));
-  }, [parts, filters, sortItems]);
+    const mapped = filtered.map((p: Part) => ({ ...p, category: p.category || '' }));
+    return mapped.sort((a: FilteredPart, b: FilteredPart) => {
+      const { col, dir } = sortState;
+      if (col === 'name') return dir * a.name.localeCompare(b.name);
+      if (col === 'category') return dir * (a.category || '').localeCompare(b.category || '');
+      if (col === '_en') return dir * ((a.base_en ?? 0) - (b.base_en ?? 0));
+      if (col === '_tp') return dir * ((a.base_tp ?? 0) - (b.base_tp ?? 0));
+      return 0;
+    });
+  }, [parts, filters, sortState]);
 
   const openAdd = () => {
     setEditing(null);

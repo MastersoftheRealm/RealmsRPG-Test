@@ -125,12 +125,12 @@ export function AdminPublicItemsTab() {
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'type', label: 'TYPE', sortable: false as const },
-          { key: 'rarity', label: 'RARITY', sortable: false as const },
-          { key: 'currency', label: 'CURRENCY', sortable: false as const },
-          { key: 'tp', label: 'TP', sortable: false as const },
-          { key: 'range', label: 'RANGE', sortable: false as const },
-          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: 'type', label: 'TYPE' },
+          { key: 'rarity', label: 'RARITY' },
+          { key: 'currency', label: 'CURRENCY' },
+          { key: 'tp', label: 'TP' },
+          { key: 'range', label: 'RANGE' },
+          { key: 'damage', label: 'DAMAGE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={ITEM_GRID}

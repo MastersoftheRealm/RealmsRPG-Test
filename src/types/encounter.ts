@@ -29,6 +29,9 @@ export interface TrackedCombatant extends Combatant {
   sourceUserId?: string;
 }
 
+/** Participant side in skill encounter (when using initiative) */
+export type SkillParticipantType = 'ally' | 'enemy';
+
 /** A participant in a skill encounter */
 export interface SkillParticipant {
   id: string;
@@ -50,6 +53,10 @@ export interface SkillParticipant {
   sourceType?: CombatantSource;
   sourceId?: string;
   sourceUserId?: string;
+  /** Initiative order (when useInitiative is true) */
+  initiative?: number;
+  /** Ally or enemy (when useInitiative is true) */
+  participantType?: SkillParticipantType;
 }
 
 /** State for a skill encounter */
@@ -66,6 +73,14 @@ export interface SkillEncounterState {
   additionalSuccesses?: number;
   /** RM-added failures (buttons "Additional Failure") */
   additionalFailures?: number;
+  /** When true, track turns and use initiative (roll, sort, drag, ally/enemy) */
+  useInitiative?: boolean;
+  /** Current turn index when useInitiative is true */
+  currentTurnIndex?: number;
+  /** Sequence: manual running total of successes across multiple skill encounters */
+  sequenceSuccesses?: number;
+  /** Sequence: manual running total of failures across multiple skill encounters */
+  sequenceFailures?: number;
   /** @deprecated Legacy: optional target for successes (mixed page) */
   requiredSuccesses?: number;
   /** @deprecated Legacy: optional target for failures (mixed page) */

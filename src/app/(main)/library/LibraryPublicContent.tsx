@@ -149,12 +149,12 @@ function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequir
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY', sortable: false as const },
-          { key: 'action', label: 'ACTION', sortable: false as const },
-          { key: 'duration', label: 'DURATION', sortable: false as const },
-          { key: 'range', label: 'RANGE', sortable: false as const },
-          { key: 'area', label: 'AREA', sortable: false as const },
-          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: 'energy', label: 'ENERGY' },
+          { key: 'action', label: 'ACTION' },
+          { key: 'duration', label: 'DURATION' },
+          { key: 'range', label: 'RANGE' },
+          { key: 'area', label: 'AREA' },
+          { key: 'damage', label: 'DAMAGE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={POWER_GRID}
@@ -301,11 +301,11 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY', sortable: false as const },
-          { key: 'tp', label: 'TP', sortable: false as const },
-          { key: 'action', label: 'ACTION', sortable: false as const },
-          { key: 'weapon', label: 'WEAPON', sortable: false as const },
-          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: 'energy', label: 'ENERGY' },
+          { key: 'tp', label: 'TP' },
+          { key: 'action', label: 'ACTION' },
+          { key: 'weapon', label: 'WEAPON' },
+          { key: 'damage', label: 'DAMAGE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={TECHNIQUE_GRID}
@@ -454,12 +454,12 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'type', label: 'TYPE', sortable: false as const },
-          { key: 'rarity', label: 'RARITY', sortable: false as const },
-          { key: 'currency', label: 'CURRENCY', sortable: false as const },
-          { key: 'tp', label: 'TP', sortable: false as const },
-          { key: 'range', label: 'RANGE', sortable: false as const },
-          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: 'type', label: 'TYPE' },
+          { key: 'rarity', label: 'RARITY' },
+          { key: 'currency', label: 'CURRENCY' },
+          { key: 'tp', label: 'TP' },
+          { key: 'range', label: 'RANGE' },
+          { key: 'damage', label: 'DAMAGE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={ITEM_GRID}
@@ -584,8 +584,8 @@ function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginReq
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'level', label: 'LEVEL', sortable: false as const },
-          { key: 'type', label: 'TYPE', sortable: false as const },
+          { key: 'level', label: 'LEVEL' },
+          { key: 'type', label: 'TYPE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={CREATURE_GRID}

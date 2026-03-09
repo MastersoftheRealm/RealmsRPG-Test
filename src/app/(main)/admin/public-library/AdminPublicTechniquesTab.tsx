@@ -113,11 +113,11 @@ export function AdminPublicTechniquesTab() {
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY', sortable: false as const },
-          { key: 'tp', label: 'TP', sortable: false as const },
-          { key: 'action', label: 'ACTION', sortable: false as const },
-          { key: 'weapon', label: 'WEAPON', sortable: false as const },
-          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: 'energy', label: 'ENERGY' },
+          { key: 'tp', label: 'TP' },
+          { key: 'action', label: 'ACTION' },
+          { key: 'weapon', label: 'WEAPON' },
+          { key: 'damage', label: 'DAMAGE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={TECHNIQUE_GRID}

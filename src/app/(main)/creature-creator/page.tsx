@@ -777,18 +777,18 @@ function CreatureCreatorContent() {
               { label: 'Currency', value: stats.currency, variant: stats.currency < 0 ? 'danger' : 'warning' },
             ]}
             quickStats={[
-              { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health' },
-              { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy' },
-              { label: 'SPD', value: stats.speed, color: 'bg-surface-alt' },
-              { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt' },
-              { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt' },
+              { label: 'HP', value: stats.maxHealth, color: 'bg-health-light text-health border border-border-light' },
+              { label: 'EN', value: stats.maxEnergy, color: 'bg-energy-light text-energy border border-border-light' },
+              { label: 'SPD', value: stats.speed, color: 'bg-surface-alt border border-border-light' },
+              { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt border border-border-light' },
+              { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt border border-border-light' },
             ]}
+            abilitiesChips={(['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
+              const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
+              const v = creature.abilities[k];
+              return { abbr, value: v };
+            })}
             statRows={[
-              { label: 'Abilities', value: (['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
-                const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
-                const v = creature.abilities[k];
-                return `${abbr} ${v >= 0 ? '+' : ''}${v}`;
-              }).join(', ') },
               { label: 'Archetype', value: creature.archetypeType.charAt(0).toUpperCase() + creature.archetypeType.slice(1) },
               { label: 'Level', value: creature.level },
               { label: 'Type', value: creature.type },

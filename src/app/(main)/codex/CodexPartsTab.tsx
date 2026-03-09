@@ -28,8 +28,8 @@ const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
 const PART_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
-  { key: 'energy', label: 'ENERGY', sortable: false as const },
-  { key: 'tp', label: 'TP', sortable: false as const },
+  { key: 'energy', label: 'ENERGY' },
+  { key: 'tp', label: 'TP' },
   { key: '_actions', label: '', sortable: false as const },
 ];
 
@@ -132,7 +132,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     );
   }
   const { data: parts, isLoading, error } = useParts();
-  const { sortState, handleSort, sortItems } = useSort('name');
+  const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
     search: '',
     categoryFilter: '',
@@ -169,8 +169,16 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
       return true;
     });
     type FilteredPart = Part & { category: string };
-    return sortItems<FilteredPart>(filtered.map((p: Part) => ({ ...p, category: p.category || '' })));
-  }, [parts, filters, sortItems]);
+    const mapped = filtered.map((p: Part) => ({ ...p, category: p.category || '' }));
+    return mapped.sort((a: FilteredPart, b: FilteredPart) => {
+      const { col, dir } = sortState;
+      if (col === 'name') return dir * a.name.localeCompare(b.name);
+      if (col === 'category') return dir * (a.category || '').localeCompare(b.category || '');
+      if (col === 'energy') return dir * ((a.base_en ?? 0) - (b.base_en ?? 0));
+      if (col === 'tp') return dir * ((a.base_tp ?? 0) - (b.base_tp ?? 0));
+      return 0;
+    });
+  }, [parts, filters, sortState]);
 
   if (error) return <ErrorState message="Failed to load parts" />;
 

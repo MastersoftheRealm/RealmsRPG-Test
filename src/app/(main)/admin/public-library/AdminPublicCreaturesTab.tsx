@@ -88,8 +88,8 @@ export function AdminPublicCreaturesTab() {
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'level', label: 'LEVEL', sortable: false as const },
-          { key: 'type', label: 'TYPE', sortable: false as const },
+          { key: 'level', label: 'LEVEL' },
+          { key: 'type', label: 'TYPE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={CREATURE_GRID}

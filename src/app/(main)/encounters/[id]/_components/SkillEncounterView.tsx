@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, DragEvent } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Brain,
@@ -19,6 +19,9 @@ import {
   RotateCcw,
   Users,
   HandHelping,
+  GripVertical,
+  ListOrdered,
+  Swords,
 } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
@@ -26,8 +29,12 @@ import { useCodexSkills } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
 import { RollLog } from '@/components/character-sheet';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
-import type { Encounter, SkillParticipant, SkillEncounterState, TrackedCombatant } from '@/types/encounter';
+import type { Encounter, SkillParticipant, SkillEncounterState, TrackedCombatant, SkillParticipantType } from '@/types/encounter';
 import type { Campaign } from '@/types/campaign';
+
+function rollInitiative(acuity: number = 0): number {
+  return Math.floor(Math.random() * 20) + 1 + acuity;
+}
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
@@ -39,6 +46,8 @@ export interface SkillEncounterViewProps {
   setEncounter: React.Dispatch<React.SetStateAction<Encounter | null>>;
   campaignsFull: Campaign[];
   showRollLog?: boolean;
+  /** When true (mixed encounter), initiative defaults on and "Sync with combat order" is shown */
+  isMixedEncounter?: boolean;
 }
 
 export default function SkillEncounterView({
@@ -46,6 +55,7 @@ export default function SkillEncounterView({
   setEncounter,
   campaignsFull,
   showRollLog = true,
+  isMixedEncounter = false,
 }: SkillEncounterViewProps) {
   if (encounter === null || encounter.skillEncounter === undefined) return null;
 
@@ -57,9 +67,24 @@ export default function SkillEncounterView({
   const skill = encounter.skillEncounter;
   const additionalSuccesses = skill?.additionalSuccesses ?? 0;
   const additionalFailures = skill?.additionalFailures ?? 0;
-  const netSuccesses = skill
-    ? skill.currentSuccesses + additionalSuccesses - (skill.currentFailures + additionalFailures)
-    : 0;
+
+  // Derive roll totals from participants so display never drifts from actual rolls
+  const { derivedRollSuccesses, derivedRollFailures } = useMemo(() => {
+    if (!skill) return { derivedRollSuccesses: 0, derivedRollFailures: 0 };
+    let s = 0;
+    let f = 0;
+    for (const p of skill.participants) {
+      if (p.hasRolled && !p.isHelping) {
+        s += p.successCount ?? 0;
+        f += p.failureCount ?? 0;
+      }
+    }
+    return { derivedRollSuccesses: s, derivedRollFailures: f };
+  }, [skill?.participants]);
+
+  const netSuccesses = derivedRollSuccesses + additionalSuccesses - (derivedRollFailures + additionalFailures);
+  const sequenceSuccesses = skill?.sequenceSuccesses ?? 0;
+  const sequenceFailures = skill?.sequenceFailures ?? 0;
 
   const updateSkill = useCallback(
     (updates: Partial<SkillEncounterState>) => {
@@ -73,18 +98,24 @@ export default function SkillEncounterView({
 
   const addParticipant = () => {
     if (!newParticipantName.trim()) return;
+    const useInit = skill?.useInitiative ?? false;
     const participant: SkillParticipant = {
       id: generateId(),
       name: newParticipantName.trim(),
       hasRolled: false,
       sourceType: 'manual',
+      ...(useInit && { initiative: rollInitiative(0), participantType: 'ally' as const }),
     };
     updateSkill({ participants: [...(skill?.participants || []), participant] });
     setNewParticipantName('');
   };
 
-  const addParticipantsFromModal = (participants: SkillParticipant[]) => {
-    updateSkill({ participants: [...(skill?.participants || []), ...participants] });
+  const addParticipantsFromModal = (newParticipants: SkillParticipant[]) => {
+    const useInit = skill?.useInitiative ?? false;
+    const withInit = useInit
+      ? newParticipants.map((p) => ({ ...p, initiative: p.initiative ?? rollInitiative(0), participantType: p.participantType ?? ('ally' as const) }))
+      : newParticipants;
+    updateSkill({ participants: [...(skill?.participants || []), ...withInit] });
     setShowAddModal(false);
   };
 
@@ -96,6 +127,7 @@ export default function SkillEncounterView({
     if (!encounter?.campaignId || !linkedCampaign?.characters?.length) return;
     setAddingAllChars(true);
     try {
+      const useInit = skill?.useInitiative ?? false;
       const participants: SkillParticipant[] = linkedCampaign.characters.map(
         (c: { userId: string; characterId: string; characterName: string }) => ({
           id: generateId(),
@@ -103,25 +135,51 @@ export default function SkillEncounterView({
           hasRolled: false,
           sourceType: 'campaign-character' as const,
           sourceId: c.characterId,
+          ...(useInit && { initiative: rollInitiative(0), participantType: 'ally' as const }),
         })
       );
       updateSkill({ participants: [...(skill?.participants || []), ...participants] });
     } finally {
       setAddingAllChars(false);
     }
-  }, [encounter?.campaignId, linkedCampaign, skill?.participants, updateSkill]);
+  }, [encounter?.campaignId, linkedCampaign, skill?.participants, skill?.useInitiative, updateSkill]);
 
   const addCombatantsAsParticipants = (combatants: TrackedCombatant[]) => {
+    const useInit = skill?.useInitiative ?? false;
     const participants: SkillParticipant[] = combatants.map((c) => ({
       id: c.id,
       name: c.name,
       hasRolled: false,
       sourceType: c.sourceType,
       sourceId: c.sourceId,
+      ...(useInit && { initiative: rollInitiative(c.acuity ?? 0), participantType: c.isAlly ? ('ally' as const) : ('enemy' as const) }),
     }));
     updateSkill({ participants: [...(skill?.participants || []), ...participants] });
     setShowAddModal(false);
   };
+
+  /** In mixed encounter: copy all combat encounter combatants into skill participants, keeping initiative and ally/enemy. */
+  const copyCombatantsToSkill = useCallback(() => {
+    if (!encounter?.combatants?.length || !skill) return;
+    const existingIds = new Set(skill.participants.map((p) => p.id));
+    const combatants = encounter.combatants as TrackedCombatant[];
+    const toAdd = combatants.filter((c) => !existingIds.has(c.id));
+    if (toAdd.length === 0) return;
+    const participants: SkillParticipant[] = toAdd.map((c) => ({
+      id: c.id,
+      name: c.name,
+      hasRolled: false,
+      sourceType: c.sourceType,
+      sourceId: c.sourceId,
+      sourceUserId: c.sourceUserId,
+      initiative: c.initiative,
+      participantType: c.isAlly ? ('ally' as const) : ('enemy' as const),
+    }));
+    updateSkill({
+      useInitiative: skill.useInitiative ?? true,
+      participants: [...skill.participants, ...participants],
+    });
+  }, [encounter?.combatants, skill, updateSkill]);
 
   const removeParticipant = (id: string) => {
     if (!skill) return;
@@ -296,7 +354,7 @@ export default function SkillEncounterView({
     });
   };
 
-  const restartEncounter = () => {
+  const resetEncounter = () => {
     if (!skill) return;
     updateSkill({
       participants: skill.participants.map((p) => ({
@@ -310,8 +368,126 @@ export default function SkillEncounterView({
       })),
       currentSuccesses: 0,
       currentFailures: 0,
+      additionalSuccesses: 0,
+      additionalFailures: 0,
     });
   };
+
+  const useInitiative = skill?.useInitiative ?? false;
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+  }, []);
+  const handleDragEnd = useCallback(() => {
+    setDraggedId(null);
+    setDragOverId(null);
+  }, []);
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (id !== draggedId) setDragOverId(id);
+  }, [draggedId]);
+  const handleDragLeave = useCallback(() => setDragOverId(null), []);
+  const handleDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>, targetId: string) => {
+      e.preventDefault();
+      if (!draggedId || draggedId === targetId) {
+        setDraggedId(null);
+        setDragOverId(null);
+        return;
+      }
+      setEncounter((prev) => {
+        if (!prev?.skillEncounter) return prev;
+        const participants = [...prev.skillEncounter.participants];
+        const draggedIndex = participants.findIndex((p) => p.id === draggedId);
+        const targetIndex = participants.findIndex((p) => p.id === targetId);
+        if (draggedIndex === -1 || targetIndex === -1) return prev;
+        const [dragged] = participants.splice(draggedIndex, 1);
+        participants.splice(targetIndex, 0, dragged);
+        return { ...prev, skillEncounter: { ...prev.skillEncounter, participants } };
+      });
+      setDraggedId(null);
+      setDragOverId(null);
+    },
+    [draggedId, setEncounter]
+  );
+
+  const sortedParticipants = useMemo(() => {
+    if (!skill?.participants.length) return [];
+    if (!useInitiative) return skill.participants;
+    const list = [...skill.participants];
+    list.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0));
+    return list;
+  }, [skill?.participants, useInitiative]);
+
+  const updateParticipantInitiative = (id: string, initiative: number) => {
+    if (!skill) return;
+    updateSkill({
+      participants: skill.participants.map((p) => (p.id === id ? { ...p, initiative } : p)),
+    });
+  };
+  const updateParticipantType = (id: string, participantType: SkillParticipantType) => {
+    if (!skill) return;
+    updateSkill({
+      participants: skill.participants.map((p) => (p.id === id ? { ...p, participantType } : p)),
+    });
+  };
+  const rollInitiativeForParticipant = (id: string) => {
+    if (!skill) return;
+    const p = skill.participants.find((x) => x.id === id);
+    const initiative = rollInitiative(0);
+    updateParticipantInitiative(id, initiative);
+  };
+  const sortByInitiative = () => {
+    if (!skill) return;
+    const list = [...skill.participants];
+    list.sort((a, b) => (b.initiative ?? 0) - (a.initiative ?? 0));
+    updateSkill({ participants: list });
+  };
+
+  // Combat turn order (same logic as CombatEncounterView) for "Sync with combat order" in mixed mode
+  const combatTurnOrder = useMemo(() => {
+    if (!isMixedEncounter || !encounter?.combatants?.length) return [];
+    const combatants = encounter.combatants as TrackedCombatant[];
+    const sortFn = (a: TrackedCombatant, b: TrackedCombatant) => {
+      if (b.initiative !== a.initiative) return b.initiative - a.initiative;
+      return (b.acuity ?? 0) - (a.acuity ?? 0);
+    };
+    const companions = combatants.filter((c) => c.combatantType === 'companion').sort(sortFn);
+    const nonCompanions = combatants.filter((c) => c.combatantType !== 'companion');
+    if (encounter.round === 1) {
+      const notSurprised = nonCompanions.filter((c) => !c.isSurprised).sort(sortFn);
+      const surprised = nonCompanions.filter((c) => c.isSurprised).sort(sortFn);
+      return [...notSurprised, ...surprised, ...companions];
+    }
+    return [...nonCompanions.sort(sortFn), ...companions];
+  }, [isMixedEncounter, encounter?.combatants, encounter?.round]);
+
+  const syncWithCombatOrder = useCallback(() => {
+    if (!skill || combatTurnOrder.length === 0) return;
+    const used = new Set<string>();
+    const ordered: SkillParticipant[] = [];
+    for (const combatant of combatTurnOrder) {
+      const c = combatant as TrackedCombatant;
+      const match = skill.participants.find(
+        (p) =>
+          !used.has(p.id) &&
+          (p.id === c.id || // same id when copied from combat
+            p.name === c.name ||
+            (p.sourceId && c.sourceId && p.sourceId === c.sourceId))
+      );
+      if (match) {
+        ordered.push(match);
+        used.add(match.id);
+      }
+    }
+    const rest = skill.participants.filter((p) => !used.has(p.id));
+    updateSkill({ participants: [...ordered, ...rest] });
+  }, [skill, combatTurnOrder, updateSkill]);
 
   return (
     <>
@@ -320,8 +496,8 @@ export default function SkillEncounterView({
           <div className="bg-surface rounded-xl border border-border-light p-4">
             <h2 className="text-sm font-semibold text-text-secondary mb-3">Successes</h2>
             <SuccessFailureTracker
-              rollSuccesses={skill.currentSuccesses}
-              rollFailures={skill.currentFailures}
+              rollSuccesses={derivedRollSuccesses}
+              rollFailures={derivedRollFailures}
               additionalSuccesses={additionalSuccesses}
               additionalFailures={additionalFailures}
             />
@@ -341,9 +517,43 @@ export default function SkillEncounterView({
             </div>
           </div>
 
+          {/* Sequence tracker: manual S/F across multiple skill encounters */}
+          <div className="bg-surface rounded-xl border border-border-light p-4">
+            <h2 className="text-sm font-semibold text-text-secondary mb-2 flex items-center gap-2">
+              <ListOrdered className="w-4 h-4" /> Sequence
+            </h2>
+            <p className="text-xs text-text-muted dark:text-text-secondary mb-2">
+              Track total successes/failures across multiple skill encounters in a sequence.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-secondary">Successes:</span>
+                <ValueStepper
+                  value={sequenceSuccesses}
+                  onChange={(v) => updateSkill({ sequenceSuccesses: Math.max(0, v) })}
+                  min={0}
+                  max={99}
+                  size="sm"
+                  enableHoldRepeat
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-secondary">Failures:</span>
+                <ValueStepper
+                  value={sequenceFailures}
+                  onChange={(v) => updateSkill({ sequenceFailures: Math.max(0, v) })}
+                  min={0}
+                  max={99}
+                  size="sm"
+                  enableHoldRepeat
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="bg-surface rounded-xl border border-border-light p-4 flex flex-wrap items-center gap-3">
-            <Button variant="ghost" onClick={restartEncounter}>
-              <RotateCcw className="w-4 h-4" /> Restart Encounter
+            <Button variant="secondary" onClick={resetEncounter} aria-label="Reset skill encounter (clear all rolls and totals)">
+              <RotateCcw className="w-4 h-4" /> Reset
             </Button>
             <div className="ml-auto text-sm text-text-muted dark:text-text-secondary">
               {skill.participants.length} participant{skill.participants.length !== 1 ? 's' : ''}
@@ -352,25 +562,36 @@ export default function SkillEncounterView({
             </div>
           </div>
 
-          <div className="space-y-2">
-            {skill.participants.length === 0 ? (
+          <div className="space-y-3">
+            {sortedParticipants.length === 0 ? (
               <div className="bg-surface rounded-xl border border-border-light p-8 text-center text-text-muted dark:text-text-secondary">
                 <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p>No participants yet. Add characters using the panel on the right.</p>
               </div>
             ) : (
-              skill.participants.map((p) => (
+              sortedParticipants.map((p) => (
                 <ParticipantCard
                   key={p.id}
                   participant={p}
                   ds={skill.difficultyScore}
                   codexSkills={codexSkills}
+                  useInitiative={useInitiative}
+                  isDragOver={dragOverId === p.id}
+                  isDragging={draggedId === p.id}
                   onUpdateRoll={(val) => updateParticipantRollOnly(p.id, val)}
                   onUpdateSkill={(s) => updateParticipantSkill(p.id, s)}
                   onUpdateRmBonus={(v) => updateParticipantRmBonus(p.id, v)}
                   onClearRoll={() => clearParticipantRoll(p.id)}
                   onSetHelping={(v) => setParticipantHelping(p.id, v)}
                   onRemove={() => removeParticipant(p.id)}
+                  onUpdateInitiative={(v) => updateParticipantInitiative(p.id, v)}
+                  onUpdateParticipantType={(t) => updateParticipantType(p.id, t)}
+                  onRollInitiative={() => rollInitiativeForParticipant(p.id)}
+                  onDragStart={(e) => handleDragStart(e, p.id)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, p.id)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, p.id)}
                 />
               ))
             )}
@@ -382,27 +603,73 @@ export default function SkillEncounterView({
             <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
               <Brain className="w-5 h-5 text-blue-500" /> Configuration
             </h2>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty Score (DS)</label>
-              <ValueStepper
-                value={skill.difficultyScore}
-                onChange={(val) => {
-                  updateSkill({ difficultyScore: val });
-                  recomputeParticipantRollsFromDs(val);
-                }}
-                min={1}
-                max={40}
-                size="sm"
-                enableHoldRepeat
-              />
-              <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-                Roll ≥ DS = success. Each 5 over/under adds extra success/failure.
-              </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty Score (DS)</label>
+                <ValueStepper
+                  value={skill.difficultyScore}
+                  onChange={(val) => {
+                    updateSkill({ difficultyScore: val });
+                    recomputeParticipantRollsFromDs(val);
+                  }}
+                  min={1}
+                  max={40}
+                  size="sm"
+                  enableHoldRepeat
+                />
+                <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+                  Roll ≥ DS = success. Each 5 over/under adds extra success/failure.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useInitiative}
+                  onChange={(e) => updateSkill({ useInitiative: e.target.checked })}
+                  className="rounded border-border-light"
+                  aria-label="Track turns / use initiative"
+                />
+                <span className="text-sm font-medium text-text-secondary">Track turns / use initiative</span>
+              </label>
+              {useInitiative && (
+                <Button variant="secondary" size="sm" onClick={sortByInitiative} aria-label="Sort participants by initiative">
+                  <GripVertical className="w-4 h-4" /> Sort Initiative
+                </Button>
+              )}
+              {isMixedEncounter && useInitiative && combatTurnOrder.length > 0 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={syncWithCombatOrder}
+                  aria-label="Sync participant order with combat turn order"
+                  title="Reorder skill participants to match combat turn order (by name or character)"
+                >
+                  <Swords className="w-4 h-4" /> Sync with combat order
+                </Button>
+              )}
             </div>
           </div>
 
           <div className="bg-surface rounded-xl border border-border-light p-6">
             <h2 className="font-bold text-text-primary mb-4">Add Participants</h2>
+            {isMixedEncounter && encounter?.combatants?.length ? (() => {
+              const combatants = encounter.combatants as TrackedCombatant[];
+              const existingIds = new Set(skill?.participants.map((p) => p.id) ?? []);
+              const notYetAdded = combatants.filter((c) => !existingIds.has(c.id)).length;
+              return (
+                <Button
+                  variant="secondary"
+                  className="w-full mb-4"
+                  onClick={copyCombatantsToSkill}
+                  disabled={notYetAdded === 0}
+                  aria-label="Copy combat encounter combatants to skill participants (keeps initiative and ally/enemy)"
+                  title={notYetAdded === 0 ? 'All combatants are already in the skill encounter.' : 'Add everyone from the combat tab as skill participants, with their initiative and side (ally/enemy) preserved.'}
+                >
+                  <Swords className="w-4 h-4" /> Copy combatants from combat encounter
+                  {notYetAdded > 0 && ` (${notYetAdded})`}
+                </Button>
+              );
+            })() : null}
             <div className="mb-4 space-y-2">
               <label htmlFor="skill-encounter-campaign" className="block text-sm font-medium text-text-secondary">Campaign</label>
               <select
@@ -534,30 +801,65 @@ interface CodexSkillOption {
   name: string;
 }
 
+function getParticipantBorderColor(participant: SkillParticipant, useInitiative: boolean): string {
+  if (useInitiative && participant.participantType === 'enemy') return 'border-l-red-500';
+  if (useInitiative && participant.participantType === 'ally') return 'border-l-blue-500';
+  if (participant.isHelping) return 'border-l-amber-500';
+  const hasActed = participant.hasRolled || participant.isHelping;
+  const isSuccess = (participant.successCount ?? 0) > 0;
+  if (hasActed && isSuccess) return 'border-l-green-500';
+  if (hasActed && !isSuccess) return 'border-l-red-500';
+  return 'border-l-border-light';
+}
+
 function ParticipantCard({
   participant,
   ds,
   codexSkills,
+  useInitiative,
+  isDragOver,
+  isDragging,
   onUpdateRoll,
   onUpdateSkill,
   onUpdateRmBonus,
   onClearRoll,
   onSetHelping,
   onRemove,
+  onUpdateInitiative,
+  onUpdateParticipantType,
+  onRollInitiative,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: {
   participant: SkillParticipant;
   ds: number;
   codexSkills: CodexSkillOption[];
+  useInitiative: boolean;
+  isDragOver?: boolean;
+  isDragging?: boolean;
   onUpdateRoll: (value: number) => void;
   onUpdateSkill: (skill: string) => void;
   onUpdateRmBonus: (value: number | undefined) => void;
   onClearRoll: () => void;
   onSetHelping: (v: boolean) => void;
   onRemove: () => void;
+  onUpdateInitiative?: (value: number) => void;
+  onUpdateParticipantType?: (t: SkillParticipantType) => void;
+  onRollInitiative?: () => void;
+  onDragStart?: (e: DragEvent<HTMLDivElement>) => void;
+  onDragEnd?: () => void;
+  onDragOver?: (e: DragEvent<HTMLDivElement>) => void;
+  onDragLeave?: () => void;
+  onDrop?: (e: DragEvent<HTMLDivElement>) => void;
 }) {
   const [rollInput, setRollInput] = useState('');
   const hasActed = participant.hasRolled || participant.isHelping;
   const isSuccess = (participant.successCount ?? 0) > 0;
+  const successCount = participant.successCount ?? 0;
+  const failureCount = participant.failureCount ?? 0;
   const effectiveRoll =
     participant.hasRolled && participant.rollValue != null && (participant.rmBonus ?? 0) !== 0
       ? participant.rollValue + (participant.rmBonus ?? 0)
@@ -572,135 +874,195 @@ function ParticipantCard({
 
   return (
     <div
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
       className={cn(
-        'flex items-center gap-4 p-4 bg-surface rounded-xl border transition-colors',
-        participant.isHelping
-          ? 'border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-900/10'
-          : hasActed
-            ? isSuccess
-              ? 'border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10'
-              : 'border-red-300 dark:border-red-700 bg-red-50/50 dark:bg-red-900/10'
-            : 'border-border-light'
+        'bg-surface rounded-xl shadow-md p-3 transition-all border-l-4',
+        getParticipantBorderColor(participant, useInitiative),
+        participant.isHelping && 'bg-amber-50/50 dark:bg-amber-900/10',
+        hasActed && !participant.isHelping && isSuccess && 'bg-green-50/50 dark:bg-green-900/10',
+        hasActed && !participant.isHelping && !isSuccess && 'bg-red-50/50 dark:bg-red-900/10',
+        isDragOver && 'ring-2 ring-amber-400 bg-amber-50 dark:bg-amber-900/30',
+        isDragging && 'opacity-50'
       )}
     >
-      <div className="flex-shrink-0">
-        {participant.isHelping ? (
-          <span title="Helping (doesn't count)">
-            <HandHelping className="w-6 h-6 text-amber-600" />
-          </span>
-        ) : hasActed ? (
-          isSuccess ? (
-            <CheckCircle2 className="w-6 h-6 text-green-600" />
-          ) : (
-            <XCircle className="w-6 h-6 text-red-600" />
-          )
-        ) : (
-          <div className="w-6 h-6 rounded-full border-2 border-border-light" />
-        )}
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-text-primary">{participant.name}</div>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <select
-            aria-label="Skill for participant"
-            value={participant.skillUsed || ''}
-            onChange={(e) => onUpdateSkill(e.target.value)}
-            className="text-xs bg-transparent border border-border-light rounded px-1 py-0.5 text-text-secondary focus:border-primary-500 focus:outline-none min-w-0 max-w-[140px]"
+      <div className="flex items-start gap-3">
+        {useInitiative && (
+          <div
+            draggable
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none"
           >
-            <option value="">Skill...</option>
-            {codexSkills.map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs text-text-muted dark:text-text-secondary">RM Bonus:</span>
-          <input
-            type="number"
-            value={participant.rmBonus ?? ''}
-            onChange={(e) => {
-              const v = e.target.value.trim();
-              onUpdateRmBonus(v === '' || v === '-' ? undefined : parseInt(v, 10));
-            }}
-            placeholder="+0"
-            className="w-12 px-1 py-0.5 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-500 focus:outline-none"
-          />
-          {participant.hasRolled && participant.rollValue != null && (
-            <span className="text-xs text-text-muted dark:text-text-secondary">
-              {(participant.successCount ?? 0) > 0
-                ? `${participant.successCount}S`
-                : (participant.failureCount ?? 0) > 0
-                  ? `${participant.failureCount}F`
-                  : ''}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 flex-shrink-0">
-        {participant.isHelping ? (
-          <Button size="sm" variant="ghost" onClick={() => onSetHelping(false)}>
-            Undo Helping
-          </Button>
-        ) : participant.hasRolled ? (
-          <>
-            <div
-              className={cn(
-                'px-3 py-1 rounded-lg font-bold text-sm',
-                isSuccess
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-              )}
-            >
-              {participant.rollValue}
-              {(participant.rmBonus ?? 0) !== 0 && (
-                <span className="text-xs font-normal ml-1">
-                  ({participant.rmBonus! > 0 ? '+' : ''}{participant.rmBonus}) = {effectiveRoll}
-                </span>
-              )}
-              <span className="text-xs font-normal ml-1">vs {ds}</span>
+            <div className="text-text-muted dark:text-text-secondary hover:text-text-primary p-1 rounded hover:bg-surface-alt">
+              <GripVertical className="w-5 h-5" aria-hidden />
             </div>
-            <button
-              onClick={onClearRoll}
-              className="p-1 text-text-muted dark:text-text-secondary hover:text-text-secondary rounded"
-              title="Clear roll"
+            <div
+              className="w-10 h-10 rounded-lg flex flex-col items-center justify-center bg-surface-alt text-text-secondary text-sm font-bold cursor-pointer hover:bg-surface transition-colors min-w-[44px] min-h-[44px]"
+              onClick={onRollInitiative}
+              title="Roll initiative (d20)"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && onRollInitiative?.()}
+              aria-label={`Initiative: ${participant.initiative ?? '—'}. Click to roll.`}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          </>
-        ) : (
-          <>
+              {participant.initiative ?? '—'}
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <div className="font-bold text-text-primary">{participant.name}</div>
+            {useInitiative && onUpdateParticipantType && (
+              <select
+                value={participant.participantType ?? 'ally'}
+                onChange={(e) => onUpdateParticipantType(e.target.value as SkillParticipantType)}
+                aria-label="Participant side"
+                className={cn(
+                  'text-[10px] font-medium rounded px-1.5 py-0.5 border cursor-pointer',
+                  (participant.participantType ?? 'ally') === 'ally' && 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300',
+                  participant.participantType === 'enemy' && 'bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
+                )}
+              >
+                <option value="ally">Ally</option>
+                <option value="enemy">Enemy</option>
+              </select>
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              aria-label="Skill for participant"
+              value={participant.skillUsed || ''}
+              onChange={(e) => onUpdateSkill(e.target.value)}
+              className="text-xs bg-transparent border border-border-light rounded px-1 py-0.5 text-text-secondary focus:border-primary-500 focus:outline-none min-w-0 max-w-[140px]"
+            >
+              <option value="">Skill...</option>
+              {codexSkills.map((s) => (
+                <option key={s.id} value={s.name}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-text-muted dark:text-text-secondary">RM Bonus:</span>
             <input
               type="number"
-              value={rollInput}
-              onChange={(e) => setRollInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && submitRoll()}
-              placeholder="Total"
-              className="w-16 px-2 py-1 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-500 focus:outline-none"
+              value={participant.rmBonus ?? ''}
+              onChange={(e) => {
+                const v = e.target.value.trim();
+                onUpdateRmBonus(v === '' || v === '-' ? undefined : parseInt(v, 10));
+              }}
+              placeholder="+0"
+              className="w-12 px-1 py-0.5 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-500 focus:outline-none"
+              aria-label="RM bonus"
             />
-            <Button size="sm" onClick={submitRoll} disabled={!rollInput}>
-              Submit
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onSetHelping(true)}
-              title="Mark as helping — doesn't count toward encounter"
-            >
-              <HandHelping className="w-4 h-4" />
-            </Button>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
 
-      <button
-        onClick={onRemove}
-        className="p-1.5 text-text-muted dark:text-text-secondary hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
-        title="Remove"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+          {participant.isHelping ? (
+            <Button size="sm" variant="ghost" onClick={() => onSetHelping(false)}>
+              Undo Helping
+            </Button>
+          ) : participant.hasRolled ? (
+            <>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div
+                  className={cn(
+                    'px-3 py-1 rounded-lg font-bold text-sm',
+                    isSuccess
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                  )}
+                >
+                  {participant.rollValue}
+                  {(participant.rmBonus ?? 0) !== 0 && (
+                    <span className="text-xs font-normal ml-1">
+                      ({participant.rmBonus! > 0 ? '+' : ''}{participant.rmBonus}) = {effectiveRoll}
+                    </span>
+                  )}
+                  <span className="text-xs font-normal ml-1">vs {ds}</span>
+                </div>
+                <span
+                  className={cn(
+                    'px-2 py-1 rounded-lg text-sm font-bold min-h-[44px] flex items-center',
+                    successCount > 0
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                  )}
+                  aria-live="polite"
+                >
+                  {successCount > 0
+                    ? `${successCount} Success${successCount !== 1 ? 'es' : ''}!`
+                    : failureCount > 0
+                      ? `${failureCount} Failure${failureCount !== 1 ? 's' : ''}!`
+                      : ''}
+                </span>
+                <button
+                  onClick={onClearRoll}
+                  className="p-2 min-w-[44px] min-h-[44px] text-text-muted dark:text-text-secondary hover:text-text-secondary rounded hover:bg-surface-alt"
+                  title="Clear roll"
+                  aria-label="Clear roll"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <input
+                type="number"
+                value={rollInput}
+                onChange={(e) => setRollInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitRoll()}
+                placeholder="Total"
+                className="w-16 px-2 py-1.5 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-500 focus:outline-none min-h-[44px]"
+                aria-label="Roll total"
+              />
+              <Button size="sm" onClick={submitRoll} disabled={!rollInput} className="min-h-[44px]">
+                Submit
+              </Button>
+              <span
+                className={cn(
+                  'px-2 py-1 rounded-lg text-sm font-bold min-h-[44px] flex items-center empty:invisible',
+                  successCount > 0
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                    : failureCount > 0
+                      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                      : ''
+                )}
+                aria-live="polite"
+              >
+                {successCount > 0
+                  ? `${successCount} Success${successCount !== 1 ? 'es' : ''}!`
+                  : failureCount > 0
+                    ? `${failureCount} Failure${failureCount !== 1 ? 's' : ''}!`
+                    : ''}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onSetHelping(true)}
+                title="Mark as helping — doesn't count toward encounter"
+                aria-label="Mark as helping"
+                className="min-h-[44px]"
+              >
+                <HandHelping className="w-4 h-4" />
+              </Button>
+            </>
+          )}
+
+          <button
+            onClick={onRemove}
+            className="p-2 min-w-[44px] min-h-[44px] text-text-muted dark:text-text-secondary hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex-shrink-0"
+            title="Remove participant"
+            aria-label="Remove participant"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

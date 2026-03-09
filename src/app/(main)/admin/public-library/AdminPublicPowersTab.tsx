@@ -118,12 +118,12 @@ export function AdminPublicPowersTab() {
       <ListHeader
         columns={[
           { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY', sortable: false as const },
-          { key: 'action', label: 'ACTION', sortable: false as const },
-          { key: 'duration', label: 'DURATION', sortable: false as const },
-          { key: 'range', label: 'RANGE', sortable: false as const },
-          { key: 'area', label: 'AREA', sortable: false as const },
-          { key: 'damage', label: 'DAMAGE', sortable: false as const },
+          { key: 'energy', label: 'ENERGY' },
+          { key: 'action', label: 'ACTION' },
+          { key: 'duration', label: 'DURATION' },
+          { key: 'range', label: 'RANGE' },
+          { key: 'area', label: 'AREA' },
+          { key: 'damage', label: 'DAMAGE' },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={POWER_GRID}

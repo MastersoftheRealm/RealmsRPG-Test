@@ -80,6 +80,8 @@ export interface CreatorSummaryPanelProps {
   resourceBoxes?: Array<{ label: string; value: number; variant?: SummaryItem['variant'] }>;
   /** Line items as sentences: "Skills: Stealth +3, Athletics -1" (D&D stat block style) */
   lineItems?: Array<{ label: string; items: string[] }>;
+  /** Abilities as chips (e.g. STR +2, VIT +1) — rendered in a section "Abilities" below quickStats with border/chip style */
+  abilitiesChips?: Array<{ abbr: string; value: number }>;
   /** Additional content at the bottom */
   children?: ReactNode;
   /** Additional class names */
@@ -125,6 +127,7 @@ export function CreatorSummaryPanel({
   breakdowns,
   resourceBoxes,
   lineItems,
+  abilitiesChips,
   children,
   className,
 }: CreatorSummaryPanelProps) {
@@ -199,14 +202,32 @@ export function CreatorSummaryPanel({
             <div
               key={index}
               className={cn(
-                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm',
+                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-border-light',
                 stat.color || 'bg-surface-alt'
               )}
             >
               <span className="text-text-muted dark:text-text-secondary">{stat.label}</span>
-              <span className="font-bold">{stat.value}</span>
+              <span className="font-bold text-text-primary">{stat.value}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Abilities (chip/border style, same family as HP/EVA) */}
+      {abilitiesChips && abilitiesChips.length > 0 && (
+        <div className="mb-4 pb-4 border-b border-border-light">
+          <h3 className="text-sm font-semibold text-text-secondary dark:text-text-primary mb-2">Abilities</h3>
+          <div className="flex flex-wrap gap-2">
+            {abilitiesChips.map((ab, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium border border-border-light bg-surface-alt text-text-primary"
+              >
+                <span className="text-text-muted dark:text-text-secondary">{ab.abbr}</span>
+                <span>{ab.value >= 0 ? '+' : ''}{ab.value}</span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
