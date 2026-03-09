@@ -21,7 +21,7 @@ import {
   type Skill,
 } from '@/hooks';
 import { CREATURE_TYPES } from '@/lib/game/creator-constants';
-import { CreatorLayout, CreatorSaveToolbar, CreatorSummaryPanel } from '@/components/creator';
+import { CreatorLayout, CreatorSaveToolbar, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { Button, Input, Textarea, Modal, LoadingState, Alert } from '@/components/ui';
 import {
@@ -354,6 +354,35 @@ export default function SpeciesCreatorPage() {
     [form]
   );
 
+  // Collapsed summaries for collapsible sections (match other creators)
+  const basicsSummary = useMemo(() => {
+    if (form.name.trim()) return form.type ? `${form.name.trim()} · ${form.type}` : form.name.trim();
+    return form.type ? form.type : 'Name, type, description';
+  }, [form.name, form.type]);
+  const sizesSummary = useMemo(() => form.sizes.join(', ') || 'Medium', [form.sizes]);
+  const baseSkillsSummary = useMemo(() => {
+    const names = form.skillIds.map((id) => (id === '0' || !id ? 'Any' : (skills as Skill[]).find((s) => String(s.id) === id)?.name ?? id));
+    return names.filter(Boolean).length ? names.join(', ') : '— Select —';
+  }, [form.skillIds, skills]);
+  const languagesSummary = useMemo(() => form.languages.join(', ') || 'None', [form.languages]);
+  const traitsSummary = useMemo(() => {
+    const parts = [];
+    if (form.species_traits.length) parts.push(`${form.species_traits.length} species`);
+    if (form.ancestry_traits.length) parts.push(`${form.ancestry_traits.length} ancestry`);
+    if (form.characteristics.length) parts.push(`${form.characteristics.length} characteristics`);
+    if (form.flaws.length) parts.push(`${form.flaws.length} flaws`);
+    return parts.length ? parts.join(', ') : 'No traits';
+  }, [form.species_traits.length, form.ancestry_traits.length, form.characteristics.length, form.flaws.length]);
+  const heightWeightLifespanSummary = useMemo(() => {
+    const h = form.ave_height !== '' ? `${form.ave_height} cm` : null;
+    const w = form.ave_weight !== '' ? `${form.ave_weight} kg` : null;
+    const a = form.adulthood_lifespan[0] !== '' ? form.adulthood_lifespan[0] : null;
+    const l = form.adulthood_lifespan[1] !== '' ? form.adulthood_lifespan[1] : null;
+    if (h && w && a != null && l != null) return `H: ${h}, W: ${w}, ${a}–${l} yrs`;
+    if (h || w || a != null || l != null) return [h, w, a != null ? `Adulthood: ${a}` : null, l != null ? `Lifespan: ${l}` : null].filter(Boolean).join(', ');
+    return 'Not set';
+  }, [form.ave_height, form.ave_weight, form.adulthood_lifespan]);
+
   return (
     <CreatorLayout
       icon={<Users className="w-8 h-8 text-primary-600" />}
@@ -425,7 +454,7 @@ export default function SpeciesCreatorPage() {
                         <li key={s.id}>
                           <button
                             type="button"
-                            className="text-left w-full px-3 py-2 rounded-lg hover:bg-surface-alt text-primary-700"
+                            className="text-left w-full px-3 py-2 rounded-lg hover:bg-surface-alt text-primary-700 dark:text-primary-300 dark:hover:bg-surface"
                             onClick={() => loadSpeciesIntoForm(s)}
                           >
                             {s.name}
@@ -442,7 +471,7 @@ export default function SpeciesCreatorPage() {
                       <li key={s.id}>
                         <button
                           type="button"
-                          className="text-left w-full px-3 py-2 rounded-lg hover:bg-surface-alt text-primary-700"
+                          className="text-left w-full px-3 py-2 rounded-lg hover:bg-surface-alt text-primary-700 dark:text-primary-300 dark:hover:bg-surface"
                           onClick={() => loadSpeciesIntoForm(s)}
                         >
                           {s.name} {s.type ? `(${s.type})` : ''}
@@ -505,8 +534,7 @@ export default function SpeciesCreatorPage() {
       )}
 
       <div className="space-y-6">
-        <section className="bg-surface rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-4">Basics</h2>
+        <CollapsibleSection title="Basics" collapsedSummary={basicsSummary} defaultExpanded={true}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Input
@@ -521,7 +549,7 @@ export default function SpeciesCreatorPage() {
               <label htmlFor="species-type" className="block text-sm font-medium text-text-secondary mb-1">Type</label>
               <select
                 id="species-type"
-                className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                className="w-full px-3 py-2 rounded-lg border border-border-light bg-surface text-text-primary"
                 value={form.type}
                 onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
                 aria-label="Creature type"
@@ -544,11 +572,10 @@ export default function SpeciesCreatorPage() {
               aria-label="Species description"
             />
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="bg-surface rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-2">Sizes (up to {MAX_SIZES})</h2>
-          <p className="text-sm text-text-muted mb-4">Choose up to two size options for this species.</p>
+        <CollapsibleSection title={`Sizes (up to ${MAX_SIZES})`} collapsedSummary={sizesSummary} defaultExpanded={true}>
+          <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Choose up to two size options for this species.</p>
           <ChipList items={form.sizes} onRemove={removeSize} color="bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200" />
           <div className="flex flex-wrap gap-2 mt-2">
             {SIZE_OPTIONS.filter((s) => !form.sizes.includes(s)).slice(0, SIZE_OPTIONS.length - form.sizes.length).map((size) => (
@@ -557,18 +584,17 @@ export default function SpeciesCreatorPage() {
               </Button>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="bg-surface rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-2">Base skills (2)</h2>
-          <p className="text-sm text-text-muted mb-4">Select two base skills; one may be &quot;Any&quot; (id 0). You cannot pick the same skill twice.</p>
+        <CollapsibleSection title="Base skills (2)" collapsedSummary={baseSkillsSummary} defaultExpanded={true}>
+          <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Select two base skills; one may be &quot;Any&quot; (id 0). You cannot pick the same skill twice.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {([0, 1] as const).map((i) => (
               <div key={i}>
                 <label htmlFor={i === 0 ? 'base-skill-0' : 'base-skill-1'} className="block text-sm font-medium text-text-secondary mb-1">Skill {i + 1}</label>
                 <select
                   id={i === 0 ? 'base-skill-0' : 'base-skill-1'}
-                  className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                  className="w-full px-3 py-2 rounded-lg border border-border-light bg-surface text-text-primary"
                   value={form.skillIds[i] ?? ''}
                   onChange={(e) => setSkill(i, e.target.value)}
                   aria-label={i === 0 ? 'First base skill' : 'Second base skill'}
@@ -581,11 +607,10 @@ export default function SpeciesCreatorPage() {
               </div>
             ))}
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="bg-surface rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-2">Languages (up to {MAX_LANGUAGES})</h2>
-          <p className="text-sm text-text-muted mb-4">Universal can be included by default; add or remove as desired.</p>
+        <CollapsibleSection title={`Languages (up to ${MAX_LANGUAGES})`} collapsedSummary={languagesSummary} defaultExpanded={true}>
+          <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Universal can be included by default; add or remove as desired.</p>
           <ChipList items={form.languages} onRemove={removeLanguage} color="bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300" />
           <div className="flex gap-2 mt-2">
             <Input
@@ -599,47 +624,46 @@ export default function SpeciesCreatorPage() {
             />
             <Button onClick={addLanguage} disabled={!newLanguage.trim() || form.languages.length >= MAX_LANGUAGES} size="sm">Add</Button>
           </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="bg-surface rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-2">Traits</h2>
-          <p className="text-sm text-text-muted mb-4">
+        <CollapsibleSection
+          title="Traits"
+          collapsedSummary={traitsSummary}
+          defaultExpanded={true}
+          rightSlot={
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                onClick={() => setShowAddSpeciesAncestryModal(true)}
+                disabled={form.species_traits.length >= MAX_SPECIES_TRAITS && form.ancestry_traits.length >= MAX_ANCESTRY_TRAITS}
+              >
+                <Plus className="w-4 h-4 mr-1" aria-hidden />
+                Species/ancestry
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setShowAddFlawModal(true)} disabled={form.flaws.length >= MAX_FLAWS}>
+                <Plus className="w-4 h-4 mr-1" aria-hidden />
+                Flaw
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setShowAddCharacteristicModal(true)} disabled={form.characteristics.length >= MAX_CHARACTERISTICS}>
+                <Plus className="w-4 h-4 mr-1" aria-hidden />
+                Characteristic
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
             Species traits ({MAX_SPECIES_TRAITS} max), ancestry traits ({MAX_ANCESTRY_TRAITS} max), characteristics ({MAX_CHARACTERISTICS} max), flaws ({MAX_FLAWS} max). Add from the matching list; species/ancestry traits are classified after you add.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <TraitBlock title="Species traits" limit={MAX_SPECIES_TRAITS} ids={form.species_traits} traitIdToName={traitIdToName} onRemove={(id) => removeTrait('species_traits', id)} />
             <TraitBlock title="Ancestry traits" limit={MAX_ANCESTRY_TRAITS} ids={form.ancestry_traits} traitIdToName={traitIdToName} onRemove={(id) => removeTrait('ancestry_traits', id)} />
             <TraitBlock title="Characteristics" limit={MAX_CHARACTERISTICS} ids={form.characteristics} traitIdToName={traitIdToName} onRemove={(id) => removeTrait('characteristics', id)} />
             <TraitBlock title="Flaws" limit={MAX_FLAWS} ids={form.flaws} traitIdToName={traitIdToName} onRemove={(id) => removeTrait('flaws', id)} />
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => setShowAddSpeciesAncestryModal(true)}
-              disabled={form.species_traits.length >= MAX_SPECIES_TRAITS && form.ancestry_traits.length >= MAX_ANCESTRY_TRAITS}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add species/ancestry trait
-            </Button>
-            <Button
-              onClick={() => setShowAddFlawModal(true)}
-              disabled={form.flaws.length >= MAX_FLAWS}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add flaw
-            </Button>
-            <Button
-              onClick={() => setShowAddCharacteristicModal(true)}
-              disabled={form.characteristics.length >= MAX_CHARACTERISTICS}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add characteristic
-            </Button>
-          </div>
-        </section>
+        </CollapsibleSection>
 
-        <section className="bg-surface rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-text-primary mb-4">Height, weight & lifespan *</h2>
-          <p className="text-sm text-text-muted mb-4">Required. Average height (cm), average weight (kg), adulthood age, and lifespan (years).</p>
+        <CollapsibleSection title="Height, weight & lifespan *" collapsedSummary={heightWeightLifespanSummary} defaultExpanded={true}>
+          <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Required. Average height (cm), average weight (kg), adulthood age, and lifespan (years).</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Input
@@ -682,7 +706,7 @@ export default function SpeciesCreatorPage() {
               />
             </div>
           </div>
-        </section>
+        </CollapsibleSection>
       </div>
     </CreatorLayout>
   );

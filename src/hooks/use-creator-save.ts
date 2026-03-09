@@ -13,6 +13,15 @@ import { saveToLibrary, saveToOfficialLibrary, findLibraryItemByName, findOffici
 
 const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
 
+/** Partial query keys for user library; invalidating these refreshes load-modal lists after save */
+const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
+  powers: ['user-powers'],
+  techniques: ['user-techniques'],
+  items: ['user-items'],
+  creatures: ['user-creatures'],
+  species: ['user-species'],
+};
+
 export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
 
 export interface CreatorSavePayload {
@@ -97,6 +106,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         } else {
           const existing = await findLibraryItemByName(type, name.trim());
           await saveToLibrary(type, payload, existing ? { existingId: existing.id } : undefined);
+          queryClient.invalidateQueries({ queryKey: [...USER_LIBRARY_QUERY_KEYS[type]] });
           setSaveMessage({ type: 'success', text: successMessage });
         }
         setTimeout(() => {

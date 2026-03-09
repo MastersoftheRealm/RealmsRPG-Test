@@ -379,6 +379,53 @@ export function deriveRange(
   return `${spaces} ${spaces > 1 ? 'spaces' : 'space'}`;
 }
 
+/** Area type to part mapping for lookup */
+const AREA_TYPE_TO_PART: Record<string, { id: number; name: string }> = {
+  sphere: { id: PART_IDS.SPHERE_OF_EFFECT, name: 'Sphere of Effect' },
+  cylinder: { id: PART_IDS.CYLINDER_OF_EFFECT, name: 'Cylinder of Effect' },
+  cone: { id: PART_IDS.CONE_OF_EFFECT, name: 'Cone of Effect' },
+  line: { id: PART_IDS.LINE_OF_EFFECT, name: 'Line of Effect' },
+  trail: { id: PART_IDS.TRAIL_OF_EFFECT, name: 'Trail of Effect' },
+};
+
+/**
+ * Get area part for display (description, op_1_desc) from area config.
+ * Used in power creator to show part description when area is selected.
+ */
+export function getAreaPartForDisplay(
+  areaType: string,
+  areaLevel: number,
+  partsDb: PowerPart[] = []
+): { part: PowerPart; description: string; op1Desc?: string; op1Level: number } | null {
+  const info = AREA_TYPE_TO_PART[areaType];
+  if (!info) return null;
+  const part = findByIdOrName(partsDb, { id: info.id, name: info.name });
+  if (!part) return null;
+  const op1Level = Math.max(0, areaLevel - 1);
+  return {
+    part,
+    description: part.description || '',
+    op1Desc: part.op_1_desc,
+    op1Level,
+  };
+}
+
+/**
+ * Format area for collapsed summary (e.g. "Level 3 Sphere", "Level 1 Cone").
+ */
+export function formatAreaForDisplay(areaType: string, areaLevel: number): string {
+  if (areaType === 'none') return 'Single target';
+  const names: Record<string, string> = {
+    sphere: 'Sphere',
+    cylinder: 'Cylinder',
+    cone: 'Cone',
+    line: 'Line',
+    trail: 'Trail',
+  };
+  const shape = names[areaType] || areaType;
+  return `Level ${areaLevel} ${shape}`;
+}
+
 /**
  * Derive area string from parts
  */

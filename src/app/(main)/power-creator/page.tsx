@@ -23,15 +23,17 @@ import { CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
 import { LoadingState, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
 import { LoadFromLibraryModal } from '@/components/creator/LoadFromLibraryModal';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import { ValueStepper } from '@/components/shared';
-import { CreatorSummaryPanel } from '@/components/creator';
+import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
 import {
   calculatePowerCosts,
   computePowerActionTypeFromSelection,
-  buildPowerMechanicParts,
+  buildMechanicParts,
   deriveRange,
   deriveArea,
   deriveDuration,
+  getAreaPartForDisplay,
+  formatAreaForDisplay,
   type PowerPartPayload,
   type AreaConfig,
   type DurationConfig,
@@ -44,10 +46,10 @@ import {
   DURATION_TYPES,
   DURATION_VALUES,
 } from '@/lib/game/creator-constants';
+import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, ADVANCED_CATEGORIES, EXCLUDED_PARTS } from './power-creator-constants';
 import { PowerPartCard } from './PowerPartCard';
-import { PowerAdvancedMechanicsSection } from './PowerAdvancedMechanics';
 
 // =============================================================================
 // Main Component
@@ -96,7 +98,7 @@ function PowerCreatorContent() {
   const [selectedAdvancedParts, setSelectedAdvancedParts] = useState<AdvancedPart[]>([]);
   const [actionType, setActionType] = useState('basic');
   const [isReaction, setIsReaction] = useState(false);
-  const [damages, setDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none' }]);
+  const [damages, setDamages] = useState<DamageConfig[]>([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
   const damage = damages[0] ?? { amount: 0, size: 6, type: 'none' };
   // Range state (0 = melee/1 space, 1+ = ranged increments)
   const [range, setRange] = useState<RangeConfig>({ steps: 0 });
@@ -134,7 +136,13 @@ function PowerCreatorContent() {
           setActionType(parsed.actionType || 'basic');
           setIsReaction(parsed.isReaction || false);
           const d = parsed.damage;
-          setDamages(Array.isArray(d) && d.length > 0 ? d : (d && !Array.isArray(d) ? [d] : [{ amount: 0, size: 6, type: 'none' }]));
+          setDamages(
+            Array.isArray(d) && d.length > 0
+              ? d.map((x: DamageConfig) => ({ ...x, applyDuration: x.applyDuration ?? false }))
+              : d && !Array.isArray(d)
+                ? [{ ...d, amount: d.amount ?? 0, size: d.size ?? 6, type: d.type ?? 'none', applyDuration: (d as DamageConfig).applyDuration ?? false }]
+                : [{ amount: 0, size: 6, type: 'none', applyDuration: false }]
+          );
           setRange(parsed.range || { steps: 0 });
           setArea(parsed.area || { type: 'none', level: 1, applyDuration: false });
           setDuration(parsed.duration || {
@@ -178,6 +186,7 @@ function PowerCreatorContent() {
                   op_2_lvl: savedPart.op_2_lvl,
                   op_3_lvl: savedPart.op_3_lvl,
                   applyDuration: savedPart.applyDuration,
+                  selectedCategory: foundPart.category || 'any',
                 });
               }
             }
@@ -232,34 +241,43 @@ function PowerCreatorContent() {
 
   // Filter out mechanic parts for the "Add Part" dropdown
   // Mechanic parts are handled by basic mechanics UI (action, damage, range, area, duration)
-  // or the Advanced Mechanics section
+  // or the Power Mechanics section
   const nonMechanicParts = useMemo(
     () => powerParts.filter((p: PowerPart) => !p.mechanic),
     [powerParts]
   );
 
-  // Build mechanic parts using unified builder
+  // Mechanic parts for Power Mechanics section (same parts as old Advanced Mechanics, excluded from hardcoded UI)
+  const mechanicPartsForList = useMemo(
+    () => powerParts.filter((p: PowerPart) => p.mechanic && !EXCLUDED_PARTS.has(p.name)),
+    [powerParts]
+  );
+
+  // Build mechanic parts using unified builder (powerDamage array supports applyDuration per row)
   const mechanicParts = useMemo(
-    () => buildPowerMechanicParts({
-      actionTypeSelection: actionType,
-      reaction: isReaction,
-      damageType: damage.type,
-      diceAmt: damage.amount,
-      dieSize: damage.size,
-      range: range.steps,
-      areaType: area.type,
-      areaLevel: area.level,
-      areaApplyDuration: area.applyDuration,
-      durationType: duration.type,
-      durationValue: duration.value,
-      durationApplyDuration: duration.applyDuration,
-      focus: duration.focus,
-      noHarm: duration.noHarm,
-      endsOnActivation: duration.endsOnActivation,
-      sustain: duration.sustain,
+    () => buildMechanicParts({
+      creatorType: 'power',
       partsDb: powerParts,
+      action: { type: actionType, isReaction },
+      powerDamage: damages.map((d) => ({
+        type: d.type,
+        diceAmount: d.amount,
+        dieSize: d.size,
+        applyDuration: d.applyDuration ?? false,
+      })),
+      range: { steps: range.steps },
+      area: area.type !== 'none' ? { type: area.type, level: area.level, applyDuration: area.applyDuration ?? false } : undefined,
+      duration: duration.type !== 'instant' ? {
+        type: duration.type,
+        value: duration.value,
+        applyDuration: duration.applyDuration ?? false,
+        focus: duration.focus,
+        noHarm: duration.noHarm,
+        endsOnActivation: duration.endsOnActivation,
+        sustain: duration.sustain,
+      } : undefined,
     }),
-    [actionType, isReaction, damage, range, area, duration, powerParts]
+    [actionType, isReaction, damages, range, area, duration, powerParts]
   );
 
   // Convert selected parts to payload format for calculator
@@ -303,6 +321,85 @@ function PowerCreatorContent() {
   const areaDisplay = useMemo(() => deriveArea(partsPayload, powerParts), [partsPayload, powerParts]);
   const durationDisplay = useMemo(() => deriveDuration(partsPayload, powerParts), [partsPayload, powerParts]);
 
+  // Format range for collapsed summary (from UI state)
+  const rangeSummary = useMemo(() => {
+    if (range.steps === 0) return '1 Space / Melee';
+    const spaces = 3 + 3 * (range.steps - 1);
+    return `${spaces} ${spaces > 1 ? 'Spaces' : 'Space'}`;
+  }, [range.steps]);
+
+  // Area part for description display when area is selected
+  const areaPartInfo = useMemo(
+    () => (area.type !== 'none' ? getAreaPartForDisplay(area.type, area.level, powerParts) : null),
+    [area.type, area.level, powerParts]
+  );
+
+  // Format damage for collapsed summary
+  const damageSummary = useMemo(() => {
+    const valid = damages.filter((d) => d.type !== 'none' && d.amount > 0);
+    if (valid.length === 0) return 'No damage';
+    return valid.map((d) => `${d.amount}d${d.size} ${d.type}`).join(', ');
+  }, [damages]);
+
+  // Power parts summary (first few part names + EN/TP)
+  const powerPartsSummary = useMemo(() => {
+    if (selectedParts.length === 0) return 'No parts';
+    const names = selectedParts.slice(0, 5).map((sp) => sp.part.name);
+    const more = selectedParts.length > 5 ? ` +${selectedParts.length - 5} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [selectedParts]);
+
+  // Power mechanics summary
+  const powerMechanicsSummary = useMemo(() => {
+    if (selectedAdvancedParts.length === 0) return 'No mechanics';
+    const names = selectedAdvancedParts.slice(0, 5).map((ap) => ap.part.name);
+    const more = selectedAdvancedParts.length > 5 ? ` +${selectedAdvancedParts.length - 5} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [selectedAdvancedParts]);
+
+  // Duration summary for collapsed state
+  const durationSummary = useMemo(() => {
+    if (duration.type === 'instant') return 'Instant';
+    if (duration.type === 'permanent') return 'Permanent';
+    return formatDurationFromTypeAndValue(duration.type, duration.value);
+  }, [duration.type, duration.value]);
+
+  // Section costs for display (EN/TP contribution per section)
+  const sectionCosts = useMemo(() => {
+    const toPayload = (mp: { id: number | string; name: string; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number }) =>
+      ({ id: mp.id, name: mp.name, op_1_lvl: mp.op_1_lvl, op_2_lvl: mp.op_2_lvl, op_3_lvl: mp.op_3_lvl });
+    const rangeParts = mechanicParts.filter((mp) => mp.name === 'Power Range').map(toPayload);
+    const areaNames = ['Sphere of Effect', 'Cylinder of Effect', 'Cone of Effect', 'Line of Effect', 'Trail of Effect'];
+    const areaParts = mechanicParts.filter((mp) => areaNames.includes(mp.name)).map(toPayload);
+    const durationNames = ['Duration (Round)', 'Duration (Minute)', 'Duration (Hour)', 'Duration (Days)', 'Duration (Permanent)', 'Focus for Duration', 'No Harm or Adaptation for Duration', 'Duration Ends On Activation', 'Sustain for Duration'];
+    const durationParts = mechanicParts.filter((mp) => durationNames.includes(mp.name)).map(toPayload);
+    const damageNames = ['Magic Damage', 'Light Damage', 'Elemental Damage', 'Poison or Necrotic Damage', 'Sonic Damage', 'Spiritual Damage', 'Psychic Damage', 'Physical Damage', 'Power Split Damage Dice'];
+    const damageParts = mechanicParts.filter((mp) => damageNames.includes(mp.name)).map(toPayload);
+    const actionNames = ['Power Reaction', 'Power Quick or Free Action', 'Power Long Action'];
+    const actionParts = mechanicParts.filter((mp) => actionNames.includes(mp.name)).map(toPayload);
+    const partsPayload = selectedParts.map((sp) => ({
+      part: sp.part,
+      op_1_lvl: sp.op_1_lvl,
+      op_2_lvl: sp.op_2_lvl,
+      op_3_lvl: sp.op_3_lvl,
+    }));
+    const mechanicPayload = selectedAdvancedParts.map((ap) => ({
+      part: ap.part,
+      op_1_lvl: ap.op_1_lvl,
+      op_2_lvl: ap.op_2_lvl,
+      op_3_lvl: ap.op_3_lvl,
+    }));
+    return {
+      action: calculatePowerCosts(actionParts, powerParts),
+      range: calculatePowerCosts(rangeParts, powerParts),
+      area: calculatePowerCosts(areaParts, powerParts),
+      duration: calculatePowerCosts(durationParts, powerParts),
+      damage: calculatePowerCosts(damageParts, powerParts),
+      powerParts: calculatePowerCosts(partsPayload, powerParts),
+      powerMechanics: calculatePowerCosts(mechanicPayload, powerParts),
+    };
+  }, [mechanicParts, powerParts, selectedParts, selectedAdvancedParts]);
+
   // Actions
   const addPart = useCallback(() => {
     if (nonMechanicParts.length === 0) return;
@@ -330,16 +427,22 @@ function PowerCreatorContent() {
   }, []);
 
   // Advanced part actions
-  const addAdvancedPart = useCallback((part: PowerPart) => {
-    // Don't add if already selected
-    if (selectedAdvancedParts.some((ap) => ap.part.id === part.id)) {
-      return;
-    }
+  const addMechanicPart = useCallback(() => {
+    if (mechanicPartsForList.length === 0) return;
+    const first = mechanicPartsForList[0];
+    if (selectedAdvancedParts.some((ap) => ap.part.id === first.id)) return;
     setSelectedAdvancedParts((prev) => [
       ...prev,
-      { part, op_1_lvl: 0, op_2_lvl: 0, op_3_lvl: 0, applyDuration: false },
+      {
+        part: first,
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+        selectedCategory: 'any',
+      },
     ]);
-  }, [selectedAdvancedParts]);
+  }, [mechanicPartsForList, selectedAdvancedParts]);
 
   const removeAdvancedPart = useCallback((index: number) => {
     setSelectedAdvancedParts((prev) => prev.filter((_, i) => i !== index));
@@ -382,7 +485,7 @@ function PowerCreatorContent() {
     ];
     const damageToSave = damages
       .filter((d) => d.type !== 'none' && d.amount > 0)
-      .map((d) => ({ amount: d.amount, size: d.size, type: d.type }));
+      .map((d) => ({ amount: d.amount, size: d.size, type: d.type, applyDuration: d.applyDuration ?? false }));
     return {
       name: name.trim(),
       data: {
@@ -417,7 +520,7 @@ function PowerCreatorContent() {
       setSelectedAdvancedParts([]);
       setActionType('basic');
       setIsReaction(false);
-      setDamages([{ amount: 0, size: 6, type: 'none' }]);
+      setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
       setRange({ steps: 0 });
       setArea({ type: 'none', level: 1, applyDuration: false });
       setDuration({
@@ -447,7 +550,7 @@ function PowerCreatorContent() {
     setSelectedAdvancedParts([]);
     setActionType('basic');
     setIsReaction(false);
-    setDamages([{ amount: 0, size: 6, type: 'none' }]);
+    setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
     setRange({ steps: 0 });
     setArea({ type: 'none', level: 1, applyDuration: false });
     setDuration({
@@ -514,7 +617,10 @@ function PowerCreatorContent() {
         
         // Check if it's an advanced mechanic part
         if (savedPart.isAdvanced || (matchedPart.mechanic && ADVANCED_CATEGORIES.includes(matchedPart.category as typeof ADVANCED_CATEGORIES[number]))) {
-          loadedAdvancedParts.push(partData);
+          loadedAdvancedParts.push({
+            ...partData,
+            selectedCategory: matchedPart.category || 'any',
+          });
         } else if (!matchedPart.mechanic) {
           // Only add non-mechanic parts to regular parts section
           loadedParts.push({
@@ -528,15 +634,17 @@ function PowerCreatorContent() {
     setSelectedAdvancedParts(loadedAdvancedParts);
     
     // Load damage - handle both array and object formats
-    let damageData: Array<{ amount?: number; size?: number; type?: string }> = [];
+    let damageData: Array<{ amount?: number; size?: number; type?: string; applyDuration?: boolean }> = [];
     if (Array.isArray(power.damage)) {
       damageData = power.damage;
     } else if (power.damage && typeof power.damage === 'object') {
       // Convert object format to array
+      const d = power.damage as { dice?: number; amount?: number; sides?: number; size?: number; type?: string; applyDuration?: boolean };
       damageData = [{
-        amount: power.damage.dice || power.damage.amount || 0,
-        size: power.damage.sides || power.damage.size || 6,
-        type: power.damage.type || 'none',
+        amount: d.dice ?? d.amount ?? 0,
+        size: d.sides ?? d.size ?? 6,
+        type: d.type ?? 'none',
+        applyDuration: d.applyDuration ?? false,
       }];
     }
     
@@ -546,10 +654,11 @@ function PowerCreatorContent() {
           amount: dmg.amount ?? 0,
           size: dmg.size ?? 6,
           type: dmg.type ?? 'none',
+          applyDuration: (dmg as { applyDuration?: boolean }).applyDuration ?? false,
         }))
       );
     } else {
-      setDamages([{ amount: 0, size: 6, type: 'none' }]);
+      setDamages([{ amount: 0, size: 6, type: 'none', applyDuration: false }]);
     }
     
     // Load action type and reaction
@@ -748,8 +857,12 @@ function PowerCreatorContent() {
           </div>
 
           {/* Action Type */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Action Type</h2>
+          <CollapsibleSection
+            title="Action Type"
+            collapsedSummary={actionTypeDisplay}
+            defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={sectionCosts.action.totalEnergy} tp={sectionCosts.action.totalTP} />}
+          >
             <div className="flex flex-wrap gap-4">
               <select
                 aria-label="Action type"
@@ -769,11 +882,15 @@ function PowerCreatorContent() {
                   label="Reaction"
                 />
             </div>
-          </div>
+          </CollapsibleSection>
 
           {/* Range */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Range</h2>
+          <CollapsibleSection
+            title="Range"
+            collapsedSummary={rangeSummary}
+            defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={sectionCosts.range.totalEnergy} tp={sectionCosts.range.totalTP} />}
+          >
             <div className="flex flex-wrap items-center gap-4">
               <ValueStepper
                 value={range.steps}
@@ -786,12 +903,16 @@ function PowerCreatorContent() {
                 {range.steps === 0 ? '(1 Space / Melee)' : `(${range.steps * 3} spaces)`}
               </span>
             </div>
-          </div>
+          </CollapsibleSection>
 
           {/* Area of Effect */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Area of Effect</h2>
-            <div className="flex flex-wrap items-center gap-4">
+          <CollapsibleSection
+            title="Area of Effect"
+            collapsedSummary={area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)}
+            defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={sectionCosts.area.totalEnergy} tp={sectionCosts.area.totalTP} />}
+          >
+            <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
                 aria-label="Area of effect"
                 value={area.type}
@@ -805,27 +926,46 @@ function PowerCreatorContent() {
                 ))}
               </select>
               {area.type !== 'none' && (
-                <>
-                  <ValueStepper
-                    value={area.level}
-                    onChange={(v) => setArea((a) => ({ ...a, level: v }))}
-                    label="Level:"
-                    min={1}
-                    max={10}
-                  />
-                  <Checkbox
-                      checked={area.applyDuration || false}
-                      onChange={(e) => setArea((a) => ({ ...a, applyDuration: e.target.checked }))}
-                      label="Apply Duration"
-                    />
-                </>
+                <ValueStepper
+                  value={area.level}
+                  onChange={(v) => setArea((a) => ({ ...a, level: v }))}
+                  label="Level:"
+                  min={1}
+                  max={10}
+                />
               )}
             </div>
-          </div>
+            {area.type !== 'none' && (
+              <div className="mt-4">
+                <Checkbox
+                  checked={area.applyDuration ?? false}
+                  onChange={(e) => setArea((a) => ({ ...a, applyDuration: e.target.checked }))}
+                  label="Apply duration"
+                />
+              </div>
+            )}
+            {areaPartInfo && (
+              <div className="mt-4 p-4 rounded-lg bg-surface-alt border border-border-light">
+                <p className="text-sm text-text-primary leading-relaxed">{areaPartInfo.description}</p>
+                {areaPartInfo.op1Desc && areaPartInfo.op1Level > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border-light">
+                    <p className="text-sm font-medium text-text-secondary dark:text-text-primary mb-1">
+                      Option 1 (Level {areaPartInfo.op1Level + 1}):
+                    </p>
+                    <p className="text-sm text-text-primary">{areaPartInfo.op1Desc}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CollapsibleSection>
 
           {/* Duration */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Duration</h2>
+          <CollapsibleSection
+            title="Duration"
+            collapsedSummary={durationSummary}
+            defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={sectionCosts.duration.totalEnergy} tp={sectionCosts.duration.totalTP} />}
+          >
             <div className="flex flex-wrap items-center gap-4 mb-4">
               <select
                 aria-label="Duration type"
@@ -889,7 +1029,7 @@ function PowerCreatorContent() {
                 </select>
               )}
             </div>
-            {/* Apply Duration + Duration Modifiers - only enabled for durations of 2+ rounds */}
+            {/* Duration Modifiers - only enabled for durations of 2+ rounds */}
             {(() => {
               const isShortDuration = duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
               return (
@@ -897,12 +1037,6 @@ function PowerCreatorContent() {
                   'flex flex-wrap items-center gap-4 pt-3 border-t border-border-light',
                   isShortDuration && 'opacity-50'
                 )}>
-                  <Checkbox
-                    checked={duration.applyDuration || false}
-                    onChange={(e) => setDuration((d) => ({ ...d, applyDuration: e.target.checked }))}
-                    label="Apply Duration"
-                    disabled={isShortDuration}
-                  />
                   <Checkbox
                     checked={duration.focus || false}
                     onChange={(e) => setDuration((d) => ({ ...d, focus: e.target.checked }))}
@@ -945,25 +1079,23 @@ function PowerCreatorContent() {
                 </div>
               );
             })()}
-          </div>
+          </CollapsibleSection>
 
           {/* Power Parts */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-text-primary">
-                Power Parts ({selectedParts.length})
-              </h2>
-              <Button
-                type="button"
-                variant="primary"
-                className="flex items-center gap-1"
-                onClick={addPart}
-              >
-                <Plus className="w-4 h-4" />
-                Add Part
-              </Button>
-            </div>
-
+          <CollapsibleSection
+            title={`Power Parts (${selectedParts.length})`}
+            collapsedSummary={powerPartsSummary}
+            defaultExpanded={true}
+            rightSlot={
+              <>
+                <SectionCostBadge en={sectionCosts.powerParts.totalEnergy} tp={sectionCosts.powerParts.totalTP} />
+                <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPart}>
+                  <Plus className="w-4 h-4" />
+                  Add Part
+                </Button>
+              </>
+            }
+          >
             {selectedParts.length === 0 ? (
               <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -983,22 +1115,64 @@ function PowerCreatorContent() {
                 ))}
               </div>
             )}
-          </div>
+          </CollapsibleSection>
 
-          {/* Advanced Power Mechanics */}
-          <PowerAdvancedMechanicsSection
-            powerParts={powerParts}
-            selectedAdvancedParts={selectedAdvancedParts}
-            onAdd={addAdvancedPart}
-            onRemove={removeAdvancedPart}
-            onUpdate={updateAdvancedPart}
-          />
+          {/* Power Mechanics — same add/select UX as Power Parts */}
+          <CollapsibleSection
+            title={`Power Mechanics (${selectedAdvancedParts.length})`}
+            collapsedSummary={powerMechanicsSummary}
+            defaultExpanded={true}
+            rightSlot={
+              <>
+                <SectionCostBadge en={sectionCosts.powerMechanics.totalEnergy} tp={sectionCosts.powerMechanics.totalTP} />
+                <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addMechanicPart}>
+                  <Plus className="w-4 h-4" />
+                  Add Part
+                </Button>
+              </>
+            }
+          >
+            {selectedAdvancedParts.length === 0 ? (
+              <div className="text-center py-8 text-text-muted dark:text-text-secondary">
+                <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration modifiers, and other mechanic parts.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {selectedAdvancedParts.map((sp, idx) => (
+                  <PowerPartCard
+                    key={idx}
+                    selectedPart={sp}
+                    _index={idx}
+                    onRemove={() => removeAdvancedPart(idx)}
+                    onUpdate={(updates) => updateAdvancedPart(idx, updates)}
+                    allParts={mechanicPartsForList}
+                  />
+                ))}
+              </div>
+            )}
+          </CollapsibleSection>
 
           {/* Damage — multiple rows (TASK-286) */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Damage</h2>
+          <CollapsibleSection
+            title="Damage"
+            collapsedSummary={damageSummary}
+            defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={sectionCosts.damage.totalEnergy} tp={sectionCosts.damage.totalTP} />}
+          >
             {damages.map((d, index) => (
               <div key={index} className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light">
+                {d.type !== 'none' && d.amount > 0 && (
+                  <Checkbox
+                    checked={d.applyDuration ?? false}
+                    onChange={(e) =>
+                      setDamages((prev) =>
+                        prev.map((x, i) => (i === index ? { ...x, applyDuration: e.target.checked } : x))
+                      )
+                    }
+                    label="Apply duration"
+                  />
+                )}
                 <ValueStepper
                   value={d.amount}
                   onChange={(v) =>
@@ -1066,7 +1240,7 @@ function PowerCreatorContent() {
               variant="secondary"
               size="sm"
               onClick={() =>
-                setDamages((prev) => [...prev, { amount: 0, size: 6, type: 'none' }])
+                setDamages((prev) => [...prev, { amount: 0, size: 6, type: 'none', applyDuration: false }])
               }
               className="mt-2 min-h-[44px]"
             >
@@ -1081,7 +1255,7 @@ function PowerCreatorContent() {
                   .join(', ')}
               </p>
             )}
-          </div>
+          </CollapsibleSection>
     </CreatorLayout>
   );
 }

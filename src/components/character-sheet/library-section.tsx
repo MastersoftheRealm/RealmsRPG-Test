@@ -40,6 +40,7 @@ import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
+import { formatRange } from '@/lib/calculators/item-calc';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
 
 /** Codex part data for enrichment */
@@ -261,7 +262,7 @@ function propertiesToPartData(
 /**
  * Calculate weapon attack bonus based on weapon properties
  * - Finesse: Use agility instead of strength
- * - Range: Use acuity instead of strength
+ * - Range > melee: Use acuity (range weapon property)
  * - Default: Use strength
  */
 function getWeaponAttackBonus(
@@ -270,21 +271,21 @@ function getWeaponAttackBonus(
 ): { bonus: number; abilityName: string } {
   if (!abilities) return { bonus: 0, abilityName: 'Strength' };
   
-  const props = (weapon.properties || []).map(p => 
+  const props = (weapon.properties || []).map(p =>
     typeof p === 'string' ? p : (p as { name?: string }).name || ''
   );
-  
+
   // Finesse uses agility
   if (props.some(p => p.toLowerCase() === 'finesse')) {
     return { bonus: abilities.agility, abilityName: 'Agility' };
   }
-  
-  // Range uses acuity (also check if weapon has a range property > melee)
-  if (props.some(p => p.toLowerCase() === 'range') || 
-      (weapon as Item & { range?: string | number }).range) {
+
+  // Range > melee uses acuity (rule: weapon with range greater than melee uses acuity)
+  const rangeStr = formatRange((weapon.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]);
+  if (rangeStr.toLowerCase() !== 'melee') {
     return { bonus: abilities.acuity, abilityName: 'Acuity' };
   }
-  
+
   // Default to strength
   return { bonus: abilities.strength, abilityName: 'Strength' };
 }

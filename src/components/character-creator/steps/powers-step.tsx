@@ -32,12 +32,14 @@ function capitalize(s: string | undefined): string {
 const POWER_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
   { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
+  { key: 'Energy', label: 'EN', sortable: false, align: 'center' as const },
+  { key: 'TP', label: 'TP', sortable: false, align: 'center' as const },
   { key: 'Damage', label: 'DAMAGE', sortable: false, align: 'center' as const },
   { key: 'Area', label: 'AREA', sortable: false, align: 'center' as const },
   { key: 'Range', label: 'RANGE', sortable: false, align: 'center' as const },
   { key: 'Duration', label: 'DURATION', sortable: false, align: 'center' as const },
 ];
-const POWER_GRID_COLUMNS = '1.4fr 0.7fr 0.7fr 0.6fr 0.7fr 0.7fr';
+const POWER_GRID_COLUMNS = '1.2fr 0.6fr 0.5fr 0.5fr 0.6fr 0.5fr 0.6fr 0.6fr';
 
 const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
@@ -147,6 +149,8 @@ export function PowersStep() {
         description: power.description,
         columns: [
           { key: 'Action', value: capitalize(power.actionType), align: 'center' as const },
+          { key: 'Energy', value: String(display.energy ?? '-'), align: 'center' as const },
+          { key: 'TP', value: String(display.tp ?? '-'), align: 'center' as const },
           { key: 'Damage', value: damageStr, align: 'center' as const },
           { key: 'Area', value: areaStr, align: 'center' as const },
           { key: 'Range', value: rangeStr, align: 'center' as const },

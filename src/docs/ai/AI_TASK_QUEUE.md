@@ -6690,3 +6690,48 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - npm run build passes.
   notes: |
     Done 2026-03-07. normalizeRangeDisplay in utils: trim, collapse spaces, standardize "Spaces"/"Space" to lowercase. item-calc formatRange now emits "X space(s)". library-section uses normalizeRangeDisplay for power/tech/item range. npm run build passes.
+
+- id: TASK-291
+  title: Power Mechanics rework, remove apply duration, section cost badges
+  priority: high
+  status: done
+  created_at: 2026-03-07
+  created_by: owner
+  description: |
+    Rework Advanced Power Mechanics to match Power Parts UX (Add Part, category sort, part selection). Remove apply duration toggle from duration and area sections. Add SectionCostBadge (EN/TP/IP) to all creator sections showing cost contribution per section.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/components/shared/section-cost-badge.tsx
+    - src/app/(main)/power-creator/power-creator-types.ts
+  acceptance_criteria:
+    - Power Mechanics uses same Add Part + PowerPartCard UX as Power Parts; mechanic parts only (excluded from hardcoded UI).
+    - Apply duration checkbox removed from duration and area sections.
+    - SectionCostBadge shows EN/TP/IP per section in power, technique, and item creators.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. (1) Power Mechanics: replaced PowerAdvancedMechanicsSection with inline section using PowerPartCard; mechanicPartsForList = mechanic && !EXCLUDED_PARTS; addMechanicPart adds first mechanic part; deleted PowerAdvancedMechanics.tsx. (2) Removed apply duration from duration and area sections. (3) SectionCostBadge component; power creator: Action, Range, Area, Duration, Damage, Power Parts, Power Mechanics; item creator: Range, Base Damage, DR, Agility Reduction, Critical Range, Ability Req, Shield Block, Shield Damage; technique creator: Additional Damage. npm run build passes.
+
+- id: TASK-292
+  title: Area of effect description + collapsible sections in creators
+  priority: medium
+  status: done
+  created_at: 2026-03-07
+  created_by: owner
+  description: |
+    (1) Area of effect in power creator: show part description and Option 1 increase when an area part is selected. (2) Collapsible sections across creators: Action Type, Range, Area of Effect, Duration, Power Parts, Power Mechanics, Damage, etc. When collapsed, show shorthand summary (e.g. "Basic Reaction", "12 Spaces", "3 Space Radius Sphere", "3 Minutes", "Part Name, Energy, TP").
+  related_files:
+    - src/components/creator/collapsible-section.tsx
+    - src/lib/calculators/power-calc.ts (getAreaPartForDisplay, formatAreaForDisplay)
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  acceptance_criteria:
+    - Area of Effect section shows part description and op_1 when applicable.
+    - All major creator sections are collapsible with collapsedSummary.
+    - Power, Technique, Item, Creature creators use shared CollapsibleSection.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. (1) getAreaPartForDisplay/formatAreaForDisplay in power-calc; Area of Effect shows description + Option 1 block when areaPartInfo exists. (2) CollapsibleSection: collapsedSummary, rightSlot, chevron. (3) Power creator: Action Type, Range, Area, Duration, Power Parts, Power Mechanics, Damage wrapped in CollapsibleSection. (4) Technique creator: Combat Configuration, Technique Parts, Additional Damage. (5) Item creator: Weapon/Shield Config, Base Damage, Armor Config, Shield Block, Shield Damage, Ability Requirement, Properties. (6) Creature creator: Feats, Powers, Techniques, Armaments have collapsedSummary. npm run build passes.

@@ -39,6 +39,8 @@ export {
   deriveRange,
   deriveArea,
   deriveDuration,
+  getAreaPartForDisplay,
+  formatAreaForDisplay,
   formatPowerPartChip,
   derivePowerDisplay,
   formatPowerDamage,

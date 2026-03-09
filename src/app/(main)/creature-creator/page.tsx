@@ -562,6 +562,32 @@ function CreatureCreatorContent() {
     data: { ...creature },
   }), [creature]);
 
+  // Collapsed summaries for CollapsibleSections
+  const featsSummary = useMemo(() => {
+    if (creature.feats.length === 0) return 'No feats';
+    const names = creature.feats.slice(0, 4).map((f: { name?: string }) => f.name || 'Unknown');
+    const more = creature.feats.length > 4 ? ` +${creature.feats.length - 4} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [creature.feats]);
+  const powersSummary = useMemo(() => {
+    if (creature.powers.length === 0) return 'No powers';
+    const names = creature.powers.slice(0, 4).map((p: { name?: string }) => p.name || 'Unknown');
+    const more = creature.powers.length > 4 ? ` +${creature.powers.length - 4} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [creature.powers]);
+  const techniquesSummary = useMemo(() => {
+    if (creature.techniques.length === 0) return 'No techniques';
+    const names = creature.techniques.slice(0, 4).map((t: { name?: string }) => t.name || 'Unknown');
+    const more = creature.techniques.length > 4 ? ` +${creature.techniques.length - 4} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [creature.techniques]);
+  const armamentsSummary = useMemo(() => {
+    if (creature.armaments.length === 0) return 'No armaments';
+    const names = creature.armaments.slice(0, 4).map((a: { name?: string }) => a.name || 'Unknown');
+    const more = creature.armaments.length > 4 ? ` +${creature.armaments.length - 4} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [creature.armaments]);
+
   const save = useCreatorSave({
     type: 'creatures',
     getPayload,
@@ -1295,6 +1321,7 @@ function CreatureCreatorContent() {
           <CollapsibleSection
             title="Feats"
             subtitle="Special abilities and traits"
+            collapsedSummary={featsSummary}
             icon="⭐"
             itemCount={creature.feats.length}
             points={{ spent: stats.featSpent, total: stats.featPoints }}
@@ -1334,6 +1361,7 @@ function CreatureCreatorContent() {
           <CollapsibleSection
             title="Powers"
             subtitle="Supernatural abilities and magical effects"
+            collapsedSummary={powersSummary}
             icon="✨"
             optional
             enabled={creature.enablePowers}
@@ -1396,6 +1424,7 @@ function CreatureCreatorContent() {
           <CollapsibleSection
             title="Techniques"
             subtitle="Combat maneuvers and martial skills"
+            collapsedSummary={techniquesSummary}
             icon="⚔️"
             optional
             enabled={creature.enableTechniques}
@@ -1458,6 +1487,7 @@ function CreatureCreatorContent() {
           <CollapsibleSection
             title="Armaments"
             subtitle="Weapons, armor, and equipment"
+            collapsedSummary={armamentsSummary}
             icon="🛡️"
             optional
             enabled={creature.enableArmaments}

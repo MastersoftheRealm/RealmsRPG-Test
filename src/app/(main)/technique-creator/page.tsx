@@ -20,9 +20,9 @@ import { useTechniqueParts, useUserItems, useItemProperties, useAdmin, useCreato
 import { useAuthStore } from '@/stores';
 import { LoginPromptModal, ConfirmActionModal } from '@/components/shared';
 import { LoadingState, IconButton, Checkbox, Button, Input, Textarea, Alert, PageContainer } from '@/components/ui';
-import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout } from '@/components/creator';
+import { LoadFromLibraryModal, CreatorSaveToolbar, CreatorLayout, CollapsibleSection } from '@/components/creator';
 import { SourceFilter } from '@/components/shared/filters/source-filter';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CreatorSummaryPanel } from '@/components/creator';
 import {
   calculateTechniqueCosts,
@@ -522,6 +522,30 @@ function TechniqueCreatorContent() {
     [damage]
   );
 
+  // Collapsed summaries for collapsible sections
+  const combatConfigSummary = useMemo(
+    () => `${weapon.name} • ${actionTypeDisplay}`,
+    [weapon.name, actionTypeDisplay]
+  );
+  const techniquePartsSummary = useMemo(() => {
+    if (selectedParts.length === 0) return 'No parts';
+    const names = selectedParts.slice(0, 5).map((sp) => sp.part.name);
+    const more = selectedParts.length > 5 ? ` +${selectedParts.length - 5} more` : '';
+    return `${names.join(', ')}${more}`;
+  }, [selectedParts]);
+  const damageSummary = useMemo(
+    () => (damage.amount > 0 ? `+${damage.amount}d${damage.size}` : 'None'),
+    [damage.amount, damage.size]
+  );
+
+  // Section cost for Additional Damage
+  const damageSectionCost = useMemo(() => {
+    const damageParts = mechanicParts.filter(
+      (mp) => mp.name === 'Additional Damage' || mp.name === 'Split Damage Dice'
+    );
+    return calculateTechniqueCosts(damageParts, techniqueParts);
+  }, [mechanicParts, techniqueParts]);
+
   // Actions
   const addPart = useCallback(() => {
     if (techniqueParts.length === 0) return;
@@ -838,8 +862,11 @@ function TechniqueCreatorContent() {
           </div>
 
           {/* Weapon & Action Type */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Combat Configuration</h2>
+          <CollapsibleSection
+            title="Combat Configuration"
+            collapsedSummary={combatConfigSummary}
+            defaultExpanded={true}
+          >
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -902,23 +929,20 @@ function TechniqueCreatorContent() {
                 label="Can be used as a Reaction"
               />
             </div>
-          </div>
+          </CollapsibleSection>
 
           {/* Technique Parts */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-text-primary">
-                Technique Parts ({selectedParts.length})
-              </h2>
-              <Button
-                variant="danger"
-                onClick={addPart}
-              >
+          <CollapsibleSection
+            title={`Technique Parts (${selectedParts.length})`}
+            collapsedSummary={techniquePartsSummary}
+            defaultExpanded={true}
+            rightSlot={
+              <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={addPart}>
                 <Plus className="w-4 h-4" />
                 Add Part
               </Button>
-            </div>
-
+            }
+          >
             {selectedParts.length === 0 ? (
               <div className="text-center py-8 text-text-muted dark:text-text-secondary">
                 <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -938,11 +962,15 @@ function TechniqueCreatorContent() {
                 ))}
               </div>
             )}
-          </div>
+          </CollapsibleSection>
 
           {/* Additional Damage */}
-          <div className="bg-surface rounded-xl shadow-md p-6">
-            <h2 className="text-lg font-bold text-text-primary mb-4">Additional Damage</h2>
+          <CollapsibleSection
+            title="Additional Damage"
+            collapsedSummary={damageSummary}
+            defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={damageSectionCost.totalEnergy} tp={damageSectionCost.totalTP} />}
+          >
             <p className="text-sm text-text-secondary mb-4">
               Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.
             </p>
@@ -975,7 +1003,7 @@ function TechniqueCreatorContent() {
                 Additional Damage: <strong>+{damage.amount}d{damage.size}</strong>
               </p>
             )}
-          </div>
+          </CollapsibleSection>
     </CreatorLayout>
   );
 }
