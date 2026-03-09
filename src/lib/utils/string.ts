@@ -75,6 +75,17 @@ export function formatDamageDisplay(
 }
 
 /**
+ * Normalize range display for consistent spacing and casing across list/detail/library views (TASK-290).
+ * Trims, collapses multiple spaces to one, and standardizes "Spaces"/"Space" to lowercase.
+ */
+export function normalizeRangeDisplay(range: string | number | null | undefined): string {
+  if (range == null) return '';
+  const s = String(range).trim().replace(/\s+/g, ' ');
+  if (!s) return '';
+  return s.replace(/\bSpaces\b/g, 'spaces').replace(/\bSpace\b/g, 'space');
+}
+
+/**
  * Format feat ability (sorting) for list display: "Strength, Intelligence" etc.
  * Handles array, comma-separated string, or concatenated names (e.g. "StrengthIntelligence" → "Strength, Intelligence").
  */

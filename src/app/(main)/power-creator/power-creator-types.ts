@@ -13,13 +13,8 @@ export interface SelectedPart {
   selectedCategory: string;
 }
 
-export interface AdvancedPart {
-  part: PowerPart;
-  op_1_lvl: number;
-  op_2_lvl: number;
-  op_3_lvl: number;
-  applyDuration: boolean;
-}
+/** Mechanic parts use same shape as SelectedPart for PowerPartCard compatibility */
+export type AdvancedPart = SelectedPart;
 
 export interface DamageConfig {
   amount: number;

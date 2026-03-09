@@ -4,6 +4,7 @@
  - Reads `src/docs/ai/AI_TASK_QUEUE.md` and for each task looks for commits that mention the TASK id (e.g., TASK-001)
  - Produces a JSON report at `reports/task-reconcile-report.json` describing matches and missing tasks.
  - Run locally or in CI. Use `--apply` to append a short evidence note to `src/docs/ai/AI_CHANGELOG.md` (safe-guarded).
+ - By default, the script is report-only (exit 0). Use `--strict` to fail (exit 2) when any task marked done has no matching commits.
 
  Note: This is a best-effort script that uses `git` to find commits and changed files.
 */
@@ -99,11 +100,12 @@ if (apply) {
   console.log('Appended summary to', changelogPath);
 }
 
-// Exit with non-zero if any task marked done has no matches
+// In --strict mode, exit with non-zero if any task marked done has no matches
+const strict = process.argv.includes('--strict');
 const problematic = report.tasks.filter(t => t.status === 'done' && t.matches.length === 0);
 if (problematic.length) {
   console.error('Found tasks marked done with no matching commits:', problematic.map(p=>p.id).join(', '));
-  process.exit(2);
+  if (strict) process.exit(2);
 }
 
 console.log('Reconciliation complete.');

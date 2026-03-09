@@ -9,7 +9,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { cn, formatDamageDisplay } from '@/lib/utils';
+import { cn, formatDamageDisplay, normalizeRangeDisplay } from '@/lib/utils';
 import { Plus, X } from 'lucide-react';
 import { useRollsOptional } from './roll-context';
 import { NotesTab, type CharacterNote } from './notes-tab';
@@ -40,6 +40,7 @@ import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
+import { formatRange } from '@/lib/calculators/item-calc';
 import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
 
 /** Codex part data for enrichment */
@@ -261,7 +262,7 @@ function propertiesToPartData(
 /**
  * Calculate weapon attack bonus based on weapon properties
  * - Finesse: Use agility instead of strength
- * - Range: Use acuity instead of strength
+ * - Range > melee: Use acuity (range weapon property)
  * - Default: Use strength
  */
 function getWeaponAttackBonus(
@@ -270,21 +271,21 @@ function getWeaponAttackBonus(
 ): { bonus: number; abilityName: string } {
   if (!abilities) return { bonus: 0, abilityName: 'Strength' };
   
-  const props = (weapon.properties || []).map(p => 
+  const props = (weapon.properties || []).map(p =>
     typeof p === 'string' ? p : (p as { name?: string }).name || ''
   );
-  
+
   // Finesse uses agility
   if (props.some(p => p.toLowerCase() === 'finesse')) {
     return { bonus: abilities.agility, abilityName: 'Agility' };
   }
-  
-  // Range uses acuity (also check if weapon has a range property > melee)
-  if (props.some(p => p.toLowerCase() === 'range') || 
-      (weapon as Item & { range?: string | number }).range) {
+
+  // Range > melee uses acuity (rule: weapon with range greater than melee uses acuity)
+  const rangeStr = formatRange((weapon.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]);
+  if (rangeStr.toLowerCase() !== 'melee') {
     return { bonus: abilities.acuity, abilityName: 'Acuity' };
   }
-  
+
   // Default to strength
   return { bonus: abilities.strength, abilityName: 'Strength' };
 }
@@ -795,7 +796,7 @@ export function LibrarySection({
                           costLabel="TP"
                           requirements={power.range ? (
                             <div className="text-sm text-text-secondary">
-                              <span className="font-medium">Range:</span> {power.range}
+                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(power.range)}
                             </div>
                           ) : undefined}
                           innate={isInnate}
@@ -912,7 +913,7 @@ export function LibrarySection({
                           costLabel="TP"
                           requirements={power.range ? (
                             <div className="text-sm text-text-secondary">
-                              <span className="font-medium">Range:</span> {power.range}
+                              <span className="font-medium">Range:</span> {normalizeRangeDisplay(power.range)}
                             </div>
                           ) : undefined}
                           innate={isInnate}
@@ -995,7 +996,7 @@ export function LibrarySection({
                     const rangeOrDamage = (tech.range || tech.damage) && (
                       <div className="flex flex-wrap gap-3 text-sm text-text-secondary">
                         {tech.range && (
-                          <span><span className="font-medium">Range:</span> {tech.range}</span>
+                          <span><span className="font-medium">Range:</span> {normalizeRangeDisplay(tech.range)}</span>
                         )}
                         {tech.damage && (
                           <span><span className="font-medium">Damage:</span> {tech.damage}</span>
@@ -1116,7 +1117,7 @@ export function LibrarySection({
                     const columns: ColumnValue[] = [
                       { key: 'attack', value: attackDisplay, className: 'font-medium', align: 'center' },
                       { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-danger-600 dark:text-danger-400 font-medium', align: 'center' },
-                      { key: 'range', value: (item as Item & { range?: string }).range || 'Melee', align: 'center' },
+                      { key: 'range', value: normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee', align: 'center' },
                     ];
                     
                     return (

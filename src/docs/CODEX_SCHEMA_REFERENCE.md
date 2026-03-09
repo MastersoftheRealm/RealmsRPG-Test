@@ -24,6 +24,7 @@
 | `mart_prof_req` | number | Required Martial Proficiency | Minimum Martial Proficiency required to gain the feat. | 0+ | 1 |
 | `speed_req` | number | Required speed | Minimum character/creature speed required to gain the feat. | 0+ | 6 |
 | `feat_lvl` | number | Level of the feat itself | Encodes feat tier (e.g. Bloodlust=1, Bloodlust II=2, Bloodlust III=3); 0 implies no leveled variant. Used for sorting and validation so you can’t take tiers out of order. | 0+ | 1 |
+| `base_feat_id` | string (nullable) | Id of the level-1 feat | Set for feat_lvl >= 2; links to level-1 base. NULL for level-1. Groups leveled feats and validates prerequisites. | codex_feats id | null |
 | `lvl_req` | number | Character level required | Minimum character level required to gain the feat. | 0+ | 1 |
 | `uses_per_rec` | number | Uses per recovery period | Maximum number of times the feat can be used between recoveries. | 0+ | 2 |
 | `rec_period` | string | Recovery period for uses | Determines when `uses_per_rec` refreshes. | "Full", "Partial" | "Partial" |

@@ -95,8 +95,10 @@ export interface Feat {
   char_feat: boolean;
   state_feat: boolean;
   rec_period?: string;
-  /** Level of the feat itself (e.g. Bloodlust II = 2). Omitted when not set. */
+  /** Level of the feat itself (e.g. 1 = first, 2 = second level). Omitted when not set. */
   feat_lvl?: number;
+  /** Id of the level-1 feat. Set for feat_lvl >= 2; used to group leveled feats and validate prerequisites. */
+  base_feat_id?: string;
   req_desc?: string;
   feat_cat_req?: string;
   pow_abil_req?: number;

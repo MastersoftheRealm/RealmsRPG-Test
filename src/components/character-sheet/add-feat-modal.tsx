@@ -27,21 +27,25 @@ interface AddFeatModalProps {
   onAdd: (feats: FeatModal[]) => void;
 }
 
-const ROMAN_TO_NUM: Record<string, number> = {
-  'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5,
-  'VI': 6, 'VII': 7, 'VIII': 8, 'IX': 9, 'X': 10
-};
+/** Display name for a feat: same name for all levels, with " (Level N)" when feat_lvl > 1. */
+function featDisplayName(feat: FeatModal): string {
+  const level = feat.feat_lvl;
+  if (level != null && level > 1) return `${feat.name ?? ''} (Level ${level})`;
+  return feat.name ?? '';
+}
 
-function parseFeatLevel(name: string): { baseName: string; level: number; hasLevel: boolean } {
-  if (!name) return { baseName: name, level: 1, hasLevel: false };
-  const match = name.match(/^(.+?)\s+(I{1,3}|IV|VI{0,3}|IX|X)$/i);
-  if (match) {
-    const baseName = match[1].trim();
-    const roman = match[2].toUpperCase();
-    const level = ROMAN_TO_NUM[roman] || 1;
-    return { baseName, level, hasLevel: true };
+/** Id of the previous-level feat required to take this feat. Null if level 1 or no base. */
+function getPreviousLevelFeatId(feat: FeatModal, allFeats: FeatModal[]): string | null {
+  const level = feat.feat_lvl;
+  if (level == null || level <= 1) return null;
+  if (feat.base_feat_id && level === 2) return feat.base_feat_id;
+  if (feat.base_feat_id && level >= 3) {
+    const prev = allFeats.find(
+      (f) => f.base_feat_id === feat.base_feat_id && (f.feat_lvl ?? 1) === level - 1
+    );
+    return prev ? String(prev.id) : null;
   }
-  return { baseName: name, level: 1, hasLevel: false };
+  return null;
 }
 
 function featToSelectableItem(
@@ -75,7 +79,7 @@ function featToSelectableItem(
   const usesDisplay = (usesVal === 0 || usesVal === undefined) ? '-' : String(usesVal);
   return {
     id: String(feat.id),
-    name: feat.name ?? '',
+    name: featDisplayName(feat),
     description: feat.description || (feat as FeatModal).effect,
     columns: [
       { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
@@ -182,20 +186,21 @@ export function AddFeatModal({
         else if (bonus < requiredBonus) warnings.push(`Requires ${skillName} bonus ${requiredBonus}+ (yours: ${bonus})`);
       });
     }
-    const { baseName, level } = parseFeatLevel(feat.name);
-    if (level > 1) {
-      const allCharFeats = [...(character.archetypeFeats || []), ...(character.feats || [])];
-      const hasPrereq = allCharFeats.some(f => {
-        const parsed = parseFeatLevel(f.name);
-        return parsed.baseName === baseName && parsed.level === level - 1;
-      });
+    const prevLevelId = getPreviousLevelFeatId(feat, feats);
+    if (prevLevelId) {
+      const allCharFeatIds = [
+        ...(character.archetypeFeats || []).map((f) => String(f.id ?? (f as { name?: string }).name)),
+        ...(character.feats || []).map((f) => String(f.id ?? (f as { name?: string }).name)),
+      ];
+      const hasPrereq = allCharFeatIds.includes(prevLevelId);
       if (!hasPrereq) {
-        const prevRoman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'][level - 2] || 'I';
-        warnings.push(`Requires ${baseName} ${prevRoman}`);
+        const prevFeat = feats.find((f) => String(f.id) === prevLevelId);
+        const prevLevel = prevFeat?.feat_lvl ?? 1;
+        warnings.push(`Requires ${prevFeat?.name ?? 'previous level'} (Level ${prevLevel})`);
       }
     }
     return { meets: warnings.length === 0, warning: warnings.join(', ') };
-  }, [character, skillIdToName, codexSkills]);
+  }, [character, skillIdToName, codexSkills, feats]);
 
   const items = useMemo((): SelectableItem[] => {
     return feats

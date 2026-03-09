@@ -6596,3 +6596,172 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - npm run build passes.
   notes: |
     Done 2026-02-25. sql/supabase-campaign-rolls-list-columns.sql; GET list selects character_id, user_id, type, title; POST insert sets columns. npm run build passes.
+
+- id: TASK-284
+  title: Species steps — deduplicate list items (flaws, traits, characteristics) when mixed
+  priority: high
+  status: done
+  created_at: 2026-03-07
+  created_by: agent
+  description: |
+    When species steps show mixed content (e.g. ancestry + flaw + characteristic), list items can appear duplicated. Deduplicate display so each flaw, trait, or characteristic appears once.
+  related_files:
+    - src/components/character-creator/steps/ancestry-step.tsx
+  acceptance_criteria:
+    - No duplicate entries in species-step lists for flaws, traits, characteristics when mixed.
+    - npm run build passes; manual check in character creator species steps.
+  notes: |
+    Done 2026-03-07. ancestry-step: when building merged lists for mixed species (speciesA + speciesB), deduplicate by trait ID (Set of string IDs) before resolve so shared ancestry traits, flaws, and characteristics appear once. npm run build passes.
+
+- id: TASK-285
+  title: Species steps — sticky Continue button
+  priority: medium
+  status: done
+  created_at: 2026-03-07
+  created_by: agent
+  description: |
+    Make the Continue button sticky on species steps so users don't have to scroll to proceed. Use sticky footer or equivalent so the button is always visible.
+  related_files:
+    - src/components/character-creator/steps/species-step.tsx
+    - src/components/character-creator/steps/ancestry-step.tsx
+  acceptance_criteria:
+    - Continue button remains visible (sticky footer or similar) on species steps without scrolling.
+    - Touch target ≥44px; works on mobile (fullScreenOnMobile if in modal).
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. Species-step and ancestry-step: nav block (Back / Continue) is sticky bottom with min-h-[44px] buttons. npm run build passes.
+
+- id: TASK-286
+  title: Power creator — support multiple damage types per power
+  priority: high
+  status: done
+  created_at: 2026-03-07
+  created_by: agent
+  description: |
+    Allow a power to have multiple damage types. Add UI for "add another row" of damage types; update save/load data shape (e.g. array of damage types) and ensure backward compatibility for existing single damage-type data.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+  acceptance_criteria:
+    - User can add multiple damage type rows in Power Creator; save persists array; load restores and displays all.
+    - Existing powers with single damage type still load correctly.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. State is damages[]; UI maps over rows with Add damage type and remove per row; save/load use array; cache and load handle single-object backward compat. npm run build passes.
+
+- id: TASK-287
+  title: Creators — explicit energy (EN) display per item
+  priority: medium
+  status: done
+  created_at: 2026-03-07
+  created_by: agent
+  description: |
+    In Power, Technique, and Armament creators, show energy (EN) explicitly for each part/item so users see cost per thing.
+  related_files:
+    - src/app/(main)/power-creator/PowerPartCard.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+  acceptance_criteria:
+    - Each power, technique, armament row/card in creators shows EN where applicable.
+    - Consistent with GAME_RULES and existing EN display patterns.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. Verified: PowerPartCard and technique part cards show EN per part; item creator shows IP/TP/C per property; summary panels show total Energy/IP/Currency. No code change required.
+
+- id: TASK-288
+  title: Remove "(optional)" label from damage in creators
+  priority: low
+  status: done
+  created_at: 2026-03-07
+  created_by: agent
+  description: |
+    Remove the "(optional)" label from damage fields; everything is optional so the label is redundant.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+  acceptance_criteria:
+    - No "(optional)" text next to damage in creators.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. Power creator: "Damage (Optional)" → "Damage". Item creator: "Shield Damage (Optional)" → "Shield Damage". npm run build passes.
+
+- id: TASK-289
+  title: Official library — fix save for powers, techniques, armaments
+  priority: critical
+  status: done
+  created_at: 2026-03-07
+  created_by: agent
+  description: |
+    The public/official library is not persisting when saving powers, techniques, armaments. Fix API and client so admin save to official library correctly writes to official_powers, official_techniques, official_armaments (or equivalent) and items appear after save.
+  related_files:
+    - src/app/api/official/[type]/route.ts
+    - src/hooks/use-creator-save.ts
+    - src/services/library-service.ts
+  acceptance_criteria:
+    - Admin saving power/technique/armament to official library persists to DB; list refreshes and shows new item.
+    - No silent failures; errors surfaced to user if save fails.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. (1) API bodyToDb: store power range/duration/area/damage in payload only (not as top-level columns) so base schema works without columnar expansion SQL. (2) use-creator-save: invalidate official-library query after successful public save so lists refresh. npm run build passes.
+
+- id: TASK-290
+  title: Range display — consistent spacing for powers and armaments across views
+  priority: medium
+  status: done
+  created_at: 2026-03-07
+  created_by: agent
+  description: |
+    Range displays with different spacing for powers vs armaments depending on view (e.g. more spaces in list/library views). Unify so range formatting (and spacing) is consistent in list, library, and detail views.
+  related_files:
+    - src/lib/utils/string.ts (normalizeRangeDisplay)
+    - src/lib/calculators/item-calc.ts (formatRange)
+    - src/components/character-sheet/library-section.tsx
+  acceptance_criteria:
+    - Range spacing/formatting consistent for powers and armaments in list, library, and detail views.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. normalizeRangeDisplay in utils: trim, collapse spaces, standardize "Spaces"/"Space" to lowercase. item-calc formatRange now emits "X space(s)". library-section uses normalizeRangeDisplay for power/tech/item range. npm run build passes.
+
+- id: TASK-291
+  title: Power Mechanics rework, remove apply duration, section cost badges
+  priority: high
+  status: done
+  created_at: 2026-03-07
+  created_by: owner
+  description: |
+    Rework Advanced Power Mechanics to match Power Parts UX (Add Part, category sort, part selection). Remove apply duration toggle from duration and area sections. Add SectionCostBadge (EN/TP/IP) to all creator sections showing cost contribution per section.
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/components/shared/section-cost-badge.tsx
+    - src/app/(main)/power-creator/power-creator-types.ts
+  acceptance_criteria:
+    - Power Mechanics uses same Add Part + PowerPartCard UX as Power Parts; mechanic parts only (excluded from hardcoded UI).
+    - Apply duration checkbox removed from duration and area sections.
+    - SectionCostBadge shows EN/TP/IP per section in power, technique, and item creators.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. (1) Power Mechanics: replaced PowerAdvancedMechanicsSection with inline section using PowerPartCard; mechanicPartsForList = mechanic && !EXCLUDED_PARTS; addMechanicPart adds first mechanic part; deleted PowerAdvancedMechanics.tsx. (2) Removed apply duration from duration and area sections. (3) SectionCostBadge component; power creator: Action, Range, Area, Duration, Damage, Power Parts, Power Mechanics; item creator: Range, Base Damage, DR, Agility Reduction, Critical Range, Ability Req, Shield Block, Shield Damage; technique creator: Additional Damage. npm run build passes.
+
+- id: TASK-292
+  title: Area of effect description + collapsible sections in creators
+  priority: medium
+  status: done
+  created_at: 2026-03-07
+  created_by: owner
+  description: |
+    (1) Area of effect in power creator: show part description and Option 1 increase when an area part is selected. (2) Collapsible sections across creators: Action Type, Range, Area of Effect, Duration, Power Parts, Power Mechanics, Damage, etc. When collapsed, show shorthand summary (e.g. "Basic Reaction", "12 Spaces", "3 Space Radius Sphere", "3 Minutes", "Part Name, Energy, TP").
+  related_files:
+    - src/components/creator/collapsible-section.tsx
+    - src/lib/calculators/power-calc.ts (getAreaPartForDisplay, formatAreaForDisplay)
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/technique-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+  acceptance_criteria:
+    - Area of Effect section shows part description and op_1 when applicable.
+    - All major creator sections are collapsible with collapsedSummary.
+    - Power, Technique, Item, Creature creators use shared CollapsibleSection.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-07. (1) getAreaPartForDisplay/formatAreaForDisplay in power-calc; Area of Effect shows description + Option 1 block when areaPartInfo exists. (2) CollapsibleSection: collapsedSummary, rightSlot, chevron. (3) Power creator: Action Type, Range, Area, Duration, Power Parts, Power Mechanics, Damage wrapped in CollapsibleSection. (4) Technique creator: Combat Configuration, Technique Parts, Additional Damage. (5) Item creator: Weapon/Shield Config, Base Damage, Armor Config, Shield Block, Shield Damage, Ability Requirement, Properties. (6) Creature creator: Feats, Powers, Techniques, Armaments have collapsedSummary. npm run build passes.

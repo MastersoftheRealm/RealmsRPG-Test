@@ -51,6 +51,7 @@ interface CodexFeat {
   uses_per_rec?: number; // Canonical field from API
   rec_period?: string;
   category?: string;
+  feat_lvl?: number; // Level of feat (1, 2, 3…); used for "Name (Level N)" display
 }
 
 interface FeatData {
@@ -215,15 +216,18 @@ export function FeatsTab({
     };
   }, [traitsDb]);
 
-  // Enrich feat with codex data — derive name/description/maxUses/recovery when not on character
+  // Enrich feat with codex data — derive name/description/maxUses/recovery/feat_lvl when not on character
   const enrichFeat = useCallback((feat: FeatData) => {
     let dbFeat = featsDb.find(f => f.id === String(feat.id));
     if (!dbFeat) {
       dbFeat = featsDb.find(f => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
     }
+    const featLvl = dbFeat?.feat_lvl;
+    const name = feat.name || dbFeat?.name || String(feat.id);
+    const displayName = featLvl != null && featLvl > 1 ? `${name} (Level ${featLvl})` : name;
     return {
       ...feat,
-      name: feat.name || dbFeat?.name || String(feat.id),
+      name: displayName,
       description: feat.description || dbFeat?.description || dbFeat?.effect,
       maxUses: feat.maxUses ?? dbFeat?.uses_per_rec ?? dbFeat?.max_uses ?? 0,
       recovery: feat.recovery || dbFeat?.rec_period,

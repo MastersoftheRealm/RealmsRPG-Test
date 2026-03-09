@@ -30,6 +30,13 @@ import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats, getSkillBonusFo
 import { formatAbilityList } from '@/lib/utils';
 import type { ArchetypeCategory } from '@/types';
 
+/** Display name for leveled feats: "Name (Level N)" when feat_lvl > 1 */
+function featDisplayName(feat: Feat): string {
+  const level = feat.feat_lvl;
+  if (level != null && level > 1) return `${feat.name ?? ''} (Level ${level})`;
+  return feat.name ?? '';
+}
+
 // Grid columns for feat display (Name, Category, Ability, Recovery, Uses, Add) — match Codex
 const FEAT_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 44px';
 const FEAT_HEADER_COLUMNS = [
@@ -329,7 +336,7 @@ export function FeatsStep() {
       <GridListRow
         key={feat.id}
         id={feat.id}
-        name={feat.name}
+        name={featDisplayName(feat)}
         description={feat.description}
         gridColumns={FEAT_GRID_COLUMNS}
         columns={[
@@ -396,6 +403,8 @@ export function FeatsStep() {
               selectedArchetypeFeats.map(feat => {
                 const key = `arch-${feat.id}`;
                 const isExpanded = expandedSelectedId === key;
+                const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
+                const displayName = fullFeat ? featDisplayName(fullFeat) : feat.name;
                 return (
                   <div key={feat.id} className="rounded-lg border border-amber-200 bg-white overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
@@ -404,7 +413,7 @@ export function FeatsStep() {
                         onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
                         className="text-amber-700 font-medium text-sm text-left flex-1 truncate"
                       >
-                        {feat.name}
+                        {displayName}
                       </button>
                       <button
                         type="button"
@@ -451,6 +460,8 @@ export function FeatsStep() {
               selectedCharacterFeats.map(feat => {
                 const key = `char-${feat.id}`;
                 const isExpanded = expandedSelectedId === key;
+                const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
+                const displayName = fullFeat ? featDisplayName(fullFeat) : feat.name;
                 return (
                   <div key={feat.id} className="rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-surface-alt overflow-hidden max-w-md">
                     <div className="px-3 py-1.5 flex items-center gap-2">
@@ -459,7 +470,7 @@ export function FeatsStep() {
                         onClick={() => setExpandedSelectedId(isExpanded ? null : key)}
                         className="text-blue-700 dark:text-blue-300 font-medium text-sm text-left flex-1 truncate"
                       >
-                        {feat.name}
+                        {displayName}
                       </button>
                       <button
                         type="button"

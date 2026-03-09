@@ -8,7 +8,19 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { saveToLibrary, saveToOfficialLibrary, findLibraryItemByName, findOfficialLibraryItemByName } from '@/services/library-service';
+
+const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
+
+/** Partial query keys for user library; invalidating these refreshes load-modal lists after save */
+const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
+  powers: ['user-powers'],
+  techniques: ['user-techniques'],
+  items: ['user-items'],
+  creatures: ['user-creatures'],
+  species: ['user-species'],
+};
 
 export type CreatorLibraryType = 'powers' | 'techniques' | 'items' | 'creatures' | 'species';
 
@@ -66,6 +78,7 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
     publicSuccessMessage = DEFAULT_PUBLIC_SUCCESS,
   } = options;
 
+  const queryClient = useQueryClient();
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
   const [saving, setSaving] = useState(false);
@@ -88,10 +101,12 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       try {
         if (effectiveTarget === 'public' && publicLibraryType) {
           await saveToOfficialLibrary(publicLibraryType, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
+          queryClient.invalidateQueries({ queryKey: OFFICIAL_LIBRARY_KEY });
           setSaveMessage({ type: 'success', text: publicSuccessMessage });
         } else {
           const existing = await findLibraryItemByName(type, name.trim());
           await saveToLibrary(type, payload, existing ? { existingId: existing.id } : undefined);
+          queryClient.invalidateQueries({ queryKey: [...USER_LIBRARY_QUERY_KEYS[type]] });
           setSaveMessage({ type: 'success', text: successMessage });
         }
         setTimeout(() => {
