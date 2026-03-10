@@ -6765,3 +6765,65 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - npm run build passes.
   notes: |
     Done 2026-03-07. (1) getAreaPartForDisplay/formatAreaForDisplay in power-calc; Area of Effect shows description + Option 1 block when areaPartInfo exists. (2) CollapsibleSection: collapsedSummary, rightSlot, chevron. (3) Power creator: Action Type, Range, Area, Duration, Power Parts, Power Mechanics, Damage wrapped in CollapsibleSection. (4) Technique creator: Combat Configuration, Technique Parts, Additional Damage. (5) Item creator: Weapon/Shield Config, Base Damage, Armor Config, Shield Block, Shield Damage, Ability Requirement, Properties. (6) Creature creator: Feats, Powers, Techniques, Armaments have collapsedSummary. npm run build passes.
+
+- id: TASK-293
+  title: Add crafting rules to core_rules + admin Crafting tab
+  priority: high
+  status: done
+  created_at: 2026-03-10
+  created_by: owner
+  description: |
+    Add CRAFTING category to core_rules table with general crafting table, successes table, enhanced crafting table, consumable enhanced table, multiple-use energy table, and multipliers (crafting cost 75%, consumable time ¼, upgrade cost, etc.). Add Crafting tab to admin core rules editor for editing these values.
+  related_files:
+    - src/types/core-rules.ts
+    - scripts/seed-core-rules.js
+    - src/hooks/use-game-rules.ts
+    - src/app/(main)/admin/core-rules/page.tsx
+    - src/docs/ai/CRAFTING_IMPLEMENTATION_PLAN.md
+  acceptance_criteria:
+    - CraftingRules interface and CRAFTING in CoreRulesMap.
+    - CRAFTING seeded in seed-core-rules.js; useGameRules returns CRAFTING.
+    - Admin Core Rules has Crafting tab with editable tables and multipliers.
+    - npm run build passes.
+  notes: |
+    Done 2026-03-10 (Phase 1). Types: CraftingTableRow, SuccessesTableRow, EnhancedCraftingTableRow, ConsumableEnhancedTableRow, MultipleUseEnergyRow, CraftingRules; CRAFTING in CoreRulesMap. Seed: full CRAFTING object in seed-core-rules.js (generalTable, successesTable, enhancedTable, consumableEnhancedTable, multipleUseTable, multipliers, finerToolsBonus). use-game-rules: CRAFTING in FALLBACK_RULES. Admin: Crafting tab; CategoryEditor case CRAFTING with multipliers and editable General + Successes tables. Run `node scripts/seed-core-rules.js` to populate DB. npm run build passes.
+
+- id: TASK-294
+  title: Create crafting hub + crafting page with skill-encounter logic
+  priority: high
+  status: done
+  created_at: 2026-03-10
+  created_by: owner
+  notes: "Phase 2 implemented: crafting_sessions table (schema + migration SQL in SUPABASE_SCHEMA.md), API and hooks, Crafting Hub at /crafting, /crafting/new (item picker, Consumable/Bulk, Start), /crafting/[id] (DS modifier, additional successes/failures, roll sessions, Complete -> outcome). Sub-skill flavor and fullScreenOnMobile on modals deferred. npm run build passes. Run crafting_sessions migration in Supabase before use."
+  description: |
+    Build crafting hub (encounter-like list: completed, planned, in progress) with "Start Crafting" and crafting page that: (1) lets user select equipment/armament from library, codex, or public (or custom for enhanced); (2) toggles Consumable, Bulk, Enhanced; (3) DS modifier (effective DS = base + modifier) and manual additional successes/failures (like skill encounters); (4) auto-calculates requirements (effective DS, successes, time, material cost); (5) incremental roll sessions (one per time increment, styled like skill encounter combatants); (6) craft sub-skill selection + craft_success_desc/craft_failure_desc; (7) auto-calculated final material cost, market price, outcome from Successes table. Crafting lives under RM Tools in navbar.
+  related_files:
+    - src/app/(main)/crafting/page.tsx
+    - src/app/(main)/crafting/new/page.tsx
+    - src/lib/game/crafting-utils.ts
+    - src/components/crafting/
+    - src/docs/ai/CRAFTING_IMPLEMENTATION_PLAN.md
+  acceptance_criteria:
+    - Crafting Hub with list and Start Crafting.
+    - Crafting page: item selection, Consumable/Bulk toggles, incremental roll sessions, outcome with auto-calculated costs.
+    - fullScreenOnMobile on modals; touch targets ≥44px.
+    - npm run build passes.
+
+- id: TASK-295
+  title: Enhanced crafting + Enhanced Equipment Library
+  priority: medium
+  status: done
+  created_at: 2026-03-10
+  created_by: owner
+  notes: "Implemented: (1) crafting-utils: getEnhancedCraftingRequirements, getConsumableEnhancedRequirements, getMultipleUseAdjustedEnergy, getEnhancedMarketPrice. (2) Types: CraftingPowerRef, CraftingCustomBaseItem, UserEnhancedItem; session data extended with isEnhanced, powerRef, customBaseItem, potency, multipleUseTableIndex. (3) /crafting/new: Enhanced checkbox, power selector (user powers), energy cost input, custom base option (name+price), potency (creator or manual), multiple-use table dropdown; uses enhanced or consumable-enhanced table by energy. (4) user_enhanced_items table (schema + migration SQL in SUPABASE_SCHEMA.md), API GET/POST /api/user/enhanced-items, DELETE [id], PATCH [id] for potency/name; hooks useEnhancedItems, useCreateEnhancedItem, useDeleteEnhancedItem, useUpdateEnhancedItem. (5) Library: Enhanced tab (My Library only), LibraryEnhancedTab list + delete. (6) Crafting [id]: when completed and isEnhanced, 'Save to Library' creates enhanced item. (7) Upgrade potency (Phase 5): hub 'Upgrade potency' → /crafting/new?mode=upgrade-potency (select enhanced item from library); getUpgradePotencyRequirements (25% time/cost/successes, same DS); session [id] when completed shows 'Update potency in library' with potency input and PATCH. npm run build passes."
+  description: |
+    Add Enhanced crafting: toggle, power selection, custom base item, potency (manual or creator's), Multiple Use table, Consumable Enhanced table. Add Enhanced Equipment library (official + personal): save enhanced items from crafting; base item + power + description, uses, potency.
+  related_files:
+    - src/app/(main)/crafting/new/page.tsx
+    - src/app/(main)/library/page.tsx
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/CRAFTING_IMPLEMENTATION_PLAN.md
+  acceptance_criteria:
+    - Enhanced toggle with power selection, custom base item, potency.
+    - Library Enhanced tab; save enhanced items from crafting.
+    - npm run build passes.

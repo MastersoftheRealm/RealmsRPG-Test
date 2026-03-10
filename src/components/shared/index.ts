@@ -52,6 +52,10 @@ export type { SectionCostBadgeProps } from './section-cost-badge';
 export { SectionHeader } from './section-header';
 export type { SectionHeaderProps } from './section-header';
 
+// HubListRow - Unified list row for hub pages (Encounters, Crafting)
+export { HubListRow } from './hub-list-row';
+export type { HubListRowProps } from './hub-list-row';
+
 // TabSummarySection - Compact top section for tab summary info
 // Use for: innate energy, currency, armament proficiency, physical attributes, etc.
 export { TabSummarySection, SummaryItem, SummaryRow } from './tab-summary-section';

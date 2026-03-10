@@ -199,6 +199,41 @@ const FALLBACK_RULES: CoreRulesMap = {
     skillEncounterSuccesses: 'Number of participating characters + 1',
     divideXp: 'Split evenly among participating Characters',
   },
+  CRAFTING: {
+    craftingCostMultiplier: 0.75,
+    consumableTimeMultiplier: 0.25,
+    craftingDayHours: 8,
+    enhancedSellPriceMultiplier: 1.25,
+    upgradeMaterialCostMultiplier: 0.75,
+    npcUpgradeCostMultiplier: 1,
+    npcServiceFeeWithMaterials: 0.25,
+    bulkCraftCount: 4,
+    bulkCraftMaterialCount: 3,
+    generalTable: [
+      { currencyMin: 0, currencyMax: 99, rarity: 'Common', difficultyScore: 14, successes: 1, timeValue: 8, timeUnit: 'hours' as const },
+      { currencyMin: 100, currencyMax: null, rarity: 'Uncommon', difficultyScore: 16, successes: 1, timeValue: 5, timeUnit: 'days' as const },
+    ],
+    successesTable: [
+      { delta: 0, failureEffect: '—', successEffect: 'Create fully functional item worth market price.', successItemWorthPercent: 100, materialsRetainedPercent: 0, choiceExtraItemOrEnhance: false },
+      { delta: 1, failureEffect: '75% market price', successEffect: '125% market price', failureItemWorthPercent: 75, successItemWorthPercent: 125, materialsRetainedPercent: 0, choiceExtraItemOrEnhance: false },
+    ],
+    enhancedTable: [
+      { rarity: 'Common', currencyPerEnergy: 10, energyMin: 0, energyMax: 10, difficultyScore: 14, successes: 1, timeValue: 8, timeUnit: 'hours' as const },
+      { rarity: 'Uncommon', currencyPerEnergy: 25, energyMin: 11, energyMax: null, difficultyScore: 16, successes: 1, timeValue: 5, timeUnit: 'days' as const },
+    ],
+    multipleUseTable: [
+      { partialRecovery: 'permanent' as const, fullRecovery: 1, adjustedEnergyPercent: 100 },
+      { partialRecovery: 'permanent' as const, fullRecovery: 'permanent' as const, adjustedEnergyPercent: 300 },
+    ],
+    consumableEnhancedTable: [
+      { rarity: 'Common', costPerEnergy: 5, energyMin: 0, energyMax: 10, difficultyScore: 14, successes: 1, timeValue: 2, timeUnit: 'hours' as const },
+      { rarity: 'Uncommon', costPerEnergy: 12, energyMin: 21, energyMax: null, difficultyScore: 16, successes: 1, timeValue: 1, timeUnit: 'days' as const },
+    ],
+    optionalReduceTimeByDifficulty: { dsIncreasePerStep: 2, daysReductionPerStep: 5, successesReductionPerStep: 1, maxSteps: 5, halfTimeWhenUnder5Days: true },
+    optionalReduceTimeByCost: { costIncreasePercentPerStep: 50, daysReductionPerStep: 5, successesReductionPerStep: 1, maxSteps: 5, halfTimeWhenUnder5Days: true },
+    optionalReduceDifficultyByTime: { additionalDaysCommon: 1, additionalDaysOther: 5, dsReduction: 1, successesIncrease: 1 },
+    optionalReduceDifficultyByCost: { costIncreasePercent: 25, dsReduction: 2, maxSteps: 4 },
+  },
 };
 
 // =============================================================================

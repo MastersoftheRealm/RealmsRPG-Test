@@ -37,6 +37,25 @@ export {
   useInvalidateEncounters,
 } from './use-encounters';
 
+// Crafting
+export {
+  craftingKeys,
+  useCraftingSessions,
+  useCraftingSession,
+  useCreateCraftingSession,
+  useSaveCraftingSession,
+  useDeleteCraftingSession,
+} from './use-crafting';
+
+// Enhanced items (from crafting)
+export {
+  enhancedItemsKeys,
+  useEnhancedItems,
+  useCreateEnhancedItem,
+  useDeleteEnhancedItem,
+  useUpdateEnhancedItem,
+} from './use-enhanced-items';
+
 // Characters
 export {
   characterKeys,

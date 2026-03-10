@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Wand2, Swords, Shield, Users, LogIn } from 'lucide-react';
+import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, Button, useToast } from '@/components/ui';
@@ -25,15 +25,19 @@ import {
   useDeleteItem,
   useDeleteCreature,
   usePublicLibrary,
+  useEnhancedItems,
+  useDeleteEnhancedItem,
 } from '@/hooks';
 import type { DisplayItem } from '@/types';
+import type { UserEnhancedItem } from '@/types/crafting';
 import { LibraryPowersTab } from './LibraryPowersTab';
 import { LibraryTechniquesTab } from './LibraryTechniquesTab';
 import { LibraryItemsTab } from './LibraryItemsTab';
 import { LibraryCreaturesTab } from './LibraryCreaturesTab';
+import { LibraryEnhancedTab } from './LibraryEnhancedTab';
 import { LibraryPublicContent, type LibraryPublicTabId } from './LibraryPublicContent';
 
-type TabId = 'powers' | 'techniques' | 'items' | 'creatures';
+type TabId = 'powers' | 'techniques' | 'items' | 'creatures' | 'enhanced';
 
 interface Tab {
   id: TabId;
@@ -48,6 +52,7 @@ const TABS: Tab[] = [
   { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" />, createHref: '/technique-creator', createLabel: 'Create Technique' },
   { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armament' },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
+  { id: 'enhanced', label: 'Enhanced', icon: <Sparkles className="w-4 h-4" />, createHref: '/crafting', createLabel: 'From Crafting' },
 ];
 
 type LibraryMode = 'my' | 'public';
@@ -62,7 +67,7 @@ function LibraryContent() {
   const { showToast } = useToast();
   const [libraryMode, setLibraryMode] = useState<LibraryMode>('public');
   const [activeTab, setActiveTab] = useState<TabId>('powers');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: TabId; item: DisplayItem | UserEnhancedItem } | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
@@ -83,12 +88,16 @@ function LibraryContent() {
   const deleteTechnique = useDeleteTechnique();
   const deleteItem = useDeleteItem();
   const deleteCreature = useDeleteCreature();
+  const deleteEnhancedItem = useDeleteEnhancedItem();
+
+  const { data: enhancedItems = [] } = useEnhancedItems();
 
   const myCounts: Record<TabId, number> = {
     powers: powers.length,
     techniques: techniques.length,
     items: items.length,
     creatures: creatures.length,
+    enhanced: enhancedItems.length,
   };
 
   const publicCounts: Record<TabId, number> = {
@@ -96,13 +105,14 @@ function LibraryContent() {
     techniques: publicTechniques.length,
     items: publicItems.length,
     creatures: publicCreatures.length,
+    enhanced: 0,
   };
 
   const counts = libraryMode === 'my' ? myCounts : publicCounts;
   const currentTab = TABS.find(t => t.id === activeTab)!;
 
   const isDeleting = deletePower.isPending || deleteTechnique.isPending ||
-    deleteItem.isPending || deleteCreature.isPending;
+    deleteItem.isPending || deleteCreature.isPending || deleteEnhancedItem.isPending;
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -121,6 +131,9 @@ function LibraryContent() {
         case 'creatures':
           await deleteCreature.mutateAsync(deleteConfirm.item.id);
           break;
+        case 'enhanced':
+          await deleteEnhancedItem.mutateAsync(deleteConfirm.item.id);
+          break;
       }
       setDeleteConfirm(null);
     } catch (error) {
@@ -129,7 +142,7 @@ function LibraryContent() {
     }
   };
 
-  const tabsWithCounts = TABS.map(tab => ({
+  const tabsWithCounts = (libraryMode === 'public' ? TABS.filter((t) => t.id !== 'enhanced') : TABS).map(tab => ({
     id: tab.id,
     label: tab.label,
     icon: tab.icon,
@@ -215,6 +228,7 @@ function LibraryContent() {
           {activeTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} />}
           {activeTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
           {activeTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
+          {activeTab === 'enhanced' && <LibraryEnhancedTab onDelete={(item) => setDeleteConfirm({ type: 'enhanced', item })} />}
         </>
       )}
 
@@ -222,7 +236,7 @@ function LibraryContent() {
         <DeleteConfirmModal
           isOpen={true}
           itemName={deleteConfirm.item.name}
-          itemType={deleteConfirm.type.slice(0, -1)}
+          itemType={deleteConfirm.type === 'enhanced' ? 'enhanced item' : deleteConfirm.type.slice(0, -1)}
           isDeleting={isDeleting}
           onConfirm={handleDelete}
           onClose={() => setDeleteConfirm(null)}

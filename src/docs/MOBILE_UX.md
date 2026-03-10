@@ -36,6 +36,7 @@ Audit: `ValueStepper`, `IconButton`, sheet action toolbar, tab triggers, list ro
 
 - **Full-screen on mobile:** For selection/add modals, wizards, recovery, level-up, settings, and other large dialogs, set **`fullScreenOnMobile`** on `Modal`. When viewport is &lt; `md`, the modal renders full-screen (sticky header/footer, scrollable content). On `md+`, existing size behavior applies.
 - **Which modals:** Add/load/settings/level-up/recovery, unified selection, add feat/skill/library item, confirm-action and delete-confirm when content is tall, login prompt. Small confirmations can stay centered without full-screen.
+- **Crafting:** Item selection is on `/crafting/new` (no modal); DeleteConfirmModal for session delete uses fullScreenOnMobile. Touch targets ≥44px for roll inputs, steppers, and buttons on crafting session page.
 
 ---
 

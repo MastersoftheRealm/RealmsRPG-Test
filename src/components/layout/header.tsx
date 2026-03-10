@@ -38,6 +38,7 @@ const navLinks: Array<{ href: string; label: string; external?: boolean } | { la
     label: 'RM Tools',
     dropdown: [
       { href: '/encounters', label: 'Encounters' },
+      { href: '/crafting', label: 'Crafting' },
       { href: '/creature-creator', label: 'Creature Creator' },
     ],
   },

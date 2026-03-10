@@ -72,6 +72,7 @@ See `UI_COMPONENT_REFERENCE.md` for full component details.
 | **Codex/library data** | `src/docs/DATA_HANDLING.md` — single codex fetch, query keys, cache headers, prefetch; read when adding or changing codex/library hooks or APIs |
 | **Character/creature math** | `src/lib/formulas.ts`, `src/lib/calculations.ts`, `src/lib/skill-allocation.ts` — all ability, defense, skill, and derived stats |
 | **Power/technique/item cost and display** | `src/lib/calculators/` — part costs, derive*Display helpers, filterSavedItemPropertiesForList; use for creator preview and library/codex display |
+| **Crafting requirements and outcome** | `src/lib/game/crafting-utils.ts` — getCraftingRequirements, getUpgradeRequirements, getEnhancedCraftingRequirements, calculateCraftingOutcome, optional modifiers; `src/types/crafting.ts` — session and enhanced item types |
 
 ## Hooks & Services
 
@@ -97,15 +98,16 @@ Steps live in `src/components/character-creator/steps/` (e.g., `species-step.tsx
 - `(main)/library` — user items (powers, techniques, armaments, creatures)
 - `(main)/codex` — browse all content
 - `(main)/power-creator`, `(main)/technique-creator`, `(main)/item-creator`, `(main)/creature-creator`
-- `(main)/encounter-tracker`, `(main)/my-account`, `(main)/rules`, `(main)/privacy`, `(main)/terms`, `(main)/resources`
+- `(main)/encounter-tracker`, `(main)/crafting`, `(main)/my-account`, `(main)/rules`, `(main)/privacy`, `(main)/terms`, `(main)/resources`
 - `(auth)/login`, `(auth)/register`, `(auth)/forgot-password`, `(auth)/forgot-username`
 
 ## Shared Component Usage (Verified)
 
 - **GridListRow** — Library, Codex, add-feat-modal, add-library-item-modal, add-skill-modal, equipment-step, feats-tab, library-section, creature-creator
+- **HubListRow** — Encounters hub, Crafting hub, Library Enhanced tab (list rows with icon, title, badge, subtitle, delete). **Do not use** for combat/skill encounter participants: those use **CombatantCard** and participant-specific blocks (health, initiative, roll state); HubListRow is for “open/delete” list items only.
 - **SkillRow** — skills-section, skills-step, creature-creator
 - **ValueStepper** — abilities-section, sheet-header, health-energy-allocator, dice-roller, all creators, encounter-tracker
-- **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section
+- **SectionHeader** — feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages
 - **AddSubSkillModal** — Uses SelectionToggle (not GridListRow) — unique base-skill selector UX
 
 ## Creator load logic (avoid duplication)

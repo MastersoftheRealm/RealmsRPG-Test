@@ -30,25 +30,34 @@ How to use
 - **Modals with lists:** Unify add-X modals, load modals, and selection modals — same logic, styles, EmptyState/LoadingState, FilterSection; align with Codex/Library. TASK-264 (done).
 - Find and remove true dead code.
 
-### 2) Creators (Power / Technique / Armament / Creature)
+### 2) Crafting (2026-03-10)
+- **Core rules:** Add CRAFTING category to core_rules with crafting table, successes table (incl. calculation fields for auto-cost/price), enhanced/consumable tables, multipliers. TASK-293.
+- **Admin:** Crafting tab in admin core rules editor. TASK-293.
+- **Crafting Hub:** Encounter-like list (completed, planned, in progress); "Start Crafting" (no naming). TASK-294.
+- **Crafting page:** Item selection (library/codex/public/custom), Consumable/Bulk/Enhanced toggles, incremental roll sessions (styled like skill encounter combatants), craft sub-skill + flavor text, auto-calculated final material cost and market price. TASK-294.
+- **Enhanced crafting:** Power selection, custom base item, potency, Multiple Use table, Consumable Enhanced table. TASK-295.
+- **Enhanced Equipment Library:** New library type; save enhanced items from crafting. TASK-295.
+- **Plan:** See `src/docs/ai/CRAFTING_IMPLEMENTATION_PLAN.md`.
+
+### 3) Creators (Power / Technique / Armament / Creature)
 - Ensure parts/properties load their TP/IP/C values from Codex and are used to compute EN/TP/C when rendering lists or summaries.
 - Wire option levels and part selections to update calculated costs (EN/TP/C) in UI immediately.
 - Consistent layout: fixed compact summary + scrolling inputs/values.
 - **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities — before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
 - **2026-03-07 (barfight):** Power creator: allow multiple damage types per power (add row; save/load array). TASK-286. Creators: show explicit energy (EN) per item. TASK-287. Remove "(optional)" from damage in creators. TASK-288.
 
-### 3) Character Sheet & Library
+### 4) Character Sheet & Library
 - Library tab order: Feats, Powers, Techniques, Inventory, Proficiencies, Notes (default open to Feats).
 - Use shared components for list headers and items (remove counts, make headers sortable).
 - Equip toggles (SelectionToggle) must work outside edit mode and persist state.
 - Display computed weapon attack bonus, damage, crit range, armor DR/requirements consistently.
 - **Character library expanded content:** When expanding items in the character library (powers, techniques, weapons, armor, equipment), show the same full information as on the Library page: description, property/part chips (with TP and expandable descriptions), total cost, range/damage/requirements where applicable. No custom expandedContent that hides chips or details. Implemented 2026-02-21.
 
-### 4) Skills
+### 5) Skills
 - Replace three separate implementations (character sheet, character creator, creature creator) with a unified `SkillRow`/`SkillList` component with variants.
 - Keep business logic in parents; rendering/controls in shared components.
 
-### 5) UI / Visual Standards
+### 6) UI / Visual Standards
 - Standardize interactive elements (add/select, steppers, roll buttons) with consistent visuals and hit areas.
 - Palette: primarily blues/grays; use green for health, blue for energy, and lighter purple for powers.
 - Remove extraneous expand/collapse chevrons when they cause layout issues.
@@ -56,19 +65,19 @@ How to use
 - **Buttons:** Use solid colors with clear white font (btn-solid, btn-outline-clean) — no gradients. Match about page styles site-wide.
 - **Roll Log:** Single-row layout (1d20 X + Bonus = Total in boxes); roll=light grey, bonus=green, total=blue; smaller timestamp.
 
-### 6) Modals & Lists
+### 7) Modals & Lists
 - Shared modal/list components should include: rounded headers, header spacing, sortable columns, and right-aligned add/select controls.
 - Remove "# items" counts and ensure list header spacing equals item spacing.
 - All modals: uniform rounded corners (overflow-hidden on modal container). Remove "Add" column header; ListHeader with hasSelectionColumn provides empty slot. Header bar: shorter than modal width, rounded edges, ascending/descending sort.
 
-### 6b) Creator Contrast & Accessibility
+### 7b) Creator Contrast & Accessibility
 - Technique and Armament creators: description and option boxes must use semantic tokens (text-text-primary) and dark mode variants — match Power Creator. Dropdown menus across all 3 creators must have explicit text-text-primary bg-surface. ✅ TASK-254
 - **Dark mode — cost/TP/currency and advanced mechanics:** Cost stat boxes (Energy, TP, Currency) in CreatorSummaryPanel and advanced mechanics option boxes in Power Creator must use dark-mode-appropriate backgrounds (semantic tokens or .dark overrides). Implemented 2026-02-21: .dark --color-tp-light and --color-tp; PowerAdvancedMechanics option boxes use bg-surface-alt.
 - **Armaments: strength requirements and descriptions:** When loading armaments (weapons, armor) from library or character, description and strength/ability requirements must display when saved. Implemented 2026-02-21: item creator edit load restores abilityRequirement.id from saved item; enrichItems derives abilityRequirement from properties when missing on library item; description preserved with ?? ''.
 - Full accessibility audit: Elements must meet WCAG 2.1 AA contrast (4.5:1 small text, 3:1 large text). Use axe DevTools to identify and fix violations. ✅ TASK-255 (not-started; handled by other agent)
 - **Site-wide accessibility (Vercel audit 2026-02-23):** (1) Minimum color contrast in light mode: home feature text (text-neutral-600 → text-neutral-700 or semantic token), auth password toggle icon, primary buttons, status text (e.g. green-600). (2) Buttons must have discernable text: icon-only buttons need aria-label (e.g. password show/hide, dice roller history, campaign edit name/description). (3) Select elements must have an accessible name: use <label htmlFor> + id on select, or aria-label. (4) Heading levels must only increase by one: page h1 → next section h2 (not h3); fix campaigns list, campaign detail, encounter combat/skill views. (5) Image alt text must not duplicate adjacent visible text: dice images with "d4"/"d6" etc. next to them should use alt="". (6) Set up eslint-plugin-jsx-a11y and Cursor rule so future code complies. TASK-267.
 
-### 7) Bugs / Behavior to Prioritize
+### 8) Bugs / Behavior to Prioritize
 - **user_profiles / user_items after migration:** Ensure user_profiles row exists (with created_at/updated_at) before any insert into user_items, user_powers, etc. Fix "null value in column updated_at" and "user_items_user_id_fkey" by upserting profile with timestamps and ensuring profile before library writes. ✅ Implemented 2026-03-02 (ensureUserProfile, auth/API/actions/profile-picture; SQL default script).
 - Login redirect: return user to the page that initiated login.
 - Character creator: persist skill allocations automatically when switching tabs. Species steps: deduplicate list items (flaws, traits, characteristics) when mixed. TASK-284. Species steps: sticky Continue button so user doesn't have to scroll. TASK-285.
@@ -1219,3 +1228,11 @@ Notes
 - Feedback: (1) Duplicate list items for species when mixed — e.g. flaws, etc. (2) Continue button should be sticky on species steps so you don't need to wait. (3) Power creator: allow multiple damage types to be added to a power (add another row of damage types; may need to change the save data setup and load data). (4) Creators: explicit energy displays per each thing. (5) Remove "(optional)" from damage — everything is optional so we don't need to specify it. (6) The public library isn't saving powers, techniques, armaments, etc. (7) Spaces for range seems to display differently for powers and maybe armaments depending on what view you're in (more spaces in lists/libraries).
 - Expected: (1) No duplicate traits/flaws/characteristics in species mixed lists. (2) Continue button sticky (e.g. footer) on species steps. (3) Power can have multiple damage types; schema/save/load supports array. (4) Each power/technique/armament in creators shows EN explicitly. (5) No "(optional)" label on damage. (6) Official/public library save persists powers, techniques, armaments. (7) Range spacing consistent across list vs detail views for powers and armaments.
 - Disposition: (1) TASK-284 done 2026-03-07. (2) TASK-285 done 2026-03-07: sticky Continue on species/ancestry steps. (3) TASK-286 done 2026-03-07: power creator multiple damage types. (4) TASK-287 done 2026-03-07: verified EN per part/property already shown. (5) TASK-288 done 2026-03-07: removed "(optional)" from damage labels. (6) TASK-289 done 2026-03-07. (7) TASK-290 done 2026-03-07: normalizeRangeDisplay + item formatRange consistency.
+
+**Raw Feedback Log — 2026-03-10 (Crafting rules + crafting page)**
+- Date: 2026-03-10
+- Context: Core rules database, admin core rules editor, creators section
+- Priority: High
+- Feedback: (1) Add crafting rules to the core rules database (crafting table, successes table, enhanced crafting table, consumable enhanced table, multipliers, etc.) so values can be accessed, utilized, and updated across the site. (2) Add a Crafting tab to the admin core rules editor for editing crafting values. (3) Create a crafting page in the creators section that: uses skill encounter logic (rolls, successes/failures); lets user select equipment/armament from library or codex to craft; uses stored core rules for DS, successes, time, costs; lets user select a craft sub-skill when rolling (for craft_success_desc/craft_failure_desc display); requires only user input of roll values; streamlines and automates the crafting process.
+- Expected: Crafting rules in core_rules; admin Crafting tab; crafting page with item selection, roll phase, outcome display using sub-skill flavor text.
+- Disposition: Plan created/updated in CRAFTING_IMPLEMENTATION_PLAN.md. TASK-293 (core rules + admin tab), TASK-294 (crafting hub + page), TASK-295 (enhanced crafting + library). Plan now includes: Crafting Hub (encounter-like list), incremental roll sessions, Consumable/Bulk/Enhanced toggles, auto-calculated costs, custom base items, Enhanced Equipment Library.

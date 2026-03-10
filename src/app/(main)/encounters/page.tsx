@@ -33,7 +33,7 @@ import {
   SearchInput,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow } from '@/components/shared';
 import { useEncounters, useCreateEncounter, useDeleteEncounter, useAuth } from '@/hooks';
 import { createDefaultEncounter } from '@/types/encounter';
 import type { EncounterType, EncounterStatus, EncounterSummary } from '@/types/encounter';
@@ -263,12 +263,30 @@ function EncountersContent() {
         ) : (
           <div className="space-y-2">
             {filteredEncounters.map((encounter) => (
-              <EncounterRow
+              <HubListRow
                 key={encounter.id}
-                encounter={encounter}
-                onOpen={() => handleOpen(encounter)}
+                icon={TYPE_ICONS[encounter.type]}
+                iconContainerClassName={TYPE_COLORS[encounter.type]}
+                title={encounter.name}
+                badge={encounter.status.charAt(0).toUpperCase() + encounter.status.slice(1)}
+                badgeClassName={STATUS_COLORS[encounter.status]}
+                subtitle={[
+                  TYPE_LABELS[encounter.type],
+                  getParticipantLabel(encounter) && getParticipantLabel(encounter),
+                  encounter.round > 0 && `Round ${encounter.round}`,
+                  encounter.updatedAt &&
+                    new Date(encounter.updatedAt as string).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+                description={encounter.description ?? undefined}
+                onClick={() => handleOpen(encounter)}
                 onDelete={() => setDeleteTarget(encounter)}
-                participantLabel={getParticipantLabel(encounter)}
+                deleteAriaLabel={`Delete encounter ${encounter.name}`}
               />
             ))}
           </div>
@@ -297,82 +315,6 @@ function EncountersContent() {
         />
       )}
     </PageContainer>
-  );
-}
-
-function EncounterRow({
-  encounter,
-  onOpen,
-  onDelete,
-  participantLabel,
-}: {
-  encounter: EncounterSummary;
-  onOpen: () => void;
-  onDelete: () => void;
-  participantLabel: string;
-}) {
-  const updatedDate = encounter.updatedAt
-    ? new Date(encounter.updatedAt as string).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : '';
-
-  return (
-    <div
-      className="flex items-center gap-4 p-4 bg-surface rounded-xl border border-border-light hover:border-primary-300 transition-colors cursor-pointer group"
-      onClick={onOpen}
-    >
-      {/* Type icon */}
-      <div
-        className={cn(
-          'flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0',
-          TYPE_COLORS[encounter.type]
-        )}
-      >
-        {TYPE_ICONS[encounter.type]}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-text-primary truncate">{encounter.name}</h2>
-          <span
-            className={cn(
-              'px-2 py-0.5 text-xs rounded-full font-medium',
-              STATUS_COLORS[encounter.status]
-            )}
-          >
-            {encounter.status.charAt(0).toUpperCase() + encounter.status.slice(1)}
-          </span>
-        </div>
-        <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5">
-          {TYPE_LABELS[encounter.type]}
-          {participantLabel && ` \u00b7 ${participantLabel}`}
-          {encounter.round > 0 && ` \u00b7 Round ${encounter.round}`}
-          {updatedDate && ` \u00b7 ${updatedDate}`}
-        </p>
-        {encounter.description && (
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-0.5 truncate">{encounter.description}</p>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="p-2 rounded-lg text-text-muted dark:text-text-secondary hover:text-danger-600 dark:hover:text-danger-400 hover:bg-red-50 dark:hover:bg-danger-900/20 transition-colors opacity-0 group-hover:opacity-100"
-          title="Delete encounter"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-        <ChevronRight className="w-5 h-5 text-text-muted" />
-      </div>
-    </div>
   );
 }
 

@@ -199,6 +199,116 @@ export interface ExperienceRules {
   divideXp: string;
 }
 
+// ─── Crafting ──────────────────────────────────────────────────────────────
+
+export interface CraftingTableRow {
+  currencyMin: number;
+  currencyMax: number | null;
+  rarity: string;
+  difficultyScore: number;
+  successes: number;
+  timeValue: number;
+  timeUnit: 'hours' | 'days';
+}
+
+export interface SuccessesTableRow {
+  delta: number;
+  failureEffect: string;
+  successEffect: string;
+  failureItemWorthPercent?: number;
+  successItemWorthPercent?: number;
+  materialsRetainedPercent?: number;
+  extraItemCount?: number;
+  choiceExtraItemOrEnhance?: boolean;
+}
+
+export interface EnhancedCraftingTableRow {
+  rarity: string;
+  currencyPerEnergy: number;
+  energyMin: number;
+  energyMax: number | null;
+  difficultyScore: number;
+  successes: number;
+  timeValue: number;
+  timeUnit: 'hours' | 'days';
+}
+
+export interface ConsumableEnhancedTableRow {
+  rarity: string;
+  costPerEnergy: number;
+  energyMin: number;
+  energyMax: number | null;
+  difficultyScore: number;
+  successes: number;
+  timeValue: number;
+  timeUnit: 'hours' | 'days';
+}
+
+export interface MultipleUseEnergyRow {
+  partialRecovery: number | 'permanent';
+  fullRecovery: number | 'permanent';
+  adjustedEnergyPercent: number;
+}
+
+/** Optional: reduce time by increasing difficulty (+2 DS per step, -5 days, -1 success; max 5 steps; or halve time once if < 5 days) */
+export interface OptionalReduceTimeByDifficulty {
+  dsIncreasePerStep: number;
+  daysReductionPerStep: number;
+  successesReductionPerStep: number;
+  maxSteps: number;
+  halfTimeWhenUnder5Days: boolean;
+}
+
+/** Optional: reduce time by increasing cost (+50% cost per step, -5 days, -1 success; max 5 steps; or halve time once if < 5 days) */
+export interface OptionalReduceTimeByCost {
+  costIncreasePercentPerStep: number;
+  daysReductionPerStep: number;
+  successesReductionPerStep: number;
+  maxSteps: number;
+  halfTimeWhenUnder5Days: boolean;
+}
+
+/** Optional: reduce difficulty by spending more time (+1 day common / consumable common–rare, or +5 days other; -1 DS, +1 success) */
+export interface OptionalReduceDifficultyByTime {
+  additionalDaysCommon: number;
+  additionalDaysOther: number;
+  dsReduction: number;
+  successesIncrease: number;
+}
+
+/** Optional: reduce difficulty by spending more resources (+25% cost per step, -2 DS; max 4 steps) */
+export interface OptionalReduceDifficultyByCost {
+  costIncreasePercent: number;
+  dsReduction: number;
+  maxSteps: number;
+}
+
+export interface CraftingRules {
+  craftingCostMultiplier: number;
+  consumableTimeMultiplier: number;
+  craftingDayHours: number;
+  generalTable: CraftingTableRow[];
+  successesTable: SuccessesTableRow[];
+  enhancedTable: EnhancedCraftingTableRow[];
+  multipleUseTable: MultipleUseEnergyRow[];
+  enhancedSellPriceMultiplier: number;
+  consumableEnhancedTable: ConsumableEnhancedTableRow[];
+  upgradeMaterialCostMultiplier: number;
+  npcUpgradeCostMultiplier: number;
+  npcServiceFeeWithMaterials: number;
+  bulkCraftCount: number;
+  bulkCraftMaterialCount: number;
+  finerToolsBonus?: Record<string, number>;
+  /** Optional mechanics: reduce time by increasing difficulty */
+  optionalReduceTimeByDifficulty?: OptionalReduceTimeByDifficulty;
+  /** Optional mechanics: reduce time by increasing cost */
+  optionalReduceTimeByCost?: OptionalReduceTimeByCost;
+  /** Optional mechanics: reduce difficulty by spending more time */
+  optionalReduceDifficultyByTime?: OptionalReduceDifficultyByTime;
+  /** Optional mechanics: reduce difficulty by spending more resources */
+  optionalReduceDifficultyByCost?: OptionalReduceDifficultyByCost;
+}
+
 // ─── Aggregate ────────────────────────────────────────────────────────────
 
 /** All core rules categories, keyed by their DB row ID */
@@ -216,6 +326,7 @@ export interface CoreRulesMap {
   DAMAGE_TYPES: DamageTypesRules;
   RECOVERY: RecoveryRules;
   EXPERIENCE: ExperienceRules;
+  CRAFTING: CraftingRules;
 }
 
 export type CoreRulesCategory = keyof CoreRulesMap;

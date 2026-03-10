@@ -1,0 +1,720 @@
+Crafting
+The majority of Realms takes place in exciting adventures and epic quests guided by your party and illustrated by the Realm Master, but your Characters don’t stop there! Realms encourages parties to allow time for Characters to rest, recover, plan, live, and craft! This chapter will outline the basics of the Craft Skill, as well as the specifics of each Craft Subskill, and how to use them to craft a variety of equipment from the mundane to the enhanced!
+Characters can craft basic or common items using the crafting rules, and can also spend more time and resources to craft enhanced items and equipment, provided they have the Skills, Proficiencies, and resources to do so. To enhance, or craft and enhance, a piece of equipment a Character needs proficiency with the related Sub-Skill.
+The Craft Skill. Unlike the Craft Skill’s subskills, Craft has no specifically defined utility in the game. Instead, it serves as a versatile Skill, representing a general understanding of craftsmanship and the use of basic equipment, materials, and tools. Most applications of the Craft Skill occur during game sessions—rigging a snare or tripwire, securing a loose rope bridge, boarding up a gate before an oncoming attack, and so on. Subskills of Craft have both in-game utility and out-of-game or downtime utility, which we’ll soon delve into!
+
+General Crafting Mechanics
+Each Craft Sub-Skill has unique capabilities that allow creatures to create a variety of specialized items, enhanced or not. Generally speaking, crafting items requires time, resources with a set currency cost, and proficiency with the skill(s) involved.
+Crafting an Item
+Before you can craft an item you must have access to the proper tools, proficiency with the correct crafting Sub-Skill, and the resources required to craft that item. Beyond simply having a skill and rolling some dice, you can also expend effort collecting resources, upgrading toolsets and skills, and so on in and out of session time to enhance the level of your crafting. The basic rules are outlined in this section, with additional options for more advanced crafting found at the end.
+
+General Crafting Process. With the proper tools and implements, skills, and resources, you can craft an item. The item you craft’s value will help you determine the time required to craft that item, which can be done all at once or in different chunks of time. In addition, this cost will have a corresponding Difficulty Score. 
+
+Crafting Sub-Skills
+The type of item you craft will have a corresponding Sub-Skill, as well as a corresponding set of tools and crafting implements that you should have on hand and be proficient with to craft. Each of the crafting Sub-Skills can be found in the Realms Codex, Skills section. The Codex outlines what each Sub-Skill can specifically craft and the required implements. Each Sub-Skill functions slightly differently, but the general crafting rules are outlined in this section.
+
+Crafting Steps
+General crafting follows these specific steps:
+Choose an Item to Craft. Select the item you wish to craft.
+Determine Requirements. Identify the necessary skills, tools, and resources.
+Gather Resources. Acquire the materials needed for crafting.
+Craft the Item. Use your resources, skills, and time to complete the creation.
+
+Step 1: Choose an Item to Craft
+Look through the item lists in the Realms Codex and choose which item you’d like to craft. It’s important to note the item’s Currency Cost as that will help you determine the requirements to craft in the next step.
+Ensure the type of item you plan to craft is one which you have the proper Craft Sub-Skill to craft, such as having glassblowing for eyewear or smithing for armor with a strength requirement. Each Sub-Skill outlines what item types they can craft.
+
+Step 2: Determine Requirements
+There are three main resources that crafting requires: Currency, Time, and Skill (represented by a Difficulty Score and Successes). Outside of these three resources, crafting also requires the proper tools and implements as outlined by each Craft Sub-Skill in the Realms Codex such as a forge for Smithing, or a tailoring kit for Tailoring. Use the crafting table to cross-reference the Currency Cost of your item with the appropriate Time and Difficulty Score needed to craft it.
+Crafting Table. The table below gives the brackets for items based on their Currency Cost which ultimately determines the item’s Rarity, the Difficulty Score to successfully craft, and the time required to craft.
+Currency Cost
+Rarity
+Difficulty Score
+Successes
+Time
+0-99
+Common
+14
+1
+8 hours
+100-499
+Uncommon
+16
+1
+5 Days
+500-1,499
+Rare
+18
+2
+10 Days
+1,500-2,499
+Epic
+20
+4
+20 Days
+2,500-4,999
+Epic
+22
+5
+25 Days
+5,000-9,999
+Epic
+24
+6
+30 Days
+10,000-19,999
+Legendary
+26
+7
+35 Days
+20,000-34,999
+Legendary
+28
+8
+40 Days
+35,000-49,999
+Legendary
+30
+9
+45 Days
+50,000-64,999
+Mythic
+32
+10
+50 Days
+65,000-79,999
+Mythic
+34
+11
+55 Days
+80,000-99,999
+Mythic
+36
+12
+60 Days
+100,000+
+Ascended
+38
+14
+70 Days
+
+
+Currency Cost. The cost of crafting an item in Realms goes beyond simply having the necessary gold, silver, credits, or other currency. Instead, an item's price is tied to the rarity and quantity of materials required to craft it. Even if you possess enough currency, rarer items may still demand time and effort to gather specific ingredients. While common and uncommon items are typically available for purchase without additional effort, rarer goods often require extra steps, determined by the Realm Master.
+The cost of crafting an item is 75% of its market price, meaning you must have materials worth this amount to complete the crafting process. The market prices for items are outlined in the Crafting Table above.
+For more structured resource collection, you can use the optional Resource Gathering rules at the end of this chapter. Resources should logically reflect an item’s nature—for example, fine jewelry and armor require rare metals, while food and healing salves depend on proper ingredients.
+Time. Crafting an item requires dedicated time and effort. A "day" of crafting consists of 8 hours of active work. Exceeding this daily limit typically results in exhaustion or other penalties, as determined by the Realm Master. To complete the process, you must have access to the necessary tools and materials for the entire crafting duration.
+You may split crafting into multiple sessions, as long as the total required time is met. If circumstances allow, materials and partially completed items may be relocated or adjusted between sessions.
+For consumable items, crafting time is only ¼ of the listed time in the Crafting Table. All other items require the full-time stated. Optional rules at the end of this section provide ways to reduce crafting time.
+Difficulty Score & Successes. At the end of each 5-day period, or 8 hours for Common items, you must make a skill roll against the Difficulty Score determined by the Crafting Table. The number of successes is tracked similarly to Skill Encounters. Each Success counts toward the total required. Conversely, each Failure removes one Success or, if none remain, counts as a Failure instead. Successes can also cancel out Failures.
+At the end of the entire crafting period, the total number of Successes must meet or exceed the required amount to successfully complete the item. Falling short of the required Successes, or exceeding them, can lead to heightened positive or negative consequences, as outlined in Step 4.
+
+Step 3: Gather Resources
+Since you have determined the required resources it’s now time to gather and prepare those resources! 
+Downtime. Your Realm Master should specify how much downtime you have between in-game events, or they can provide this information upon request. It’s important to communicate with your Realm Master when you want more time to craft so they can integrate downtime into the story. If you plan to craft in sessions rather than all at once, make sure you know where each crafting session will take place and how much time you’ll have for it.
+Adventuring life can be chaotic and unpredictable, so it may not always be possible to plan, but having a clear idea of when and where you’ll craft can help ensure you take advantage of available time.
+Implements & Tools. The required tools and implements for crafting are not included in the currency cost, nor are living expenses or other incidental costs. Because of this, it’s important to plan ahead and ensure your Character has access to the necessary resources. Make sure you have the proper tools, suitable locations (such as a blacksmith’s forge), and adequate housing during the crafting process. Often, you can find non-player Characters in the world who are willing to lend resources to Characters who have proven helpful or earned their trust.
+Fulfilling the Currency Cost. For Common and Uncommon items, most materials can be purchased from local or specialized vendors. As long as you have the necessary currency and access to the proper vendors, you should be able to craft the item without issue. However, you must have materials worth 75% of the item’s market price in order to craft it. The Crafting Table displays the market price of items, not the material for crafting cost.
+For items of higher rarity, or if the materials aren’t available due to a lack of vendors or supply, you can always gather the materials yourself or with your party’s help. Common sources for gathering materials include harvesting from forests, caves, mines, creatures, ancient ruins, and similar locations. More details on gathering your own resources for crafting can be found in the Gathering Resources & Harvesting section of this chapter.
+
+Step 4: Craft the Item
+Now that you have all the necessary resources and have set aside the required time, you can begin crafting your item. At the end of each 5-day period—or after 8 hours for a Common item—make a Skill Roll using the appropriate Craft Sub-Skill against the item's Difficulty Score. Track each success and failure, with successes canceling out failures where applicable. If, by the end of the crafting period, your total number of successes meets or exceeds the required amount listed in the Crafting Table, you successfully craft the item! Even if you fall below the required amount of successes, you can still make an item, but it will have flaws as shown in the table below and outlined by specific Sub-Skills.
+Successes Table. Each success beyond or below the required threshold for crafting an item carries specific consequences, leading to either improved or diminished results. The general effects of these Successes are outlined in the table below, with more detailed and craft-specific outcomes provided for each Craft Sub-Skill.
+Successes
+Below (Failure)
+Above (Success)
+Meet Req. # of Successes
+—
+Create a fully functional item worth market price with no complications.
++/- 1
+The item is worth 75% of the market price.
+The item is worth 125% of the market price. 
++/- 2
+The item is worth 50% of the market price.
+You retain 25% of the crafting materials you would’ve spent and the item is worth 125% of the market price.
++/- 3
+The item is worth 25% of the market price.
+You retain 50% of the crafting materials you would’ve spent and the item is worth 125% of the market price instead.
++/- 4
+The item is worthless and doesn’t function as intended.
+You retain 50% of the crafting materials you would’ve spent and the item is worth 150% of the market price instead.
++/- 5
+—
+You retain 75% of the crafting materials you would’ve spent and the item is worth 150% of the market price instead.
++/- 6
+—
+You retain 75% of the crafting materials you would’ve spent and the item is worth 175% of the market price instead.
++/- 7
+—
+You retain 75% of the crafting materials you would have used and can choose either to craft an additional identical item, both valued at 100% of the market price or to enhance the original item, increasing its value to 200% of the market price.
++/- 8+
+—
+In addition to the previous effect, you gain one additional item worth 100% of the cost for each success above 7 over the required successes.
+
+
+This table applies to both general crafting and Enhanced Crafting (refer to "Worth of Enhanced Items").
+Crafting Sub-Skill Successes. Crafting Sub-Skills can function similarly to regular skills, often used for appraising items, identifying crafting techniques, recalling methods, and related tasks. In these cases, Successes apply as usual, providing more or less information based on the roll as outlined by the Skill. However, Crafting Sub-Skills are distinct in that they have specific outcomes when crafting items, depending on the number of successes above or below the required threshold. These outcomes are specific to each Sub-Skill. Be sure to reference both the Successes table and the specific Sub-Skill descriptions in the Codex to fully understand the results of your crafting attempts.
+Selling Crafted Items. Simply because you know the worth of an item, doesn’t mean you will be able to successfully sell it for its fair price. Depending on the situation, such as whether or not you’re a trusted adventurer or craftsperson, how established you are in a community, and how well you’re able to haggle, you may be able to sell an item for much less than its value, or perhaps much more.
+
+Enhanced Crafting
+Beyond crafting standard items, you can also create enhanced equipment using the same process and Craft Sub-Skills. Every Character with a Craft Sub-Skill has the potential to forge powerful gear, but the way they achieve this—and the appearance of their creations—is entirely up to you. A flaming sword might be enchanted with magic, or it could channel a volatile gas to unleash bursts of flame through scientific ingenuity. 
+Enhanced equipment represents more than just superior craftsmanship; it embodies supernatural forces, masterful engineering, or raw elemental power. As you adventure, you’ll discover and craft unique enhancements that elevate your gear, empowering Characters and complementing their builds.
+
+Crafting an Enhanced Item
+The process for crafting enhanced items is almost exactly the same as crafting regular items, but the process for determining Currency Cost is slightly different since these items will be customized and not based on existing parameters like item lists or the Armament Creator.
+
+Crafting using Powers
+Instead of simply finding an item to craft, you now have the creative freedom to imagine and design one, infusing it with your own unique power! You will still follow the usual crafting process with the same Skill requirements, but this time, in addition to the base item, you can incorporate your personal flair by using the Power Creation rules and mechanics.
+To begin, follow the power creation process outlined in Chapter 5: Powers & Techniques to design a power you'd like to imbue into your crafted item. Once you’ve conceptualized your power, you must ensure you are proficient with each of the Power's Parts in order to successfully imbue the power within the item. Only once you have the necessary proficiency can you proceed to craft the item with your chosen power. This allows for deep customization and the creation of items that are not only functional but also deeply tied to your Character’s unique abilities.
+Item’s Interactions with Powers. Powers imbued in items function exactly as they would if used normally, with the key difference that they do not require an Energy cost. However, to activate the power, the Character must have the item equipped in the appropriate slot. 
+This means the power still requires the same type of action to use, maintains its original duration, range, and targeting mechanics, and affects the same defenses as it would outside of an item. Essentially, the item acts as a conduit for the power without altering its fundamental mechanics.
+Potency. The potency of any power imbued within an enhanced item is equal to the potency of the creator at the time of crafting. However, this potency can be improved through an upgrade process.
+To upgrade an item's potency, the crafter must spend 25% of the original crafting time and material cost. Once upgraded, the item adopts the new potency of the upgrader. The Difficulty Score for this process remains the same as the original enhanced crafting attempt, while the required number of successes is 25% of the original requirement.
+The upgrader must also be proficient in an appropriate Crafting Sub-Skill related to the item being enhanced. This ensures that only skilled artisans can refine and strengthen existing enhancements, further aligning the item's power with the growth of its wielder.
+Archetype Proficiency/Ability Bonuses. Enhanced items that allow the wielder to use powers that deal damage or provide healing gain the same bonuses the creator would apply at the time of crafting.
+Power Part Proficiency. To gain proficiency with power parts, you spend Training Points (TP) equal to the part's TP cost, including any TP level increases you plan to use. This allows you to customize your Character’s abilities, gaining access to more advanced or specialized powers by investing TP into the parts you want to master.
+Write This Down...
+Make sure you record any power parts that you are proficient in, including the parts level increases, if any, within your proficiencies, so you don’t forget them!
+
+
+Energy Cost. When crafting enhanced equipment with imbued powers, you’ll need to consider the Power’s Energy cost, as it will determine both the Difficulty Score and the Currency Cost for crafting the item. Since these items are designed to store Powers permanently, the Energy required for the power will typically be much lower than that of a one-time-use power. This means you'll want to keep the cost manageable while ensuring the effect is precise and aligns with your desired outcome. Careful planning is key to balancing power and practicality when embedding powers into your crafted items.
+
+Resources Required
+The main resources for enhanced crafting remain the same as they do for regular crafting, with the exception that the item’s rarity and currency cost are instead determined by the imbued power’s energy cost.
+Base Items. When crafting an enhanced item, you must first have access to a basic item to serve as the foundation, such as an unenhanced set of armor, a weapon, ammunition, or another relevant piece of equipment. Some enhanced items require only simple base components, like a glass bottle for a potion or a hat for a charisma-boosting accessory.
+If you don’t already have the base item, you can craft it using the general crafting mechanics before applying enhancements with these specialized rules. Even if you envision the entire process as a seamless creation, such as imbuing a weapon with power as it’s forged, the mechanics still require both general crafting and enhanced crafting steps. Be sure to align your item’s context and function with the overall flavor of your crafting process.
+For example, if you were creating an empowered shield with a gemstone affixed at its center that enhances perception, you would first craft the shield itself, then imbue it with the enhancement. You might describe the crafting process as a singular act of artistry and enchantment, but mechanically, it still follows both the standard and enhanced crafting rules.
+Enhanced Crafting Table. This table provides the Energy cost required to imbue a power into an item, alongside its corresponding Rarity, Difficulty Score, required crafting time, necessary successes, and the currency cost per 1 Energy. The higher the Energy of the power, the rarer and more expensive the enhanced item becomes, reflecting the complexity and effort required to bind potent abilities into physical form. 
+Use this table to determine the exact cost and difficulty of crafting your enhanced item.
+Rarity
+Currency Per Energy
+Energy
+Difficulty Score
+Successes
+Time
+Common
+10
+0-10
+14
+1
+8 hours
+Uncommon
+25
+11-20
+16
+1
+5 Days
+Rare
+50
+21-30
+18
+2
+10 Days
+Epic
+71
+31-35
+20
+4
+20 Days
+Epic
+125
+36-40
+22
+5
+25 Days
+Epic
+222
+41-45
+24
+6
+30 Days
+Legendary
+363
+46-55
+26
+7
+35 Days
+Legendary
+583
+56-60
+28
+8
+40 Days
+Legendary
+692
+61-65
+30
+9
+45 Days
+Mythic
+866
+66-75
+32
+10
+50 Days
+Mythic
+1,000
+76-80
+34
+11
+55 Days
+Mythic
+1,176
+81-85
+36
+12
+60 Days
+Ascended
+1,300
+86+
+38
+14
+70 Days
+
+
+Use the Table to Craft. Using the Energy cost of the power you’re imbuing into the item, you can cross-reference the required crafting time, the difficulty score, and the number of successes needed over that time. Then, multiply the Energy cost by the Currency Per Energy amount to determine the total currency required for crafting.
+With everything set, it’s time to start crafting! Roll against the Difficulty Score as many times as the required number of successes, spacing out the rolls evenly over the crafting period. For example, if crafting takes 20 days and requires 4 successes, you’d roll once every 5 days. This will usually equate to 1 roll every 5 crafting days.
+
+Item Uses
+Enhanced items can only activate their imbued power once per Full Recovery. If you'd like to create an enhanced item with more frequent uses, you can modify the energy cost to correspond with the desired number of uses and the specific recovery period you prefer.
+Multiple Use Energy Adjustment Table. The table below provides the effective energy cost of an enhanced item, along with the corresponding number of Full or Partial Recovery uses. When creating the item, you must choose whether it utilizes Full or Partial Recovery, and this choice cannot be changed afterward. The adjusted energy cost determines what percentage of the power’s normal energy cost is used in the Enhanced Crafting Table to calculate resource requirements such as time, difficulty, and currency. This also influences the item's rarity classification.
+Partial Recovery
+Full Recovery
+Adjusted Energy
+X
+1
+100%
+X
+2
+125%
+1
+3
+150%
+2
+4
+175%
+3
+6
+200%
+4
+8
+225%
+5
+10
+250%
+Permanent/Passive
+Permanent/Passive
+300%
+
+
+Permanent/Passive Effects. An item with a permanent or passive effect continuously grants the benefits of the imbued power to the Character wearing or wielding it. Alternatively, instead of being always active, the item can allow the power to be used an unlimited number of times, requiring the appropriate action determined during the power’s creation.
+
+Single-Use Items
+Consumable enhanced items can take many forms, such as potions, power scrolls, or power gems, allowing for creative flavoring that suits your Character’s crafting style. Some Crafting Sub-Skills, like Alchemy or Calligraphy, are specifically suited for creating consumable items, so be sure to reference their skill descriptions and the Successes outcomes when crafting.
+Single-Use Item Limitations. As the name implies, once you’ve utilized and benefited from the utility of a single-use enhanced item, you lose the ability to use it again. In addition to this more face-value limitation, single-use items have a few other limitations:
+Duration. The duration of single-use item powers cannot be longer than one day.
+Potency. The potency of a single-use item cannot exceed 25.
+Flavor. The flavor of single-use items may limit their effect further, such as a poison requiring ingestion, but this can also be a stipulation in the Power, reducing the Energy cost.
+Consumable Enhanced Crafting Table. Crafting consumable-enhanced items follows a different process from crafting basic consumables. Rather than reducing the time requirement, you will use the table below to determine the necessary resources. 
+Rarity
+Cost Per Energy
+Energy
+Difficulty Score
+Successes
+Time
+Common
+5
+0-10
+14
+1
+2 hours
+Common
+5
+11-20
+15
+1
+4 hours
+Uncommon
+12
+21-40
+16
+1
+1 Day
+Rare
+24
+41-60
+18
+1
+2 Days
+Epic
+34
+61-70
+20
+1
+5 Days
+Epic
+62
+71-80
+22
+2
+10 Days
+Epic
+110
+81-90
+24
+3
+15 Days
+Legendary
+180
+91-110
+26
+4
+20 Days
+Legendary
+290
+111-120
+28
+5
+25 Days
+Legendary
+384
+121-130
+30
+6
+30 Days
+Mythic
+432
+131-150
+32
+7
+35 Days
+Mythic
+500
+151-160
+34
+8
+40 Days
+Mythic
+588
+161-170
+36
+9
+45 Days
+Ascended
+650
+171+
+38
+10
+50 Days
+
+
+Crafting Consumables in Bulk. In addition to using this table for crafting consumable or single-use enhanced items, you may also opt to create consumable items in bulk by spending only the time and material cost of creating 3 consumable items, but instead creating 4. In these cases, you still must make the proper number of rolls and obtain the proper amount of successes that you would for 3 items, with the Difficulty Score remaining the same.
+
+Worth of Enhanced Items.
+Since you use Energy to determine the currency an enhanced item costs to create, you don’t actually know how much the item itself is worth to the market. Usually, selling common or uncommon enhanced items is possible in an everyday market, but for more rare items, you will have to find specific buyers, and it can prove to be more difficult depending on the world’s setting and item scarcity.
+Determining Cost. To set a fair market price for an enhanced item, multiply the crafting cost by 125%, ensuring the final price doesn't exceed the upper limit of its rarity bracket. For example, if you spend 20 energy to craft a common item, you’d refer to the enhanced crafting table (where energy costs 5 currency per unit) and calculate a material cost of 80 (40 × 2). Then, multiply 80 by 1.25 (125%) to reach 100. However, since the maximum price for a common item is 99 currency, you’d adjust the price down to 99.
+
+
+Additional & Optional Crafting Mechanics
+In this section, you’ll find Additional Crafting Mechanics, such as upgrading already existing items, and harvesting resources for crafting, as well as Optional Crafting Mechanics, such as ways to decrease the crafting difficulty score.
+
+Additional Crafting Mechanics
+These mechanics are designed to help provide more flexibility in how you craft, allowing you to more easily incorporate crafting into your regular adventuring sessions.
+
+Upgrading or Improving Items
+Characters will naturally increase in strength, power, and experience as they adventure and level up. Upgrading items provides a way for their gear to improve with them. The rules for upgrading items apply to Characters and non-player Characters alike, so even if you lack the proficiency to improve an item yourself, you can still call upon an NPC’s help to do so!
+What can be upgraded? Both General and Enhanced items can be upgraded, with the process for Enhanced items following the same steps—though you’ll need to estimate currency cost and market price using energy costs, as outlined in the Enhanced Crafting section. What can be upgraded typically hinges on the item’s nature or flavor. For instance, armor and weapons are commonly improved through improvements like rebalancing, sharpening, or hardening. Upgrading single-use items, such as potions, may pose more of a challenge, but it isn’t out of the question. With enough creative ingenuity, most items can be upgraded if you set your mind to it. Regardless of the item, though, you’ll still need the appropriate Sub-Skill proficiency and tools to perform the upgrade, as usual.
+Cost to Upgrade. The cost to upgrade an item, in materials or currency, is based on the difference between the original item’s market price (using its initial value, not an adjusted higher price from successes that boosted its worth) and the market price of the upgraded version. As with other items, this cost might be in currency or specific materials, especially if the item is rare or becomes rarer.
+To calculate, subtract the old market price from the new one, then take 75% of that difference; this is the material cost to upgrade. For example, if the original item was valued at 100 currency and the upgraded version is worth 200, the difference is 100 (200 - 100). Taking 75% of 100 gives you an upgrade cost of 75.
+Paying for Services. Upgrading an item through an NPC typically costs 100% of the price difference between the original and upgraded versions. However, if you supply the materials yourself, you’d likely only pay a standard service fee of 25% for the upgrade. 
+Opting for NPC services offers benefits like not having to be present during the process and typically ensuring a successful craft with consistent quality.
+Time Requirement. The time required to upgrade an item is determined by the difference in crafting times listed on the Crafting Table, based on the rarity and cost of the original item versus the upgraded version. For example, if you’re upgrading an item worth 750 currency to one worth 2,500 currency, and the table shows 10 days for the base item, and 25 days for the upgraded one, the upgrade would take 25 - 10 = 15 days.
+Difficulty Score & Successes. The Difficulty Score for upgrading an item is the same as the difficulty score of the upgraded item, while the number of required successes is the difference between the successes needed for the original item and the upgraded one. For example, if you’re upgrading an item worth 750 currency (requiring 2 Successes) to one worth 2,500 currency (requiring 5 successes), the difference is 5 - 2 = 3 Successes needed.
+
+Gathering Resources & Harvesting
+An exciting part of crafting is often the adventures you’ll go on to obtain the materials you need for crafting! Perhaps it’s as simple as a skill encounter to gather potent herbs, or as advanced as slaying beasts for special fire-spitting glands. Whatever the flavor may be, the gathering resources and harvesting rules provide the rules on how to obtain resources. Material and resource costs for crafting will always be measured in terms of Currency Cost, even if it isn’t always straightforward how to sell or buy them for their explained “worth”.
+
+Harvesting
+Harvesting is a versatile skill that enables Characters to invest time and effort in gathering resources and materials. As a unique Sub-Skill, its base Skill and associated Ability can vary depending on the context and the type of harvesting being performed.
+Characters can use Harvesting to forage for herbs, mine ore, gather crops, or extract useful parts from a creature’s body, among other resource-gathering activities.
+Any number of Characters can collaborate to harvest resources, provided they have the necessary time and access to a suitable source. The quantity and quality of the gathered materials depend on several key factors:
+Material Quality. The value of harvested materials varies based on their purity and condition. Rare gemstones, pure iron ore, or high-yield crops are more valuable, whereas impure deposits or withering plants reduce the overall worth.
+Number of Successes. Harvesting requires a Skill Roll against a set Difficulty Score. The number of Successes determines the quality and quantity of the yield.
+Harvesting Difficulty. More valuable or delicate resources present greater challenges. The Difficulty Score reflects the complexity of the task, such as extracting liquid from a natural source or carefully removing a rare organ from a formidable creature.
+Harvesting Skill Encounters. Using the rules for Skill Encounters, Characters can invest time and effort into harvesting resources, applying creative solutions, and using unique skills to the task. Harvesting can take many forms, such as sequences that require multiple Skill Rolls to fully extract a resource, combat skill encounters where materials must be gathered under pressure, or competitive skill encounters where multiple parties race to claim limited resources.
+There are rules set apart for a variety of Harvest situations, such as harvesting resources from the environment or harvesting resources from creatures, but there are also some basic rules that apply to all harvesting, such as the time you have to harvest.
+Time & Resource Limitations. Time is often a limiting factor in harvesting, not only due to the time a Character has available but also because of external constraints. A creature may only remain fresh enough for a limited period before its valuable components degrade, and some resources simply take time to extract properly. Even if Characters manage to harvest an entire resource, poor skill rolls can result in waste, diminishing its utility, purity, or overall worth rather than just reducing the quantity gathered.
+On average, harvesting takes between four and eight hours, depending on the resource. While RMs can adjust this timeframe as needed, most Harvest Skill Encounters fall within this range. This duration accounts for various factors, such as how long a creature's body remains viable, the available daylight for gathering, the time required to fully extract a resource, or even the sustainable limits of harvesting from an environment without disrupting local ecosystems.
+
+General Harvesting
+This section covers all forms of harvesting, including mining ore, extracting gemstones, and stripping an ancient palace of gold. While there are specific rules for harvesting materials from creatures and flora, these general harvesting rules can be applied to any type of harvesting if it is more convenient for the party and Realm Master. However, for creature and flora harvesting, using the specific rules provided is recommended.
+General Harvesting Table. Below is a table that gives the general outline for how much maximum currency is available in the 4-8 hour time constraint, along with the currency obtained per each success, the rarity of the resource, and the harvesting Difficulty Score.
+Rarity
+Maximum Currency
+Currency Per Success
+Difficulty Score
+Common
+100
+20
+14
+Uncommon
+500
+100
+16
+Rare
+1,500
+300
+18
+Epic
+10,000
+2,000
+24
+Legendary
+50,000
+10,000
+30
+Mythic
+100,000
+20,000
+36
+Ascended
+Unlimited
+50,000
+38
+
+
+Creature Harvesting
+Creature Harvesting Table. Harvesting resources from a creature is represented in this table, factoring in the rarity of materials obtained, the maximum amount of harvestable resources within the standard timeframe of four to eight hours (expressed as maximum currency), the difficulty score of the harvesting process, and the currency gained per success—all determined by the creature’s level.
+Creatures can provide resources for both basic and enhanced crafting, typically guided by flavor. While some creatures’ resources may yield specific utilities, the primary rule for determining what can be harvested and how it can be used is ultimately a matter of flavor rulings by the party and Realm Master. This type of interaction enables a party to plan targeted adventures in pursuit of specific resources needed for crafting particular items and armaments. 
+By identifying valuable materials and strategizing their approach, Characters can embark on expeditions to hunt rare creatures, gather exotic components, and refine their crafting capabilities, making resource acquisition an integral part of their journey.
+Creature Level
+Rarity
+Maximum Currency
+Currency Per Success
+Difficulty Score
+1/4
+Common
+25
+5
+11
+1/2
+Common
+50
+10
+12
+3/4
+Common
+75
+15
+13
+1
+Common
+100
+20
+14
+2
+Uncommon
+200
+40
+15
+3
+Uncommon
+350
+70
+16
+4
+Uncommon
+500
+100
+17
+5
+Rare
+750
+150
+18
+6
+Rare
+1,500
+300
+19
+7
+Epic
+2,500
+500
+20
+8
+Epic
+3,500
+700
+21
+9
+Epic
+5,000
+1,000
+22
+10
+Epic
+8,000
+1,600
+23
+11
+Epic
+10,000
+2,000
+24
+12
+Legendary
+15,000
+3,000
+25
+13
+Legendary
+20,000
+4,000
+26
+14
+Legendary
+25,000
+5,000
+27
+15
+Legendary
+30,000
+6,000
+28
+16
+Legendary
+40,000
+8,000
+29
+17
+Legendary
+50,000
+10,000
+30
+18
+Mythic
+55,000
+11,000
+31
+19
+Mythic
+65,000
+13,000
+32
+20
+Mythic
+70,000
+14,000
+33
+
+
+Flora Harvesting
+Plants, Flora, & Herb Harvesting Tables. You can spend time searching for naturally growing resources in a variety of locations and for many crafting purposes—for example, exploring caves for rare mushrooms and mosses, wandering forests for unique and potent flow-buds, or examining trees for lichens used in healing. Whatever the setting, herbs can be gathered using the two tables below. The first determines the currency potential based on the type of ingredient you are seeking, and the second provides a reference for the Realm Master to assign penalties and bonuses according to the relative fertility of the environment in which harvesting takes place.
+Worth/Type of Flora for Enhanced Item Crafting. You may attempt to harvest flora of any rarity, regardless of the enhanced item you intend to craft. However, the minimum rarity of flora required for enhanced item crafting must match the rarity of the item being created.
+
+Worth of Flora
+Rarity of Flora
+Currency Per Success
+Difficulty Score
+0-99
+Common
+5
+14
+100-499
+Uncommon
+25
+16
+500-1,499
+Rare
+75
+18
+1,500-9,999
+Epic
+500
+24
+10,000-49,999
+Legendary
+2,500
+30
+50,000-99,999
+Mythic
+5,000
+36
+100,000+
+Ascended
+10,000
+38
+
+
+Abundance of Flora Table. Using this chart, a Realm Master can determine how verdant the environment you are searching in is. Once environmental fertility is established, a corresponding bonus or penalty can be applied to all harvesting rolls made in that area. Overharvesting, as well as regional or seasonal effects, may reduce an area’s fertility over time at the Realm Master’s discretion.
+Abundance
+Bonus/Penalty
+Desolate
+-8
+Infertile
+-6
+Sparse
+-4
+Meager
+-2
+Moderate
++0
+Flourishing
++2
+Abundant
++4
+Bountiful
++6
+Verdant
++8
+Teeming
++10
+
+
+
+Repurposing & Harvesting from Items
+You can harvest materials from existing items by spending time melting them down, studying their craftsmanship, or repurposing their components. This allows you to reclaim materials from items you no longer wish to keep in their original form. While this process follows the general harvesting mechanics, it includes a few key differences.
+Gaining Proficiencies. If you spend time harvesting materials from an item and achieve a number of successes equal to the item's Training Points (representing its power or complexity), you gain proficiency in crafting that item yourself. If you achieve fewer successes than the item's Training Points, you instead learn only partial components—either the simplest aspects or the ones you don’t already know—up to the number of successes gained.
+Reduced Worth. Harvesting materials from an item typically yields resources worth less than the item's original value. The total currency value of harvested materials is reduced by 75% of the value shown on the general harvesting table.
+
+Optional Crafting Mechanics
+Upgrading on the Road. You might find yourself wanting to upgrade equipment during an adventure—say, after leveling up in a dungeon and earning Training Points to become proficient with a sharper sword’s edge or reinforced chestplate—even if you’re far from an ideal crafting setup. As an optional rule in such cases, you can upgrade an item as long as the rarity doesn’t increase or the market price rises no more than 50%, and the upgrade time required would be no more than 10 days.
+These on-the-road upgrades are faster than standard crafting, but they require special single-use tools, which are costly and must be purchased beforehand. The materials needed mirror those for normal upgrades, though you can use any you’ve brought along. The Difficulty Score for this type of upgrade is the standard score for the item plus 5, and the crafting time is a minimum of 8 hours, preceded or followed by a full recovery.
+Your Realm Master may tweak the rules for on-the-road crafting based on your surroundings. For example, forging in an enclosed space with a hot fire might risk choking you with smoke, halting the process entirely. Conversely, an abandoned workshop with usable tools could lower the Difficulty Score by making the task easier.
+
+Reducing Crafting Difficulty
+To make seemingly impossible feats of crafting more manageable, many craftspeople adopt various strategies. They may acquire finer tools, take extra time to work with greater precision, or use materials far more valuable than the final item to ensure its quality. These are optional rules that Characters can apply when crafting to reduce difficulty.
+Spending More Time. To lower the Difficulty Score of crafting, you can extend the crafting time—spending 1 additional day for common items (or common to rare if the item is consumable) or 5 additional days for all other items. This reduces the Difficulty Score by 1 but increases the required number of successes by 1.
+Spending More Resources. You can increase the crafting cost by 25% to decrease the Difficulty Score by 2. This can be done up to four times, doubling the total crafting cost while reducing the Difficulty Score by up to 8. However, this does not increase the item's rarity or final value unless it results in additional successes.
+Finer Tools. The standard instruments and tools used for any Crafting Sub-Skill provide no bonuses to crafting rolls. However, finer craftsman tools can be found, purchased, or created, offering various benefits such as bonuses to crafting rolls, reduced crafting time, or other unique advantages. A common trend is that the rarity of a toolset influences the bonus it grants to crafting rolls, shown in the table below.
+
+Rarity
+Crafting Bonus
+Common
+0
+Uncommon
++1
+Rare
++2
+Epic
++3
+Legendary
++4
+Mythic
++5
+Ascended
++6
+
+
+Beyond finer tools, you can also acquire superior facilities that provide additional crafting benefits. These may include an ancient forge powered by magma, a specialized glassblower’s workshop, or a prestigious high-society jeweler’s studio. Such facilities can grant bonuses to crafting in various ways, enhancing efficiency, quality, or success rates.
+
+Reducing Crafting Time
+You can accelerate the crafting process to complete it in a shorter time, but this comes at the cost of increased difficulty or higher crafting expenses.
+Increasing Crafting Difficulty. By increasing the crafting Difficulty Score by 2, you can reduce the crafting time by 5 days and lower the required number of successes by 1. This can be done up to 5 times, for a total reduction of 25 days and 5 successes, but at the cost of increasing the Difficulty Score by 10.
+For crafting projects that take fewer than 5 days, you may halve the total crafting time instead, though this does not reduce the required successes. This option can only be used once.
+Increasing Crafting Cost. You can also reduce crafting time by increasing the cost. By raising the crafting cost by 50%, you can decrease the time required by 5 days and reduce the required number of successes by 1. This can be done up to 5 times, significantly reducing the time needed at the expense of higher costs.
+For projects taking fewer than 5 days, instead of reducing time by days, you may halve the total crafting time. This option can only be used once.
+
+Group Crafting
+You can approach crafting like any skill encounter and enlist an ally to assist in the process. Allies can aid in crafting if they are proficient in the relevant crafting skill and if you have the necessary tools and workspace to accommodate multiple workers.
+Allies contribute using the Help Dice system, rolling their crafting Skill or relevant Sub-Skill. If they are only proficient in the general Craft Skill but not the specific Sub-Skill, their Help Die size is reduced by half.

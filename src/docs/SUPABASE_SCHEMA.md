@@ -119,6 +119,72 @@ Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls
 
 ---
 
+### 2.9 Crafting Sessions
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `crafting_sessions` | Hybrid | id (PK), user_id, data (JSONB), created_at, updated_at; list columns: status, item_name, currency_cost |
+
+**Migration (run in Supabase SQL Editor):**
+
+```sql
+CREATE TABLE IF NOT EXISTS public.crafting_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  data JSONB NOT NULL DEFAULT '{}',
+  status TEXT NOT NULL DEFAULT 'planned',
+  item_name TEXT,
+  currency_cost NUMERIC,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_crafting_sessions_user_id ON public.crafting_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_crafting_sessions_updated_at ON public.crafting_sessions(updated_at DESC);
+
+ALTER TABLE public.crafting_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY crafting_sessions_select ON public.crafting_sessions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY crafting_sessions_insert ON public.crafting_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY crafting_sessions_update ON public.crafting_sessions FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY crafting_sessions_delete ON public.crafting_sessions FOR DELETE USING (auth.uid() = user_id);
+```
+
+---
+
+### 2.10 User Enhanced Items (Enhanced Equipment Library)
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `user_enhanced_items` | Hybrid | id (PK), user_id, data (JSONB), name, created_at, updated_at |
+
+Stores enhanced equipment (base item + imbued power) saved from crafting. List columns: name for list display.
+
+**Migration (run in Supabase SQL Editor):**
+
+```sql
+CREATE TABLE IF NOT EXISTS public.user_enhanced_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  data JSONB NOT NULL DEFAULT '{}',
+  name TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_enhanced_items_user_id ON public.user_enhanced_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_enhanced_items_updated_at ON public.user_enhanced_items(updated_at DESC);
+
+ALTER TABLE public.user_enhanced_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY user_enhanced_items_select ON public.user_enhanced_items FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY user_enhanced_items_insert ON public.user_enhanced_items FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY user_enhanced_items_update ON public.user_enhanced_items FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY user_enhanced_items_delete ON public.user_enhanced_items FOR DELETE USING (auth.uid() = user_id);
+```
+
+---
+
 ## 3. Enums
 
 | Name | Values |

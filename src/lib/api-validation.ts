@@ -123,6 +123,123 @@ export const encounterUpdateSchema = z.object({
 }).passthrough();
 
 // =============================================================================
+// Crafting Session Schemas
+// =============================================================================
+
+const craftingItemRefSchema = z.object({
+  source: z.enum(['library', 'codex']),
+  id: z.string().min(1),
+  name: z.string().min(1),
+  marketPrice: z.number().min(0),
+  subSkillId: z.string().nullable().optional(),
+}).passthrough();
+
+const craftingRollSessionSchema = z.object({
+  label: z.string(),
+  roll: z.number().int().min(1).max(100).nullable(),
+  successes: z.number().int().min(0),
+  failures: z.number().int().min(0),
+}).passthrough();
+
+export const craftingSessionCreateSchema = z.object({
+  name: z.string().max(200).optional(),
+  status: z.enum(['planned', 'in_progress', 'completed']).optional().default('planned'),
+  item: craftingItemRefSchema.nullable().optional(),
+  isConsumable: z.boolean().optional().default(false),
+  isBulk: z.boolean().optional().default(false),
+  dsModifier: z.number().optional().default(0),
+  additionalSuccesses: z.number().int().min(0).optional().default(0),
+  additionalFailures: z.number().int().min(0).optional().default(0),
+  requiredSuccesses: z.number().int().min(0).optional().default(0),
+  difficultyScore: z.number().optional().default(0),
+  materialCost: z.number().min(0).optional().default(0),
+  timeValue: z.number().int().min(0).optional().default(0),
+  timeUnit: z.enum(['hours', 'days']).optional().default('days'),
+  sessionCount: z.number().int().min(0).optional().default(0),
+  sessions: z.array(craftingRollSessionSchema).optional().default([]),
+  netDelta: z.number().int().optional(),
+  outcome: z.record(z.string(), z.unknown()).optional().nullable(),
+  isUpgrade: z.boolean().optional(),
+  upgradeOriginalItem: z.union([
+    craftingItemRefSchema,
+    z.object({ name: z.string().min(1), marketPrice: z.number().min(0) }),
+  ]).nullable().optional(),
+  isUpgradePotency: z.boolean().optional(),
+  upgradePotencyEnhancedItemId: z.string().uuid().optional(),
+  optionalModifiers: z.object({
+    reduceTimeByDifficultySteps: z.number().int().min(0).max(5).optional(),
+    reduceTimeByCostSteps: z.number().int().min(0).max(5).optional(),
+    reduceDifficultyByTime: z.boolean().optional(),
+    reduceDifficultyByCostSteps: z.number().int().min(0).max(4).optional(),
+  }).optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+}).passthrough();
+
+export const craftingSessionUpdateSchema = z.object({
+  name: z.string().max(200).optional(),
+  status: z.enum(['planned', 'in_progress', 'completed']).optional(),
+  item: craftingItemRefSchema.nullable().optional(),
+  isConsumable: z.boolean().optional(),
+  isBulk: z.boolean().optional(),
+  dsModifier: z.number().optional(),
+  additionalSuccesses: z.number().int().min(0).optional(),
+  additionalFailures: z.number().int().min(0).optional(),
+  requiredSuccesses: z.number().int().min(0).optional(),
+  difficultyScore: z.number().optional(),
+  materialCost: z.number().min(0).optional(),
+  timeValue: z.number().int().min(0).optional(),
+  timeUnit: z.enum(['hours', 'days']).optional(),
+  sessionCount: z.number().int().min(0).optional(),
+  sessions: z.array(craftingRollSessionSchema).optional(),
+  netDelta: z.number().int().optional(),
+  outcome: z.record(z.string(), z.unknown()).optional().nullable(),
+  isUpgrade: z.boolean().optional(),
+  upgradeOriginalItem: z.union([
+    craftingItemRefSchema,
+    z.object({ name: z.string().min(1), marketPrice: z.number().min(0) }),
+  ]).nullable().optional(),
+  optionalModifiers: z.object({
+    reduceTimeByDifficultySteps: z.number().int().min(0).max(5).optional(),
+    reduceTimeByCostSteps: z.number().int().min(0).max(5).optional(),
+    reduceDifficultyByTime: z.boolean().optional(),
+    reduceDifficultyByCostSteps: z.number().int().min(0).max(4).optional(),
+  }).optional(),
+  updatedAt: z.string().optional(),
+}).passthrough();
+
+// =============================================================================
+// Enhanced Item (Library) Schemas
+// =============================================================================
+
+const enhancedBaseItemSchema = z.union([
+  craftingItemRefSchema,
+  z.object({ name: z.string().min(1), marketPrice: z.number().min(0) }),
+]);
+
+const enhancedPowerRefSchema = z.object({
+  source: z.enum(['library', 'official']),
+  id: z.string().min(1),
+  name: z.string().min(1),
+  energyCost: z.number().int().min(0),
+}).passthrough();
+
+export const enhancedItemCreateSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(200),
+  baseItem: enhancedBaseItemSchema,
+  powerRef: enhancedPowerRefSchema,
+  description: z.string().max(5000).optional(),
+  usesType: z.string().max(50).optional(),
+  usesCount: z.number().int().min(0).optional(),
+  potency: z.number().min(0).optional(),
+}).passthrough();
+
+export const enhancedItemPatchSchema = z.object({
+  potency: z.number().min(0).optional(),
+  name: z.string().min(1).max(200).optional(),
+}).passthrough();
+
+// =============================================================================
 // Library Item Schemas
 // =============================================================================
 
