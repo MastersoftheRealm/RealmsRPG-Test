@@ -172,6 +172,7 @@ export const craftingSessionCreateSchema = z.object({
     reduceDifficultyByTime: z.boolean().optional(),
     reduceDifficultyByCostSteps: z.number().int().min(0).max(4).optional(),
   }).optional(),
+  quantity: z.number().int().min(1).optional().default(1),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 }).passthrough();
@@ -205,6 +206,7 @@ export const craftingSessionUpdateSchema = z.object({
     reduceDifficultyByTime: z.boolean().optional(),
     reduceDifficultyByCostSteps: z.number().int().min(0).max(4).optional(),
   }).optional(),
+  quantity: z.number().int().min(1).optional(),
   updatedAt: z.string().optional(),
 }).passthrough();
 

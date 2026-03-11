@@ -70,7 +70,8 @@ export interface CraftingSessionData {
   optionalModifiers?: {
     reduceTimeByDifficultySteps?: number;
     reduceTimeByCostSteps?: number;
-    reduceDifficultyByTime?: boolean;
+    /** Number of steps (was boolean in v1, now numeric for multi-step support) */
+    reduceDifficultyByTime?: number | boolean;
     reduceDifficultyByCostSteps?: number;
   };
   /** DS modifier (e.g. finer tools) applied to difficultyScore */
@@ -100,6 +101,8 @@ export interface CraftingSessionData {
     choiceExtraOrEnhance: boolean;
     effectText: string;
   };
+  /** How many copies of the item you intend to craft (1 by default) */
+  quantity?: number;
   createdAt?: string;
   updatedAt?: string;
 }

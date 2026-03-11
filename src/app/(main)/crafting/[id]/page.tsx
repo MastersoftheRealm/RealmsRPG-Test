@@ -1,15 +1,17 @@
 /**
- * Crafting Session Page
- * ======================
- * View/edit a crafting session: item, DS modifier, additional successes/failures, roll sessions. Complete -> outcome.
+ * Crafting Tool Page (Single-Page)
+ * =================================
+ * All-in-one crafting tool: select item, set options, configure optional rules,
+ * enter rolls, see live results and outcome. Autosaves progress.
+ * Layout inspired by creators (sidebar summary) and skill encounters (roll tracking).
  */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ChevronLeft, CheckCircle2, XCircle, Hammer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   PageContainer,
@@ -20,27 +22,72 @@ import {
   Input,
 } from '@/components/ui';
 import { ValueStepper, SectionHeader } from '@/components/shared';
-import { useCraftingSession, useSaveCraftingSession, useCreateEnhancedItem, useUpdateEnhancedItem, useCodexSkills } from '@/hooks';
+import { CreatorSummaryPanel } from '@/components/creator';
+import {
+  useCraftingSession,
+  useSaveCraftingSession,
+  useCreateEnhancedItem,
+  useUpdateEnhancedItem,
+  useCodexSkills,
+  useUserPowers,
+  useEnhancedItems,
+} from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useToast } from '@/components/ui';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
-import { calculateCraftingOutcome } from '@/lib/game/crafting-utils';
-import type { CraftingSession as CraftingSessionType, CraftingRollSession } from '@/types/crafting';
+import {
+  getCraftingRequirements,
+  getCraftingSessionLabels,
+  getEnhancedCraftingRequirements,
+  getConsumableEnhancedRequirements,
+  getMultipleUseAdjustedEnergy,
+  calculateCraftingOutcome,
+  applyReduceTimeByDifficulty,
+  applyReduceTimeByCost,
+  applyReduceDifficultyByTime,
+  applyReduceDifficultyByCost,
+  type CraftingRequirements,
+} from '@/lib/game/crafting-utils';
+import {
+  CraftingItemSelectModal,
+  type CraftingSelectedItem,
+} from '@/components/crafting/CraftingItemSelectModal';
+import type {
+  CraftingSession as CraftingSessionType,
+  CraftingRollSession,
+  CraftingItemRef,
+  CraftingPowerRef,
+} from '@/types/crafting';
 
-export default function CraftingSessionPage() {
+function toCraftingItemRef(c: CraftingSelectedItem): CraftingItemRef {
+  return {
+    source: c.source === 'library' ? 'library' : 'codex',
+    id: c.id,
+    name: c.name,
+    marketPrice: c.marketPrice,
+  };
+}
+
+export default function CraftingToolPage() {
   const params = useParams();
   const id = typeof params?.id === 'string' ? params.id : '';
-  const router = useRouter();
   const { data: sessionData, isLoading, error } = useCraftingSession(id);
   const saveMutation = useSaveCraftingSession();
   const createEnhanced = useCreateEnhancedItem();
   const updateEnhanced = useUpdateEnhancedItem();
   const { showToast } = useToast();
   const { rules } = useGameRules();
+  const rulesData = rules?.CRAFTING;
 
   const [session, setSession] = useState<CraftingSessionType | null>(null);
   const [initialized, setInitialized] = useState(false);
-  const [upgradePotencyValue, setUpgradePotencyValue] = useState<string>('');
+  const [itemSelectOpen, setItemSelectOpen] = useState(false);
+  const [upgradePotencyValue, setUpgradePotencyValue] = useState('');
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: codexSkills = [] } = useCodexSkills();
+  const { data: userPowers = [] } = useUserPowers();
+  const { data: enhancedItems = [] } = useEnhancedItems();
 
   useEffect(() => {
     if (sessionData && !initialized) {
@@ -48,13 +95,6 @@ export default function CraftingSessionPage() {
       setInitialized(true);
     }
   }, [sessionData, initialized]);
-
-  const rulesData = rules?.CRAFTING;
-  const { data: codexSkills = [] } = useCodexSkills();
-  const craftSubSkill = session?.data.item?.subSkillId
-    ? codexSkills.find((s: { id: string }) => String(s.id) === String(session.data.item?.subSkillId))
-    : null;
-  const effectiveDS = (session?.data.difficultyScore ?? 0) + (session?.data.dsModifier ?? 0);
 
   const updateData = useCallback(
     (updates: Partial<CraftingSessionType['data']>) => {
@@ -66,9 +106,143 @@ export default function CraftingSessionPage() {
     []
   );
 
+  // Autosave: debounced 2s after any change
+  useEffect(() => {
+    if (!session || !id || !initialized) return;
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      saveMutation.mutate({
+        id,
+        data: session.data,
+      });
+    }, 2000);
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.data, id, initialized]);
+
+  // --- Derived values ---
+
+  const item = session?.data.item ?? null;
+  const isConsumable = session?.data.isConsumable ?? false;
+  const quantity = session?.data.quantity ?? 1;
+  const isEnhanced = session?.data.isEnhanced ?? false;
+  const isCompleted = session?.data.status === 'completed';
+
+  const CRAFT_BASE_SKILL_ID = 13;
+  const craftSubSkills = useMemo(() => {
+    const withCraftDesc = codexSkills.filter(
+      (s: { base_skill_id?: number; craft_success_desc?: string; craft_failure_desc?: string }) =>
+        s.craft_success_desc || s.craft_failure_desc
+    );
+    const craftSubs = withCraftDesc.filter(
+      (s: { base_skill_id?: number }) => s.base_skill_id === CRAFT_BASE_SKILL_ID
+    );
+    return craftSubs.length > 0 ? craftSubs : withCraftDesc;
+  }, [codexSkills]);
+
+  const craftSubSkill = session?.data.item?.subSkillId
+    ? codexSkills.find((s: { id: string }) => String(s.id) === String(session.data.item?.subSkillId))
+    : null;
+
+  // Compute requirements from current session config + rules
+  const requirements = useMemo((): CraftingRequirements | null => {
+    if (!rulesData || !item) return null;
+    let base: CraftingRequirements | null = null;
+
+    if (isEnhanced && session?.data.powerRef) {
+      const multiIdx = session?.data.multipleUseTableIndex ?? -1;
+      const energyCost = session?.data.powerRef?.energyCost ?? 10;
+      const effectiveEnergy = multiIdx >= 0
+        ? getMultipleUseAdjustedEnergy(energyCost, multiIdx, rulesData)
+        : energyCost;
+      const req = isConsumable
+        ? getConsumableEnhancedRequirements(effectiveEnergy, rulesData)
+        : getEnhancedCraftingRequirements(effectiveEnergy, rulesData);
+      if (!req) return null;
+      base = req;
+    } else {
+      const req = getCraftingRequirements(item.marketPrice, isConsumable, rulesData);
+      if (!req) return null;
+      base = req;
+    }
+
+    // Apply quantity / bulk
+    const bulkItems = rulesData.bulkCraftCount ?? 4;
+    const bulkMaterialCount = rulesData.bulkCraftMaterialCount ?? 3;
+    const isBulkQuantity = quantity === bulkItems;
+    const multiplier = isBulkQuantity ? bulkMaterialCount : quantity;
+    if (multiplier > 1) {
+      base = {
+        ...base,
+        requiredSuccesses: base.requiredSuccesses * multiplier,
+        sessionCount: base.sessionCount * multiplier,
+        materialCost: base.materialCost * multiplier,
+        timeValue: base.timeValue * multiplier,
+      };
+    }
+
+    // Apply optional modifiers
+    let r = base;
+    const mods = session?.data.optionalModifiers;
+    const isCommonOrConsumableCommonToRare = r.rarity === 'Common' || (isConsumable && ['Common', 'Uncommon', 'Rare'].includes(r.rarity));
+    if (mods?.reduceDifficultyByTime && typeof mods.reduceDifficultyByTime === 'number' && mods.reduceDifficultyByTime > 0) {
+      for (let i = 0; i < mods.reduceDifficultyByTime; i++) {
+        r = applyReduceDifficultyByTime(r, isCommonOrConsumableCommonToRare, rulesData);
+      }
+    }
+    if ((mods?.reduceDifficultyByCostSteps ?? 0) > 0) {
+      r = applyReduceDifficultyByCost(r, mods!.reduceDifficultyByCostSteps!, rulesData);
+    }
+    if ((mods?.reduceTimeByDifficultySteps ?? 0) > 0) {
+      r = applyReduceTimeByDifficulty(r, mods!.reduceTimeByDifficultySteps!, rulesData);
+    }
+    if ((mods?.reduceTimeByCostSteps ?? 0) > 0) {
+      r = applyReduceTimeByCost(r, mods!.reduceTimeByCostSteps!, rulesData);
+    }
+    return r;
+  }, [item, isConsumable, isEnhanced, session?.data.powerRef, session?.data.multipleUseTableIndex, session?.data.optionalModifiers, quantity, rulesData]);
+
+  // Sync requirements -> session snapshot when requirements change and item is set
+  useEffect(() => {
+    if (!requirements || !session || !item) return;
+    const needsSync =
+      session.data.difficultyScore !== requirements.difficultyScore ||
+      session.data.requiredSuccesses !== requirements.requiredSuccesses ||
+      session.data.materialCost !== requirements.materialCost ||
+      session.data.timeValue !== requirements.timeValue ||
+      session.data.sessionCount !== requirements.sessionCount;
+    if (!needsSync) return;
+
+    const labels = getCraftingSessionLabels(requirements.timeValue, requirements.timeUnit, requirements.sessionCount);
+    const existingSessions = session.data.sessions ?? [];
+    const newSessions: CraftingRollSession[] = labels.map((label, i) => {
+      if (i < existingSessions.length) {
+        return { ...existingSessions[i], label };
+      }
+      return { label, roll: null, successes: 0, failures: 0 };
+    });
+
+    updateData({
+      status: 'in_progress',
+      difficultyScore: requirements.difficultyScore,
+      requiredSuccesses: requirements.requiredSuccesses,
+      materialCost: requirements.materialCost,
+      timeValue: requirements.timeValue,
+      timeUnit: requirements.timeUnit,
+      sessionCount: requirements.sessionCount,
+      sessions: newSessions,
+      isBulk: quantity === (rulesData?.bulkCraftCount ?? 4),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requirements]);
+
+  const effectiveDS = (session?.data.difficultyScore ?? 0) + (session?.data.dsModifier ?? 0);
+
   const updateSessionRoll = useCallback(
     (index: number, roll: number | null) => {
-      if (!session || !rulesData) return;
+      if (!session) return;
       const sessions = [...session.data.sessions];
       if (index < 0 || index >= sessions.length) return;
       const label = sessions[index].label;
@@ -79,8 +253,24 @@ export default function CraftingSessionPage() {
       sessions[index] = { label, roll, successes, failures };
       updateData({ sessions });
     },
-    [session, effectiveDS, rulesData, updateData]
+    [session, effectiveDS, updateData]
   );
+
+  // Recompute all roll results when DS changes
+  useEffect(() => {
+    if (!session || !initialized) return;
+    const sessions = session.data.sessions;
+    if (!sessions?.length) return;
+    let changed = false;
+    const updated = sessions.map((s) => {
+      if (s.roll == null) return s;
+      const { successes, failures } = computeSkillRollResult(s.roll, effectiveDS);
+      if (successes !== s.successes || failures !== s.failures) changed = true;
+      return { ...s, successes, failures };
+    });
+    if (changed) updateData({ sessions: updated });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveDS]);
 
   const totalSuccesses =
     (session?.data.sessions?.reduce((a, s) => a + s.successes, 0) ?? 0) +
@@ -90,77 +280,98 @@ export default function CraftingSessionPage() {
     (session?.data.additionalFailures ?? 0);
   const required = session?.data.requiredSuccesses ?? 0;
   const netDelta = totalSuccesses - totalFailures - required;
-  const isCompleted = session?.data.status === 'completed';
 
-  const handleSave = useCallback(async () => {
-    if (!session || !id) return;
-    await saveMutation.mutateAsync({
-      id,
-      data: {
-        status: session.data.status,
-        dsModifier: session.data.dsModifier,
-        additionalSuccesses: session.data.additionalSuccesses,
-        additionalFailures: session.data.additionalFailures,
-        sessions: session.data.sessions,
-        netDelta: session.data.netDelta,
-        outcome: session.data.outcome,
-      },
-    });
-  }, [id, session, saveMutation]);
-
-  const handleComplete = useCallback(async () => {
-    if (!session || !id || !rulesData || !session.data.item) return;
-    const materialCost = session.data.materialCost ?? 0;
-    const marketPrice = session.data.item.marketPrice ?? 0;
-    const outcome = calculateCraftingOutcome(
+  const liveOutcome = useMemo(() => {
+    if (!rulesData || !item?.marketPrice) return null;
+    return calculateCraftingOutcome(
       netDelta,
-      materialCost,
-      marketPrice,
+      session?.data.materialCost ?? 0,
+      item.marketPrice,
       rulesData.successesTable
     );
-    setSession((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
-          status: 'completed',
-          netDelta,
-          outcome: {
-            finalMaterialCost: outcome.finalMaterialCost,
-            materialsRetained: outcome.materialsRetained,
-            itemWorth: outcome.itemWorth,
-            extraItemCount: outcome.extraItemCount,
-            choiceExtraOrEnhance: outcome.choiceExtraOrEnhance,
-            effectText: outcome.effectText,
-          },
-        },
-      };
-    });
-    // Save after state update
-    setTimeout(async () => {
-      await saveMutation.mutateAsync({
-        id,
-        data: {
-          status: 'completed',
-          netDelta,
-          outcome: {
-            finalMaterialCost: outcome.finalMaterialCost,
-            materialsRetained: outcome.materialsRetained,
-            itemWorth: outcome.itemWorth,
-            extraItemCount: outcome.extraItemCount,
-            choiceExtraOrEnhance: outcome.choiceExtraOrEnhance,
-            effectText: outcome.effectText,
-          },
-        },
-      });
-    }, 0);
-  }, [session, id, rulesData, netDelta, saveMutation]);
+  }, [rulesData, item?.marketPrice, netDelta, session?.data.materialCost]);
+
+  const handleComplete = useCallback(async () => {
+    if (!session || !id || !rulesData || !item) return;
+    const outcome = calculateCraftingOutcome(
+      netDelta,
+      session.data.materialCost ?? 0,
+      item.marketPrice ?? 0,
+      rulesData.successesTable
+    );
+    const completedData = {
+      ...session.data,
+      status: 'completed' as const,
+      netDelta,
+      outcome: {
+        finalMaterialCost: outcome.finalMaterialCost,
+        materialsRetained: outcome.materialsRetained,
+        itemWorth: outcome.itemWorth,
+        extraItemCount: outcome.extraItemCount,
+        choiceExtraOrEnhance: outcome.choiceExtraOrEnhance,
+        effectText: outcome.effectText,
+      },
+    };
+    setSession((prev) => prev ? { ...prev, data: completedData } : prev);
+    try {
+      await saveMutation.mutateAsync({ id, data: completedData });
+      showToast('Crafting complete!', 'success');
+    } catch {
+      showToast('Failed to save outcome', 'error');
+    }
+  }, [session, id, rulesData, item, netDelta, saveMutation, showToast]);
+
+  // --- Handlers for item selection & options ---
+
+  const handleItemSelect = (selected: CraftingSelectedItem) => {
+    const ref = toCraftingItemRef(selected);
+    updateData({ item: ref });
+    setItemSelectOpen(false);
+  };
+
+  const setOptionModifier = (key: string, value: number) => {
+    const prev = session?.data.optionalModifiers ?? {};
+    updateData({ optionalModifiers: { ...prev, [key]: value } });
+  };
+
+  // --- Optional rules: compute valid options ---
+
+  const maxReduceTimeByDifficultySteps = useMemo(() => {
+    if (!rulesData?.optionalReduceTimeByDifficulty || !requirements) return 0;
+    const opt = rulesData.optionalReduceTimeByDifficulty;
+    const isShort = (requirements.timeUnit === 'days' && requirements.timeValue < 5) || requirements.timeUnit === 'hours';
+    if (isShort) return opt.halfTimeWhenUnder5Days ? 1 : 0;
+    const maxByTime = Math.floor((requirements.timeValue - 1) / opt.daysReductionPerStep);
+    const maxBySuccesses = requirements.requiredSuccesses - 1;
+    return Math.min(opt.maxSteps, maxByTime, maxBySuccesses);
+  }, [rulesData, requirements]);
+
+  const maxReduceTimeByCostSteps = useMemo(() => {
+    if (!rulesData?.optionalReduceTimeByCost || !requirements) return 0;
+    const opt = rulesData.optionalReduceTimeByCost;
+    const isShort = (requirements.timeUnit === 'days' && requirements.timeValue < 5) || requirements.timeUnit === 'hours';
+    if (isShort) return opt.halfTimeWhenUnder5Days ? 1 : 0;
+    const maxByTime = Math.floor((requirements.timeValue - 1) / opt.daysReductionPerStep);
+    const maxBySuccesses = requirements.requiredSuccesses - 1;
+    return Math.min(opt.maxSteps, maxByTime, maxBySuccesses);
+  }, [rulesData, requirements]);
+
+  const maxReduceDifficultyByTimeSteps = useMemo(() => {
+    if (!rulesData?.optionalReduceDifficultyByTime || !requirements) return 0;
+    return Math.min(5, Math.max(0, Math.floor((requirements.difficultyScore - 1) / (rulesData.optionalReduceDifficultyByTime.dsReduction || 1))));
+  }, [rulesData, requirements]);
+
+  const maxReduceDifficultyByCostSteps = useMemo(() => {
+    if (!rulesData?.optionalReduceDifficultyByCost) return 0;
+    return rulesData.optionalReduceDifficultyByCost.maxSteps;
+  }, [rulesData]);
+
+  // --- Rendering ---
 
   if (isLoading || !initialized) {
     return (
       <PageContainer size="xl">
-        <LoadingState message="Loading session..." size="lg" />
+        <LoadingState message="Loading crafting session..." size="lg" />
       </PageContainer>
     );
   }
@@ -181,22 +392,10 @@ export default function CraftingSessionPage() {
     );
   }
 
-  const item = session.data.item;
   const sessions = session.data.sessions ?? [];
   const outcome = session.data.outcome;
-  const isUpgrade = session.data.isUpgrade === true;
-  const upgradeOriginal = session.data.upgradeOriginalItem;
-  const optionalModifiers = session.data.optionalModifiers;
-  const displayName =
-    item?.name ??
-    (session.data.isEnhanced ? session.data.customBaseItem?.name : null) ??
-    (isUpgrade && upgradeOriginal && 'name' in upgradeOriginal ? upgradeOriginal.name : null) ??
-    'Crafting session';
-  const upgradeLabel = isUpgrade && upgradeOriginal && item
-    ? `${'name' in upgradeOriginal ? upgradeOriginal.name : 'Original'} → ${item.name}`
-    : null;
-  const isUpgradePotency = session.data.isUpgradePotency === true;
-  const upgradePotencyLabel = isUpgradePotency && item ? `Upgrade potency: ${item.name}` : null;
+  const displayName = item?.name ?? 'New Crafting Session';
+  const mods = session.data.optionalModifiers ?? {};
 
   return (
     <PageContainer size="xl">
@@ -210,95 +409,353 @@ export default function CraftingSessionPage() {
         </Link>
       </div>
       <PageHeader
-        title={upgradePotencyLabel ?? upgradeLabel ?? displayName}
-        description={
-          item
-            ? `Difficulty Score ${effectiveDS} (base ${session.data.difficultyScore}${session.data.dsModifier ? ` + ${session.data.dsModifier} modifier` : ''}) · ${session.data.requiredSuccesses} success${session.data.requiredSuccesses !== 1 ? 'es' : ''} required${isUpgrade ? ' · Upgrade' : ''}${isUpgradePotency ? ' · Upgrade potency' : ''}`
-            : undefined
+        icon={<Hammer className="w-6 h-6" />}
+        title={displayName}
+        description={item
+          ? `${requirements?.rarity ?? ''} · DS ${effectiveDS} · ${required} success${required !== 1 ? 'es' : ''} required`
+          : 'Select an item to begin crafting.'
         }
       />
 
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Summary */}
-        <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-          <SectionHeader title="Summary" size="md" className="mb-3" />
-          <ul className="text-sm text-text-secondary space-y-1.5">
-            {isUpgradePotency && (
-              <li>Upgrade potency: 25% of original time, cost, and successes; same Difficulty Score</li>
-            )}
-            {isUpgrade && upgradeOriginal && (
-              <li>Upgrade: {'name' in upgradeOriginal ? upgradeOriginal.name : 'Original'} ({'marketPrice' in upgradeOriginal ? upgradeOriginal.marketPrice : 0} → {item?.marketPrice ?? 0} currency)</li>
-            )}
-            <li>Material cost: {session.data.materialCost ?? 0} currency</li>
-            <li>Time: {session.data.timeValue} {session.data.timeUnit}</li>
-            <li>Consumable: {session.data.isConsumable ? 'Yes' : 'No'}</li>
-            <li>Bulk: {session.data.isBulk ? 'Yes (4 items)' : 'No'}</li>
-            {optionalModifiers && (optionalModifiers.reduceTimeByDifficultySteps ?? optionalModifiers.reduceTimeByCostSteps ?? optionalModifiers.reduceDifficultyByTime ?? (optionalModifiers.reduceDifficultyByCostSteps ?? 0) > 0) && (
-              <li>Optional rules: Reduce time by difficulty {optionalModifiers.reduceTimeByDifficultySteps ?? 0} steps, by cost {optionalModifiers.reduceTimeByCostSteps ?? 0} steps; Reduce difficulty by time {optionalModifiers.reduceDifficultyByTime ? 'yes' : 'no'}, by cost {optionalModifiers.reduceDifficultyByCostSteps ?? 0} steps</li>
-            )}
-          </ul>
-        </section>
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* ───────── Main content (left 2/3) ───────── */}
+        <div className="lg:col-span-2 space-y-6 order-2 lg:order-1 min-w-0">
 
-        {!isCompleted && (
-          <>
-            {/* Difficulty modifier & additional successes/failures */}
+          {/* Item selection */}
+          <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+            <SectionHeader title="Item" size="md" className="mb-2" />
+            {item ? (
+              <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt">
+                <span className="font-medium text-text-primary">{item.name}</span>
+                <span className="text-sm text-text-muted dark:text-text-secondary">{item.marketPrice} currency</span>
+                {!isCompleted && (
+                  <Button variant="secondary" size="sm" onClick={() => setItemSelectOpen(true)} aria-label="Change item">
+                    Change
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Button onClick={() => setItemSelectOpen(true)} aria-label="Select item to craft">
+                Select item to craft
+              </Button>
+            )}
+          </section>
+
+          {/* Options: consumable, quantity, enhanced, sub-skill */}
+          {!isCompleted && (
+            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+              <SectionHeader title="Options" size="md" className="mb-3" />
+              <div className="flex flex-wrap gap-6 items-start">
+                <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                  <input
+                    type="checkbox"
+                    checked={isConsumable}
+                    onChange={(e) => updateData({ isConsumable: e.target.checked })}
+                    className="rounded border-border"
+                  />
+                  <span className="text-text-primary">Consumable</span>
+                </label>
+                {isConsumable && rulesData && (
+                  <p className="text-xs text-text-muted dark:text-text-secondary max-w-xs self-center">
+                    Crafting time is reduced to {Math.round(rulesData.consumableTimeMultiplier * 100)}% of normal.
+                  </p>
+                )}
+
+                <div>
+                  <span className="block text-sm font-medium text-text-secondary mb-1">Quantity</span>
+                  <ValueStepper
+                    value={quantity}
+                    onChange={(v) => updateData({ quantity: Math.max(1, v) })}
+                    min={1}
+                    max={20}
+                    step={1}
+                    decrementTitle="Decrease quantity"
+                    incrementTitle="Increase quantity"
+                  />
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1 max-w-[200px]">
+                    {quantity === (rulesData?.bulkCraftCount ?? 4)
+                      ? `Bulk: pay for ${rulesData?.bulkCraftMaterialCount ?? 3}, receive ${rulesData?.bulkCraftCount ?? 4}.`
+                      : `Crafting ${quantity} item${quantity !== 1 ? 's' : ''}.`
+                    }
+                  </p>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                  <input
+                    type="checkbox"
+                    checked={isEnhanced}
+                    onChange={(e) => {
+                      updateData({ isEnhanced: e.target.checked });
+                      if (!e.target.checked) updateData({ powerRef: null });
+                    }}
+                    className="rounded border-border"
+                  />
+                  <span className="text-text-primary">Enhanced</span>
+                </label>
+              </div>
+
+              {/* Enhanced power selection */}
+              {isEnhanced && (
+                <div className="mt-4 pt-4 border-t border-border-light space-y-3">
+                  <div>
+                    <label htmlFor="enhanced-power" className="block text-sm font-medium text-text-secondary mb-1">Power to imbue</label>
+                    <select
+                      id="enhanced-power"
+                      value={session.data.powerRef?.id ?? ''}
+                      onChange={(e) => {
+                        const pid = e.target.value;
+                        const p = userPowers.find((x) => x.id === pid);
+                        if (p) {
+                          const ref: CraftingPowerRef = { source: 'library', id: p.id, name: p.name, energyCost: (p as unknown as { energyCost?: number }).energyCost ?? 10 };
+                          updateData({ powerRef: ref });
+                        } else {
+                          updateData({ powerRef: null });
+                        }
+                      }}
+                      className="w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                    >
+                      <option value="">Select a power</option>
+                      {userPowers.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {session.data.powerRef && (
+                    <div>
+                      <label htmlFor="energy-cost" className="block text-sm font-medium text-text-secondary mb-1">Energy cost</label>
+                      <Input
+                        id="energy-cost"
+                        type="number"
+                        min={0}
+                        max={200}
+                        value={session.data.powerRef.energyCost}
+                        onChange={(e) => {
+                          if (!session.data.powerRef) return;
+                          updateData({ powerRef: { ...session.data.powerRef, energyCost: Number(e.target.value) || 0 } });
+                        }}
+                        className="w-24"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Craft sub-skill */}
+              {craftSubSkills.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border-light">
+                  <label htmlFor="craft-subskill" className="block text-sm font-medium text-text-secondary mb-1">
+                    Craft sub-skill
+                  </label>
+                  <select
+                    id="craft-subskill"
+                    value={session.data.item?.subSkillId ?? ''}
+                    onChange={(e) => {
+                      if (!session.data.item) return;
+                      updateData({ item: { ...session.data.item, subSkillId: e.target.value || null } });
+                    }}
+                    className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px] max-w-md"
+                    aria-label="Craft sub-skill for flavor text"
+                  >
+                    <option value="">None</option>
+                    {craftSubSkills.map((s: { id: string; name: string }) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Optional rules: reduce time / reduce difficulty */}
+          {!isCompleted && item && requirements && rulesData && (
+            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+              <SectionHeader title="Crafting Adjustments" size="md" className="mb-2" />
+              <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
+                Trade time for difficulty (or vice versa), or spend more resources to speed up or simplify crafting.
+              </p>
+              <div className="space-y-5">
+                {/* Reduce Time by Increasing Difficulty */}
+                {rulesData.optionalReduceTimeByDifficulty && maxReduceTimeByDifficultySteps > 0 && (
+                  <div>
+                    <label htmlFor="opt-rt-ds" className="block text-sm font-medium text-text-primary mb-1">
+                      Reduce Time (increase DS)
+                    </label>
+                    <select
+                      id="opt-rt-ds"
+                      value={mods.reduceTimeByDifficultySteps ?? 0}
+                      onChange={(e) => setOptionModifier('reduceTimeByDifficultySteps', Number(e.target.value))}
+                      className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                      aria-label="Reduce time by increasing difficulty"
+                    >
+                      <option value={0}>No change</option>
+                      {Array.from({ length: maxReduceTimeByDifficultySteps }, (_, i) => i + 1).map((n) => {
+                        const opt = rulesData.optionalReduceTimeByDifficulty!;
+                        const isShort = (requirements.timeUnit === 'days' && requirements.timeValue < 5) || requirements.timeUnit === 'hours';
+                        if (isShort) {
+                          return (
+                            <option key={n} value={n}>
+                              Halve time (+{opt.dsIncreasePerStep} DS)
+                            </option>
+                          );
+                        }
+                        return (
+                          <option key={n} value={n}>
+                            −{n * opt.daysReductionPerStep} days, −{n * opt.successesReductionPerStep} success{n * opt.successesReductionPerStep !== 1 ? 'es' : ''}, +{n * opt.dsIncreasePerStep} DS
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
+                {/* Reduce Time by Increasing Cost */}
+                {rulesData.optionalReduceTimeByCost && maxReduceTimeByCostSteps > 0 && (
+                  <div>
+                    <label htmlFor="opt-rt-cost" className="block text-sm font-medium text-text-primary mb-1">
+                      Reduce Time (increase cost)
+                    </label>
+                    <select
+                      id="opt-rt-cost"
+                      value={mods.reduceTimeByCostSteps ?? 0}
+                      onChange={(e) => setOptionModifier('reduceTimeByCostSteps', Number(e.target.value))}
+                      className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                      aria-label="Reduce time by increasing cost"
+                    >
+                      <option value={0}>No change</option>
+                      {Array.from({ length: maxReduceTimeByCostSteps }, (_, i) => i + 1).map((n) => {
+                        const opt = rulesData.optionalReduceTimeByCost!;
+                        const isShort = (requirements.timeUnit === 'days' && requirements.timeValue < 5) || requirements.timeUnit === 'hours';
+                        if (isShort) {
+                          return (
+                            <option key={n} value={n}>
+                              Halve time (+50% cost)
+                            </option>
+                          );
+                        }
+                        return (
+                          <option key={n} value={n}>
+                            −{n * opt.daysReductionPerStep} days, −{n * opt.successesReductionPerStep} success{n * opt.successesReductionPerStep !== 1 ? 'es' : ''}, +{n * opt.costIncreasePercentPerStep}% cost
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
+                {/* Reduce Difficulty by Spending More Time */}
+                {rulesData.optionalReduceDifficultyByTime && maxReduceDifficultyByTimeSteps > 0 && (
+                  <div>
+                    <label htmlFor="opt-rd-time" className="block text-sm font-medium text-text-primary mb-1">
+                      Reduce DS (spend more time)
+                    </label>
+                    <select
+                      id="opt-rd-time"
+                      value={typeof mods.reduceDifficultyByTime === 'number' ? mods.reduceDifficultyByTime : (mods.reduceDifficultyByTime ? 1 : 0)}
+                      onChange={(e) => setOptionModifier('reduceDifficultyByTime', Number(e.target.value))}
+                      className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                      aria-label="Reduce difficulty by spending more time"
+                    >
+                      <option value={0}>No change</option>
+                      {Array.from({ length: maxReduceDifficultyByTimeSteps }, (_, i) => i + 1).map((n) => {
+                        const opt = rulesData.optionalReduceDifficultyByTime!;
+                        const isCommon = requirements.rarity === 'Common' || (isConsumable && ['Common', 'Uncommon', 'Rare'].includes(requirements.rarity));
+                        const extraDays = isCommon ? opt.additionalDaysCommon : opt.additionalDaysOther;
+                        return (
+                          <option key={n} value={n}>
+                            −{n * opt.dsReduction} DS, +{n * extraDays} days, +{n * opt.successesIncrease} success{n * opt.successesIncrease !== 1 ? 'es' : ''} required
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
+                {/* Reduce Difficulty by Spending More Resources */}
+                {rulesData.optionalReduceDifficultyByCost && maxReduceDifficultyByCostSteps > 0 && (
+                  <div>
+                    <label htmlFor="opt-rd-cost" className="block text-sm font-medium text-text-primary mb-1">
+                      Reduce DS (spend more resources)
+                    </label>
+                    <select
+                      id="opt-rd-cost"
+                      value={mods.reduceDifficultyByCostSteps ?? 0}
+                      onChange={(e) => setOptionModifier('reduceDifficultyByCostSteps', Number(e.target.value))}
+                      className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                      aria-label="Reduce difficulty by spending more resources"
+                    >
+                      <option value={0}>No change</option>
+                      {Array.from({ length: maxReduceDifficultyByCostSteps }, (_, i) => i + 1).map((n) => {
+                        const opt = rulesData.optionalReduceDifficultyByCost!;
+                        return (
+                          <option key={n} value={n}>
+                            −{n * opt.dsReduction} DS, +{n * opt.costIncreasePercent}% cost
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* Modifiers: DS modifier + additional successes/failures */}
+          {!isCompleted && item && (
             <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
               <SectionHeader title="Modifiers" size="md" className="mb-3" />
               <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-                Adjust the effective Difficulty Score or add bonus successes/failures (e.g. from tools or help).
+                Adjust the effective DS or add bonus successes/failures (finer tools, help, environmental bonuses).
               </p>
               <div className="flex flex-wrap gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Difficulty modifier
-                  </label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">DS modifier</label>
                   <ValueStepper
                     value={session.data.dsModifier ?? 0}
                     onChange={(v) => updateData({ dsModifier: v })}
                     min={-10}
                     max={10}
                     step={1}
-                    decrementTitle="Decrease difficulty modifier"
-                    incrementTitle="Increase difficulty modifier"
+                    formatValue={(v) => (v >= 0 ? `+${v}` : `${v}`)}
+                    colorValue
+                    decrementTitle="Decrease DS modifier"
+                    incrementTitle="Increase DS modifier"
                   />
-                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Effective Difficulty Score: {effectiveDS}</p>
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Effective DS: {effectiveDS}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Bonus successes
-                  </label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Additional successes</label>
                   <ValueStepper
                     value={session.data.additionalSuccesses ?? 0}
                     onChange={(v) => updateData({ additionalSuccesses: v })}
                     min={0}
                     max={20}
                     step={1}
-                    decrementTitle="Decrease bonus successes"
-                    incrementTitle="Increase bonus successes"
+                    decrementTitle="Remove additional success"
+                    incrementTitle="Add additional success"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Bonus failures
-                  </label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Additional failures</label>
                   <ValueStepper
                     value={session.data.additionalFailures ?? 0}
                     onChange={(v) => updateData({ additionalFailures: v })}
                     min={0}
                     max={20}
                     step={1}
-                    decrementTitle="Decrease bonus failures"
-                    incrementTitle="Increase bonus failures"
+                    decrementTitle="Remove additional failure"
+                    incrementTitle="Add additional failure"
                   />
                 </div>
               </div>
             </section>
+          )}
 
-            {/* Roll sessions */}
+          {/* Roll sessions */}
+          {!isCompleted && sessions.length > 0 && (
             <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-              <SectionHeader title="Crafting rolls" size="md" className="mb-2" />
+              <SectionHeader title="Crafting Rolls" size="md" className="mb-2" />
               <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-                Enter the total of each roll (d20 + modifiers) for the period. Successes and failures are calculated from your effective Difficulty Score ({effectiveDS}).
+                Enter each roll total (d20 + modifiers). Results auto-calculate against DS {effectiveDS}.
               </p>
               <div className="space-y-3">
                 {sessions.map((s, i) => {
@@ -306,187 +763,283 @@ export default function CraftingSessionPage() {
                   const isSuccess = hasRoll && s.successes > 0;
                   const isFailure = hasRoll && s.failures > 0;
                   return (
-                  <div
-                    key={s.label}
-                    className={cn(
-                      'flex flex-wrap items-center gap-4 p-3 sm:p-4 rounded-xl border border-border-light transition-colors',
-                      hasRoll && isSuccess && 'bg-green-50/50 dark:bg-green-900/10 border-l-4 border-l-green-500',
-                      hasRoll && isFailure && 'bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500',
-                      hasRoll && !isSuccess && !isFailure && 'bg-surface-alt border-l-4 border-l-border-light'
-                    )}
-                  >
-                    <span className="font-medium text-text-primary w-28 shrink-0">{s.label}</span>
-                    <div className="flex items-center gap-2">
-                      <label className="sr-only" htmlFor={`roll-${id}-${i}`}>
-                        Roll for {s.label}
-                      </label>
-                      <Input
-                        id={`roll-${id}-${i}`}
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={s.roll ?? ''}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          updateSessionRoll(i, v === '' ? null : parseInt(v, 10));
-                        }}
-                        placeholder="Roll total"
-                        className="w-20 min-h-[44px]"
-                      />
-                    </div>
-                    {s.roll != null && (
-                      <span className="text-sm">
-                        <span className="text-success-700 dark:text-success-400 font-medium">
-                          +{s.successes} success{s.successes !== 1 ? 'es' : ''}
+                    <div
+                      key={s.label}
+                      className={cn(
+                        'flex flex-wrap items-center gap-4 p-3 sm:p-4 rounded-xl border transition-colors',
+                        hasRoll && isSuccess && 'bg-green-50/50 dark:bg-green-900/10 border-l-4 border-l-green-500 border-border-light',
+                        hasRoll && isFailure && 'bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500 border-border-light',
+                        !hasRoll && 'border-border-light'
+                      )}
+                    >
+                      <span className="font-medium text-text-primary w-28 shrink-0">{s.label}</span>
+                      <div className="flex items-center gap-2">
+                        <label className="sr-only" htmlFor={`roll-${id}-${i}`}>Roll for {s.label}</label>
+                        <Input
+                          id={`roll-${id}-${i}`}
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={s.roll ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            updateSessionRoll(i, v === '' ? null : parseInt(v, 10));
+                          }}
+                          placeholder="Roll"
+                          className="w-20 min-h-[44px]"
+                        />
+                      </div>
+                      {hasRoll && (
+                        <span className="text-sm flex items-center gap-1">
+                          {isSuccess && (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 text-success-700 dark:text-success-400" />
+                              <span className="text-success-700 dark:text-success-400 font-medium">
+                                {s.successes} success{s.successes !== 1 ? 'es' : ''}
+                              </span>
+                            </>
+                          )}
+                          {isFailure && (
+                            <>
+                              <XCircle className="w-4 h-4 text-danger-700 dark:text-danger-400" />
+                              <span className="text-danger-700 dark:text-danger-400 font-medium">
+                                {s.failures} failure{s.failures !== 1 ? 's' : ''}
+                              </span>
+                            </>
+                          )}
                         </span>
-                        {s.failures > 0 && (
-                          <>
-                            {' '}
-                            <span className="text-danger-700 dark:text-danger-400 font-medium">
-                              −{s.failures} failure{s.failures !== 1 ? 's' : ''}
-                            </span>
-                          </>
-                        )}
-                      </span>
-                    )}
-                  </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
             </section>
+          )}
 
-            {/* Result: successes vs required */}
+          {/* Result tracker */}
+          {!isCompleted && item && sessions.length > 0 && (
             <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
               <SectionHeader title="Result" size="md" className="mb-2" />
-              <p className="text-sm text-text-secondary mb-2">
-                Total successes: <strong className="text-text-primary">{totalSuccesses}</strong> · Total failures: <strong className="text-text-primary">{totalFailures}</strong> · Required: <strong className="text-text-primary">{required}</strong>
-              </p>
+              <div className="flex flex-wrap items-center gap-4 mb-3">
+                <div className="text-sm text-text-secondary">
+                  Successes: <strong className="text-text-primary">{totalSuccesses}</strong>
+                </div>
+                <div className="text-sm text-text-secondary">
+                  Failures: <strong className="text-text-primary">{totalFailures}</strong>
+                </div>
+                <div className="text-sm text-text-secondary">
+                  Required: <strong className="text-text-primary">{required}</strong>
+                </div>
+              </div>
               <p className={cn(
-                'mt-2 font-semibold',
+                'font-semibold text-lg',
                 netDelta >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'
               )}>
                 {netDelta >= 0
-                  ? `${netDelta} over target — success`
-                  : `${Math.abs(netDelta)} under target — shortfall`}
+                  ? `+${netDelta} over target`
+                  : `${Math.abs(netDelta)} under target`}
               </p>
-            </section>
-
-            <div className="flex flex-wrap gap-3">
-              <Button variant="ghost" onClick={handleSave} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? 'Saving...' : 'Save progress'}
-              </Button>
-              <Button
-                onClick={handleComplete}
-                disabled={saveMutation.isPending}
-              >
-                Complete crafting
-              </Button>
-            </div>
-          </>
-        )}
-
-        {isCompleted && outcome && (
-          <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-            <SectionHeader title="Outcome" size="md" className="mb-3" />
-            <p className="text-text-secondary whitespace-pre-wrap">{outcome.effectText}</p>
-            {craftSubSkill && (craftSubSkill.craft_success_desc || craftSubSkill.craft_failure_desc) && (
-              <div className="mt-3 pt-3 border-t border-border-light">
-                <p className="text-xs font-medium text-text-muted dark:text-text-secondary uppercase tracking-wide mb-1">
-                  {craftSubSkill.name} — {netDelta >= 0 ? 'Success' : 'Failure'}
-                </p>
-                <p className="text-sm text-text-secondary whitespace-pre-wrap">
-                  {netDelta >= 0
-                    ? (craftSubSkill.craft_success_desc ?? '')
-                    : (craftSubSkill.craft_failure_desc ?? '')}
-                </p>
-              </div>
-            )}
-            <ul className="mt-3 text-sm text-text-secondary space-y-1">
-              <li>Materials spent: {Math.ceil(outcome.finalMaterialCost)} currency</li>
-              <li>Materials recovered: {Math.ceil(outcome.materialsRetained)} currency</li>
-              <li>Item value: {Math.ceil(outcome.itemWorth)} currency</li>
-              {outcome.extraItemCount > 0 && (
-                <li>Extra items gained: {outcome.extraItemCount}</li>
+              {liveOutcome && (
+                <div className="mt-3 pt-3 border-t border-border-light">
+                  <p className="text-xs font-medium text-text-muted dark:text-text-secondary uppercase tracking-wide mb-2">
+                    Projected outcome
+                  </p>
+                  <ul className="text-sm text-text-secondary space-y-1">
+                    <li>Net material cost: {Math.ceil(liveOutcome.finalMaterialCost)} currency</li>
+                    <li>Materials recovered: {Math.ceil(liveOutcome.materialsRetained)} currency</li>
+                    <li>Item market value: {Math.ceil(liveOutcome.itemWorth)} currency</li>
+                    {liveOutcome.extraItemCount > 0 && (
+                      <li>Extra items: {liveOutcome.extraItemCount}</li>
+                    )}
+                    {liveOutcome.choiceExtraOrEnhance && (
+                      <li className="text-text-primary font-medium">Choice: extra item at 100% or enhance to 200%</li>
+                    )}
+                  </ul>
+                </div>
               )}
-              {outcome.choiceExtraOrEnhance && (
-                <li>Your choice: one extra item at full value, or enhance this item to 200% value</li>
-              )}
-            </ul>
-            {session.data.isEnhanced && session.data.powerRef && !session.data.isUpgradePotency && (
-              <div className="mt-4 pt-4 border-t border-border-light">
-                <p className="text-sm text-text-secondary mb-2">Save this enhanced item to My Library to reuse it.</p>
+
+              <div className="flex flex-wrap gap-3 mt-4">
                 <Button
-                  onClick={async () => {
-                    try {
-                      const baseItem = session.data.customBaseItem ?? session.data.item;
-                      if (!baseItem || !session.data.powerRef) return;
-                      const name = `${'name' in baseItem ? baseItem.name : session.data.item?.name ?? 'Item'} (${session.data.powerRef.name})`;
-                      await createEnhanced.mutateAsync({
-                        name,
-                        baseItem,
-                        powerRef: session.data.powerRef,
-                        potency: typeof session.data.potency === 'number' ? session.data.potency : undefined,
-                        usesType: session.data.multipleUseTableIndex != null && session.data.multipleUseTableIndex >= 0 ? 'multiple' : undefined,
-                        usesCount: session.data.multipleUseTableIndex != null && session.data.multipleUseTableIndex >= 0 ? undefined : undefined,
-                      });
-                      showToast('Saved to Enhanced Equipment in Library', 'success');
-                    } catch (e) {
-                      showToast((e as Error)?.message ?? 'Failed to save to library', 'error');
-                    }
-                  }}
-                  disabled={createEnhanced.isPending}
+                  onClick={handleComplete}
+                  disabled={saveMutation.isPending}
                 >
-                  {createEnhanced.isPending ? 'Saving...' : 'Save to Library'}
+                  {saveMutation.isPending ? 'Completing...' : 'Complete Crafting'}
                 </Button>
               </div>
-            )}
-            {session.data.isUpgradePotency && session.data.upgradePotencyEnhancedItemId && (
-              <div className="mt-4 pt-4 border-t border-border-light">
-                <p className="text-sm text-text-secondary mb-2">
-                  Update the enhanced item&apos;s potency in your library to the upgrader&apos;s new potency.
-                </p>
-                <div className="flex flex-wrap items-center gap-3">
-                  <label htmlFor="upgrade-potency-input" className="block text-sm font-medium text-text-secondary">
-                    New potency
-                  </label>
-                  <Input
-                    id="upgrade-potency-input"
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={upgradePotencyValue}
-                    onChange={(e) => setUpgradePotencyValue(e.target.value)}
-                    placeholder="e.g. 25"
-                    className="w-24"
-                    aria-label="New potency for enhanced item"
-                  />
+            </section>
+          )}
+
+          {/* Completed outcome */}
+          {isCompleted && outcome && (
+            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+              <SectionHeader title="Outcome" size="md" className="mb-3" />
+              <p className="text-text-secondary whitespace-pre-wrap">{outcome.effectText}</p>
+              {craftSubSkill && (craftSubSkill.craft_success_desc || craftSubSkill.craft_failure_desc) && (
+                <div className="mt-3 pt-3 border-t border-border-light">
+                  <p className="text-xs font-medium text-text-muted dark:text-text-secondary uppercase tracking-wide mb-1">
+                    {craftSubSkill.name} — {netDelta >= 0 ? 'Success' : 'Failure'}
+                  </p>
+                  <p className="text-sm text-text-secondary whitespace-pre-wrap">
+                    {netDelta >= 0
+                      ? (craftSubSkill.craft_success_desc ?? '')
+                      : (craftSubSkill.craft_failure_desc ?? '')}
+                  </p>
+                </div>
+              )}
+              <ul className="mt-3 text-sm text-text-secondary space-y-1">
+                <li>Materials spent: {Math.ceil(outcome.finalMaterialCost)} currency</li>
+                <li>Materials recovered: {Math.ceil(outcome.materialsRetained)} currency</li>
+                <li>Item value: {Math.ceil(outcome.itemWorth)} currency</li>
+                {outcome.extraItemCount > 0 && (
+                  <li>Extra items: {outcome.extraItemCount}</li>
+                )}
+                {outcome.choiceExtraOrEnhance && (
+                  <li>Your choice: one extra item at full value, or enhance to 200% value</li>
+                )}
+              </ul>
+              {session.data.isEnhanced && session.data.powerRef && !session.data.isUpgradePotency && (
+                <div className="mt-4 pt-4 border-t border-border-light">
+                  <p className="text-sm text-text-secondary mb-2">Save this enhanced item to My Library.</p>
                   <Button
                     onClick={async () => {
-                      const potency = parseInt(upgradePotencyValue, 10);
-                      if (Number.isNaN(potency) || potency < 0) {
-                        showToast('Enter a valid potency (0 or higher)', 'error');
-                        return;
-                      }
                       try {
-                        await updateEnhanced.mutateAsync({
-                          id: session.data.upgradePotencyEnhancedItemId!,
-                          patch: { potency },
+                        const baseItem = session.data.customBaseItem ?? session.data.item;
+                        if (!baseItem || !session.data.powerRef) return;
+                        const name = `${'name' in baseItem ? baseItem.name : 'Item'} (${session.data.powerRef.name})`;
+                        await createEnhanced.mutateAsync({
+                          name,
+                          baseItem,
+                          powerRef: session.data.powerRef,
+                          potency: typeof session.data.potency === 'number' ? session.data.potency : undefined,
+                          usesType: session.data.multipleUseTableIndex != null && session.data.multipleUseTableIndex >= 0 ? 'multiple' : undefined,
                         });
-                        showToast('Potency updated in library', 'success');
+                        showToast('Saved to Enhanced Equipment in Library', 'success');
                       } catch (e) {
-                        showToast((e as Error)?.message ?? 'Failed to update potency', 'error');
+                        showToast((e as Error)?.message ?? 'Failed to save', 'error');
                       }
                     }}
-                    disabled={updateEnhanced.isPending}
+                    disabled={createEnhanced.isPending}
                   >
-                    {updateEnhanced.isPending ? 'Updating...' : 'Update potency in library'}
+                    {createEnhanced.isPending ? 'Saving...' : 'Save to Library'}
                   </Button>
+                </div>
+              )}
+              {session.data.isUpgradePotency && session.data.upgradePotencyEnhancedItemId && (
+                <div className="mt-4 pt-4 border-t border-border-light">
+                  <p className="text-sm text-text-secondary mb-2">
+                    Update the enhanced item&apos;s potency in your library.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label htmlFor="upgrade-potency-input" className="block text-sm font-medium text-text-secondary">New potency</label>
+                    <Input
+                      id="upgrade-potency-input"
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={upgradePotencyValue}
+                      onChange={(e) => setUpgradePotencyValue(e.target.value)}
+                      placeholder="e.g. 25"
+                      className="w-24"
+                      aria-label="New potency for enhanced item"
+                    />
+                    <Button
+                      onClick={async () => {
+                        const potency = parseInt(upgradePotencyValue, 10);
+                        if (Number.isNaN(potency) || potency < 0) {
+                          showToast('Enter a valid potency (0 or higher)', 'error');
+                          return;
+                        }
+                        try {
+                          await updateEnhanced.mutateAsync({
+                            id: session.data.upgradePotencyEnhancedItemId!,
+                            patch: { potency },
+                          });
+                          showToast('Potency updated', 'success');
+                        } catch (e) {
+                          showToast((e as Error)?.message ?? 'Failed to update', 'error');
+                        }
+                      }}
+                      disabled={updateEnhanced.isPending}
+                    >
+                      {updateEnhanced.isPending ? 'Updating...' : 'Update Potency'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+
+        {/* ───────── Sidebar (right 1/3) ───────── */}
+        <div className="order-1 lg:order-2 min-w-0">
+          <CreatorSummaryPanel
+            title="Crafting Summary"
+            statRows={[
+              ...(requirements ? [
+                { label: 'Rarity', value: requirements.rarity },
+                { label: 'Difficulty Score', value: effectiveDS, valueColor: session?.data.dsModifier ? 'text-primary-600 dark:text-primary-400' : undefined },
+                { label: 'Required Successes', value: requirements.requiredSuccesses },
+                { label: 'Material Cost', value: `${Math.ceil(requirements.materialCost)} C` },
+                { label: 'Time', value: `${requirements.timeValue} ${requirements.timeUnit}` },
+                { label: 'Roll Sessions', value: requirements.sessionCount },
+                { label: 'Quantity', value: quantity },
+              ] : [
+                { label: 'Item', value: 'Not selected' },
+              ]),
+              ...(item?.marketPrice ? [{ label: 'Market Price', value: `${item.marketPrice} C` }] : []),
+              ...(liveOutcome ? [
+                { label: 'Current Value', value: `${Math.ceil(liveOutcome.itemWorth)} C`, valueColor: netDelta >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400' },
+              ] : []),
+            ]}
+          >
+            {!isCompleted && sessions.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-text-secondary">Successes</span>
+                  <span className="font-medium text-success-700 dark:text-success-400">{totalSuccesses}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-text-secondary">Failures</span>
+                  <span className="font-medium text-danger-700 dark:text-danger-400">{totalFailures}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-text-secondary">Net</span>
+                  <span className={cn(
+                    'font-bold',
+                    netDelta >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'
+                  )}>
+                    {netDelta >= 0 ? `+${netDelta}` : netDelta}
+                  </span>
                 </div>
               </div>
             )}
-          </section>
-        )}
+            {isCompleted && outcome && (
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Final Value</span>
+                  <span className="font-medium text-text-primary">{Math.ceil(outcome.itemWorth)} C</span>
+                </div>
+                {outcome.extraItemCount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Extra Items</span>
+                    <span className="font-medium text-text-primary">{outcome.extraItemCount}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </CreatorSummaryPanel>
+
+          {saveMutation.isPending && (
+            <p className="text-xs text-text-muted dark:text-text-secondary mt-2 text-center">Saving...</p>
+          )}
+        </div>
       </div>
+
+      <CraftingItemSelectModal
+        isOpen={itemSelectOpen}
+        onClose={() => setItemSelectOpen(false)}
+        onSelect={handleItemSelect}
+      />
     </PageContainer>
   );
 }

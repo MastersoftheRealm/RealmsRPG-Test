@@ -1,7 +1,7 @@
 /**
  * Crafting Hub Page
  * =================
- * List crafting sessions (planned, in progress, completed). Start Crafting -> /crafting/new.
+ * List crafting sessions (planned, in progress, completed). Start Crafting creates a blank session and opens it.
  */
 
 'use client';
@@ -9,7 +9,7 @@
 import { useState, useMemo, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Hammer, Plus, ArrowUpCircle, Sparkles } from 'lucide-react';
+import { Hammer, Plus } from 'lucide-react';
 import {
   PageContainer,
   PageHeader,
@@ -25,6 +25,7 @@ import { DeleteConfirmModal, HubListRow } from '@/components/shared';
 import {
   useCraftingSessions,
   useDeleteCraftingSession,
+  useCreateCraftingSession,
   useAuth,
 } from '@/hooks';
 import type { CraftingSessionSummary, CraftingSessionStatus } from '@/types/crafting';
@@ -69,6 +70,7 @@ function CraftingHubContent() {
   const { showToast } = useToast();
   const { data: sessions = [], isLoading, error } = useCraftingSessions();
   const deleteMutation = useDeleteCraftingSession();
+  const createSession = useCreateCraftingSession();
 
   const [activeTab, setActiveTab] = useState<TabId>('all');
   const [search, setSearch] = useState('');
@@ -96,16 +98,29 @@ function CraftingHubContent() {
   ).length;
   const completedCount = sessions.filter((s) => s.status === 'completed').length;
 
-  const handleStartCrafting = () => {
-    router.push('/crafting/new');
-  };
-
-  const handleUpgradeItem = () => {
-    router.push('/crafting/new?mode=upgrade');
-  };
-
-  const handleUpgradePotency = () => {
-    router.push('/crafting/new?mode=upgrade-potency');
+  const handleStartCrafting = async () => {
+    try {
+      const id = await createSession.mutateAsync({
+        status: 'planned',
+        item: null,
+        isConsumable: false,
+        isBulk: false,
+        dsModifier: 0,
+        additionalSuccesses: 0,
+        additionalFailures: 0,
+        requiredSuccesses: 0,
+        difficultyScore: 0,
+        materialCost: 0,
+        timeValue: 0,
+        timeUnit: 'days',
+        sessionCount: 0,
+        sessions: [],
+      });
+      router.push(`/crafting/${id}`);
+    } catch (err) {
+      console.error('Failed to start crafting session:', err);
+      showToast((err as Error)?.message ?? 'Failed to start crafting session', 'error');
+    }
   };
 
   const handleOpen = (session: CraftingSessionSummary) => {
@@ -138,17 +153,9 @@ function CraftingHubContent() {
       )}
       <PageHeader
         title="Crafting"
-        description="Manage crafting sessions. Start a new craft, upgrade equipment, track rolls and successes, and view outcomes."
+        description="Manage crafting sessions. Start a new craft, track rolls, view outcomes — all in one tool."
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={handleUpgradePotency}>
-              <Sparkles className="w-4 h-4" />
-              Upgrade potency
-            </Button>
-            <Button variant="outline" onClick={handleUpgradeItem}>
-              <ArrowUpCircle className="w-4 h-4" />
-              Upgrade item
-            </Button>
             <Button onClick={handleStartCrafting}>
               <Plus className="w-4 h-4" />
               Start Crafting
