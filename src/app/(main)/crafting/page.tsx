@@ -171,7 +171,7 @@ function CraftingHubContent() {
         onTabChange={(id) => setActiveTab(id as TabId)}
       />
 
-      <div className="mt-6">
+      <div className="mt-6 max-w-4xl mx-auto">
         <div className="flex flex-wrap items-center gap-3 mb-4 min-w-0">
           <div className="flex-1 min-w-[200px]">
             <SearchInput

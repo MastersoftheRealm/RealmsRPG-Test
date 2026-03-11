@@ -203,7 +203,7 @@ export default function CraftingSessionPage() {
       <div className="mb-4">
         <Link
           href="/crafting"
-          className="inline-flex items-center gap-1 text-sm text-text-muted dark:text-text-secondary hover:text-primary-600 dark:hover:text-primary-400"
+          className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-600 dark:hover:text-primary-400"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Crafting
@@ -213,18 +213,18 @@ export default function CraftingSessionPage() {
         title={upgradePotencyLabel ?? upgradeLabel ?? displayName}
         description={
           item
-            ? `DS ${effectiveDS} (base ${session.data.difficultyScore} ${session.data.dsModifier ? `+ ${session.data.dsModifier} modifier` : ''}) · ${session.data.requiredSuccesses} successes required${isUpgrade ? ' · Upgrade' : ''}${isUpgradePotency ? ' · Upgrade potency' : ''}`
+            ? `Difficulty Score ${effectiveDS} (base ${session.data.difficultyScore}${session.data.dsModifier ? ` + ${session.data.dsModifier} modifier` : ''}) · ${session.data.requiredSuccesses} success${session.data.requiredSuccesses !== 1 ? 'es' : ''} required${isUpgrade ? ' · Upgrade' : ''}${isUpgradePotency ? ' · Upgrade potency' : ''}`
             : undefined
         }
       />
 
-      <div className="space-y-6 max-w-2xl">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Summary */}
-        <section className="p-4 rounded-xl bg-surface-alt border border-border-light">
-          <SectionHeader title="Summary" size="md" className="mb-2" />
-          <ul className="text-sm text-text-secondary space-y-1">
+        <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+          <SectionHeader title="Summary" size="md" className="mb-3" />
+          <ul className="text-sm text-text-secondary space-y-1.5">
             {isUpgradePotency && (
-              <li>Upgrade potency: 25% of original time, cost, and successes; same DS</li>
+              <li>Upgrade potency: 25% of original time, cost, and successes; same Difficulty Score</li>
             )}
             {isUpgrade && upgradeOriginal && (
               <li>Upgrade: {'name' in upgradeOriginal ? upgradeOriginal.name : 'Original'} ({'marketPrice' in upgradeOriginal ? upgradeOriginal.marketPrice : 0} → {item?.marketPrice ?? 0} currency)</li>
@@ -234,20 +234,23 @@ export default function CraftingSessionPage() {
             <li>Consumable: {session.data.isConsumable ? 'Yes' : 'No'}</li>
             <li>Bulk: {session.data.isBulk ? 'Yes (4 items)' : 'No'}</li>
             {optionalModifiers && (optionalModifiers.reduceTimeByDifficultySteps ?? optionalModifiers.reduceTimeByCostSteps ?? optionalModifiers.reduceDifficultyByTime ?? (optionalModifiers.reduceDifficultyByCostSteps ?? 0) > 0) && (
-              <li>Optional: Reduce time by DS {optionalModifiers.reduceTimeByDifficultySteps ?? 0} steps, by cost {optionalModifiers.reduceTimeByCostSteps ?? 0} steps; Reduce difficulty by time {optionalModifiers.reduceDifficultyByTime ? 'yes' : 'no'}, by cost {optionalModifiers.reduceDifficultyByCostSteps ?? 0} steps</li>
+              <li>Optional rules: Reduce time by difficulty {optionalModifiers.reduceTimeByDifficultySteps ?? 0} steps, by cost {optionalModifiers.reduceTimeByCostSteps ?? 0} steps; Reduce difficulty by time {optionalModifiers.reduceDifficultyByTime ? 'yes' : 'no'}, by cost {optionalModifiers.reduceDifficultyByCostSteps ?? 0} steps</li>
             )}
           </ul>
         </section>
 
         {!isCompleted && (
           <>
-            {/* DS modifier & additional successes/failures */}
-            <section>
+            {/* Difficulty modifier & additional successes/failures */}
+            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
               <SectionHeader title="Modifiers" size="md" className="mb-3" />
+              <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
+                Adjust the effective Difficulty Score or add bonus successes/failures (e.g. from tools or help).
+              </p>
               <div className="flex flex-wrap gap-6">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    DS modifier
+                    Difficulty modifier
                   </label>
                   <ValueStepper
                     value={session.data.dsModifier ?? 0}
@@ -255,13 +258,14 @@ export default function CraftingSessionPage() {
                     min={-10}
                     max={10}
                     step={1}
-                    decrementTitle="Decrease DS modifier"
-                    incrementTitle="Increase DS modifier"
+                    decrementTitle="Decrease difficulty modifier"
+                    incrementTitle="Increase difficulty modifier"
                   />
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Effective Difficulty Score: {effectiveDS}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Additional successes
+                    Bonus successes
                   </label>
                   <ValueStepper
                     value={session.data.additionalSuccesses ?? 0}
@@ -269,13 +273,13 @@ export default function CraftingSessionPage() {
                     min={0}
                     max={20}
                     step={1}
-                    decrementTitle="Decrease additional successes"
-                    incrementTitle="Increase additional successes"
+                    decrementTitle="Decrease bonus successes"
+                    incrementTitle="Increase bonus successes"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Additional failures
+                    Bonus failures
                   </label>
                   <ValueStepper
                     value={session.data.additionalFailures ?? 0}
@@ -283,26 +287,35 @@ export default function CraftingSessionPage() {
                     min={0}
                     max={20}
                     step={1}
-                    decrementTitle="Decrease additional failures"
-                    incrementTitle="Increase additional failures"
+                    decrementTitle="Decrease bonus failures"
+                    incrementTitle="Increase bonus failures"
                   />
                 </div>
               </div>
             </section>
 
             {/* Roll sessions */}
-            <section>
-              <SectionHeader title="Roll sessions" size="md" className="mb-3" />
-              <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
-                Enter the result of each crafting period roll (d20 + modifiers). Successes and failures are calculated from DS {effectiveDS}.
+            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+              <SectionHeader title="Crafting rolls" size="md" className="mb-2" />
+              <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
+                Enter the total of each roll (d20 + modifiers) for the period. Successes and failures are calculated from your effective Difficulty Score ({effectiveDS}).
               </p>
               <div className="space-y-3">
-                {sessions.map((s, i) => (
+                {sessions.map((s, i) => {
+                  const hasRoll = s.roll != null;
+                  const isSuccess = hasRoll && s.successes > 0;
+                  const isFailure = hasRoll && s.failures > 0;
+                  return (
                   <div
                     key={s.label}
-                    className="flex flex-wrap items-center gap-4 p-3 rounded-lg border border-border-light bg-surface"
+                    className={cn(
+                      'flex flex-wrap items-center gap-4 p-3 sm:p-4 rounded-xl border border-border-light transition-colors',
+                      hasRoll && isSuccess && 'bg-green-50/50 dark:bg-green-900/10 border-l-4 border-l-green-500',
+                      hasRoll && isFailure && 'bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500',
+                      hasRoll && !isSuccess && !isFailure && 'bg-surface-alt border-l-4 border-l-border-light'
+                    )}
                   >
-                    <span className="font-medium text-text-primary w-28">{s.label}</span>
+                    <span className="font-medium text-text-primary w-28 shrink-0">{s.label}</span>
                     <div className="flex items-center gap-2">
                       <label className="sr-only" htmlFor={`roll-${id}-${i}`}>
                         Roll for {s.label}
@@ -317,19 +330,19 @@ export default function CraftingSessionPage() {
                           const v = e.target.value;
                           updateSessionRoll(i, v === '' ? null : parseInt(v, 10));
                         }}
-                        placeholder="Roll"
-                        className="w-20"
+                        placeholder="Roll total"
+                        className="w-20 min-h-[44px]"
                       />
                     </div>
                     {s.roll != null && (
                       <span className="text-sm">
-                        <span className="text-success-700 dark:text-success-400">
+                        <span className="text-success-700 dark:text-success-400 font-medium">
                           +{s.successes} success{s.successes !== 1 ? 'es' : ''}
                         </span>
                         {s.failures > 0 && (
                           <>
                             {' '}
-                            <span className="text-danger-700 dark:text-danger-400">
+                            <span className="text-danger-700 dark:text-danger-400 font-medium">
                               −{s.failures} failure{s.failures !== 1 ? 's' : ''}
                             </span>
                           </>
@@ -337,23 +350,28 @@ export default function CraftingSessionPage() {
                       </span>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
-            {/* Net result */}
-            <section className="p-4 rounded-xl border border-border-light">
-              <SectionHeader title="Net result" size="md" className="mb-2" />
-              <p className="text-sm text-text-secondary">
-                Total successes: {totalSuccesses} · Total failures: {totalFailures} · Required: {required}
+            {/* Result: successes vs required */}
+            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+              <SectionHeader title="Result" size="md" className="mb-2" />
+              <p className="text-sm text-text-secondary mb-2">
+                Total successes: <strong className="text-text-primary">{totalSuccesses}</strong> · Total failures: <strong className="text-text-primary">{totalFailures}</strong> · Required: <strong className="text-text-primary">{required}</strong>
               </p>
-              <p className="mt-1 font-medium text-text-primary">
-                Net delta: {netDelta >= 0 ? '+' : ''}{netDelta}
-                {netDelta >= 0 ? ' (success)' : ' (failure)'}
+              <p className={cn(
+                'mt-2 font-semibold',
+                netDelta >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'
+              )}>
+                {netDelta >= 0
+                  ? `${netDelta} over target — success`
+                  : `${Math.abs(netDelta)} under target — shortfall`}
               </p>
             </section>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button variant="ghost" onClick={handleSave} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? 'Saving...' : 'Save progress'}
               </Button>
@@ -368,8 +386,8 @@ export default function CraftingSessionPage() {
         )}
 
         {isCompleted && outcome && (
-          <section className="p-4 rounded-xl bg-surface-alt border border-border-light">
-            <SectionHeader title="Outcome" size="md" className="mb-2" />
+          <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+            <SectionHeader title="Outcome" size="md" className="mb-3" />
             <p className="text-text-secondary whitespace-pre-wrap">{outcome.effectText}</p>
             {craftSubSkill && (craftSubSkill.craft_success_desc || craftSubSkill.craft_failure_desc) && (
               <div className="mt-3 pt-3 border-t border-border-light">
@@ -384,14 +402,14 @@ export default function CraftingSessionPage() {
               </div>
             )}
             <ul className="mt-3 text-sm text-text-secondary space-y-1">
-              <li>Final material cost: {Math.ceil(outcome.finalMaterialCost)} currency</li>
-              <li>Materials retained: {Math.ceil(outcome.materialsRetained)} currency</li>
-              <li>Item worth: {Math.ceil(outcome.itemWorth)} currency</li>
+              <li>Materials spent: {Math.ceil(outcome.finalMaterialCost)} currency</li>
+              <li>Materials recovered: {Math.ceil(outcome.materialsRetained)} currency</li>
+              <li>Item value: {Math.ceil(outcome.itemWorth)} currency</li>
               {outcome.extraItemCount > 0 && (
-                <li>Extra items: {outcome.extraItemCount}</li>
+                <li>Extra items gained: {outcome.extraItemCount}</li>
               )}
               {outcome.choiceExtraOrEnhance && (
-                <li>Choice: extra item or enhance</li>
+                <li>Your choice: one extra item at full value, or enhance this item to 200% value</li>
               )}
             </ul>
             {session.data.isEnhanced && session.data.powerRef && !session.data.isUpgradePotency && (

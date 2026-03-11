@@ -14,8 +14,9 @@ import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PageContainer, PageHeader, Button, LoadingState, Alert, Input } from '@/components/ui';
 import { SectionHeader } from '@/components/shared';
-import { useEquipment, useUserItems, useUserPowers, useCreateCraftingSession, useCodexSkills, useEnhancedItems } from '@/hooks';
+import { useUserPowers, useCreateCraftingSession, useCodexSkills, useEnhancedItems } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
+import { CraftingItemSelectModal, type CraftingSelectedItem } from '@/components/crafting/CraftingItemSelectModal';
 import {
   getCraftingRequirements,
   getCraftingSessionLabels,
@@ -31,15 +32,14 @@ import {
   type CraftingRequirements,
 } from '@/lib/game/crafting-utils';
 import type { CraftingItemRef, CraftingRollSession, CraftingPowerRef, CraftingCustomBaseItem, UserEnhancedItem } from '@/types/crafting';
-import type { EquipmentItem } from '@/hooks/use-rtdb';
-import type { UserItem } from '@/hooks/use-user-library';
 
-function marketPriceFromEquipment(e: EquipmentItem): number {
-  return e.currency ?? e.gold_cost ?? 0;
-}
-
-function marketPriceFromUserItem(u: UserItem): number {
-  return u.costs?.totalCurrency ?? 0;
+function toCraftingItemRef(c: CraftingSelectedItem): CraftingItemRef {
+  return {
+    source: c.source === 'library' ? 'library' : 'codex',
+    id: c.id,
+    name: c.name,
+    marketPrice: c.marketPrice,
+  };
 }
 
 export default function NewCraftingPage() {
@@ -48,12 +48,13 @@ export default function NewCraftingPage() {
   const modeUpgrade = searchParams.get('mode') === 'upgrade';
   const modeUpgradePotency = searchParams.get('mode') === 'upgrade-potency';
 
-  const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
-  const { data: userItems = [], isLoading: userLoading } = useUserItems();
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: enhancedItems = [], isLoading: enhancedLoading } = useEnhancedItems();
   const { rules, isLoading: rulesLoading } = useGameRules();
   const createSession = useCreateCraftingSession();
+
+  const [itemSelectModalOpen, setItemSelectModalOpen] = useState(false);
+  const [itemSelectModalPurpose, setItemSelectModalPurpose] = useState<'main' | 'upgrade-original' | 'upgrade-target' | null>(null);
 
   const [selectedItem, setSelectedItem] = useState<CraftingItemRef | null>(null);
   const [upgradeOriginalItem, setUpgradeOriginalItem] = useState<CraftingItemRef | null>(null);
@@ -92,14 +93,19 @@ export default function NewCraftingPage() {
     [codexSkills]
   );
 
-  const craftableCodex = useMemo(() => {
-    return codexEquipment.filter((e) => marketPriceFromEquipment(e) > 0);
-  }, [codexEquipment]);
-  const craftableUser = useMemo(() => {
-    return userItems.filter((u) => marketPriceFromUserItem(u) > 0);
-  }, [userItems]);
-
   const rulesData = rules?.CRAFTING;
+
+  const handleCraftingItemSelect = (item: CraftingSelectedItem) => {
+    const ref = toCraftingItemRef(item);
+    if (itemSelectModalPurpose === 'upgrade-original') {
+      setUpgradeOriginalItem(ref);
+    } else if (itemSelectModalPurpose === 'upgrade-target') {
+      setSelectedItem(ref);
+    } else {
+      setSelectedItem(ref);
+    }
+    setItemSelectModalPurpose(null);
+  };
   const requirements = useMemo((): CraftingRequirements | null => {
     if (!rulesData) return null;
     let base: CraftingRequirements | null = null;
@@ -349,7 +355,7 @@ export default function NewCraftingPage() {
     }
   };
 
-  const isLoading = codexLoading || userLoading || rulesLoading || powersLoading || (modeUpgradePotency && enhancedLoading);
+  const isLoading = rulesLoading || powersLoading || (modeUpgradePotency && enhancedLoading);
   const canStartUpgrade = modeUpgrade && upgradeOriginalItem && selectedItem && selectedItem.marketPrice > upgradeOriginalItem.marketPrice && requirements;
   const canStartUpgradePotency = modeUpgradePotency && selectedEnhancedForPotency && requirements;
   const canStartGeneral = !modeUpgrade && !modeUpgradePotency && selectedItem && requirements && !isEnhanced;
@@ -361,7 +367,7 @@ export default function NewCraftingPage() {
       <div className="mb-4">
         <Link
           href="/crafting"
-          className="inline-flex items-center gap-1 text-sm text-text-muted dark:text-text-secondary hover:text-primary-600 dark:hover:text-primary-400"
+          className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-600 dark:hover:text-primary-400"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Crafting
@@ -385,10 +391,10 @@ export default function NewCraftingPage() {
           Crafting rules could not be loaded. Check admin core rules for CRAFTING.
         </Alert>
       ) : (
-        <div className="space-y-6 max-w-2xl">
+        <div className="space-y-6 max-w-3xl mx-auto">
           {modeUpgradePotency ? (
             <>
-              <section>
+              <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
                 <SectionHeader title="Select enhanced item" size="md" className="mb-2" />
                 <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
                   Choose an enhanced item from your library to upgrade its potency. You will spend 25% of the original crafting time, material cost, and required successes; the Difficulty Score stays the same.
@@ -427,7 +433,7 @@ export default function NewCraftingPage() {
                 )}
               </section>
               {requirements && (
-                <section className="p-4 rounded-xl bg-surface-alt border border-border-light">
+                <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
                   <SectionHeader title="Requirements (25% of original)" size="md" className="mb-2" />
                   <ul className="text-sm text-text-secondary space-y-1">
                     <li>Difficulty Score: {requirements.difficultyScore}</li>
@@ -455,161 +461,73 @@ export default function NewCraftingPage() {
             </>
           ) : modeUpgrade ? (
             <>
-              <section>
+              <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
                 <SectionHeader title="Original item" size="md" className="mb-2" />
                 <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
                   The equipment or armament you are upgrading (lower market price).
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto rounded-lg border border-border-light p-2">
-                  {craftableCodex.map((e) => {
-                    const price = marketPriceFromEquipment(e);
-                    const ref: CraftingItemRef = { source: 'codex', id: e.id, name: e.name, marketPrice: price };
-                    const isSelected = upgradeOriginalItem?.source === 'codex' && upgradeOriginalItem?.id === e.id;
-                    return (
-                      <button key={`orig-codex-${e.id}`} type="button" onClick={() => setUpgradeOriginalItem(ref)}
-                        className={cn('text-left p-3 rounded-lg border-2 transition-colors min-h-[44px]', isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-border-light hover:border-primary-300')}
-                        aria-label={isSelected ? `Selected as original: ${e.name}` : `Select ${e.name} as original item`}
-                        aria-pressed={isSelected}>
-                        <span className="font-medium text-text-primary">{e.name}</span>
-                        <span className="block text-sm text-text-muted dark:text-text-secondary">{price} currency</span>
-                      </button>
-                    );
-                  })}
-                  {craftableUser.map((u) => {
-                    const price = marketPriceFromUserItem(u);
-                    const ref: CraftingItemRef = { source: 'library', id: u.id, name: u.name, marketPrice: price };
-                    const isSelected = upgradeOriginalItem?.source === 'library' && upgradeOriginalItem?.id === u.id;
-                    return (
-                      <button key={`orig-lib-${u.id}`} type="button" onClick={() => setUpgradeOriginalItem(ref)}
-                        className={cn('text-left p-3 rounded-lg border-2 transition-colors min-h-[44px]', isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-border-light hover:border-primary-300')}
-                        aria-label={isSelected ? `Selected as original: ${u.name}` : `Select ${u.name} as original item`}
-                        aria-pressed={isSelected}>
-                        <span className="font-medium text-text-primary">{u.name}</span>
-                        <span className="block text-sm text-text-muted dark:text-text-secondary">{price} currency · Library</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {upgradeOriginalItem ? (
+                  <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt">
+                    <span className="font-medium text-text-primary">{upgradeOriginalItem.name}</span>
+                    <span className="text-sm text-text-muted dark:text-text-secondary">{upgradeOriginalItem.marketPrice} currency</span>
+                    <Button variant="secondary" size="sm" onClick={() => { setItemSelectModalPurpose('upgrade-original'); setItemSelectModalOpen(true); }} aria-label="Change original item">
+                      Change item
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={() => { setItemSelectModalPurpose('upgrade-original'); setItemSelectModalOpen(true); }} aria-label="Select original item to upgrade">
+                    Select original item
+                  </Button>
+                )}
               </section>
-              <section>
+              <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
                 <SectionHeader title="Upgraded item" size="md" className="mb-2" />
                 <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
                   The target item (must have a higher market price than the original).
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto rounded-lg border border-border-light p-2">
-                  {craftableCodex.map((e) => {
-                    const price = marketPriceFromEquipment(e);
-                    const ref: CraftingItemRef = { source: 'codex', id: e.id, name: e.name, marketPrice: price };
-                    const isSelected = selectedItem?.source === 'codex' && selectedItem?.id === e.id;
-                    return (
-                      <button key={`upg-codex-${e.id}`} type="button" onClick={() => setSelectedItem(ref)}
-                        className={cn('text-left p-3 rounded-lg border-2 transition-colors min-h-[44px]', isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-border-light hover:border-primary-300')}
-                        aria-label={isSelected ? `Selected as upgraded: ${e.name}` : `Select ${e.name} as upgraded item`}
-                        aria-pressed={isSelected}>
-                        <span className="font-medium text-text-primary">{e.name}</span>
-                        <span className="block text-sm text-text-muted dark:text-text-secondary">{price} currency</span>
-                      </button>
-                    );
-                  })}
-                  {craftableUser.map((u) => {
-                    const price = marketPriceFromUserItem(u);
-                    const ref: CraftingItemRef = { source: 'library', id: u.id, name: u.name, marketPrice: price };
-                    const isSelected = selectedItem?.source === 'library' && selectedItem?.id === u.id;
-                    return (
-                      <button key={`upg-lib-${u.id}`} type="button" onClick={() => setSelectedItem(ref)}
-                        className={cn('text-left p-3 rounded-lg border-2 transition-colors min-h-[44px]', isSelected ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-border-light hover:border-primary-300')}
-                        aria-label={isSelected ? `Selected as upgraded: ${u.name}` : `Select ${u.name} as upgraded item`}
-                        aria-pressed={isSelected}>
-                        <span className="font-medium text-text-primary">{u.name}</span>
-                        <span className="block text-sm text-text-muted dark:text-text-secondary">{price} currency · Library</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {selectedItem ? (
+                  <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt">
+                    <span className="font-medium text-text-primary">{selectedItem.name}</span>
+                    <span className="text-sm text-text-muted dark:text-text-secondary">{selectedItem.marketPrice} currency</span>
+                    <Button variant="secondary" size="sm" onClick={() => { setItemSelectModalPurpose('upgrade-target'); setItemSelectModalOpen(true); }} aria-label="Change upgraded item">
+                      Change item
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={() => { setItemSelectModalPurpose('upgrade-target'); setItemSelectModalOpen(true); }} aria-label="Select upgraded item">
+                    Select upgraded item
+                  </Button>
+                )}
                 {upgradeOriginalItem && selectedItem && selectedItem.marketPrice <= upgradeOriginalItem.marketPrice && (
                   <p className="text-sm text-danger-700 dark:text-danger-400 mt-2">Upgraded item must have a higher market price than the original.</p>
                 )}
               </section>
             </>
           ) : (
-          <section>
+          <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
             <SectionHeader title="Select item" size="md" className="mb-2" />
             <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
-              Only items with a market price (currency) can be crafted. Codex equipment and library items with cost are listed below.
+              Choose an item to craft from Armaments or Equipment. Use the modal to pick from Realms Library or My Library.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[280px] overflow-y-auto rounded-lg border border-border-light p-2">
-              {craftableCodex.map((e) => {
-                const price = marketPriceFromEquipment(e);
-                const ref: CraftingItemRef = {
-                  source: 'codex',
-                  id: e.id,
-                  name: e.name,
-                  marketPrice: price,
-                };
-                const isSelected = selectedItem?.source === 'codex' && selectedItem?.id === e.id;
-                return (
-                  <button
-                    key={`codex-${e.id}`}
-                    type="button"
-                    onClick={() => setSelectedItem(ref)}
-                    className={cn(
-                      'text-left p-3 rounded-lg border-2 transition-colors min-h-[44px]',
-                      isSelected
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                        : 'border-border-light hover:border-primary-300'
-                    )}
-                    aria-label={isSelected ? `Selected: ${e.name}` : `Select ${e.name} to craft`}
-                    aria-pressed={isSelected}
-                  >
-                    <span className="font-medium text-text-primary">{e.name}</span>
-                    <span className="block text-sm text-text-muted dark:text-text-secondary">
-                      {price} currency
-                    </span>
-                  </button>
-                );
-              })}
-              {craftableUser.map((u) => {
-                const price = marketPriceFromUserItem(u);
-                const ref: CraftingItemRef = {
-                  source: 'library',
-                  id: u.id,
-                  name: u.name,
-                  marketPrice: price,
-                };
-                const isSelected = selectedItem?.source === 'library' && selectedItem?.id === u.id;
-                return (
-                  <button
-                    key={`lib-${u.id}`}
-                    type="button"
-                    onClick={() => setSelectedItem(ref)}
-                    className={cn(
-                      'text-left p-3 rounded-lg border-2 transition-colors min-h-[44px]',
-                      isSelected
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                        : 'border-border-light hover:border-primary-300'
-                    )}
-                    aria-label={isSelected ? `Selected: ${u.name}` : `Select ${u.name} to craft`}
-                    aria-pressed={isSelected}
-                  >
-                    <span className="font-medium text-text-primary">{u.name}</span>
-                    <span className="block text-sm text-text-muted dark:text-text-secondary">
-                      {price} currency · Library
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {craftableCodex.length === 0 && craftableUser.length === 0 && (
-              <p className="text-sm text-text-muted dark:text-text-secondary mt-2">
-                No items with a market price found. Add equipment in Codex or library items with cost.
-              </p>
+            {selectedItem ? (
+              <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt">
+                <span className="font-medium text-text-primary">{selectedItem.name}</span>
+                <span className="text-sm text-text-muted dark:text-text-secondary">{selectedItem.marketPrice} currency</span>
+                <Button variant="secondary" size="sm" onClick={() => { setItemSelectModalPurpose('main'); setItemSelectModalOpen(true); }} aria-label="Change selected item">
+                  Change item
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={() => { setItemSelectModalPurpose('main'); setItemSelectModalOpen(true); }} aria-label="Open modal to select item to craft">
+                Select item to craft
+              </Button>
             )}
           </section>
           )}
 
           {!modeUpgrade && !modeUpgradePotency && (
             <>
-          <section>
+          <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
             <SectionHeader title="Options" size="md" className="mb-2" />
             <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
@@ -668,7 +586,7 @@ export default function NewCraftingPage() {
           </section>
 
           {isEnhanced && (
-            <section className="p-4 rounded-xl border border-border-light bg-surface-alt">
+            <section className="p-4 sm:p-6 rounded-xl border border-border-light bg-surface">
               <SectionHeader title="Enhanced crafting" size="md" className="mb-3" />
               <div className="space-y-4">
                 <div>
@@ -795,14 +713,14 @@ export default function NewCraftingPage() {
           )}
 
           {/* Optional crafting mechanics: reduce time or difficulty */}
-          <section className="p-4 rounded-xl border border-border-light bg-surface-alt">
-            <SectionHeader title="Optional mechanics" size="md" className="mb-2" />
+          <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
+            <SectionHeader title="Optional rules" size="md" className="mb-2" />
             <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
               Optional rules to reduce crafting time (at higher difficulty or cost) or reduce difficulty (with more time or resources).
             </p>
             <div className="space-y-4">
               <div>
-                <label htmlFor="opt-reduce-time-ds" className="block text-sm font-medium text-text-secondary mb-1">Reduce time: +2 DS per step (−5 days, −1 success), max 5 steps</label>
+                <label htmlFor="opt-reduce-time-ds" className="block text-sm font-medium text-text-secondary mb-1">Reduce time: +2 Difficulty Score per step (−5 days, −1 success), max 5 steps</label>
                 <select
                   id="opt-reduce-time-ds"
                   value={reduceTimeByDifficultySteps}
@@ -843,7 +761,7 @@ export default function NewCraftingPage() {
                 <p id="opt-diff-time-desc" className="text-xs text-text-muted dark:text-text-secondary mt-1 ml-6">Spend more time for lower difficulty.</p>
               </div>
               <div>
-                <label htmlFor="opt-reduce-diff-cost" className="block text-sm font-medium text-text-secondary mb-1">Reduce difficulty: +25% cost per step (−2 DS), max 4 steps</label>
+                <label htmlFor="opt-reduce-diff-cost" className="block text-sm font-medium text-text-secondary mb-1">Reduce difficulty: +25% cost per step (−2 Difficulty Score), max 4 steps</label>
                 <select
                   id="opt-reduce-diff-cost"
                   value={reduceDifficultyByCostSteps}
@@ -860,7 +778,7 @@ export default function NewCraftingPage() {
           </section>
 
           {requirements && (
-            <section className="p-4 rounded-xl bg-surface-alt border border-border-light">
+            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
               <SectionHeader title="Requirements" size="md" className="mb-2" />
               <ul className="text-sm text-text-secondary space-y-1">
                 <li>Rarity: {requirements.rarity}</li>
@@ -889,6 +807,12 @@ export default function NewCraftingPage() {
           </div>
         </div>
       )}
+
+      <CraftingItemSelectModal
+        isOpen={itemSelectModalOpen}
+        onClose={() => { setItemSelectModalOpen(false); setItemSelectModalPurpose(null); }}
+        onSelect={handleCraftingItemSelect}
+      />
     </PageContainer>
   );
 }
