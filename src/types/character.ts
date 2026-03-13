@@ -130,6 +130,8 @@ export interface Character {
   
   // Archetype
   archetype?: CharacterArchetype;
+  creationMode?: 'forge' | 'path';
+  archetypePathId?: string;
   pow_abil?: AbilityName;
   mart_abil?: AbilityName;
   

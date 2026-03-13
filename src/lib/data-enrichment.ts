@@ -557,6 +557,7 @@ const SAVEABLE_FIELDS = [
   'skills',
   // Archetype/Build (lean: { id, type } only — name/description derived from codex)
   'archetype',
+  'creationMode', 'archetypePathId',
   // Proficiency data
   'mart_prof', 'pow_prof', 'mart_abil', 'pow_abil', 'archetypeChoices',
   // References (IDs or minimal data — not full objects)

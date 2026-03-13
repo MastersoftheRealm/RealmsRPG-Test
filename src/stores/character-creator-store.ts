@@ -11,7 +11,8 @@ import type {
   CharacterDraft, 
   ArchetypeCategory, 
   AbilityName, 
-  Abilities 
+  Abilities,
+  Archetype,
 } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergy, getArchetypeAbilityScore } from '@/lib/game/calculations';
@@ -57,6 +58,8 @@ interface CharacterCreatorState {
   // Draft updates
   updateDraft: (updates: Partial<CharacterDraft>) => void;
   setArchetype: (type: ArchetypeCategory, ability: AbilityName, martialAbility?: AbilityName) => void;
+  setCreationMode: (mode: 'forge' | 'path') => void;
+  setArchetypePath: (archetype: Archetype) => void;
   setSpecies: (speciesId: string, speciesName: string) => void;
   setMixedSpecies: (speciesA: { id: string; name: string }, speciesB: { id: string; name: string }) => void;
   setAncestry: (ancestryId: string, ancestryName: string, traits: string[]) => void;
@@ -149,10 +152,58 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         set({
           draft: {
             ...get().draft,
+            creationMode: 'forge',
             archetype,
             pow_abil: archetype.pow_abil,
             mart_abil: archetype.mart_abil,
+            archetypePathId: undefined,
           }
+        });
+      },
+
+      setCreationMode: (mode) => {
+        set({
+          draft: {
+            ...get().draft,
+            creationMode: mode,
+          },
+        });
+      },
+
+      setArchetypePath: (archetype) => {
+        const type = (archetype.type || 'power') as ArchetypeCategory;
+        const pathPowerProf = archetype.power_prof_start ?? (type === 'power' ? 2 : type === 'powered-martial' ? 1 : 0);
+        const pathMartialProf = archetype.martial_prof_start ?? (type === 'martial' ? 2 : type === 'powered-martial' ? 1 : 0);
+        const primaryAbility = archetype.archetype_ability;
+        const fallbackPowerAbility = archetype.pow_abil || archetype.ability || primaryAbility;
+        const fallbackMartialAbility = archetype.mart_abil || archetype.ability || primaryAbility;
+
+        set({
+          draft: {
+            ...get().draft,
+            creationMode: 'path',
+            archetype: {
+              id: archetype.id,
+              name: archetype.name,
+              type,
+              description: archetype.description,
+              archetype_ability: archetype.archetype_ability,
+              secondary_ability: archetype.secondary_ability,
+              power_prof_start: archetype.power_prof_start,
+              martial_prof_start: archetype.martial_prof_start,
+              power_prof_level5: archetype.power_prof_level5,
+              martial_prof_level5: archetype.martial_prof_level5,
+              path_data: archetype.path_data,
+              pow_abil: archetype.pow_abil,
+              mart_abil: archetype.mart_abil,
+              ability: archetype.ability,
+            },
+            archetypePathId: archetype.id,
+            pow_abil: fallbackPowerAbility,
+            mart_abil: fallbackMartialAbility,
+            pow_prof: pathPowerProf,
+            mart_prof: pathMartialProf,
+          },
         });
       },
       
@@ -275,6 +326,8 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           level,
           abilities,
           ...(archetype && { archetype }),
+          ...(draft.archetypePathId && { archetypePathId: draft.archetypePathId }),
+          ...(draft.creationMode && { creationMode: draft.creationMode }),
           ...(draft.pow_abil && { pow_abil: draft.pow_abil }),
           ...(draft.mart_abil && { mart_abil: draft.mart_abil }),
           // Proficiency allocation - set based on archetype type

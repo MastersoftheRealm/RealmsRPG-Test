@@ -22,6 +22,7 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
 /** Capitalize first letter of each word for display */
 function capitalize(s: string | undefined): string {
@@ -104,6 +105,9 @@ export function PowersStep() {
     () => new Set(selectedTechniques.map((t: { id: string | number }) => String(t.id))), 
     [selectedTechniques]
   );
+  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const recommendedPowerRefs = useMemo(() => new Set((pathData?.level1?.powers || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.powers]);
+  const recommendedTechniqueRefs = useMemo(() => new Set((pathData?.level1?.techniques || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.techniques]);
   
   const powersForList = useMemo(() => {
     const my = (source === 'my' || source === 'all') ? userPowers : [];
@@ -143,6 +147,9 @@ export function PowersStep() {
       const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
       const rangeStr = display.range || '-';
       const durationStr = display.duration || '-';
+      const isRecommended =
+        recommendedPowerRefs.has(String(power.docId).toLowerCase()) ||
+        recommendedPowerRefs.has(String(power.name).toLowerCase());
       return {
         id: power.docId,
         name: power.name,
@@ -159,10 +166,11 @@ export function PowersStep() {
         detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
         totalCost: display.tp > 0 ? display.tp : undefined,
         costLabel: display.tp > 0 ? 'TP' : undefined,
+        badges: isRecommended ? [{ label: 'Path Recommended', color: 'green' as const }] : undefined,
         data: power,
       };
     });
-  }, [powersForList, powerParts]);
+  }, [powersForList, powerParts, recommendedPowerRefs]);
 
   // Transform techniques to SelectableItems — match add-library-item: detailSections, totalCost for expanded view
   const availableTechniques = useMemo((): SelectableItem[] => {
@@ -181,6 +189,9 @@ export function PowersStep() {
         cost: chip.finalTP,
         costLabel: 'TP',
       }));
+      const isRecommended =
+        recommendedTechniqueRefs.has(String(tech.docId).toLowerCase()) ||
+        recommendedTechniqueRefs.has(String(tech.name).toLowerCase());
       return {
         id: tech.docId,
         name: tech.name,
@@ -193,10 +204,11 @@ export function PowersStep() {
         detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
         totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
         costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
+        badges: isRecommended ? [{ label: 'Path Recommended', color: 'green' as const }] : undefined,
         data: tech,
       };
     });
-  }, [techniquesForList, techniqueParts]);
+  }, [techniquesForList, techniqueParts, recommendedTechniqueRefs]);
   
   // Display items for selected powers/techniques
   const selectedPowerItems = useMemo((): SelectableItem[] => {
@@ -305,6 +317,11 @@ export function PowersStep() {
         <p className="text-text-muted dark:text-text-secondary">
           Select powers and techniques from your library for your character to know.
         </p>
+        {draft.creationMode === 'path' && (
+          <p className="text-xs text-success-700 dark:text-success-400 mt-2">
+            Archetype Path recommendations are highlighted in green.
+          </p>
+        )}
       </div>
       
       {/* Empty state if no content */}
@@ -383,6 +400,7 @@ export function PowersStep() {
                     detailSections={power.detailSections}
                     totalCost={power.totalCost}
                     costLabel={power.costLabel}
+                    badges={power.badges}
                     rightSlot={
                       <IconButton
                         variant="danger"
@@ -457,6 +475,7 @@ export function PowersStep() {
                     detailSections={tech.detailSections}
                     totalCost={tech.totalCost}
                     costLabel={tech.costLabel}
+                    badges={tech.badges}
                     rightSlot={
                       <IconButton
                         variant="danger"

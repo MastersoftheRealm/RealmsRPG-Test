@@ -66,7 +66,28 @@ const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
   codex_parts: ['name', 'description', 'category', 'baseEn', 'baseTp', 'op1Desc', 'op1En', 'op1Tp', 'op2Desc', 'op2En', 'op2Tp', 'op3Desc', 'op3En', 'op3Tp', 'type', 'mechanic', 'percentage', 'duration', 'defense'],
   codex_properties: ['name', 'description', 'baseIp', 'baseTp', 'baseC', 'op1Desc', 'op1Ip', 'op1Tp', 'op1C', 'type', 'mechanic'],
   codex_equipment: ['name', 'description', 'category', 'currency', 'rarity'],
-  codex_archetypes: ['name', 'type', 'description'],
+  codex_archetypes: [
+    'name',
+    'type',
+    'description',
+    'archetypeAbility',
+    'secondaryAbility',
+    'powerProfStart',
+    'martialProfStart',
+    'powerProfLevel5',
+    'martialProfLevel5',
+    'level1Feats',
+    'level1Skills',
+    'level1Powers',
+    'level1Techniques',
+    'level1Armaments',
+    'level1Equipment',
+    'level1RemoveFeats',
+    'level1RemovePowers',
+    'level1RemoveTechniques',
+    'level1RemoveArmaments',
+    'level1Notes',
+  ],
   codex_creature_feats: ['name', 'description', 'featPoints', 'featLvl', 'lvlReq', 'mechanic'],
   core_rules: [],
 };
@@ -205,5 +226,114 @@ export async function deleteCodexDoc(
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to delete' };
+  }
+}
+
+type ArchetypeLevelPayload = {
+  level: number;
+  feats?: string;
+  skills?: string;
+  powers?: string;
+  techniques?: string;
+  armaments?: string;
+  equipment?: string;
+  remove_feats?: string;
+  remove_powers?: string;
+  remove_techniques?: string;
+  remove_armaments?: string;
+  notes?: string;
+};
+
+type SaveArchetypeWithPathInput = {
+  id?: string;
+  name: string;
+  type: 'power' | 'martial' | 'powered-martial';
+  description?: string;
+  archetype_ability?: string;
+  secondary_ability?: string;
+  power_prof_start?: number;
+  martial_prof_start?: number;
+  power_prof_level5?: number;
+  martial_prof_level5?: number;
+  level1_feats?: string;
+  level1_skills?: string;
+  level1_powers?: string;
+  level1_techniques?: string;
+  level1_armaments?: string;
+  level1_equipment?: string;
+  level1_remove_feats?: string;
+  level1_remove_powers?: string;
+  level1_remove_techniques?: string;
+  level1_remove_armaments?: string;
+  level1_notes?: string;
+  levels: ArchetypeLevelPayload[];
+};
+
+export async function saveArchetypeWithPath(
+  payload: SaveArchetypeWithPathInput
+): Promise<{ success: boolean; error?: string; id?: string }> {
+  try {
+    await requireAdmin();
+    const supabase = getSupabaseAdmin();
+    const id = payload.id ? sanitizeId(payload.id) : sanitizeId(payload.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '').slice(0, 100) || `arch_${Date.now()}`);
+
+    const archetypeRow = {
+      id,
+      name: payload.name,
+      type: payload.type,
+      description: payload.description ?? null,
+      archetype_ability: payload.archetype_ability ?? null,
+      secondary_ability: payload.secondary_ability ?? null,
+      power_prof_start: payload.power_prof_start ?? null,
+      martial_prof_start: payload.martial_prof_start ?? null,
+      power_prof_level5: payload.power_prof_level5 ?? null,
+      martial_prof_level5: payload.martial_prof_level5 ?? null,
+      level1_feats: payload.level1_feats ?? null,
+      level1_skills: payload.level1_skills ?? null,
+      level1_powers: payload.level1_powers ?? null,
+      level1_techniques: payload.level1_techniques ?? null,
+      level1_armaments: payload.level1_armaments ?? null,
+      level1_equipment: payload.level1_equipment ?? null,
+      level1_remove_feats: payload.level1_remove_feats ?? null,
+      level1_remove_powers: payload.level1_remove_powers ?? null,
+      level1_remove_techniques: payload.level1_remove_techniques ?? null,
+      level1_remove_armaments: payload.level1_remove_armaments ?? null,
+      level1_notes: payload.level1_notes ?? null,
+    };
+
+    const { error: upsertError } = await supabase.from('codex_archetypes').upsert(archetypeRow);
+    if (upsertError) throw new Error(upsertError.message);
+
+    const { error: clearLevelsError } = await supabase.from('codex_archetype_levels').delete().eq('archetype_id', id);
+    if (clearLevelsError) throw new Error(clearLevelsError.message);
+
+    const cleanLevels = payload.levels
+      .filter((entry) => Number.isFinite(entry.level) && entry.level >= 2)
+      .map((entry) => ({
+        archetype_id: id,
+        level: entry.level,
+        feats: entry.feats ?? null,
+        skills: entry.skills ?? null,
+        powers: entry.powers ?? null,
+        techniques: entry.techniques ?? null,
+        armaments: entry.armaments ?? null,
+        equipment: entry.equipment ?? null,
+        remove_feats: entry.remove_feats ?? null,
+        remove_powers: entry.remove_powers ?? null,
+        remove_techniques: entry.remove_techniques ?? null,
+        remove_armaments: entry.remove_armaments ?? null,
+        notes: entry.notes ?? null,
+      }));
+
+    if (cleanLevels.length > 0) {
+      const { error: insertLevelsError } = await supabase.from('codex_archetype_levels').insert(cleanLevels);
+      if (insertLevelsError) throw new Error(insertLevelsError.message);
+    }
+
+    revalidatePath('/admin/codex');
+    revalidatePath('/codex');
+    return { success: true, id };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to save archetype path data' };
   }
 }

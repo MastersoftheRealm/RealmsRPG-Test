@@ -8,14 +8,12 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, DragEvent } from 'react';
+import { useState, useCallback, useMemo, DragEvent, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Brain,
   Plus,
   Trash2,
-  CheckCircle2,
-  XCircle,
   RotateCcw,
   Users,
   HandHelping,
@@ -81,8 +79,17 @@ export default function SkillEncounterView({
     }
     return { derivedRollSuccesses: s, derivedRollFailures: f };
   }, [skill?.participants]);
+  const totalSuccesses = derivedRollSuccesses + additionalSuccesses;
+  const totalFailures = derivedRollFailures + additionalFailures;
+  const requiredSuccesses = Math.max(1, skill?.requiredSuccesses ?? (skill?.participants.length ?? 0) + 1);
+  const maxFailures = Math.max(1, skill?.maxFailures ?? 3);
+  const encounterOutcome =
+    totalSuccesses >= requiredSuccesses
+      ? 'success'
+      : totalFailures >= maxFailures
+        ? 'failure'
+        : 'in-progress';
 
-  const netSuccesses = derivedRollSuccesses + additionalSuccesses - (derivedRollFailures + additionalFailures);
   const sequenceSuccesses = skill?.sequenceSuccesses ?? 0;
   const sequenceFailures = skill?.sequenceFailures ?? 0;
 
@@ -224,21 +231,6 @@ export default function SkillEncounterView({
     });
   };
 
-  const addAdditionalSuccess = () => {
-    updateSkill({ additionalSuccesses: (skill?.additionalSuccesses ?? 0) + 1 });
-  };
-  const addAdditionalFailure = () => {
-    updateSkill({ additionalFailures: (skill?.additionalFailures ?? 0) + 1 });
-  };
-  const removeAdditionalSuccess = () => {
-    const cur = skill?.additionalSuccesses ?? 0;
-    if (cur > 0) updateSkill({ additionalSuccesses: cur - 1 });
-  };
-  const removeAdditionalFailure = () => {
-    const cur = skill?.additionalFailures ?? 0;
-    if (cur > 0) updateSkill({ additionalFailures: cur - 1 });
-  };
-
   const updateParticipantRmBonus = (id: string, rmBonus: number | undefined) => {
     if (!skill) return;
     const p = skill.participants.find((x) => x.id === id);
@@ -322,7 +314,8 @@ export default function SkillEncounterView({
         currentFailures: Math.max(0, skill.currentFailures - dFailures),
       });
     } else {
-      const { successes, failures } = computeSkillRollResult(p.rollValue ?? 0, skill.difficultyScore);
+      const effectiveRoll = (p.rollValue ?? 0) + (p.rmBonus ?? 0);
+      const { successes, failures } = computeSkillRollResult(effectiveRoll, skill.difficultyScore);
       updateSkill({
         participants: skill.participants.map((x) => (x.id === id ? { ...x, isHelping: false } : x)),
         currentSuccesses: skill.currentSuccesses + successes,
@@ -500,20 +493,33 @@ export default function SkillEncounterView({
               rollFailures={derivedRollFailures}
               additionalSuccesses={additionalSuccesses}
               additionalFailures={additionalFailures}
+              requiredSuccesses={requiredSuccesses}
+              maxFailures={maxFailures}
+              outcome={encounterOutcome}
             />
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
-              <Button size="sm" variant="secondary" onClick={addAdditionalSuccess}>
-                Additional Success
-              </Button>
-              <Button size="sm" variant="secondary" onClick={removeAdditionalSuccess} disabled={additionalSuccesses <= 0}>
-                − Success
-              </Button>
-              <Button size="sm" variant="secondary" onClick={addAdditionalFailure}>
-                Additional Failure
-              </Button>
-              <Button size="sm" variant="secondary" onClick={removeAdditionalFailure} disabled={additionalFailures <= 0}>
-                − Failure
-              </Button>
+            <div className="mt-4 grid sm:grid-cols-2 gap-3">
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-border-light px-3 py-2">
+                <span className="text-sm text-text-secondary">Additional Successes</span>
+                <ValueStepper
+                  value={additionalSuccesses}
+                  onChange={(v) => updateSkill({ additionalSuccesses: Math.max(0, v) })}
+                  min={0}
+                  max={99}
+                  size="sm"
+                  enableHoldRepeat
+                />
+              </div>
+              <div className="flex items-center justify-between gap-2 rounded-lg border border-border-light px-3 py-2">
+                <span className="text-sm text-text-secondary">Additional Failures</span>
+                <ValueStepper
+                  value={additionalFailures}
+                  onChange={(v) => updateSkill({ additionalFailures: Math.max(0, v) })}
+                  min={0}
+                  max={99}
+                  size="sm"
+                  enableHoldRepeat
+                />
+              </div>
             </div>
           </div>
 
@@ -621,6 +627,40 @@ export default function SkillEncounterView({
                   Roll ≥ DS = success. Each 5 over/under adds extra success/failure.
                 </p>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Required Successes</label>
+                <ValueStepper
+                  value={requiredSuccesses}
+                  onChange={(val) => updateSkill({ requiredSuccesses: Math.max(1, val) })}
+                  min={1}
+                  max={99}
+                  size="sm"
+                  enableHoldRepeat
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Maximum Failures</label>
+                <ValueStepper
+                  value={maxFailures}
+                  onChange={(val) => updateSkill({ maxFailures: Math.max(1, val) })}
+                  min={1}
+                  max={99}
+                  size="sm"
+                  enableHoldRepeat
+                />
+              </div>
+              <div>
+                <label htmlFor="encounter-description" className="block text-sm font-medium text-text-secondary mb-1">
+                  Encounter Description
+                </label>
+                <textarea
+                  id="encounter-description"
+                  value={encounter.description ?? ''}
+                  onChange={(e) => setEncounter((prev) => (prev ? { ...prev, description: e.target.value } : prev))}
+                  placeholder="Rewards, penalties, context, and skill bonus notes..."
+                  className="w-full rounded-lg border border-border-light bg-background px-3 py-2 text-sm text-text-primary focus:border-primary-500 focus:outline-none min-h-[96px]"
+                />
+              </div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -720,7 +760,11 @@ export default function SkillEncounterView({
             <div className="space-y-2 text-xs text-text-muted dark:text-text-secondary">
               <p>
                 <strong className="text-text-secondary">Required Successes:</strong>{' '}
-                {skill.participants.length + 1} (per GAME_RULES: # participants + 1)
+                {requiredSuccesses}
+              </p>
+              <p>
+                <strong className="text-text-secondary">Maximum Failures:</strong>{' '}
+                {maxFailures}
               </p>
               <p>
                 <strong className="text-text-secondary">Success:</strong> roll ≥ DS; +1 per 5 over
@@ -730,6 +774,14 @@ export default function SkillEncounterView({
               </p>
               <p>
                 <strong className="text-text-secondary">Net:</strong> successes − failures
+              </p>
+              <p>
+                <strong className="text-text-secondary">Outcome:</strong>{' '}
+                {encounterOutcome === 'success'
+                  ? 'Encounter Overcome'
+                  : encounterOutcome === 'failure'
+                    ? 'Encounter Failed'
+                    : 'In Progress'}
               </p>
             </div>
           </div>
@@ -755,11 +807,17 @@ function SuccessFailureTracker({
   rollFailures,
   additionalSuccesses,
   additionalFailures,
+  requiredSuccesses,
+  maxFailures,
+  outcome,
 }: {
   rollSuccesses: number;
   rollFailures: number;
   additionalSuccesses: number;
   additionalFailures: number;
+  requiredSuccesses: number;
+  maxFailures: number;
+  outcome: 'success' | 'failure' | 'in-progress';
 }) {
   const totalSuccesses = rollSuccesses + additionalSuccesses;
   const totalFailures = rollFailures + additionalFailures;
@@ -768,29 +826,58 @@ function SuccessFailureTracker({
   const maxBubbles = Math.max(10, netAbs + 4);
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      <div className="px-4 py-2 rounded-lg bg-surface-alt text-text-muted dark:text-text-secondary text-sm font-medium min-w-[4rem] text-center">
-        {net === 0 ? '0' : net > 0 ? `+${net}` : net}
-      </div>
-      <div className="flex items-center gap-1">
-        {net > 0 &&
-          Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
-            <div key={`g-${i}`} className="w-4 h-4 rounded-full bg-green-500 dark:bg-green-600" title="Success" />
-          ))}
-        {net < 0 &&
-          Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
-            <div key={`r-${i}`} className="w-4 h-4 rounded-full bg-red-500 dark:bg-red-600" title="Failure" />
-          ))}
-        {(net > 0 || net < 0) && (
-          <span
+    <div className="space-y-3">
+      <div className="grid sm:grid-cols-3 gap-2 text-xs">
+        <div className="rounded-lg border border-border-light bg-surface-alt px-3 py-2">
+          <div className="text-text-muted dark:text-text-secondary">Total Successes</div>
+          <div className="text-sm font-semibold text-success-700 dark:text-success-400">
+            {totalSuccesses} / {requiredSuccesses}
+          </div>
+        </div>
+        <div className="rounded-lg border border-border-light bg-surface-alt px-3 py-2">
+          <div className="text-text-muted dark:text-text-secondary">Total Failures</div>
+          <div className="text-sm font-semibold text-danger-700 dark:text-danger-400">
+            {totalFailures} / {maxFailures}
+          </div>
+        </div>
+        <div className="rounded-lg border border-border-light bg-surface-alt px-3 py-2">
+          <div className="text-text-muted dark:text-text-secondary">Status</div>
+          <div
             className={cn(
-              'text-xs font-medium ml-1',
-              net > 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+              'text-sm font-semibold',
+              outcome === 'success' && 'text-success-700 dark:text-success-400',
+              outcome === 'failure' && 'text-danger-700 dark:text-danger-400',
+              outcome === 'in-progress' && 'text-text-primary'
             )}
           >
-            {net > 0 ? `+${net}` : net}
-          </span>
-        )}
+            {outcome === 'success' ? 'Overcome' : outcome === 'failure' ? 'Failed' : 'In Progress'}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-2">
+        <div className="px-4 py-2 rounded-lg bg-surface-alt text-text-muted dark:text-text-secondary text-sm font-medium min-w-[4rem] text-center">
+          {net === 0 ? '0' : net > 0 ? `+${net}` : net}
+        </div>
+        <div className="flex items-center gap-1">
+          {net > 0 &&
+            Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
+              <div key={`g-${i}`} className="w-4 h-4 rounded-full bg-green-500 dark:bg-green-600" title="Success" />
+            ))}
+          {net < 0 &&
+            Array.from({ length: Math.min(netAbs, maxBubbles) }).map((_, i) => (
+              <div key={`r-${i}`} className="w-4 h-4 rounded-full bg-red-500 dark:bg-red-600" title="Failure" />
+            ))}
+          {(net > 0 || net < 0) && (
+            <span
+              className={cn(
+                'text-xs font-medium ml-1',
+                net > 0 ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'
+              )}
+            >
+              {net > 0 ? `+${net}` : net}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -856,6 +943,12 @@ function ParticipantCard({
   onDrop?: (e: DragEvent<HTMLDivElement>) => void;
 }) {
   const [rollInput, setRollInput] = useState('');
+  const [rmBonusInput, setRmBonusInput] = useState(
+    participant.rmBonus == null ? '' : String(participant.rmBonus)
+  );
+  useEffect(() => {
+    setRmBonusInput(participant.rmBonus == null ? '' : String(participant.rmBonus));
+  }, [participant.rmBonus]);
   const hasActed = participant.hasRolled || participant.isHelping;
   const isSuccess = (participant.successCount ?? 0) > 0;
   const successCount = participant.successCount ?? 0;
@@ -868,8 +961,22 @@ function ParticipantCard({
   const submitRoll = () => {
     const val = parseInt(rollInput, 10);
     if (isNaN(val)) return;
+    const bonusParsed = rmBonusInput.trim();
+    const rmBonus = bonusParsed === '' || bonusParsed === '-' ? undefined : parseInt(bonusParsed, 10);
+    onUpdateRmBonus(Number.isNaN(rmBonus as number) ? undefined : rmBonus);
     onUpdateRoll(val);
     setRollInput('');
+  };
+
+  const handleRmBonusChange = (value: string) => {
+    setRmBonusInput(value);
+    const v = value.trim();
+    if (v === '' || v === '-') {
+      onUpdateRmBonus(undefined);
+      return;
+    }
+    const parsed = parseInt(v, 10);
+    if (!Number.isNaN(parsed)) onUpdateRmBonus(parsed);
   };
 
   return (
@@ -945,18 +1052,6 @@ function ParticipantCard({
                 </option>
               ))}
             </select>
-            <span className="text-xs text-text-muted dark:text-text-secondary">RM Bonus:</span>
-            <input
-              type="number"
-              value={participant.rmBonus ?? ''}
-              onChange={(e) => {
-                const v = e.target.value.trim();
-                onUpdateRmBonus(v === '' || v === '-' ? undefined : parseInt(v, 10));
-              }}
-              placeholder="+0"
-              className="w-12 px-1 py-0.5 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-500 focus:outline-none"
-              aria-label="RM bonus"
-            />
           </div>
         </div>
 
@@ -983,6 +1078,17 @@ function ParticipantCard({
                     </span>
                   )}
                   <span className="text-xs font-normal ml-1">vs {ds}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-text-muted dark:text-text-secondary">RM</span>
+                  <input
+                    type="number"
+                    value={rmBonusInput}
+                    onChange={(e) => handleRmBonusChange(e.target.value)}
+                    placeholder="+0"
+                    className="w-14 px-2 py-1 text-xs border border-border-light rounded bg-surface text-text-primary focus:border-primary-500 focus:outline-none min-h-[44px]"
+                    aria-label="RM bonus"
+                  />
                 </div>
                 <span
                   className={cn(
@@ -1020,6 +1126,17 @@ function ParticipantCard({
                 className="w-16 px-2 py-1.5 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-500 focus:outline-none min-h-[44px]"
                 aria-label="Roll total"
               />
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-text-muted dark:text-text-secondary">RM</span>
+                <input
+                  type="number"
+                  value={rmBonusInput}
+                  onChange={(e) => handleRmBonusChange(e.target.value)}
+                  placeholder="+0"
+                  className="w-14 px-2 py-1.5 text-sm border border-border-light rounded-lg bg-surface text-text-primary focus:border-primary-500 focus:outline-none min-h-[44px]"
+                  aria-label="RM bonus"
+                />
+              </div>
               <Button size="sm" onClick={submitRoll} disabled={!rollInput} className="min-h-[44px]">
                 Submit
               </Button>

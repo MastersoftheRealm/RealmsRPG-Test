@@ -398,8 +398,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
     const archetypeType = character.archetype?.type || 'power';
     const archetypeFeatSlots = calculateMaxArchetypeFeats(level, archetypeType);
     const characterFeatSlots = calculateMaxCharacterFeats(level);
-    const usedArchetypeFeats = (character.archetypeFeats || []).length;
-    const usedCharacterFeats = (character.feats || []).length;
+    const featLevelById = new Map<string, number>();
+    (featsDb || []).forEach((f) => {
+      const lvl = f.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1;
+      featLevelById.set(String(f.id), lvl);
+    });
+    const usedArchetypeFeats = (character.archetypeFeats || []).reduce((sum, feat) => {
+      return sum + (featLevelById.get(String(feat.id)) ?? 1);
+    }, 0);
+    const usedCharacterFeats = (character.feats || []).reduce((sum, feat) => {
+      return sum + (featLevelById.get(String(feat.id)) ?? 1);
+    }, 0);
     const archetypeFeatsRemaining = archetypeFeatSlots - usedArchetypeFeats;
     const characterFeatsRemaining = characterFeatSlots - usedCharacterFeats;
     
@@ -411,7 +420,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
       archetypeFeatsRemaining > 0 ||
       characterFeatsRemaining > 0
     );
-  }, [character, characterSpeciesSkills]);
+  }, [character, characterSpeciesSkills, featsDb]);
   
   // Auto-save with debounce
   const { hasUnsavedChanges, isSaving, lastSaved, saveNow } = useAutoSave({
@@ -1085,14 +1094,46 @@ export default function CharacterSheetPage({ params }: PageParams) {
         feats: [...(prev.feats || []), ...toCharacter],
       } : null);
     } else if (type === 'archetype') {
+      type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number };
+      const db = featsDb as LeveledFeat[];
+      const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
+      const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
+      const getFamily = (f: LeveledFeat | undefined) => (f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? ''));
       setCharacter(prev => prev ? {
         ...prev,
-        archetypeFeats: [...(prev.archetypeFeats || []), ...newFeats]
+        archetypeFeats: newFeats.reduce<CharacterFeat[]>((acc, nextFeat) => {
+          const nextDef = byId.get(String(nextFeat.id));
+          const nextFamily = getFamily(nextDef);
+          const nextLevel = getLevel(nextDef);
+          const filtered = acc.filter((existing) => {
+            const existingDef = byId.get(String(existing.id));
+            if (!existingDef || !nextFamily) return true;
+            if (getFamily(existingDef) !== nextFamily) return true;
+            return getLevel(existingDef) >= nextLevel;
+          });
+          return [...filtered, nextFeat];
+        }, [...(prev.archetypeFeats || [])])
       } : null);
     } else {
+      type LeveledFeat = Feat & { base_feat_id?: string; feat_lvl?: number };
+      const db = featsDb as LeveledFeat[];
+      const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
+      const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
+      const getFamily = (f: LeveledFeat | undefined) => (f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? ''));
       setCharacter(prev => prev ? {
         ...prev,
-        feats: [...(prev.feats || []), ...newFeats]
+        feats: newFeats.reduce<CharacterFeat[]>((acc, nextFeat) => {
+          const nextDef = byId.get(String(nextFeat.id));
+          const nextFamily = getFamily(nextDef);
+          const nextLevel = getLevel(nextDef);
+          const filtered = acc.filter((existing) => {
+            const existingDef = byId.get(String(existing.id));
+            if (!existingDef || !nextFamily) return true;
+            if (getFamily(existingDef) !== nextFamily) return true;
+            return getLevel(existingDef) >= nextLevel;
+          });
+          return [...filtered, nextFeat];
+        }, [...(prev.feats || [])])
       } : null);
     }
     setFeatModalType(null);

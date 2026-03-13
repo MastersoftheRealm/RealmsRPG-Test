@@ -534,11 +534,19 @@ export function FinalizeStep() {
           <div>
             <span className="text-text-muted dark:text-text-secondary">Archetype:</span>
             <span className="ml-2 font-medium">
-              {draft.archetype?.type 
+              {draft.archetype?.name
+                ? draft.archetype.name
+                : draft.archetype?.type 
                 ? draft.archetype.type.charAt(0).toUpperCase() + draft.archetype.type.slice(1)
                 : 'Not selected'}
             </span>
           </div>
+          {draft.creationMode && (
+            <div>
+              <span className="text-text-muted dark:text-text-secondary">Creation Style:</span>
+              <span className="ml-2 font-medium">{draft.creationMode === 'path' ? 'Choose a Path' : 'Forge Your Own Path'}</span>
+            </div>
+          )}
           
           <div>
             <span className="text-text-muted dark:text-text-secondary">Species:</span>

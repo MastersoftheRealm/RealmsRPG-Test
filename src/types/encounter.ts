@@ -73,6 +73,10 @@ export interface SkillEncounterState {
   additionalSuccesses?: number;
   /** RM-added failures (buttons "Additional Failure") */
   additionalFailures?: number;
+  /** RM-configured threshold to overcome the encounter */
+  requiredSuccesses?: number;
+  /** RM-configured failure limit before the encounter fails */
+  maxFailures?: number;
   /** When true, track turns and use initiative (roll, sort, drag, ally/enemy) */
   useInitiative?: boolean;
   /** Current turn index when useInitiative is true */
@@ -81,9 +85,7 @@ export interface SkillEncounterState {
   sequenceSuccesses?: number;
   /** Sequence: manual running total of failures across multiple skill encounters */
   sequenceFailures?: number;
-  /** @deprecated Legacy: optional target for successes (mixed page) */
-  requiredSuccesses?: number;
-  /** @deprecated Legacy: optional target for failures (mixed page) */
+  /** @deprecated Legacy target for failures */
   requiredFailures?: number;
 }
 
@@ -152,6 +154,10 @@ export function createDefaultEncounter(
             participants: [],
             currentSuccesses: 0,
             currentFailures: 0,
+            additionalSuccesses: 0,
+            additionalFailures: 0,
+            requiredSuccesses: 1,
+            maxFailures: 3,
           },
         }
       : {}),

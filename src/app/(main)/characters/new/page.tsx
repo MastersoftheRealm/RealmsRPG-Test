@@ -62,7 +62,7 @@ export default function CharacterCreatorPage() {
             Step {stepIndex} of {totalSteps} — Follow the steps below to build your character
           </p>
           <p className="text-text-secondary text-sm mt-3 rounded-lg bg-muted/50 dark:bg-muted/30 px-3 py-2 border border-border-light">
-            <strong className="text-text-primary">Quick start:</strong> Ready-to-play Archetypes (e.g. Martial striker, Power caster) will be available soon in Realms Library. For now, choose from the Codex and Realms Library in each step below.
+            <strong className="text-text-primary">Tip:</strong> Start with <strong className="text-text-primary">Choose a Path</strong> for guided recommendations, or use <strong className="text-text-primary">Forge Your Own Path</strong> for full customization.
           </p>
         </div>
         

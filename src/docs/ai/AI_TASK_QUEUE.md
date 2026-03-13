@@ -6827,3 +6827,127 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Enhanced toggle with power selection, custom base item, potency.
     - Library Enhanced tab; save enhanced items from crafting.
     - npm run build passes.
+
+- id: TASK-296
+  title: Creator resource colors — shift TP to lime and keep IP/C distinct
+  priority: medium
+  status: done
+  created_at: 2026-03-12
+  created_by: agent
+  description: |
+    Apply requested visual shift for Training Points (TP) toward lime while preserving distinct colors
+    for Item Points (IP) and Currency (C). Keep usage consistent through existing semantic tokens so
+    creator/list UIs update globally without ad-hoc per-component colors.
+  related_files:
+    - src/app/globals.css
+  acceptance_criteria:
+    - TP semantic tokens use lime palette in light/dark mode.
+    - Existing TP usages (text-tp-text/bg-tp-light) render with new palette.
+    - IP and Currency tokens remain visually distinct from TP.
+    - No lint/build regressions.
+  notes: |
+    Implemented 2026-03-12: Updated --color-tp, --color-tp-light, --color-tp-text, --color-tp-border
+    and dark-mode TP overrides to lime palette. Existing TP semantic classes now render in lime while
+    IP (blue) and Currency (gold) remain distinct from prior creator color-token update.
+
+- id: TASK-297
+  title: Leveled feats migration and sitewide behavior unification (same name + level/id)
+  priority: high
+  status: in-progress
+  created_at: 2026-03-12
+  created_by: agent
+  description: |
+    Finalize leveled-feat architecture across app and data: feats share same name across levels,
+    `feat_lvl` indicates tier, ids differentiate rows, and `base_feat_id` links level-2+ feats to the
+    level-1 feat. Remove remaining roman numeral naming dependence and ensure upgrade/replacement/counting
+    rules are enforced consistently.
+  related_files:
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-sheet/feats-tab.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/docs/LEVELED_FEATS_DESIGN.md
+    - sql/leveled-feats-add-base-feat-id.sql
+    - sql/leveled-feats-migrate-roman-to-base-id.sql
+  acceptance_criteria:
+    - Add/select flows use feat ids (not names) for duplicate detection and prerequisites.
+    - Upgrading to higher feat level replaces lower-level feat in same family.
+    - Slot usage/counting treats level-N feat as N slots of its feat type where limits are shown/enforced.
+    - Codex/admin/showcase surfaces display "Name (Level N)" and no roman-suffix logic.
+    - DB migration path documented and runnable to strip roman suffixes and populate base_feat_id.
+    - npm run build passes after completion.
+  notes: |
+    In progress 2026-03-12.
+    Implemented so far:
+    - Character sheet Add Feat modal now uses id-only existing checks (same names allowed).
+    - Character creator Feats step now enforces previous-level prerequisite via base_feat_id/feat_lvl,
+      performs lower-level replacement on upgrade, and uses level-weighted slot counting.
+    - Character sheet used-slot calculations and Feats tab counters now use level-weighted totals.
+    - Character page add-feat flow replaces lower-level feats in same family when adding upgraded levels.
+    - Added shared leveled-feat utilities (`src/lib/leveled-feats.ts`) for family grouping, display
+      naming, and level-chip generation.
+    - Unified feat-family UI display in Codex and Admin feat tabs: one family-oriented row with
+      `Feat Levels` expandable chips rather than rendering every level as separate top-level rows.
+    - Unified Character Creator Feats step and Character Sheet Add Feat modal to family-aware row
+      rendering with `Feat Levels` chips and consistent shared `GridListRow` detail sections.
+    - Character Sheet Feats tab now surfaces `Feat Levels` chips for selected feats when additional
+      levels exist in the same family.
+    - Build blocker in crafting detail page resolved: fixed `CreatorLayout` child structure,
+      removed duplicated legacy sidebar/modal block, restored missing crafting-utils import, and
+      corrected minor typing/UI issues surfaced by TypeScript.
+    - `npm run build` now passes.
+    Remaining:
+    - Validate any remaining feat edit edge-cases for level variants in Admin workflows.
+
+- id: TASK-298
+  title: Archetype Path system for guided character creation + admin authoring
+  priority: high
+  status: in-progress
+  created_at: 2026-03-12
+  created_by: agent
+  description: |
+    Implement end-to-end archetype path support so users can choose between "Forge Your Own Path"
+    and "Choose a Path" during character creation. Archetype paths include level-1 recommendations
+    (proficiency, feat/skill/power/technique/armament/equipment options), primary+secondary ability
+    guidance, and level progression recommendation data. Admin codex archetype editing should support
+    authoring these path fields, and creator steps should consume/reuse shared list UI patterns with
+    recommendation-first UX plus manual override.
+  related_files:
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/actions.ts
+    - src/app/api/codex/route.ts
+    - src/components/character-creator/steps/archetype-step.tsx
+    - src/components/character-creator/steps/abilities-step.tsx
+    - src/components/character-creator/steps/skills-step.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/stores/character-creator-store.ts
+    - src/types/archetype.ts
+    - src/types/character.ts
+    - src/lib/game/archetype-path.ts
+    - src/lib/data-enrichment.ts
+  acceptance_criteria:
+    - Creator first step includes "Forge Your Own Path" and "Choose a Path" options with explanatory copy.
+    - Choose-a-Path mode lists official archetype paths grouped by archetype type and supports selecting one.
+    - Selected path feeds recommended data into creator steps (at minimum feats/skills/equipment/powers/techniques guidance with manual override).
+    - Character save persists path context (`archetypePathId`) for future level-up guidance.
+    - Admin archetype editing supports path metadata fields and level-path data authoring.
+    - Codex API returns archetype path fields safely (including JSON path payload).
+    - npm run build passes.
+  notes: |
+    In progress 2026-03-12. Implemented in this session:
+    - Added archetype path types and parsing utility (`src/types/archetype.ts`, `src/lib/game/archetype-path.ts`).
+    - Extended codex archetype API payload with path fields and safe JSON handling.
+    - Extended admin codex archetype authoring form to include primary/secondary ability, proficiency milestones, and path JSON data.
+    - Added creator flow mode selection (Forge vs Path), grouped path selection UI, and path selection persistence in creator store.
+    - Added path-aware recommendations in abilities, skills, feats (toggle between path and full list), powers/techniques, and equipment steps.
+    - Persisted `archetypePathId`/`creationMode` in character save pipeline (`store`, `types`, `cleanForSave`).
+    - Replaced JSON-only path authoring with a structured level-by-level Archetype Path Builder in admin:
+      level 1 recommendation inputs, add/remove progression level cards, add/remove lists per level,
+      and optional advanced JSON override for power users.
+    - Refactored persistence toward columnar/relational Supabase data:
+      level-1 path recommendations now map to dedicated columns on `codex_archetypes`, and level 2+
+      progression rows map to `codex_archetype_levels` (one row per archetype+level).

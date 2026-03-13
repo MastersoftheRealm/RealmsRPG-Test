@@ -11,18 +11,24 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ChevronLeft, CheckCircle2, XCircle, Hammer } from 'lucide-react';
+import {
+  ChevronLeft,
+  CheckCircle2,
+  XCircle,
+  Hammer,
+  Gauge,
+  Coins,
+  Clock,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  PageContainer,
-  PageHeader,
   Button,
   LoadingState,
   Alert,
   Input,
 } from '@/components/ui';
 import { ValueStepper, SectionHeader } from '@/components/shared';
-import { CreatorSummaryPanel } from '@/components/creator';
+import { CreatorLayout, CreatorSummaryPanel, CollapsibleSection } from '@/components/creator';
 import {
   useCraftingSession,
   useSaveCraftingSession,
@@ -37,6 +43,7 @@ import { useToast } from '@/components/ui';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import {
   getCraftingRequirements,
+  getUpgradeRequirements,
   getCraftingSessionLabels,
   getEnhancedCraftingRequirements,
   getConsumableEnhancedRequirements,
@@ -82,6 +89,7 @@ export default function CraftingToolPage() {
   const [session, setSession] = useState<CraftingSessionType | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [itemSelectOpen, setItemSelectOpen] = useState(false);
+  const [upgradeItemSelectOpen, setUpgradeItemSelectOpen] = useState(false);
   const [upgradePotencyValue, setUpgradePotencyValue] = useState('');
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -125,9 +133,12 @@ export default function CraftingToolPage() {
   // --- Derived values ---
 
   const item = session?.data.item ?? null;
+  const customBaseItem = session?.data.customBaseItem ?? null;
+  const upgradeOriginalItem = session?.data.upgradeOriginalItem ?? null;
   const isConsumable = session?.data.isConsumable ?? false;
   const quantity = session?.data.quantity ?? 1;
   const isEnhanced = session?.data.isEnhanced ?? false;
+  const isUpgrade = session?.data.isUpgrade ?? false;
   const isCompleted = session?.data.status === 'completed';
 
   const CRAFT_BASE_SKILL_ID = 13;
@@ -148,10 +159,17 @@ export default function CraftingToolPage() {
 
   // Compute requirements from current session config + rules
   const requirements = useMemo((): CraftingRequirements | null => {
-    if (!rulesData || !item) return null;
+    if (!rulesData || (!item && !customBaseItem)) return null;
     let base: CraftingRequirements | null = null;
 
-    if (isEnhanced && session?.data.powerRef) {
+    if (isUpgrade && (item || customBaseItem) && upgradeOriginalItem) {
+      const oldPrice = upgradeOriginalItem.marketPrice;
+      const newPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
+      if (!oldPrice || !newPrice) return null;
+      const req = getUpgradeRequirements(oldPrice, newPrice, rulesData);
+      if (!req) return null;
+      base = req;
+    } else if (isEnhanced && session?.data.powerRef) {
       const multiIdx = session?.data.multipleUseTableIndex ?? -1;
       const energyCost = session?.data.powerRef?.energyCost ?? 10;
       const effectiveEnergy = multiIdx >= 0
@@ -163,7 +181,9 @@ export default function CraftingToolPage() {
       if (!req) return null;
       base = req;
     } else {
-      const req = getCraftingRequirements(item.marketPrice, isConsumable, rulesData);
+      const baseMarketPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
+      if (!baseMarketPrice) return null;
+      const req = getCraftingRequirements(baseMarketPrice, isConsumable, rulesData);
       if (!req) return null;
       base = req;
     }
@@ -282,21 +302,25 @@ export default function CraftingToolPage() {
   const netDelta = totalSuccesses - totalFailures - required;
 
   const liveOutcome = useMemo(() => {
-    if (!rulesData || !item?.marketPrice) return null;
+    if (!rulesData) return null;
+    const baseMarketPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
+    if (!baseMarketPrice) return null;
     return calculateCraftingOutcome(
       netDelta,
       session?.data.materialCost ?? 0,
-      item.marketPrice,
+      baseMarketPrice,
       rulesData.successesTable
     );
-  }, [rulesData, item?.marketPrice, netDelta, session?.data.materialCost]);
+  }, [rulesData, item?.marketPrice, customBaseItem?.marketPrice, netDelta, session?.data.materialCost]);
 
   const handleComplete = useCallback(async () => {
-    if (!session || !id || !rulesData || !item) return;
+    if (!session || !id || !rulesData || (!item && !customBaseItem)) return;
+    const baseMarketPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
+    if (!baseMarketPrice) return;
     const outcome = calculateCraftingOutcome(
       netDelta,
       session.data.materialCost ?? 0,
-      item.marketPrice ?? 0,
+      baseMarketPrice,
       rulesData.successesTable
     );
     const completedData = {
@@ -325,8 +349,20 @@ export default function CraftingToolPage() {
 
   const handleItemSelect = (selected: CraftingSelectedItem) => {
     const ref = toCraftingItemRef(selected);
-    updateData({ item: ref });
+    updateData({
+      item: ref,
+      customBaseItem: null,
+    });
     setItemSelectOpen(false);
+  };
+
+  const handleUpgradeItemSelect = (selected: CraftingSelectedItem) => {
+    const ref = toCraftingItemRef(selected);
+    updateData({
+      isUpgrade: true,
+      upgradeOriginalItem: ref,
+    });
+    setUpgradeItemSelectOpen(false);
   };
 
   const setOptionModifier = (key: string, value: number) => {
@@ -369,207 +405,675 @@ export default function CraftingToolPage() {
   // --- Rendering ---
 
   if (isLoading || !initialized) {
-    return (
-      <PageContainer size="xl">
-        <LoadingState message="Loading crafting session..." size="lg" />
-      </PageContainer>
-    );
+    return <LoadingState message="Loading crafting session..." size="lg" />;
   }
 
   if (error || !session) {
     return (
-      <PageContainer size="xl">
-        <Alert variant="danger" title="Session not found">
-          {error?.message ?? 'This crafting session could not be loaded.'}
-        </Alert>
-        <Link href="/crafting">
-          <Button variant="ghost" className="mt-4">
-            <ChevronLeft className="w-4 h-4" />
-            Back to Crafting
-          </Button>
-        </Link>
-      </PageContainer>
+      <Alert variant="danger" title="Session not found">
+        {error?.message ?? 'This crafting session could not be loaded.'}
+      </Alert>
     );
   }
 
   const sessions = session.data.sessions ?? [];
   const outcome = session.data.outcome;
-  const displayName = item?.name ?? 'New Crafting Session';
+  const displayName =
+    item?.name ?? customBaseItem?.name ?? 'New Crafting Session';
   const mods = session.data.optionalModifiers ?? {};
 
   return (
-    <PageContainer size="xl">
-      <div className="mb-4">
-        <Link
-          href="/crafting"
-          className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-600 dark:hover:text-primary-400"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Back to Crafting
-        </Link>
-      </div>
-      <PageHeader
-        icon={<Hammer className="w-6 h-6" />}
-        title={displayName}
-        description={item
+    <CreatorLayout
+      icon={<Hammer className="w-6 h-6" />}
+      title={displayName}
+      description={
+        item || customBaseItem
           ? `${requirements?.rarity ?? ''} · DS ${effectiveDS} · ${required} success${required !== 1 ? 'es' : ''} required`
           : 'Select an item to begin crafting.'
-        }
-      />
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* ───────── Main content (left 2/3) ───────── */}
-        <div className="lg:col-span-2 space-y-6 order-2 lg:order-1 min-w-0">
-
-          {/* Item selection */}
-          <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-            <SectionHeader title="Item" size="md" className="mb-2" />
-            {item ? (
-              <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt">
-                <span className="font-medium text-text-primary">{item.name}</span>
-                <span className="text-sm text-text-muted dark:text-text-secondary">{item.marketPrice} currency</span>
-                {!isCompleted && (
-                  <Button variant="secondary" size="sm" onClick={() => setItemSelectOpen(true)} aria-label="Change item">
-                    Change
-                  </Button>
-                )}
+      }
+      actions={
+        <Link href="/crafting">
+          <Button variant="ghost" size="sm">
+            <ChevronLeft className="w-4 h-4" />
+            Back to Crafting
+          </Button>
+        </Link>
+      }
+      sidebar={
+        <CreatorSummaryPanel
+          title="Crafting Summary"
+          costStats={
+            requirements
+              ? [
+                  {
+                    label: 'Difficulty Score',
+                    value: effectiveDS,
+                    color: 'energy',
+                    icon: <Gauge className="w-5 h-5" />,
+                  },
+                  {
+                    label: 'Material Cost',
+                    value: `${Math.ceil(requirements.materialCost)} C`,
+                    color: 'currency',
+                    icon: <Coins className="w-5 h-5" />,
+                  },
+                  {
+                    label: 'Time',
+                    value: `${requirements.timeValue} ${requirements.timeUnit}`,
+                    color: 'tp',
+                    icon: <Clock className="w-5 h-5" />,
+                  },
+                ]
+              : undefined
+          }
+          statRows={[
+            ...(requirements
+              ? [
+                  { label: 'Rarity', value: requirements.rarity },
+                  { label: 'Required Successes', value: requirements.requiredSuccesses },
+                  { label: 'Roll Sessions', value: requirements.sessionCount },
+                  { label: 'Quantity', value: quantity },
+                ]
+              : [{ label: 'Item', value: 'Not selected' }]),
+            ...(item?.marketPrice || customBaseItem?.marketPrice
+              ? [
+                  {
+                    label: 'Market Price',
+                    value: `${item?.marketPrice ?? customBaseItem?.marketPrice} C`,
+                  },
+                ]
+              : []),
+            ...(liveOutcome
+              ? [
+                  {
+                    label: 'Current Value',
+                    value: `${Math.ceil(liveOutcome.itemWorth)} C`,
+                    valueColor:
+                      netDelta >= 0
+                        ? 'text-success-700 dark:text-success-400'
+                        : 'text-danger-700 dark:text-danger-400',
+                  },
+                ]
+              : []),
+          ]}
+        >
+          {!isCompleted && sessions.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Successes</span>
+                <span className="font-medium text-success-700 dark:text-success-400">
+                  {totalSuccesses}
+                </span>
               </div>
-            ) : (
-              <Button onClick={() => setItemSelectOpen(true)} aria-label="Select item to craft">
-                Select item to craft
-              </Button>
-            )}
-          </section>
-
-          {/* Options: consumable, quantity, enhanced, sub-skill */}
-          {!isCompleted && (
-            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-              <SectionHeader title="Options" size="md" className="mb-3" />
-              <div className="flex flex-wrap gap-6 items-start">
-                <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                  <input
-                    type="checkbox"
-                    checked={isConsumable}
-                    onChange={(e) => updateData({ isConsumable: e.target.checked })}
-                    className="rounded border-border"
-                  />
-                  <span className="text-text-primary">Consumable</span>
-                </label>
-                {isConsumable && rulesData && (
-                  <p className="text-xs text-text-muted dark:text-text-secondary max-w-xs self-center">
-                    Crafting time is reduced to {Math.round(rulesData.consumableTimeMultiplier * 100)}% of normal.
-                  </p>
-                )}
-
-                <div>
-                  <span className="block text-sm font-medium text-text-secondary mb-1">Quantity</span>
-                  <ValueStepper
-                    value={quantity}
-                    onChange={(v) => updateData({ quantity: Math.max(1, v) })}
-                    min={1}
-                    max={20}
-                    step={1}
-                    decrementTitle="Decrease quantity"
-                    incrementTitle="Increase quantity"
-                  />
-                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1 max-w-[200px]">
-                    {quantity === (rulesData?.bulkCraftCount ?? 4)
-                      ? `Bulk: pay for ${rulesData?.bulkCraftMaterialCount ?? 3}, receive ${rulesData?.bulkCraftCount ?? 4}.`
-                      : `Crafting ${quantity} item${quantity !== 1 ? 's' : ''}.`
-                    }
-                  </p>
-                </div>
-
-                <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
-                  <input
-                    type="checkbox"
-                    checked={isEnhanced}
-                    onChange={(e) => {
-                      updateData({ isEnhanced: e.target.checked });
-                      if (!e.target.checked) updateData({ powerRef: null });
-                    }}
-                    className="rounded border-border"
-                  />
-                  <span className="text-text-primary">Enhanced</span>
-                </label>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Failures</span>
+                <span className="font-medium text-danger-700 dark:text-danger-400">
+                  {totalFailures}
+                </span>
               </div>
-
-              {/* Enhanced power selection */}
-              {isEnhanced && (
-                <div className="mt-4 pt-4 border-t border-border-light space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Net</span>
+                <span
+                  className={cn(
+                    'font-bold',
+                    netDelta >= 0
+                      ? 'text-success-700 dark:text-success-400'
+                      : 'text-danger-700 dark:text-danger-400'
+                  )}
+                >
+                  {netDelta >= 0 ? `+${netDelta}` : netDelta}
+                </span>
+              </div>
+              <div className="text-xs text-text-muted dark:text-text-secondary">
+                Required successes: {required}
+              </div>
+              {liveOutcome && (
+                <div className="mt-2 border-t border-border-light pt-2 space-y-1 text-xs text-text-secondary">
                   <div>
-                    <label htmlFor="enhanced-power" className="block text-sm font-medium text-text-secondary mb-1">Power to imbue</label>
-                    <select
-                      id="enhanced-power"
-                      value={session.data.powerRef?.id ?? ''}
-                      onChange={(e) => {
-                        const pid = e.target.value;
-                        const p = userPowers.find((x) => x.id === pid);
-                        if (p) {
-                          const ref: CraftingPowerRef = { source: 'library', id: p.id, name: p.name, energyCost: (p as unknown as { energyCost?: number }).energyCost ?? 10 };
-                          updateData({ powerRef: ref });
-                        } else {
-                          updateData({ powerRef: null });
-                        }
-                      }}
-                      className="w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
-                    >
-                      <option value="">Select a power</option>
-                      {userPowers.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                    Projected net material cost: {Math.ceil(liveOutcome.finalMaterialCost)} C
                   </div>
-                  {session.data.powerRef && (
-                    <div>
-                      <label htmlFor="energy-cost" className="block text-sm font-medium text-text-secondary mb-1">Energy cost</label>
-                      <Input
-                        id="energy-cost"
-                        type="number"
-                        min={0}
-                        max={200}
-                        value={session.data.powerRef.energyCost}
-                        onChange={(e) => {
-                          if (!session.data.powerRef) return;
-                          updateData({ powerRef: { ...session.data.powerRef, energyCost: Number(e.target.value) || 0 } });
-                        }}
-                        className="w-24"
-                      />
+                  <div>
+                    Projected materials recovered: {Math.ceil(liveOutcome.materialsRetained)} C
+                  </div>
+                  <div>
+                    Projected item value: {Math.ceil(liveOutcome.itemWorth)} C
+                  </div>
+                  {liveOutcome.extraItemCount > 0 && (
+                    <div>Projected extra items: {liveOutcome.extraItemCount}</div>
+                  )}
+                  {liveOutcome.choiceExtraOrEnhance && (
+                    <div className="text-text-primary dark:text-primary-400 font-medium">
+                      Choice: extra item at 100% or enhance to 200%
                     </div>
                   )}
                 </div>
               )}
-
-              {/* Craft sub-skill */}
-              {craftSubSkills.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-border-light">
-                  <label htmlFor="craft-subskill" className="block text-sm font-medium text-text-secondary mb-1">
-                    Craft sub-skill
-                  </label>
-                  <select
-                    id="craft-subskill"
-                    value={session.data.item?.subSkillId ?? ''}
-                    onChange={(e) => {
-                      if (!session.data.item) return;
-                      updateData({ item: { ...session.data.item, subSkillId: e.target.value || null } });
-                    }}
-                    className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px] max-w-md"
-                    aria-label="Craft sub-skill for flavor text"
-                  >
-                    <option value="">None</option>
-                    {craftSubSkills.map((s: { id: string; name: string }) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
+            </div>
+          )}
+          {isCompleted && outcome && (
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Final Value</span>
+                <span className="font-medium text-text-primary">
+                  {Math.ceil(outcome.itemWorth)} C
+                </span>
+              </div>
+              {outcome.extraItemCount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">Extra Items</span>
+                  <span className="font-medium text-text-primary">
+                    {outcome.extraItemCount}
+                  </span>
                 </div>
               )}
-            </section>
+            </div>
+          )}
+          {!isCompleted && (item || customBaseItem) && sessions.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button
+                onClick={handleComplete}
+                disabled={saveMutation.isPending}
+              >
+                {saveMutation.isPending ? 'Completing...' : 'Complete Crafting'}
+              </Button>
+            </div>
+          )}
+          {saveMutation.isPending && (
+            <p className="text-xs text-text-muted dark:text-text-secondary mt-2 text-center">
+              Saving...
+            </p>
+          )}
+        </CreatorSummaryPanel>
+      }
+      modals={
+        <>
+          <CraftingItemSelectModal
+            isOpen={itemSelectOpen}
+            onClose={() => setItemSelectOpen(false)}
+            onSelect={handleItemSelect}
+          />
+          <CraftingItemSelectModal
+            isOpen={upgradeItemSelectOpen}
+            onClose={() => setUpgradeItemSelectOpen(false)}
+            onSelect={handleUpgradeItemSelect}
+          />
+        </>
+      }
+    >
+      {/* ───────── Main content (left 2/3) ───────── */}
+
+          {/* Item + core options */}
+          <CollapsibleSection
+            title="Item & Options"
+            defaultExpanded
+            collapsedSummary={
+              item
+                ? `${item.name} · ${item.marketPrice} currency`
+                : customBaseItem
+                  ? `${customBaseItem.name} · ${customBaseItem.marketPrice} currency`
+                  : 'No item selected'
+            }
+          >
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                {item || customBaseItem ? (
+                  <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt">
+                    <span className="font-medium text-text-primary">
+                      {item?.name ?? customBaseItem?.name}
+                    </span>
+                    {(item?.marketPrice ?? customBaseItem?.marketPrice) != null && (
+                      <span className="text-sm text-text-muted dark:text-text-secondary">
+                        {item?.marketPrice ?? customBaseItem?.marketPrice} currency
+                      </span>
+                    )}
+                    {!isCompleted && (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setItemSelectOpen(true)}
+                          aria-label="Change item"
+                        >
+                          Change
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            updateData({
+                              item: null,
+                              customBaseItem: null,
+                              isUpgrade: false,
+                              upgradeOriginalItem: null,
+                              sessions: [],
+                              requiredSuccesses: 0,
+                              materialCost: 0,
+                              timeValue: 0,
+                              sessionCount: 0,
+                            })
+                          }
+                          aria-label="Remove item"
+                        >
+                          Remove
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  !isCompleted && (
+                    <Button
+                      onClick={() => setItemSelectOpen(true)}
+                      aria-label="Select item to craft"
+                    >
+                      Select item to craft
+                    </Button>
+                  )
+                )}
+              </div>
+
+              {/* Custom item entry */}
+              {!isCompleted && (
+                <div className="rounded-lg border border-border-light bg-surface-alt/60 p-3 space-y-2">
+                  <p className="text-xs font-medium text-text-secondary">
+                    Or define a custom base item (name + currency); rarity and crafting
+                    requirements will be computed from its cost.
+                  </p>
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <Input
+                      type="text"
+                      placeholder="Custom item name"
+                      value={customBaseItem?.name ?? ''}
+                      onChange={(e) =>
+                        updateData({
+                          customBaseItem: {
+                            name: e.target.value,
+                            marketPrice: customBaseItem?.marketPrice ?? 0,
+                          },
+                          item: null,
+                          isUpgrade: false,
+                          upgradeOriginalItem: null,
+                        })
+                      }
+                      className="min-w-[200px] max-w-xs"
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="Currency cost"
+                      value={
+                        customBaseItem?.marketPrice !== undefined
+                          ? customBaseItem.marketPrice
+                          : ''
+                      }
+                      onChange={(e) =>
+                        updateData({
+                          customBaseItem: {
+                            name: customBaseItem?.name ?? '',
+                            marketPrice: Number(e.target.value) || 0,
+                          },
+                          item: null,
+                          isUpgrade: false,
+                          upgradeOriginalItem: null,
+                        })
+                      }
+                      className="w-32"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Upgrade-from item selection */}
+              {!isCompleted && (item || customBaseItem) && (
+                <div className="rounded-lg border border-border-light bg-surface-alt/40 p-3 space-y-2">
+                  <p className="text-xs font-medium text-text-secondary">
+                    Upgrade an existing item into this one (cost/time based on price difference).
+                  </p>
+                  {upgradeOriginalItem ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm text-text-primary font-medium">
+                        From:{' '}
+                        <span className="font-semibold">
+                          {upgradeOriginalItem.name}
+                        </span>
+                      </span>
+                      <span className="text-xs text-text-muted dark:text-text-secondary">
+                        {upgradeOriginalItem.marketPrice} currency
+                      </span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setUpgradeItemSelectOpen(true)}
+                      >
+                        Change
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          updateData({
+                            isUpgrade: false,
+                            upgradeOriginalItem: null,
+                          })
+                        }
+                      >
+                        Clear upgrade
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setUpgradeItemSelectOpen(true)}
+                    >
+                      Select original item to upgrade from
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {!isCompleted && (
+                <div className="flex flex-wrap gap-6 items-start">
+                  <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                    <input
+                      type="checkbox"
+                      checked={isConsumable}
+                      onChange={(e) => updateData({ isConsumable: e.target.checked })}
+                      className="rounded border-border"
+                    />
+                    <span className="text-text-primary">Consumable</span>
+                  </label>
+                  {isConsumable && rulesData && (
+                    <p className="text-xs text-text-muted dark:text-text-secondary max-w-xs self-center">
+                      Crafting time is reduced to {Math.round(rulesData.consumableTimeMultiplier * 100)}% of normal.
+                    </p>
+                  )}
+
+                  <div>
+                    <span className="block text-sm font-medium text-text-secondary mb-1">
+                      Quantity
+                    </span>
+                    <ValueStepper
+                      value={quantity}
+                      onChange={(v) => updateData({ quantity: Math.max(1, v) })}
+                      min={1}
+                      max={20}
+                      step={1}
+                      decrementTitle="Decrease quantity"
+                      incrementTitle="Increase quantity"
+                    />
+                    <p className="text-xs text-text-muted dark:text-text-secondary mt-1 max-w-[200px]">
+                      {quantity === (rulesData?.bulkCraftCount ?? 4)
+                        ? `Bulk: pay for ${rulesData?.bulkCraftMaterialCount ?? 3}, receive ${rulesData?.bulkCraftCount ?? 4}.`
+                        : `Crafting ${quantity} item${quantity !== 1 ? 's' : ''}.`}
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                      <input
+                        type="checkbox"
+                        checked={isEnhanced}
+                        onChange={(e) => {
+                          updateData({ isEnhanced: e.target.checked });
+                          if (!e.target.checked) updateData({ powerRef: null });
+                        }}
+                        className="rounded border-border"
+                      />
+                      <span className="text-text-primary">Enhanced</span>
+                    </label>
+
+                    {isEnhanced && (
+                      <div className="pt-4 border-t border-border-light space-y-3">
+                        <div>
+                          <label
+                            htmlFor="enhanced-power"
+                            className="block text-sm font-medium text-text-secondary mb-1"
+                          >
+                            Power to imbue
+                          </label>
+                          <select
+                            id="enhanced-power"
+                            value={session.data.powerRef?.id ?? ''}
+                            onChange={(e) => {
+                              const pid = e.target.value;
+                              const p = userPowers.find((x) => x.id === pid);
+                              if (p) {
+                                const ref: CraftingPowerRef = {
+                                  source: 'library',
+                                  id: p.id,
+                                  name: p.name,
+                                  energyCost:
+                                    (p as unknown as { energyCost?: number }).energyCost ?? 10,
+                                };
+                                updateData({ powerRef: ref });
+                              } else {
+                                updateData({ powerRef: null });
+                              }
+                            }}
+                            className="w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                          >
+                            <option value="">Select a power</option>
+                            {userPowers.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {session.data.powerRef && (
+                          <div>
+                            <label
+                              htmlFor="energy-cost"
+                              className="block text-sm font-medium text-text-secondary mb-1"
+                            >
+                              Energy cost
+                            </label>
+                            <Input
+                              id="energy-cost"
+                              type="number"
+                              min={0}
+                              max={200}
+                              value={session.data.powerRef.energyCost}
+                              onChange={(e) => {
+                                if (!session.data.powerRef) return;
+                                updateData({
+                                  powerRef: {
+                                    ...session.data.powerRef,
+                                    energyCost: Number(e.target.value) || 0,
+                                  },
+                                });
+                              }}
+                              className="w-24"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CollapsibleSection>
+
+          {/* Modifiers: DS modifier + additional successes/failures */}
+          {!isCompleted && (item || customBaseItem) && (
+            <CollapsibleSection
+              title="Modifiers"
+              defaultExpanded
+              collapsedSummary={`DS modifier ${session.data.dsModifier ?? 0}, bonus S/F`}
+            >
+              <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
+                Adjust the effective DS or add bonus successes/failures (finer tools, help,
+                environmental bonuses).
+              </p>
+              <div className="flex flex-wrap gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    DS modifier
+                  </label>
+                  <ValueStepper
+                    value={session.data.dsModifier ?? 0}
+                    onChange={(v) => updateData({ dsModifier: v })}
+                    min={-10}
+                    max={10}
+                    step={1}
+                    formatValue={(v) => (v >= 0 ? `+${v}` : `${v}`)}
+                    colorValue
+                    decrementTitle="Decrease DS modifier"
+                    incrementTitle="Increase DS modifier"
+                  />
+                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+                    Effective DS: {effectiveDS}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Additional successes
+                  </label>
+                  <ValueStepper
+                    value={session.data.additionalSuccesses ?? 0}
+                    onChange={(v) => updateData({ additionalSuccesses: v })}
+                    min={0}
+                    max={20}
+                    step={1}
+                    decrementTitle="Remove additional success"
+                    incrementTitle="Add additional success"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Additional failures
+                  </label>
+                  <ValueStepper
+                    value={session.data.additionalFailures ?? 0}
+                    onChange={(v) => updateData({ additionalFailures: v })}
+                    min={0}
+                    max={20}
+                    step={1}
+                    decrementTitle="Remove additional failure"
+                    incrementTitle="Add additional failure"
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+          )}
+
+          {/* Crafting rolls + skill */}
+          {!isCompleted && sessions.length > 0 && (
+            <CollapsibleSection
+              title="Crafting Rolls"
+              defaultExpanded
+              collapsedSummary={`Net ${netDelta >= 0 ? `+${netDelta}` : netDelta}, ${totalSuccesses} S / ${totalFailures} F`}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <p className="text-sm text-text-muted dark:text-text-secondary">
+                  Enter each roll total (d20 + modifiers). Results auto-calculate against DS{' '}
+                  {effectiveDS}.
+                </p>
+                {craftSubSkills.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="craft-subskill"
+                      className="block text-xs font-medium text-text-secondary"
+                    >
+                      Skill used
+                    </label>
+                    <select
+                      id="craft-subskill"
+                      value={session.data.item?.subSkillId ?? ''}
+                      onChange={(e) => {
+                        if (!session.data.item) return;
+                        updateData({
+                          item: { ...session.data.item, subSkillId: e.target.value || null },
+                        });
+                      }}
+                      className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-text-primary min-h-[36px] max-w-xs"
+                      aria-label="Craft skill used for this project"
+                    >
+                      <option value="">None</option>
+                      {craftSubSkills.map((s: { id: string; name: string }) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-3">
+                {sessions.map((s, i) => {
+                  const hasRoll = s.roll != null;
+                  const isSuccess = hasRoll && s.successes > 0;
+                  const isFailure = hasRoll && s.failures > 0;
+                  return (
+                    <div
+                      key={s.label}
+                      className={cn(
+                        'flex flex-wrap items-center gap-4 p-3 sm:p-4 rounded-xl border transition-colors',
+                        hasRoll &&
+                          isSuccess &&
+                          'bg-green-50/50 dark:bg-green-900/10 border-l-4 border-l-green-500 border-border-light',
+                        hasRoll &&
+                          isFailure &&
+                          'bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500 border-border-light',
+                        !hasRoll && 'border-border-light'
+                      )}
+                    >
+                      <span className="font-medium text-text-primary w-28 shrink-0">
+                        {s.label}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <label className="sr-only" htmlFor={`roll-${id}-${i}`}>
+                          Roll for {s.label}
+                        </label>
+                        <Input
+                          id={`roll-${id}-${i}`}
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={s.roll ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            updateSessionRoll(i, v === '' ? null : parseInt(v, 10));
+                          }}
+                          placeholder="Roll"
+                          className="w-20 min-h-[44px]"
+                        />
+                      </div>
+                      {hasRoll && (
+                        <span className="text-sm flex items-center gap-1">
+                          {isSuccess && (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 text-success-700 dark:text-success-400" />
+                              <span className="text-success-700 dark:text-success-400 font-medium">
+                                {s.successes} success{s.successes !== 1 ? 'es' : ''}
+                              </span>
+                            </>
+                          )}
+                          {isFailure && (
+                            <>
+                              <XCircle className="w-4 h-4 text-danger-700 dark:text-danger-400" />
+                              <span className="text-danger-700 dark:text-danger-400 font-medium">
+                                {s.failures} failure{s.failures !== 1 ? 's' : ''}
+                              </span>
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CollapsibleSection>
           )}
 
           {/* Optional rules: reduce time / reduce difficulty */}
-          {!isCompleted && item && requirements && rulesData && (
-            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-              <SectionHeader title="Crafting Adjustments" size="md" className="mb-2" />
+          {!isCompleted && (item || customBaseItem) && requirements && rulesData && (
+            <CollapsibleSection
+              title="Crafting Adjustments"
+              defaultExpanded={false}
+              collapsedSummary="Trade time, DS, or cost"
+            >
               <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
                 Trade time for difficulty (or vice versa), or spend more resources to speed up or simplify crafting.
               </p>
@@ -696,177 +1200,7 @@ export default function CraftingToolPage() {
                   </div>
                 )}
               </div>
-            </section>
-          )}
-
-          {/* Modifiers: DS modifier + additional successes/failures */}
-          {!isCompleted && item && (
-            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-              <SectionHeader title="Modifiers" size="md" className="mb-3" />
-              <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-                Adjust the effective DS or add bonus successes/failures (finer tools, help, environmental bonuses).
-              </p>
-              <div className="flex flex-wrap gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">DS modifier</label>
-                  <ValueStepper
-                    value={session.data.dsModifier ?? 0}
-                    onChange={(v) => updateData({ dsModifier: v })}
-                    min={-10}
-                    max={10}
-                    step={1}
-                    formatValue={(v) => (v >= 0 ? `+${v}` : `${v}`)}
-                    colorValue
-                    decrementTitle="Decrease DS modifier"
-                    incrementTitle="Increase DS modifier"
-                  />
-                  <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Effective DS: {effectiveDS}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Additional successes</label>
-                  <ValueStepper
-                    value={session.data.additionalSuccesses ?? 0}
-                    onChange={(v) => updateData({ additionalSuccesses: v })}
-                    min={0}
-                    max={20}
-                    step={1}
-                    decrementTitle="Remove additional success"
-                    incrementTitle="Add additional success"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Additional failures</label>
-                  <ValueStepper
-                    value={session.data.additionalFailures ?? 0}
-                    onChange={(v) => updateData({ additionalFailures: v })}
-                    min={0}
-                    max={20}
-                    step={1}
-                    decrementTitle="Remove additional failure"
-                    incrementTitle="Add additional failure"
-                  />
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Roll sessions */}
-          {!isCompleted && sessions.length > 0 && (
-            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-              <SectionHeader title="Crafting Rolls" size="md" className="mb-2" />
-              <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-                Enter each roll total (d20 + modifiers). Results auto-calculate against DS {effectiveDS}.
-              </p>
-              <div className="space-y-3">
-                {sessions.map((s, i) => {
-                  const hasRoll = s.roll != null;
-                  const isSuccess = hasRoll && s.successes > 0;
-                  const isFailure = hasRoll && s.failures > 0;
-                  return (
-                    <div
-                      key={s.label}
-                      className={cn(
-                        'flex flex-wrap items-center gap-4 p-3 sm:p-4 rounded-xl border transition-colors',
-                        hasRoll && isSuccess && 'bg-green-50/50 dark:bg-green-900/10 border-l-4 border-l-green-500 border-border-light',
-                        hasRoll && isFailure && 'bg-red-50/50 dark:bg-red-900/10 border-l-4 border-l-red-500 border-border-light',
-                        !hasRoll && 'border-border-light'
-                      )}
-                    >
-                      <span className="font-medium text-text-primary w-28 shrink-0">{s.label}</span>
-                      <div className="flex items-center gap-2">
-                        <label className="sr-only" htmlFor={`roll-${id}-${i}`}>Roll for {s.label}</label>
-                        <Input
-                          id={`roll-${id}-${i}`}
-                          type="number"
-                          min={1}
-                          max={100}
-                          value={s.roll ?? ''}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            updateSessionRoll(i, v === '' ? null : parseInt(v, 10));
-                          }}
-                          placeholder="Roll"
-                          className="w-20 min-h-[44px]"
-                        />
-                      </div>
-                      {hasRoll && (
-                        <span className="text-sm flex items-center gap-1">
-                          {isSuccess && (
-                            <>
-                              <CheckCircle2 className="w-4 h-4 text-success-700 dark:text-success-400" />
-                              <span className="text-success-700 dark:text-success-400 font-medium">
-                                {s.successes} success{s.successes !== 1 ? 'es' : ''}
-                              </span>
-                            </>
-                          )}
-                          {isFailure && (
-                            <>
-                              <XCircle className="w-4 h-4 text-danger-700 dark:text-danger-400" />
-                              <span className="text-danger-700 dark:text-danger-400 font-medium">
-                                {s.failures} failure{s.failures !== 1 ? 's' : ''}
-                              </span>
-                            </>
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* Result tracker */}
-          {!isCompleted && item && sessions.length > 0 && (
-            <section className="bg-surface rounded-xl border border-border-light p-4 sm:p-6">
-              <SectionHeader title="Result" size="md" className="mb-2" />
-              <div className="flex flex-wrap items-center gap-4 mb-3">
-                <div className="text-sm text-text-secondary">
-                  Successes: <strong className="text-text-primary">{totalSuccesses}</strong>
-                </div>
-                <div className="text-sm text-text-secondary">
-                  Failures: <strong className="text-text-primary">{totalFailures}</strong>
-                </div>
-                <div className="text-sm text-text-secondary">
-                  Required: <strong className="text-text-primary">{required}</strong>
-                </div>
-              </div>
-              <p className={cn(
-                'font-semibold text-lg',
-                netDelta >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'
-              )}>
-                {netDelta >= 0
-                  ? `+${netDelta} over target`
-                  : `${Math.abs(netDelta)} under target`}
-              </p>
-              {liveOutcome && (
-                <div className="mt-3 pt-3 border-t border-border-light">
-                  <p className="text-xs font-medium text-text-muted dark:text-text-secondary uppercase tracking-wide mb-2">
-                    Projected outcome
-                  </p>
-                  <ul className="text-sm text-text-secondary space-y-1">
-                    <li>Net material cost: {Math.ceil(liveOutcome.finalMaterialCost)} currency</li>
-                    <li>Materials recovered: {Math.ceil(liveOutcome.materialsRetained)} currency</li>
-                    <li>Item market value: {Math.ceil(liveOutcome.itemWorth)} currency</li>
-                    {liveOutcome.extraItemCount > 0 && (
-                      <li>Extra items: {liveOutcome.extraItemCount}</li>
-                    )}
-                    {liveOutcome.choiceExtraOrEnhance && (
-                      <li className="text-text-primary font-medium">Choice: extra item at 100% or enhance to 200%</li>
-                    )}
-                  </ul>
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-3 mt-4">
-                <Button
-                  onClick={handleComplete}
-                  disabled={saveMutation.isPending}
-                >
-                  {saveMutation.isPending ? 'Completing...' : 'Complete Crafting'}
-                </Button>
-              </div>
-            </section>
+            </CollapsibleSection>
           )}
 
           {/* Completed outcome */}
@@ -968,78 +1302,6 @@ export default function CraftingToolPage() {
               )}
             </section>
           )}
-        </div>
-
-        {/* ───────── Sidebar (right 1/3) ───────── */}
-        <div className="order-1 lg:order-2 min-w-0">
-          <CreatorSummaryPanel
-            title="Crafting Summary"
-            statRows={[
-              ...(requirements ? [
-                { label: 'Rarity', value: requirements.rarity },
-                { label: 'Difficulty Score', value: effectiveDS, valueColor: session?.data.dsModifier ? 'text-primary-600 dark:text-primary-400' : undefined },
-                { label: 'Required Successes', value: requirements.requiredSuccesses },
-                { label: 'Material Cost', value: `${Math.ceil(requirements.materialCost)} C` },
-                { label: 'Time', value: `${requirements.timeValue} ${requirements.timeUnit}` },
-                { label: 'Roll Sessions', value: requirements.sessionCount },
-                { label: 'Quantity', value: quantity },
-              ] : [
-                { label: 'Item', value: 'Not selected' },
-              ]),
-              ...(item?.marketPrice ? [{ label: 'Market Price', value: `${item.marketPrice} C` }] : []),
-              ...(liveOutcome ? [
-                { label: 'Current Value', value: `${Math.ceil(liveOutcome.itemWorth)} C`, valueColor: netDelta >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400' },
-              ] : []),
-            ]}
-          >
-            {!isCompleted && sessions.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-secondary">Successes</span>
-                  <span className="font-medium text-success-700 dark:text-success-400">{totalSuccesses}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-secondary">Failures</span>
-                  <span className="font-medium text-danger-700 dark:text-danger-400">{totalFailures}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-text-secondary">Net</span>
-                  <span className={cn(
-                    'font-bold',
-                    netDelta >= 0 ? 'text-success-700 dark:text-success-400' : 'text-danger-700 dark:text-danger-400'
-                  )}>
-                    {netDelta >= 0 ? `+${netDelta}` : netDelta}
-                  </span>
-                </div>
-              </div>
-            )}
-            {isCompleted && outcome && (
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Final Value</span>
-                  <span className="font-medium text-text-primary">{Math.ceil(outcome.itemWorth)} C</span>
-                </div>
-                {outcome.extraItemCount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Extra Items</span>
-                    <span className="font-medium text-text-primary">{outcome.extraItemCount}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </CreatorSummaryPanel>
-
-          {saveMutation.isPending && (
-            <p className="text-xs text-text-muted dark:text-text-secondary mt-2 text-center">Saving...</p>
-          )}
-        </div>
-      </div>
-
-      <CraftingItemSelectModal
-        isOpen={itemSelectOpen}
-        onClose={() => setItemSelectOpen(false)}
-        onSelect={handleItemSelect}
-      />
-    </PageContainer>
+    </CreatorLayout>
   );
 }

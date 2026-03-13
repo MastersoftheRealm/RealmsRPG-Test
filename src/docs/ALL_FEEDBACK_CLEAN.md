@@ -1236,3 +1236,42 @@ Notes
 - Feedback: (1) Add crafting rules to the core rules database (crafting table, successes table, enhanced crafting table, consumable enhanced table, multipliers, etc.) so values can be accessed, utilized, and updated across the site. (2) Add a Crafting tab to the admin core rules editor for editing crafting values. (3) Create a crafting page in the creators section that: uses skill encounter logic (rolls, successes/failures); lets user select equipment/armament from library or codex to craft; uses stored core rules for DS, successes, time, costs; lets user select a craft sub-skill when rolling (for craft_success_desc/craft_failure_desc display); requires only user input of roll values; streamlines and automates the crafting process.
 - Expected: Crafting rules in core_rules; admin Crafting tab; crafting page with item selection, roll phase, outcome display using sub-skill flavor text.
 - Disposition: Plan created/updated in CRAFTING_IMPLEMENTATION_PLAN.md. TASK-293 (core rules + admin tab), TASK-294 (crafting hub + page), TASK-295 (enhanced crafting + library). Plan now includes: Crafting Hub (encounter-like list), incremental roll sessions, Consumable/Bulk/Enhanced toggles, auto-calculated costs, custom base items, Enhanced Equipment Library.
+
+**Raw Feedback Log — 2026-03-12 (TP color shift + leveled feat normalization)**
+- Date: 2026-03-12
+- Context: Creator UI resource colors; feat system architecture across codex/admin/character sheet/creator
+- Priority: High
+- Feedback: (1) Shift TP color away from current palette (toward lime), while keeping IP and Currency distinct/consistent. (2) Move leveled feats away from roman-numeral naming (e.g., Speedy II/III) to same-name feats distinguished by id + feat_lvl. (3) Remove roman numeral suffixes in DB and normalize linking between feat levels. (4) Determine best relational model for leveled feats and show higher-level variants clearly in codex/admin/player lists. (5) Higher-level feats should replace lower levels and count as multiple feats (level N counts as N).
+- Expected: TP color updated globally through semantic tokens; feat architecture uses `feat_lvl` + ids (same names) with robust family linking; migration path for roman suffix removal; UI displays level variants clearly; replacement/counting behavior enforced consistently.
+- Disposition: In progress via TASK-296/TASK-297. Implemented this session: TP lime token shift; id-only duplicate checks in Add Feat modal; creator/sheet level-weighted feat slot counting; previous-level prerequisite and upgrade replacement behavior in creator add-feat flow and character sheet add-feat handling. Remaining: run/verify DB migration and complete full surface audit for slot enforcement/replacement consistency.
+
+**Raw Feedback Log — 2026-03-12 (Creator costs, sort direction, section styling, resource colors)**
+- Date: 2026-03-12
+- Context: Power/Technique/Item creators (section costs and sorting), creator section UI consistency
+- Priority: High
+- Feedback: In creators, Action Type, Reaction toggle, and Weapon (technique user) need to display EN/TP/IP/C contribution somewhere in section so users can see what each choice adds to totals. Ascend/descend sort for some columns (e.g. Type) is not working correctly. Collapsible sections have an unnecessary dividing line between header and content. TP, IP, and C should use distinct consistent colors (example preference: currency gold, TP lime-ish, IP blue).
+- Expected: Technique combat configuration clearly shows cost contribution for selected weapon/action/reaction; type column sorting toggles and sorts alphabetically both directions; no extra divider line in collapsible sections; TP/IP/C colors are distinct and consistent anywhere section cost labels/stat boxes render.
+- Disposition: Implemented 2026-03-12. Added technique combat configuration section and per-control cost badges for weapon/action/reaction; fixed shared sort resolver to sort by GridListRow column values (including `type`) with asc/desc toggle; removed collapsible content top border; introduced separate IP and currency color tokens and applied them in shared creator cost components and item creator cost displays.
+
+**Raw Feedback Log — 2026-03-12 (Skill encounter tracker UX: RM bonus placement, success steppers, encounter thresholds/description)**
+- Date: 2026-03-12
+- Context: Skill encounter tracker UI (`/encounters/[id]/skill` and mixed encounter skill tab)
+- Priority: High
+- Feedback: Use steppers with visible values for additional successes/failures. Move RM bonus input so it is entered after the roll total (not beside name/skill). Add editable RM-facing encounter description on the tracker. Allow RM to input Required Successes and Maximum Failures in config/success sections and show whether the encounter is overcome or failed.
+- Expected: Success tracker clearly separates roll totals vs RM-added totals; RM bonus entered next to roll total; editable encounter description field on tracker; configurable required successes and max failures persisted and displayed in the Successes area with clear status.
+- Disposition: Implemented 2026-03-12. SkillEncounterView now uses ValueStepper controls for additional successes/failures, displays total successes/failures against required/max thresholds with status (Overcome/Failed/In Progress), moves RM bonus input into the roll area (after total) for both pending and rolled participants, and adds editable Encounter Description in configuration. Skill/mixed page initialization and encounter types now persist requiredSuccesses/maxFailures defaults.
+
+**Raw Feedback Log — 2026-03-12 (Leveled feat family row UX across all feat surfaces)**
+- Date: 2026-03-12
+- Context: Feat list and selection surfaces (Codex, Admin, Character Creator, Character Sheet, Add Feat modal)
+- Priority: High
+- Feedback: After SQL normalization (same feat names + base_feat_id), feat lists are showing each level as separate rows and losing the expected base-feat-centric presentation. Desired design is a normal feat row with base feat info, plus a `Feat Levels` section under other chips that exposes level variants as expandable chips.
+- Expected: One row per feat family where appropriate, with `Feat Levels` chips listing other levels; consistent styling/behavior across Codex/Admin/player flows using shared modern components and sources of truth.
+- Disposition: Implemented 2026-03-12. Added shared leveled-feat helpers (`src/lib/leveled-feats.ts`) for family grouping, display naming, and level-chip generation. Updated Codex feats, Admin feats, Character Creator feats, Add Feat modal, and Character Sheet feats tab to use family-aware display with `Feat Levels` chips and shared `GridListRow` detail sections. Build remains blocked by pre-existing unrelated syntax error in `src/app/(main)/crafting/[id]/page.tsx`.
+
+**Raw Feedback Log — 2026-03-12 (Archetype Paths for guided character creation + admin authoring)**
+- Date: 2026-03-12
+- Context: Character creator entry flow, archetype admin authoring, codex archetype data model, level-up guidance persistence
+- Priority: High
+- Feedback: Add an archetype-path system where users choose between "Forge Your Own Path" (fully custom) and "Choose a Path" (guided archetype recommendations). Archetype paths should include level-1 recommendations (proficiency, feats, skills, powers/techniques, armaments, equipment), primary + optional secondary ability emphasis, and level 2-5 progression recommendations (add/remove options). Admin archetype editing should support creating these robust paths with clean shared UI patterns. Choose-a-Path flow should present official archetype paths in grouped categories, guide feats/skills/equipment/powers/techniques by recommendations while still allowing manual override, and save selected path id with the character for level-up guidance.
+- Expected: End-to-end archetype path support in data model/API/admin/creator flow with reusable components, strong UX consistency, and saved `archetypePathId` for future leveling guidance.

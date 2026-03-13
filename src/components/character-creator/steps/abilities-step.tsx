@@ -38,8 +38,10 @@ export function AbilitiesStep() {
   const canContinue = remainingPoints >= 0;
   
   // Get archetype abilities
-  const powerAbility = draft.pow_abil as AbilityName | undefined;
-  const martialAbility = draft.mart_abil as AbilityName | undefined;
+  const pathPrimaryAbility = (draft.archetype?.archetype_ability || draft.pow_abil || draft.mart_abil) as AbilityName | undefined;
+  const pathSecondaryAbility = draft.archetype?.secondary_ability as AbilityName | undefined;
+  const powerAbility = (draft.pow_abil || pathPrimaryAbility) as AbilityName | undefined;
+  const martialAbility = (draft.mart_abil || pathSecondaryAbility) as AbilityName | undefined;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -49,6 +51,13 @@ export function AbilitiesStep() {
         {powerAbility && <span className="text-power-dark dark:text-power-300"> Power archetype ability highlighted.</span>}
         {martialAbility && <span className="text-martial-dark dark:text-martial-300"> Martial archetype ability highlighted.</span>}
       </p>
+      {draft.creationMode === 'path' && (
+        <div className="mb-4 rounded-lg border border-border-light bg-surface-alt px-4 py-3 text-sm text-text-secondary">
+          This character uses an Archetype Path. Recommended ability focus:
+          {pathPrimaryAbility && <strong className="ml-1 text-text-primary capitalize">{pathPrimaryAbility}</strong>}
+          {pathSecondaryAbility && <span className="ml-1">with secondary <strong className="text-text-primary capitalize">{pathSecondaryAbility}</strong></span>}.
+        </div>
+      )}
       
       {/* Shared Ability Score Editor */}
       <div className="mb-8">

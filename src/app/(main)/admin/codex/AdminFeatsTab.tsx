@@ -25,6 +25,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Plus, Copy, X, Layers } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import type { ChipData } from '@/components/shared/grid-list-row';
+import { buildFeatLevelChips, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 
 const COPY_NAME_SUFFIX = ' copy';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -146,6 +148,8 @@ export function AdminFeatsTab() {
     });
     return sortItems<Feat>(filtered);
   }, [feats, filters, sortItems]);
+
+  const groupedFeats = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
 
   const formDefaults = {
     name: '',
@@ -477,7 +481,7 @@ export function AdminFeatsTab() {
       <div className="flex flex-col gap-1 mt-2">
         {isLoading ? (
           <LoadingState />
-        ) : filteredFeats.length === 0 ? (
+        ) : groupedFeats.length === 0 ? (
           <EmptyState
             title="No feats match your filters"
             description="Add one to get started."
@@ -485,9 +489,9 @@ export function AdminFeatsTab() {
             size="sm"
           />
         ) : (
-          filteredFeats.map((feat) => {
-            const detailSections: Array<{ label: string; chips: { name: string; category?: 'default' | 'tag' | 'skill' | 'archetype' }[]; hideLabelIfSingle?: boolean }> = [];
-            const typeChips: { name: string; category: 'skill' | 'archetype' }[] = [];
+          groupedFeats.map(({ main: feat, levels: familyLevels }) => {
+            const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
+            const typeChips: ChipData[] = [];
             if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
             else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
             if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
@@ -506,11 +510,13 @@ export function AdminFeatsTab() {
               return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
             });
             if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
+            const levelChips = buildFeatLevelChips(familyLevels, feat.id);
+            if (levelChips.length > 0) detailSections.push({ label: 'Feat Levels', chips: levelChips });
             return (
               <GridListRow
                 key={feat.id}
                 id={feat.id}
-                name={feat.name}
+                name={formatFeatName(feat)}
                 description={feat.description}
                 gridColumns={FEAT_GRID_COLUMNS}
                 columns={[

@@ -46,10 +46,10 @@ export function SectionCostBadge({ en, tp, ip, currency, className }: SectionCos
         <span className="text-tp-text">{`TP: ${tp >= 0 ? '+' : ''}${tp}`}</span>
       )}
       {ip !== undefined && ip !== 0 && (
-        <span className="text-tp-text">{`IP: ${ip >= 0 ? '+' : ''}${ip}`}</span>
+        <span className="text-ip-text">{`IP: ${ip >= 0 ? '+' : ''}${ip}`}</span>
       )}
       {currency !== undefined && currency !== 0 && (
-        <span className="text-amber-600 dark:text-amber-400">{`C: ${currency >= 0 ? '+' : ''}${currency}`}</span>
+        <span className="text-currency-text">{`C: ${currency >= 0 ? '+' : ''}${currency}`}</span>
       )}
     </span>
   );

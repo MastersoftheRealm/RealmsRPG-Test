@@ -14,6 +14,7 @@ import { useMergedSpecies, type Species } from '@/hooks';
 import { SkillsAllocationPage } from '@/components/shared';
 import { Button } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
 export function SkillsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
@@ -66,6 +67,8 @@ export function SkillsStep() {
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
 
   const mergedSkillAbilities = draft.skillAbilities ?? {};
+  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const recommendedSkillIds = pathData?.level1?.skills ?? [];
 
   const handleSkillAbilityChange = useCallback(
     (skillId: string, abilityKey: string) => {
@@ -112,20 +115,30 @@ export function SkillsStep() {
   );
 
   return (
-    <SkillsAllocationPage
-      entityType="character"
-      level={level}
-      abilities={abilities}
-      allocations={allocationsWithSpecies}
-      defenseSkills={defenseVals}
-      speciesSkillIds={speciesSkillIds}
-      extraSkillPoints={extraSkillPoints}
-      onAllocationsChange={handleAllocationsChange}
-      onDefenseChange={handleDefenseChange}
-      abilityDefenseBonuses={abilityDefenseBonuses}
-      skillAbilities={mergedSkillAbilities}
-      onSkillAbilityChange={handleSkillAbilityChange}
-      footer={footer}
-    />
+    <div className="space-y-4">
+      {draft.creationMode === 'path' && recommendedSkillIds.length > 0 && (
+        <div className="rounded-lg border border-border-light bg-surface-alt px-4 py-3">
+          <p className="text-sm text-text-secondary">
+            <strong className="text-text-primary">Archetype Path recommendations (Level 1 skills):</strong>{' '}
+            {recommendedSkillIds.join(', ')}
+          </p>
+        </div>
+      )}
+      <SkillsAllocationPage
+        entityType="character"
+        level={level}
+        abilities={abilities}
+        allocations={allocationsWithSpecies}
+        defenseSkills={defenseVals}
+        speciesSkillIds={speciesSkillIds}
+        extraSkillPoints={extraSkillPoints}
+        onAllocationsChange={handleAllocationsChange}
+        onDefenseChange={handleDefenseChange}
+        abilityDefenseBonuses={abilityDefenseBonuses}
+        skillAbilities={mergedSkillAbilities}
+        onSkillAbilityChange={handleSkillAbilityChange}
+        footer={footer}
+      />
+    </div>
   );
 }

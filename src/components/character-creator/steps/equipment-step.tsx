@@ -33,6 +33,7 @@ import { Spinner, Button, EmptyState } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { AlertCircle, Swords, Check } from 'lucide-react';
 import type { Item } from '@/types';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
 // List column definitions and grid (unified with Library/Codex); name column wider for readability
 const WEAPON_LIST_COLUMNS: ListColumn[] = [
@@ -119,6 +120,15 @@ export function EquipmentStep() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('public');
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const recommendedArmamentRefs = useMemo(
+    () => new Set((pathData?.level1?.armaments || []).map((v: string) => String(v).toLowerCase())),
+    [pathData?.level1?.armaments]
+  );
+  const recommendedEquipmentRefs = useMemo(
+    () => new Set((pathData?.level1?.equipment || []).map((v: string) => String(v).toLowerCase())),
+    [pathData?.level1?.equipment]
+  );
 
   const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
 
@@ -458,6 +468,11 @@ export function EquipmentStep() {
           <p className="text-text-secondary">
             Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
           </p>
+          {draft.creationMode === 'path' && (
+            <p className="text-xs text-success-700 dark:text-success-400 mt-1">
+              Archetype Path recommended gear is highlighted in green.
+            </p>
+          )}
         </div>
         
         <div className={cn(
@@ -678,9 +693,19 @@ export function EquipmentStep() {
                   const cost = item.gold_cost || item.currency || 0;
                   const quantity = getItemQuantity(item.id);
                   const canAfford = cost <= remainingCurrency;
+                  const isRecommendedArmament =
+                    recommendedArmamentRefs.has(String(item.id).toLowerCase()) ||
+                    recommendedArmamentRefs.has(String(item.name).toLowerCase());
+                  const isRecommendedEquipment =
+                    recommendedEquipmentRefs.has(String(item.id).toLowerCase()) ||
+                    recommendedEquipmentRefs.has(String(item.name).toLowerCase());
+                  const isPathRecommended = item.type === 'equipment' ? isRecommendedEquipment : isRecommendedArmament;
 
                   // No damage/rarity badges — damage (and armor DR) are columns; keep list clean
                   const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
+                  if (draft.creationMode === 'path' && isPathRecommended) {
+                    badges.push({ label: 'Path Recommended', color: 'blue' });
+                  }
 
                   // Build property chips
                   const chips: ChipData[] = item.properties.map(prop => ({

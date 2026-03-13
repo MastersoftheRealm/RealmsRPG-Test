@@ -48,14 +48,17 @@ function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           currentFailures: 0,
           additionalSuccesses: 0,
           additionalFailures: 0,
+          requiredSuccesses: 1,
+          maxFailures: 3,
           useInitiative: true, // mixed encounter: default to initiative so turn order can sync with combat
         };
       } else {
         const sk = enc.skillEncounter as unknown as Record<string, unknown>;
-        delete sk.requiredSuccesses;
-        delete sk.requiredFailures;
+        const participants = (sk.participants as unknown[]) ?? [];
         if (sk.additionalSuccesses == null) sk.additionalSuccesses = 0;
         if (sk.additionalFailures == null) sk.additionalFailures = 0;
+        if (sk.requiredSuccesses == null) sk.requiredSuccesses = Math.max(1, participants.length + 1);
+        if (sk.maxFailures == null) sk.maxFailures = 3;
         // Mixed encounter: default useInitiative to true so skill tab can sync with combat order
         if (sk.useInitiative == null) sk.useInitiative = true;
       }

@@ -149,7 +149,7 @@ export function CollapsibleSection({
 
       {/* Content */}
       {isExpanded && (
-        <div className="p-4 pt-0 border-t border-border-light">
+        <div className="p-4 pt-0">
           {children}
         </div>
       )}
