@@ -13,7 +13,15 @@ import { useAuth, useAutoSave, useCampaignsFull, useUserPowers, useUserTechnique
 import { LoadingState } from '@/components/ui';
 import { enrichCharacterData, cleanForSave } from '@/lib/data-enrichment';
 import { calculateArchetypeProgression, calculateSkillPointsForEntity, calculateMaxArchetypeFeats, calculateMaxCharacterFeats, calculateProficiency } from '@/lib/game/formulas';
+import { getArchetypeAbilityScore } from '@/lib/game/calculations';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
+import {
+  buildRequiredProficiencies,
+  dedupeHighestProficiencies,
+  mergeOwnedWithRequired,
+  calculateProficiencyTP,
+  getTrainingPointLimit,
+} from '@/lib/proficiencies';
 import {
   SheetHeader,
   AbilitiesSection,
@@ -28,7 +36,7 @@ import {
 } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
-import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat, Feat } from '@/types';
+import type { Character, AbilityName, Item, CharacterPower, CharacterTechnique, CharacterFeat, Feat, CharacterProficiency } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import { calculateStats } from './character-sheet-utils';
 import { CharacterSheetModals, type AddModalType, type FeatModalType, type SkillModalType } from './CharacterSheetModals';
@@ -278,7 +286,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     if (!character) return null;
     return calculateStats(character);
   }, [character]);
-  
+
   // Calculate point budgets for edit mode
   const pointBudgets = useMemo(() => {
     if (!character) return null;
@@ -767,15 +775,64 @@ export default function CharacterSheetPage({ params }: PageParams) {
     (character.equipment?.items as Item[] || []).forEach(e => add(e.id));
     return ids;
   }, [character]);
+
+  const buildRequiredForCharacter = useCallback((c: Character) => {
+    const weapons = ((c.equipment?.weapons as Item[]) || []);
+    const shields = ((c.equipment?.shields as Item[]) || []);
+    const armor = ((c.equipment?.armor as Item[]) || []);
+    return buildRequiredProficiencies({
+      powers: c.powers || [],
+      techniques: c.techniques || [],
+      weapons,
+      shields,
+      armor,
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    });
+  }, [powerPartsDb, techniquePartsDb, itemPropertiesDb]);
+
+  const applyAutoProficiencies = useCallback((next: Character, reason: string): Character | null => {
+    const required = buildRequiredForCharacter(next);
+    const merged = mergeOwnedWithRequired(next.proficiencies || [], required);
+    const deduped = dedupeHighestProficiencies(merged);
+    const newSpent = deduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+    const currentDeduped = dedupeHighestProficiencies(next.proficiencies || []);
+    const currentSpent = currentDeduped.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+    const ability = getArchetypeAbilityScore(next);
+    const max = getTrainingPointLimit(next.level || 1, ability);
+    const overLimit = newSpent > max;
+    const thisActionAddedTp = newSpent > currentSpent;
+    if (overLimit && thisActionAddedTp) {
+      const ok = window.confirm(
+        `${reason} will put this character over their proficiency TP limit (${newSpent}/${max}). Continue anyway?`
+      );
+      if (!ok) return null;
+      showToast(`Proficiency TP is over limit: ${newSpent}/${max}`, 'warning');
+    }
+    return { ...next, proficiencies: deduped };
+  }, [buildRequiredForCharacter, showToast]);
+
+  useEffect(() => {
+    if (!character) return;
+    if ((character.proficiencies || []).length > 0) return;
+    if (!powerPartsDb.length && !techniquePartsDb.length && !itemPropertiesDb.length) return;
+    const required = buildRequiredForCharacter(character);
+    if (required.length === 0) return;
+    setCharacter((prev) => (prev ? { ...prev, proficiencies: required } : prev));
+  }, [character, powerPartsDb.length, techniquePartsDb.length, itemPropertiesDb.length, buildRequiredForCharacter]);
   
   // Add power handler
   const handleAddPowers = useCallback((powers: CharacterPower[]) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      powers: [...(prev.powers || []), ...powers]
-    } : null);
-  }, [character]);
+    const candidate: Character = {
+      ...character,
+      powers: [...(character.powers || []), ...powers],
+    };
+    const next = applyAutoProficiencies(candidate, 'Adding powers');
+    if (!next) return;
+    setCharacter(next);
+  }, [character, applyAutoProficiencies]);
   
   // Remove power handler
   const handleRemovePower = useCallback((powerId: string | number) => {
@@ -814,11 +871,14 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Add technique handler
   const handleAddTechniques = useCallback((techniques: CharacterTechnique[]) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
-      techniques: [...(prev.techniques || []), ...techniques]
-    } : null);
-  }, [character]);
+    const candidate: Character = {
+      ...character,
+      techniques: [...(character.techniques || []), ...techniques],
+    };
+    const next = applyAutoProficiencies(candidate, 'Adding techniques');
+    if (!next) return;
+    setCharacter(next);
+  }, [character, applyAutoProficiencies]);
   
   // Remove technique handler
   const handleRemoveTechnique = useCallback((techId: string | number) => {
@@ -844,14 +904,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Add weapon handler
   const handleAddWeapons = useCallback((items: Item[]) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
+    const candidate: Character = {
+      ...character,
       equipment: {
-        ...prev.equipment,
-        weapons: [...((prev.equipment?.weapons as Item[]) || []), ...items]
-      }
-    } : null);
-  }, [character]);
+        ...character.equipment,
+        weapons: [...((character.equipment?.weapons as Item[]) || []), ...items],
+      },
+    };
+    const next = applyAutoProficiencies(candidate, 'Adding weapons');
+    if (!next) return;
+    setCharacter(next);
+  }, [character, applyAutoProficiencies]);
   
   // Remove weapon handler
   // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
@@ -898,14 +961,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Add armor handler
   const handleAddArmor = useCallback((items: Item[]) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
+    const candidate: Character = {
+      ...character,
       equipment: {
-        ...prev.equipment,
-        armor: [...((prev.equipment?.armor as Item[]) || []), ...items]
-      }
-    } : null);
-  }, [character]);
+        ...character.equipment,
+        armor: [...((character.equipment?.armor as Item[]) || []), ...items],
+      },
+    };
+    const next = applyAutoProficiencies(candidate, 'Adding armor');
+    if (!next) return;
+    setCharacter(next);
+  }, [character, applyAutoProficiencies]);
   
   // Remove armor handler
   // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name, equipped} without ID
@@ -952,14 +1018,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Add shield handler
   const handleAddShields = useCallback((items: Item[]) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
+    const candidate: Character = {
+      ...character,
       equipment: {
-        ...prev.equipment,
-        shields: [...((prev.equipment?.shields as Item[]) || []), ...items]
-      }
-    } : null);
-  }, [character]);
+        ...character.equipment,
+        shields: [...((character.equipment?.shields as Item[]) || []), ...items],
+      },
+    };
+    const next = applyAutoProficiencies(candidate, 'Adding shields');
+    if (!next) return;
+    setCharacter(next);
+  }, [character, applyAutoProficiencies]);
 
   // Remove shield handler
   const handleRemoveShield = useCallback((itemId: string | number) => {
@@ -1004,14 +1073,17 @@ export default function CharacterSheetPage({ params }: PageParams) {
   // Add equipment handler
   const handleAddEquipment = useCallback((items: Item[]) => {
     if (!character) return;
-    setCharacter(prev => prev ? {
-      ...prev,
+    const candidate: Character = {
+      ...character,
       equipment: {
-        ...prev.equipment,
-        items: [...((prev.equipment?.items as Item[]) || []), ...items]
-      }
-    } : null);
-  }, [character]);
+        ...character.equipment,
+        items: [...((character.equipment?.items as Item[]) || []), ...items],
+      },
+    };
+    const next = applyAutoProficiencies(candidate, 'Adding equipment');
+    if (!next) return;
+    setCharacter(next);
+  }, [character, applyAutoProficiencies]);
   
   // Remove equipment handler
   // Note: Match by ID, name, or index (when passed as number) since equipment may be stored as {name} without ID
@@ -1821,11 +1893,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
                   // Proficiencies tab props
                   level={character.level}
                   archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
-                  unarmedProwess={character.unarmedProwess}
-                  onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
                   powerPartsDb={powerPartsDb}
                   techniquePartsDb={techniquePartsDb}
                   itemPropertiesDb={itemPropertiesDb}
+                  proficiencies={character.proficiencies}
+                  onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
                   // Feats tab props
                   // Cast ancestry to any to accommodate nullable fields from Codex (selectedFlaw may be null)
                   ancestry={character.ancestry as any}
@@ -1975,11 +2047,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
                       }}
                       level={character.level}
                       archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
-                      unarmedProwess={character.unarmedProwess}
-                      onUnarmedProwessChange={(level) => setCharacter(prev => prev ? { ...prev, unarmedProwess: level } : null)}
                       powerPartsDb={powerPartsDb}
                       techniquePartsDb={techniquePartsDb}
                       itemPropertiesDb={itemPropertiesDb}
+                      proficiencies={character.proficiencies}
+                      onProficienciesChange={(next: CharacterProficiency[]) => setCharacter(prev => prev ? { ...prev, proficiencies: next } : null)}
                       ancestry={character.ancestry as any}
                       vanillaTraits={{
                         ancestryTraits: character.ancestryTraits,

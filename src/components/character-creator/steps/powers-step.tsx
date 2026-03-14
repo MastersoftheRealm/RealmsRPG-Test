@@ -119,10 +119,30 @@ export function PowersStep() {
     const pub = (source === 'public' || source === 'all') ? normalizedPublicTechniques : [];
     return [...my, ...pub];
   }, [source, userTechniques, normalizedPublicTechniques]);
+
+  // Merged pool (user + public, deduped) for looking up selected items so they persist when switching tabs/source
+  const allPowersForLookup = useMemo(() => {
+    const seen = new Set<string>();
+    return [...userPowers, ...normalizedPublicPowers].filter((p: UserPower) => {
+      const id = String(p.docId ?? p.id ?? '');
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [userPowers, normalizedPublicPowers]);
+  const allTechniquesForLookup = useMemo(() => {
+    const seen = new Set<string>();
+    return [...userTechniques, ...normalizedPublicTechniques].filter((t: UserTechnique) => {
+      const id = String(t.docId ?? t.id ?? '');
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [userTechniques, normalizedPublicTechniques]);
   
   // Transform powers to SelectableItems — match add-library-item: columns, detailSections, totalCost for expanded view
-  const availablePowers = useMemo((): SelectableItem[] => {
-    return powersForList.map((power: UserPower) => {
+  const powerListToSelectable = useCallback((list: UserPower[]): SelectableItem[] => {
+    return list.map((power: UserPower) => {
       const doc: PowerDocument = {
         name: String(power.name ?? ''),
         description: String(power.description ?? ''),
@@ -170,11 +190,14 @@ export function PowersStep() {
         data: power,
       };
     });
-  }, [powersForList, powerParts, recommendedPowerRefs]);
+  }, [powerParts, recommendedPowerRefs]);
+
+  const availablePowers = useMemo(() => powerListToSelectable(powersForList), [powersForList, powerListToSelectable]);
+  const allPowersSelectable = useMemo(() => powerListToSelectable(allPowersForLookup), [allPowersForLookup, powerListToSelectable]);
 
   // Transform techniques to SelectableItems — match add-library-item: detailSections, totalCost for expanded view
-  const availableTechniques = useMemo((): SelectableItem[] => {
-    return techniquesForList.map((tech: UserTechnique) => {
+  const techniqueListToSelectable = useCallback((list: UserTechnique[]): SelectableItem[] => {
+    return list.map((tech: UserTechnique) => {
       const doc: TechniqueDocument = {
         name: String(tech.name ?? ''),
         description: String(tech.description ?? ''),
@@ -208,16 +231,41 @@ export function PowersStep() {
         data: tech,
       };
     });
-  }, [techniquesForList, techniqueParts, recommendedTechniqueRefs]);
+  }, [techniqueParts, recommendedTechniqueRefs]);
+
+  const availableTechniques = useMemo(() => techniqueListToSelectable(techniquesForList), [techniquesForList, techniqueListToSelectable]);
+  const allTechniquesSelectable = useMemo(() => techniqueListToSelectable(allTechniquesForLookup), [allTechniquesForLookup, techniqueListToSelectable]);
   
-  // Display items for selected powers/techniques
+  // Display items for selected powers/techniques — lookup from full pool so selection persists when switching tabs/source
   const selectedPowerItems = useMemo((): SelectableItem[] => {
-    return availablePowers.filter(p => selectedPowerIds.has(p.id));
-  }, [availablePowers, selectedPowerIds]);
+    return selectedPowers.map((p: { id: string | number; name?: string; description?: string }) => {
+      const id = String(p.id);
+      const found = allPowersSelectable.find((x) => x.id === id);
+      if (found) return found;
+      return {
+        id,
+        name: p.name ?? 'Unknown',
+        description: p.description ?? '',
+        columns: [],
+        data: p,
+      };
+    });
+  }, [selectedPowers, allPowersSelectable]);
   
   const selectedTechniqueItems = useMemo((): SelectableItem[] => {
-    return availableTechniques.filter(t => selectedTechniqueIds.has(t.id));
-  }, [availableTechniques, selectedTechniqueIds]);
+    return selectedTechniques.map((t: { id: string | number; name?: string; description?: string }) => {
+      const id = String(t.id);
+      const found = allTechniquesSelectable.find((x) => x.id === id);
+      if (found) return found;
+      return {
+        id,
+        name: t.name ?? 'Unknown',
+        description: t.description ?? '',
+        columns: [],
+        data: t,
+      };
+    });
+  }, [selectedTechniques, allTechniquesSelectable]);
   
   // Ids of items currently in the modal list (depends on source filter: my/public/all)
   const availablePowerIds = useMemo(() => new Set(availablePowers.map((p) => p.id)), [availablePowers]);

@@ -11,11 +11,12 @@ import type {
   CharacterDraft, 
   ArchetypeCategory, 
   AbilityName, 
-  Abilities,
   Archetype,
+  Item,
 } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
-import { calculateMaxHealth, calculateMaxEnergy, getArchetypeAbilityScore } from '@/lib/game/calculations';
+import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import { buildRequiredProficiencies } from '@/lib/proficiencies';
 
 export type CreatorStep = 
   | 'archetype' 
@@ -317,9 +318,18 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           weapons,
           armor,
           items,
+          shields: inventory.filter(item => item.type === 'shield'),
           // Also keep original inventory for reference
           inventory,
         };
+
+        const proficiencies = buildRequiredProficiencies({
+          powers: (draft.powers as Character['powers']) || [],
+          techniques: (draft.techniques as Character['techniques']) || [],
+          weapons: weapons as Item[],
+          shields: equipment.shields as unknown as Item[],
+          armor: armor as unknown as Item[],
+        });
         
         return {
           name: draft.name || 'Unnamed Character',
@@ -360,6 +370,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           techniques: draft.techniques || [],
           equipment: equipment,
           unarmedProwess: draft.unarmedProwess ?? 0,
+          proficiencies,
           // Health/Energy current values (max is calculated from healthPoints + level + abilities)
           currentHealth: maxHealth,
           currentEnergy: maxEnergy,

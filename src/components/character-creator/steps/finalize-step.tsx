@@ -9,10 +9,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { useAuth, useCodexSkills, useSpecies } from '@/hooks';
+import { useAuth, useCodexSkills, useSpecies, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
-import type { Character } from '@/types';
+import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
@@ -20,6 +20,11 @@ import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations'
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
 import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
+import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import type { PowerDocument } from '@/lib/calculators/power-calc';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 
 // Health-Energy pool for new characters (18 at level 1, +2 per level)
 const BASE_HE_POOL = 18;
@@ -329,6 +334,9 @@ export function FinalizeStep() {
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
   const { data: codexSkills } = useCodexSkills();
   const { data: allSpecies = [] } = useSpecies();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
   
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -344,6 +352,35 @@ export function FinalizeStep() {
       }),
     [draft, allSpecies, codexSkills]
   );
+
+  const proficiencyTpSummary = useMemo(() => {
+    const inventory = draft.equipment?.inventory || [];
+    const weapons = inventory.filter((item) => item.type === 'weapon');
+    const shields = inventory.filter((item) => item.type === 'shield');
+    const armor = inventory.filter((item) => item.type === 'armor');
+    const required = buildRequiredProficiencies({
+      powers: (draft.powers || []) as CharacterPower[],
+      techniques: (draft.techniques || []) as CharacterTechnique[],
+      weapons: weapons as Item[],
+      shields: shields as Item[],
+      armor: armor as Item[],
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    });
+    const spent = dedupeHighestProficiencies(required).reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+
+    const abilities = draft.abilities || {};
+    const getAbility = (key: string | undefined): number =>
+      key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
+    const highestAbility = Math.max(
+      ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
+      0
+    );
+    const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+    const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
+    return { spent, limit, remaining: limit - spent };
+  }, [draft, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
   
   const handleValidateAndSave = () => {
     setShowValidation(true);
@@ -567,32 +604,44 @@ export function FinalizeStep() {
             </div>
           )}
         </div>
+
+        <div className="mt-4 pt-4 border-t border-border-light">
+          <span className="text-text-muted dark:text-text-secondary text-sm">Proficiency TP:</span>
+          <div className="mt-2 flex flex-wrap gap-2 text-sm">
+            <span className="px-2 py-1 rounded bg-surface text-text-secondary">
+              Limit: {proficiencyTpSummary.limit}
+            </span>
+            <span className="px-2 py-1 rounded bg-surface text-text-secondary">
+              Required: {proficiencyTpSummary.spent}
+            </span>
+            <span
+              className={cn(
+                'px-2 py-1 rounded font-medium',
+                proficiencyTpSummary.remaining >= 0
+                  ? 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-300'
+                  : 'bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-300'
+              )}
+            >
+              Remaining: {proficiencyTpSummary.remaining}
+            </span>
+          </div>
+          {proficiencyTpSummary.remaining < 0 && (
+            <p className="mt-2 text-sm text-danger-700 dark:text-danger-300">
+              This character is over the proficiency TP limit by {Math.abs(proficiencyTpSummary.remaining)}.
+              You can still create the character and adjust proficiencies later.
+            </p>
+          )}
+        </div>
         
-        {/* Abilities Summary */}
+        {/* Abilities Summary — plain text, no chips/colors for clarity */}
         {draft.abilities && (
           <div className="mt-4 pt-4 border-t border-border-light">
             <span className="text-text-muted dark:text-text-secondary text-sm">Abilities:</span>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {Object.entries(draft.abilities).map(([ability, value]) => {
-                const isPowerAbil = draft.pow_abil === ability;
-                const isMartAbil = draft.mart_abil === ability;
-                return (
-                  <span
-                    key={ability}
-                    className={cn(
-                      'px-2 py-1 rounded text-sm font-medium',
-                      isPowerAbil ? 'bg-power-light text-power-dark dark:bg-power-900/30 dark:text-power-300' :
-                      isMartAbil ? 'bg-martial-light text-martial-dark dark:bg-martial-900/30 dark:text-martial-300' :
-                      value > 0 ? 'bg-green-100 text-green-700 dark:bg-success-900/30 dark:text-success-300' :
-                      value < 0 ? 'bg-red-100 text-red-700 dark:bg-danger-900/30 dark:text-danger-300' :
-                      'bg-surface-alt text-text-secondary'
-                    )}
-                  >
-                    {ABILITY_DISPLAY_NAMES[ability] ?? ability}: {value >= 0 ? `+${value}` : value}
-                  </span>
-                );
-              })}
-            </div>
+            <p className="mt-2 text-sm text-text-primary">
+              {Object.entries(draft.abilities)
+                .map(([ability, value]) => `${ABILITY_DISPLAY_NAMES[ability] ?? ability}: ${value >= 0 ? `+${value}` : value}`)
+                .join(', ')}
+            </p>
           </div>
         )}
         
@@ -616,14 +665,29 @@ export function FinalizeStep() {
           </div>
         )}
         
-        {/* Powers & Techniques Summary */}
+        {/* Powers & Techniques Summary — show energy cost for each */}
         {((draft.powers && draft.powers.length > 0) || (draft.techniques && draft.techniques.length > 0)) && (
           <div className="mt-4 pt-4 border-t border-border-light">
             {draft.powers && draft.powers.length > 0 && (
               <div className="mb-2">
                 <span className="text-text-muted dark:text-text-secondary text-sm">Powers: </span>
                 <span className="text-sm text-power-dark dark:text-power-300">
-                  {draft.powers.map(p => p.name).join(', ')}
+                  {draft.powers.map((p) => {
+                    const doc: PowerDocument = {
+                      name: String(p.name ?? ''),
+                      description: String(p.description ?? ''),
+                      parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
+                      damage: (p as CharacterPower & { damage?: PowerDocument['damage'] }).damage,
+                      actionType: (p as CharacterPower & { actionType?: string }).actionType,
+                      isReaction: (p as CharacterPower & { isReaction?: boolean }).isReaction,
+                      range: (p as CharacterPower & { range?: PowerDocument['range'] }).range,
+                      area: (p as CharacterPower & { area?: PowerDocument['area'] }).area,
+                      duration: (p as CharacterPower & { duration?: PowerDocument['duration'] }).duration,
+                    };
+                    const display = derivePowerDisplay(doc, powerPartsDb ?? []);
+                    const en = typeof display.energy === 'number' ? display.energy : '—';
+                    return `${p.name} (${en} EN)`;
+                  }).join(', ')}
                 </span>
               </div>
             )}
@@ -631,7 +695,20 @@ export function FinalizeStep() {
               <div>
                 <span className="text-text-muted dark:text-text-secondary text-sm">Techniques: </span>
                 <span className="text-sm text-martial-dark dark:text-martial-300">
-                  {draft.techniques.map(t => t.name).join(', ')}
+                  {draft.techniques.map((t) => {
+                    const doc: TechniqueDocument = {
+                      name: String(t.name ?? ''),
+                      description: String(t.description ?? ''),
+                      parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
+                      damage: Array.isArray((t as CharacterTechnique & { damage?: unknown }).damage) && (t as CharacterTechnique & { damage: unknown[] }).damage[0]
+                        ? (t as CharacterTechnique & { damage: unknown[] }).damage[0] as TechniqueDocument['damage']
+                        : (t as CharacterTechnique & { damage?: TechniqueDocument['damage'] }).damage,
+                      weapon: (t as CharacterTechnique & { weapon?: TechniqueDocument['weapon'] }).weapon,
+                    };
+                    const display = deriveTechniqueDisplay(doc, techniquePartsDb ?? []);
+                    const en = typeof display.energy === 'number' ? display.energy : '—';
+                    return `${t.name} (${en} EN)`;
+                  }).join(', ')}
                 </span>
               </div>
             )}

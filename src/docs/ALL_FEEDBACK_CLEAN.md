@@ -1275,3 +1275,17 @@ Notes
 - Priority: High
 - Feedback: Add an archetype-path system where users choose between "Forge Your Own Path" (fully custom) and "Choose a Path" (guided archetype recommendations). Archetype paths should include level-1 recommendations (proficiency, feats, skills, powers/techniques, armaments, equipment), primary + optional secondary ability emphasis, and level 2-5 progression recommendations (add/remove options). Admin archetype editing should support creating these robust paths with clean shared UI patterns. Choose-a-Path flow should present official archetype paths in grouped categories, guide feats/skills/equipment/powers/techniques by recommendations while still allowing manual override, and save selected path id with the character for level-up guidance.
 - Expected: End-to-end archetype path support in data model/API/admin/creator flow with reusable components, strong UX consistency, and saved `archetypePathId` for future leveling guidance.
+
+**Raw Feedback Log — 2026-03-14 (TP/proficiency system completion audit)**
+- Date: 2026-03-14
+- Context: Character creator, character sheet proficiencies, sitewide TP/proficiency logic and tracking
+- Priority: High
+- Feedback: Ensure the entire TP/proficiency overhaul is fully implemented sitewide with no dropped requirements: per-part/property proficiency storage, TP formula with floor rounding, duplicate-highest logic, damage-type dedupe, creator payload + over-limit visibility, character sheet auto-add/prompt on over limit, missing-proficiency indicators, add-all-missing, removable old proficiencies, custom proficiencies, and durable task/phase tracking so nothing falls through cracks.
+- Expected: Sitewide behavior matches core TP/proficiency rules end-to-end; over-limit states are visible (not silently blocked); tracking docs and task queue reflect completion status and remaining gaps explicitly.
+
+**Raw Feedback Log — 2026-03-14 (Creators, character creator, library bugs)**
+- Date: 2026-03-14
+- Context: Creators, Character Creator (finalize, powers, equipment), Character Sheet Library (inventory/weapons)
+- Priority: High
+- Feedback: (1) Creators: when displaying en/ip/c/tp cost, show one decimal only when fractional (e.g. 1.5), not "1.0" for whole numbers. (2) Character Creator finalize: display abilities as plain text without chips/colors. (3) Character Creator: selected powers/techniques should persist when switching step tabs, not disappear. (4) Equipment step: show added equipment in grid list rows with expand/collapse like powers/techniques. (5) Finalize step: power/technique chips should show energy cost for each. (6) Library inventory: negative attack bonus displayed as "+-1" should be "-1"; remove redundant attack column and keep single "Attack" button column; attack button should use same calculation as character sheet weapon section (ability + proficiency).
+- Expected: Implemented 2026-03-14: formatCostDisplay in creators, plain abilities in finalize, selected powers/techniques from full pool so they persist, equipment as GridListRow list, energy cost on finalize powers/techniques, getWeaponAttackBonus with proficiency and single Attack column in library.

@@ -31,7 +31,8 @@ import type { SourceFilterValue } from '@/components/shared/filters/source-filte
 import { FilterSection } from '@/components/codex';
 import { Spinner, Button, EmptyState } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
-import { AlertCircle, Swords, Check } from 'lucide-react';
+import { AlertCircle, Swords, Check, X } from 'lucide-react';
+import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
@@ -60,6 +61,15 @@ const EQUIPMENT_LIST_COLUMNS: ListColumn[] = [
 ];
 const EQUIPMENT_LIST_GRID = '1.8fr 0.8fr 0.6fr 0.6fr';
 
+// Selected equipment summary — grid list row columns (like powers-step)
+const SELECTED_EQUIPMENT_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.6fr' },
+  { key: 'type', label: 'Type', width: '0.7fr', align: 'center' },
+  { key: 'cost', label: 'Cost', width: '0.6fr', align: 'right' },
+  { key: 'qty', label: 'Qty', width: '0.5fr', align: 'center' },
+];
+const SELECTED_EQUIPMENT_GRID = '1.6fr 0.7fr 0.6fr 0.5fr';
+
 // Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
 const RIGHT_SLOT_WIDTH = '4.5rem';
 
@@ -86,7 +96,7 @@ interface UnifiedEquipmentItem {
   armor_value?: number;
   gold_cost: number;
   currency: number;
-  properties: string[];
+  properties: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
   rarity?: string;
   category?: string; // Equipment category for display
   source: 'library' | 'codex' | 'public'; // Track where item came from
@@ -104,7 +114,7 @@ interface SelectedItem {
   quantity: number;
   damage?: string | Array<{ amount?: number | string; size?: number | string; type?: string }>;
   armor?: number;
-  properties: string[];
+  properties: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
 }
 
 export function EquipmentStep() {
@@ -220,7 +230,20 @@ export function EquipmentStep() {
           armor_value: display.damageReduction || undefined,
           gold_cost: display.currencyCost,
           currency: display.currencyCost,
-          properties: display.proficiencies.map(p => p.name),
+          properties: (userItem.properties || []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
+            if (typeof prop === 'string') return prop;
+            const dbProp = itemProperties.find((p) =>
+              String(p.id) === String(prop.id) ||
+              String(p.name ?? '').toLowerCase() === String(prop.name ?? '').toLowerCase()
+            );
+            return {
+              id: prop.id,
+              name: prop.name,
+              op_1_lvl: prop.op_1_lvl,
+              base_tp: dbProp?.base_tp,
+              op_1_tp: dbProp?.op_1_tp,
+            };
+          }),
           rarity: display.rarity,
           source: 'library',
         });
@@ -240,7 +263,19 @@ export function EquipmentStep() {
           armor_value: item.armor_value,
           gold_cost: item.gold_cost || 0,
           currency: item.currency || item.gold_cost || 0,
-          properties: item.properties || [],
+          properties: (item.properties || []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
+            if (typeof prop === 'string') {
+              const dbProp = itemProperties?.find((p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase());
+              return {
+                name: prop,
+                id: dbProp?.id,
+                op_1_lvl: 0,
+                base_tp: dbProp?.base_tp,
+                op_1_tp: dbProp?.op_1_tp,
+              };
+            }
+            return prop as { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number };
+          }),
           rarity: item.rarity,
           category: equip.category,
           source: 'codex',
@@ -284,7 +319,30 @@ export function EquipmentStep() {
           armor_value: display.damageReduction || undefined,
           gold_cost: display.currencyCost,
           currency: display.currencyCost,
-          properties: display.proficiencies.map(p => p.name),
+          properties: (Array.isArray(pub.properties) ? pub.properties : []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
+            if (typeof prop === 'string') {
+              const dbProp = itemProperties?.find((p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase());
+              return {
+                name: prop,
+                id: dbProp?.id,
+                op_1_lvl: 0,
+                base_tp: dbProp?.base_tp,
+                op_1_tp: dbProp?.op_1_tp,
+              };
+            }
+            const typed = prop as { id?: string | number; name?: string; op_1_lvl?: number };
+            const dbProp = itemProperties?.find((p) =>
+              String(p.id) === String(typed.id) ||
+              String(p.name ?? '').toLowerCase() === String(typed.name ?? '').toLowerCase()
+            );
+            return {
+              id: typed.id,
+              name: typed.name,
+              op_1_lvl: typed.op_1_lvl ?? 0,
+              base_tp: dbProp?.base_tp,
+              op_1_tp: dbProp?.op_1_tp,
+            };
+          }),
           rarity: display.rarity,
           category: (pub.category as string) || (type === 'equipment' ? 'Equipment' : undefined),
           source: 'public',
@@ -314,9 +372,7 @@ export function EquipmentStep() {
       quantity: item.quantity || 1,
       damage: item.damage,
       armor: item.armor,
-      properties: Array.isArray(item.properties) 
-        ? item.properties.map(p => typeof p === 'string' ? p : p.name) 
-        : [],
+      properties: Array.isArray(item.properties) ? item.properties : [],
     }));
   }, [draft.equipment?.inventory]);
 
@@ -382,7 +438,7 @@ export function EquipmentStep() {
         quantity: 1,
         damage: item.damage,
         armor: item.armor_value,
-        properties: item.properties,
+        properties: item.properties as unknown as Item['properties'],
       };
       
       updateDraft({
@@ -485,28 +541,49 @@ export function EquipmentStep() {
         </div>
       </div>
 
-      {/* Selected Items Summary */}
+      {/* Selected Equipment — grid list rows with expand/collapse (like powers-step) */}
       {selectedItems.length > 0 && (
-        <div className="bg-surface-alt dark:bg-surface rounded-xl border border-border-light p-4 mb-6">
-          <h3 className="font-medium text-text-primary mb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
-          <div className="flex flex-wrap gap-2">
-            {selectedItems.map(item => (
-              <span
-                key={item.id}
-                className="px-3 py-1 bg-surface dark:bg-surface-alt border border-border-light rounded-full text-sm flex items-center gap-2 text-text-primary"
-              >
-                {item.quantity > 1 && <span className="font-bold text-primary-600 dark:text-primary-400">{item.quantity}×</span>}
-                {item.name}
-                <span className="text-tp-text dark:text-warning-400 text-xs">{item.cost * item.quantity}c</span>
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="hover:text-danger-500 dark:hover:text-danger-400 ml-1"
-                  aria-label={`Remove ${item.name}`}
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+        <div className="bg-surface-alt dark:bg-surface rounded-xl border border-border-light overflow-hidden mb-6">
+          <h3 className="font-medium text-text-primary px-4 pt-4 pb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
+          <ListHeader
+            columns={SELECTED_EQUIPMENT_COLUMNS.map((c) => ({ ...c, align: (c.align as 'left' | 'center' | 'right') ?? 'left' }))}
+            gridColumns={SELECTED_EQUIPMENT_GRID}
+            rightSlotWidth={RIGHT_SLOT_WIDTH}
+            compact
+          />
+          <div className="space-y-1 px-1 pb-2">
+            {selectedItems.map((item) => {
+              const fullItem = allEquipment.find((e) => e.id === item.id);
+              const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+              const costTotal = item.cost * item.quantity;
+              const columns = [
+                { key: 'name', value: item.name },
+                { key: 'type', value: typeLabel, align: 'center' as const },
+                { key: 'cost', value: `${costTotal}c`, align: 'right' as const },
+                { key: 'qty', value: String(item.quantity), align: 'center' as const },
+              ];
+              return (
+                <GridListRow
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  description={fullItem?.description || undefined}
+                  columns={columns}
+                  gridColumns={SELECTED_EQUIPMENT_GRID}
+                  rightSlot={
+                    <IconButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => removeItem(item.id)}
+                      label={`Remove ${item.name}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </IconButton>
+                  }
+                  compact
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -708,8 +785,8 @@ export function EquipmentStep() {
                   }
 
                   // Build property chips
-                  const chips: ChipData[] = item.properties.map(prop => ({
-                    name: prop,
+                  const chips: ChipData[] = item.properties.map((prop) => ({
+                    name: typeof prop === 'string' ? prop : (prop.name || 'Property'),
                     category: 'tag' as const,
                   }));
 

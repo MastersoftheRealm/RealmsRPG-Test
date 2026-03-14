@@ -584,6 +584,8 @@ const SAVEABLE_FIELDS = [
   'conditions',
   // Training points tracking
   'trainingPointsSpent',
+  // Persisted part/property proficiencies
+  'proficiencies',
   // Timestamps
   'createdAt', 'updatedAt', 'lastPlayedAt',
 ] as const;

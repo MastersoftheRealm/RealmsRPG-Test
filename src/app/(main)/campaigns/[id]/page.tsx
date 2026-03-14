@@ -41,7 +41,7 @@ import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, delete
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../constants';
 import type { Campaign, CampaignCharacter } from '@/types/campaign';
 
-const FALLBACK_AVATAR = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" fill="%23053357"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" font-size="24" fill="white" font-family="Arial">?</text></svg>';
+import { getEffectivePortrait } from '@/lib/portrait';
 
 export default function CampaignDetailPage() {
   return (
@@ -583,7 +583,7 @@ function CharacterChip({
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[200px]">
       <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-primary-800">
         <Image
-          src={character.portrait || FALLBACK_AVATAR}
+          src={getEffectivePortrait(character.portrait)}
           alt={character.characterName}
           width={56}
           height={56}
@@ -663,13 +663,7 @@ function AddCharacterModal({
             disabled={loading}
             className="flex items-center gap-3 w-full p-3 rounded-lg border border-border-light hover:bg-surface-alt text-left transition-colors disabled:opacity-50"
           >
-            {c.portrait ? (
-              <img src={c.portrait} alt="" className="w-12 h-12 rounded-lg object-cover" />
-            ) : (
-              <div className="w-12 h-12 rounded-lg bg-primary-800 flex items-center justify-center text-white text-sm font-bold">
-                {c.name.charAt(0)}
-              </div>
-            )}
+            <img src={getEffectivePortrait(c.portrait)} alt="" className="w-12 h-12 rounded-lg object-cover" />
             <div>
               <p className="font-medium">{c.name}</p>
               <p className="text-sm text-text-muted dark:text-text-secondary">

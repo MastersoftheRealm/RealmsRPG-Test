@@ -12,8 +12,7 @@ import { cn } from '@/lib/utils';
 import { X, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { CharacterSummary } from '@/types';
-
-const FALLBACK_AVATAR = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><rect width="100%" height="100%" fill="%23053357"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" font-size="44" fill="white" font-family="Arial">?</text></svg>';
+import { getEffectivePortrait } from '@/lib/portrait';
 
 interface CharacterCardProps {
   character: CharacterSummary;
@@ -40,7 +39,7 @@ export function CharacterCard({ character, onDelete, isDeleting }: CharacterCard
       {/* Portrait */}
       <div className="relative aspect-[3/4] bg-primary-800">
         <Image
-          src={character.portrait || FALLBACK_AVATAR}
+          src={getEffectivePortrait(character.portrait)}
           alt={character.name}
           fill
           className="object-cover"

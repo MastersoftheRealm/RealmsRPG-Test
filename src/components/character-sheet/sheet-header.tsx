@@ -22,6 +22,7 @@ import { HealthEnergyAllocator } from '@/components/creator';
 import { ValueStepper, ImageUploadModal, EditSectionToggle } from '@/components/shared';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import type { Character } from '@/types';
+import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
 
 interface CalculatedStats {
   maxHealth: number;
@@ -544,11 +545,12 @@ export function SheetHeader({
           >
             <Image
               key={`portrait-${character.portrait ?? ''}-${portraitRefreshKey ?? ''}`}
-              src={
-                character.portrait
-                  ? `${character.portrait}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`
-                  : '/images/placeholder-portrait.png'
-              }
+              src={(() => {
+                const effective = getEffectivePortrait(character.portrait);
+                return effective === FALLBACK_PORTRAIT_DATA_URL
+                  ? effective
+                  : `${effective}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`;
+              })()}
               alt={character.name}
               fill
               unoptimized
@@ -558,7 +560,7 @@ export function SheetHeader({
               )}
               sizes="(max-width: 768px) 112px, 144px"
               onError={(e) => {
-                (e.target as HTMLImageElement).src = '/images/placeholder-portrait.png';
+                (e.target as HTMLImageElement).src = FALLBACK_PORTRAIT_DATA_URL;
               }}
             />
             {/* Upload overlay in edit mode */}

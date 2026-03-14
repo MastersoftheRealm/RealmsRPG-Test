@@ -31,13 +31,22 @@ interface AddLibraryItemModalProps {
   onAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
 }
 
+type EqItem = {
+  id: string;
+  name?: string;
+  description?: string;
+  damage?: unknown;
+  armorValue?: number;
+  properties?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
+};
+
 function capitalize(s: string | undefined): string {
   if (!s) return '-';
   return s.replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function getItemColumns(
-  item: UserPower | UserTechnique | UserItem | { id: string; name?: string; description?: string; damage?: unknown; armorValue?: number; properties?: string[] },
+  item: UserPower | UserTechnique | UserItem | EqItem,
   itemType: ItemType,
   techniqueDisplay?: { energy: number; weaponName: string; tp: number }
 ): ColumnValue[] {
@@ -122,8 +131,6 @@ function getTitle(itemType: ItemType): string {
     default: return 'Add Item';
   }
 }
-
-type EqItem = { id: string; name?: string; description?: string; damage?: unknown; armorValue?: number; properties?: string[] };
 
 export function AddLibraryItemModal({
   isOpen,
@@ -212,7 +219,7 @@ export function AddLibraryItemModal({
             description: String(i.description ?? ''),
             damage: i.damage,
             armorValue: i.armorValue,
-            properties: (i.properties || []).map((p: { name?: string } | string) => typeof p === 'string' ? p : (p as { name?: string }).name).filter(Boolean) as string[],
+            properties: (i.properties || []) as EqItem['properties'],
             _source: 'my',
           }) as WithSource<EqItem>),
           ...publicEquip.map((i: UserItem | EqItem): WithSource<EqItem> => ({
@@ -221,7 +228,7 @@ export function AddLibraryItemModal({
             description: String(i.description ?? ''),
             damage: (i as UserItem).damage,
             armorValue: (i as UserItem).armorValue,
-            properties: ((i as UserItem).properties || []).map((p: { name?: string } | string) => typeof p === 'string' ? p : (p as { name?: string }).name).filter(Boolean) as string[],
+            properties: ((i as UserItem).properties || []) as EqItem['properties'],
             _source: 'public',
           }) as WithSource<EqItem>),
         ];
@@ -386,18 +393,13 @@ export function AddLibraryItemModal({
       onAdd(techniques);
     } else {
       const equipmentItems: Item[] = (selectedRaw as EqItem[]).map(i => {
-        let damageStr = '';
-        if (Array.isArray(i.damage) && i.damage.length > 0) {
-          const d = i.damage[0] as { amount?: number; size?: number; type?: string };
-          if (d?.amount && d?.size && d?.type && d.type !== 'none') damageStr = `${d.amount}d${d.size} ${d.type}`;
-        } else if (typeof i.damage === 'string') damageStr = i.damage;
-        const props = (i.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name).filter((n): n is string => typeof n === 'string');
+        const props = (i.properties || []) as EqItem['properties'];
         return {
           id: i.id,
           name: String(i.name ?? ''),
           description: String(i.description ?? ''),
-          properties: props,
-          damage: damageStr,
+          properties: props as unknown as Item['properties'],
+          damage: i.damage as Item['damage'],
           armor: i.armorValue ?? 0,
           equipped: false,
           quantity: itemType === 'equipment' ? (quantities[i.id] ?? 1) : 1,

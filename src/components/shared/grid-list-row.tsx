@@ -21,6 +21,7 @@
 import { useState, memo, ReactNode } from 'react';
 import { Edit, Copy, Zap, Check, Plus, AlertCircle, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
@@ -268,6 +269,15 @@ export const GridListRow = memo(function GridListRow({
     }
   };
 
+  // Prevent row expand when clicking buttons/links inside (avoids nested button hydration error and wrong UX)
+  const handleRowClickWithGuard = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest?.('button, [role="button"], a, input, select, textarea')) return;
+    handleRowClick();
+  };
+
+  const isRowClickable = (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
+
   // Determine row styling based on state (equipped: no row green/checkmark — toggle is enough)
   const rowStyles = cn(
     'bg-surface transition-all rounded-lg border overflow-hidden',
@@ -300,15 +310,23 @@ export const GridListRow = memo(function GridListRow({
           </div>
         )}
         
-        {/* Clickable Row Content */}
-        <button
-          onClick={handleRowClick}
-          disabled={disabled && (!selectable || !showExpander)}
+        {/* Clickable Row Content - div not button to allow RollButton/other buttons inside without nesting */}
+        <div
+          role={isRowClickable ? 'button' : undefined}
+          tabIndex={isRowClickable ? 0 : undefined}
+          onClick={isRowClickable ? handleRowClickWithGuard : undefined}
+          onKeyDown={isRowClickable ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleRowClick();
+            }
+          } : undefined}
           className={cn(
             'flex-1 text-left transition-colors min-h-[44px]',
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
             compact ? 'px-3 py-2' : 'px-4 py-3',
-            disabled && 'cursor-default'
+            disabled && 'cursor-default',
+            isRowClickable && 'cursor-pointer'
           )}
           style={gridStyle}
         >
@@ -397,7 +415,7 @@ export const GridListRow = memo(function GridListRow({
             </div>
           )}
 
-        </button>
+        </div>
         
         {/* Right Slot - use button, roll buttons, quantity, etc. (before delete so X is at far right) */}
         {rightSlot && (
@@ -536,7 +554,7 @@ export const GridListRow = memo(function GridListRow({
                 <div className="flex items-center gap-2 mb-4">
                   <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border border-info-200 dark:border-info-800/50">
                     <Zap className="w-4 h-4" />
-                    Total {costLabel}: {totalCost}
+                    Total {costLabel}: {formatCostDisplay(totalCost)}
                   </span>
                 </div>
               )}
@@ -591,7 +609,7 @@ export const GridListRow = memo(function GridListRow({
                                 {hasCost && (
                                   <>
                                     <span className="opacity-40">|</span>
-                                    <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                    <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {typeof chip.cost === 'number' ? formatCostDisplay(chip.cost) : chip.cost}</span>
                                   </>
                                 )}
                               </span>
@@ -666,7 +684,7 @@ export const GridListRow = memo(function GridListRow({
                               {hasCost && (
                                 <>
                                   <span className="opacity-40">|</span>
-                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {typeof chip.cost === 'number' ? formatCostDisplay(chip.cost) : chip.cost}</span>
                                 </>
                               )}
                             </span>

@@ -6951,3 +6951,38 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
     - Refactored persistence toward columnar/relational Supabase data:
       level-1 path recommendations now map to dedicated columns on `codex_archetypes`, and level 2+
       progression rows map to `codex_archetype_levels` (one row per archetype+level).
+
+- id: TASK-299
+  title: TP/proficiency system completion audit and rule-hardening
+  priority: high
+  status: done
+  created_at: 2026-03-14
+  created_by: agent
+  description: |
+    Complete a full sitewide TP/proficiency audit against owner requirements: per-part/property tracking,
+    floor-rounded TP formula, duplicate-highest handling, damage-type dedupe across sources, creator
+    over-limit visibility, and end-to-end tracking updates so no requirements are dropped.
+  related_files:
+    - src/lib/proficiencies.ts
+    - src/lib/character-creator-validation.ts
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/AI_TASK_QUEUE.md
+  acceptance_criteria:
+    - Damage-type proficiencies dedupe across powers/techniques/items by damage type key.
+    - Damage-type parsing handles string and object array forms safely.
+    - Character creator TP over-limit uses proficiency-derived TP (not legacy trainingPointsSpent).
+    - Creator over-limit is visible as a warning and does not hard-block creation.
+    - Finalize summary shows TP limit/spent/remaining from required proficiencies.
+    - Build/lint checks pass.
+  notes: |
+    Implemented 2026-03-14.
+    - proficiencies.ts: proficiencyKey now normalizes any proficiency with damageType to `damage_type:{type}`
+      so cross-source damage requirements dedupe correctly; parseDamageTypes now supports string array entries
+      and object entries with type/damageType/name fields.
+    - character-creator-validation.ts: equipment-step TP validation now derives required proficiencies from
+      powers/techniques/armaments and computes spent TP via calculateProficiencyTP; over-limit is warning
+      (allowed) with explicit spent/limit message.
+    - finalize-step.tsx: added Proficiency TP summary (limit/required/remaining) and explicit over-limit notice.
+    - Verification: npm run build passes; ReadLints reports no issues in modified files.

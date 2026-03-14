@@ -11,6 +11,24 @@ import type { CharacterSkills, DefenseSkills } from './skills';
 import type { CharacterFeat } from './feats';
 import type { CharacterEquipment, Item } from './equipment';
 
+export type ProficiencyKind = 'power_part' | 'technique_part' | 'item_property' | 'custom';
+
+export interface CharacterProficiency {
+  kind: ProficiencyKind;
+  id: string;
+  refId?: string;
+  name: string;
+  damageType?: string;
+  op1Level?: number;
+  op2Level?: number;
+  op3Level?: number;
+  baseTP?: number;
+  op1TP?: number;
+  op2TP?: number;
+  op3TP?: number;
+  custom?: boolean;
+}
+
 /** Character creation status */
 export type CharacterStatus = 'draft' | 'complete' | 'playing';
 
@@ -214,6 +232,7 @@ export interface Character {
   
   // Training points tracking
   trainingPointsSpent?: number;
+  proficiencies?: CharacterProficiency[];
   
   // Metadata
   createdAt?: Date | string;
@@ -326,6 +345,7 @@ export interface CharacterSaveData {
   // Unarmed prowess
   unarmedProwess?: number;
   trainingPointsSpent?: number;
+  proficiencies?: CharacterProficiency[];
 
   // Conditions (runtime state)
   conditions?: Array<{ name: string; level: number; decaying: boolean }>;
