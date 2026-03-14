@@ -58,6 +58,8 @@ export interface CraftingSessionData {
   potency?: number | 'creator';
   /** When isEnhanced + multiple use: index into multipleUseTable; -1 = single use per full recovery */
   multipleUseTableIndex?: number;
+  /** When isEnhanced: include crafting requirements for the base item in addition to enhancement */
+  craftBaseItemAlso?: boolean;
   /** Upgrade mode: upgrading an existing item to a higher-tier one */
   isUpgrade?: boolean;
   /** Upgrade potency: re-craft session to raise an enhanced item's potency (25% time/cost/successes, same DS) */

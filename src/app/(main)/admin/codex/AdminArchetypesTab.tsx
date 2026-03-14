@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
-import { useCodexArchetypes } from '@/hooks/use-codex';
+import { ChipSelect } from '@/components/shared';
+import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills } from '@/hooks/use-codex';
+import { useOfficialLibrary } from '@/hooks/use-public-library';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
@@ -15,29 +17,56 @@ const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intellige
 type PathLevelForm = {
   rowId: string;
   level: number;
-  feats: string;
-  skills: string;
-  powers: string;
-  techniques: string;
-  armaments: string;
-  equipment: string;
-  removeFeats: string;
-  removePowers: string;
-  removeTechniques: string;
-  removeArmaments: string;
+  feats: string[];
+  skills: string[];
+  powers: string[];
+  techniques: string[];
+  armaments: string[];
+  equipment: string[];
+  removeFeats: string[];
+  removePowers: string[];
+  removeTechniques: string[];
+  removeArmaments: string[];
   notes: string;
 };
 
-function csvToArray(value: string): string[] {
-  return value
-    .split(',')
-    .map((v) => v.trim())
-    .filter(Boolean);
-}
+type SelectionOption = { value: string; label: string };
 
 function toCsv(value: unknown): string {
   if (!Array.isArray(value)) return '';
   return value.map(String).filter(Boolean).join(', ');
+}
+
+function toSelectionArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((entry) => String(entry).trim()).filter(Boolean);
+  }
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function dedupeStrings(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+function resolveSelectedValues(values: string[], options: SelectionOption[]): string[] {
+  if (!values.length) return [];
+  if (!options.length) return dedupeStrings(values);
+
+  const byValue = new Map(options.map((opt) => [opt.value.toLowerCase(), opt.value]));
+  const byLabel = new Map(options.map((opt) => [opt.label.toLowerCase(), opt.value]));
+
+  return dedupeStrings(
+    values.map((raw) => {
+      const normalized = raw.toLowerCase();
+      return byValue.get(normalized) || byLabel.get(normalized) || raw;
+    })
+  );
 }
 
 function parsePathData(value: unknown): Record<string, unknown> | undefined {
@@ -59,34 +88,38 @@ function makeLevelRow(level = 2): PathLevelForm {
   return {
     rowId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     level,
-    feats: '',
-    skills: '',
-    powers: '',
-    techniques: '',
-    armaments: '',
-    equipment: '',
-    removeFeats: '',
-    removePowers: '',
-    removeTechniques: '',
-    removeArmaments: '',
+    feats: [],
+    skills: [],
+    powers: [],
+    techniques: [],
+    armaments: [],
+    equipment: [],
+    removeFeats: [],
+    removePowers: [],
+    removeTechniques: [],
+    removeArmaments: [],
     notes: '',
   };
 }
 
-function toLevelForm(raw: Record<string, unknown>, level = 2): PathLevelForm {
+function toLevelForm(
+  raw: Record<string, unknown>,
+  level = 2,
+  optionsByKey?: Partial<Record<keyof Omit<PathLevelForm, 'rowId' | 'level' | 'notes'>, SelectionOption[]>>
+): PathLevelForm {
   return {
     rowId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     level: Number(raw.level ?? level) || level,
-    feats: toCsv(raw.feats),
-    skills: toCsv(raw.skills),
-    powers: toCsv(raw.powers),
-    techniques: toCsv(raw.techniques),
-    armaments: toCsv(raw.armaments),
-    equipment: toCsv(raw.equipment),
-    removeFeats: toCsv(raw.removeFeats),
-    removePowers: toCsv(raw.removePowers),
-    removeTechniques: toCsv(raw.removeTechniques),
-    removeArmaments: toCsv(raw.removeArmaments),
+    feats: resolveSelectedValues(toSelectionArray(raw.feats), optionsByKey?.feats ?? []),
+    skills: resolveSelectedValues(toSelectionArray(raw.skills), optionsByKey?.skills ?? []),
+    powers: resolveSelectedValues(toSelectionArray(raw.powers), optionsByKey?.powers ?? []),
+    techniques: resolveSelectedValues(toSelectionArray(raw.techniques), optionsByKey?.techniques ?? []),
+    armaments: resolveSelectedValues(toSelectionArray(raw.armaments), optionsByKey?.armaments ?? []),
+    equipment: resolveSelectedValues(toSelectionArray(raw.equipment), optionsByKey?.equipment ?? []),
+    removeFeats: resolveSelectedValues(toSelectionArray(raw.removeFeats), optionsByKey?.removeFeats ?? []),
+    removePowers: resolveSelectedValues(toSelectionArray(raw.removePowers), optionsByKey?.removePowers ?? []),
+    removeTechniques: resolveSelectedValues(toSelectionArray(raw.removeTechniques), optionsByKey?.removeTechniques ?? []),
+    removeArmaments: resolveSelectedValues(toSelectionArray(raw.removeArmaments), optionsByKey?.removeArmaments ?? []),
     notes: typeof raw.notes === 'string' ? raw.notes : '',
   };
 }
@@ -94,16 +127,16 @@ function toLevelForm(raw: Record<string, unknown>, level = 2): PathLevelForm {
 function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<string, unknown> {
   const payload: Record<string, unknown> = {};
   if (includeLevel) payload.level = level.level;
-  const feats = csvToArray(level.feats);
-  const skills = csvToArray(level.skills);
-  const powers = csvToArray(level.powers);
-  const techniques = csvToArray(level.techniques);
-  const armaments = csvToArray(level.armaments);
-  const equipment = csvToArray(level.equipment);
-  const removeFeats = csvToArray(level.removeFeats);
-  const removePowers = csvToArray(level.removePowers);
-  const removeTechniques = csvToArray(level.removeTechniques);
-  const removeArmaments = csvToArray(level.removeArmaments);
+  const feats = dedupeStrings(level.feats);
+  const skills = dedupeStrings(level.skills);
+  const powers = dedupeStrings(level.powers);
+  const techniques = dedupeStrings(level.techniques);
+  const armaments = dedupeStrings(level.armaments);
+  const equipment = dedupeStrings(level.equipment);
+  const removeFeats = dedupeStrings(level.removeFeats);
+  const removePowers = dedupeStrings(level.removePowers);
+  const removeTechniques = dedupeStrings(level.removeTechniques);
+  const removeArmaments = dedupeStrings(level.removeArmaments);
   if (feats.length) payload.feats = feats;
   if (skills.length) payload.skills = skills;
   if (powers.length) payload.powers = powers;
@@ -120,6 +153,12 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
 
 export function AdminArchetypesTab() {
   const { data: archetypes, isLoading, error } = useCodexArchetypes();
+  const { data: codexFeats = [] } = useCodexFeats();
+  const { data: codexSkills = [] } = useCodexSkills();
+  const { data: codexEquipment = [] } = useCodexEquipment();
+  const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary('powers');
+  const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } = useOfficialLibrary('techniques');
+  const { data: officialItems = [], isLoading: isLoadingOfficialItems } = useOfficialLibrary('items');
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -164,6 +203,163 @@ export function AdminArchetypesTab() {
       (a.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
+  const featOptions = useMemo<SelectionOption[]>(
+    () =>
+      (codexFeats as Array<{ id?: string; name?: string }>)
+        .map((feat) => ({ value: String(feat.id ?? ''), label: String(feat.name ?? feat.id ?? '') }))
+        .filter((feat) => feat.value && feat.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [codexFeats]
+  );
+
+  const skillOptions = useMemo<SelectionOption[]>(
+    () =>
+      (codexSkills as Array<{ id?: string; name?: string }>)
+        .map((skill) => ({ value: String(skill.id ?? ''), label: String(skill.name ?? skill.id ?? '') }))
+        .filter((skill) => skill.value && skill.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [codexSkills]
+  );
+
+  const powerOptions = useMemo<SelectionOption[]>(
+    () =>
+      (officialPowers as Array<Record<string, unknown>>)
+        .map((power) => ({
+          value: String(power.id ?? ''),
+          label: String(power.name ?? power.id ?? ''),
+        }))
+        .filter((power) => power.value && power.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [officialPowers]
+  );
+
+  const techniqueOptions = useMemo<SelectionOption[]>(
+    () =>
+      (officialTechniques as Array<Record<string, unknown>>)
+        .map((technique) => ({
+          value: String(technique.id ?? ''),
+          label: String(technique.name ?? technique.id ?? ''),
+        }))
+        .filter((technique) => technique.value && technique.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [officialTechniques]
+  );
+
+  const armamentOptions = useMemo<SelectionOption[]>(
+    () =>
+      (officialItems as Array<Record<string, unknown>>)
+        .filter((item) => {
+          const type = String(item.type ?? '').toLowerCase();
+          return type === 'weapon' || type === 'armor' || type === 'shield';
+        })
+        .map((item) => ({
+          value: String(item.id ?? ''),
+          label: String(item.name ?? item.id ?? ''),
+        }))
+        .filter((item) => item.value && item.label)
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [officialItems]
+  );
+
+  const equipmentOptions = useMemo<SelectionOption[]>(() => {
+    const codex = (codexEquipment as Array<{ id?: string; name?: string }>)
+      .map((item) => ({
+        value: String(item.id ?? ''),
+        label: `${String(item.name ?? item.id ?? '')} (Codex)`,
+      }))
+      .filter((item) => item.value && item.label);
+
+    const official = (officialItems as Array<Record<string, unknown>>)
+      .filter((item) => String(item.type ?? '').toLowerCase() === 'equipment')
+      .map((item) => ({
+        value: String(item.id ?? ''),
+        label: `${String(item.name ?? item.id ?? '')} (Official)`,
+      }))
+      .filter((item) => item.value && item.label);
+
+    return dedupeStrings([...codex.map((item) => item.value), ...official.map((item) => item.value)])
+      .map((id) => codex.find((item) => item.value === id) ?? official.find((item) => item.value === id))
+      .filter((item): item is SelectionOption => Boolean(item))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [codexEquipment, officialItems]);
+
+  const optionsByField = useMemo(
+    () => ({
+      feats: featOptions,
+      skills: skillOptions,
+      powers: powerOptions,
+      techniques: techniqueOptions,
+      armaments: armamentOptions,
+      equipment: equipmentOptions,
+      removeFeats: featOptions,
+      removePowers: powerOptions,
+      removeTechniques: techniqueOptions,
+      removeArmaments: armamentOptions,
+    }),
+    [featOptions, skillOptions, powerOptions, techniqueOptions, armamentOptions, equipmentOptions]
+  );
+
+  const isSelectionDataLoading =
+    isLoadingOfficialPowers || isLoadingOfficialTechniques || isLoadingOfficialItems;
+
+  type PathSelectionKey =
+    | 'feats'
+    | 'skills'
+    | 'powers'
+    | 'techniques'
+    | 'armaments'
+    | 'equipment'
+    | 'removeFeats'
+    | 'removePowers'
+    | 'removeTechniques'
+    | 'removeArmaments';
+
+  const selectionFieldConfig: Array<{ key: PathSelectionKey; label: string; placeholder: string }> = [
+    { key: 'feats', label: 'Feats', placeholder: 'Select recommended feats' },
+    { key: 'skills', label: 'Skills', placeholder: 'Select recommended skills' },
+    { key: 'powers', label: 'Powers', placeholder: 'Select recommended powers' },
+    { key: 'techniques', label: 'Techniques', placeholder: 'Select recommended techniques' },
+    { key: 'armaments', label: 'Armaments', placeholder: 'Select recommended armaments' },
+    { key: 'equipment', label: 'Equipment', placeholder: 'Select recommended equipment' },
+  ];
+
+  const removeFieldConfig: Array<{ key: PathSelectionKey; label: string; placeholder: string }> = [
+    { key: 'removeFeats', label: 'Remove Feats', placeholder: 'Select feats to remove at this level' },
+    { key: 'removePowers', label: 'Remove Powers', placeholder: 'Select powers to remove at this level' },
+    { key: 'removeTechniques', label: 'Remove Techniques', placeholder: 'Select techniques to remove at this level' },
+    { key: 'removeArmaments', label: 'Remove Armaments', placeholder: 'Select armaments to remove at this level' },
+  ];
+
+  const getSelectedLabels = (values: string[], options: SelectionOption[]) =>
+    values.map((value) => options.find((option) => option.value === value)?.label ?? value);
+
+  function getUnknownSelectionsForLevel(levelForm: PathLevelForm, labelPrefix: string): string[] {
+    const unknowns: string[] = [];
+
+    const checkField = (key: PathSelectionKey, label: string) => {
+      const options = optionsByField[key];
+      const knownIds = new Set(options.map((opt) => opt.value));
+      const invalidIds = levelForm[key].filter((id) => !knownIds.has(id));
+      if (invalidIds.length) {
+        const prettyLabels = getSelectedLabels(invalidIds, options);
+        unknowns.push(`${labelPrefix}${label}: ${prettyLabels.join(', ')}`);
+      }
+    };
+
+    checkField('feats', 'Feats');
+    checkField('skills', 'Skills');
+    checkField('powers', 'Powers');
+    checkField('techniques', 'Techniques');
+    checkField('armaments', 'Armaments');
+    checkField('equipment', 'Equipment');
+    checkField('removeFeats', 'Remove Feats');
+    checkField('removePowers', 'Remove Powers');
+    checkField('removeTechniques', 'Remove Techniques');
+    checkField('removeArmaments', 'Remove Armaments');
+
+    return unknowns;
+  }
+
   const openAdd = () => {
     setEditing(null);
     setCopySourceName(null);
@@ -195,7 +391,7 @@ export function AdminArchetypesTab() {
       : [];
     const levelRows = rawLevels
       .filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null)
-      .map((entry, index) => toLevelForm(entry, index + 2));
+      .map((entry, index) => toLevelForm(entry, index + 2, optionsByField));
 
     setEditing(null);
     setCopySourceName(a.name || '');
@@ -209,7 +405,7 @@ export function AdminArchetypesTab() {
       martialProfStart: a.martial_prof_start ?? 0,
       powerProfLevel5: a.power_prof_level5 ?? 0,
       martialProfLevel5: a.martial_prof_level5 ?? 0,
-      level1Path: toLevelForm(rawLevel1, 1),
+      level1Path: toLevelForm(rawLevel1, 1, optionsByField),
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
     });
@@ -227,7 +423,7 @@ export function AdminArchetypesTab() {
       : [];
     const levelRows = rawLevels
       .filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null)
-      .map((entry, index) => toLevelForm(entry, index + 2));
+      .map((entry, index) => toLevelForm(entry, index + 2, optionsByField));
 
     setEditing(a);
     setCopySourceName(null);
@@ -241,7 +437,7 @@ export function AdminArchetypesTab() {
       martialProfStart: a.martial_prof_start ?? 0,
       powerProfLevel5: a.power_prof_level5 ?? 0,
       martialProfLevel5: a.martial_prof_level5 ?? 0,
-      level1Path: toLevelForm(rawLevel1, 1),
+      level1Path: toLevelForm(rawLevel1, 1, optionsByField),
       levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
       advancedPathJson: '',
     });
@@ -257,6 +453,20 @@ export function AdminArchetypesTab() {
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
+
+    const unknownFromLevel1 = getUnknownSelectionsForLevel(form.level1Path, 'Level 1 ');
+    const unknownFromLevels = form.levelPathRows.flatMap((row) =>
+      getUnknownSelectionsForLevel(row, `Level ${row.level} `)
+    );
+    const allUnknowns = [...unknownFromLevel1, ...unknownFromLevels];
+    if (allUnknowns.length) {
+      alert(
+        'Some archetype path entries no longer match existing Codex/Official Library items. ' +
+          'Please fix or remove these before saving:\n\n' +
+          allUnknowns.join('\n')
+      );
+      return;
+    }
 
     const level1Payload = buildLevelPayload(form.level1Path, false);
     const levelsPayload = form.levelPathRows
@@ -432,7 +642,7 @@ export function AdminArchetypesTab() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={closeModal}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
+              <Button onClick={handleSave} disabled={saving || !form.name.trim() || isSelectionDataLoading}>
                 {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>
@@ -533,20 +743,54 @@ export function AdminArchetypesTab() {
             <div>
               <h3 className="text-sm font-semibold text-text-primary">Archetype Path Builder</h3>
               <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-                Use comma-separated IDs or names. Example: <code>mighty_blow, precise_strike</code>
+                Select existing codex and official library entries. No manual CSV input required.
               </p>
+              {isSelectionDataLoading && (
+                <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+                  Loading official library options...
+                </p>
+              )}
             </div>
 
             <div className="rounded-md border border-border-light bg-surface-alt p-3 space-y-2">
               <h4 className="text-sm font-medium text-text-primary">Level 1 Recommendations</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <Input value={form.level1Path.feats} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, feats: e.target.value } }))} placeholder="Feats (CSV)" />
-                <Input value={form.level1Path.skills} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, skills: e.target.value } }))} placeholder="Skills (CSV)" />
-                <Input value={form.level1Path.powers} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, powers: e.target.value } }))} placeholder="Powers (CSV)" />
-                <Input value={form.level1Path.techniques} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, techniques: e.target.value } }))} placeholder="Techniques (CSV)" />
-                <Input value={form.level1Path.armaments} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, armaments: e.target.value } }))} placeholder="Armaments (CSV)" />
-                <Input value={form.level1Path.equipment} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, equipment: e.target.value } }))} placeholder="Equipment (CSV)" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {selectionFieldConfig.map((field) => (
+                  <ChipSelect
+                    key={`level1-${field.key}`}
+                    label={field.label}
+                    placeholder={field.placeholder}
+                    options={optionsByField[field.key].map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    }))}
+                    selectedValues={form.level1Path[field.key]}
+                    onSelect={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        level1Path: {
+                          ...prev.level1Path,
+                          [field.key]: dedupeStrings([...prev.level1Path[field.key], value]),
+                        },
+                      }))
+                    }
+                    onRemove={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        level1Path: {
+                          ...prev.level1Path,
+                          [field.key]: prev.level1Path[field.key].filter((entry) => entry !== value),
+                        },
+                      }))
+                    }
+                  />
+                ))}
               </div>
+              {!!form.level1Path.feats.length && (
+                <p className="text-xs text-text-secondary">
+                  Selected Feats: {getSelectedLabels(form.level1Path.feats, featOptions).join(', ')}
+                </p>
+              )}
               <Input value={form.level1Path.notes} onChange={(e) => setForm((f) => ({ ...f, level1Path: { ...f.level1Path, notes: e.target.value } }))} placeholder="Level 1 notes (optional)" />
             </div>
 
@@ -600,17 +844,71 @@ export function AdminArchetypesTab() {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <Input value={row.feats} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, feats: e.target.value } : candidate) }))} placeholder="Add feats (CSV)" />
-                    <Input value={row.skills} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, skills: e.target.value } : candidate) }))} placeholder="Add skills (CSV)" />
-                    <Input value={row.powers} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, powers: e.target.value } : candidate) }))} placeholder="Add powers (CSV)" />
-                    <Input value={row.techniques} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, techniques: e.target.value } : candidate) }))} placeholder="Add techniques (CSV)" />
-                    <Input value={row.armaments} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, armaments: e.target.value } : candidate) }))} placeholder="Add armaments (CSV)" />
-                    <Input value={row.equipment} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, equipment: e.target.value } : candidate) }))} placeholder="Add equipment (CSV)" />
-                    <Input value={row.removeFeats} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, removeFeats: e.target.value } : candidate) }))} placeholder="Remove feats (CSV)" />
-                    <Input value={row.removePowers} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, removePowers: e.target.value } : candidate) }))} placeholder="Remove powers (CSV)" />
-                    <Input value={row.removeTechniques} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, removeTechniques: e.target.value } : candidate) }))} placeholder="Remove techniques (CSV)" />
-                    <Input value={row.removeArmaments} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, removeArmaments: e.target.value } : candidate) }))} placeholder="Remove armaments (CSV)" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectionFieldConfig.map((field) => (
+                      <ChipSelect
+                        key={`${row.rowId}-${field.key}`}
+                        label={`Add ${field.label}`}
+                        placeholder={field.placeholder}
+                        options={optionsByField[field.key].map((option) => ({
+                          value: option.value,
+                          label: option.label,
+                        }))}
+                        selectedValues={row[field.key]}
+                        onSelect={(value) =>
+                          setForm((f) => ({
+                            ...f,
+                            levelPathRows: f.levelPathRows.map((candidate) =>
+                              candidate.rowId === row.rowId
+                                ? { ...candidate, [field.key]: dedupeStrings([...candidate[field.key], value]) }
+                                : candidate
+                            ),
+                          }))
+                        }
+                        onRemove={(value) =>
+                          setForm((f) => ({
+                            ...f,
+                            levelPathRows: f.levelPathRows.map((candidate) =>
+                              candidate.rowId === row.rowId
+                                ? { ...candidate, [field.key]: candidate[field.key].filter((entry) => entry !== value) }
+                                : candidate
+                            ),
+                          }))
+                        }
+                      />
+                    ))}
+                    {removeFieldConfig.map((field) => (
+                      <ChipSelect
+                        key={`${row.rowId}-${field.key}`}
+                        label={field.label}
+                        placeholder={field.placeholder}
+                        options={optionsByField[field.key].map((option) => ({
+                          value: option.value,
+                          label: option.label,
+                        }))}
+                        selectedValues={row[field.key]}
+                        onSelect={(value) =>
+                          setForm((f) => ({
+                            ...f,
+                            levelPathRows: f.levelPathRows.map((candidate) =>
+                              candidate.rowId === row.rowId
+                                ? { ...candidate, [field.key]: dedupeStrings([...candidate[field.key], value]) }
+                                : candidate
+                            ),
+                          }))
+                        }
+                        onRemove={(value) =>
+                          setForm((f) => ({
+                            ...f,
+                            levelPathRows: f.levelPathRows.map((candidate) =>
+                              candidate.rowId === row.rowId
+                                ? { ...candidate, [field.key]: candidate[field.key].filter((entry) => entry !== value) }
+                                : candidate
+                            ),
+                          }))
+                        }
+                      />
+                    ))}
                   </div>
                   <Input value={row.notes} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, notes: e.target.value } : candidate) }))} placeholder="Level notes (optional)" />
                 </div>
