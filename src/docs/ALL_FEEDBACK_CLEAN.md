@@ -1275,3 +1275,17 @@ Notes
 - Priority: High
 - Feedback: Add an archetype-path system where users choose between "Forge Your Own Path" (fully custom) and "Choose a Path" (guided archetype recommendations). Archetype paths should include level-1 recommendations (proficiency, feats, skills, powers/techniques, armaments, equipment), primary + optional secondary ability emphasis, and level 2-5 progression recommendations (add/remove options). Admin archetype editing should support creating these robust paths with clean shared UI patterns. Choose-a-Path flow should present official archetype paths in grouped categories, guide feats/skills/equipment/powers/techniques by recommendations while still allowing manual override, and save selected path id with the character for level-up guidance.
 - Expected: End-to-end archetype path support in data model/API/admin/creator flow with reusable components, strong UX consistency, and saved `archetypePathId` for future leveling guidance.
+
+**Raw Feedback Log — 2026-03-13 (Enhanced crafting energy, base-item inclusion, and uses flow)**
+- Date: 2026-03-13
+- Context: Crafting tool enhanced flow (`/crafting/[id]`)
+- Priority: High
+- Feedback: Enhanced crafting should pull power energy from calculated power data (not manual EN input), account for whether the base item is already crafted vs must be crafted in the same process, and account for item uses/recovery selection in enhanced requirements. Requested UX includes a toggle like "craft base item as well" and clearer rules-aligned enhanced crafting flow.
+- Expected: Power selector auto-resolves calculated EN, enhanced requirements apply multiple-use energy adjustment, and optional base-item crafting is included in requirements when toggled.
+
+**Raw Feedback Log — 2026-03-13 (Archetype editor should use selection dropdowns, no CSV/manual IDs)**
+- Date: 2026-03-13
+- Context: Admin Codex → Archetypes → Archetype Path Builder (editing/creation UX)
+- Priority: High
+- Feedback: Archetype format/editing/creation updates: the editor needs to utilize dropdowns/selection for feats, skills, powers, techniques, armaments, and equipment (from codex/official library) not manually inputted CSV or anything. The editor needs to be UI friendly. All recommended feats/items/powers/etc already exist in codex/library; do not create new ones for archetype paths, only choose existing entries.
+- Expected: Path builder uses selection-based controls backed by existing codex/official library datasets for recommendation fields (and remove lists), eliminating manual CSV entry and preventing ad-hoc values.
