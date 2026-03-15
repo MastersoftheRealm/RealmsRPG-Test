@@ -86,17 +86,27 @@ export function CollapsibleSection({
     );
   }
 
+  const handleHeaderKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsExpanded((prev) => !prev);
+    }
+  };
+
   return (
     <div className={cn(
       'rounded-xl border border-border-light bg-surface shadow-sm overflow-hidden',
       className
     )}>
-      {/* Header */}
-      <button
-        type="button"
+      {/* Header: div with role="button" so rightSlot can contain real <button>s without nesting */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 flex items-center justify-between gap-3 hover:bg-surface-alt transition-colors text-left"
+        onKeyDown={handleHeaderKeyDown}
+        className="w-full p-4 flex items-center justify-between gap-3 hover:bg-surface-alt transition-colors text-left cursor-pointer"
         aria-expanded={isExpanded}
+        aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {icon && <span className="text-xl flex-shrink-0">{icon}</span>}
@@ -145,11 +155,11 @@ export function CollapsibleSection({
             </Button>
           )}
         </div>
-      </button>
+      </div>
 
       {/* Content */}
       {isExpanded && (
-        <div className="p-4 pt-0 border-t border-border-light">
+        <div className="p-4 pt-0">
           {children}
         </div>
       )}

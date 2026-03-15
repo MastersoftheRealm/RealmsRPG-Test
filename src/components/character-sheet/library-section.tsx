@@ -41,7 +41,8 @@ import { Button, IconButton } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import { formatRange } from '@/lib/calculators/item-calc';
-import type { CharacterPower, CharacterTechnique, Item, Abilities } from '@/types';
+import type { CharacterPower, CharacterTechnique, Item, Abilities, CharacterProficiency } from '@/types';
+import { buildRequiredProficiencies, getMissingRequiredProficiencies } from '@/lib/proficiencies';
 
 /** Codex part data for enrichment */
 interface CodexPart {
@@ -260,16 +261,16 @@ function propertiesToPartData(
 }
 
 /**
- * Calculate weapon attack bonus based on weapon properties
- * - Finesse: Use agility instead of strength
- * - Range > melee: Use acuity (range weapon property)
- * - Default: Use strength
+ * Calculate weapon attack bonus based on weapon properties (same as archetype-section).
+ * Ability + martial proficiency. Finesse → Agility; Range > melee → Acuity; else Strength.
  */
 function getWeaponAttackBonus(
   weapon: Item,
-  abilities?: Abilities
+  abilities?: Abilities,
+  martialProficiency?: number
 ): { bonus: number; abilityName: string } {
-  if (!abilities) return { bonus: 0, abilityName: 'Strength' };
+  const prof = martialProficiency ?? 0;
+  if (!abilities) return { bonus: prof, abilityName: 'Strength' };
   
   const props = (weapon.properties || []).map(p =>
     typeof p === 'string' ? p : (p as { name?: string }).name || ''
@@ -277,17 +278,17 @@ function getWeaponAttackBonus(
 
   // Finesse uses agility
   if (props.some(p => p.toLowerCase() === 'finesse')) {
-    return { bonus: abilities.agility, abilityName: 'Agility' };
+    return { bonus: (abilities.agility ?? 0) + prof, abilityName: 'Agility' };
   }
 
-  // Range > melee uses acuity (rule: weapon with range greater than melee uses acuity)
+  // Range > melee uses acuity
   const rangeStr = formatRange((weapon.properties || []) as { id?: number; name?: string; op_1_lvl?: number }[]);
   if (rangeStr.toLowerCase() !== 'melee') {
-    return { bonus: abilities.acuity, abilityName: 'Acuity' };
+    return { bonus: (abilities.acuity ?? 0) + prof, abilityName: 'Acuity' };
   }
 
   // Default to strength
-  return { bonus: abilities.strength, abilityName: 'Strength' };
+  return { bonus: (abilities.strength ?? 0) + prof, abilityName: 'Strength' };
 }
 
 interface LibrarySectionProps {
@@ -350,12 +351,12 @@ interface LibrarySectionProps {
   level?: number;
   archetypeAbility?: number;
   martialProficiency?: number; // For armament proficiency display
-  unarmedProwess?: number; // 0 means not selected, 1-5 = prowess level
-  onUnarmedProwessChange?: (level: number) => void;
   // Parts RTDB data for enrichment (descriptions, TP costs)
   powerPartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
   techniquePartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
   itemPropertiesDb?: Array<{ id: string | number; name: string; description?: string; base_tp?: number; tp_cost?: number }>;
+  proficiencies?: CharacterProficiency[];
+  onProficienciesChange?: (next: CharacterProficiency[]) => void;
   // Feats tab props
   ancestry?: {
     selectedTraits?: string[];
@@ -453,11 +454,12 @@ const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 
 const WEAPON_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
-  { key: 'attack', label: 'Attack', width: '0.7fr', align: 'center' },
   { key: 'damage', label: 'Damage', width: '0.8fr', align: 'center' },
   { key: 'range', label: 'Range', width: '0.6fr', align: 'center' },
 ];
-const WEAPON_GRID = '1fr 0.7fr 0.8fr 0.6fr';
+const WEAPON_GRID = '1fr 0.8fr 0.6fr';
+/** Right slot column label for weapons: Attack (roll button) */
+const WEAPON_ATTACK_COLUMN = { key: '_right', label: 'Attack', width: '4rem', sortable: false as const };
 
 const SHIELD_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: '1fr' },
@@ -541,11 +543,11 @@ export function LibrarySection({
   level = 1,
   archetypeAbility = 0,
   martialProficiency,
-  unarmedProwess,
-  onUnarmedProwessChange,
   powerPartsDb = [],
   techniquePartsDb = [],
   itemPropertiesDb = [],
+  proficiencies = [],
+  onProficienciesChange,
   // Feats props
   ancestry,
   vanillaTraits,
@@ -618,6 +620,20 @@ export function LibrarySection({
     () => sortByColumn(equipment, equipmentSort),
     [equipment, equipmentSort]
   );
+
+  const hasMissingForEntry = useCallback((params: { powers?: CharacterPower[]; techniques?: CharacterTechnique[]; weapons?: Item[]; shields?: Item[]; armor?: Item[] }) => {
+    const requiredForEntry = buildRequiredProficiencies({
+      powers: params.powers || [],
+      techniques: params.techniques || [],
+      weapons: params.weapons || [],
+      shields: params.shields || [],
+      armor: params.armor || [],
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    });
+    return getMissingRequiredProficiencies(requiredForEntry, proficiencies).length > 0;
+  }, [powerPartsDb, techniquePartsDb, itemPropertiesDb, proficiencies]);
 
   // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
 
@@ -741,6 +757,8 @@ export function LibrarySection({
                         options: p.options,
                       }));
                       const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
+                      const hasMissingProf = hasMissingForEntry({ powers: [power] });
+                      const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
                       
                       const damageCell = power.damage && rollContext?.rollDamage ? (
                         <RollButton
@@ -792,6 +810,7 @@ export function LibrarySection({
                           gridColumns={POWER_GRID}
                           chips={partChips}
                           chipsLabel="Parts"
+                          badges={rowBadges}
                           totalCost={powerTotalTP > 0 ? powerTotalTP : undefined}
                           costLabel="TP"
                           requirements={power.range ? (
@@ -858,6 +877,8 @@ export function LibrarySection({
                         options: p.options,
                       }));
                       const powerTotalTP = partChips.reduce((sum, p) => sum + (p.cost ?? 0), 0);
+                      const hasMissingProf = hasMissingForEntry({ powers: [power] });
+                      const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
                       
                       const damageCellRegular = power.damage && rollContext?.rollDamage ? (
                         <RollButton
@@ -909,6 +930,7 @@ export function LibrarySection({
                           gridColumns={POWER_GRID}
                           chips={partChips}
                           chipsLabel="Parts"
+                          badges={rowBadges}
                           totalCost={powerTotalTP > 0 ? powerTotalTP : undefined}
                           costLabel="TP"
                           requirements={power.range ? (
@@ -971,6 +993,8 @@ export function LibrarySection({
                     }));
                     const techTP = (tech as { tp?: number }).tp;
                     const totalTP = typeof techTP === 'number' ? techTP : (typeof techTP === 'string' ? parseFloat(techTP) : undefined);
+                    const hasMissingProf = hasMissingForEntry({ techniques: [tech] });
+                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
                     
                     const columns: ColumnValue[] = [
                       { key: 'energy', value: energyCost, align: 'center' },
@@ -1014,6 +1038,7 @@ export function LibrarySection({
                         gridColumns={TECHNIQUE_GRID}
                         chips={partChips}
                         chipsLabel="Parts"
+                        badges={rowBadges}
                         totalCost={totalTP && totalTP > 0 ? totalTP : undefined}
                         costLabel="TP"
                         requirements={rangeOrDamage}
@@ -1091,7 +1116,7 @@ export function LibrarySection({
                   columns={[
                     BLANK_LEFT,
                     ...WEAPON_COLUMNS,
-                    BLANK_RIGHT,
+                    WEAPON_ATTACK_COLUMN,
                     ...(showLibraryEditControls ? [BLANK_DELETE] : []),
                   ]}
                   gridColumns={['2rem', WEAPON_GRID, '4rem', ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
@@ -1102,10 +1127,8 @@ export function LibrarySection({
               {sortedWeapons.length > 0 ? (
                 <div className="space-y-1">
                   {sortedWeapons.map((item, i) => {
-                    // Calculate attack bonus based on weapon properties (finesse/range/default)
-                    const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities);
-                    const abilityAbbr = abilityName === 'Strength' ? 'Str' : abilityName === 'Agility' ? 'Agi' : abilityName === 'Acuity' ? 'Acu' : abilityName.slice(0, 3);
-                    const attackDisplay = `+${attackBonus} (${abilityAbbr})`;
+                    // Attack bonus = ability + martial proficiency (same as character sheet weapon section)
+                    const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(item, abilities, martialProficiency);
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
@@ -1114,8 +1137,9 @@ export function LibrarySection({
                       category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
+                    const hasMissingProf = hasMissingForEntry({ weapons: [item] });
+                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
                     const columns: ColumnValue[] = [
-                      { key: 'attack', value: attackDisplay, className: 'font-medium', align: 'center' },
                       { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-danger-600 dark:text-danger-400 font-medium', align: 'center' },
                       { key: 'range', value: normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee', align: 'center' },
                     ];
@@ -1129,6 +1153,7 @@ export function LibrarySection({
                         gridColumns={WEAPON_GRID}
                         chips={propertyChips}
                         chipsLabel="Properties"
+                        badges={rowBadges}
                         description={item.description}
                         equipped={item.equipped}
                         leftSlot={onToggleEquipWeapon && (
@@ -1194,7 +1219,7 @@ export function LibrarySection({
                     const enriched = item as Item & { shieldAmount?: string; shieldDamage?: string | null };
                     const shieldBlock = enriched.shieldAmount ?? '-';
                     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? formatDamageDisplay(item.damage) : '-');
-                    const { bonus: attackBonus } = getWeaponAttackBonus(item, abilities);
+                    const { bonus: attackBonus } = getWeaponAttackBonus(item, abilities, martialProficiency);
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
@@ -1203,6 +1228,8 @@ export function LibrarySection({
                       category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
+                    const hasMissingProf = hasMissingForEntry({ shields: [item] });
+                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
                     const columns: ColumnValue[] = [
                       { key: 'attack', value: shieldDamageStr !== '-' ? (attackBonus >= 0 ? '+' : '') + attackBonus : '-', align: 'center' },
                       { key: 'damage', value: shieldDamageStr !== '-' ? shieldDamageStr : '-', className: shieldDamageStr !== '-' ? 'text-danger-600 dark:text-danger-400 font-medium' : '', align: 'center' },
@@ -1217,6 +1244,7 @@ export function LibrarySection({
                         gridColumns={SHIELD_GRID}
                         chips={propertyChips}
                         chipsLabel="Properties"
+                        badges={rowBadges}
                         description={item.description}
                         equipped={item.equipped}
                         leftSlot={onToggleEquipShield && (
@@ -1275,6 +1303,8 @@ export function LibrarySection({
                       category: p.tpCost && p.tpCost > 0 ? ('cost' as const) : ('default' as const),
                       level: p.optionLevels ? Math.max(p.optionLevels.opt1 ?? 0, p.optionLevels.opt2 ?? 0, p.optionLevels.opt3 ?? 0) || undefined : undefined,
                     }));
+                    const hasMissingProf = hasMissingForEntry({ armor: [item] });
+                    const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
                     // Get ability requirement from enriched data
                     const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
                     const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
@@ -1328,6 +1358,7 @@ export function LibrarySection({
                         gridColumns={ARMOR_ROW_GRID}
                         chips={propertyChips}
                         chipsLabel="Properties"
+                        badges={rowBadges}
                         requirements={armorRequirements}
                         equipped={item.equipped}
                         leftSlot={onToggleEquipArmor && (
@@ -1469,14 +1500,16 @@ export function LibrarySection({
             powers={powers}
             techniques={techniques}
             weapons={weapons}
+            shields={shields}
             armor={armor}
             level={level}
             archetypeAbility={archetypeAbility}
             powerPartsDb={powerPartsDb}
             techniquePartsDb={techniquePartsDb}
-            unarmedProwess={unarmedProwess}
+            itemPropertiesDb={itemPropertiesDb}
+            proficiencies={proficiencies}
             isEditMode={isEditMode}
-            onUnarmedProwessChange={onUnarmedProwessChange}
+            onProficienciesChange={onProficienciesChange}
           />
         )}
 

@@ -22,11 +22,13 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
+import type { ChipData } from '@/components/shared/grid-list-row';
 import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { Input } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { formatAbilityList } from '@/lib/utils';
+import { groupFeatFamilies, buildFeatLevelChips } from '@/lib/leveled-feats';
 
 const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
 const FEAT_COLUMNS = [
@@ -51,32 +53,18 @@ interface FeatFilters {
   stateFeatMode: 'all' | 'only' | 'hide';
 }
 
-/** Group feats by family: level-1 (base_feat_id null) or by base_feat_id. Each family sorted by feat_lvl. */
-function groupFeatsByFamily(feats: Feat[]): { main: Feat; higherLevels: Feat[] }[] {
-  const byFamily = new Map<string, Feat[]>();
-  feats.forEach((f) => {
-    const key = f.base_feat_id ?? String(f.id);
-    if (!byFamily.has(key)) byFamily.set(key, []);
-    byFamily.get(key)!.push(f);
-  });
-  return [...byFamily.values()].map((group) => {
-    const sorted = [...group].sort((a, b) => (a.feat_lvl ?? 1) - (b.feat_lvl ?? 1));
-    return { main: sorted[0], higherLevels: sorted.slice(1) };
-  });
-}
-
 function FeatCard({
   feat,
   skillIdToName,
-  higherLevels = [],
+  familyLevels = [],
 }: {
   feat: Feat;
   skillIdToName: Map<string, string>;
-  higherLevels?: Feat[];
+  familyLevels?: Feat[];
 }) {
-  const detailSections: Array<{ label: string; chips: { name: string; category?: 'default' | 'tag' | 'skill' | 'archetype' }[]; hideLabelIfSingle?: boolean }> = [];
+  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
 
-  const typeChips: { name: string; category: 'skill' | 'archetype' }[] = [];
+  const typeChips: ChipData[] = [];
   if (feat.char_feat) typeChips.push({ name: 'Character Feat', category: 'skill' });
   else typeChips.push({ name: 'Archetype Feat', category: 'archetype' });
   if (feat.state_feat) typeChips.push({ name: 'State Feat', category: 'archetype' });
@@ -110,27 +98,13 @@ function FeatCard({
     detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
   }
 
-  const expandedContent =
-    higherLevels.length > 0 ? (
-      <div className="pt-2 border-t border-border-subtle mt-2">
-        <h4 className="text-xs font-semibold text-text-secondary mb-2">Higher levels</h4>
-        <ul className="space-y-2">
-          {higherLevels.map((f) => (
-            <li key={f.id} className="text-sm">
-              <span className="font-medium text-text-primary">
-                {f.name} (Level {f.feat_lvl ?? 2})
-              </span>
-              {f.lvl_req != null && f.lvl_req > 0 && (
-                <span className="text-text-muted dark:text-text-secondary ml-1">— Req. level {f.lvl_req}</span>
-              )}
-              {f.description && (
-                <p className="text-text-secondary text-xs mt-0.5 line-clamp-2">{f.description}</p>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-    ) : undefined;
+  const levelChips = buildFeatLevelChips(familyLevels, feat.id);
+  if (levelChips.length > 0) {
+    detailSections.push({
+      label: 'Feat Levels',
+      chips: levelChips,
+    });
+  }
 
   return (
     <GridListRow
@@ -149,7 +123,6 @@ function FeatCard({
         { key: 'Recovery', value: feat.rec_period || '-' },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
-      expandedContent={expandedContent}
     />
   );
 }
@@ -276,10 +249,7 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     return sortItems<Feat>(filtered);
   }, [feats, filters, sortItems]);
 
-  const featFamilies = useMemo(
-    () => groupFeatsByFamily(filteredFeats),
-    [filteredFeats]
-  );
+  const featFamilies = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
 
   if (error) {
     return <ErrorState message="Failed to load feats" />;
@@ -396,12 +366,12 @@ export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' |
         ) : featFamilies.length === 0 ? (
           <div className="p-8 text-center text-text-muted dark:text-text-secondary">No feats match your filters.</div>
         ) : (
-          featFamilies.map(({ main, higherLevels }) => (
+          featFamilies.map(({ main, levels }) => (
             <FeatCard
               key={main.id}
               feat={main}
               skillIdToName={skillIdToName}
-              higherLevels={higherLevels}
+              familyLevels={levels}
             />
           ))
         )}

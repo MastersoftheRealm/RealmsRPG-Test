@@ -204,9 +204,12 @@ export function enrichPowers(
         },
         powerPartsDb
       );
-      
+      // Preserve character's power id so toggles/remove match character.powers (library id can differ when matched by name)
+      const identityId = typeof charPower === 'object' && (charPower as CharacterPower).id != null
+        ? (charPower as CharacterPower).id
+        : libraryItem.id;
       return {
-        id: libraryItem.id,
+        id: identityId,
         name: libraryItem.name,
         description: libraryItem.description || '',
         parts: (libraryItem.parts || []).map(part => ({
@@ -557,6 +560,7 @@ const SAVEABLE_FIELDS = [
   'skills',
   // Archetype/Build (lean: { id, type } only — name/description derived from codex)
   'archetype',
+  'creationMode', 'archetypePathId',
   // Proficiency data
   'mart_prof', 'pow_prof', 'mart_abil', 'pow_abil', 'archetypeChoices',
   // References (IDs or minimal data — not full objects)
@@ -583,6 +587,8 @@ const SAVEABLE_FIELDS = [
   'conditions',
   // Training points tracking
   'trainingPointsSpent',
+  // Persisted part/property proficiencies
+  'proficiencies',
   // Timestamps
   'createdAt', 'updatedAt', 'lastPlayedAt',
 ] as const;

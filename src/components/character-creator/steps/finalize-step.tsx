@@ -9,10 +9,10 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { useAuth, useCodexSkills, useSpecies } from '@/hooks';
+import { useAuth, useCodexSkills, useSpecies, usePowerParts, useTechniqueParts, useItemProperties } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
-import type { Character } from '@/types';
+import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Spinner, Button, Alert, Modal, Textarea, useToast } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { getAllValidationIssues, type ValidationIssue } from '@/lib/character-creator-validation';
@@ -20,6 +20,11 @@ import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations'
 import { ABILITY_DISPLAY_NAMES } from '@/lib/game/constants';
 import { LoginPromptModal, ImageUploadModal } from '@/components/shared';
 import { HealthEnergyAllocator } from '@/components/creator';
+import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import type { PowerDocument } from '@/lib/calculators/power-calc';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 
 // Health-Energy pool for new characters (18 at level 1, +2 per level)
 const BASE_HE_POOL = 18;
@@ -127,9 +132,12 @@ function ValidationModal({
  * Health & Energy Allocation Section
  * Uses the shared HealthEnergyAllocator component for consistent UX
  * across character creator, character sheet, and creature creator.
+ * Auto-allocate button sets energy to match highest power/technique cost (if possible), rest to health.
  */
 function HealthEnergyAllocationSection() {
   const { draft, updateDraft } = useCharacterCreatorStore();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
   
   // Calculate base values using centralized calculations
   const abilities = draft.abilities || { strength: 0, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 };
@@ -152,12 +160,57 @@ function HealthEnergyAllocationSection() {
   const maxHp = calculateMaxHealth(hpBonus, abilities.vitality || 0, level, powAbil, abilities);
   const maxEnergy = calculateMaxEnergy(enBonus, powAbil || martAbil, abilities, level);
   
+  // Highest energy cost among powers and techniques (for auto-allocate)
+  const highestEnergyCost = useMemo(() => {
+    let max = 0;
+    const powers = (draft.powers || []) as CharacterPower[];
+    const techniques = (draft.techniques || []) as CharacterTechnique[];
+    powers.forEach((p) => {
+      try {
+        const disp = derivePowerDisplay(p as unknown as PowerDocument, powerPartsDb);
+        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
+      } catch {
+        // ignore invalid power
+      }
+    });
+    techniques.forEach((t) => {
+      try {
+        const disp = deriveTechniqueDisplay(t as unknown as TechniqueDocument, techniquePartsDb);
+        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
+      } catch {
+        // ignore invalid technique
+      }
+    });
+    return max;
+  }, [draft.powers, draft.techniques, powerPartsDb, techniquePartsDb]);
+  
+  const onAutoAllocate = useCallback(() => {
+    // Target max EN = highest power/technique cost, capped by what the pool can provide
+    const maxAchievableEN = baseEnergy + hePool;
+    const targetEN = Math.min(highestEnergyCost, maxAchievableEN);
+    const energyBonusNeeded = Math.max(0, targetEN - baseEnergy);
+    const energyBonusFinal = Math.min(hePool, energyBonusNeeded);
+    const hpBonusFinal = hePool - energyBonusFinal;
+    updateDraft({ healthPoints: hpBonusFinal, energyPoints: energyBonusFinal });
+  }, [baseEnergy, hePool, highestEnergyCost, updateDraft]);
+  
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h3 className="font-bold text-text-primary">Health/Energy Allocation</h3>
-        <div className="text-xs text-text-muted dark:text-text-secondary">
-          Base HP: {baseHealth} | Base EN: {baseEnergy}
+        <div className="flex items-center gap-2">
+          <div className="text-xs text-text-muted dark:text-text-secondary">
+            Base HP: {baseHealth} | Base EN: {baseEnergy}
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onAutoAllocate}
+            aria-label="Auto-allocate points so max energy matches highest power or technique cost, rest to health"
+          >
+            Auto-allocate to match highest cost
+          </Button>
         </div>
       </div>
       <HealthEnergyAllocator
@@ -329,6 +382,9 @@ export function FinalizeStep() {
   const { draft, updateDraft, getCharacter, resetCreator, prevStep } = useCharacterCreatorStore();
   const { data: codexSkills } = useCodexSkills();
   const { data: allSpecies = [] } = useSpecies();
+  const { data: powerPartsDb = [] } = usePowerParts();
+  const { data: techniquePartsDb = [] } = useTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useItemProperties();
   
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -344,6 +400,35 @@ export function FinalizeStep() {
       }),
     [draft, allSpecies, codexSkills]
   );
+
+  const proficiencyTpSummary = useMemo(() => {
+    const inventory = draft.equipment?.inventory || [];
+    const weapons = inventory.filter((item) => item.type === 'weapon');
+    const shields = inventory.filter((item) => item.type === 'shield');
+    const armor = inventory.filter((item) => item.type === 'armor');
+    const required = buildRequiredProficiencies({
+      powers: (draft.powers || []) as CharacterPower[],
+      techniques: (draft.techniques || []) as CharacterTechnique[],
+      weapons: weapons as Item[],
+      shields: shields as Item[],
+      armor: armor as Item[],
+      powerPartsDb,
+      techniquePartsDb,
+      itemPropertiesDb,
+    });
+    const spent = dedupeHighestProficiencies(required).reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+
+    const abilities = draft.abilities || {};
+    const getAbility = (key: string | undefined): number =>
+      key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
+    const highestAbility = Math.max(
+      ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
+      0
+    );
+    const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+    const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
+    return { spent, limit, remaining: limit - spent };
+  }, [draft, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
   
   const handleValidateAndSave = () => {
     setShowValidation(true);
@@ -366,7 +451,11 @@ export function FinalizeStep() {
       setError(null);
       setShowValidation(false);
       
-      const characterData = getCharacter();
+      const characterData = getCharacter({
+        powerPartsDb,
+        techniquePartsDb,
+        itemPropertiesDb,
+      });
       
       // Convert skills from Record<string, number> to array format
       // Character sheet expects: Array<{ id, name, category, skill_val, prof }>
@@ -521,126 +610,222 @@ export function FinalizeStep() {
       {/* Character Portrait (Optional) */}
       <PortraitUpload />
       
-      {/* Character Summary */}
-      <div className="bg-surface-alt rounded-xl p-6 mb-6">
-        <h2 className="font-bold text-text-primary mb-4">Character Summary</h2>
-        
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-text-muted dark:text-text-secondary">Level:</span>
-            <span className="ml-2 font-medium">{draft.level || 1}</span>
+      {/* Character Summary — styled to match creator steps: clear hierarchy, ability cards, no grey-on-grey */}
+      <div className="rounded-xl border border-border-light bg-surface overflow-hidden mb-6 shadow-sm">
+        <div className="px-5 py-4 border-b border-border-light bg-surface-alt">
+          <h2 className="text-lg font-bold text-text-primary">Character Summary</h2>
+          <p className="text-sm text-text-secondary mt-0.5">Review your character at a glance.</p>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* Top row: Level, Archetype, Species, Power/Martial only when archetype has that proficiency */}
+          {(() => {
+            const arch = draft.archetype;
+            const hasPowerProf = arch?.type === 'power' || arch?.type === 'powered-martial' || (arch?.power_prof_start ?? 0) > 0;
+            const hasMartialProf = arch?.type === 'martial' || arch?.type === 'powered-martial' || (arch?.martial_prof_start ?? 0) > 0;
+            const showPowerAbility = draft.pow_abil && hasPowerProf;
+            const showMartialAbility = draft.mart_abil && hasMartialProf;
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
+                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Level</p>
+                  <p className="text-lg font-bold text-text-primary mt-0.5">{draft.level || 1}</p>
+                </div>
+                <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
+                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Archetype</p>
+                  <p className="text-lg font-bold text-text-primary mt-0.5">
+                    {arch?.name
+                      ? arch.name
+                      : arch?.type
+                        ? arch.type.charAt(0).toUpperCase() + arch.type.slice(1)
+                        : '—'}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3">
+                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide">Species</p>
+                  <p className="text-lg font-bold text-text-primary mt-0.5">{draft.ancestry?.name || '—'}</p>
+                </div>
+                {showPowerAbility && (
+                  <div className="rounded-lg border border-power bg-power-light/40 dark:bg-power-900/20 p-3">
+                    <p className="text-xs font-medium text-power-dark dark:text-power-300 uppercase tracking-wide">Power Ability</p>
+                    <p className="text-lg font-bold text-power-dark dark:text-power-300 mt-0.5 capitalize">{draft.pow_abil}</p>
+                  </div>
+                )}
+                {showMartialAbility && (
+                  <div className="rounded-lg border border-martial bg-martial-light/40 dark:bg-martial-900/20 p-3">
+                    <p className="text-xs font-medium text-martial-dark dark:text-martial-300 uppercase tracking-wide">Martial Ability</p>
+                    <p className="text-lg font-bold text-martial-dark dark:text-martial-300 mt-0.5 capitalize">{draft.mart_abil}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Proficiency TP — same token styling as elsewhere */}
+          <div className="rounded-lg border border-border-light bg-surface-alt/50 p-4">
+            <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-2">Proficiency TP</p>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-surface text-text-primary border border-border-light">
+                Limit: {proficiencyTpSummary.limit}
+              </span>
+              <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-surface text-text-primary border border-border-light">
+                Required: {proficiencyTpSummary.spent}
+              </span>
+              <span
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-sm font-bold',
+                  proficiencyTpSummary.remaining >= 0
+                    ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-300 border border-success-200 dark:border-success-700/50'
+                    : 'bg-danger-100 dark:bg-danger-900/40 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-700/50'
+                )}
+              >
+                Remaining: {proficiencyTpSummary.remaining}
+              </span>
+            </div>
+            {proficiencyTpSummary.remaining < 0 && (
+              <p className="mt-2 text-sm text-danger-700 dark:text-danger-300 font-medium">
+                Over by {Math.abs(proficiencyTpSummary.remaining)} TP. You can still create and adjust later.
+              </p>
+            )}
           </div>
-          
-          <div>
-            <span className="text-text-muted dark:text-text-secondary">Archetype:</span>
-            <span className="ml-2 font-medium">
-              {draft.archetype?.type 
-                ? draft.archetype.type.charAt(0).toUpperCase() + draft.archetype.type.slice(1)
-                : 'Not selected'}
-            </span>
-          </div>
-          
-          <div>
-            <span className="text-text-muted dark:text-text-secondary">Species:</span>
-            <span className="ml-2 font-medium">{draft.ancestry?.name || 'Not selected'}</span>
-          </div>
-          
-          {draft.pow_abil && (
+
+          {/* Abilities — name above value, mini ability cards matching creator (power/martial tint, +/- colors) */}
+          {draft.abilities && (
             <div>
-              <span className="text-text-muted dark:text-text-secondary">Power Ability:</span>
-              <span className="ml-2 font-medium capitalize text-power-dark dark:text-power-300">{draft.pow_abil}</span>
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-3">Abilities</p>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {(Object.entries(draft.abilities) as [string, number][]).map(([key, value]) => {
+                  const isPower = draft.pow_abil === key;
+                  const isMartial = draft.mart_abil === key;
+                  const name = ABILITY_DISPLAY_NAMES[key] ?? key;
+                  return (
+                    <div
+                      key={key}
+                      className={cn(
+                        'rounded-lg border-2 p-2 text-center',
+                        isPower && 'border-power bg-power-light/50 dark:bg-power-900/20',
+                        isMartial && 'border-martial bg-martial-light/50 dark:bg-martial-900/20',
+                        !isPower && !isMartial && 'border-border-light bg-surface-alt/50'
+                      )}
+                    >
+                      <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wide leading-tight">
+                        {name}
+                      </p>
+                      <p
+                        className={cn(
+                          'text-lg font-bold mt-0.5',
+                          value > 0 && 'text-success-700 dark:text-success-400',
+                          value < 0 && 'text-danger-600 dark:text-danger-400',
+                          value === 0 && 'text-text-secondary'
+                        )}
+                      >
+                        {value >= 0 ? `+${value}` : value}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
-          
-          {draft.mart_abil && (
+
+          {/* Feats — chips with contrast */}
+          {draft.feats && draft.feats.length > 0 && (
             <div>
-              <span className="text-text-muted dark:text-text-secondary">Martial Ability:</span>
-              <span className="ml-2 font-medium capitalize text-martial-dark dark:text-martial-300">{draft.mart_abil}</span>
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-2">Feats</p>
+              <div className="flex flex-wrap gap-2">
+                {draft.feats.map((feat) => (
+                  <span
+                    key={feat.id}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg text-sm font-medium border',
+                      feat.type === 'archetype'
+                        ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-700/50'
+                        : 'bg-info-100 dark:bg-info-900/40 text-info-800 dark:text-info-200 border-info-200 dark:border-info-700/50'
+                    )}
+                  >
+                    {feat.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Powers & Techniques — section headers with power/martial color, list with EN */}
+          {((draft.powers && draft.powers.length > 0) || (draft.techniques && draft.techniques.length > 0)) && (
+            <div className="space-y-3">
+              {draft.powers && draft.powers.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-power-dark dark:text-power-300 uppercase tracking-wide mb-2">Powers</p>
+                  <div className="flex flex-wrap gap-2">
+                    {draft.powers.map((p) => {
+                      const doc: PowerDocument = {
+                        name: String(p.name ?? ''),
+                        description: String(p.description ?? ''),
+                        parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
+                        damage: (p as CharacterPower & { damage?: PowerDocument['damage'] }).damage,
+                        actionType: (p as CharacterPower & { actionType?: string }).actionType,
+                        isReaction: (p as CharacterPower & { isReaction?: boolean }).isReaction,
+                        range: (p as CharacterPower & { range?: PowerDocument['range'] }).range,
+                        area: (p as CharacterPower & { area?: PowerDocument['area'] }).area,
+                        duration: (p as CharacterPower & { duration?: PowerDocument['duration'] }).duration,
+                      };
+                      const display = derivePowerDisplay(doc, powerPartsDb ?? []);
+                      const en = typeof display.energy === 'number' ? display.energy : '—';
+                      return (
+                        <span
+                          key={String(p.id)}
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-power-light/50 dark:bg-power-900/30 text-power-dark dark:text-power-300 border border-power/30"
+                        >
+                          {p.name} <span className="opacity-90">({en} EN)</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {draft.techniques && draft.techniques.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-martial-dark dark:text-martial-300 uppercase tracking-wide mb-2">Techniques</p>
+                  <div className="flex flex-wrap gap-2">
+                    {draft.techniques.map((t) => {
+                      const doc: TechniqueDocument = {
+                        name: String(t.name ?? ''),
+                        description: String(t.description ?? ''),
+                        parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
+                        damage: Array.isArray((t as CharacterTechnique & { damage?: unknown }).damage) && (t as CharacterTechnique & { damage: unknown[] }).damage[0]
+                          ? (t as CharacterTechnique & { damage: unknown[] }).damage[0] as TechniqueDocument['damage']
+                          : (t as CharacterTechnique & { damage?: TechniqueDocument['damage'] }).damage,
+                        weapon: (t as CharacterTechnique & { weapon?: TechniqueDocument['weapon'] }).weapon,
+                      };
+                      const display = deriveTechniqueDisplay(doc, techniquePartsDb ?? []);
+                      const en = typeof display.energy === 'number' ? display.energy : '—';
+                      return (
+                        <span
+                          key={String(t.id)}
+                          className="px-3 py-1.5 rounded-lg text-sm font-medium bg-martial-light/50 dark:bg-martial-900/30 text-martial-dark dark:text-martial-300 border border-martial/30"
+                        >
+                          {t.name} <span className="opacity-90">({en} EN)</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Equipment */}
+          {draft.equipment?.inventory && draft.equipment.inventory.length > 0 && (
+            <div>
+              <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-2">Equipment</p>
+              <p className="text-sm text-text-primary">
+                {draft.equipment.inventory.map(i =>
+                  (i.quantity ?? 1) > 1 ? `${i.name} ×${i.quantity ?? 1}` : i.name
+                ).join(', ')}
+              </p>
             </div>
           )}
         </div>
-        
-        {/* Abilities Summary */}
-        {draft.abilities && (
-          <div className="mt-4 pt-4 border-t border-border-light">
-            <span className="text-text-muted dark:text-text-secondary text-sm">Abilities:</span>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {Object.entries(draft.abilities).map(([ability, value]) => {
-                const isPowerAbil = draft.pow_abil === ability;
-                const isMartAbil = draft.mart_abil === ability;
-                return (
-                  <span
-                    key={ability}
-                    className={cn(
-                      'px-2 py-1 rounded text-sm font-medium',
-                      isPowerAbil ? 'bg-power-light text-power-dark dark:bg-power-900/30 dark:text-power-300' :
-                      isMartAbil ? 'bg-martial-light text-martial-dark dark:bg-martial-900/30 dark:text-martial-300' :
-                      value > 0 ? 'bg-green-100 text-green-700 dark:bg-success-900/30 dark:text-success-300' :
-                      value < 0 ? 'bg-red-100 text-red-700 dark:bg-danger-900/30 dark:text-danger-300' :
-                      'bg-surface-alt text-text-secondary'
-                    )}
-                  >
-                    {ABILITY_DISPLAY_NAMES[ability] ?? ability}: {value >= 0 ? `+${value}` : value}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        
-        {/* Feats Summary */}
-        {draft.feats && draft.feats.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border-light">
-            <span className="text-text-muted dark:text-text-secondary text-sm">Feats:</span>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {draft.feats.map((feat) => (
-                <span
-                  key={feat.id}
-                  className={cn(
-                    'px-2 py-1 rounded text-sm font-medium',
-                    feat.type === 'archetype' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                  )}
-                >
-                  {feat.name}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Powers & Techniques Summary */}
-        {((draft.powers && draft.powers.length > 0) || (draft.techniques && draft.techniques.length > 0)) && (
-          <div className="mt-4 pt-4 border-t border-border-light">
-            {draft.powers && draft.powers.length > 0 && (
-              <div className="mb-2">
-                <span className="text-text-muted dark:text-text-secondary text-sm">Powers: </span>
-                <span className="text-sm text-power-dark dark:text-power-300">
-                  {draft.powers.map(p => p.name).join(', ')}
-                </span>
-              </div>
-            )}
-            {draft.techniques && draft.techniques.length > 0 && (
-              <div>
-                <span className="text-text-muted dark:text-text-secondary text-sm">Techniques: </span>
-                <span className="text-sm text-martial-dark dark:text-martial-300">
-                  {draft.techniques.map(t => t.name).join(', ')}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Equipment Summary */}
-        {draft.equipment?.inventory && draft.equipment.inventory.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border-light">
-            <span className="text-text-muted dark:text-text-secondary text-sm">Equipment: </span>
-            <span className="text-sm text-text-secondary">
-              {draft.equipment.inventory.map(i => 
-                (i.quantity ?? 1) > 1 ? `${i.name} ×${i.quantity ?? 1}` : i.name
-              ).join(', ')}
-            </span>
-          </div>
-        )}
       </div>
       
       {/* Health & Energy Allocation */}

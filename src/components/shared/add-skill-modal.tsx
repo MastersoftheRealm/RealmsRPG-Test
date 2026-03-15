@@ -103,7 +103,7 @@ export function AddSkillModal({
       .map(skillToSelectableItem);
   }, [skills, existingSkillNames, abilityFilter]);
 
-  const error = queryError ? `Failed to load skills: ${queryError.message}` : null;
+  const error = queryError ? `Failed to load Skills: ${queryError.message}` : null;
 
   const filterContent = (
     <div className="flex gap-3 items-center">
@@ -142,9 +142,9 @@ export function AddSkillModal({
           { key: 'ability', label: 'Abilities', sortable: true },
         ]}
         gridColumns="1fr auto"
-        itemLabel="skill"
-        emptyMessage={error ?? 'No skills available to add'}
-        searchPlaceholder="Search skills by name or description..."
+        itemLabel="Skill"
+        emptyMessage={error ?? 'No Skills available to add'}
+        searchPlaceholder="Search Skills by name or description..."
         filterContent={filterContent}
         showFilters={true}
         size="xl"

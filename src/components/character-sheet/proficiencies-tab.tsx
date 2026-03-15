@@ -1,22 +1,32 @@
 /**
  * Proficiencies Tab
  * =================
- * Shows training points and proficiencies extracted from powers, techniques, and equipment
- * Matches vanilla site's proficiencies functionality
- * 
- * Uses unified components: SectionHeader, TabSummarySection
+ * Shows persisted proficiencies and loadout requirements.
  */
 
 'use client';
 
-import { useMemo } from 'react';
-import { Chip } from '@/components/ui';
-import { Check, Swords } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Chip, IconButton, Button, Input } from '@/components/ui';
+import { Plus, X, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow } from '@/components/shared';
-import type { CharacterPower, CharacterTechnique, Item } from '@/types';
+import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent } from '@/components/shared';
+import type { PartData } from '@/components/shared/part-chip';
+import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';
+import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
+import {
+  buildRequiredProficiencies,
+  calculateProficiencyTP,
+  dedupeHighestProficiencies,
+  filterToRequiredAndCustom,
+  filterZeroCostProficiencies,
+  generateProficiencyId,
+  getMissingRequiredProficiencies,
+  getTrainingPointLimit,
+  isCustomProficiency,
+  mergeOwnedWithRequired,
+} from '@/lib/proficiencies';
 
-/** Codex part data for enrichment */
 interface CodexPart {
   id: string;
   name: string;
@@ -25,444 +35,444 @@ interface CodexPart {
   op_1_tp?: number;
   op_2_tp?: number;
   op_3_tp?: number;
+  op_1_desc?: string;
+  op_2_desc?: string;
+  op_3_desc?: string;
 }
 
-interface ProficiencyData {
+interface CodexProperty {
+  id: string | number;
   name: string;
   description?: string;
-  baseTP: number;
-  op1Lvl: number;
-  op1TP: number;
-  op2Lvl?: number;
-  op2TP?: number;
-  op3Lvl?: number;
-  op3TP?: number;
-  damageType?: string | null;
+  base_tp?: number;
+  op_1_tp?: number;
+  op_1_desc?: string;
 }
 
 interface ProficienciesTabProps {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
+  shields?: Item[];
   armor: Item[];
   level: number;
-  archetypeAbility: number; // The archetype's key ability score value
-  // Unarmed prowess level (0 = none, 1-5 = prowess levels)
-  unarmedProwess?: number;
-  // Edit mode for selecting/upgrading unarmed prowess
-  isEditMode?: boolean;
-  onUnarmedProwessChange?: (level: number) => void;
-  // Codex parts data for enrichment
+  archetypeAbility: number;
   powerPartsDb?: CodexPart[];
   techniquePartsDb?: CodexPart[];
+  itemPropertiesDb?: CodexProperty[];
+  proficiencies?: CharacterProficiency[];
+  isEditMode?: boolean;
+  onProficienciesChange?: (next: CharacterProficiency[]) => void;
 }
 
-// Unarmed Prowess constants (matching equipment-step.tsx). Damage = Attack Bonus (Ability + Martial Prof) + dice at level 2+.
-const UNARMED_PROWESS_BASE_TP = 10;
-const UNARMED_PROWESS_UPGRADE_TP = 6;
-const UNARMED_PROWESS_LEVELS = [
-  { level: 1, charLevel: 1, name: 'Unarmed Prowess', damage: 'Attack Bonus' },
-  { level: 2, charLevel: 4, name: 'Unarmed Prowess II', damage: '1d2 + Attack Bonus' },
-  { level: 3, charLevel: 8, name: 'Unarmed Prowess III', damage: '1d4 + Attack Bonus' },
-  { level: 4, charLevel: 12, name: 'Unarmed Prowess IV', damage: '1d6 + Attack Bonus' },
-  { level: 5, charLevel: 16, name: 'Unarmed Prowess V', damage: '1d8 + Attack Bonus' },
-];
-
-// Calculate TP cost for unarmed prowess
-function calculateUnarmedProwessTP(level: number): number {
-  if (level <= 0) return 0;
-  return UNARMED_PROWESS_BASE_TP + (level - 1) * UNARMED_PROWESS_UPGRADE_TP;
+function profChipLabel(p: CharacterProficiency): string {
+  const levels = [p.op1Level, p.op2Level, p.op3Level].some((v) => (v ?? 0) > 0)
+    ? ` Lv.${p.op1Level ?? 0}/${p.op2Level ?? 0}/${p.op3Level ?? 0}`
+    : '';
+  const damageType = p.damageType ? ` (${p.damageType})` : '';
+  return `${p.name}${damageType}${levels}`;
 }
 
-// Calculate TP for a proficiency
-function calculateProfTP(prof: ProficiencyData): number {
-  const rawTP = (prof.baseTP || 0) +
-    (prof.op1TP || 0) * (prof.op1Lvl || 0) +
-    (prof.op2TP || 0) * (prof.op2Lvl || 0) +
-    (prof.op3TP || 0) * (prof.op3Lvl || 0);
-  return Math.floor(rawTP);
+type ProficiencyCategory = 'power' | 'technique' | 'armor' | 'weapon' | 'custom';
+
+function getProficiencyCategory(
+  p: CharacterProficiency,
+  itemPropertiesDb: CodexProperty[]
+): ProficiencyCategory {
+  if (p.kind === 'power_part') return 'power';
+  if (p.kind === 'technique_part') return 'technique';
+  if (isCustomProficiency(p)) return 'custom';
+  if (p.kind === 'item_property') {
+    const prop = itemPropertiesDb.find(
+      (x) => String(x.id) === String(p.refId ?? '') || (x.name && p.name && x.name.toLowerCase() === p.name.toLowerCase())
+    );
+    const type = (prop as { type?: string })?.type?.toLowerCase();
+    if (type === 'armor') return 'armor';
+    return 'weapon'; // weapon, shield, or unknown
+  }
+  return 'weapon';
 }
 
-// Extract proficiencies from powers - with Codex enrichment for string parts
-function extractPowerProficiencies(powers: CharacterPower[], codexParts: CodexPart[] = []): Map<string, ProficiencyData> {
-  const profs = new Map<string, ProficiencyData>();
-  
-  powers.forEach(power => {
-    if (!power.parts) return;
-    
-    power.parts.forEach((part) => {
-      // Parts can be strings (just names) or objects with full data
-      if (typeof part === 'string') {
-        // String parts - look up in Codex for TP data
-        const codexPart = codexParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
-        if (!profs.has(part)) {
-          profs.set(part, {
-            name: part,
-            description: codexPart?.description,
-            baseTP: codexPart?.base_tp || 0,
-            op1Lvl: 0,
-            op1TP: codexPart?.op_1_tp || 0,
-            op2TP: codexPart?.op_2_tp || 0,
-            op3TP: codexPart?.op_3_tp || 0,
-          });
-        }
-        return;
-      }
-      
-      const partData = part;
-      if (!partData.name) return;
-
-      const partName = partData.name;
-
-      // Look up Codex data for TP values if not present on the part
-      const codexPart = codexParts.find(p => 
-        p.id === partData.id || 
-        p.name?.toLowerCase() === partName.toLowerCase()
-      );
-
-      const lvl1 = partData.op_1_lvl || 0;
-      const lvl2 = partData.op_2_lvl || 0;
-      const lvl3 = partData.op_3_lvl || 0;
-      // Use part data if available, fall back to Codex
-      const baseTP = partData.base_tp ?? codexPart?.base_tp ?? 0;
-      const op1TP = partData.op_1_tp ?? codexPart?.op_1_tp ?? 0;
-      const op2TP = partData.op_2_tp ?? codexPart?.op_2_tp ?? 0;
-      const op3TP = partData.op_3_tp ?? codexPart?.op_3_tp ?? 0;
-      
-      const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
-      if (Math.floor(rawTP) <= 0) return;
-      
-      const key = partName;
-      if (profs.has(key)) {
-        const ex = profs.get(key)!;
-        ex.op1Lvl = Math.max(ex.op1Lvl, lvl1);
-        ex.op2Lvl = Math.max(ex.op2Lvl || 0, lvl2);
-        ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
-      } else {
-        profs.set(key, {
-          name: partName,
-          description: codexPart?.description,
-          baseTP,
-          op1Lvl: lvl1,
-          op1TP,
-          op2Lvl: lvl2,
-          op2TP,
-          op3Lvl: lvl3,
-          op3TP,
-        });
-      }
+function proficiencyToPartData(
+  prof: CharacterProficiency,
+  powerPartsDb: CodexPart[],
+  techniquePartsDb: CodexPart[],
+  itemPropertiesDb: CodexProperty[]
+): PartData {
+  const norm = (s: unknown) => String(s ?? '').trim().toLowerCase();
+  let codex: CodexPart | CodexProperty | undefined;
+  if (prof.kind === 'power_part') {
+    codex = powerPartsDb.find(
+      (x) => norm(x.id) === norm(prof.refId) || (x.name && prof.name && norm(x.name) === norm(prof.name))
+    );
+  } else if (prof.kind === 'technique_part') {
+    codex = techniquePartsDb.find(
+      (x) => norm(x.id) === norm(prof.refId) || (x.name && prof.name && norm(x.name) === norm(prof.name))
+    );
+  } else if (prof.kind === 'item_property') {
+    codex = itemPropertiesDb.find(
+      (x) => norm(x.id) === norm(prof.refId) || (x.name && prof.name && norm(x.name) === norm(prof.name))
+    ) as CodexProperty | undefined;
+  }
+  const partCodex = codex as CodexPart | undefined;
+  const propCodex = codex as CodexProperty | undefined;
+  const options: PartData['options'] = [];
+  if ((prof.op1Level ?? 0) > 0) {
+    options.push({
+      label: 'Option 1',
+      description: partCodex?.op_1_desc ?? propCodex?.op_1_desc,
+      level: prof.op1Level ?? 0,
     });
-  });
-  
-  return profs;
-}
-
-// Extract proficiencies from techniques - with Codex enrichment for string parts
-function extractTechniqueProficiencies(techniques: CharacterTechnique[], codexParts: CodexPart[] = []): Map<string, ProficiencyData> {
-  const profs = new Map<string, ProficiencyData>();
-  
-  techniques.forEach(tech => {
-    if (!tech.parts) return;
-    
-    tech.parts.forEach((part) => {
-      // Parts can be strings (just names) or objects with full data
-      if (typeof part === 'string') {
-        // String parts - look up in Codex for TP data
-        const codexPart = codexParts.find(p => p.name?.toLowerCase() === part.toLowerCase());
-        if (!profs.has(part)) {
-          profs.set(part, {
-            name: part,
-            description: codexPart?.description,
-            baseTP: codexPart?.base_tp || 0,
-            op1Lvl: 0,
-            op1TP: codexPart?.op_1_tp || 0,
-            op2TP: codexPart?.op_2_tp || 0,
-            op3TP: codexPart?.op_3_tp || 0,
-          });
-        }
-        return;
-      }
-      
-      const partData = part;
-      if (!partData.name) return;
-
-      const partName = partData.name;
-
-      // Look up Codex data for TP values if not present on the part
-      const codexPart = codexParts.find(p => 
-        p.id === partData.id || 
-        p.name?.toLowerCase() === partName.toLowerCase()
-      );
-
-      const lvl1 = partData.op_1_lvl || 0;
-      const lvl2 = partData.op_2_lvl || 0;
-      const lvl3 = partData.op_3_lvl || 0;
-      // Use part data if available, fall back to Codex
-      const baseTP = partData.base_tp ?? codexPart?.base_tp ?? 0;
-      const op1TP = partData.op_1_tp ?? codexPart?.op_1_tp ?? 0;
-      const op2TP = partData.op_2_tp ?? codexPart?.op_2_tp ?? 0;
-      const op3TP = partData.op_3_tp ?? codexPart?.op_3_tp ?? 0;
-      
-      const rawTP = baseTP + op1TP * lvl1 + op2TP * lvl2 + op3TP * lvl3;
-      if (Math.floor(rawTP) <= 0) return;
-      
-      const key = partName;
-      if (profs.has(key)) {
-        const ex = profs.get(key)!;
-        ex.op1Lvl = Math.max(ex.op1Lvl, lvl1);
-        ex.op2Lvl = Math.max(ex.op2Lvl || 0, lvl2);
-        ex.op3Lvl = Math.max(ex.op3Lvl || 0, lvl3);
-      } else {
-        profs.set(key, {
-          name: partName,
-          description: codexPart?.description,
-          baseTP,
-          op1Lvl: lvl1,
-          op1TP,
-          op2Lvl: lvl2,
-          op2TP,
-          op3Lvl: lvl3,
-          op3TP,
-        });
-      }
+  }
+  if ((prof.op2Level ?? 0) > 0 && partCodex) {
+    options.push({
+      label: 'Option 2',
+      description: partCodex.op_2_desc,
+      level: prof.op2Level ?? 0,
     });
-  });
-  
-  return profs;
-}
-
-// Extract proficiencies from weapons/armor properties
-// Note: Full TP calculation requires loading property data from Codex
-// For now, just list the property names (TP from Codex)
-function extractEquipmentProficiencies(weapons: Item[], armor: Item[]): Map<string, ProficiencyData> {
-  const profs = new Map<string, ProficiencyData>();
-  const items = [...weapons, ...armor];
-  
-  items.forEach(item => {
-    if (!item.properties) return;
-    
-    item.properties.forEach((propRef) => {
-      // Properties can be strings or objects with name
-      const propName = typeof propRef === 'string' 
-        ? propRef 
-        : (propRef as { name?: string }).name;
-      
-      if (!propName) return;
-      
-      // For now, just list properties without TP data
-      // Full TP calculation would require loading from Codex
-      if (!profs.has(propName)) {
-        profs.set(propName, {
-          name: propName,
-          baseTP: 0,
-          op1Lvl: 0,
-          op1TP: 0,
-        });
-      }
+  }
+  if ((prof.op3Level ?? 0) > 0 && partCodex) {
+    options.push({
+      label: 'Option 3',
+      description: partCodex.op_3_desc,
+      level: prof.op3Level ?? 0,
     });
-  });
-  
-  return profs;
-}
-
-interface ProficiencySectionProps {
-  title: string;
-  profs: Map<string, ProficiencyData>;
-}
-
-function ProficiencySection({ title, profs }: ProficiencySectionProps) {
-  const totalTP = useMemo(() => {
-    let sum = 0;
-    profs.forEach(prof => {
-      sum += calculateProfTP(prof);
-    });
-    return sum;
-  }, [profs]);
-
-  return (
-    <div className="mb-4">
-      <SectionHeader 
-        title={title}
-        rightContent={
-          <span className="text-xs text-text-muted">
-            TP: <span className="font-semibold text-primary-600">{totalTP}</span>
-          </span>
-        }
-      />
-      
-      <div className="px-2 py-3">
-        {profs.size === 0 ? (
-          <p className="text-sm text-text-muted italic text-center py-2">No proficiencies</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {Array.from(profs.values()).map((prof, index) => {
-              const tp = calculateProfTP(prof);
-              let label = prof.name;
-              if (prof.damageType) label += ` (${prof.damageType})`;
-              if (prof.op1Lvl > 0) label += ` Lvl ${prof.op1Lvl}`;
-              
-              return (
-                <Chip
-                  key={prof.name + (prof.damageType || '')}
-                  variant="proficiency"
-                  size="sm"
-                  title={prof.description || `${label} - TP: ${tp}`}
-                >
-                  {label} | {tp} TP
-                </Chip>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  }
+  const name = prof.damageType ? `${prof.name} (${prof.damageType})` : prof.name;
+  return {
+    name,
+    description: codex?.description,
+    tpCost: calculateProficiencyTP(prof),
+    optionLevels: { opt1: prof.op1Level, opt2: prof.op2Level, opt3: prof.op3Level },
+    options,
+    category: 'proficiency',
+  };
 }
 
 export function ProficienciesTab({
   powers,
   techniques,
   weapons,
+  shields = [],
   armor,
   level,
   archetypeAbility,
-  unarmedProwess = 0,
-  isEditMode = false,
-  onUnarmedProwessChange,
   powerPartsDb = [],
   techniquePartsDb = [],
+  itemPropertiesDb = [],
+  proficiencies = [],
+  isEditMode = false,
+  onProficienciesChange,
 }: ProficienciesTabProps) {
-  // Extract all proficiencies - with Codex enrichment
-  const powerProfs = useMemo(() => extractPowerProficiencies(powers, powerPartsDb), [powers, powerPartsDb]);
-  const techniqueProfs = useMemo(() => extractTechniqueProficiencies(techniques, techniquePartsDb), [techniques, techniquePartsDb]);
-  const weaponProfs = useMemo(() => extractEquipmentProficiencies(weapons, []), [weapons]);
-  const armorProfs = useMemo(() => extractEquipmentProficiencies([], armor), [armor]);
+  const [customName, setCustomName] = useState('');
+  const [customTp, setCustomTp] = useState(1);
+  const [addProficiencyVariant, setAddProficiencyVariant] = useState<AddProficiencyVariant | null>(null);
+  const [expandedProfId, setExpandedProfId] = useState<string | null>(null);
 
-  // Calculate unarmed prowess TP
-  const unarmedProwessTP = calculateUnarmedProwessTP(unarmedProwess);
+  const required = useMemo(
+    () =>
+      buildRequiredProficiencies({
+        powers,
+        techniques,
+        weapons,
+        shields,
+        armor,
+        powerPartsDb,
+        techniquePartsDb,
+        itemPropertiesDb,
+      }),
+    [powers, techniques, weapons, shields, armor, powerPartsDb, techniquePartsDb, itemPropertiesDb]
+  );
 
-  // Get available unarmed prowess levels based on character level
-  const availableUnarmedLevels = useMemo(() => {
-    return UNARMED_PROWESS_LEVELS.filter(up => up.charLevel <= level);
-  }, [level]);
+  const owned = useMemo(
+    () => filterZeroCostProficiencies(dedupeHighestProficiencies(proficiencies)),
+    [proficiencies]
+  );
+  const missing = useMemo(() => getMissingRequiredProficiencies(required, owned), [required, owned]);
 
-  // Calculate total TP spent
-  const totalSpent = useMemo(() => {
-    let sum = unarmedProwessTP;
-    [powerProfs, techniqueProfs, weaponProfs, armorProfs].forEach(profs => {
-      profs.forEach(prof => {
-        sum += calculateProfTP(prof);
-      });
+  const spent = useMemo(() => owned.reduce((sum, p) => sum + calculateProficiencyTP(p), 0), [owned]);
+  const maxTp = useMemo(() => getTrainingPointLimit(level, archetypeAbility), [level, archetypeAbility]);
+  const remaining = maxTp - spent;
+
+  const persistProficiencies = (next: CharacterProficiency[]) => {
+    if (!onProficienciesChange) return;
+    onProficienciesChange(filterZeroCostProficiencies(dedupeHighestProficiencies(next)));
+  };
+
+  const addAllMissing = () => {
+    if (!onProficienciesChange) return;
+    persistProficiencies([...owned, ...missing]);
+  };
+
+  const syncProficiencies = () => {
+    if (!onProficienciesChange) return;
+    const message =
+      'Sync will remove proficiencies not needed for your current loadout and add any missing. Custom proficiencies are kept. Continue?';
+    if (!window.confirm(message)) return;
+    const kept = filterToRequiredAndCustom(owned, required);
+    persistProficiencies(mergeOwnedWithRequired(kept, required));
+  };
+
+  const removeProf = (id: string) => {
+    if (!onProficienciesChange) return;
+    persistProficiencies(owned.filter((p) => p.id !== id));
+  };
+
+  const addCustom = () => {
+    if (!onProficienciesChange) return;
+    const name = customName.trim();
+    const tp = Math.max(1, customTp);
+    if (!name) return;
+    const custom: CharacterProficiency = {
+      id: generateProficiencyId(),
+      kind: 'custom',
+      custom: true,
+      name,
+      baseTP: tp,
+      op1Level: 0,
+      op2Level: 0,
+      op3Level: 0,
+      op1TP: 0,
+      op2TP: 0,
+      op3TP: 0,
+    };
+    persistProficiencies([...owned, custom]);
+    setCustomName('');
+    setCustomTp(1);
+  };
+
+  const addProficiency = (prof: CharacterProficiency) => {
+    if (calculateProficiencyTP(prof) <= 0) return;
+    persistProficiencies([...owned, prof]);
+  };
+
+  const ownedByCategory = useMemo(() => {
+    const map = new Map<ProficiencyCategory, CharacterProficiency[]>();
+    owned.forEach((p) => {
+      const cat = getProficiencyCategory(p, itemPropertiesDb);
+      const list = map.get(cat) ?? [];
+      list.push(p);
+      map.set(cat, list);
     });
-    return sum;
-  }, [powerProfs, techniqueProfs, weaponProfs, armorProfs, unarmedProwessTP]);
+    return map;
+  }, [owned, itemPropertiesDb]);
 
-  // Calculate available training points
-  // Formula: 22 + (archetype_ability * level) + (2 * (level - 1)) - total_spent
-  const baseTP = 22;
-  const trainingPoints = baseTP + (archetypeAbility * level) + (2 * (level - 1)) - totalSpent;
+  const ownedPartDataById = useMemo(
+    () =>
+      new Map(
+        owned.map((p) => [
+          p.id,
+          proficiencyToPartData(p, powerPartsDb, techniquePartsDb, itemPropertiesDb),
+        ])
+      ),
+    [owned, powerPartsDb, techniquePartsDb, itemPropertiesDb]
+  );
+
+  const weaponShieldProperties = useMemo(
+    () =>
+      itemPropertiesDb.filter(
+        (p) => (p as { type?: string }).type && ['weapon', 'shield'].includes((p as { type?: string }).type!.toLowerCase())
+      ),
+    [itemPropertiesDb]
+  );
+  const armorProperties = useMemo(
+    () =>
+      itemPropertiesDb.filter(
+        (p) => (p as { type?: string }).type && (p as { type?: string }).type!.toLowerCase() === 'armor'
+      ),
+    [itemPropertiesDb]
+  );
 
   return (
     <div className="space-y-4">
-      {/* Training Points Summary */}
       <TabSummarySection variant="default">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <SummaryRow>
-            <SummaryItem 
-              icon="📊" 
-              label="Training Points" 
-              value={trainingPoints}
-              highlight
-              highlightColor={trainingPoints >= 0 ? 'primary' : 'danger'}
-            />
-            <SummaryItem 
-              label="Spent" 
-              value={totalSpent}
-            />
-          </SummaryRow>
-          <span className="text-xs text-text-muted">
-            {baseTP} base + ({archetypeAbility} × {level}) + {2 * (level - 1)} bonus
-          </span>
-        </div>
+        <SummaryRow>
+          <SummaryItem icon="🎯" label="TP Limit" value={maxTp} />
+          <SummaryItem label="TP Spent" value={spent} />
+          <SummaryItem
+            label="Remaining"
+            value={remaining}
+            highlight
+            highlightColor={remaining >= 0 ? 'success' : 'danger'}
+          />
+        </SummaryRow>
       </TabSummarySection>
 
-      {/* Unarmed Prowess Section - shown in edit mode or if character has it */}
-      {(isEditMode || unarmedProwess > 0) && (
-        <div className="mb-4">
-          <SectionHeader 
-            title="Unarmed Prowess"
-            rightContent={
-              <span className="text-xs text-text-muted">
-                TP: <span className="font-semibold text-primary-600">{unarmedProwessTP}</span>
-              </span>
-            }
-          />
-          
-          <div className="px-2 py-3">
-            {isEditMode ? (
-              <div className="space-y-2">
-                {/* Only show levels that are available at the character's level */}
-                {availableUnarmedLevels.map((prowessLevel) => {
-                  const isSelected = unarmedProwess >= prowessLevel.level;
-                  const canToggle = onUnarmedProwessChange;
-                  const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
-                  
-                  return (
-                    <div
-                      key={prowessLevel.level}
-                      className={cn(
-                        'flex items-center gap-3 p-2 rounded-lg border transition-all',
-                        isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600/50' : 'bg-surface border-border-light',
-                        canToggle && 'cursor-pointer hover:border-primary-300'
-                      )}
-                      onClick={() => {
-                        if (!canToggle) return;
-                        if (isSelected && unarmedProwess === prowessLevel.level) {
-                          // Deselect this level (set to previous)
-                          onUnarmedProwessChange(prowessLevel.level - 1);
-                        } else if (!isSelected && unarmedProwess === prowessLevel.level - 1) {
-                          // Select this level
-                          onUnarmedProwessChange(prowessLevel.level);
-                        }
-                      }}
-                    >
-                      <div className={cn(
-                        'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0',
-                        isSelected ? 'bg-primary-600 text-white dark:bg-primary-100 dark:text-white' : 'bg-surface-alt border border-border-light'
-                      )}>
-                        {isSelected && <Check className="w-3 h-3" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-text-primary">{prowessLevel.name}</span>
-                        <span className="text-xs text-text-muted ml-2">({prowessLevel.damage})</span>
-                      </div>
-                      <span className="text-xs font-semibold text-warning-700 dark:text-warning-300 bg-warning-50 dark:bg-warning-900/30 px-2 py-0.5 rounded">
-                        {tpCost} TP
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {unarmedProwess > 0 ? (
-                  <Chip variant="proficiency" size="sm">
-                    {UNARMED_PROWESS_LEVELS[unarmedProwess - 1]?.name || 'Unarmed Prowess'} | {unarmedProwessTP} TP
-                  </Chip>
-                ) : (
-                  <p className="text-sm text-text-muted italic text-center py-2 w-full">No unarmed prowess</p>
-                )}
-              </div>
-            )}
+      {isEditMode && (
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border bg-surface-alt/50 px-3 py-2">
+            <p className="text-xs font-medium text-text-muted mb-2">Catch-all: add every proficiency required by your current loadout</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={addAllMissing} disabled={missing.length === 0}>
+                <Plus className="w-4 h-4" /> Add All Missing Proficiencies
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={syncProficiencies}
+                aria-label="Sync proficiencies with current loadout (removes unused, adds missing)"
+              >
+                <RefreshCw className="w-4 h-4" /> Sync Proficiencies
+              </Button>
+            </div>
+            <p className="text-xs text-text-muted mt-2">
+              Sync removes proficiencies no longer needed for your current powers/techniques/equipment and adds any missing. Custom proficiencies are kept.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={() => setAddProficiencyVariant('power_part')}>
+              <Plus className="w-4 h-4" /> Add Power Part
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setAddProficiencyVariant('technique_part')}>
+              <Plus className="w-4 h-4" /> Add Technique Part
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setAddProficiencyVariant('weapon_shield_property')}>
+              <Plus className="w-4 h-4" /> Add Weapon/Shield Property
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setAddProficiencyVariant('armor_property')}>
+              <Plus className="w-4 h-4" /> Add Armor Property
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Input
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="Custom proficiency name"
+              className="max-w-[240px]"
+              aria-label="Custom proficiency name"
+            />
+            <span className="text-sm text-text-secondary">TP cost:</span>
+            <ValueStepper
+              value={customTp}
+              onChange={(v) => setCustomTp(Math.max(1, v))}
+              min={1}
+              size="sm"
+              variant="inline"
+              decrementTitle="Decrease TP cost"
+              incrementTitle="Increase TP cost"
+            />
+            <Button size="sm" variant="primary" onClick={addCustom}>
+              Add Custom
+            </Button>
           </div>
         </div>
       )}
 
-      {/* Proficiency Sections */}
-      <ProficiencySection title="Power Proficiencies" profs={powerProfs} />
-      <ProficiencySection title="Technique Proficiencies" profs={techniqueProfs} />
-      <ProficiencySection title="Weapon Proficiencies" profs={weaponProfs} />
-      <ProficiencySection title="Armor Proficiencies" profs={armorProfs} />
+      <div>
+        <SectionHeader
+          title="Owned Proficiencies"
+          rightContent={<span className="text-xs text-text-muted">{owned.length} total</span>}
+        />
+        <div className="px-2 py-3 space-y-4">
+          {owned.length === 0 ? (
+            <p className="text-sm text-text-muted italic text-center py-2">No proficiencies saved.</p>
+          ) : (
+            <>
+              {(['power', 'technique', 'weapon', 'armor', 'custom'] as ProficiencyCategory[]).map((cat) => {
+                const list = ownedByCategory.get(cat) ?? [];
+                if (list.length === 0) return null;
+                const sectionTitle =
+                  cat === 'power'
+                    ? 'Power parts'
+                    : cat === 'technique'
+                      ? 'Technique parts'
+                      : cat === 'weapon'
+                        ? 'Weapon / shield properties'
+                        : cat === 'armor'
+                          ? 'Armor properties'
+                          : 'Custom';
+                return (
+                  <div key={cat}>
+                    <h3 className="text-sm font-medium text-text-secondary mb-2">{sectionTitle}</h3>
+                    <div className="flex flex-wrap gap-2 items-start">
+                      {list.map((prof) => {
+                        const partData = ownedPartDataById.get(prof.id);
+                        const isExpanded = expandedProfId === prof.id;
+                        return (
+                          <div
+                            key={prof.id}
+                            className={cn(
+                              'inline-flex items-center gap-1',
+                              isExpanded && 'w-full min-w-0'
+                            )}
+                          >
+                            {partData ? (
+                              <PartChipComponent
+                                part={partData}
+                                size="md"
+                                isExpanded={isExpanded}
+                                fullWidthWhenExpanded
+                                className={cn(isExpanded && 'flex-1 min-w-0')}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedProfId(isExpanded ? null : prof.id);
+                                }}
+                              />
+                            ) : (
+                              <Chip variant="proficiency" size="md">
+                                {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
+                              </Chip>
+                            )}
+                            {isEditMode && (
+                              <IconButton
+                                size="sm"
+                                variant="ghost"
+                                label={`Remove ${prof.name}`}
+                                onClick={() => removeProf(prof.id)}
+                              >
+                                <X className="w-4 h-4" />
+                              </IconButton>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <SectionHeader
+          title="Missing For Current Loadout"
+          rightContent={<span className="text-xs text-danger-700 dark:text-danger-300">{missing.length} missing</span>}
+        />
+        <div className="px-2 py-3">
+          {missing.length === 0 ? (
+            <p className="text-sm text-success-700 dark:text-success-400 italic text-center py-2">
+              All current powers, techniques, and armaments are covered.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {missing.map((prof) => (
+                <Chip key={prof.id} variant="danger" size="md">
+                  {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
+                </Chip>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {addProficiencyVariant && (
+        <AddProficiencyModal
+          isOpen={!!addProficiencyVariant}
+          onClose={() => setAddProficiencyVariant(null)}
+          variant={addProficiencyVariant}
+          parts={addProficiencyVariant === 'power_part' ? powerPartsDb : addProficiencyVariant === 'technique_part' ? techniquePartsDb : undefined}
+          properties={
+            addProficiencyVariant === 'weapon_shield_property'
+              ? weaponShieldProperties
+              : addProficiencyVariant === 'armor_property'
+                ? armorProperties
+                : undefined
+          }
+          onAdd={addProficiency}
+        />
+      )}
     </div>
   );
 }

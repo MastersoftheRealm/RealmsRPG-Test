@@ -7,13 +7,13 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Plus, Wand2, Swords, X, ExternalLink } from 'lucide-react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { GridListRow, ListHeader } from '@/components/shared';
-import { Button, IconButton } from '@/components/ui';
+import { Button, IconButton, Spinner } from '@/components/ui';
 import { useUserPowers, useUserTechniques, usePowerParts, useTechniqueParts, usePublicLibrary, type PowerPart, type TechniquePart } from '@/hooks';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared';
@@ -22,6 +22,8 @@ import { derivePowerDisplay } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 
 /** Capitalize first letter of each word for display */
 function capitalize(s: string | undefined): string {
@@ -29,17 +31,15 @@ function capitalize(s: string | undefined): string {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// Select powers modal: name, action, en, tp, damage only for legibility
 const POWER_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
   { key: 'Action', label: 'ACTION', sortable: false, align: 'center' as const },
   { key: 'Energy', label: 'EN', sortable: false, align: 'center' as const },
   { key: 'TP', label: 'TP', sortable: false, align: 'center' as const },
   { key: 'Damage', label: 'DAMAGE', sortable: false, align: 'center' as const },
-  { key: 'Area', label: 'AREA', sortable: false, align: 'center' as const },
-  { key: 'Range', label: 'RANGE', sortable: false, align: 'center' as const },
-  { key: 'Duration', label: 'DURATION', sortable: false, align: 'center' as const },
 ];
-const POWER_GRID_COLUMNS = '1.2fr 0.6fr 0.5fr 0.5fr 0.6fr 0.5fr 0.6fr 0.6fr';
+const POWER_GRID_COLUMNS = '1.4fr 0.8fr 0.5fr 0.5fr 0.7fr';
 
 const TECHNIQUE_MODAL_COLUMNS = [
   { key: 'name', label: 'NAME', sortable: true },
@@ -58,8 +58,8 @@ export function PowersStep() {
   // Fetch user's library and public library
   const { data: userPowers = [], isLoading: powersLoading } = useUserPowers();
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
-  const { data: publicPowers = [] } = usePublicLibrary('powers');
-  const { data: publicTechniques = [] } = usePublicLibrary('techniques');
+  const { data: publicPowers = [], isLoading: publicPowersLoading } = usePublicLibrary('powers');
+  const { data: publicTechniques = [], isLoading: publicTechniquesLoading } = usePublicLibrary('techniques');
   const { data: powerParts } = usePowerParts();
   const { data: techniqueParts } = useTechniqueParts();
   
@@ -104,7 +104,15 @@ export function PowersStep() {
     () => new Set(selectedTechniques.map((t: { id: string | number }) => String(t.id))), 
     [selectedTechniques]
   );
-  
+  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const recommendedPowerRefs = useMemo(() => new Set((pathData?.level1?.powers || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.powers]);
+  const recommendedTechniqueRefs = useMemo(() => new Set((pathData?.level1?.techniques || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.techniques]);
+  const pathName = draft.archetype?.name ?? 'Path';
+  const hasPathPowerRecs = recommendedPowerRefs.size > 0;
+  const hasPathTechniqueRecs = recommendedTechniqueRefs.size > 0;
+  const pathMergeKey = draft.creationMode === 'path' ? draft.archetype?.id ?? 'path' : '';
+  const hasMergedPathRef = useRef<string | null>(null);
+
   const powersForList = useMemo(() => {
     const my = (source === 'my' || source === 'all') ? userPowers : [];
     const pub = (source === 'public' || source === 'all') ? normalizedPublicPowers : [];
@@ -115,97 +123,242 @@ export function PowersStep() {
     const pub = (source === 'public' || source === 'all') ? normalizedPublicTechniques : [];
     return [...my, ...pub];
   }, [source, userTechniques, normalizedPublicTechniques]);
-  
-  // Transform powers to SelectableItems — match add-library-item: columns, detailSections, totalCost for expanded view
-  const availablePowers = useMemo((): SelectableItem[] => {
-    return powersForList.map((power: UserPower) => {
-      const doc: PowerDocument = {
-        name: String(power.name ?? ''),
-        description: String(power.description ?? ''),
-        parts: Array.isArray(power.parts) ? (power.parts as PowerDocument['parts']) : [],
-        damage: power.damage as PowerDocument['damage'],
-        actionType: power.actionType,
-        isReaction: power.isReaction,
-        range: power.range as PowerDocument['range'],
-        area: power.area as PowerDocument['area'],
-        duration: power.duration as PowerDocument['duration'],
-      };
-      const display = derivePowerDisplay(doc, powerParts ?? []);
-      const partChips: ChipData[] = display.partChips.map((chip) => ({
-        name: chip.text.split(' | TP:')[0].trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-      }));
-      const damageStr = power.damage?.length
-        ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
-        : '-';
-      const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
-      const rangeStr = display.range || '-';
-      const durationStr = display.duration || '-';
-      return {
-        id: power.docId,
-        name: power.name,
-        description: power.description,
-        columns: [
-          { key: 'Action', value: capitalize(power.actionType), align: 'center' as const },
-          { key: 'Energy', value: String(display.energy ?? '-'), align: 'center' as const },
-          { key: 'TP', value: String(display.tp ?? '-'), align: 'center' as const },
-          { key: 'Damage', value: damageStr, align: 'center' as const },
-          { key: 'Area', value: areaStr, align: 'center' as const },
-          { key: 'Range', value: rangeStr, align: 'center' as const },
-          { key: 'Duration', value: durationStr, align: 'center' as const },
-        ],
-        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
-        totalCost: display.tp > 0 ? display.tp : undefined,
-        costLabel: display.tp > 0 ? 'TP' : undefined,
-        data: power,
-      };
+
+  // Merged pool (user + public, deduped) for looking up selected items so they persist when switching tabs/source
+  const allPowersForLookup = useMemo(() => {
+    const seen = new Set<string>();
+    return [...userPowers, ...normalizedPublicPowers].filter((p: UserPower) => {
+      const id = String(p.docId ?? p.id ?? '');
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
     });
-  }, [powersForList, powerParts]);
+  }, [userPowers, normalizedPublicPowers]);
+  const allTechniquesForLookup = useMemo(() => {
+    const seen = new Set<string>();
+    return [...userTechniques, ...normalizedPublicTechniques].filter((t: UserTechnique) => {
+      const id = String(t.docId ?? t.id ?? '');
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [userTechniques, normalizedPublicTechniques]);
+
+  // Path mode: waiting for public library so we can resolve and auto-add recommended powers/techniques
+  const pathRecommendationsLoading =
+    draft.creationMode === 'path' &&
+    ((hasPathPowerRecs && allPowersForLookup.length === 0 && publicPowersLoading) ||
+      (hasPathTechniqueRecs && allTechniquesForLookup.length === 0 && publicTechniquesLoading));
+
+  // Path mode: auto-add recommended powers and techniques once per path (wait for lookup data so we don't mark merged before data loads)
+  useEffect(() => {
+    if (!pathMergeKey || (!hasPathPowerRecs && !hasPathTechniqueRecs)) return;
+    if (hasMergedPathRef.current === pathMergeKey) return;
+    // Wait for lookup pools so we can resolve recommended ids; otherwise we'd set the ref and never run again when data loads
+    if (hasPathPowerRecs && allPowersForLookup.length === 0) return;
+    if (hasPathTechniqueRecs && allTechniquesForLookup.length === 0) return;
+    const currentPowerIds = new Set((draft.powers || []).map((p: { id: string | number }) => String(p.id)));
+    const currentTechniqueIds = new Set((draft.techniques || []).map((t: { id: string | number }) => String(t.id)));
+    let powersUpdated = false;
+    let techniquesUpdated = false;
+    const newPowers = [...(draft.powers || [])];
+    const newTechniques = [...(draft.techniques || [])];
+    if (hasPathPowerRecs && allPowersForLookup.length > 0) {
+      for (const power of allPowersForLookup) {
+        const id = String(power.docId ?? power.id ?? '');
+        if (!currentPowerIds.has(id) && (recommendedPowerRefs.has(id.toLowerCase()) || recommendedPowerRefs.has(String(power.name ?? '').toLowerCase()))) {
+          newPowers.push({
+            id: power.docId ?? power.id,
+            name: power.name,
+            description: power.description,
+            parts: (power.parts ?? []).map((p) => ({ ...p, id: p.id != null ? String(p.id) : undefined })),
+          });
+          currentPowerIds.add(id);
+          powersUpdated = true;
+        }
+      }
+    }
+    if (hasPathTechniqueRecs && allTechniquesForLookup.length > 0) {
+      for (const tech of allTechniquesForLookup) {
+        const id = String(tech.docId ?? tech.id ?? '');
+        if (!currentTechniqueIds.has(id) && (recommendedTechniqueRefs.has(id.toLowerCase()) || recommendedTechniqueRefs.has(String(tech.name ?? '').toLowerCase()))) {
+          newTechniques.push({
+            id: tech.docId ?? tech.id,
+            name: tech.name,
+            description: tech.description,
+            parts: (tech.parts ?? []).map((p) => ({ ...p, id: p.id != null ? String(p.id) : undefined })),
+          });
+          currentTechniqueIds.add(id);
+          techniquesUpdated = true;
+        }
+      }
+    }
+    if (powersUpdated || techniquesUpdated) {
+      updateDraft({ powers: newPowers, techniques: newTechniques });
+    }
+    hasMergedPathRef.current = pathMergeKey;
+  }, [pathMergeKey, hasPathPowerRecs, hasPathTechniqueRecs, draft.powers, draft.techniques, recommendedPowerRefs, recommendedTechniqueRefs, allPowersForLookup, allTechniquesForLookup, updateDraft]);
+
+  // Transform powers to SelectableItems — match add-library-item: columns, detailSections, totalCost for expanded view
+  // options.selectedIds + pathName: show (PathName) badge in modal only for selected path-recommended items
+  const powerListToSelectable = useCallback(
+    (list: UserPower[], options?: { selectedIds?: Set<string>; pathName?: string }): SelectableItem[] => {
+      return list.map((power: UserPower) => {
+        const doc: PowerDocument = {
+          name: String(power.name ?? ''),
+          description: String(power.description ?? ''),
+          parts: Array.isArray(power.parts) ? (power.parts as PowerDocument['parts']) : [],
+          damage: power.damage as PowerDocument['damage'],
+          actionType: power.actionType,
+          isReaction: power.isReaction,
+          range: power.range as PowerDocument['range'],
+          area: power.area as PowerDocument['area'],
+          duration: power.duration as PowerDocument['duration'],
+        };
+        const display = derivePowerDisplay(doc, powerParts ?? []);
+        const partChips: ChipData[] = display.partChips.map((chip) => ({
+          name: chip.text.split(' | TP:')[0].trim(),
+          description: chip.description,
+          cost: chip.finalTP,
+          costLabel: 'TP',
+        }));
+        const damageStr = power.damage?.length
+          ? power.damage.map((d: { type?: string }) => capitalize(d.type)).join(', ')
+          : '-';
+        const isRecommended =
+          recommendedPowerRefs.has(String(power.docId).toLowerCase()) ||
+          recommendedPowerRefs.has(String(power.name).toLowerCase());
+        const showPathBadge =
+          isRecommended &&
+          options?.pathName &&
+          options?.selectedIds &&
+          options.selectedIds.has(String(power.docId));
+        return {
+          id: power.docId,
+          name: power.name,
+          description: power.description,
+          columns: [
+            { key: 'Action', value: display.actionType ?? '-', align: 'center' as const },
+            { key: 'Energy', value: String(display.energy ?? '-'), align: 'center' as const },
+            { key: 'TP', value: String(display.tp ?? '-'), align: 'center' as const },
+            { key: 'Damage', value: damageStr, align: 'center' as const },
+          ],
+          detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+          totalCost: display.tp > 0 ? display.tp : undefined,
+          costLabel: display.tp > 0 ? 'TP' : undefined,
+          badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
+          data: power,
+        };
+      });
+    },
+    [powerParts, recommendedPowerRefs]
+  );
+
+  const selectedPowerIdsSet = useMemo(() => new Set(selectedPowers.map((p) => String(p.id))), [selectedPowers]);
+  const powerSelectableOpts = useMemo(
+    () => (pathName ? { selectedIds: selectedPowerIdsSet, pathName } : undefined),
+    [pathName, selectedPowerIdsSet]
+  );
+  const availablePowers = useMemo(
+    () => powerListToSelectable(powersForList, powerSelectableOpts),
+    [powersForList, powerListToSelectable, powerSelectableOpts]
+  );
+  const allPowersSelectable = useMemo(
+    () => powerListToSelectable(allPowersForLookup, powerSelectableOpts),
+    [allPowersForLookup, powerListToSelectable, powerSelectableOpts]
+  );
 
   // Transform techniques to SelectableItems — match add-library-item: detailSections, totalCost for expanded view
-  const availableTechniques = useMemo((): SelectableItem[] => {
-    return techniquesForList.map((tech: UserTechnique) => {
-      const doc: TechniqueDocument = {
-        name: String(tech.name ?? ''),
-        description: String(tech.description ?? ''),
-        parts: Array.isArray(tech.parts) ? (tech.parts as TechniqueDocument['parts']) : [],
-        damage: Array.isArray(tech.damage) && tech.damage[0] ? tech.damage[0] : (tech.damage as TechniqueDocument['damage']),
-        weapon: tech.weapon as TechniqueDocument['weapon'],
-      };
-      const display = deriveTechniqueDisplay(doc, techniqueParts ?? []);
-      const partChips: ChipData[] = display.partChips.map((chip) => ({
-        name: chip.text.split(' | TP:')[0].trim(),
-        description: chip.description,
-        cost: chip.finalTP,
-        costLabel: 'TP',
-      }));
+  // options.selectedIds + pathName: show (PathName) badge in modal only for selected path-recommended items
+  const techniqueListToSelectable = useCallback(
+    (list: UserTechnique[], options?: { selectedIds?: Set<string>; pathName?: string }): SelectableItem[] => {
+      return list.map((tech: UserTechnique) => {
+        const doc: TechniqueDocument = {
+          name: String(tech.name ?? ''),
+          description: String(tech.description ?? ''),
+          parts: Array.isArray(tech.parts) ? (tech.parts as TechniqueDocument['parts']) : [],
+          damage: Array.isArray(tech.damage) && tech.damage[0] ? tech.damage[0] : (tech.damage as TechniqueDocument['damage']),
+          weapon: tech.weapon as TechniqueDocument['weapon'],
+        };
+        const display = deriveTechniqueDisplay(doc, techniqueParts ?? []);
+        const partChips: ChipData[] = display.partChips.map((chip) => ({
+          name: chip.text.split(' | TP:')[0].trim(),
+          description: chip.description,
+          cost: chip.finalTP,
+          costLabel: 'TP',
+        }));
+        const isRecommended =
+          recommendedTechniqueRefs.has(String(tech.docId).toLowerCase()) ||
+          recommendedTechniqueRefs.has(String(tech.name).toLowerCase());
+        const showPathBadge =
+          isRecommended &&
+          options?.pathName &&
+          options?.selectedIds &&
+          options.selectedIds.has(String(tech.docId));
+        return {
+          id: tech.docId,
+          name: tech.name,
+          description: tech.description,
+          columns: [
+            { key: 'Energy', value: String(display.energy), align: 'center' as const },
+            { key: 'Weapon', value: display.weaponName || '-', align: 'center' as const },
+            { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
+          ],
+          detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
+          totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
+          costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
+          badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
+          data: tech,
+        };
+      });
+    },
+    [techniqueParts, recommendedTechniqueRefs]
+  );
+
+  const selectedTechniqueIdsSet = useMemo(() => new Set(selectedTechniques.map((t) => String(t.id))), [selectedTechniques]);
+  const techniqueSelectableOpts = useMemo(
+    () => (pathName ? { selectedIds: selectedTechniqueIdsSet, pathName } : undefined),
+    [pathName, selectedTechniqueIdsSet]
+  );
+  const availableTechniques = useMemo(
+    () => techniqueListToSelectable(techniquesForList, techniqueSelectableOpts),
+    [techniquesForList, techniqueListToSelectable, techniqueSelectableOpts]
+  );
+  const allTechniquesSelectable = useMemo(
+    () => techniqueListToSelectable(allTechniquesForLookup, techniqueSelectableOpts),
+    [allTechniquesForLookup, techniqueListToSelectable, techniqueSelectableOpts]
+  );
+  
+  // Display items for selected powers/techniques — lookup from full pool so selection persists when switching tabs/source
+  const selectedPowerItems = useMemo((): SelectableItem[] => {
+    return selectedPowers.map((p: { id: string | number; name?: string; description?: string }) => {
+      const id = String(p.id);
+      const found = allPowersSelectable.find((x) => x.id === id);
+      if (found) return found;
       return {
-        id: tech.docId,
-        name: tech.name,
-        description: tech.description,
-        columns: [
-          { key: 'Energy', value: String(display.energy), align: 'center' as const },
-          { key: 'Weapon', value: display.weaponName || '-', align: 'center' as const },
-          { key: 'Training Pts', value: String(display.tp), align: 'center' as const },
-        ],
-        detailSections: partChips.length > 0 ? [{ label: 'Parts & Proficiencies', chips: partChips }] : undefined,
-        totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
-        costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'TP' : undefined,
-        data: tech,
+        id,
+        name: p.name ?? 'Unknown',
+        description: p.description ?? '',
+        columns: [],
+        data: p,
       };
     });
-  }, [techniquesForList, techniqueParts]);
-  
-  // Display items for selected powers/techniques
-  const selectedPowerItems = useMemo((): SelectableItem[] => {
-    return availablePowers.filter(p => selectedPowerIds.has(p.id));
-  }, [availablePowers, selectedPowerIds]);
+  }, [selectedPowers, allPowersSelectable]);
   
   const selectedTechniqueItems = useMemo((): SelectableItem[] => {
-    return availableTechniques.filter(t => selectedTechniqueIds.has(t.id));
-  }, [availableTechniques, selectedTechniqueIds]);
+    return selectedTechniques.map((t: { id: string | number; name?: string; description?: string }) => {
+      const id = String(t.id);
+      const found = allTechniquesSelectable.find((x) => x.id === id);
+      if (found) return found;
+      return {
+        id,
+        name: t.name ?? 'Unknown',
+        description: t.description ?? '',
+        columns: [],
+        data: t,
+      };
+    });
+  }, [selectedTechniques, allTechniquesSelectable]);
   
   // Ids of items currently in the modal list (depends on source filter: my/public/all)
   const availablePowerIds = useMemo(() => new Set(availablePowers.map((p) => p.id)), [availablePowers]);
@@ -306,9 +459,51 @@ export function PowersStep() {
           Select powers and techniques from your library for your character to know.
         </p>
       </div>
+
+      {pathRecommendationsLoading && (
+        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-xl p-6 flex items-center gap-4 mb-8">
+          <Spinner className="w-6 h-6 flex-shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+          <div>
+            <p className="text-text-primary font-medium">
+              Loading recommended powers and techniques from the library…
+            </p>
+            <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5">
+              Your path&apos;s recommendations will appear here in a moment.
+            </p>
+          </div>
+        </div>
+      )}
+      {!pathRecommendationsLoading && draft.creationMode === 'path' && draft.archetype?.name && (hasPathPowerRecs || hasPathTechniqueRecs) && (
+        <PathHelpCard pathName={draft.archetype.name}>
+          {(() => {
+            const name = draft.archetype?.name ?? 'Path';
+            const hasPowers = hasPathPowerRecs;
+            const hasTechniques = hasPathTechniqueRecs;
+            const phrase = hasPowers && hasTechniques
+              ? 'recommended powers and techniques'
+              : hasPowers
+                ? 'recommended powers'
+                : 'recommended techniques';
+            return (
+              <>
+                As a {name}, some {phrase} have been added to your list. Look through them and keep the ones you&apos;d like.
+              </>
+            );
+          })()}
+        </PathHelpCard>
+      )}
       
-      {/* Empty state if no content */}
-      {!powersLoading && !techniquesLoading && !hasContent && (
+      {/* Path mode but no recommendations: nothing to show in this step */}
+      {!powersLoading && !techniquesLoading && draft.creationMode === 'path' && !hasPathPowerRecs && !hasPathTechniqueRecs && (
+        <div className="bg-muted/30 border border-border rounded-xl p-6 text-center mb-8">
+          <p className="text-text-muted dark:text-text-secondary">
+            This path doesn&apos;t recommend specific powers or techniques. You can add them from your library later if you like.
+          </p>
+        </div>
+      )}
+
+      {/* Empty state if no content (skip when path mode has no recs — we show that message above) */}
+      {!powersLoading && !techniquesLoading && !hasContent && !(draft.creationMode === 'path' && !hasPathPowerRecs && !hasPathTechniqueRecs) && (
         <div className="bg-muted/30 border border-border rounded-xl p-8 text-center mb-8">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
             <Wand2 className="w-8 h-8 text-text-muted dark:text-text-secondary" />
@@ -340,8 +535,8 @@ export function PowersStep() {
         </div>
       )}
       
-      {/* Powers Section */}
-      {(hasContent || powersLoading) && (
+      {/* Powers Section — hidden in path mode when path has no power recommendations */}
+      {(hasContent || powersLoading) && (draft.creationMode !== 'path' || hasPathPowerRecs) && (
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -372,17 +567,24 @@ export function PowersStep() {
                 compact
               />
               <div className="space-y-1">
-                {selectedPowerItems.map(power => (
+                {selectedPowerItems.map(power => {
+                  const idStr = String(power.id);
+                  const isPathRec =
+                    recommendedPowerRefs.has(idStr.toLowerCase()) ||
+                    recommendedPowerRefs.has(String(power.name).toLowerCase());
+                  const displayName = isPathRec ? `${power.name} (${pathName})` : power.name;
+                  return (
                   <GridListRow
                     key={power.id}
                     id={power.id}
-                    name={power.name}
+                    name={displayName}
                     description={power.description}
                     columns={power.columns}
                     gridColumns={POWER_GRID_COLUMNS}
                     detailSections={power.detailSections}
                     totalCost={power.totalCost}
                     costLabel={power.costLabel}
+                    badges={isPathRec ? undefined : power.badges}
                     rightSlot={
                       <IconButton
                         variant="danger"
@@ -395,7 +597,8 @@ export function PowersStep() {
                     }
                     compact
                   />
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : userPowers.length > 0 ? (
@@ -413,8 +616,8 @@ export function PowersStep() {
         </section>
       )}
       
-      {/* Techniques Section */}
-      {(hasContent || techniquesLoading) && (
+      {/* Techniques Section — hidden in path mode when path has no technique recommendations */}
+      {(hasContent || techniquesLoading) && (draft.creationMode !== 'path' || hasPathTechniqueRecs) && (
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -446,17 +649,24 @@ export function PowersStep() {
                 compact
               />
               <div className="space-y-1">
-                {selectedTechniqueItems.map(tech => (
+                {selectedTechniqueItems.map(tech => {
+                  const idStr = String(tech.id);
+                  const isPathRec =
+                    recommendedTechniqueRefs.has(idStr.toLowerCase()) ||
+                    recommendedTechniqueRefs.has(String(tech.name).toLowerCase());
+                  const displayName = isPathRec ? `${tech.name} (${pathName})` : tech.name;
+                  return (
                   <GridListRow
                     key={tech.id}
                     id={tech.id}
-                    name={tech.name}
+                    name={displayName}
                     description={tech.description}
                     columns={tech.columns}
                     gridColumns={TECHNIQUE_GRID_COLUMNS}
                     detailSections={tech.detailSections}
                     totalCost={tech.totalCost}
                     costLabel={tech.costLabel}
+                    badges={isPathRec ? undefined : tech.badges}
                     rightSlot={
                       <IconButton
                         variant="danger"
@@ -469,7 +679,8 @@ export function PowersStep() {
                     }
                     compact
                   />
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : userTechniques.length > 0 ? (

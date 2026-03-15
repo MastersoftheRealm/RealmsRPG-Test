@@ -8,6 +8,7 @@
 import { useState, useEffect, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { getSkillBonusForFeatRequirement } from '@/lib/game/formulas';
+import { buildFeatLevelChips, getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import { Alert } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { ChipData } from '@/components/shared/grid-list-row';
@@ -27,21 +28,14 @@ interface AddFeatModalProps {
   onAdd: (feats: FeatModal[]) => void;
 }
 
-/** Display name for a feat: same name for all levels, with " (Level N)" when feat_lvl > 1. */
-function featDisplayName(feat: FeatModal): string {
-  const level = feat.feat_lvl;
-  if (level != null && level > 1) return `${feat.name ?? ''} (Level ${level})`;
-  return feat.name ?? '';
-}
-
 /** Id of the previous-level feat required to take this feat. Null if level 1 or no base. */
 function getPreviousLevelFeatId(feat: FeatModal, allFeats: FeatModal[]): string | null {
-  const level = feat.feat_lvl;
-  if (level == null || level <= 1) return null;
+  const level = getFeatLevel(feat);
+  if (level <= 1) return null;
   if (feat.base_feat_id && level === 2) return feat.base_feat_id;
   if (feat.base_feat_id && level >= 3) {
     const prev = allFeats.find(
-      (f) => f.base_feat_id === feat.base_feat_id && (f.feat_lvl ?? 1) === level - 1
+      (f) => f.base_feat_id === feat.base_feat_id && getFeatLevel(f) === level - 1
     );
     return prev ? String(prev.id) : null;
   }
@@ -50,6 +44,7 @@ function getPreviousLevelFeatId(feat: FeatModal, allFeats: FeatModal[]): string 
 
 function featToSelectableItem(
   feat: FeatModal,
+  familyLevels: FeatModal[],
   disabled: boolean,
   warningMessage: string | undefined,
   skillIdToName: Map<string, string>
@@ -74,12 +69,14 @@ function featToSelectableItem(
     return { name: `${label}${typeof val === 'number' ? ` ${val}+` : ''}`, category: 'skill' as const };
   });
   if (skillReqChips.length > 0) detailSections.push({ label: 'Skill Requirements', chips: skillReqChips });
+  const levelChips = buildFeatLevelChips(familyLevels, feat.id);
+  if (levelChips.length > 0) detailSections.push({ label: 'Feat Levels', chips: levelChips });
 
   const usesVal = feat.uses_per_rec ?? (feat as FeatModal).max_uses;
   const usesDisplay = (usesVal === 0 || usesVal === undefined) ? '-' : String(usesVal);
   return {
     id: String(feat.id),
-    name: featDisplayName(feat),
+    name: formatFeatName(feat),
     description: feat.description || (feat as FeatModal).effect,
     columns: [
       { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
@@ -203,24 +200,37 @@ export function AddFeatModal({
   }, [character, skillIdToName, codexSkills, feats]);
 
   const items = useMemo((): SelectableItem[] => {
-    return feats
+    const baseFiltered = feats
       .filter(feat => {
         if (featType === 'state') {
           if (!feat.state_feat) return false;
         } else if (featType === 'character' && !feat.char_feat) return false;
         else if (featType === 'archetype' && feat.char_feat) return false;
-        if (existingFeatIds.includes(feat.id) || existingFeatIds.includes(feat.name)) return false;
+        // Id-only matching: leveled feats can share the same name.
+        if (existingFeatIds.includes(feat.id)) return false;
         if (featType !== 'state' && !showStateFeats && feat.state_feat) return false;
         const { meets } = checkRequirements(feat);
         if (!meets && !showBlocked) return false;
         if (selectedCategory && feat.category !== selectedCategory) return false;
         if (selectedAbility && feat.ability !== selectedAbility) return false;
         return true;
-      })
-      .map(feat => {
-        const { meets, warning } = checkRequirements(feat);
-        return featToSelectableItem(feat, !meets && !showBlocked, warning, skillIdToName);
       });
+
+    const families = groupFeatFamilies(baseFiltered);
+    const existingFeatIdSet = new Set(existingFeatIds.map((id) => String(id)));
+
+    return families
+      .map(({ levels }) => {
+        const selectableLevels = levels
+          .filter((levelFeat) => !existingFeatIdSet.has(String(levelFeat.id)))
+          .slice()
+          .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
+        if (selectableLevels.length === 0) return null;
+        const displayFeat = selectableLevels[0];
+        const { meets, warning } = checkRequirements(displayFeat);
+        return featToSelectableItem(displayFeat, levels, !meets && !showBlocked, warning, skillIdToName);
+      })
+      .filter((item): item is SelectableItem => item !== null);
   }, [feats, featType, existingFeatIds, showStateFeats, showBlocked, selectedCategory, selectedAbility, checkRequirements, skillIdToName]);
 
   const error = queryError ? `Failed to load feats: ${queryError.message}` : null;

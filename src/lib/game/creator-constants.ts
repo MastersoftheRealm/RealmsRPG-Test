@@ -287,6 +287,18 @@ export function formatCost(value: number, isPercentage = false): string {
 }
 
 /**
+ * Format a cost for display in creators: at most one decimal, and only when the value has a fractional part.
+ * Examples: 1 → "1", 1.0 → "1", 1.5 → "1.5". Use this (not toFixed(1)) so we never show "1.0".
+ */
+export function formatCostDisplay(value: number): string {
+  const n = Number(value);
+  if (Number.isInteger(n) || n === Math.floor(n)) {
+    return String(Math.round(n));
+  }
+  return n.toFixed(1);
+}
+
+/**
  * Format a cost with a label (e.g., "EN: 5" or "TP: 10")
  */
 export function formatCostWithLabel(label: string, value: number, isPercentage = false): string {

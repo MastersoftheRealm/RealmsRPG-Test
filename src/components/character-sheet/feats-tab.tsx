@@ -17,9 +17,11 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { SectionHeader, ListHeader, GridListRow, DecrementButton, IncrementButton } from '@/components/shared';
+import type { ChipData } from '@/components/shared/grid-list-row';
 import type { SortState, ListColumn } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { cn } from '@/lib/utils';
+import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 
 // =============================================================================
 // Types
@@ -52,6 +54,7 @@ interface CodexFeat {
   rec_period?: string;
   category?: string;
   feat_lvl?: number; // Level of feat (1, 2, 3…); used for "Name (Level N)" display
+  base_feat_id?: string;
 }
 
 interface FeatData {
@@ -118,6 +121,8 @@ const TRAIT_COLUMNS: ListColumn[] = [
 ];
 
 const TRAIT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
+/** When uses/recovery are null, description spans Description+Uses+Recovery columns (same grid, one cell spans 3) */
+const DESCRIPTION_EXTENDED_TRUNCATE = 220;
 
 const FEAT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
@@ -194,8 +199,40 @@ export function FeatsTab({
 }: FeatsTabProps) {
   const archetypeCount = archetypeFeats.length;
   const characterCount = characterFeats.length;
-  const archetypeOver = maxArchetypeFeats !== undefined && archetypeCount > maxArchetypeFeats;
-  const characterOver = maxCharacterFeats !== undefined && characterCount > maxCharacterFeats;
+  const getFeatLevel = useCallback((feat: FeatData): number => {
+    const dbFeat = featsDb.find(f => String(f.id) === String(feat.id));
+    return dbFeat?.feat_lvl != null && dbFeat.feat_lvl > 0 ? dbFeat.feat_lvl : 1;
+  }, [featsDb]);
+  const usedArchetypeSlots = useMemo(
+    () => archetypeFeats.reduce((sum, feat) => sum + getFeatLevel(feat), 0),
+    [archetypeFeats, getFeatLevel]
+  );
+  const usedCharacterSlots = useMemo(
+    () => characterFeats.reduce((sum, feat) => sum + getFeatLevel(feat), 0),
+    [characterFeats, getFeatLevel]
+  );
+  const archetypeOver = maxArchetypeFeats !== undefined && usedArchetypeSlots > maxArchetypeFeats;
+  const characterOver = maxCharacterFeats !== undefined && usedCharacterSlots > maxCharacterFeats;
+  const featLevelsByFamily = useMemo(() => {
+    const map = new Map<string, CodexFeat[]>();
+    featsDb.forEach((feat) => {
+      const family = getFeatFamilyId(feat);
+      if (!map.has(family)) map.set(family, []);
+      map.get(family)!.push(feat);
+    });
+    map.forEach((levels) => levels.sort((a, b) => getFeatLevel(a) - getFeatLevel(b)));
+    return map;
+  }, [featsDb]);
+
+  const getFeatLevelDetailSections = useCallback((featId: string | number) => {
+    const feat = featsDb.find((f) => String(f.id) === String(featId));
+    if (!feat) return undefined;
+    const family = featLevelsByFamily.get(getFeatFamilyId(feat)) || [];
+    const chips = buildFeatLevelChips(family, feat.id);
+    if (chips.length === 0) return undefined;
+    return [{ label: 'Feat Levels', chips }] as Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+  }, [featsDb, featLevelsByFamily]);
+
   // Sort state for each section
   const [traitSort, setTraitSort] = useState<SortState>({ col: 'name', dir: 1 });
   const [archetypeFeatSort, setArchetypeFeatSort] = useState<SortState>({ col: 'name', dir: 1 });
@@ -224,7 +261,9 @@ export function FeatsTab({
     }
     const featLvl = dbFeat?.feat_lvl;
     const name = feat.name || dbFeat?.name || String(feat.id);
-    const displayName = featLvl != null && featLvl > 1 ? `${name} (Level ${featLvl})` : name;
+    const displayName = featLvl != null && featLvl > 1
+      ? formatFeatName({ id: String(feat.id ?? name), name, feat_lvl: featLvl })
+      : name;
     return {
       ...feat,
       name: displayName,
@@ -380,6 +419,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(trait.recoveryPeriod) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={`${trait.category}-${index}`}
@@ -387,11 +427,14 @@ export function FeatsTab({
                   name={trait.name}
                   description={trait.description}
                   gridColumns={TRAIT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(trait.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
                   badges={categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined}
                   uses={uses}
                   hideUsesInName={!!(uses && onTraitUsesChange)}
@@ -416,7 +459,7 @@ export function FeatsTab({
           addLabel="Add archetype feat"
           rightContent={showEditControls && maxArchetypeFeats !== undefined ? (
             <span className={cn('tabular-nums text-sm font-medium', archetypeOver && 'text-danger-600 dark:text-danger-400')}>
-              {archetypeCount}/{maxArchetypeFeats}
+              {usedArchetypeSlots}/{maxArchetypeFeats}
             </span>
           ) : undefined}
           addButtonClassName={archetypeOver ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30' : undefined}
@@ -457,6 +500,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -464,11 +508,15 @@ export function FeatsTab({
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
+                  detailSections={getFeatLevelDetailSections(featId)}
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
                   onQuantityChange={undefined}
@@ -495,7 +543,7 @@ export function FeatsTab({
           addLabel="Add character feat"
           rightContent={showEditControls && maxCharacterFeats !== undefined ? (
             <span className={cn('tabular-nums text-sm font-medium', characterOver && 'text-danger-600 dark:text-danger-400')}>
-              {characterCount}/{maxCharacterFeats}
+              {usedCharacterSlots}/{maxCharacterFeats}
             </span>
           ) : undefined}
           addButtonClassName={characterOver ? 'text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300 hover:bg-danger-50 dark:hover:bg-danger-900/30' : undefined}
@@ -536,6 +584,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -543,11 +592,15 @@ export function FeatsTab({
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
+                  detailSections={getFeatLevelDetailSections(featId)}
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
                   onQuantityChange={undefined}
@@ -652,6 +705,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -659,12 +713,16 @@ export function FeatsTab({
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
                   badges={[{ label: typeLabel, color: 'blue' }]}
+                  detailSections={getFeatLevelDetailSections(featId)}
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
                   onQuantityChange={undefined}

@@ -207,11 +207,23 @@
      GAME SEMANTIC COLORS
      Semantic colors for game-specific concepts
      --------------------------------------------------------------------------- */
-  /* Training Points (TP) - Amber */
-  --color-tp: #d97706;
-  --color-tp-light: #fef3c7;
-  --color-tp-text: #92400e;
-  --color-tp-border: #fcd34d;
+  /* Training Points (TP) - Lime */
+  --color-tp: #65a30d;
+  --color-tp-light: #ecfccb;
+  --color-tp-text: #3f6212;
+  --color-tp-border: #a3e635;
+
+  /* Item Points (IP) - Blue */
+  --color-ip: #2563eb;
+  --color-ip-light: #dbeafe;
+  --color-ip-text: #1e40af;
+  --color-ip-border: #93c5fd;
+
+  /* Currency (C) - Gold */
+  --color-currency: #ca8a04;
+  --color-currency-light: #fef9c3;
+  --color-currency-text: #a16207;
+  --color-currency-border: #facc15;
   
   /* Power Archetype - Muted Lavender (very low saturation for subtle appearance) */
   --color-power: #a899b8;
@@ -357,12 +369,18 @@
     --color-info-light: #0f172a;
     --color-warning-light: #292419;
     /* TP/currency cost stat boxes in creator summary panel */
-    --color-tp-light: #292419;
-    --color-tp: #f59e0b;
+    --color-tp-light: #1f2a12;
+    --color-tp: #84cc16;
+    --color-currency-light: #2c2514;
+    --color-currency: #facc15;
     /* Dark mode: ensure energy/TP text meet contrast on dark backgrounds */
     --color-energy: #93c5fd;
     --color-energy-text: #93c5fd;
-    --color-tp-text: #fcd34d;
+    --color-tp-text: #bef264;
+    --color-ip-light: #0f172a;
+    --color-ip: #60a5fa;
+    --color-ip-text: #93c5fd;
+    --color-currency-text: #fde047;
     /* Dark mode: warning buttons (e.g. Recover) so white text meets contrast */
     --color-warning-500: #d97706;
     --color-warning-600: #b45309;

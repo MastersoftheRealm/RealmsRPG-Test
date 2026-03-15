@@ -67,6 +67,8 @@ export type {
   EntityType,
   CharacterPower,
   CharacterTechnique,
+  ProficiencyKind,
+  CharacterProficiency,
   CharacterCondition,
   ResourcePool,
   CombatBonuses,

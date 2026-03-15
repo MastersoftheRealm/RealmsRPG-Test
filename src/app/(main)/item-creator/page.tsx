@@ -155,7 +155,7 @@ function PropertyCard({
           <span className="font-medium text-text-primary truncate">{property.name}</span>
           <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
             {propIP > 0 && (
-              <span className="text-primary-600 dark:text-primary-400">
+              <span className="text-ip-text">
                 IP: {formatCost(propIP)}
               </span>
             )}
@@ -163,7 +163,7 @@ function PropertyCard({
               <span className="text-tp-text">TP: {formatCost(propTP)}</span>
             )}
             {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
-              <span className="text-tp-text">
+              <span className="text-currency-text">
                 C: {formatCost((property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl)}
               </span>
             )}
@@ -222,7 +222,7 @@ function PropertyCard({
                     </span>
                   )}
                   {property.op_1_c && (
-                    <span className="text-sm font-medium text-tp-text">
+                    <span className="text-sm font-medium text-currency-text">
                       C +{formatCost(property.op_1_c)}/level
                     </span>
                   )}
@@ -280,7 +280,7 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
         className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface-alt/80 transition-colors text-text-primary"
       >
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-tp-text" />
+          <Info className="w-4 h-4 text-ip-text" />
           <span className="font-medium text-text-primary">Rarity Reference</span>
         </div>
         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -313,11 +313,11 @@ function RarityReferenceTable({ currentIP }: { currentIP: number }) {
                       {r.name}
                     </span>
                     {currentRarity === r.name && (
-                      <span className="ml-1 text-xs text-tp-text">← Current</span>
+                      <span className="ml-1 text-xs text-ip-text">← Current</span>
                     )}
                   </td>
                   <td className="text-right py-1.5 text-text-secondary">{r.ipRange}</td>
-                  <td className="text-right py-1.5 text-tp-text">{r.baseCost.toLocaleString()}</td>
+                  <td className="text-right py-1.5 text-currency-text">{r.baseCost.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

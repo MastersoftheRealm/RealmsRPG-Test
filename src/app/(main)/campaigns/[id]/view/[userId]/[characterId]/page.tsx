@@ -335,8 +335,8 @@ function CampaignCharacterViewContent() {
                   }}
                   speciesTraitsFromCodex={[]}
   archetypeAbility={character.abilities?.[character.pow_abil as keyof typeof character.abilities] || 0}
-  unarmedProwess={character.unarmedProwess ?? 0}
-  onUnarmedProwessChange={() => {}}
+  proficiencies={character.proficiencies}
+  onProficienciesChange={() => {}}
   weight={character.weight}
   height={character.height}
   appearance={character.appearance}

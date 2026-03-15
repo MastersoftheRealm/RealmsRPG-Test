@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
@@ -29,10 +29,24 @@ function toNum(val: unknown): number | undefined {
   return Number.isNaN(n) ? undefined : n;
 }
 
+function parseJsonObject(val: unknown): Record<string, unknown> | undefined {
+  if (!val) return undefined;
+  if (typeof val === 'object' && val !== null) return val as Record<string, unknown>;
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val);
+      return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 /** DB row shape (snake_case from Supabase) */
 type Row = Record<string, unknown>;
 
-async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function fetchCodexFromClient(supabase: ReturnType<typeof createServiceRoleClient>) {
   const [
     { data: feats, error: eFeats },
     { data: skills, error: eSkills },
@@ -42,6 +56,7 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
     { data: properties, error: eProps },
     { data: equipment, error: eEquip },
     { data: archetypes, error: eArch },
+    { data: archetypeLevels, error: eArchLevels },
     { data: creatureFeats, error: eCreature },
     coreResult,
   ] = await Promise.all([
@@ -53,6 +68,7 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
     supabase.from('codex_properties').select('*'),
     supabase.from('codex_equipment').select('*'),
     supabase.from('codex_archetypes').select('*'),
+    supabase.from('codex_archetype_levels').select('*'),
     supabase.from('codex_creature_feats').select('*'),
     (async () => {
       const r = await supabase.from('core_rules').select('id, data');
@@ -68,8 +84,8 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
     return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
   }
 
-  const tableNames = ['codex_feats', 'codex_skills', 'codex_species', 'codex_traits', 'codex_parts', 'codex_properties', 'codex_equipment', 'codex_archetypes', 'codex_creature_feats'];
-  const errors = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eCreature];
+  const tableNames = ['codex_feats', 'codex_skills', 'codex_species', 'codex_traits', 'codex_parts', 'codex_properties', 'codex_equipment', 'codex_archetypes', 'codex_archetype_levels', 'codex_creature_feats'];
+  const errors = [eFeats, eSkills, eSpecies, eTraits, eParts, eProps, eEquip, eArch, eArchLevels, eCreature];
   errors.forEach((e, i) => {
     if (e && isTableMissing(e)) {
       console.warn('[Codex API] Table missing (use empty):', tableNames[i], e.message);
@@ -90,6 +106,7 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
     const propRows = ((isTableMissing(eProps) ? [] : properties) ?? []) as Row[];
     const equipRows = ((isTableMissing(eEquip) ? [] : equipment) ?? []) as Row[];
     const archRows = ((isTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
+    const archLevelRows = ((isTableMissing(eArchLevels) ? [] : archetypeLevels) ?? []) as Row[];
     const creatureRows = ((isTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
     const coreRows = coreRulesRows as Row[];
 
@@ -262,12 +279,91 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
       };
     });
 
-    const codexArchetypes = archRows.map((r) => ({
-      id: r.id,
-      name: r.name ?? '',
-      type: r.type ?? '',
-      description: r.description ?? '',
-    }));
+    const levelsByArchetype = new Map<string, Row[]>();
+    archLevelRows.forEach((levelRow) => {
+      const archetypeId = levelRow.archetype_id != null ? String(levelRow.archetype_id) : '';
+      if (!archetypeId) return;
+      const existing = levelsByArchetype.get(archetypeId) || [];
+      existing.push(levelRow);
+      levelsByArchetype.set(archetypeId, existing);
+    });
+
+    const codexArchetypes = archRows.map((r) => {
+      const archetypeId = String(r.id ?? '');
+      const levelRows = (levelsByArchetype.get(archetypeId) || [])
+        .map((entry) => ({
+          level: toNum(entry.level),
+          feats: toStrArray(entry.feats),
+          skills: toStrArray(entry.skills),
+          powers: toStrArray(entry.powers),
+          techniques: toStrArray(entry.techniques),
+          armaments: toStrArray(entry.armaments),
+          equipment: toStrArray(entry.equipment),
+          removeFeats: toStrArray(entry.remove_feats),
+          removePowers: toStrArray(entry.remove_powers),
+          removeTechniques: toStrArray(entry.remove_techniques),
+          removeArmaments: toStrArray(entry.remove_armaments),
+          notes: entry.notes ? String(entry.notes) : undefined,
+        }))
+        .filter((entry) => typeof entry.level === 'number')
+        .sort((a, b) => Number(a.level) - Number(b.level));
+
+      const level1FromColumns = {
+        feats: toStrArray(r.level1_feats),
+        skills: toStrArray(r.level1_skills),
+        powers: toStrArray(r.level1_powers),
+        techniques: toStrArray(r.level1_techniques),
+        armaments: toStrArray(r.level1_armaments),
+        equipment: toStrArray(r.level1_equipment),
+        recommendUnarmedProwess: r.level1_recommend_unarmed_prowess === true,
+        removeFeats: toStrArray(r.level1_remove_feats),
+        removePowers: toStrArray(r.level1_remove_powers),
+        removeTechniques: toStrArray(r.level1_remove_techniques),
+        removeArmaments: toStrArray(r.level1_remove_armaments),
+        notes: r.level1_notes ? String(r.level1_notes) : undefined,
+      };
+      const hasLevel1Columns = Object.values(level1FromColumns).some((value) => {
+        if (Array.isArray(value)) return value.length > 0;
+        return Boolean(value);
+      });
+
+      const legacyPath = parseJsonObject(r.path_data);
+      const level1FromLegacy =
+        legacyPath && typeof legacyPath.level1 === 'object' && legacyPath.level1 !== null
+          ? (legacyPath.level1 as Record<string, unknown>)
+          : undefined;
+
+      return {
+        id: r.id,
+        name: r.name ?? '',
+        type: r.type ?? '',
+        description: r.description ?? '',
+        archetype_ability: (r.archetype_ability as string | undefined) ?? undefined,
+        secondary_ability: (r.secondary_ability as string | undefined) ?? undefined,
+        power_prof_start: toNum(r.power_prof_start),
+        martial_prof_start: toNum(r.martial_prof_start),
+        power_prof_level5: toNum(r.power_prof_level5),
+        martial_prof_level5: toNum(r.martial_prof_level5),
+        path_data:
+          hasLevel1Columns || levelRows.length > 0
+            ? {
+                ...(hasLevel1Columns ? { level1: level1FromColumns } : {}),
+                ...(levelRows.length > 0 ? { levels: levelRows } : {}),
+              }
+            : legacyPath,
+        level1_feats: toStrArray(r.level1_feats),
+        level1_skills: toStrArray(r.level1_skills),
+        level1_powers: toStrArray(r.level1_powers),
+        level1_techniques: toStrArray(r.level1_techniques),
+        level1_armaments: toStrArray(r.level1_armaments),
+        level1_equipment: toStrArray(r.level1_equipment),
+        level1_remove_feats: toStrArray(r.level1_remove_feats),
+        level1_remove_powers: toStrArray(r.level1_remove_powers),
+        level1_remove_techniques: toStrArray(r.level1_remove_techniques),
+        level1_remove_armaments: toStrArray(r.level1_remove_armaments),
+        level1_notes: r.level1_notes ?? level1FromLegacy?.notes ?? '',
+      };
+    });
 
     const codexCreatureFeats = creatureRows.map((r) => {
       const pointsVal = toNum(r.feat_points);
@@ -313,7 +409,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const debug = url.searchParams.get('debug') === '1';
   try {
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const body = await fetchCodexFromClient(supabase);
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {

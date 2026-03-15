@@ -11,10 +11,12 @@ import type {
   CharacterDraft, 
   ArchetypeCategory, 
   AbilityName, 
-  Abilities 
+  Archetype,
+  Item,
 } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
-import { calculateMaxHealth, calculateMaxEnergy, getArchetypeAbilityScore } from '@/lib/game/calculations';
+import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import { buildRequiredProficiencies } from '@/lib/proficiencies';
 
 export type CreatorStep = 
   | 'archetype' 
@@ -57,6 +59,8 @@ interface CharacterCreatorState {
   // Draft updates
   updateDraft: (updates: Partial<CharacterDraft>) => void;
   setArchetype: (type: ArchetypeCategory, ability: AbilityName, martialAbility?: AbilityName) => void;
+  setCreationMode: (mode: 'forge' | 'path') => void;
+  setArchetypePath: (archetype: Archetype) => void;
   setSpecies: (speciesId: string, speciesName: string) => void;
   setMixedSpecies: (speciesA: { id: string; name: string }, speciesB: { id: string; name: string }) => void;
   setAncestry: (ancestryId: string, ancestryName: string, traits: string[]) => void;
@@ -65,8 +69,12 @@ interface CharacterCreatorState {
   // Reset
   resetCreator: () => void;
   
-  // Generate final character
-  getCharacter: () => Partial<Character>;
+  // Generate final character (pass part DBs so proficiencies get correct TP from codex)
+  getCharacter: (options?: {
+    powerPartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
+    techniquePartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
+    itemPropertiesDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number }>;
+  }) => Partial<Character>;
 }
 
 const initialDraft: CharacterDraft = {
@@ -149,10 +157,58 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         set({
           draft: {
             ...get().draft,
+            creationMode: 'forge',
             archetype,
             pow_abil: archetype.pow_abil,
             mart_abil: archetype.mart_abil,
+            archetypePathId: undefined,
           }
+        });
+      },
+
+      setCreationMode: (mode) => {
+        set({
+          draft: {
+            ...get().draft,
+            creationMode: mode,
+          },
+        });
+      },
+
+      setArchetypePath: (archetype) => {
+        const type = (archetype.type || 'power') as ArchetypeCategory;
+        const pathPowerProf = archetype.power_prof_start ?? (type === 'power' ? 2 : type === 'powered-martial' ? 1 : 0);
+        const pathMartialProf = archetype.martial_prof_start ?? (type === 'martial' ? 2 : type === 'powered-martial' ? 1 : 0);
+        const primaryAbility = archetype.archetype_ability;
+        const fallbackPowerAbility = archetype.pow_abil || archetype.ability || primaryAbility;
+        const fallbackMartialAbility = archetype.mart_abil || archetype.ability || primaryAbility;
+
+        set({
+          draft: {
+            ...get().draft,
+            creationMode: 'path',
+            archetype: {
+              id: archetype.id,
+              name: archetype.name,
+              type,
+              description: archetype.description,
+              archetype_ability: archetype.archetype_ability,
+              secondary_ability: archetype.secondary_ability,
+              power_prof_start: archetype.power_prof_start,
+              martial_prof_start: archetype.martial_prof_start,
+              power_prof_level5: archetype.power_prof_level5,
+              martial_prof_level5: archetype.martial_prof_level5,
+              path_data: archetype.path_data,
+              pow_abil: archetype.pow_abil,
+              mart_abil: archetype.mart_abil,
+              ability: archetype.ability,
+            },
+            archetypePathId: archetype.id,
+            pow_abil: fallbackPowerAbility,
+            mart_abil: fallbackMartialAbility,
+            pow_prof: pathPowerProf,
+            mart_prof: pathMartialProf,
+          },
         });
       },
       
@@ -234,7 +290,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         });
       },
       
-      getCharacter: () => {
+      getCharacter: (options) => {
         const { draft } = get();
         
         // Calculate health/energy using centralized formulas (calculations.ts)
@@ -266,15 +322,29 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           weapons,
           armor,
           items,
+          shields: inventory.filter(item => item.type === 'shield'),
           // Also keep original inventory for reference
           inventory,
         };
+
+        const proficiencies = buildRequiredProficiencies({
+          powers: (draft.powers as Character['powers']) || [],
+          techniques: (draft.techniques as Character['techniques']) || [],
+          weapons: weapons as Item[],
+          shields: equipment.shields as unknown as Item[],
+          armor: armor as unknown as Item[],
+          powerPartsDb: options?.powerPartsDb ?? [],
+          techniquePartsDb: options?.techniquePartsDb ?? [],
+          itemPropertiesDb: options?.itemPropertiesDb ?? [],
+        });
         
         return {
           name: draft.name || 'Unnamed Character',
           level,
           abilities,
           ...(archetype && { archetype }),
+          ...(draft.archetypePathId && { archetypePathId: draft.archetypePathId }),
+          ...(draft.creationMode && { creationMode: draft.creationMode }),
           ...(draft.pow_abil && { pow_abil: draft.pow_abil }),
           ...(draft.mart_abil && { mart_abil: draft.mart_abil }),
           // Proficiency allocation - set based on archetype type
@@ -307,6 +377,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           techniques: draft.techniques || [],
           equipment: equipment,
           unarmedProwess: draft.unarmedProwess ?? 0,
+          proficiencies,
           // Health/Energy current values (max is calculated from healthPoints + level + abilities)
           currentHealth: maxHealth,
           currentEnergy: maxEnergy,

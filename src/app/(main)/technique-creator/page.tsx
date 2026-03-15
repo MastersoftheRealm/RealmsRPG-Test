@@ -546,6 +546,31 @@ function TechniqueCreatorContent() {
     return calculateTechniqueCosts(damageParts, techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
+  // Section cost for Combat Configuration (weapon + action type + reaction)
+  const combatConfigCost = useMemo(() => {
+    const combatParts = mechanicParts.filter(
+      (mp) => mp.name !== 'Additional Damage' && mp.name !== 'Split Damage Dice'
+    );
+    return calculateTechniqueCosts(combatParts, techniqueParts);
+  }, [mechanicParts, techniqueParts]);
+
+  const weaponCost = useMemo(() => {
+    const weaponParts = mechanicParts.filter((mp) => mp.name === 'Add Weapon Attack');
+    return calculateTechniqueCosts(weaponParts, techniqueParts);
+  }, [mechanicParts, techniqueParts]);
+
+  const actionTypeCost = useMemo(() => {
+    const actionParts = mechanicParts.filter(
+      (mp) => mp.name === 'Quick or Free Action' || mp.name === 'Long Action'
+    );
+    return calculateTechniqueCosts(actionParts, techniqueParts);
+  }, [mechanicParts, techniqueParts]);
+
+  const reactionCost = useMemo(() => {
+    const reactionParts = mechanicParts.filter((mp) => mp.name === 'Reaction');
+    return calculateTechniqueCosts(reactionParts, techniqueParts);
+  }, [mechanicParts, techniqueParts]);
+
   // Actions
   const addPart = useCallback(() => {
     if (techniqueParts.length === 0) return;
@@ -866,12 +891,19 @@ function TechniqueCreatorContent() {
             title="Combat Configuration"
             collapsedSummary={combatConfigSummary}
             defaultExpanded={true}
+            rightSlot={<SectionCostBadge en={combatConfigCost.totalEnergy} tp={combatConfigCost.totalTP} />}
           >
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Weapon
-                </label>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <label className="block text-sm font-medium text-text-secondary">
+                    Weapon
+                  </label>
+                  <SectionCostBadge
+                    en={weaponCost.totalEnergy}
+                    tp={weaponCost.totalTP}
+                  />
+                </div>
                 <select
                   value={String(weapon.id)}
                   onChange={(e) => {
@@ -905,9 +937,15 @@ function TechniqueCreatorContent() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Action Type
-                </label>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <label className="block text-sm font-medium text-text-secondary">
+                    Action Type
+                  </label>
+                  <SectionCostBadge
+                    en={actionTypeCost.totalEnergy}
+                    tp={actionTypeCost.totalTP}
+                  />
+                </div>
                 <select
                   value={actionType}
                   onChange={(e) => setActionType(e.target.value)}
@@ -923,11 +961,16 @@ function TechniqueCreatorContent() {
               </div>
             </div>
             <div className="mt-4">
-              <Checkbox
-                checked={isReaction}
-                onChange={(e) => setIsReaction(e.target.checked)}
-                label="Can be used as a Reaction"
-              />
+              <div className="flex items-center justify-between gap-3">
+                <Checkbox
+                  checked={isReaction}
+                  onChange={(e) => setIsReaction(e.target.checked)}
+                  label="Can be used as a Reaction"
+                />
+                {isReaction && (
+                  <SectionCostBadge en={reactionCost.totalEnergy} tp={reactionCost.totalTP} />
+                )}
+              </div>
             </div>
           </CollapsibleSection>
 

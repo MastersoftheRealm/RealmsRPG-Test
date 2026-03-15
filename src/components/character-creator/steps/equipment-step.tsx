@@ -31,8 +31,11 @@ import type { SourceFilterValue } from '@/components/shared/filters/source-filte
 import { FilterSection } from '@/components/codex';
 import { Spinner, Button, EmptyState } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
-import { AlertCircle, Swords, Check } from 'lucide-react';
+import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';
+import { IconButton } from '@/components/ui';
 import type { Item } from '@/types';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 
 // List column definitions and grid (unified with Library/Codex); name column wider for readability
 const WEAPON_LIST_COLUMNS: ListColumn[] = [
@@ -58,6 +61,14 @@ const EQUIPMENT_LIST_COLUMNS: ListColumn[] = [
   { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
 ];
 const EQUIPMENT_LIST_GRID = '1.8fr 0.8fr 0.6fr 0.6fr';
+
+// Selected equipment summary — Name (with quantity stepper), Type, Cost; grid aligns with ListHeader
+const SELECTED_EQUIPMENT_COLUMNS: ListColumn[] = [
+  { key: 'name', label: 'Name', width: '1.6fr' },
+  { key: 'type', label: 'Type', width: '0.7fr', align: 'center' },
+  { key: 'cost', label: 'Cost', width: '0.6fr', align: 'right' },
+];
+const SELECTED_EQUIPMENT_GRID = '1.6fr 0.7fr 0.6fr';
 
 // Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
 const RIGHT_SLOT_WIDTH = '4.5rem';
@@ -85,7 +96,7 @@ interface UnifiedEquipmentItem {
   armor_value?: number;
   gold_cost: number;
   currency: number;
-  properties: string[];
+  properties: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
   rarity?: string;
   category?: string; // Equipment category for display
   source: 'library' | 'codex' | 'public'; // Track where item came from
@@ -103,7 +114,7 @@ interface SelectedItem {
   quantity: number;
   damage?: string | Array<{ amount?: number | string; size?: number | string; type?: string }>;
   armor?: number;
-  properties: string[];
+  properties: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }>;
 }
 
 export function EquipmentStep() {
@@ -119,6 +130,21 @@ export function EquipmentStep() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('public');
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
+  const [showFullEquipmentList, setShowFullEquipmentList] = useState(false);
+  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const recommendedArmamentRefs = useMemo(
+    () => new Set((pathData?.level1?.armaments || []).map((v: string) => String(v).toLowerCase())),
+    [pathData?.level1?.armaments]
+  );
+  const recommendedEquipmentRefs = useMemo(
+    () => new Set((pathData?.level1?.equipment || []).map((v: string) => String(v).toLowerCase())),
+    [pathData?.level1?.equipment]
+  );
+  const pathArmamentRecommendations = pathData?.level1?.armamentRecommendations ?? [];
+  const pathEquipmentRecommendations = pathData?.level1?.equipmentRecommendations ?? [];
+  const pathRecommendsUnarmedProwess = pathData?.level1?.recommendUnarmedProwess === true;
+
+  // Resolve path recommendations to full items (depends on allEquipment, so after it's defined)
 
   const { data: publicItems = [], isLoading: publicItemsLoading } = usePublicLibrary('items');
 
@@ -210,7 +236,20 @@ export function EquipmentStep() {
           armor_value: display.damageReduction || undefined,
           gold_cost: display.currencyCost,
           currency: display.currencyCost,
-          properties: display.proficiencies.map(p => p.name),
+          properties: (userItem.properties || []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
+            if (typeof prop === 'string') return prop;
+            const dbProp = itemProperties.find((p) =>
+              String(p.id) === String(prop.id) ||
+              String(p.name ?? '').toLowerCase() === String(prop.name ?? '').toLowerCase()
+            );
+            return {
+              id: prop.id,
+              name: prop.name,
+              op_1_lvl: prop.op_1_lvl,
+              base_tp: dbProp?.base_tp,
+              op_1_tp: dbProp?.op_1_tp,
+            };
+          }),
           rarity: display.rarity,
           source: 'library',
         });
@@ -230,7 +269,19 @@ export function EquipmentStep() {
           armor_value: item.armor_value,
           gold_cost: item.gold_cost || 0,
           currency: item.currency || item.gold_cost || 0,
-          properties: item.properties || [],
+          properties: (item.properties || []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
+            if (typeof prop === 'string') {
+              const dbProp = itemProperties?.find((p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase());
+              return {
+                name: prop,
+                id: dbProp?.id,
+                op_1_lvl: 0,
+                base_tp: dbProp?.base_tp,
+                op_1_tp: dbProp?.op_1_tp,
+              };
+            }
+            return prop as { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number };
+          }),
           rarity: item.rarity,
           category: equip.category,
           source: 'codex',
@@ -274,7 +325,30 @@ export function EquipmentStep() {
           armor_value: display.damageReduction || undefined,
           gold_cost: display.currencyCost,
           currency: display.currencyCost,
-          properties: display.proficiencies.map(p => p.name),
+          properties: (Array.isArray(pub.properties) ? pub.properties : []).map((prop: string | { id?: string | number; name?: string; op_1_lvl?: number }) => {
+            if (typeof prop === 'string') {
+              const dbProp = itemProperties?.find((p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase());
+              return {
+                name: prop,
+                id: dbProp?.id,
+                op_1_lvl: 0,
+                base_tp: dbProp?.base_tp,
+                op_1_tp: dbProp?.op_1_tp,
+              };
+            }
+            const typed = prop as { id?: string | number; name?: string; op_1_lvl?: number };
+            const dbProp = itemProperties?.find((p) =>
+              String(p.id) === String(typed.id) ||
+              String(p.name ?? '').toLowerCase() === String(typed.name ?? '').toLowerCase()
+            );
+            return {
+              id: typed.id,
+              name: typed.name,
+              op_1_lvl: typed.op_1_lvl ?? 0,
+              base_tp: dbProp?.base_tp,
+              op_1_tp: dbProp?.op_1_tp,
+            };
+          }),
           rarity: display.rarity,
           category: (pub.category as string) || (type === 'equipment' ? 'Equipment' : undefined),
           source: 'public',
@@ -284,6 +358,48 @@ export function EquipmentStep() {
 
     return items;
   }, [userItems, codexEquipment, publicItems, itemProperties]);
+
+  // Path recommendations: armaments = weapons, armor, shields; equipment = general gear. Resolve from user + codex + public (official) library.
+  const pathRecommendedItems = useMemo((): Array<{ item: UnifiedEquipmentItem; quantity: number }> => {
+    const out: Array<{ item: UnifiedEquipmentItem; quantity: number }> = [];
+    const seenIds = new Set<string>();
+    const findItem = (idOrName: string) => {
+      const norm = String(idOrName).toLowerCase().trim();
+      return allEquipment.find(
+        (e) =>
+          String(e.id).toLowerCase().trim() === norm ||
+          String(e.name ?? '').toLowerCase().trim() === norm
+      );
+    };
+    const pushIfNew = (item: UnifiedEquipmentItem, quantity: number) => {
+      const key = String(item.id).toLowerCase();
+      if (seenIds.has(key)) return;
+      seenIds.add(key);
+      out.push({ item, quantity });
+    };
+    pathArmamentRecommendations.forEach((rec) => {
+      const item = findItem(rec.id);
+      if (item) pushIfNew(item, rec.quantity);
+    });
+    pathEquipmentRecommendations.forEach((rec) => {
+      const item = findItem(rec.id);
+      if (item) pushIfNew(item, rec.quantity);
+    });
+    // Also resolve raw armaments/equipment refs in case they differ from parsed (e.g. legacy or alternate format)
+    (pathData?.level1?.armaments || []).forEach((ref: string) => {
+      const id = String(ref).includes(':') ? String(ref).split(':')[0].trim() : String(ref).trim();
+      if (!id) return;
+      const item = findItem(id);
+      if (item && !seenIds.has(String(item.id).toLowerCase())) pushIfNew(item, 1);
+    });
+    (pathData?.level1?.equipment || []).forEach((ref: string) => {
+      const id = String(ref).includes(':') ? String(ref).split(':')[0].trim() : String(ref).trim();
+      if (!id) return;
+      const item = findItem(id);
+      if (item && !seenIds.has(String(item.id).toLowerCase())) pushIfNew(item, 1);
+    });
+    return out;
+  }, [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations, pathData?.level1?.armaments, pathData?.level1?.equipment]);
 
   // Calculate starting currency - base 200 for level 1
   // For higher levels: 200 * 1.45^(level-1)
@@ -304,9 +420,7 @@ export function EquipmentStep() {
       quantity: item.quantity || 1,
       damage: item.damage,
       armor: item.armor,
-      properties: Array.isArray(item.properties) 
-        ? item.properties.map(p => typeof p === 'string' ? p : p.name) 
-        : [],
+      properties: Array.isArray(item.properties) ? item.properties : [],
     }));
   }, [draft.equipment?.inventory]);
 
@@ -341,48 +455,50 @@ export function EquipmentStep() {
     [filteredEquipment, equipmentSort]
   );
 
-  // Add item to inventory
-  const addItem = useCallback((item: UnifiedEquipmentItem) => {
+  // Add item to inventory with a specific quantity (used by path recommended chips and by addItem)
+  const addItemWithQuantity = useCallback((item: UnifiedEquipmentItem, qty: number) => {
+    if (qty < 1) return;
     const cost = item.gold_cost || item.currency || 0;
-    if (cost > remainingCurrency) return;
-    
+    const totalCost = cost * qty;
+    if (totalCost > remainingCurrency) return;
     const currentInventory: Item[] = draft.equipment?.inventory || [];
-    const existingIndex = currentInventory.findIndex(i => String(i.id) === item.id);
-    
+    const existingIndex = currentInventory.findIndex((i) => String(i.id) === item.id);
     if (existingIndex >= 0) {
-      // Increase quantity
       const updated = [...currentInventory];
+      const existingQty = updated[existingIndex].quantity || 1;
       updated[existingIndex] = {
         ...updated[existingIndex],
-        quantity: (updated[existingIndex].quantity || 1) + 1,
+        quantity: existingQty + qty,
       };
       updateDraft({
         equipment: {
           ...draft.equipment,
           inventory: updated,
-        }
+        },
       });
     } else {
-      // Add new item with quantity 1
       const newItem: Item = {
         id: item.id,
         name: item.name,
         type: item.type,
-        cost: cost,
-        quantity: 1,
+        cost,
+        quantity: qty,
         damage: item.damage,
         armor: item.armor_value,
-        properties: item.properties,
+        properties: item.properties as unknown as Item['properties'],
       };
-      
       updateDraft({
         equipment: {
           ...draft.equipment,
           inventory: [...currentInventory, newItem],
-        }
+        },
       });
     }
   }, [draft.equipment, remainingCurrency, updateDraft]);
+
+  const addItem = useCallback((item: UnifiedEquipmentItem) => {
+    addItemWithQuantity(item, 1);
+  }, [addItemWithQuantity]);
 
   // Remove item from inventory (decrease quantity or remove)
   const removeItem = useCallback((itemId: string) => {
@@ -423,6 +539,30 @@ export function EquipmentStep() {
     const item = selectedItems.find(i => i.id === itemId);
     return item?.quantity || 0;
   }, [selectedItems]);
+
+  // Add all path-recommended equipment at once; if called again, replace previous recommended set (no duplicates)
+  const addAllRecommendedEquipment = useCallback(() => {
+    if (pathRecommendedItems.length === 0) return;
+    const recommendedIds = new Set(pathRecommendedItems.map(({ item }) => String(item.id)));
+    const currentInventory: Item[] = draft.equipment?.inventory || [];
+    const otherItems = currentInventory.filter((i) => !recommendedIds.has(String(i.id)));
+    const recommendedEntries: Item[] = pathRecommendedItems.map(({ item, quantity }) => ({
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      cost: item.gold_cost ?? item.currency ?? 0,
+      quantity,
+      damage: item.damage,
+      armor: item.armor_value,
+      properties: item.properties as unknown as Item['properties'],
+    }));
+    updateDraft({
+      equipment: {
+        ...draft.equipment,
+        inventory: [...otherItems, ...recommendedEntries],
+      },
+    });
+  }, [pathRecommendedItems, draft.equipment, updateDraft]);
 
   // Save currency and proceed to next step
   const handleContinue = useCallback(() => {
@@ -470,32 +610,226 @@ export function EquipmentStep() {
         </div>
       </div>
 
-      {/* Selected Items Summary */}
-      {selectedItems.length > 0 && (
-        <div className="bg-surface-alt dark:bg-surface rounded-xl border border-border-light p-4 mb-6">
-          <h3 className="font-medium text-text-primary mb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
-          <div className="flex flex-wrap gap-2">
-            {selectedItems.map(item => (
-              <span
-                key={item.id}
-                className="px-3 py-1 bg-surface dark:bg-surface-alt border border-border-light rounded-full text-sm flex items-center gap-2 text-text-primary"
+      {draft.creationMode === 'path' && draft.archetype?.name && (
+        <PathHelpCard pathName={draft.archetype.name}>
+          Add recommended equipment below (weapons, armor, shields, and general gear) with one click, or get your own from the full list.
+        </PathHelpCard>
+      )}
+
+      {/* Path mode: recommended equipment = armaments (weapons, armor, shields) + general equipment from path. Show loading while public (official) library loads so recommended items can resolve. */}
+      {draft.creationMode === 'path' && !showFullEquipmentList && (pathRecommendedItems.length > 0 || (pathArmamentRecommendations.length + pathEquipmentRecommendations.length > 0 || (pathData?.level1?.armaments?.length ?? 0) + (pathData?.level1?.equipment?.length ?? 0) > 0)) && (
+        <div className="mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary">Recommended equipment</h3>
+              <p className="text-sm text-text-secondary mt-0.5">
+                {pathRecommendedItems.length > 0
+                  ? 'Weapons, armor, shields, and general equipment from your path. Click an item to add it, or add all at once below.'
+                  : publicItemsLoading
+                    ? 'Loading recommended equipment from the library…'
+                    : 'Recommended items from your path could not be found in the library. Add equipment from the list below.'}
+              </p>
+            </div>
+            {pathRecommendedItems.length > 0 && (
+              <Button
+                onClick={addAllRecommendedEquipment}
+                className="inline-flex items-center gap-2 shrink-0"
+                aria-label="Add all recommended equipment to inventory (replaces any previously added recommended items)"
               >
-                {item.quantity > 1 && <span className="font-bold text-primary-600 dark:text-primary-400">{item.quantity}×</span>}
-                {item.name}
-                <span className="text-tp-text dark:text-warning-400 text-xs">{item.cost * item.quantity}c</span>
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="hover:text-danger-500 dark:hover:text-danger-400 ml-1"
-                  aria-label={`Remove ${item.name}`}
+                <Check className="w-4 h-4" />
+                Add Recommended Equipment
+              </Button>
+            )}
+          </div>
+          {publicItemsLoading && pathRecommendedItems.length === 0 && (
+            <div className="flex items-center gap-2 py-4 text-text-secondary">
+              <Spinner className="w-5 h-5" />
+              <span>Loading recommended equipment…</span>
+            </div>
+          )}
+          {!publicItemsLoading && pathRecommendedItems.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {pathRecommendedItems.map(({ item, quantity }) => {
+                const cost = item.gold_cost || item.currency || 0;
+                const totalCost = cost * quantity;
+                const canAfford = totalCost <= remainingCurrency;
+                return (
+                  <button
+                    key={`${item.id}-${quantity}`}
+                    type="button"
+                    onClick={() => canAfford && addItemWithQuantity(item, quantity)}
+                    disabled={!canAfford}
+                    className={cn(
+                      'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px]',
+                      canAfford
+                        ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 text-primary-800 dark:text-primary-200 hover:bg-primary-100 dark:hover:bg-primary-900/50'
+                        : 'bg-surface-alt border-border-light text-text-muted dark:text-text-secondary cursor-not-allowed'
+                    )}
+                  >
+                    <span className="text-left">
+                      {item.name}
+                      {quantity > 1 ? ` ×${quantity}` : ''}
+                    </span>
+                    <span className="text-xs text-text-secondary flex-shrink-0">
+                      {totalCost}c
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Path simplified view: Unarmed Prowess section when path recommends it */}
+      {draft.creationMode === 'path' && !showFullEquipmentList && pathRecommendsUnarmedProwess && (
+        <div className="mb-6 border border-border-light rounded-lg p-4 bg-surface">
+          <h3 className="text-lg font-semibold text-text-primary mb-2">Unarmed Prowess</h3>
+          <p className="text-sm text-text-secondary mb-4">
+            Your path recommends Unarmed Prowess. Add it below if you want to use unarmed combat.
+          </p>
+          <div className="space-y-3">
+            {availableUnarmedLevels.map((prowessLevel) => {
+              const isAvailable = prowessLevel.charLevel <= (draft.level || 1);
+              const isSelected = currentUnarmedProwess >= prowessLevel.level;
+              const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
+              const canSelect = isAvailable && (currentUnarmedProwess === prowessLevel.level - 1 || isSelected);
+              return (
+                <div
+                  key={prowessLevel.level}
+                  className={cn(
+                    'flex items-center gap-4 p-3 rounded-lg border transition-all',
+                    isSelected ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600/50' : 'bg-surface-alt border-border-light',
+                    !isAvailable && 'opacity-50',
+                    canSelect && !isSelected && 'hover:border-primary-300 cursor-pointer'
+                  )}
+                  onClick={() => {
+                    if (!isAvailable) return;
+                    if (isSelected) setUnarmedProwessLevel(prowessLevel.level - 1);
+                    else if (currentUnarmedProwess === prowessLevel.level - 1) setUnarmedProwessLevel(prowessLevel.level);
+                  }}
                 >
-                  ×
-                </button>
-              </span>
-            ))}
+                  <div className={cn(
+                    'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
+                    isSelected ? 'bg-primary-600 text-white' : 'bg-surface border border-border-light'
+                  )}>
+                    {isSelected && <Check className="w-4 h-4" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-text-primary">{prowessLevel.name}</span>
+                    {!isAvailable && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-surface-alt text-text-secondary ml-2">
+                        Level {prowessLevel.charLevel}
+                      </span>
+                    )}
+                  </div>
+                  <div className={cn(
+                    'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
+                    isSelected ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                  )}>
+                    {tpCost} TP
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {currentUnarmedProwess > 0 && (
+            <div className="mt-4 pt-3 border-t border-border-light flex items-center justify-between">
+              <span className="text-text-secondary">Total Unarmed Prowess:</span>
+              <span className="font-bold text-primary-600">{unarmedProwessTPCost} TP</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {draft.creationMode === 'path' && !showFullEquipmentList && (
+        <div className="mb-6">
+          <Button
+            variant="secondary"
+            onClick={() => setShowFullEquipmentList(true)}
+            className="inline-flex items-center gap-2"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            Get Your Own Equipment
+          </Button>
+          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+            Browse weapons, armor, and gear from the full list.
+          </p>
+        </div>
+      )}
+
+      {/* Selected Equipment — GridListRow: name only in name prop, type/cost/qty in columns, quantity stepper via quantity + onQuantityChange */}
+      {selectedItems.length > 0 && (
+        <div className="bg-surface-alt dark:bg-surface rounded-xl border border-border-light overflow-hidden mb-6">
+          <h3 className="font-medium text-text-primary px-4 pt-4 pb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
+          <ListHeader
+            columns={SELECTED_EQUIPMENT_COLUMNS.map((c) => ({ ...c, align: (c.align as 'left' | 'center' | 'right') ?? 'left' }))}
+            gridColumns={SELECTED_EQUIPMENT_GRID}
+            rightSlotWidth={RIGHT_SLOT_WIDTH}
+            compact
+          />
+          <div className="space-y-1 pb-2">
+            {selectedItems.map((item) => {
+              const fullItem = allEquipment.find((e) => e.id === item.id);
+              const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+              const costTotal = item.cost * item.quantity;
+              return (
+                <GridListRow
+                  key={item.id}
+                  id={item.id}
+                  name={item.name}
+                  description={fullItem?.description || undefined}
+                  columns={[
+                    { key: 'type', value: typeLabel, align: 'center' as const },
+                    { key: 'cost', value: `${costTotal}c`, align: 'right' as const },
+                  ]}
+                  gridColumns={SELECTED_EQUIPMENT_GRID}
+                  quantity={item.quantity}
+                  onQuantityChange={(delta) => {
+                    if (delta > 0 && fullItem) {
+                      addItemWithQuantity(fullItem, delta);
+                    } else if (delta < 0) {
+                      for (let i = 0; i < -delta; i++) removeItem(item.id);
+                    }
+                  }}
+                  rightSlot={
+                    <IconButton
+                      variant="danger"
+                      size="sm"
+                      onClick={() => removeItem(item.id)}
+                      label={`Remove ${item.name}`}
+                    >
+                      <X className="w-4 h-4" />
+                    </IconButton>
+                  }
+                  compact
+                />
+              );
+            })}
           </div>
         </div>
       )}
 
+      {/* Full equipment list + tabs — hidden for path mode until "Get Your Own Equipment" is clicked */}
+      {(draft.creationMode !== 'path' || showFullEquipmentList) && (
+      <>
+      {/* Path mode: switch back to recommended equipment view */}
+      {draft.creationMode === 'path' && showFullEquipmentList && pathRecommendedItems.length > 0 && (
+        <div className="mb-4">
+          <Button
+            variant="secondary"
+            onClick={() => setShowFullEquipmentList(false)}
+            className="inline-flex items-center gap-2"
+            aria-label="Back to recommended equipment view"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back to recommended equipment
+          </Button>
+          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+            Return to the simplified view with path-recommended weapons, armor, shields, and equipment.
+          </p>
+        </div>
+      )}
       {/* Type Tabs */}
       <TabNavigation
         tabs={[
@@ -678,13 +1012,23 @@ export function EquipmentStep() {
                   const cost = item.gold_cost || item.currency || 0;
                   const quantity = getItemQuantity(item.id);
                   const canAfford = cost <= remainingCurrency;
+                  const isRecommendedArmament =
+                    recommendedArmamentRefs.has(String(item.id).toLowerCase()) ||
+                    recommendedArmamentRefs.has(String(item.name).toLowerCase());
+                  const isRecommendedEquipment =
+                    recommendedEquipmentRefs.has(String(item.id).toLowerCase()) ||
+                    recommendedEquipmentRefs.has(String(item.name).toLowerCase());
+                  const isPathRecommended = item.type === 'equipment' ? isRecommendedEquipment : isRecommendedArmament;
 
                   // No damage/rarity badges — damage (and armor DR) are columns; keep list clean
                   const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
+                  if (draft.creationMode === 'path' && isPathRecommended) {
+                    badges.push({ label: 'Path Recommended', color: 'blue' });
+                  }
 
                   // Build property chips
-                  const chips: ChipData[] = item.properties.map(prop => ({
-                    name: prop,
+                  const chips: ChipData[] = item.properties.map((prop) => ({
+                    name: typeof prop === 'string' ? prop : (prop.name || 'Property'),
                     category: 'tag' as const,
                   }));
 
@@ -782,6 +1126,8 @@ export function EquipmentStep() {
             </div>
           </div>
         </>
+      )}
+      </>
       )}
       
       <div className="flex justify-between">

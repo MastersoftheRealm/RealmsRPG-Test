@@ -88,6 +88,8 @@ export interface SkillRowProps {
   // ----- Special States -----
   /** Is this a species-granted skill? */
   isSpeciesSkill?: boolean;
+  /** Optional source label (e.g. archetype path name); shown like "(species)" but skill can be removed */
+  sourceLabel?: string;
   /** Is this skill locked (can't be edited)? */
   isLocked?: boolean;
   /** Is the skill unlocked/available? (for sub-skills that require base proficiency) */
@@ -129,6 +131,7 @@ export const SkillRow = memo(function SkillRow({
   showRollButton = false,
   onRoll,
   isSpeciesSkill = false,
+  sourceLabel,
   isLocked = false,
   isUnlocked = true,
   lockMessage,
@@ -171,7 +174,7 @@ export const SkillRow = memo(function SkillRow({
                 (isLocked || isSpeciesSkill) && 'opacity-70'
               )}
               title={isSpeciesSkill 
-                ? 'Species skill (locked)' 
+                ? 'Species Skill (locked)' 
                 : proficient 
                   ? 'Proficient (click to toggle)' 
                   : 'Not proficient (click to toggle)'
@@ -191,6 +194,9 @@ export const SkillRow = memo(function SkillRow({
           {isSpeciesSkill && (
             <span className="ml-1 text-xs text-text-muted dark:text-text-secondary">(species)</span>
           )}
+          {sourceLabel && !isSpeciesSkill && (
+            <span className="ml-1 text-xs text-text-muted dark:text-text-secondary">({sourceLabel})</span>
+          )}
         </td>
         
         {/* Ability */}
@@ -199,7 +205,7 @@ export const SkillRow = memo(function SkillRow({
             <select
               value={ability || abilityOptions[0]?.value || 'strength'}
               onChange={(e) => onAbilityChange(e.target.value)}
-              aria-label="Ability for skill"
+              aria-label="Ability for Skill"
               className="text-xs px-1 py-0.5 rounded border border-border-light bg-surface-alt text-text-secondary cursor-pointer"
               onClick={(e) => e.stopPropagation()}
             >
@@ -304,7 +310,7 @@ export const SkillRow = memo(function SkillRow({
                 variant="ghost"
                 size="sm"
                 onClick={() => !isSpeciesSkill && onRemove?.()}
-                label={isSpeciesSkill ? 'Species skill (cannot remove)' : 'Remove skill'}
+                label={isSpeciesSkill ? 'Species Skill (cannot remove)' : sourceLabel ? `Remove ${sourceLabel} Skill` : 'Remove Skill'}
                 disabled={isSpeciesSkill}
                 className={cn(
                   isSpeciesSkill
@@ -337,6 +343,9 @@ export const SkillRow = memo(function SkillRow({
             
             {isSpeciesSkill && (
               <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">(species)</span>
+            )}
+            {sourceLabel && !isSpeciesSkill && (
+              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">({sourceLabel})</span>
             )}
           </div>
           
@@ -395,6 +404,9 @@ export const SkillRow = memo(function SkillRow({
             </span>
             {isSpeciesSkill && (
               <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">(species)</span>
+            )}
+            {sourceLabel && !isSpeciesSkill && (
+              <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">({sourceLabel})</span>
             )}
           </div>
           

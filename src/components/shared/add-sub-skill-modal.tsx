@@ -212,13 +212,13 @@ export function AddSubSkillModal({
                 className="p-3 rounded-lg border border-border-light bg-surface-alt dark:bg-surface"
               >
                 <label className="block text-sm font-medium text-text-primary mb-2">
-                  Choose base skill for <span className="font-semibold">{skill.name}</span>:
+                  Choose base Skill for <span className="font-semibold">{skill.name}</span>:
                 </label>
                 <Select
                   value={anyBaseSkillSelections[skill.id] ?? ''}
                   onChange={(e) => handleBaseSkillSelect(skill.id, e.target.value)}
                   options={[
-                    { value: '', label: 'Select a base skill...' },
+                    { value: '', label: 'Select a base Skill...' },
                     ...allBaseSkills.map((s) => ({ value: s.id, label: s.name })),
                   ]}
                 />

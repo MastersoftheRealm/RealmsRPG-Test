@@ -19,8 +19,9 @@
  */
 
 import { useState, memo, ReactNode } from 'react';
-import { Edit, Copy, Zap, Check, Plus, AlertCircle, X, ChevronDown } from 'lucide-react';
+import { Edit, Copy, Check, Plus, AlertCircle, X, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCostDisplay } from '@/lib/game/creator-constants';
 import { Button, IconButton } from '@/components/ui';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
@@ -87,6 +88,8 @@ export interface GridListRowProps {
   description?: string;
   /** Column values to display in collapsed row */
   columns?: ColumnValue[];
+  /** Optional span per column (e.g. [3] = first column spans 3 grid columns). Use so description can span Uses/Recovery when they are empty. */
+  columnSpans?: (number | undefined)[];
   /** Grid template columns CSS (must match headers) */
   gridColumns?: string;
   
@@ -195,6 +198,7 @@ export const GridListRow = memo(function GridListRow({
   name,
   description,
   columns = [],
+  columnSpans,
   gridColumns,
   chips = [],
   chipsLabel = 'Details',
@@ -268,6 +272,19 @@ export const GridListRow = memo(function GridListRow({
     }
   };
 
+  // Prevent row expand when clicking buttons/links inside (avoids nested button hydration error and wrong UX).
+  // The row's clickable div has role="button", so we must only skip when the click is on a *different*
+  // interactive element (e.g. Edit, Delete, RollButton), not the row trigger itself.
+  const handleRowClickWithGuard = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const rowTrigger = target.closest?.('[data-grid-row-trigger]');
+    const interactive = target.closest?.('button, [role="button"], a, input, select, textarea');
+    if (interactive && interactive !== rowTrigger) return;
+    handleRowClick();
+  };
+
+  const isRowClickable = (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
+
   // Determine row styling based on state (equipped: no row green/checkmark — toggle is enough)
   const rowStyles = cn(
     'bg-surface transition-all rounded-lg border overflow-hidden',
@@ -300,15 +317,24 @@ export const GridListRow = memo(function GridListRow({
           </div>
         )}
         
-        {/* Clickable Row Content */}
-        <button
-          onClick={handleRowClick}
-          disabled={disabled && (!selectable || !showExpander)}
+        {/* Clickable Row Content - div not button to allow RollButton/other buttons inside without nesting */}
+        <div
+          data-grid-row-trigger
+          role={isRowClickable ? 'button' : undefined}
+          tabIndex={isRowClickable ? 0 : undefined}
+          onClick={isRowClickable ? handleRowClickWithGuard : undefined}
+          onKeyDown={isRowClickable ? (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleRowClick();
+            }
+          } : undefined}
           className={cn(
             'flex-1 text-left transition-colors min-h-[44px]',
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
             compact ? 'px-3 py-2' : 'px-4 py-3',
-            disabled && 'cursor-default'
+            disabled && 'cursor-default',
+            isRowClickable && 'cursor-pointer'
           )}
           style={gridStyle}
         >
@@ -360,11 +386,12 @@ export const GridListRow = memo(function GridListRow({
           </div>
           
           {/* Data columns */}
-          {columns.map((col) => (
+          {columns.map((col, colIndex) => (
             <div
               key={col.key}
+              style={columnSpans?.[colIndex] ? { gridColumn: `span ${columnSpans[colIndex]}` } : undefined}
               className={cn(
-                'text-sm truncate text-left',
+                'text-sm truncate text-left min-w-0',
                 col.hideOnMobile !== false && 'hidden lg:block',
                 col.highlight ? 'text-primary-600 font-medium' : 'text-text-primary',
                 col.align === 'center' && 'text-center',
@@ -397,7 +424,7 @@ export const GridListRow = memo(function GridListRow({
             </div>
           )}
 
-        </button>
+        </div>
         
         {/* Right Slot - use button, roll buttons, quantity, etc. (before delete so X is at far right) */}
         {rightSlot && (
@@ -534,9 +561,8 @@ export const GridListRow = memo(function GridListRow({
               {/* Total Cost */}
               {totalCost !== undefined && totalCost > 0 && (
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border border-info-200 dark:border-info-800/50">
-                    <Zap className="w-4 h-4" />
-                    Total {costLabel}: {totalCost}
+                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400 border border-info-200 dark:border-info-800/50">
+                    Total {costLabel}: {formatCostDisplay(totalCost)}
                   </span>
                 </div>
               )}
@@ -591,7 +617,7 @@ export const GridListRow = memo(function GridListRow({
                                 {hasCost && (
                                   <>
                                     <span className="opacity-40">|</span>
-                                    <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                    <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {typeof chip.cost === 'number' ? formatCostDisplay(chip.cost) : chip.cost}</span>
                                   </>
                                 )}
                               </span>
@@ -666,7 +692,7 @@ export const GridListRow = memo(function GridListRow({
                               {hasCost && (
                                 <>
                                   <span className="opacity-40">|</span>
-                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {chip.cost}</span>
+                                  <span className="text-xs font-semibold text-text-secondary dark:text-text-primary">{chip.costLabel || costLabel}: {typeof chip.cost === 'number' ? formatCostDisplay(chip.cost) : chip.cost}</span>
                                 </>
                               )}
                             </span>

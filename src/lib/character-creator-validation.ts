@@ -5,10 +5,11 @@
  * Used by: Finalize step (aggregate all), Tab bar (warn when leaving step with issues).
  */
 
-import type { CharacterDraft } from '@/types';
+import type { CharacterDraft, CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { CreatorStep } from '@/stores/character-creator-store';
 import { calculateAbilityPoints, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
 import { calculateSimpleSkillPointsSpent } from '@/lib/game/skill-allocation';
+import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
 
 const BASE_HE_POOL = 18; // 18 at level 1, +2 per level
 
@@ -181,17 +182,37 @@ export function getValidationIssuesForStep(
     }
 
     case 'equipment': {
-      const highestAbility = draft.abilities
-        ? Math.max(...Object.values(draft.abilities).filter((v): v is number => typeof v === 'number'), 0)
-        : 0;
-      const trainingPoints = calculateTrainingPoints(level, highestAbility);
-      const equipmentTP = draft.trainingPointsSpent || 0;
-      const remainingTP = trainingPoints - equipmentTP;
+      const abilities = draft.abilities || {};
+      const getAbility = (key: string | undefined): number =>
+        key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
+      const highestAbility = Math.max(
+        ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
+        0
+      );
+      const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+      const trainingPoints = calculateTrainingPoints(level, archetypeAbility);
+
+      const inventory = draft.equipment?.inventory || [];
+      const weapons = inventory.filter((item) => item.type === 'weapon');
+      const shields = inventory.filter((item) => item.type === 'shield');
+      const armor = inventory.filter((item) => item.type === 'armor');
+      const requiredProficiencies = buildRequiredProficiencies({
+        powers: (draft.powers || []) as CharacterPower[],
+        techniques: (draft.techniques || []) as CharacterTechnique[],
+        weapons: weapons as Item[],
+        shields: shields as Item[],
+        armor: armor as Item[],
+      });
+      const spentTP = dedupeHighestProficiencies(requiredProficiencies).reduce(
+        (sum, prof) => sum + calculateProficiencyTP(prof),
+        0
+      );
+      const remainingTP = trainingPoints - spentTP;
       if (remainingTP < 0) {
         issues.push({
           emoji: '🎯',
-          message: `You've overspent training points by ${Math.abs(remainingTP)}.`,
-          severity: 'error',
+          message: `Proficiency TP is over the limit by ${Math.abs(remainingTP)} (${spentTP}/${trainingPoints}).`,
+          severity: 'warning',
         });
       }
       const baseCurrency = 200;

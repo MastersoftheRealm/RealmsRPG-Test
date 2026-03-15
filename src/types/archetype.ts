@@ -31,12 +31,59 @@ export interface ArchetypeConfig {
   trainingPointBonus: number;
 }
 
+/** Recommended item with optional quantity (for path armaments/equipment) */
+export interface PathItemRecommendation {
+  id: string;
+  quantity: number;
+}
+
+export interface ArchetypePathRecommendations {
+  feats?: string[];
+  skills?: string[];
+  powers?: string[];
+  techniques?: string[];
+  armaments?: string[];
+  equipment?: string[];
+  /** Parsed armaments with quantity (id or "id:qty" from armaments array) */
+  armamentRecommendations?: PathItemRecommendation[];
+  /** Parsed equipment with quantity */
+  equipmentRecommendations?: PathItemRecommendation[];
+  /** When true, path recommends Unarmed Prowess proficiency (equipment step simplified view) */
+  recommendUnarmedProwess?: boolean;
+  removeFeats?: string[];
+  removePowers?: string[];
+  removeTechniques?: string[];
+  removeArmaments?: string[];
+  notes?: string;
+}
+
+export interface ArchetypePathLevel extends ArchetypePathRecommendations {
+  level: number;
+}
+
+export interface ArchetypePathData {
+  level1?: ArchetypePathRecommendations & {
+    proficiency?: {
+      power?: number;
+      martial?: number;
+    };
+  };
+  levels?: ArchetypePathLevel[];
+}
+
 /** Full archetype definition from database */
 export interface Archetype {
   id: string;
   name: string;
   type: ArchetypeCategory;
   description?: string;
+  archetype_ability?: AbilityName;
+  secondary_ability?: AbilityName;
+  power_prof_start?: number;
+  martial_prof_start?: number;
+  power_prof_level5?: number;
+  martial_prof_level5?: number;
+  path_data?: ArchetypePathData;
   pow_abil?: AbilityName;
   mart_abil?: AbilityName;
   ability?: AbilityName; // Legacy field
@@ -73,5 +120,12 @@ export interface CharacterArchetype {
   mart_abil?: AbilityName;
   /** @deprecated Use Character.pow_abil instead. */
   ability?: AbilityName;
+  archetype_ability?: AbilityName;
+  secondary_ability?: AbilityName;
+  power_prof_start?: number;
+  martial_prof_start?: number;
+  power_prof_level5?: number;
+  martial_prof_level5?: number;
+  path_data?: ArchetypePathData;
   selectedFeats?: string[];
 }

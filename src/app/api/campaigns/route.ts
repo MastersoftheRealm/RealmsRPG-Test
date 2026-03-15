@@ -70,16 +70,24 @@ export async function GET(request: NextRequest) {
       .in('id', allIds)
       .order('updated_at', { ascending: false });
 
-    const campaigns: Campaign[] = [];
-    for (const row of campaignRows ?? []) {
-      const r = row as CampaignRow;
-      const { data: members } = await supabase
-        .from('campaign_members')
-        .select('user_id')
-        .eq('campaign_id', r.id);
-      const memberIds = (members ?? []).map((m: { user_id: string }) => m.user_id);
-      campaigns.push(rowToCampaign(r, memberIds));
+    // Single query for all members (avoid N+1)
+    const { data: allMemberRows } = await supabase
+      .from('campaign_members')
+      .select('campaign_id, user_id')
+      .in('campaign_id', allIds);
+    const membersByCampaignId = new Map<string, string[]>();
+    for (const m of allMemberRows ?? []) {
+      const row = m as { campaign_id: string; user_id: string };
+      const list = membersByCampaignId.get(row.campaign_id) ?? [];
+      list.push(row.user_id);
+      membersByCampaignId.set(row.campaign_id, list);
     }
+
+    const campaigns: Campaign[] = (campaignRows ?? []).map((row) => {
+      const r = row as CampaignRow;
+      const memberIds = membersByCampaignId.get(r.id) ?? [];
+      return rowToCampaign(r, memberIds);
+    });
 
     if (full) {
       return NextResponse.json(campaigns);

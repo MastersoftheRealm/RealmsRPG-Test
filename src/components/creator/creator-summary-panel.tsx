@@ -92,7 +92,7 @@ const COST_STAT_COLORS: Record<CostStat['color'], { bg: string; text: string }> 
   energy: { bg: 'bg-energy-light', text: 'text-energy-text' },
   tp: { bg: 'bg-tp-light', text: 'text-tp-text' },
   health: { bg: 'bg-health-light', text: 'text-health' },
-  currency: { bg: 'bg-tp-light', text: 'text-tp-text' },
+  currency: { bg: 'bg-currency-light', text: 'text-currency-text' },
 };
 
 function getVariantClasses(variant: SummaryItem['variant'], remaining: number): string {

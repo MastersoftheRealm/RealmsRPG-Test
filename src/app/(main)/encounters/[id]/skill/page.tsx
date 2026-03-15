@@ -46,11 +46,11 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
           currentFailures: 0,
           additionalSuccesses: 0,
           additionalFailures: 0,
+          requiredSuccesses: 1,
+          maxFailures: 3,
         };
       } else {
         const sk = enc.skillEncounter as unknown as Record<string, unknown>;
-        delete sk.requiredSuccesses;
-        delete sk.requiredFailures;
         const participants = (sk.participants as SkillParticipant[]) || [];
         const ds = (sk.difficultyScore as number) ?? 10;
         sk.participants = participants.map((p) => {
@@ -59,11 +59,18 @@ function SkillEncounterContent({ params }: { params: Promise<{ id: string }> }) 
             p.rollValue != null &&
             (p.successCount == null && p.failureCount == null)
           ) {
-            const { successes, failures } = computeSkillRollResult(p.rollValue, ds);
+            const { successes, failures } = computeSkillRollResult(
+              p.rollValue + (p.rmBonus ?? 0),
+              ds
+            );
             return { ...p, successCount: successes, failureCount: failures };
           }
           return p;
         });
+        if (sk.additionalSuccesses == null) sk.additionalSuccesses = 0;
+        if (sk.additionalFailures == null) sk.additionalFailures = 0;
+        if (sk.requiredSuccesses == null) sk.requiredSuccesses = Math.max(1, participants.length + 1);
+        if (sk.maxFailures == null) sk.maxFailures = 3;
       }
       setNameInput(enc.name || '');
       setEncounter(enc);

@@ -33,6 +33,7 @@ import {
   useToast,
 } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { getEffectivePortrait } from '@/lib/portrait';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
 import { createCampaignAction, joinCampaignAction } from './actions';
 import type { CampaignSummary } from '@/types/campaign';
@@ -459,17 +460,11 @@ function JoinCampaignTab({
                 onChange={() => setSelectedCharacterId(c.id)}
                 className="sr-only"
               />
-              {c.portrait ? (
-                <img
-                  src={c.portrait}
-                  alt=""
-                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-lg bg-primary-800 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                  {c.name.charAt(0)}
-                </div>
-              )}
+              <img
+                src={getEffectivePortrait(c.portrait)}
+                alt=""
+                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+              />
               <div className="min-w-0 flex-1">
                 <span className="font-medium text-text-primary">{c.name}</span>
                 <span className="block text-sm text-text-muted dark:text-text-secondary">
