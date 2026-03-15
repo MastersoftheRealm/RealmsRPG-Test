@@ -243,13 +243,17 @@ export function AdminArchetypesTab() {
   );
 
   type CodexFeatLike = { id?: string; name?: string; feat_lvl?: number; base_feat_id?: string; lvl_req?: number };
+  const toLeveledFeatLike = (f: CodexFeatLike) => ({ ...f, id: f.id ?? '' });
   const featOptions = useMemo<SelectionOption[]>(
     () =>
       (codexFeats as CodexFeatLike[])
-        .map((feat) => ({
-          value: String(feat.id ?? ''),
-          label: formatFeatName(feat) || String(feat.id ?? ''),
-        }))
+        .map((feat) => {
+          const normalized = toLeveledFeatLike(feat);
+          return {
+            value: String(normalized.id),
+            label: formatFeatName(normalized) || String(normalized.id),
+          };
+        })
         .filter((feat) => feat.value && feat.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
     [codexFeats]
@@ -260,13 +264,16 @@ export function AdminArchetypesTab() {
         .filter((feat) => {
           const lvlReq = feat.lvl_req;
           if (lvlReq != null && lvlReq > pathLevel) return false;
-          if (pathLevel === 1) return getFeatLevel(feat) === 1;
+          if (pathLevel === 1) return getFeatLevel(toLeveledFeatLike(feat)) === 1;
           return true;
         })
-        .map((feat) => ({
-          value: String(feat.id ?? ''),
-          label: formatFeatName(feat) || String(feat.id ?? ''),
-        }))
+        .map((feat) => {
+          const normalized = toLeveledFeatLike(feat);
+          return {
+            value: String(normalized.id),
+            label: formatFeatName(normalized) || String(normalized.id),
+          };
+        })
         .filter((o) => o.value && o.label)
         .sort((a, b) => a.label.localeCompare(b.label));
     },

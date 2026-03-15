@@ -171,7 +171,7 @@ export function PowersStep() {
             id: power.docId ?? power.id,
             name: power.name,
             description: power.description,
-            parts: power.parts ?? [],
+            parts: (power.parts ?? []).map((p) => ({ ...p, id: p.id != null ? String(p.id) : undefined })),
           });
           currentPowerIds.add(id);
           powersUpdated = true;
@@ -186,7 +186,7 @@ export function PowersStep() {
             id: tech.docId ?? tech.id,
             name: tech.name,
             description: tech.description,
-            parts: tech.parts ?? [],
+            parts: (tech.parts ?? []).map((p) => ({ ...p, id: p.id != null ? String(p.id) : undefined })),
           });
           currentTechniqueIds.add(id);
           techniquesUpdated = true;
