@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { SectionHeader, SearchInput, LoadingState, ErrorDisplay as ErrorState, GridListRow, ListEmptyState as EmptyState } from '@/components/shared';
 import { Modal, Button, Input } from '@/components/ui';
 import { ChipSelect } from '@/components/shared';
@@ -10,9 +10,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 
 const COPY_NAME_SUFFIX = ' copy';
 const ABILITY_OPTIONS = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
+
+type PathItemEntry = { id: string; quantity: number };
 
 type PathLevelForm = {
   rowId: string;
@@ -23,12 +26,32 @@ type PathLevelForm = {
   techniques: string[];
   armaments: string[];
   equipment: string[];
+  /** Level 1 only: armaments with quantity for path recommended gear */
+  armamentEntries: PathItemEntry[];
+  /** Level 1 only: equipment with quantity for path recommended gear */
+  equipmentEntries: PathItemEntry[];
+  /** Level 1 only: recommend Unarmed Prowess proficiency in equipment step */
+  recommendUnarmedProwess: boolean;
   removeFeats: string[];
   removePowers: string[];
   removeTechniques: string[];
   removeArmaments: string[];
   notes: string;
 };
+
+function parseIdQuantityStrings(arr: string[]): PathItemEntry[] {
+  return arr.map((s) => {
+    const colon = s.indexOf(':');
+    if (colon < 0) return { id: s.trim(), quantity: 1 };
+    const id = s.slice(0, colon).trim();
+    const q = parseInt(s.slice(colon + 1).trim(), 10);
+    return { id, quantity: Number.isFinite(q) && q >= 1 ? q : 1 };
+  }).filter((e) => e.id.length > 0);
+}
+
+function toIdQuantityStrings(entries: PathItemEntry[]): string[] {
+  return entries.map((e) => (e.quantity > 1 ? `${e.id}:${e.quantity}` : e.id));
+}
 
 type SelectionOption = { value: string; label: string };
 
@@ -94,6 +117,9 @@ function makeLevelRow(level = 2): PathLevelForm {
     techniques: [],
     armaments: [],
     equipment: [],
+    armamentEntries: [],
+    equipmentEntries: [],
+    recommendUnarmedProwess: false,
     removeFeats: [],
     removePowers: [],
     removeTechniques: [],
@@ -107,6 +133,10 @@ function toLevelForm(
   level = 2,
   optionsByKey?: Partial<Record<keyof Omit<PathLevelForm, 'rowId' | 'level' | 'notes'>, SelectionOption[]>>
 ): PathLevelForm {
+  const rawArmaments = Array.isArray(raw.armaments) ? (raw.armaments as string[]).map(String) : toSelectionArray(raw.armaments);
+  const rawEquipment = Array.isArray(raw.equipment) ? (raw.equipment as string[]).map(String) : toSelectionArray(raw.equipment);
+  const armamentEntries = parseIdQuantityStrings(rawArmaments);
+  const equipmentEntries = parseIdQuantityStrings(rawEquipment);
   return {
     rowId: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     level: Number(raw.level ?? level) || level,
@@ -114,8 +144,11 @@ function toLevelForm(
     skills: resolveSelectedValues(toSelectionArray(raw.skills), optionsByKey?.skills ?? []),
     powers: resolveSelectedValues(toSelectionArray(raw.powers), optionsByKey?.powers ?? []),
     techniques: resolveSelectedValues(toSelectionArray(raw.techniques), optionsByKey?.techniques ?? []),
-    armaments: resolveSelectedValues(toSelectionArray(raw.armaments), optionsByKey?.armaments ?? []),
-    equipment: resolveSelectedValues(toSelectionArray(raw.equipment), optionsByKey?.equipment ?? []),
+    armaments: armamentEntries.map((e) => e.id),
+    equipment: equipmentEntries.map((e) => e.id),
+    armamentEntries,
+    equipmentEntries,
+    recommendUnarmedProwess: raw.recommendUnarmedProwess === true,
     removeFeats: resolveSelectedValues(toSelectionArray(raw.removeFeats), optionsByKey?.removeFeats ?? []),
     removePowers: resolveSelectedValues(toSelectionArray(raw.removePowers), optionsByKey?.removePowers ?? []),
     removeTechniques: resolveSelectedValues(toSelectionArray(raw.removeTechniques), optionsByKey?.removeTechniques ?? []),
@@ -131,8 +164,13 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
   const skills = dedupeStrings(level.skills);
   const powers = dedupeStrings(level.powers);
   const techniques = dedupeStrings(level.techniques);
-  const armaments = dedupeStrings(level.armaments);
-  const equipment = dedupeStrings(level.equipment);
+  const isLevel1 = !includeLevel;
+  const armaments = isLevel1 && level.armamentEntries?.length
+    ? toIdQuantityStrings(level.armamentEntries)
+    : dedupeStrings(level.armaments);
+  const equipment = isLevel1 && level.equipmentEntries?.length
+    ? toIdQuantityStrings(level.equipmentEntries)
+    : dedupeStrings(level.equipment);
   const removeFeats = dedupeStrings(level.removeFeats);
   const removePowers = dedupeStrings(level.removePowers);
   const removeTechniques = dedupeStrings(level.removeTechniques);
@@ -148,6 +186,7 @@ function buildLevelPayload(level: PathLevelForm, includeLevel: boolean): Record<
   if (removeTechniques.length) payload.removeTechniques = removeTechniques;
   if (removeArmaments.length) payload.removeArmaments = removeArmaments;
   if (level.notes.trim()) payload.notes = level.notes.trim();
+  if (isLevel1 && (level as PathLevelForm).recommendUnarmedProwess) payload.recommendUnarmedProwess = true;
   return payload;
 }
 
@@ -203,14 +242,37 @@ export function AdminArchetypesTab() {
       (a.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
+  type CodexFeatLike = { id?: string; name?: string; feat_lvl?: number; base_feat_id?: string; lvl_req?: number };
   const featOptions = useMemo<SelectionOption[]>(
     () =>
-      (codexFeats as Array<{ id?: string; name?: string }>)
-        .map((feat) => ({ value: String(feat.id ?? ''), label: String(feat.name ?? feat.id ?? '') }))
+      (codexFeats as CodexFeatLike[])
+        .map((feat) => ({
+          value: String(feat.id ?? ''),
+          label: formatFeatName(feat) || String(feat.id ?? ''),
+        }))
         .filter((feat) => feat.value && feat.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
     [codexFeats]
   );
+  const getFeatOptionsForLevel = useCallback(
+    (pathLevel: number): SelectionOption[] => {
+      return (codexFeats as CodexFeatLike[])
+        .filter((feat) => {
+          const lvlReq = feat.lvl_req;
+          if (lvlReq != null && lvlReq > pathLevel) return false;
+          if (pathLevel === 1) return getFeatLevel(feat) === 1;
+          return true;
+        })
+        .map((feat) => ({
+          value: String(feat.id ?? ''),
+          label: formatFeatName(feat) || String(feat.id ?? ''),
+        }))
+        .filter((o) => o.value && o.label)
+        .sort((a, b) => a.label.localeCompare(b.label));
+    },
+    [codexFeats]
+  );
+  const featOptionsLevel1 = useMemo(() => getFeatOptionsForLevel(1), [getFeatOptionsForLevel]);
 
   const skillOptions = useMemo<SelectionOption[]>(
     () =>
@@ -339,10 +401,22 @@ export function AdminArchetypesTab() {
     const checkField = (key: PathSelectionKey, label: string) => {
       const options = optionsByField[key];
       const knownIds = new Set(options.map((opt) => opt.value));
-      const invalidIds = levelForm[key].filter((id) => !knownIds.has(id));
+      const ids = levelForm[key].filter(Boolean);
+      const invalidIds = ids.filter((id) => !knownIds.has(id));
       if (invalidIds.length) {
         const prettyLabels = getSelectedLabels(invalidIds, options);
         unknowns.push(`${labelPrefix}${label}: ${prettyLabels.join(', ')}`);
+      }
+    };
+
+    const checkEntries = (entries: PathItemEntry[], label: string) => {
+      const options = entries.length && label === 'Armaments' ? optionsByField.armaments : optionsByField.equipment;
+      if (!options) return;
+      const knownIds = new Set(options.map((opt) => opt.value));
+      const invalid = entries.filter((e) => !knownIds.has(e.id));
+      if (invalid.length) {
+        const pretty = invalid.map((e) => getSelectedLabels([e.id], options).join(', ') || e.id);
+        unknowns.push(`${labelPrefix}${label}: ${pretty.join(', ')}`);
       }
     };
 
@@ -350,8 +424,10 @@ export function AdminArchetypesTab() {
     checkField('skills', 'Skills');
     checkField('powers', 'Powers');
     checkField('techniques', 'Techniques');
-    checkField('armaments', 'Armaments');
-    checkField('equipment', 'Equipment');
+    if (levelForm.armamentEntries?.length) checkEntries(levelForm.armamentEntries, 'Armaments');
+    else checkField('armaments', 'Armaments');
+    if (levelForm.equipmentEntries?.length) checkEntries(levelForm.equipmentEntries, 'Equipment');
+    else checkField('equipment', 'Equipment');
     checkField('removeFeats', 'Remove Feats');
     checkField('removePowers', 'Remove Powers');
     checkField('removeTechniques', 'Remove Techniques');
@@ -518,6 +594,7 @@ export function AdminArchetypesTab() {
       level1_techniques: toCsv(finalLevel1.techniques),
       level1_armaments: toCsv(finalLevel1.armaments),
       level1_equipment: toCsv(finalLevel1.equipment),
+      level1_recommend_unarmed_prowess: finalLevel1.recommendUnarmedProwess === true,
       level1_remove_feats: toCsv(finalLevel1.removeFeats),
       level1_remove_powers: toCsv(finalLevel1.removePowers),
       level1_remove_techniques: toCsv(finalLevel1.removeTechniques),
@@ -542,6 +619,7 @@ export function AdminArchetypesTab() {
     setSaving(false);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -556,6 +634,7 @@ export function AdminArchetypesTab() {
     const result = await deleteCodexDoc('codex_archetypes', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       closeModal();
     } else {
       alert(result.error);
@@ -570,6 +649,7 @@ export function AdminArchetypesTab() {
     const result = await deleteCodexDoc('codex_archetypes', id);
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
       setPendingDeleteId(null);
     } else {
       alert(result.error);
@@ -754,13 +834,18 @@ export function AdminArchetypesTab() {
 
             <div className="rounded-md border border-border-light bg-surface-alt p-3 space-y-2">
               <h4 className="text-sm font-medium text-text-primary">Level 1 Recommendations</h4>
+              <p className="text-xs text-text-muted dark:text-text-secondary">
+                Only level 1 feats can be recommended at level 1. For each progression level, only feats with level requirement ≤ that level are shown.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {selectionFieldConfig.map((field) => (
+                {selectionFieldConfig.filter((f) => f.key !== 'armaments' && f.key !== 'equipment').map((field) => {
+                  const options = field.key === 'feats' ? featOptionsLevel1 : optionsByField[field.key];
+                  return (
                   <ChipSelect
                     key={`level1-${field.key}`}
                     label={field.label}
                     placeholder={field.placeholder}
-                    options={optionsByField[field.key].map((option) => ({
+                    options={options.map((option) => ({
                       value: option.value,
                       label: option.label,
                     }))}
@@ -784,8 +869,130 @@ export function AdminArchetypesTab() {
                       }))
                     }
                   />
-                ))}
+                  );
+                })}
               </div>
+              {/* Level 1: Armaments & Equipment with quantity */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-border-light">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-text-secondary">Armaments (recommended qty)</label>
+                  <ChipSelect
+                    label="Add armament"
+                    placeholder="Select armament"
+                    options={armamentOptions.map((o) => ({ value: o.value, label: o.label }))}
+                    selectedValues={[]}
+                    onSelect={(value) => {
+                      if (form.level1Path.armamentEntries.some((e) => e.id === value)) return;
+                      setForm((prev) => ({
+                        ...prev,
+                        level1Path: {
+                          ...prev.level1Path,
+                          armamentEntries: [...prev.level1Path.armamentEntries, { id: value, quantity: 1 }],
+                        },
+                      }));
+                    }}
+                    onRemove={() => {}}
+                  />
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {form.level1Path.armamentEntries.map((entry, idx) => {
+                      const label = armamentOptions.find((o) => o.value === entry.id)?.label ?? entry.id;
+                      return (
+                        <div key={`${entry.id}-${idx}`} className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1">
+                          <span className="text-sm truncate max-w-[120px]">{label}</span>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={String(entry.quantity)}
+                            onChange={(e) => {
+                              const q = Math.max(1, parseInt(e.target.value, 10) || 1);
+                              setForm((prev) => ({
+                                ...prev,
+                                level1Path: {
+                                  ...prev.level1Path,
+                                  armamentEntries: prev.level1Path.armamentEntries.map((e, i) =>
+                                    i === idx ? { ...e, quantity: q } : e
+                                  ),
+                                },
+                              }));
+                            }}
+                            className="w-14 text-center"
+                          />
+                          <IconButton variant="ghost" size="sm" onClick={() => setForm((prev) => ({ ...prev, level1Path: { ...prev.level1Path, armamentEntries: prev.level1Path.armamentEntries.filter((_, i) => i !== idx) } }))} label="Remove armament">
+                            <X className="w-4 h-4" />
+                          </IconButton>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-text-secondary">Equipment (recommended qty)</label>
+                  <ChipSelect
+                    label="Add equipment"
+                    placeholder="Select equipment"
+                    options={equipmentOptions.map((o) => ({ value: o.value, label: o.label }))}
+                    selectedValues={[]}
+                    onSelect={(value) => {
+                      if (form.level1Path.equipmentEntries.some((e) => e.id === value)) return;
+                      setForm((prev) => ({
+                        ...prev,
+                        level1Path: {
+                          ...prev.level1Path,
+                          equipmentEntries: [...prev.level1Path.equipmentEntries, { id: value, quantity: 1 }],
+                        },
+                      }));
+                    }}
+                    onRemove={() => {}}
+                  />
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {form.level1Path.equipmentEntries.map((entry, idx) => {
+                      const label = equipmentOptions.find((o) => o.value === entry.id)?.label ?? entry.id;
+                      return (
+                        <div key={`${entry.id}-${idx}`} className="flex items-center gap-1 rounded-lg border border-border-light bg-surface px-2 py-1">
+                          <span className="text-sm truncate max-w-[120px]">{label}</span>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={String(entry.quantity)}
+                            onChange={(e) => {
+                              const q = Math.max(1, parseInt(e.target.value, 10) || 1);
+                              setForm((prev) => ({
+                                ...prev,
+                                level1Path: {
+                                  ...prev.level1Path,
+                                  equipmentEntries: prev.level1Path.equipmentEntries.map((e, i) =>
+                                    i === idx ? { ...e, quantity: q } : e
+                                  ),
+                                },
+                              }));
+                            }}
+                            className="w-14 text-center"
+                          />
+                          <IconButton variant="ghost" size="sm" onClick={() => setForm((prev) => ({ ...prev, level1Path: { ...prev.level1Path, equipmentEntries: prev.level1Path.equipmentEntries.filter((_, i) => i !== idx) } }))} label="Remove equipment">
+                            <X className="w-4 h-4" />
+                          </IconButton>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <label className="flex items-center gap-2 mt-2">
+                <input
+                  type="checkbox"
+                  checked={form.level1Path.recommendUnarmedProwess}
+                  onChange={(e) => setForm((prev) => ({
+                    ...prev,
+                    level1Path: { ...prev.level1Path, recommendUnarmedProwess: e.target.checked },
+                  }))}
+                  className="rounded border-border"
+                  aria-describedby="unarmed-prowess-desc"
+                />
+                <span className="text-sm font-medium text-text-primary">Recommend Unarmed Prowess</span>
+              </label>
+              <p id="unarmed-prowess-desc" className="text-xs text-text-muted dark:text-text-secondary mt-0.5">
+                When enabled, the equipment step (choose a path) will show Unarmed Prowess in the simplified view so the player can add it.
+              </p>
               {!!form.level1Path.feats.length && (
                 <p className="text-xs text-text-secondary">
                   Selected Feats: {getSelectedLabels(form.level1Path.feats, featOptions).join(', ')}
@@ -845,12 +1052,16 @@ export function AdminArchetypesTab() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectionFieldConfig.map((field) => (
+                    {selectionFieldConfig.map((field) => {
+                      const options = (field.key === 'feats' || field.key === 'removeFeats')
+                        ? getFeatOptionsForLevel(row.level)
+                        : optionsByField[field.key];
+                      return (
                       <ChipSelect
                         key={`${row.rowId}-${field.key}`}
                         label={`Add ${field.label}`}
                         placeholder={field.placeholder}
-                        options={optionsByField[field.key].map((option) => ({
+                        options={options.map((option) => ({
                           value: option.value,
                           label: option.label,
                         }))}
@@ -876,13 +1087,18 @@ export function AdminArchetypesTab() {
                           }))
                         }
                       />
-                    ))}
-                    {removeFieldConfig.map((field) => (
+                      );
+                    })}
+                    {removeFieldConfig.map((field) => {
+                      const options = (field.key === 'feats' || field.key === 'removeFeats')
+                        ? getFeatOptionsForLevel(row.level)
+                        : optionsByField[field.key];
+                      return (
                       <ChipSelect
                         key={`${row.rowId}-${field.key}`}
                         label={field.label}
                         placeholder={field.placeholder}
-                        options={optionsByField[field.key].map((option) => ({
+                        options={options.map((option) => ({
                           value: option.value,
                           label: option.label,
                         }))}
@@ -908,7 +1124,8 @@ export function AdminArchetypesTab() {
                           }))
                         }
                       />
-                    ))}
+                      );
+                    })}
                   </div>
                   <Input value={row.notes} onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, notes: e.target.value } : candidate) }))} placeholder="Level notes (optional)" />
                 </div>

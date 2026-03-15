@@ -1,4 +1,4 @@
-import type { Archetype, ArchetypePathData, ArchetypePathRecommendations } from '@/types/archetype';
+import type { Archetype, ArchetypePathData, ArchetypePathRecommendations, PathItemRecommendation } from '@/types/archetype';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -14,6 +14,17 @@ function toStringArray(value: unknown): string[] {
       .filter(Boolean);
   }
   return [];
+}
+
+/** Parse "id" or "id:qty" strings into { id, quantity } (qty default 1). */
+function parseIdQuantityArray(arr: string[]): PathItemRecommendation[] {
+  return arr.map((s) => {
+    const colon = s.indexOf(':');
+    if (colon < 0) return { id: s.trim(), quantity: 1 };
+    const id = s.slice(0, colon).trim();
+    const q = parseInt(s.slice(colon + 1).trim(), 10);
+    return { id, quantity: Number.isFinite(q) && q >= 1 ? q : 1 };
+  }).filter((e) => e.id.length > 0);
 }
 
 function parseLevel(value: unknown): number | null {
@@ -39,13 +50,19 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
   const levelsRaw = Array.isArray(raw.levels) ? raw.levels : [];
 
   const level1: ArchetypePathData['level1'] | undefined = level1Raw
-    ? {
+    ? (() => {
+        const armamentsStr = toStringArray(level1Raw.armaments);
+        const equipmentStr = toStringArray(level1Raw.equipment);
+        return {
         feats: toStringArray(level1Raw.feats),
         skills: toStringArray(level1Raw.skills),
         powers: toStringArray(level1Raw.powers),
         techniques: toStringArray(level1Raw.techniques),
-        armaments: toStringArray(level1Raw.armaments),
-        equipment: toStringArray(level1Raw.equipment),
+        armaments: armamentsStr,
+        equipment: equipmentStr,
+        armamentRecommendations: parseIdQuantityArray(armamentsStr),
+        equipmentRecommendations: parseIdQuantityArray(equipmentStr),
+        recommendUnarmedProwess: level1Raw.recommendUnarmedProwess === true,
         removeFeats: toStringArray(level1Raw.removeFeats),
         removePowers: toStringArray(level1Raw.removePowers),
         removeTechniques: toStringArray(level1Raw.removeTechniques),
@@ -63,7 +80,8 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
                   : undefined,
             }
           : undefined,
-      }
+      };
+      })()
     : undefined;
 
   const levels = levelsRaw

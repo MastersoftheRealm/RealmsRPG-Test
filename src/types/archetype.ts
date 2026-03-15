@@ -31,6 +31,12 @@ export interface ArchetypeConfig {
   trainingPointBonus: number;
 }
 
+/** Recommended item with optional quantity (for path armaments/equipment) */
+export interface PathItemRecommendation {
+  id: string;
+  quantity: number;
+}
+
 export interface ArchetypePathRecommendations {
   feats?: string[];
   skills?: string[];
@@ -38,6 +44,12 @@ export interface ArchetypePathRecommendations {
   techniques?: string[];
   armaments?: string[];
   equipment?: string[];
+  /** Parsed armaments with quantity (id or "id:qty" from armaments array) */
+  armamentRecommendations?: PathItemRecommendation[];
+  /** Parsed equipment with quantity */
+  equipmentRecommendations?: PathItemRecommendation[];
+  /** When true, path recommends Unarmed Prowess proficiency (equipment step simplified view) */
+  recommendUnarmedProwess?: boolean;
   removeFeats?: string[];
   removePowers?: string[];
   removeTechniques?: string[];

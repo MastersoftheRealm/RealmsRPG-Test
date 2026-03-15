@@ -158,7 +158,24 @@ export function ArchetypeStep() {
       <h2 className="text-2xl font-bold text-text-primary mb-2">Choose Character Creation Style</h2>
       <p className="text-text-secondary mb-6">Pick a fully custom creation flow or an archetype-guided path with curated recommendations.</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8">
+        <button
+          type="button"
+          onClick={() => {
+            setCreationChoice('path');
+            setCreationMode('path');
+          }}
+          className={cn(
+            'selection-card text-left min-h-[160px] flex-1',
+            creationChoice === 'path' && 'selection-card--selected'
+          )}
+        >
+          <h3 className="text-lg font-bold text-text-primary mb-2">Choose a Path</h3>
+          <p className="text-text-secondary text-sm">
+            Faster setup with official archetype paths that recommend Feats, Powers, Techniques, Armaments, Skills, and Equipment.
+          </p>
+        </button>
+        <span className="text-text-muted dark:text-text-secondary text-sm font-medium self-center shrink-0" aria-hidden="true">or</span>
         <button
           type="button"
           onClick={() => {
@@ -167,29 +184,13 @@ export function ArchetypeStep() {
             setSelectedPathId(null);
           }}
           className={cn(
-            'selection-card text-left min-h-[160px]',
+            'selection-card text-left min-h-[160px] flex-1',
             creationChoice === 'forge' && 'selection-card--selected'
           )}
         >
-          <h3 className="text-lg font-bold text-text-primary mb-2">Forge Your Own Path</h3>
+          <h3 className="text-lg font-bold text-text-primary mb-2">Forge Your Own</h3>
           <p className="text-text-secondary text-sm">
             Fully customizable character creation. Pick your own Feats, Powers, Techniques, Armaments, Skills, and Equipment.
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setCreationChoice('path');
-            setCreationMode('path');
-          }}
-          className={cn(
-            'selection-card text-left min-h-[160px]',
-            creationChoice === 'path' && 'selection-card--selected'
-          )}
-        >
-          <h3 className="text-lg font-bold text-text-primary mb-2">Choose a Path</h3>
-          <p className="text-text-secondary text-sm">
-            Faster setup with official archetype paths that recommend Feats, Powers, Techniques, Armaments, Skills, and Equipment.
           </p>
         </button>
       </div>
@@ -211,59 +212,38 @@ export function ArchetypeStep() {
                       {group === 'power' ? 'Power Paths' : group === 'martial' ? 'Martial Paths' : 'Powered-Martial Paths'}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {options.map((option) => {
-                        const level1 = option.path_data?.level1;
-                        const chips = [
-                          ...(level1?.feats || []).map((id: string) => ({ label: id, variant: 'feat' as const })),
-                          ...(level1?.skills || []).map((id: string) => ({ label: id, variant: 'secondary' as const })),
-                          ...(level1?.powers || []).map((id: string) => ({ label: id, variant: 'power' as const })),
-                          ...(level1?.techniques || []).map((id: string) => ({ label: id, variant: 'technique' as const })),
-                          ...(level1?.armaments || []).map((id: string) => ({ label: id, variant: 'outline' as const })),
-                          ...(level1?.equipment || []).map((id: string) => ({ label: id, variant: 'default' as const })),
-                        ];
-
-                        return (
-                          <button
-                            type="button"
-                            key={option.id}
-                            onClick={() => setSelectedPathId(option.id)}
-                            className={cn(
-                              'selection-card text-left',
-                              selectedPathId === option.id && 'selection-card--selected'
-                            )}
-                          >
-                            <div className="flex items-center justify-between mb-1 gap-2">
-                              <h4 className="font-semibold text-text-primary">{option.name}</h4>
-                              <span className="text-xs px-2 py-0.5 rounded bg-surface-alt text-text-secondary">{option.type}</span>
-                            </div>
-                            <p className="text-sm text-text-secondary mb-2 line-clamp-2">{option.description || 'No description provided.'}</p>
+                      {options.map((option) => (
+                        <button
+                          type="button"
+                          key={option.id}
+                          onClick={() => setSelectedPathId(option.id)}
+                          className={cn(
+                            'selection-card text-left',
+                            selectedPathId === option.id && 'selection-card--selected'
+                          )}
+                        >
+                          <h4 className="font-semibold text-text-primary mb-1">{option.name}</h4>
+                          <p className="text-sm text-text-secondary mb-2 line-clamp-2">{option.description || 'No description provided.'}</p>
+                          {(option.archetype_ability || option.secondary_ability) && (
                             <div className="flex flex-wrap gap-1">
-                              {chips.slice(0, 8).map((chip) => (
-                                <Chip key={`${option.id}-${chip.label}-${chip.variant}`} variant={chip.variant} size="sm">
-                                  {chip.label}
+                              {option.archetype_ability && (
+                                <Chip variant="power" size="sm">
+                                  Primary Ability: {option.archetype_ability.charAt(0).toUpperCase() + option.archetype_ability.slice(1)}
                                 </Chip>
-                              ))}
-                              {chips.length > 8 && (
-                                <Chip variant="default" size="sm">+{chips.length - 8} more</Chip>
+                              )}
+                              {option.secondary_ability && (
+                                <Chip variant="technique" size="sm">
+                                  Secondary Ability: {option.secondary_ability.charAt(0).toUpperCase() + option.secondary_ability.slice(1)}
+                                </Chip>
                               )}
                             </div>
-                          </button>
-                        );
-                      })}
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </section>
                 );
               })}
-            </div>
-          )}
-
-          {selectedPath && (
-            <div className="mt-4 p-4 rounded-lg border border-border-light bg-surface-alt">
-              <p className="text-sm text-text-secondary">
-                <strong className="text-text-primary">Selected Path:</strong> {selectedPath.name}
-                {selectedPath.archetype_ability ? ` • Primary Ability: ${selectedPath.archetype_ability}` : ''}
-                {selectedPath.secondary_ability ? ` • Secondary Ability: ${selectedPath.secondary_ability}` : ''}
-              </p>
             </div>
           )}
         </div>

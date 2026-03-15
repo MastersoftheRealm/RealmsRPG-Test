@@ -8,17 +8,43 @@
 
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, type Species } from '@/hooks';
+import { useMergedSpecies, useCodexSkills, type Species, type Skill } from '@/hooks';
 import { SkillsAllocationPage } from '@/components/shared';
+import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { Button } from '@/components/ui';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
 
+function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
+  if (names.length === 0) return null;
+  const Bold = ({ children }: { children: string }) => (
+    <strong className="text-primary-700 dark:text-primary-300">{children}</strong>
+  );
+  if (names.length === 1) {
+    return <>the recommended Skill <Bold>{names[0]}</Bold> has been added!</>;
+  }
+  if (names.length === 2) {
+    return <>the recommended Skills <Bold>{names[0]}</Bold> and <Bold>{names[1]}</Bold> have been added!</>;
+  }
+  const last = names[names.length - 1];
+  const rest = names.slice(0, -1);
+  return (
+    <>
+      the recommended Skills{' '}
+      {rest.map((n, i) => (
+        <React.Fragment key={n}>{i > 0 ? ', ' : ''}<Bold>{n}</Bold></React.Fragment>
+      ))}
+      , and <Bold>{last}</Bold> have been added!
+    </>
+  );
+}
+
 export function SkillsStep() {
   const { draft, nextStep, prevStep, updateDraft } = useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
+  const { data: codexSkills = [] } = useCodexSkills();
 
   const speciesSkillIds = useMemo(() => {
     const isMixed = draft.ancestry?.mixed === true;
@@ -53,22 +79,26 @@ export function SkillsStep() {
   const abilities = draft.abilities || { ...DEFAULT_ABILITIES };
   const level = draft.level || 1;
 
-  // Species skill id "0" = "Any" (extra skill point), not a fixed skill — don't set allocations['0']
-  // Species skills are proficient with skill value 0 (not 1); only set if not already present
+  const mergedSkillAbilities = draft.skillAbilities ?? {};
+  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
+  const recommendedSkillIds = pathData?.level1?.skills ?? [];
+
+  // Species skill id "0" = "Any" (extra skill point); path-recommended skills also start as proficient (value 0), removable
   const allocationsWithSpecies = useMemo(() => {
     const next = { ...allocations };
     speciesSkillIds.forEach((id) => {
       if (id === '0') return; // Any = extra point only
       if (!(id in next)) next[id] = 0; // Species = proficient + value 0
     });
+    recommendedSkillIds.forEach((id) => {
+      const key = String(id);
+      if (key === '0') return;
+      if (!(key in next)) next[key] = 0; // Path = proficient + value 0 (can remove, counts against points)
+    });
     return next;
-  }, [allocations, speciesSkillIds]);
+  }, [allocations, speciesSkillIds, recommendedSkillIds]);
 
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
-
-  const mergedSkillAbilities = draft.skillAbilities ?? {};
-  const pathData = useMemo(() => parseArchetypePathData(draft.archetype?.path_data), [draft.archetype?.path_data]);
-  const recommendedSkillIds = pathData?.level1?.skills ?? [];
 
   const handleSkillAbilityChange = useCallback(
     (skillId: string, abilityKey: string) => {
@@ -90,6 +120,21 @@ export function SkillsStep() {
     },
     [updateDraft]
   );
+
+  const pathSkillIds = useMemo(() => new Set(recommendedSkillIds.map((id) => String(id))), [recommendedSkillIds]);
+  const recommendedSkillNames = useMemo(() => {
+    return recommendedSkillIds
+      .map((id) => (codexSkills as Skill[]).find((s) => String(s.id) === String(id))?.name)
+      .filter((n): n is string => !!n);
+  }, [recommendedSkillIds, codexSkills]);
+  const pathHelpAfterDescription = useMemo(() => {
+    if (draft.creationMode !== 'path' || !draft.archetype?.name || recommendedSkillNames.length === 0) return null;
+    return (
+      <PathHelpCard pathName={draft.archetype.name}>
+        {pathHelpContent(draft.archetype.name, recommendedSkillNames)}
+      </PathHelpCard>
+    );
+  }, [draft.creationMode, draft.archetype?.name, recommendedSkillNames]);
 
   const handleContinue = () => {
     updateDraft({ skills: allocationsWithSpecies, defenseVals });
@@ -116,14 +161,6 @@ export function SkillsStep() {
 
   return (
     <div className="space-y-4">
-      {draft.creationMode === 'path' && recommendedSkillIds.length > 0 && (
-        <div className="rounded-lg border border-border-light bg-surface-alt px-4 py-3">
-          <p className="text-sm text-text-secondary">
-            <strong className="text-text-primary">Archetype Path recommendations (Level 1 skills):</strong>{' '}
-            {recommendedSkillIds.join(', ')}
-          </p>
-        </div>
-      )}
       <SkillsAllocationPage
         entityType="character"
         level={level}
@@ -131,12 +168,16 @@ export function SkillsStep() {
         allocations={allocationsWithSpecies}
         defenseSkills={defenseVals}
         speciesSkillIds={speciesSkillIds}
+        pathSkillIds={pathSkillIds}
+        pathSourceLabel={draft.archetype?.name}
         extraSkillPoints={extraSkillPoints}
         onAllocationsChange={handleAllocationsChange}
         onDefenseChange={handleDefenseChange}
         abilityDefenseBonuses={abilityDefenseBonuses}
         skillAbilities={mergedSkillAbilities}
         onSkillAbilityChange={handleSkillAbilityChange}
+        afterDescription={pathHelpAfterDescription}
+        hideDefenseBonuses={draft.creationMode === 'path'}
         footer={footer}
       />
     </div>

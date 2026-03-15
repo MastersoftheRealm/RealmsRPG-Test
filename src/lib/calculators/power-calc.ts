@@ -8,6 +8,7 @@
 import type { PowerPart } from '@/hooks/use-rtdb';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
+import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 
 // Re-export for backwards compatibility
 export { PART_IDS, findByIdOrName };
@@ -605,13 +606,12 @@ export function derivePowerDisplay(
 
   const calc = calculatePowerCosts(partsPayload, partsDb);
   
-  // Use directly saved actionType if available, otherwise derive from parts
+  // Use directly saved actionType if available, otherwise derive from parts; format for display (e.g. Long (3 AP))
   let actionType: string;
   if (powerDoc.actionType) {
-    actionType = powerDoc.isReaction ? 'Reaction' : 
-      powerDoc.actionType.charAt(0).toUpperCase() + powerDoc.actionType.slice(1).toLowerCase();
+    actionType = powerDoc.isReaction ? 'Reaction' : formatActionTypeForDisplay(powerDoc.actionType);
   } else {
-    actionType = computeActionType(partsPayload, partsDb);
+    actionType = formatActionTypeForDisplay(computeActionType(partsPayload, partsDb));
   }
   
   // Use directly saved range if available, otherwise derive from parts

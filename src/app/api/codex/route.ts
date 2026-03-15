@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
@@ -46,7 +46,7 @@ function parseJsonObject(val: unknown): Record<string, unknown> | undefined {
 /** DB row shape (snake_case from Supabase) */
 type Row = Record<string, unknown>;
 
-async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function fetchCodexFromClient(supabase: ReturnType<typeof createServiceRoleClient>) {
   const [
     { data: feats, error: eFeats },
     { data: skills, error: eSkills },
@@ -315,6 +315,7 @@ async function fetchCodexFromClient(supabase: Awaited<ReturnType<typeof createCl
         techniques: toStrArray(r.level1_techniques),
         armaments: toStrArray(r.level1_armaments),
         equipment: toStrArray(r.level1_equipment),
+        recommendUnarmedProwess: r.level1_recommend_unarmed_prowess === true,
         removeFeats: toStrArray(r.level1_remove_feats),
         removePowers: toStrArray(r.level1_remove_powers),
         removeTechniques: toStrArray(r.level1_remove_techniques),
@@ -408,7 +409,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const debug = url.searchParams.get('debug') === '1';
   try {
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const body = await fetchCodexFromClient(supabase);
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {

@@ -10,6 +10,7 @@
 import { useMemo } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { AbilityScoreEditor } from '@/components/creator';
+import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
 import { Button } from '@/components/ui';
 import { calculateAbilityPoints } from '@/lib/game/formulas';
 import type { AbilityName } from '@/types';
@@ -51,12 +52,20 @@ export function AbilitiesStep() {
         {powerAbility && <span className="text-power-dark dark:text-power-300"> Power archetype ability highlighted.</span>}
         {martialAbility && <span className="text-martial-dark dark:text-martial-300"> Martial archetype ability highlighted.</span>}
       </p>
-      {draft.creationMode === 'path' && (
-        <div className="mb-4 rounded-lg border border-border-light bg-surface-alt px-4 py-3 text-sm text-text-secondary">
-          This character uses an Archetype Path. Recommended ability focus:
-          {pathPrimaryAbility && <strong className="ml-1 text-text-primary capitalize">{pathPrimaryAbility}</strong>}
-          {pathSecondaryAbility && <span className="ml-1">with secondary <strong className="text-text-primary capitalize">{pathSecondaryAbility}</strong></span>}.
-        </div>
+      {draft.creationMode === 'path' && draft.archetype?.name && (
+        <PathHelpCard pathName={draft.archetype.name}>
+          {pathPrimaryAbility ? (
+            <>
+              you should prioritize having a high <strong className="text-primary-700 dark:text-primary-300 capitalize">{pathPrimaryAbility}</strong>
+              {pathSecondaryAbility ? (
+                <> and <strong className="text-primary-700 dark:text-primary-300 capitalize">{pathSecondaryAbility}</strong></>
+              ) : null}
+              !
+            </>
+          ) : (
+            '—assign your ability points below.'
+          )}
+        </PathHelpCard>
       )}
       
       {/* Shared Ability Score Editor */}

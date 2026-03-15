@@ -9,7 +9,9 @@
 import { useMemo, useState } from 'react';
 import { Chip, IconButton, Button, Input } from '@/components/ui';
 import { Plus, X, RefreshCw } from 'lucide-react';
-import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper } from '@/components/shared';
+import { cn } from '@/lib/utils';
+import { SectionHeader, TabSummarySection, SummaryItem, SummaryRow, ValueStepper, PartChipComponent } from '@/components/shared';
+import type { PartData } from '@/components/shared/part-chip';
 import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';
 import type { CharacterPower, CharacterTechnique, Item, CharacterProficiency } from '@/types';
 import {
@@ -28,17 +30,23 @@ import {
 interface CodexPart {
   id: string;
   name: string;
+  description?: string;
   base_tp?: number;
   op_1_tp?: number;
   op_2_tp?: number;
   op_3_tp?: number;
+  op_1_desc?: string;
+  op_2_desc?: string;
+  op_3_desc?: string;
 }
 
 interface CodexProperty {
   id: string | number;
   name: string;
+  description?: string;
   base_tp?: number;
   op_1_tp?: number;
+  op_1_desc?: string;
 }
 
 interface ProficienciesTabProps {
@@ -85,6 +93,62 @@ function getProficiencyCategory(
   return 'weapon';
 }
 
+function proficiencyToPartData(
+  prof: CharacterProficiency,
+  powerPartsDb: CodexPart[],
+  techniquePartsDb: CodexPart[],
+  itemPropertiesDb: CodexProperty[]
+): PartData {
+  const norm = (s: unknown) => String(s ?? '').trim().toLowerCase();
+  let codex: CodexPart | CodexProperty | undefined;
+  if (prof.kind === 'power_part') {
+    codex = powerPartsDb.find(
+      (x) => norm(x.id) === norm(prof.refId) || (x.name && prof.name && norm(x.name) === norm(prof.name))
+    );
+  } else if (prof.kind === 'technique_part') {
+    codex = techniquePartsDb.find(
+      (x) => norm(x.id) === norm(prof.refId) || (x.name && prof.name && norm(x.name) === norm(prof.name))
+    );
+  } else if (prof.kind === 'item_property') {
+    codex = itemPropertiesDb.find(
+      (x) => norm(x.id) === norm(prof.refId) || (x.name && prof.name && norm(x.name) === norm(prof.name))
+    ) as CodexProperty | undefined;
+  }
+  const partCodex = codex as CodexPart | undefined;
+  const propCodex = codex as CodexProperty | undefined;
+  const options: PartData['options'] = [];
+  if ((prof.op1Level ?? 0) > 0) {
+    options.push({
+      label: 'Option 1',
+      description: partCodex?.op_1_desc ?? propCodex?.op_1_desc,
+      level: prof.op1Level ?? 0,
+    });
+  }
+  if ((prof.op2Level ?? 0) > 0 && partCodex) {
+    options.push({
+      label: 'Option 2',
+      description: partCodex.op_2_desc,
+      level: prof.op2Level ?? 0,
+    });
+  }
+  if ((prof.op3Level ?? 0) > 0 && partCodex) {
+    options.push({
+      label: 'Option 3',
+      description: partCodex.op_3_desc,
+      level: prof.op3Level ?? 0,
+    });
+  }
+  const name = prof.damageType ? `${prof.name} (${prof.damageType})` : prof.name;
+  return {
+    name,
+    description: codex?.description,
+    tpCost: calculateProficiencyTP(prof),
+    optionLevels: { opt1: prof.op1Level, opt2: prof.op2Level, opt3: prof.op3Level },
+    options,
+    category: 'proficiency',
+  };
+}
+
 export function ProficienciesTab({
   powers,
   techniques,
@@ -103,6 +167,7 @@ export function ProficienciesTab({
   const [customName, setCustomName] = useState('');
   const [customTp, setCustomTp] = useState(1);
   const [addProficiencyVariant, setAddProficiencyVariant] = useState<AddProficiencyVariant | null>(null);
+  const [expandedProfId, setExpandedProfId] = useState<string | null>(null);
 
   const required = useMemo(
     () =>
@@ -191,6 +256,17 @@ export function ProficienciesTab({
     });
     return map;
   }, [owned, itemPropertiesDb]);
+
+  const ownedPartDataById = useMemo(
+    () =>
+      new Map(
+        owned.map((p) => [
+          p.id,
+          proficiencyToPartData(p, powerPartsDb, techniquePartsDb, itemPropertiesDb),
+        ])
+      ),
+    [owned, powerPartsDb, techniquePartsDb, itemPropertiesDb]
+  );
 
   const weaponShieldProperties = useMemo(
     () =>
@@ -308,24 +384,48 @@ export function ProficienciesTab({
                 return (
                   <div key={cat}>
                     <h3 className="text-sm font-medium text-text-secondary mb-2">{sectionTitle}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {list.map((prof) => (
-                        <div key={prof.id} className="inline-flex items-center gap-1">
-                          <Chip variant="proficiency" size="sm">
-                            {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
-                          </Chip>
-                          {isEditMode && (
-                            <IconButton
-                              size="sm"
-                              variant="ghost"
-                              label={`Remove ${prof.name}`}
-                              onClick={() => removeProf(prof.id)}
-                            >
-                              <X className="w-4 h-4" />
-                            </IconButton>
-                          )}
-                        </div>
-                      ))}
+                    <div className="flex flex-wrap gap-2 items-start">
+                      {list.map((prof) => {
+                        const partData = ownedPartDataById.get(prof.id);
+                        const isExpanded = expandedProfId === prof.id;
+                        return (
+                          <div
+                            key={prof.id}
+                            className={cn(
+                              'inline-flex items-center gap-1',
+                              isExpanded && 'w-full min-w-0'
+                            )}
+                          >
+                            {partData ? (
+                              <PartChipComponent
+                                part={partData}
+                                size="md"
+                                isExpanded={isExpanded}
+                                fullWidthWhenExpanded
+                                className={cn(isExpanded && 'flex-1 min-w-0')}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedProfId(isExpanded ? null : prof.id);
+                                }}
+                              />
+                            ) : (
+                              <Chip variant="proficiency" size="md">
+                                {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
+                              </Chip>
+                            )}
+                            {isEditMode && (
+                              <IconButton
+                                size="sm"
+                                variant="ghost"
+                                label={`Remove ${prof.name}`}
+                                onClick={() => removeProf(prof.id)}
+                              >
+                                <X className="w-4 h-4" />
+                              </IconButton>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -348,7 +448,7 @@ export function ProficienciesTab({
           ) : (
             <div className="flex flex-wrap gap-2">
               {missing.map((prof) => (
-                <Chip key={prof.id} variant="danger" size="sm">
+                <Chip key={prof.id} variant="danger" size="md">
                   {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
                 </Chip>
               ))}

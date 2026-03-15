@@ -2,7 +2,7 @@
 
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 type CodexCollection =
@@ -133,10 +133,7 @@ function getTableName(collection: CodexCollection): string {
 }
 
 function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase admin env not configured');
-  return createClient(url, key);
+  return createServiceRoleClient();
 }
 
 export async function createCodexDoc(
@@ -261,6 +258,7 @@ type SaveArchetypeWithPathInput = {
   level1_techniques?: string;
   level1_armaments?: string;
   level1_equipment?: string;
+  level1_recommend_unarmed_prowess?: boolean;
   level1_remove_feats?: string;
   level1_remove_powers?: string;
   level1_remove_techniques?: string;
@@ -294,6 +292,7 @@ export async function saveArchetypeWithPath(
       level1_techniques: payload.level1_techniques ?? null,
       level1_armaments: payload.level1_armaments ?? null,
       level1_equipment: payload.level1_equipment ?? null,
+      level1_recommend_unarmed_prowess: payload.level1_recommend_unarmed_prowess ?? false,
       level1_remove_feats: payload.level1_remove_feats ?? null,
       level1_remove_powers: payload.level1_remove_powers ?? null,
       level1_remove_techniques: payload.level1_remove_techniques ?? null,

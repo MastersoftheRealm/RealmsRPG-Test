@@ -121,6 +121,8 @@ const TRAIT_COLUMNS: ListColumn[] = [
 ];
 
 const TRAIT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
+/** When uses/recovery are null, description spans Description+Uses+Recovery columns (same grid, one cell spans 3) */
+const DESCRIPTION_EXTENDED_TRUNCATE = 220;
 
 const FEAT_COLUMNS: ListColumn[] = [
   { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
@@ -417,6 +419,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(trait.recoveryPeriod) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={`${trait.category}-${index}`}
@@ -424,11 +427,14 @@ export function FeatsTab({
                   name={trait.name}
                   description={trait.description}
                   gridColumns={TRAIT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(trait.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(trait.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
                   badges={categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined}
                   uses={uses}
                   hideUsesInName={!!(uses && onTraitUsesChange)}
@@ -494,6 +500,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -501,11 +508,14 @@ export function FeatsTab({
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
                   detailSections={getFeatLevelDetailSections(featId)}
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
@@ -574,6 +584,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -581,11 +592,14 @@ export function FeatsTab({
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
                   detailSections={getFeatLevelDetailSections(featId)}
                   uses={uses}
                   hideUsesInName={!!(uses && onFeatUsesChange)}
@@ -691,6 +705,7 @@ export function FeatsTab({
                 <span className="text-sm text-text-secondary">{uses.current}/{uses.max}</span>
               ) : '-';
               const recoveryDisplay = formatRecoveryAbbrev(feat.recovery) || '-';
+              const noUsesOrRecovery = !uses && recoveryDisplay === '-';
               return (
                 <GridListRow
                   key={feat.id || index}
@@ -698,11 +713,14 @@ export function FeatsTab({
                   name={feat.name}
                   description={feat.description}
                   gridColumns={FEAT_GRID}
-                  columns={[
-                    { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
-                    { key: 'uses', value: usesStepper ?? '-', align: 'center' },
-                    { key: 'recovery', value: recoveryDisplay, align: 'center' },
-                  ]}
+                  columns={noUsesOrRecovery
+                    ? [{ key: 'description', value: truncateText(feat.description, DESCRIPTION_EXTENDED_TRUNCATE), hideOnMobile: true }]
+                    : [
+                        { key: 'description', value: truncateText(feat.description, uses ? 60 : 100), hideOnMobile: true },
+                        { key: 'uses', value: usesStepper ?? '-', align: 'center' },
+                        { key: 'recovery', value: recoveryDisplay, align: 'center' },
+                      ]}
+                  columnSpans={noUsesOrRecovery ? [3] : undefined}
                   badges={[{ label: typeLabel, color: 'blue' }]}
                   detailSections={getFeatLevelDetailSections(featId)}
                   uses={uses}

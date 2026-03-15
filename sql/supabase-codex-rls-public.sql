@@ -5,12 +5,15 @@
 -- (permission denied). Grants table-level SELECT to anon/authenticated, enables
 -- RLS, and adds "Anyone can read" policies so the Data API and anon key can read.
 --
+-- Admin codex writes: server actions use service_role (bypasses RLS). Ensure
+-- service_role can write: grant INSERT/UPDATE/DELETE on codex_archetypes and
+-- codex_archetype_levels to service_role. Optionally, grant to authenticated
+-- and add admin-only RLS policies so session-based admin writes work too.
+--
 -- Best practice (Supabase): Table access needs BOTH (1) GRANT and (2) RLS policy.
--- Raw SQL that creates tables does not auto-grant to anon/authenticated; add
--- GRANT SELECT (or INSERT/UPDATE/DELETE) explicitly. RLS then filters rows.
 -- =============================================================================
 
--- Table-level grants (required for anon/authenticated to access tables at all)
+-- Table-level grants (read for anon/authenticated)
 GRANT SELECT ON public.codex_feats TO anon, authenticated;
 GRANT SELECT ON public.codex_skills TO anon, authenticated;
 GRANT SELECT ON public.codex_species TO anon, authenticated;
@@ -21,6 +24,22 @@ GRANT SELECT ON public.codex_equipment TO anon, authenticated;
 GRANT SELECT ON public.codex_archetypes TO anon, authenticated;
 GRANT SELECT ON public.codex_creature_feats TO anon, authenticated;
 GRANT SELECT ON public.core_rules TO anon, authenticated;
+
+-- Admin writes: server actions use SUPABASE_SERVICE_ROLE_KEY (role: service_role).
+-- If admin save returns "permission denied for table codex_archetypes", run the
+-- GRANT ALL block below. (If your project uses a different role for the service key,
+-- replace service_role in the grants.)
+GRANT ALL ON public.codex_archetypes TO service_role;
+GRANT ALL ON public.codex_archetype_levels TO service_role;
+GRANT ALL ON public.codex_feats TO service_role;
+GRANT ALL ON public.codex_skills TO service_role;
+GRANT ALL ON public.codex_species TO service_role;
+GRANT ALL ON public.codex_traits TO service_role;
+GRANT ALL ON public.codex_parts TO service_role;
+GRANT ALL ON public.codex_properties TO service_role;
+GRANT ALL ON public.codex_equipment TO service_role;
+GRANT ALL ON public.codex_creature_feats TO service_role;
+GRANT ALL ON public.core_rules TO service_role;
 
 -- codex_feats
 ALTER TABLE public.codex_feats ENABLE ROW LEVEL SECURITY;

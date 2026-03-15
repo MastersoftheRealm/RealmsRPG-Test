@@ -69,8 +69,12 @@ interface CharacterCreatorState {
   // Reset
   resetCreator: () => void;
   
-  // Generate final character
-  getCharacter: () => Partial<Character>;
+  // Generate final character (pass part DBs so proficiencies get correct TP from codex)
+  getCharacter: (options?: {
+    powerPartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
+    techniquePartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
+    itemPropertiesDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number }>;
+  }) => Partial<Character>;
 }
 
 const initialDraft: CharacterDraft = {
@@ -286,7 +290,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         });
       },
       
-      getCharacter: () => {
+      getCharacter: (options) => {
         const { draft } = get();
         
         // Calculate health/energy using centralized formulas (calculations.ts)
@@ -329,6 +333,9 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           weapons: weapons as Item[],
           shields: equipment.shields as unknown as Item[],
           armor: armor as unknown as Item[],
+          powerPartsDb: options?.powerPartsDb ?? [],
+          techniquePartsDb: options?.techniquePartsDb ?? [],
+          itemPropertiesDb: options?.itemPropertiesDb ?? [],
         });
         
         return {

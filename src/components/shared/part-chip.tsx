@@ -12,7 +12,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Zap, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // =============================================================================
@@ -58,7 +58,8 @@ const categoryStyles: Record<string, string> = {
 };
 
 // =============================================================================
-// PartChip - Single clickable chip
+// PartChip - Single chip that expands in place (same element, no separate panel)
+// Matches ExpandableChip and GridListRow chip behavior: one chip, content inside when expanded.
 // =============================================================================
 
 interface PartChipProps {
@@ -66,64 +67,117 @@ interface PartChipProps {
   isExpanded?: boolean;
   onClick?: (e: React.MouseEvent) => void;
   size?: 'sm' | 'md';
+  /** When true, chip can grow to full width (e.g. in a flex-wrap list); set by parent when expanded */
+  fullWidthWhenExpanded?: boolean;
   className?: string;
 }
 
-export function PartChip({ 
-  part, 
-  isExpanded = false, 
-  onClick, 
+export function PartChip({
+  part,
+  isExpanded = false,
+  onClick,
   size = 'md',
-  className 
+  fullWidthWhenExpanded = false,
+  className,
 }: PartChipProps) {
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const hasTP = (part.tpCost ?? 0) > 0;
   const hasDescription = !!part.description;
-  const canExpand = hasDescription && onClick;
+  const hasOptions = (part.options?.length ?? 0) > 0;
+  const canExpand = (hasDescription || hasOptions) && !!onClick;
   const category = part.category || (hasTP ? 'proficiency' : 'default');
   const styleClass = categoryStyles[category] || categoryStyles.default;
 
   return (
-    <button
-      onClick={onClick}
-      disabled={!canExpand}
+    <div
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full font-medium transition-all border',
+        'inline-flex flex-col rounded-xl text-sm font-medium border',
         styleClass,
         size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1.5 text-sm',
-        canExpand && 'cursor-pointer hover:shadow-md',
-        !canExpand && 'cursor-default',
         isExpanded && 'ring-2 ring-offset-1',
         isExpanded && hasTP ? 'ring-info-400' : isExpanded && 'ring-primary-400',
+        fullWidthWhenExpanded && isExpanded && 'w-full min-w-0',
         className
       )}
     >
-      <span>{part.name}</span>
-      {hasTP && (
-        <>
-          <span className="opacity-40">|</span>
-          <span className="flex items-center gap-0.5 text-xs font-semibold">
-            <Zap className="w-3 h-3" />
-            {part.tpCost}
-          </span>
-        </>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!canExpand}
+        className={cn(
+          'flex items-center gap-1.5 text-left w-full',
+          canExpand && 'cursor-pointer hover:opacity-90',
+          !canExpand && 'cursor-default'
+        )}
+        aria-expanded={canExpand ? isExpanded : undefined}
+      >
+        <span>{part.name}</span>
+        {hasTP && (
+          <>
+            <span className="opacity-40">|</span>
+            <span className="text-xs font-semibold">
+              TP: {part.tpCost}
+            </span>
+          </>
+        )}
+        {part.energyCost !== undefined && part.energyCost > 0 && (
+          <>
+            <span className="opacity-40">|</span>
+            <span className="text-xs font-semibold text-energy">
+              {part.energyCost} EP
+            </span>
+          </>
+        )}
+        {canExpand && (
+          <ChevronDown
+            className={cn(
+              'w-3 h-3 ml-auto shrink-0 transition-transform duration-200',
+              isExpanded && 'rotate-180'
+            )}
+          />
+        )}
+      </button>
+
+      {/* Expanded content inside the same chip (no separate panel) */}
+      {isExpanded && (hasDescription || hasOptions) && (
+        <div className="px-3 pb-2 pt-0 mt-1 border-t border-current/15 text-left">
+          {part.description && (
+            <p className="text-xs font-normal text-text-secondary dark:text-text-primary leading-relaxed whitespace-pre-line">
+              {part.description}
+            </p>
+          )}
+          {hasOptions && part.options && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOptionsOpen((o) => !o);
+                }}
+                className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary"
+              >
+                <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', optionsOpen && 'rotate-180')} />
+                Options ({part.options.length})
+              </button>
+              {optionsOpen && (
+                <ul className="mt-1.5 space-y-2 pl-4 border-l-2 border-current/20">
+                  {part.options.map((opt, oi) => (
+                    <li key={oi} className="text-xs py-1">
+                      <span className="font-medium text-text-primary">{opt.label}: Level {opt.level}</span>
+                      {opt.description && (
+                        <p className="mt-0.5 text-text-secondary dark:text-text-primary/80 leading-relaxed">
+                          {opt.description}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
       )}
-      {part.energyCost !== undefined && part.energyCost > 0 && (
-        <>
-          <span className="opacity-40">|</span>
-          <span className="text-xs font-semibold text-energy">
-            {part.energyCost} EP
-          </span>
-        </>
-      )}
-      {canExpand && (
-        <ChevronDown 
-          className={cn(
-            'w-3 h-3 transition-transform duration-200',
-            isExpanded && 'rotate-180'
-          )} 
-        />
-      )}
-    </button>
+    </div>
   );
 }
 
@@ -148,9 +202,8 @@ export function PartChipDetails({ part, className }: PartChipDetailsProps) {
       <div className="flex items-start justify-between gap-2 mb-2">
         <h5 className="font-semibold text-text-primary">{part.name}</h5>
         {(part.tpCost ?? 0) > 0 && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400">
-            <Zap className="w-3 h-3" />
-            {part.tpCost} TP
+          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-info-50 dark:bg-info-900/30 text-info-700 dark:text-info-400">
+            TP: {part.tpCost}
           </span>
         )}
       </div>
@@ -219,23 +272,25 @@ export function PartChipList({
         </h3>
       )}
 
-      {/* Chips */}
-      <div className="flex flex-wrap gap-2">
-        {parts.map((part, index) => (
-          <PartChip
-            key={`${part.name}-${index}`}
-            part={part}
-            size={size}
-            isExpanded={expandedIndex === index}
-            onClick={part.description ? (e) => handleChipClick(index, e) : undefined}
-          />
-        ))}
+      {/* Chips: each expands in place (same chip, no separate panel); wrapper gives full width when expanded */}
+      <div className="flex flex-wrap gap-2 items-start">
+        {parts.map((part, index) => {
+          const isExpanded = expandedIndex === index;
+          const hasDescription = !!part.description;
+          const hasOptions = (part.options?.length ?? 0) > 0;
+          const canExpand = hasDescription || hasOptions;
+          return (
+            <PartChip
+              key={`${part.name}-${index}`}
+              part={part}
+              size={size}
+              isExpanded={isExpanded}
+              fullWidthWhenExpanded
+              onClick={canExpand ? (e) => handleChipClick(index, e) : undefined}
+            />
+          );
+        })}
       </div>
-
-      {/* Expanded Details */}
-      {expandedIndex !== null && parts[expandedIndex] && (
-        <PartChipDetails part={parts[expandedIndex]} />
-      )}
     </div>
   );
 }

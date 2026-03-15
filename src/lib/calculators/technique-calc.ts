@@ -7,6 +7,7 @@
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import type { TechniquePart } from '@/hooks/use-rtdb';
+import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 
 // Re-export for convenience
 export type { TechniquePart };
@@ -362,7 +363,7 @@ export function deriveTechniqueDisplay(
   const savedAction = techniqueDoc.actionType
     ? computeActionTypeFromSelection(techniqueDoc.actionType, !!techniqueDoc.isReaction)
     : null;
-  const actionType = savedAction || derivedAction;
+  const actionType = formatActionTypeForDisplay(savedAction || derivedAction);
   const damageStr = formatTechniqueDamage(techniqueDoc.damage);
   const weaponName =
     techniqueDoc.weapon && (techniqueDoc.weapon.name || techniqueDoc.weapon.id)

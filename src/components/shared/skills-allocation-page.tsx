@@ -68,6 +68,10 @@ export interface SkillsAllocationPageProps {
   defenseSkills: DefenseSkills;
   /** Species skill IDs (always proficient, can't remove). Id "0" = "Any" (extra skill point only). */
   speciesSkillIds: Set<string>;
+  /** Path-recommended skill IDs (auto-added as proficient, show sourceLabel, can remove). */
+  pathSkillIds?: Set<string>;
+  /** Label for path skills (e.g. archetype name), shown as "(label)" like species. */
+  pathSourceLabel?: string;
   /** Extra skill points (e.g. when species has skill id "0" = Any) */
   extraSkillPoints?: number;
   /** Callback when allocations change */
@@ -82,6 +86,10 @@ export interface SkillsAllocationPageProps {
   onSkillAbilityChange?: (skillId: string, abilityKey: string) => void;
   /** Optional footer (e.g. Back/Continue buttons) */
   footer?: React.ReactNode;
+  /** Optional content rendered after the description (e.g. path help card) */
+  afterDescription?: React.ReactNode;
+  /** When true, hide the Defense Bonuses section (e.g. for choose-a-path creation) */
+  hideDefenseBonuses?: boolean;
   /** Optional className */
   className?: string;
 }
@@ -93,6 +101,8 @@ export function SkillsAllocationPage({
   allocations,
   defenseSkills,
   speciesSkillIds,
+  pathSkillIds,
+  pathSourceLabel,
   extraSkillPoints = 0,
   onAllocationsChange,
   onDefenseChange,
@@ -100,6 +110,8 @@ export function SkillsAllocationPage({
   skillAbilities = {},
   onSkillAbilityChange,
   footer,
+  afterDescription,
+  hideDefenseBonuses = false,
   className,
 }: SkillsAllocationPageProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
@@ -297,10 +309,11 @@ export function SkillsAllocationPage({
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-text-primary mb-2">Allocate Skills</h1>
           <p className="text-text-secondary">
-            Spend skill points to gain proficiency, increase skill values, or boost defenses.
-            Species skills are always proficient and cannot be removed.
-            {speciesSkillIds.has('0') && ' Species option "Any" gives one extra skill point.'}
+            Spend Skill points to gain proficiency, increase Skill values, or boost defenses.
+            Species Skills are always proficient and cannot be removed.
+            {speciesSkillIds.has('0') && ' Species option "Any" gives one extra Skill point.'}
           </p>
+          {afterDescription != null && <div className="mt-4">{afterDescription}</div>}
         </div>
         <span className="flex-shrink-0 whitespace-nowrap">
           <PointStatus total={totalPoints} spent={spentPoints} variant="compact" />
@@ -313,7 +326,7 @@ export function SkillsAllocationPage({
           size="sm"
           onClick={() => setAddSkillModalOpen(true)}
           disabled={remainingPoints < 1}
-          title={remainingPoints < 1 ? 'No skill points remaining' : undefined}
+          title={remainingPoints < 1 ? 'No Skill points remaining' : undefined}
         >
           <Plus size={14} />
           Add Skill
@@ -324,14 +337,14 @@ export function SkillsAllocationPage({
           className="dark:bg-surface dark:border-border dark:hover:bg-surface-alt dark:text-text-secondary"
           onClick={() => setAddSubSkillModalOpen(true)}
           disabled={remainingPoints < 1}
-          title={remainingPoints < 1 ? 'No skill points remaining' : undefined}
+          title={remainingPoints < 1 ? 'No Skill points remaining' : undefined}
         >
           <Plus size={14} />
           Add Sub-Skill
         </Button>
       </div>
 
-      {/* Single flat skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}
+      {/* Single flat Skills table — same layout as character sheet (Prof, Skill, Ability, Bonus, Value) */}
       <div className="bg-surface rounded-xl shadow-md overflow-hidden mb-8">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -355,6 +368,7 @@ export function SkillsAllocationPage({
                 const baseProficient = baseSkill && (speciesSkillIds.has(String(baseSkill.id)) || (allocations[String(baseSkill.id)] ?? -1) >= 0);
                 const value = Math.max(0, allocations[String(skill.id)] ?? 0);
                 const isSpeciesSkill = speciesSkillIds.has(String(skill.id));
+                const isPathSkill = !isSpeciesSkill && (pathSkillIds?.has(String(skill.id)) ?? false);
                 const effectiveValue = value; // Species can have value 0 (proficient, 0 value)
                 // Base skills: value >= 0 means proficient. Sub-skills: value >= 1 = proficient
                 const proficient = isSubSkill ? value >= 1 : (value >= 0);
@@ -388,6 +402,7 @@ export function SkillsAllocationPage({
                     minValue={isSpeciesSkill ? 0 : 0}
                     canIncrease={canInc}
                     isSpeciesSkill={isSpeciesSkill}
+                    sourceLabel={isPathSkill ? pathSourceLabel : undefined}
                     onRemove={isSpeciesSkill ? undefined : () => handleRemoveSkill(String(skill.id))}
                     variant="table"
                   />
@@ -397,17 +412,18 @@ export function SkillsAllocationPage({
           </table>
         </div>
         {orderedSkills.length === 0 && (
-          <div className="text-center py-8 text-text-muted">
-            No skills added yet. Use &quot;Add Skill&quot; or &quot;Add Sub-Skill&quot; (need at least 1 skill point).
+          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
+            No Skills added yet. Use &quot;Add Skill&quot; or &quot;Add Sub-Skill&quot; (need at least 1 Skill point).
           </div>
         )}
       </div>
 
-      {/* Defense allocation */}
+      {/* Defense allocation — hidden for choose-a-path (advanced option) */}
+      {!hideDefenseBonuses && (
       <div className="bg-surface rounded-xl shadow-md p-4 mb-8">
         <h2 className="text-lg font-semibold text-text-primary mb-2 uppercase tracking-wide">Defense Bonuses</h2>
-        <p className="text-sm text-text-muted mb-4">
-          Spend 2 skill points to increase a defense bonus by 1. Defense bonus from skill points cannot exceed your level.
+        <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
+          Spend 2 Skill points to increase a defense bonus by 1. Defense bonus from Skill points cannot exceed your level.
         </p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {DEFENSE_KEYS.map((key) => {
@@ -436,7 +452,7 @@ export function SkillsAllocationPage({
                     onClick={() => handleDefenseChange(key, 1)}
                     disabled={!canInc}
                     className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold bg-surface hover:bg-surface-alt disabled:opacity-50"
-                    title={canInc ? 'Cost: 2 skill points' : `Max at level ${level}`}
+                    title={canInc ? 'Cost: 2 Skill points' : `Max at level ${level}`}
                   >
                     +
                   </button>
@@ -446,15 +462,16 @@ export function SkillsAllocationPage({
                     +{current} ({current * 2}sp)
                   </span>
                 )}
-              </div>
-            );
-          })}
+            </div>
+          );
+        })}
         </div>
       </div>
+      )}
 
       {allSkills.length === 0 && (
         <Alert variant="warning" className="mb-8">
-          No skill data available. Please check Codex connection.
+          No Skill data available. Please check Codex connection.
         </Alert>
       )}
 

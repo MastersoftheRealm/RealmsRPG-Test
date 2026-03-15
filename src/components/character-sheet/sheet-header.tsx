@@ -554,6 +554,7 @@ export function SheetHeader({
               alt={character.name}
               fill
               unoptimized
+              priority
               className={cn(
                 "object-cover transition-opacity",
                 isUploadingPortrait && "opacity-50"
