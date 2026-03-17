@@ -24,7 +24,7 @@ const enhancedBodySchema = z
     powerEnergy: z.number().min(0),
     usesType: z.enum(['full', 'partial', 'permanent']),
     usesCount: z.number().int().min(0).optional(),
-    payload: z.record(z.unknown()).optional(),
+    payload: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough();
 

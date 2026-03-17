@@ -287,14 +287,12 @@ function EnhancedItemEditModal({
               value={selectedItemId}
               onChange={(e) => setSelectedItemId(e.target.value)}
               aria-label="Select base item from official items"
-            >
-              <option value="">Select base item</option>
-              {itemOptions.map((i) => (
-                <option key={String(i.id)} value={String(i.id)}>
-                  {String(i.name ?? '')}
-                </option>
-              ))}
-            </Select>
+              placeholder="Select base item"
+              options={itemOptions.map((i) => ({
+                value: String(i.id),
+                label: String(i.name ?? ''),
+              }))}
+            />
           </div>
           <div className="flex-1 min-w-[220px]">
             <label className="block text-sm font-medium text-text-secondary mb-1">
@@ -304,14 +302,12 @@ function EnhancedItemEditModal({
               value={selectedPowerId}
               onChange={(e) => setSelectedPowerId(e.target.value)}
               aria-label="Select power from official powers"
-            >
-              <option value="">Select power</option>
-              {powerOptions.map((p) => (
-                <option key={String(p.id)} value={String(p.id)}>
-                  {String(p.name ?? '')}
-                </option>
-              ))}
-            </Select>
+              placeholder="Select power"
+              options={powerOptions.map((p) => ({
+                value: String(p.id),
+                label: String(p.name ?? ''),
+              }))}
+            />
           </div>
         </div>
         <div className="flex flex-wrap gap-4 items-end">
@@ -323,11 +319,12 @@ function EnhancedItemEditModal({
               value={usesType}
               onChange={(e) => setUsesType(e.target.value as 'full' | 'partial' | 'permanent')}
               aria-label="Uses recovery type"
-            >
-              <option value="full">Full</option>
-              <option value="partial">Partial</option>
-              <option value="permanent">Permanent</option>
-            </Select>
+              options={[
+                { value: 'full', label: 'Full' },
+                { value: 'partial', label: 'Partial' },
+                { value: 'permanent', label: 'Permanent' },
+              ]}
+            />
           </div>
           {usesType !== 'permanent' && (
             <div>

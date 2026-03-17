@@ -41,6 +41,7 @@ import {
   calculateSkillPointsForEntity,
   calculateSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
+import { useSort } from '@/hooks/use-sort';
 import { Button, Input, Select, Textarea, Alert, IconButton } from '@/components/ui';
 import { Skull, X } from 'lucide-react';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
@@ -396,6 +397,28 @@ function CreatureCreatorContent() {
     });
     return map;
   }, []);
+  
+  // Sort state for added feats and armaments (GridListRow-backed lists)
+  const {
+    sortState: featSort,
+    handleSort: handleFeatSort,
+    sortItems: sortFeatItems,
+  } = useSort('name');
+  const {
+    sortState: armamentSort,
+    handleSort: handleArmamentSort,
+    sortItems: sortArmamentItems,
+  } = useSort('name');
+
+  const sortedFeats = useMemo(
+    () => sortFeatItems(creature.feats),
+    [creature.feats, sortFeatItems]
+  );
+
+  const sortedArmaments = useMemo(
+    () => sortArmamentItems(creature.armaments),
+    [creature.armaments, sortArmamentItems]
+  );
   
   // Calculate skill bonus (uses shared utility from formulas.ts)
   const getSkillBonus = useCallback((skillName: string, skillValue: number, proficient: boolean) => {
@@ -1330,21 +1353,51 @@ function CreatureCreatorContent() {
             {creature.feats.length === 0 ? (
               <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No feats added</p>
             ) : (
-              <div className="space-y-2 mb-4">
-                {creature.feats.map(feat => (
-                  <ItemCard
-                    key={feat.id}
-                    item={creatureFeatToDisplayItem(feat)}
-                    mode="manage"
-                    actions={{
-                      onDelete: () => setCreature(prev => ({
-                        ...prev,
-                        feats: prev.feats.filter((f: { id: string }) => f.id !== feat.id)
-                      }))
-                    }}
-                    compact
-                  />
-                ))}
+              <div className="border border-border-light rounded-lg overflow-hidden mb-4">
+                <ListHeader
+                  columns={[
+                    { key: 'name', label: 'NAME' },
+                    { key: 'points', label: 'PTS', width: '0.6fr', align: 'center' },
+                    { key: '_actions', label: '', sortable: false as const },
+                  ]}
+                  gridColumns="1.5fr 0.6fr 40px"
+                  sortState={featSort}
+                  onSort={handleFeatSort}
+                />
+                <div className="space-y-1">
+                  {sortedFeats.map((feat) => (
+                    <GridListRow
+                      key={feat.id}
+                      id={feat.id}
+                      name={feat.name}
+                      description={feat.description}
+                      gridColumns="1.5fr 0.6fr 40px"
+                      columns={[
+                        {
+                          key: 'points',
+                          value: feat.points != null ? feat.points : '-',
+                          align: 'center',
+                        },
+                      ]}
+                      rightSlot={
+                        <IconButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() =>
+                            setCreature((prev) => ({
+                              ...prev,
+                              feats: prev.feats.filter((f: { id: string }) => f.id !== feat.id),
+                            }))
+                          }
+                          label="Remove feat"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      }
+                      compact
+                    />
+                  ))}
+                </div>
               </div>
             )}
             <div className="flex flex-wrap gap-2">
@@ -1375,15 +1428,16 @@ function CreatureCreatorContent() {
               <div className="border border-border-light rounded-lg overflow-hidden mb-4">
                 <ListHeader
                   columns={[
-                    { key: 'name', label: 'Name', width: '1.4fr' },
-                    { key: 'Action', label: 'Action', width: '0.8fr', align: 'center' },
-                    { key: 'Damage', label: 'Damage', width: '0.8fr', align: 'center' },
-                    { key: 'Area', label: 'Area', width: '0.7fr', align: 'center' },
+                    { key: 'name', label: 'NAME', width: '1.4fr' },
+                    { key: 'Action', label: 'ACTION', width: '0.8fr', align: 'center' },
+                    { key: 'Damage', label: 'DAMAGE', width: '0.8fr', align: 'center' },
+                    { key: 'Area', label: 'AREA', width: '0.7fr', align: 'center' },
+                    { key: 'Duration', label: 'DURATION', width: '0.8fr', align: 'center' },
                   ]}
-                  gridColumns="1.4fr 0.8fr 0.8fr 0.7fr"
+                  gridColumns="1.4fr 0.8fr 0.8fr 0.7fr 0.8fr"
                 />
                 <div className="space-y-1">
-                  {creature.powers.map((power: { id: string; name: string; action?: string; damage?: string; area?: string }) => (
+                  {creature.powers.map((power: { id: string; name: string; action?: string; damage?: string; area?: string; duration?: string }) => (
                     <GridListRow
                       key={power.id}
                       id={power.id}
@@ -1392,8 +1446,9 @@ function CreatureCreatorContent() {
                         { key: 'Action', value: power.action ?? '-', align: 'center' as const },
                         { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
                         { key: 'Area', value: power.area ?? '-', align: 'center' as const },
+                        { key: 'Duration', value: power.duration ?? '-', align: 'center' as const },
                       ]}
-                      gridColumns="1.4fr 0.8fr 0.8fr 0.7fr"
+                      gridColumns="1.4fr 0.8fr 0.8fr 0.7fr 0.8fr"
                       rightSlot={
                         <IconButton
                           variant="danger"
@@ -1498,21 +1553,62 @@ function CreatureCreatorContent() {
             {creature.armaments.length === 0 ? (
               <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No armaments added</p>
             ) : (
-              <div className="space-y-2 mb-4">
-                {creature.armaments.map(armament => (
-                  <ItemCard
-                    key={armament.id}
-                    item={creatureArmamentToDisplayItem(armament)}
-                    mode="manage"
-                    actions={{
-                      onDelete: () => setCreature(prev => ({
-                        ...prev,
-                        armaments: prev.armaments.filter((a: { id: string }) => a.id !== armament.id)
-                      }))
-                    }}
-                    compact
-                  />
-                ))}
+              <div className="border border-border-light rounded-lg overflow-hidden mb-4">
+                <ListHeader
+                  columns={[
+                    { key: 'name', label: 'NAME' },
+                    { key: 'type', label: 'TYPE', width: '0.6fr', align: 'center' },
+                    { key: 'tp', label: 'TP', width: '0.5fr', align: 'center' },
+                    { key: 'currency', label: 'COST', width: '0.6fr', align: 'center' },
+                    { key: '_actions', label: '', sortable: false as const },
+                  ]}
+                  gridColumns="1.5fr 0.6fr 0.5fr 0.6fr 40px"
+                  sortState={armamentSort}
+                  onSort={handleArmamentSort}
+                />
+                <div className="space-y-1">
+                  {sortedArmaments.map((armament) => (
+                    <GridListRow
+                      key={armament.id}
+                      id={armament.id}
+                      name={armament.name}
+                      gridColumns="1.5fr 0.6fr 0.5fr 0.6fr 40px"
+                      columns={[
+                        {
+                          key: 'type',
+                          value: armament.type ?? '-',
+                          align: 'center',
+                        },
+                        {
+                          key: 'tp',
+                          value: armament.tp != null ? armament.tp : '-',
+                          align: 'center',
+                        },
+                        {
+                          key: 'currency',
+                          value: armament.currency != null ? `${armament.currency}c` : '-',
+                          align: 'center',
+                        },
+                      ]}
+                      rightSlot={
+                        <IconButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() =>
+                            setCreature((prev) => ({
+                              ...prev,
+                              armaments: prev.armaments.filter((a: { id: string }) => a.id !== armament.id),
+                            }))
+                          }
+                          label="Remove armament"
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      }
+                      compact
+                    />
+                  ))}
+                </div>
               </div>
             )}
             <Button

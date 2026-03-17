@@ -303,7 +303,7 @@ export default function CraftingToolPage() {
 
   // Compute requirements from current session config + rules
   const requirements = useMemo((): CraftingRequirements | null => {
-    if (!rulesData || (!item && !customBaseItem)) return null;
+    if (!rulesData || (!item && !customBaseItem) || !session) return null;
     let base: CraftingRequirements | null = null;
 
     if (isUpgrade && (item || customBaseItem) && upgradeOriginalItem) {
