@@ -111,6 +111,30 @@ export type { SortState } from './list-header';
 export { CreatureStatBlock } from './creature-stat-block';
 export type { CreatureData, CreatureStatBlockProps } from './creature-stat-block';
 
+// Entity library sections (shared list section renderers)
+export {
+  PowersListSection,
+  TechniquesListSection,
+  WeaponsListSection,
+  ShieldsListSection,
+  ArmorListSection,
+  EquipmentListSection,
+  FeatsTraitsListSection,
+} from './entity-library-sections';
+export type {
+  EntityPowerRow,
+  EntityTechniqueRow,
+  EntityWeaponRow,
+  EntityShieldRow,
+  EntityArmorRow,
+  EntityEquipmentRow,
+  EntityFeatRow,
+} from './entity-library-sections';
+
+// Quick armaments tables (Archetype-style)
+export { QuickWeaponsTable, QuickShieldsTable, QuickArmorTable } from './quick-armaments-sections';
+export type { QuickArmamentItem, QuickArmamentAbilities } from './quick-armaments-sections';
+
 // Species trait components
 export { SpeciesTraitCard, TraitGroup } from './species-trait-card';
 export type { TraitData, TraitCategory, SpeciesTraitCardProps, TraitGroupProps } from './species-trait-card';

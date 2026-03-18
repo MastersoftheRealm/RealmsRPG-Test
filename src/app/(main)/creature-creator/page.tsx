@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter, AddSkillModal, AddSubSkillModal } from '@/components/shared';
+import { LoginPromptModal, ConfirmActionModal, UnifiedSelectionModal, ItemCard, SkillRow, GridListRow, ListHeader, SourceFilter, AddSkillModal, AddSubSkillModal, InnateToggle } from '@/components/shared';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUserPowers, useUserTechniques, useUserItems, useUserCreatures, usePowerParts, useTechniqueParts, useCreatureFeats, useItemProperties, useCodexSkills, useAdmin, useCreatorSave, usePublicLibrary, type CreatureFeat, type UserPower, type UserTechnique, type UserItem, type Skill } from '@/hooks';
@@ -44,6 +44,10 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { Button, Input, Select, Textarea, Alert, IconButton } from '@/components/ui';
 import { Skull, X } from 'lucide-react';
+import { RollLog, RollProvider } from '@/components/character-sheet';
+import { RollButton } from '@/components/shared';
+import { useRollsOptional } from '@/components/character-sheet/roll-context';
+import { formatDamageDisplay, normalizeRangeDisplay } from '@/lib/utils';
 import { CREATURE_FEAT_IDS, MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_SIZES, CONDITIONS } from '@/lib/game/creator-constants';
 import {
@@ -85,6 +89,7 @@ import { LoadCreatureModal } from './LoadCreatureModal';
 // =============================================================================
 
 function CreatureCreatorContent() {
+  const rollContext = useRollsOptional();
   const { user } = useAuthStore();
   const { isAdmin } = useAdmin();
   const { data: creatureFeatsData = [] } = useCreatureFeats();
@@ -366,6 +371,16 @@ function CreatureCreatorContent() {
     });
     return map;
   }, [skillsData]);
+
+  const subSkillNames = useMemo(() => {
+    const set = new Set<string>();
+    skillsData.forEach((skill: Skill) => {
+      if (skill.base_skill_id !== undefined) {
+        set.add(String(skill.name ?? '').toLowerCase());
+      }
+    });
+    return set;
+  }, [skillsData]);
   
   // Feat point cost labels for senses/movement (varies by type)
   const getSenseCostLabel = useCallback((sense: string) => {
@@ -547,7 +562,18 @@ function CreatureCreatorContent() {
     // Negative abilities give points back, positive abilities cost points
     const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + val, 0);
     const heSpent = creature.hitPoints + creature.energyPoints;
-    const skillSpent = creature.skills.reduce((sum, s) => sum + s.value + (s.proficient ? 1 : 0), 0);
+    const skillSpent = creature.skills.reduce((sum, s) => {
+      const isSubSkill =
+        s.isSubSkill === true ||
+        (s.baseSkillId != null && s.baseSkillId !== '') ||
+        subSkillNames.has(String(s.name ?? '').toLowerCase());
+      if (isSubSkill) {
+        // Match character creator behavior: sub-skill value starts at 1 as part of
+        // proficiency, so that first point does not double-charge skill points.
+        return sum + Math.max(1, s.value);
+      }
+      return sum + s.value + (s.proficient ? 1 : 0);
+    }, 0);
     const defenseSpent = Object.values(creature.defenses).reduce((sum, val) => sum + (val * 2), 0);
     
     return {
@@ -578,7 +604,7 @@ function CreatureCreatorContent() {
       weaknessFeatCost,
       conditionImmunityFeatCost,
     };
-  }, [creature, featPointsMap]);
+  }, [creature, featPointsMap, subSkillNames]);
 
   const getPayload = useCallback(() => ({
     name: creature.name.trim(),
@@ -712,9 +738,11 @@ function CreatureCreatorContent() {
       const toAdd = skills.filter((s: Skill) => !existing.has(String(s.name ?? '').toLowerCase()));
       if (toAdd.length === 0) return prev;
       const newSkills: CreatureSkill[] = toAdd.map((s: Skill) => ({
+        id: String(s.id ?? ''),
         name: String(s.name ?? ''),
         value: 0,
         proficient: true,
+        isSubSkill: false,
       }));
       return { ...prev, skills: [...prev.skills, ...newSkills] };
     });
@@ -729,13 +757,26 @@ function CreatureCreatorContent() {
         if (s.autoAddBaseSkill) {
           const baseName = String(s.autoAddBaseSkill.name ?? '');
           if (baseName && !existing.has(baseName.toLowerCase())) {
-            next.push({ name: baseName, value: 0, proficient: true });
+            next.push({
+              id: String(s.autoAddBaseSkill.id ?? ''),
+              name: baseName,
+              value: 0,
+              proficient: true,
+              isSubSkill: false,
+            });
             existing.add(baseName.toLowerCase());
           }
         }
         const name = String(s.name ?? '');
         if (name && !existing.has(name.toLowerCase())) {
-          next.push({ name, value: 1, proficient: true });
+          next.push({
+            id: String(s.id ?? ''),
+            baseSkillId: s.base_skill_id !== undefined ? String(s.base_skill_id) : undefined,
+            isSubSkill: true,
+            name,
+            value: 1,
+            proficient: true,
+          });
           existing.add(name.toLowerCase());
         }
       });
@@ -1428,27 +1469,43 @@ function CreatureCreatorContent() {
               <div className="border border-border-light rounded-lg overflow-hidden mb-4">
                 <ListHeader
                   columns={[
+                    { key: '_innate', label: '', width: '2rem', sortable: false as const },
                     { key: 'name', label: 'NAME', width: '1.4fr' },
+                    { key: 'Energy', label: 'ENERGY', width: '0.6fr', align: 'center' },
                     { key: 'Action', label: 'ACTION', width: '0.8fr', align: 'center' },
                     { key: 'Damage', label: 'DAMAGE', width: '0.8fr', align: 'center' },
                     { key: 'Area', label: 'AREA', width: '0.7fr', align: 'center' },
                     { key: 'Duration', label: 'DURATION', width: '0.8fr', align: 'center' },
                   ]}
-                  gridColumns="1.4fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                  gridColumns="2rem 1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
                 />
                 <div className="space-y-1">
-                  {creature.powers.map((power: { id: string; name: string; action?: string; damage?: string; area?: string; duration?: string }) => (
+                  {creature.powers.map((power: { id: string; name: string; energy?: number; action?: string; damage?: string; area?: string; duration?: string; innate?: boolean }) => (
                     <GridListRow
                       key={power.id}
                       id={power.id}
                       name={power.name}
                       columns={[
+                        { key: 'Energy', value: power.energy ?? '-', align: 'center' as const },
                         { key: 'Action', value: power.action ?? '-', align: 'center' as const },
                         { key: 'Damage', value: power.damage ?? '-', align: 'center' as const },
                         { key: 'Area', value: power.area ?? '-', align: 'center' as const },
                         { key: 'Duration', value: power.duration ?? '-', align: 'center' as const },
                       ]}
-                      gridColumns="1.4fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                      gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+                      innate={power.innate === true}
+                      leftSlot={
+                        <InnateToggle
+                          isInnate={power.innate === true}
+                          onToggle={() => setCreature(prev => ({
+                            ...prev,
+                            powers: prev.powers.map((p) =>
+                              p.id === power.id ? { ...p, innate: !(p.innate === true) } : p
+                            ),
+                          }))}
+                          size="md"
+                        />
+                      }
                       rightSlot={
                         <IconButton
                           variant="danger"
@@ -1557,12 +1614,15 @@ function CreatureCreatorContent() {
                 <ListHeader
                   columns={[
                     { key: 'name', label: 'NAME' },
-                    { key: 'type', label: 'TYPE', width: '0.6fr', align: 'center' },
+                    { key: 'type', label: 'TYPE', width: 'minmax(72px, 0.55fr)', align: 'center' },
+                    { key: 'range', label: 'RANGE', width: 'minmax(92px, 7.5rem)', align: 'center', sortable: false as const },
+                    { key: 'attack', label: 'ATTACK', width: 'minmax(64px, 4.25rem)', align: 'center', sortable: false as const },
+                    { key: 'damage', label: 'DAMAGE', width: 'minmax(92px, 6.75rem)', align: 'center', sortable: false as const },
                     { key: 'tp', label: 'TP', width: '0.5fr', align: 'center' },
                     { key: 'currency', label: 'COST', width: '0.6fr', align: 'center' },
                     { key: '_actions', label: '', sortable: false as const },
                   ]}
-                  gridColumns="1.5fr 0.6fr 0.5fr 0.6fr 40px"
+                  gridColumns="minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr) 40px"
                   sortState={armamentSort}
                   onSort={handleArmamentSort}
                 />
@@ -1572,11 +1632,89 @@ function CreatureCreatorContent() {
                       key={armament.id}
                       id={armament.id}
                       name={armament.name}
-                      gridColumns="1.5fr 0.6fr 0.5fr 0.6fr 40px"
+                      gridColumns="minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr) 40px"
                       columns={[
                         {
                           key: 'type',
                           value: armament.type ?? '-',
+                          align: 'center',
+                        },
+                        {
+                          key: 'range',
+                          value:
+                            normalizeRangeDisplay((armament as { range?: string }).range) ||
+                            (String((armament as { type?: string }).type ?? '').toLowerCase() === 'weapon' ? 'Melee' : '-'),
+                          align: 'center',
+                        },
+                        {
+                          key: 'attack',
+                          value:
+                            rollContext?.canRoll !== false && rollContext && String(armament.type ?? '').toLowerCase() === 'weapon' ? (() => {
+                              const prof = creature.martialProficiency ?? 0;
+                              const propNames = (armament.properties || [])
+                                .map((p: unknown) => (typeof p === 'string' ? p : (p as { name?: string }).name || ''))
+                                .filter(Boolean);
+                              const finesse = propNames.some((p: string) => p.toLowerCase() === 'finesse');
+                              const rangeStr = normalizeRangeDisplay((armament as { range?: string }).range) || 'Melee';
+                              const isRanged = rangeStr.toLowerCase() !== 'melee';
+                              const str = creature.abilities.strength ?? 0;
+                              const agi = creature.abilities.agility ?? 0;
+                              const acu = creature.abilities.acuity ?? 0;
+                              const attackBonus = (finesse ? agi : isRanged ? acu : str) + prof;
+                              return (
+                                <div className="flex justify-center">
+                                  <RollButton
+                                    value={attackBonus}
+                                    onClick={() => rollContext.rollAttack(`${creature.name || 'Creature'}: ${armament.name}`, attackBonus)}
+                                    size="sm"
+                                    title="Roll attack"
+                                  />
+                                </div>
+                              );
+                            })() : (
+                              '-'
+                            ),
+                          align: 'center',
+                        },
+                        {
+                          key: 'damage',
+                          value:
+                            rollContext?.canRoll !== false && rollContext && (armament as { damage?: string }).damage && String(armament.type ?? '').toLowerCase() === 'weapon'
+                              ? (() => {
+                                  const prof = creature.martialProficiency ?? 0;
+                                  const propNames = (armament.properties || [])
+                                    .map((p: unknown) => (typeof p === 'string' ? p : (p as { name?: string }).name || ''))
+                                    .filter(Boolean);
+                                  const finesse = propNames.some((p: string) => p.toLowerCase() === 'finesse');
+                                  const rangeStr = normalizeRangeDisplay((armament as { range?: string }).range) || 'Melee';
+                                  const isRanged = rangeStr.toLowerCase() !== 'melee';
+                                  const str = creature.abilities.strength ?? 0;
+                                  const agi = creature.abilities.agility ?? 0;
+                                  const acu = creature.abilities.acuity ?? 0;
+                                  const attackBonus = (finesse ? agi : isRanged ? acu : str) + prof;
+                                  return (
+                                    <div className="flex justify-center">
+                                      <RollButton
+                                        value={0}
+                                        displayValue={
+                                          formatDamageDisplay((armament as { damage?: string }).damage as any) ||
+                                          String((armament as { damage?: string }).damage)
+                                        }
+                                        variant="danger"
+                                        onClick={() =>
+                                          rollContext.rollDamage(
+                                            String((armament as { damage?: string }).damage),
+                                            attackBonus,
+                                            `${creature.name || 'Creature'}: ${armament.name} damage`
+                                          )
+                                        }
+                                        size="sm"
+                                        title="Roll damage"
+                                      />
+                                    </div>
+                                  );
+                                })()
+                              : ((armament as { damage?: string }).damage ?? '-'),
                           align: 'center',
                         },
                         {
@@ -1623,8 +1761,11 @@ function CreatureCreatorContent() {
 
 export default function CreatureCreatorPage() {
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <CreatureCreatorContent />
-    </div>
+    <RollProvider canRoll>
+      <div className="min-h-screen bg-background py-8 px-4">
+        <CreatureCreatorContent />
+        <RollLog />
+      </div>
+    </RollProvider>
   );
 }

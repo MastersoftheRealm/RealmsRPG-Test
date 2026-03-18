@@ -148,13 +148,13 @@ function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequir
       </div>
       <ListHeader
         columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY' },
-          { key: 'action', label: 'ACTION' },
-          { key: 'duration', label: 'DURATION' },
-          { key: 'range', label: 'RANGE' },
-          { key: 'area', label: 'AREA' },
-          { key: 'damage', label: 'DAMAGE' },
+          { key: 'name', label: 'NAME', align: 'left' as const },
+          { key: 'energy', label: 'ENERGY', align: 'center' as const },
+          { key: 'action', label: 'ACTION', align: 'center' as const },
+          { key: 'duration', label: 'DURATION', align: 'center' as const },
+          { key: 'range', label: 'RANGE', align: 'center' as const },
+          { key: 'area', label: 'AREA', align: 'center' as const },
+          { key: 'damage', label: 'DAMAGE', align: 'center' as const },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={POWER_GRID}
@@ -173,12 +173,12 @@ function PublicPowersList({ onLoginRequired, readOnly = false }: { onLoginRequir
               description={p.description}
               gridColumns={POWER_GRID}
               columns={[
-                { key: 'Energy', value: p.energy, highlight: true },
-                { key: 'Action', value: p.action },
-                { key: 'Duration', value: p.duration },
-                { key: 'Range', value: p.range },
-                { key: 'Area', value: p.area },
-                { key: 'Damage', value: p.damage },
+                { key: 'Energy', value: p.energy, highlight: true, align: 'center' },
+                { key: 'Action', value: p.action, align: 'center' },
+                { key: 'Duration', value: p.duration, align: 'center' },
+                { key: 'Range', value: p.range, align: 'center' },
+                { key: 'Area', value: p.area, align: 'center' },
+                { key: 'Damage', value: p.damage, align: 'center' },
               ]}
               chips={p.parts}
               chipsLabel="Parts"
@@ -300,12 +300,12 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
       </div>
       <ListHeader
         columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'energy', label: 'ENERGY' },
-          { key: 'tp', label: 'TP' },
-          { key: 'action', label: 'ACTION' },
-          { key: 'weapon', label: 'WEAPON' },
-          { key: 'damage', label: 'DAMAGE' },
+          { key: 'name', label: 'NAME', align: 'left' as const },
+          { key: 'energy', label: 'ENERGY', align: 'center' as const },
+          { key: 'tp', label: 'TP', align: 'center' as const },
+          { key: 'action', label: 'ACTION', align: 'center' as const },
+          { key: 'weapon', label: 'WEAPON', align: 'center' as const },
+          { key: 'damage', label: 'DAMAGE', align: 'center' as const },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={TECHNIQUE_GRID}
@@ -324,11 +324,11 @@ function PublicTechniquesList({ onLoginRequired, readOnly = false }: { onLoginRe
               description={t.description}
               gridColumns={TECHNIQUE_GRID}
               columns={[
-                { key: 'Energy', value: t.energy, highlight: true },
-                { key: 'TP', value: t.tp },
-                { key: 'Action', value: t.action },
-                { key: 'Weapon', value: t.weapon },
-                { key: 'Damage', value: t.damage },
+                { key: 'Energy', value: t.energy, highlight: true, align: 'center' },
+                { key: 'TP', value: t.tp, align: 'center' },
+                { key: 'Action', value: t.action, align: 'center' },
+                { key: 'Weapon', value: t.weapon, align: 'center' },
+                { key: 'Damage', value: t.damage, align: 'center' },
               ]}
               chips={t.parts}
               chipsLabel="Parts"
@@ -453,13 +453,13 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
       </div>
       <ListHeader
         columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'type', label: 'TYPE' },
-          { key: 'rarity', label: 'RARITY' },
-          { key: 'currency', label: 'CURRENCY' },
-          { key: 'tp', label: 'TP' },
-          { key: 'range', label: 'RANGE' },
-          { key: 'damage', label: 'DAMAGE' },
+          { key: 'name', label: 'NAME', align: 'left' as const },
+          { key: 'type', label: 'TYPE', align: 'center' as const },
+          { key: 'rarity', label: 'RARITY', align: 'center' as const },
+          { key: 'currency', label: 'CURRENCY', align: 'center' as const },
+          { key: 'tp', label: 'TP', align: 'center' as const },
+          { key: 'range', label: 'RANGE', align: 'center' as const },
+          { key: 'damage', label: 'DAMAGE', align: 'center' as const },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={ITEM_GRID}
@@ -478,12 +478,12 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
               description={i.description}
               gridColumns={ITEM_GRID}
               columns={[
-                { key: 'Type', value: i.type },
-                { key: 'Rarity', value: i.rarity },
-                { key: 'Currency', value: i.currency },
-                { key: 'TP', value: i.tp },
-                { key: 'Range', value: i.range },
-                { key: 'Damage', value: i.damage },
+                { key: 'Type', value: i.type, align: 'center' },
+                { key: 'Rarity', value: i.rarity, align: 'center' },
+                { key: 'Currency', value: i.currency, align: 'center' },
+                { key: 'TP', value: i.tp, align: 'center' },
+                { key: 'Range', value: i.range, align: 'center' },
+                { key: 'Damage', value: i.damage, align: 'center' },
               ]}
               chips={i.parts}
               chipsLabel="Properties"
@@ -583,9 +583,9 @@ function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginReq
       </div>
       <ListHeader
         columns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'level', label: 'LEVEL' },
-          { key: 'type', label: 'TYPE' },
+          { key: 'name', label: 'NAME', align: 'left' as const },
+          { key: 'level', label: 'LEVEL', align: 'center' as const },
+          { key: 'type', label: 'TYPE', align: 'center' as const },
           { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={CREATURE_GRID}
@@ -604,8 +604,8 @@ function PublicCreaturesList({ onLoginRequired, readOnly = false }: { onLoginReq
               description={c.description}
               gridColumns={CREATURE_GRID}
               columns={[
-                { key: 'Level', value: c.level, highlight: true },
-                { key: 'Type', value: c.type },
+                { key: 'Level', value: c.level, highlight: true, align: 'center' },
+                { key: 'Type', value: c.type, align: 'center' },
               ]}
               badges={[{ label: 'Realms', color: 'blue' }]}
               rightSlot={readOnly ? undefined : (

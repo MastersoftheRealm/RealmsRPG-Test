@@ -26,6 +26,7 @@ export interface CreaturePower {
   range: string;
   area: string;
   damage: string;
+  innate?: boolean;
 }
 
 export interface CreatureTechnique {
@@ -52,6 +53,14 @@ export interface CreatureArmament {
   tp: number;
   currency: number;
   rarity: string;
+  damage?: string;
+  range?: string;
+  description?: string;
+  properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
+  damageReduction?: number;
+  armorValue?: number;
+  shieldDamage?: { amount: number; size: number } | null;
+  shieldDR?: { amount: number; size: number } | null;
 }
 
 // =============================================================================
@@ -99,6 +108,7 @@ export function transformUserPowerToDisplayItem(
       range: display.range,
       area: display.area,
       damage: damageStr,
+      innate: false,
     } as unknown as Record<string, unknown>,
   };
 }
@@ -251,6 +261,18 @@ export function transformUserItemToDisplayItem(
       tp: display.totalTP || 0,
       currency: display.currencyCost || 0,
       rarity: display.rarity || 'Common',
+      damage: display.damage || undefined,
+      range: display.range || undefined,
+      description: item.description,
+      properties: (item.properties || []).map((prop) => ({
+        id: typeof prop === 'string' ? undefined : prop.id,
+        name: typeof prop === 'string' ? prop : prop.name,
+        op_1_lvl: typeof prop === 'string' ? undefined : prop.op_1_lvl,
+      })),
+      damageReduction: item.damageReduction,
+      armorValue: item.armorValue,
+      shieldDamage: item.shieldDamage ?? null,
+      shieldDR: item.shieldDR ?? null,
     } as unknown as Record<string, unknown>,
   };
 }

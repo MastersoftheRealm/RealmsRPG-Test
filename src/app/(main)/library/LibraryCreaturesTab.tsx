@@ -17,10 +17,22 @@ import {
   ErrorDisplay,
   ListEmptyState,
 } from '@/components/shared';
+import { RollLog, RollProvider } from '@/components/character-sheet';
 import { useSort } from '@/hooks/use-sort';
 import { useUserCreatures, useDuplicateCreature } from '@/hooks';
 import { Button, useToast } from '@/components/ui';
 import type { DisplayItem } from '@/types';
+
+const CREATURE_GRID_COLUMNS = '1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr';
+const CREATURE_HEADER_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'level', label: 'LEVEL', align: 'center' as const },
+  { key: 'size', label: 'SIZE', align: 'center' as const },
+  { key: 'type', label: 'TYPE', align: 'center' as const },
+  { key: 'archetype', label: 'ARCHETYPE', align: 'center' as const },
+  { key: 'hp', label: 'HP', align: 'center' as const },
+  { key: 'en', label: 'EN', align: 'center' as const },
+];
 
 interface LibraryCreaturesTabProps {
   onDelete: (item: DisplayItem) => void;
@@ -44,7 +56,23 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         c.description?.toLowerCase().includes(searchLower)
       );
     });
-    return sortItems(filtered.map(c => ({ ...c, name: c.name || '', level: c.level ?? 0 })));
+    return sortItems(
+      filtered.map(c => {
+        const power = c.powerProficiency ?? 0;
+        const martial = c.martialProficiency ?? 0;
+        const archetype = power > 0 && martial > 0 ? 'Powered-Martial' : power > 0 ? 'Power' : martial > 0 ? 'Martial' : 'None';
+        return {
+          ...c,
+          name: c.name || '',
+          level: c.level ?? 0,
+          size: c.size ?? '',
+          type: c.type ?? '',
+          hp: c.hitPoints ?? c.hp ?? 0,
+          en: c.energyPoints ?? 0,
+          archetype,
+        };
+      })
+    );
   }, [creatures, search, sortItems]);
 
   if (error) {
@@ -70,62 +98,62 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
   }
 
   return (
-    <div>
-      <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search creatures..." />
-      </div>
-      <ListHeader
-        columns={[
-          { key: 'name', label: 'Name', width: '2fr' },
-          { key: 'level', label: 'Level', width: '1fr' },
-        ]}
-        sortState={sortState}
-        onSort={handleSort}
-        className="grid-cols-2"
-      />
-      {isLoading ? (
-        <LoadingState />
-      ) : myOnlyCreatures.length === 0 ? (
-        <div className="py-12 text-center text-text-secondary">No creatures match your search.</div>
-      ) : (
-        <div className="space-y-3">
-          {myOnlyCreatures.map(creature => (
-            <CreatureStatBlock
-              key={creature.docId}
-              creature={{
-                id: creature.docId,
-                name: creature.name,
-                description: creature.description,
-                level: creature.level,
-                type: creature.type,
-                size: creature.size,
-                hp: creature.hp,
-                hitPoints: creature.hitPoints,
-                energyPoints: creature.energyPoints,
-                abilities: creature.abilities,
-                defenses: creature.defenses,
-                powerProficiency: creature.powerProficiency,
-                martialProficiency: creature.martialProficiency,
-                resistances: creature.resistances,
-                weaknesses: creature.weaknesses,
-                immunities: creature.immunities,
-                conditionImmunities: creature.conditionImmunities,
-                senses: creature.senses,
-                movementTypes: creature.movementTypes,
-                languages: creature.languages,
-                skills: creature.skills,
-                powers: creature.powers,
-                techniques: creature.techniques,
-                feats: creature.feats,
-                armaments: creature.armaments,
-              }}
-              onEdit={() => window.open(`/creature-creator?edit=${creature.docId}`, '_blank')}
-              onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
-              onDuplicate={() => duplicateCreature.mutate(creature.docId, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
-            />
-          ))}
+    <RollProvider canRoll>
+      <div>
+        <div className="mb-4">
+          <SearchInput value={search} onChange={setSearch} placeholder="Search creatures..." />
         </div>
-      )}
-    </div>
+        <ListHeader
+          columns={CREATURE_HEADER_COLUMNS}
+          gridColumns={CREATURE_GRID_COLUMNS}
+          sortState={sortState}
+          onSort={handleSort}
+        />
+        {isLoading ? (
+          <LoadingState />
+        ) : myOnlyCreatures.length === 0 ? (
+          <div className="py-12 text-center text-text-secondary">No creatures match your search.</div>
+        ) : (
+          <div className="space-y-3">
+            {myOnlyCreatures.map(creature => (
+              <CreatureStatBlock
+                key={creature.docId}
+                creature={{
+                  id: creature.docId,
+                  name: creature.name,
+                  description: creature.description,
+                  level: creature.level,
+                  type: creature.type,
+                  size: creature.size,
+                  hp: creature.hp,
+                  hitPoints: creature.hitPoints,
+                  energyPoints: creature.energyPoints,
+                  abilities: creature.abilities,
+                  defenses: creature.defenses,
+                  powerProficiency: creature.powerProficiency,
+                  martialProficiency: creature.martialProficiency,
+                  resistances: creature.resistances,
+                  weaknesses: creature.weaknesses,
+                  immunities: creature.immunities,
+                  conditionImmunities: creature.conditionImmunities,
+                  senses: creature.senses,
+                  movementTypes: creature.movementTypes,
+                  languages: creature.languages,
+                  skills: creature.skills,
+                  powers: creature.powers,
+                  techniques: creature.techniques,
+                  feats: creature.feats,
+                  armaments: creature.armaments,
+                }}
+                onEdit={() => window.open(`/creature-creator?edit=${creature.docId}`, '_blank')}
+                onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
+                onDuplicate={() => duplicateCreature.mutate(creature.docId, { onError: (e) => showToast(e?.message ?? 'Failed to duplicate', 'error') })}
+              />
+            ))}
+          </div>
+        )}
+        <RollLog />
+      </div>
+    </RollProvider>
   );
 }
