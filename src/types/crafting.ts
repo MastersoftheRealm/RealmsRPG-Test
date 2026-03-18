@@ -54,10 +54,19 @@ export interface CraftingSessionData {
   powerRef?: CraftingPowerRef | null;
   /** When isEnhanced: custom base item if not from library/codex */
   customBaseItem?: CraftingCustomBaseItem | null;
+  /** Whether the custom base item editor is currently open */
+  isEditingCustomBaseItem?: boolean;
   /** When isEnhanced: potency at crafting time; number or 'creator' */
   potency?: number | 'creator';
   /** When isEnhanced + multiple use: index into multipleUseTable; -1 = single use per full recovery */
   multipleUseTableIndex?: number;
+  /**
+   * Enhanced item uses configuration.
+   * usesType: 'full' | 'partial' | 'permanent' (or undefined for default single use per Full Recovery).
+   * usesCount: number of uses per recovery when usesType is 'full' or 'partial'.
+   */
+  usesType?: 'full' | 'partial' | 'permanent';
+  usesCount?: number;
   /** When isEnhanced: include crafting requirements for the base item in addition to enhancement */
   craftBaseItemAlso?: boolean;
   /** Upgrade mode: upgrading an existing item to a higher-tier one */
@@ -134,6 +143,10 @@ export interface UserEnhancedItem {
   /** Power imbued */
   powerRef: CraftingPowerRef;
   description?: string;
+  /** Currency cost of the enhanced item (market price) */
+  currencyCost?: number;
+  /** Rarity of the enhanced item */
+  rarity?: string;
   /** 'full' | 'partial' | 'permanent' */
   usesType?: string;
   usesCount?: number;

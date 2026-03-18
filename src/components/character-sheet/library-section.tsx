@@ -453,21 +453,39 @@ const TECHNIQUE_COLUMNS: ListColumn[] = [
 const TECHNIQUE_GRID = '1.4fr 0.7fr 1fr 0.8fr';
 
 const WEAPON_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1fr' },
-  { key: 'damage', label: 'Damage', width: '0.8fr', align: 'center' },
-  { key: 'range', label: 'Range', width: '0.6fr', align: 'center' },
+  // Expected maxes:
+  // - Name: "Scalebreaker Hammer"
+  // - Range: "32 Spaces"
+  // - Attack: "+10"
+  // - Damage: "2d12" with "Slashing" subtext
+  { key: 'name', label: 'Name', width: 'minmax(180px, 0.9fr)' },
+  { key: 'range', label: 'Range', width: 'minmax(88px, 7rem)', align: 'center' },
+  { key: 'attack', label: 'Attack', width: 'minmax(60px, 4rem)', align: 'center' },
+  { key: 'damage', label: 'Damage', width: 'minmax(110px, 8rem)', align: 'center' },
 ];
-const WEAPON_GRID = '1fr 0.8fr 0.6fr';
-/** Right slot column label for weapons: Attack (roll button) */
-const WEAPON_ATTACK_COLUMN = { key: '_right', label: 'Attack', width: '4rem', sortable: false as const };
+// Keep Range close to Name; give Damage more room than Attack.
+const WEAPON_GRID = 'minmax(180px, 0.9fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem)';
+
+function splitDamageDiceAndType(damage: unknown): { dice: string; type: string; rollStr: string } {
+  if (!damage) return { dice: '-', type: '', rollStr: '-' };
+  if (typeof damage === 'string') {
+    const str = damage.trim();
+    const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
+    if (!match) return { dice: str, type: '', rollStr: str };
+    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+  }
+  const formatted = formatDamageDisplay(damage as never);
+  return { dice: formatted ? String(formatted) : '-', type: '', rollStr: formatted ? String(formatted) : '-' };
+}
 
 const SHIELD_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1fr' },
-  { key: 'attack', label: 'Attack', width: '0.6fr', align: 'center' },
-  { key: 'damage', label: 'Damage', width: '0.7fr', align: 'center' },
-  { key: 'block', label: 'Block', width: '0.7fr', align: 'center' },
+  { key: 'name', label: 'Name', width: 'minmax(160px, 1fr)' },
+  { key: 'range', label: 'Range', width: 'minmax(64px, 0.6fr)', align: 'center' },
+  { key: 'attack', label: 'Attack', width: 'minmax(64px, 4.5rem)', align: 'center' },
+  { key: 'damage', label: 'Damage', width: 'minmax(64px, 4.5rem)', align: 'center' },
+  { key: 'block', label: 'Block', width: 'minmax(64px, 0.7fr)', align: 'center' },
 ];
-const SHIELD_GRID = '1fr 0.6fr 0.7fr 0.7fr';
+const SHIELD_GRID = 'minmax(160px, 1fr) minmax(64px, 0.6fr) minmax(64px, 4.5rem) minmax(64px, 4.5rem) minmax(64px, 0.7fr)';
 
 const ARMOR_COLUMNS: ListColumn[] = [
   { key: '_equip', label: '', width: '2rem', sortable: false as const },
@@ -1116,10 +1134,9 @@ export function LibrarySection({
                   columns={[
                     BLANK_LEFT,
                     ...WEAPON_COLUMNS,
-                    WEAPON_ATTACK_COLUMN,
                     ...(showLibraryEditControls ? [BLANK_DELETE] : []),
                   ]}
-                  gridColumns={['2rem', WEAPON_GRID, '4rem', ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
+                  gridColumns={['2rem', WEAPON_GRID, ...(showLibraryEditControls ? ['2.25rem'] : [])].join(' ')}
                   sortState={weaponSort}
                   onSort={(col) => setWeaponSort(toggleSort(weaponSort, col))}
                 />
@@ -1139,9 +1156,52 @@ export function LibrarySection({
                     }));
                     const hasMissingProf = hasMissingForEntry({ weapons: [item] });
                     const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
+                    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
+                    const { dice: damageDice, type: damageType, rollStr: damageRollStr } = splitDamageDiceAndType(item.damage);
+                    const attackButton = rollContext?.canRoll !== false && rollContext ? (
+                      <RollButton
+                        value={attackBonus}
+                        onClick={() => rollContext.rollAttack(item.name, attackBonus)}
+                        size="sm"
+                        title={`Roll attack (${abilityName})`}
+                      />
+                    ) : (
+                      <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
+                        {attackBonus >= 0 ? '+' : ''}{attackBonus}
+                      </span>
+                    );
+                    const damageButton = rollContext?.canRoll !== false && rollContext && damageRollStr !== '-' ? (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <RollButton
+                          value={0}
+                          displayValue={damageDice}
+                          variant="danger"
+                          onClick={() => rollContext.rollDamage(String(damageRollStr))}
+                          size="sm"
+                          title="Roll damage"
+                        />
+                        {damageType && (
+                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
+                            {damageType}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
+                          {damageDice}
+                        </span>
+                        {damageType && (
+                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
+                            {damageType}
+                          </span>
+                        )}
+                      </div>
+                    );
                     const columns: ColumnValue[] = [
-                      { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', className: 'text-danger-600 dark:text-danger-400 font-medium', align: 'center' },
-                      { key: 'range', value: normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee', align: 'center' },
+                      { key: 'range', value: rangeValue, align: 'center' },
+                      { key: 'attack', value: attackButton, align: 'center' },
+                      { key: 'damage', value: damageButton, align: 'center' },
                     ];
                     
                     return (
@@ -1163,26 +1223,7 @@ export function LibrarySection({
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
-                        rightSlot={rollContext?.canRoll !== false && rollContext && (
-                          <div className="flex items-center gap-1">
-                            <RollButton
-                              value={attackBonus}
-                              onClick={() => rollContext.rollAttack(item.name, attackBonus)}
-                              size="sm"
-                              title={`Roll attack (${abilityName})`}
-                            />
-                            {item.damage && typeof item.damage === 'string' && (
-                              <RollButton
-                                value={0}
-                                displayValue="💥"
-                                variant="danger"
-                                onClick={() => rollContext.rollDamage(item.damage as string)}
-                                size="sm"
-                                title="Roll damage"
-                              />
-                            )}
-                          </div>
-                        )}
+                        rightSlot={undefined}
                         onDelete={showLibraryEditControls && onRemoveWeapon ? () => onRemoveWeapon(item.id ?? item.name ?? i) : undefined}
                       />
                     );
@@ -1220,6 +1261,11 @@ export function LibrarySection({
                     const shieldBlock = enriched.shieldAmount ?? '-';
                     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? formatDamageDisplay(item.damage) : '-');
                     const { bonus: attackBonus } = getWeaponAttackBonus(item, abilities, martialProficiency);
+                    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
+                    const { dice: shieldDamageDice, type: shieldDamageType, rollStr: shieldDamageRollStr } = splitDamageDiceAndType(
+                      // Prefer enriched shield damage string when present
+                      shieldDamageStr !== '-' ? String(shieldDamageStr) : item.damage
+                    );
                     const propertyChips = propertiesToPartData(item.properties, itemPropertiesDb).map(p => ({
                       name: p.name,
                       description: chipDescriptionWithOptionLevels(p.description, p.optionLevels),
@@ -1230,10 +1276,72 @@ export function LibrarySection({
                     }));
                     const hasMissingProf = hasMissingForEntry({ shields: [item] });
                     const rowBadges = hasMissingProf ? [{ label: 'Needs Proficiency', color: 'red' as const }] : undefined;
+                    
+                    const attackCell = shieldDamageStr !== '-' && rollContext?.canRoll !== false && rollContext ? (
+                      <div className="flex justify-center">
+                        <RollButton
+                          value={attackBonus}
+                          onClick={() => rollContext.rollAttack(item.name, attackBonus)}
+                          size="sm"
+                          title="Roll attack"
+                        />
+                      </div>
+                    ) : (
+                      shieldDamageStr !== '-' ? (attackBonus >= 0 ? '+' : '') + attackBonus : '-'
+                    );
+                    
+                    const damageCell = shieldDamageRollStr !== '-' && rollContext?.canRoll !== false && rollContext ? (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <RollButton
+                          value={0}
+                          displayValue={shieldDamageDice}
+                          variant="danger"
+                          onClick={() => rollContext.rollDamage(String(shieldDamageRollStr))}
+                          size="sm"
+                          title="Roll damage"
+                        />
+                        {shieldDamageType && (
+                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
+                            {shieldDamageType}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
+                          {shieldDamageDice}
+                        </span>
+                        {shieldDamageType && (
+                          <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">
+                            {shieldDamageType}
+                          </span>
+                        )}
+                      </div>
+                    );
                     const columns: ColumnValue[] = [
-                      { key: 'attack', value: shieldDamageStr !== '-' ? (attackBonus >= 0 ? '+' : '') + attackBonus : '-', align: 'center' },
-                      { key: 'damage', value: shieldDamageStr !== '-' ? shieldDamageStr : '-', className: shieldDamageStr !== '-' ? 'text-danger-600 dark:text-danger-400 font-medium' : '', align: 'center' },
-                      { key: 'block', value: shieldBlock, className: 'text-primary-600 dark:text-primary-400 font-medium', align: 'center' },
+                      { key: 'range', value: rangeValue, align: 'center' },
+                      { key: 'attack', value: attackCell, align: 'center' },
+                      { key: 'damage', value: damageCell, align: 'center' },
+                      {
+                        key: 'block',
+                        value:
+                          shieldBlock !== '-' && rollContext?.canRoll !== false && rollContext ? (
+                            <div className="flex justify-center">
+                              <RollButton
+                                value={0}
+                                displayValue={String(shieldBlock)}
+                                variant="primary"
+                                onClick={() => rollContext.rollDamage(String(shieldBlock) + ' Bludgeoning', 0, 'Shield block')}
+                                size="sm"
+                                title="Roll shield block amount"
+                              />
+                            </div>
+                          ) : (
+                            shieldBlock
+                          ),
+                        className: 'text-primary-600 dark:text-primary-400 font-medium',
+                        align: 'center',
+                      },
                     ];
                     return (
                       <GridListRow
@@ -1254,16 +1362,7 @@ export function LibrarySection({
                             label={item.equipped ? 'Unequip' : 'Equip'}
                           />
                         )}
-                        rightSlot={rollContext?.canRoll !== false && rollContext && shieldBlock !== '-' ? (
-                          <RollButton
-                            value={0}
-                            displayValue={shieldBlock}
-                            variant="primary"
-                            onClick={() => rollContext.rollDamage(shieldBlock + ' Bludgeoning', 0, 'Shield block')}
-                            size="sm"
-                            title="Roll shield block amount"
-                          />
-                        ) : undefined}
+                        rightSlot={undefined}
                         onDelete={showLibraryEditControls && onRemoveShield ? () => onRemoveShield(item.id ?? item.name ?? i) : undefined}
                       />
                     );

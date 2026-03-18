@@ -257,6 +257,8 @@ export const enhancedItemCreateSchema = z.object({
   baseItem: enhancedBaseItemSchema,
   powerRef: enhancedPowerRefSchema,
   description: z.string().max(5000).optional(),
+  currencyCost: z.number().min(0).optional(),
+  rarity: z.string().max(50).optional(),
   usesType: z.string().max(50).optional(),
   usesCount: z.number().int().min(0).optional(),
   potency: z.number().min(0).optional(),

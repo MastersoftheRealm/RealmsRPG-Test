@@ -124,21 +124,39 @@ export function getModalGridColumns(itemType: LibraryItemType): string {
 
 export function getListHeaderColumns(
   itemType: LibraryItemType
-): { key: string; label: string; sortable?: boolean }[] {
-  const base = [{ key: 'name', label: 'Name' }];
+): { key: string; label: string; sortable?: boolean; align?: 'left' | 'center' | 'right' }[] {
+  const base = [{ key: 'name', label: 'Name', align: 'left' as const }];
   switch (itemType) {
     case 'power':
-      return [...base, { key: 'Action', label: 'Action' }, { key: 'Damage', label: 'Damage' }, { key: 'Area', label: 'Area' }];
+    return [
+      ...base,
+      { key: 'Action', label: 'Action', align: 'center' as const },
+      { key: 'Damage', label: 'Damage', align: 'center' as const },
+      { key: 'Area', label: 'Area', align: 'center' as const },
+    ];
     case 'technique':
-      return [...base, { key: 'Energy', label: 'Energy' }, { key: 'Weapon', label: 'Weapon' }, { key: 'Training Pts', label: 'Training Pts' }];
+    return [
+      ...base,
+      { key: 'Energy', label: 'Energy', align: 'center' as const },
+      { key: 'Weapon', label: 'Weapon', align: 'center' as const },
+      { key: 'Training Pts', label: 'Training Pts', align: 'center' as const },
+    ];
     case 'weapon':
-      return [...base, { key: 'damage', label: 'Damage' }];
+    return [...base, { key: 'damage', label: 'Damage', align: 'center' as const }];
     case 'shield':
-      return [...base, { key: 'Block', label: 'Block' }, { key: 'Damage', label: 'Damage' }];
+    return [
+      ...base,
+      { key: 'Block', label: 'Block', align: 'center' as const },
+      { key: 'Damage', label: 'Damage', align: 'center' as const },
+    ];
     case 'armor':
-      return [...base, { key: 'armor', label: 'Armor' }];
+    return [...base, { key: 'armor', label: 'Armor', align: 'center' as const }];
     case 'item':
-      return [...base, { key: 'type', label: 'Type' }, { key: 'stat', label: 'Damage / Armor / Block' }];
+    return [
+      ...base,
+      { key: 'type', label: 'Type', align: 'center' as const },
+      { key: 'stat', label: 'Damage / Armor / Block', align: 'center' as const },
+    ];
     case 'equipment':
     default:
       return base;

@@ -7,12 +7,13 @@
 'use client';
 
 import { useState } from 'react';
-import { cn, formatDamageDisplay } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
 import { useRollsOptional } from './roll-context';
 import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, DecrementButton, IncrementButton } from '@/components/shared';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
+import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable } from '@/components/shared';
 
 interface ArchetypeSectionProps {
   character: Character;
@@ -201,109 +202,16 @@ function WeaponsSection({
 
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
-      <SectionHeader title="Weapons" className="mb-2" />
+      <QuickWeaponsTable
+        items={equippedWeapons as unknown as import('@/components/shared').QuickArmamentItem[]}
+        abilities={abilities}
+        martialProf={martialProf}
+        filterEquipped={false}
+        className="bg-transparent p-0 mb-0"
+      />
+      {/* Unarmed Prowess - always shown, styled based on proficiency */}
       <table className="w-full text-sm">
-        <thead>
-          <tr className="text-xs text-text-muted dark:text-text-secondary">
-            <th className="text-left py-1">Name</th>
-            <th className="text-center py-1">Attack</th>
-            <th className="text-center py-1">Damage</th>
-            <th className="text-center py-1">Range</th>
-          </tr>
-        </thead>
         <tbody>
-          {equippedWeapons.map((weapon, idx) => {
-            // Determine attack bonus based on weapon properties
-            const props = (weapon.properties || []).map(p => typeof p === 'string' ? p : p.name || '');
-            let attackBonus = strBonus;
-            if (props.includes('Finesse')) {
-              attackBonus = agiBonus;
-            } else if (props.includes('Range') || weapon.range) {
-              attackBonus = acuBonus;
-            }
-            
-            // Parse damage - separate dice from type for display
-            let damageDice = '-';
-            let damageType = '';
-            let damageStr = '-';
-            
-            if (weapon.damage) {
-              if (Array.isArray(weapon.damage)) {
-                const parts = weapon.damage
-                  .filter((d: { amount?: number | string; size?: number | string; type?: string }) => d && d.amount && d.size)
-                  .map((d: { amount?: number | string; size?: number | string; type?: string }) => ({
-                    dice: `${d.amount}d${d.size}`,
-                    type: d.type && d.type !== 'none' ? d.type : ''
-                  }));
-                if (parts.length > 0) {
-                  damageDice = parts.map(p => p.dice).join(' + ');
-                  damageType = parts.map(p => p.type).filter(Boolean).join(', ');
-                  damageStr = parts.map(p => p.type ? `${p.dice} ${p.type}` : p.dice).join(', ');
-                }
-              } else {
-                // Parse string like "1d8 Slashing"
-                const strDamage = String(weapon.damage);
-                const match = strDamage.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
-                if (match) {
-                  damageDice = match[1].trim();
-                  damageType = match[2]?.trim() || '';
-                  damageStr = strDamage;
-                }
-              }
-            }
-            
-            // Show non-excluded properties below
-            const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
-            const displayProps = props.filter(p => p && !excludedProps.includes(p));
-            
-            return (
-              <tr key={weapon.id || idx} className="border-b border-border-subtle last:border-0 align-top">
-                <td className="py-2 font-medium text-text-secondary">
-                  {weapon.name}
-                  {displayProps.length > 0 && (
-                    <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
-                      {displayProps.map(p => `• ${p}`).join(' ')}
-                    </div>
-                  )}
-                </td>
-                <td className="text-center py-2">
-                  {onRollAttack ? (
-                    <RollButton
-                      value={attackBonus}
-                      onClick={() => onRollAttack(weapon.name || 'Attack', attackBonus)}
-                      size="sm"
-                      title={`Roll attack with ${weapon.name}`}
-                    />
-                  ) : (
-                    <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{attackBonus >= 0 ? '+' : ''}{attackBonus}</span>
-                  )}
-                </td>
-                <td className="text-center py-2">
-                  <div className="flex flex-col items-center gap-0.5">
-                    {onRollDamage ? (
-                      <RollButton
-                        value={0}
-                        displayValue={damageDice}
-                        variant="danger"
-                        onClick={() => onRollDamage(damageStr, attackBonus)}
-                        size="sm"
-                        title={`Roll ${damageStr} damage`}
-                      />
-                    ) : (
-                      <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{damageDice}</span>
-                    )}
-                    {damageType && (
-                      <span className="text-[10px] text-text-muted dark:text-text-secondary">{damageType}</span>
-                    )}
-                  </div>
-                </td>
-                <td className="text-center py-2 text-text-muted dark:text-text-secondary">
-                  {weapon.range || 'Melee'}
-                </td>
-              </tr>
-            );
-          })}
-          {/* Unarmed Prowess - always shown, styled based on proficiency */}
           <tr className="border-t border-border-light align-top">
             <td className="py-2 font-medium text-text-secondary">
               Unarmed Prowess
@@ -370,112 +278,24 @@ function ShieldsSection({
   enrichedShields?: EnrichedItem[];
 }) {
   const abilities = character.abilities || {};
-  const strBonus = (abilities.strength ?? 0) + martialProf;
-
   const shields = enrichedShields || (character.equipment?.shields || []) as Item[];
   const equippedShields = shields.filter(s => s.equipped);
 
-  if (equippedShields.length === 0) {
-    return (
-      <div className="bg-surface-alt rounded-lg p-3 mb-4">
-        <SectionHeader title="Shields" className="mb-2" />
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-2">No shield equipped</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-surface-alt rounded-lg p-3 mb-4">
-      <SectionHeader title="Shields" className="mb-2" />
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-xs text-text-muted dark:text-text-secondary">
-            <th className="text-left py-1">Name</th>
-            <th className="text-center py-1">Block</th>
-            <th className="text-center py-1">Damage</th>
-            <th className="text-center py-1">Attack</th>
-          </tr>
-        </thead>
-        <tbody>
-          {equippedShields.map((shield, idx) => {
-            const enriched = shield as EnrichedItem & { shieldAmount?: string; shieldDamage?: string | null };
-            const blockStr = enriched.shieldAmount ?? '-';
-            const rawDamage = enriched.shieldDamage ?? (shield.damage ? formatDamageDisplay(shield.damage) : '');
-            const damageStr = rawDamage && String(rawDamage).trim() !== '' ? String(rawDamage).trim() : '-';
-            const hasDamage = damageStr !== '-';
-            const attackBonus = strBonus; // Shields used as weapon typically use Strength
-            // All shield damage is bludgeoning for display/roll
-            const damageRollStr = hasDamage ? (damageStr.includes('Bludgeoning') ? damageStr : `${damageStr} Bludgeoning`) : '';
-
-            // Properties below name (same style as weapons) — exclude mechanical ones
-            const excludedProps = ['Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 'Armor Base', 'Weapon Damage'];
-            const props = (shield.properties || []).map(p => typeof p === 'string' ? p : (p as { name?: string }).name || '');
-            const displayProps = props.filter(p => p && !excludedProps.includes(p));
-
-            return (
-              <tr key={shield.id || idx} className="border-b border-border-subtle last:border-0 align-top">
-                <td className="py-2 font-medium text-text-secondary">
-                  {shield.name}
-                  {displayProps.length > 0 && (
-                    <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
-                      {displayProps.map(p => `• ${p}`).join(' ')}
-                    </div>
-                  )}
-                </td>
-                <td className="text-center py-2">
-                  {blockStr !== '-' ? (
-                    onRollDamage ? (
-                      <RollButton
-                        value={0}
-                        displayValue={blockStr}
-                        variant="primary"
-                        size="sm"
-                        onClick={() => onRollDamage(blockStr + ' Bludgeoning', 0)}
-                        title="Roll shield block amount"
-                      />
-                    ) : (
-                      <span className="font-mono text-primary-600 dark:text-primary-400">{blockStr}</span>
-                    )
-                  ) : (
-                    <span className="text-text-muted dark:text-text-secondary">-</span>
-                  )}
-                </td>
-                <td className="text-center py-2">
-                  {hasDamage ? (
-                    onRollDamage ? (
-                      <RollButton
-                        value={0}
-                        displayValue={damageStr}
-                        variant="danger"
-                        size="sm"
-                        onClick={() => onRollDamage(damageRollStr, attackBonus)}
-                        title={`Roll ${damageStr} damage (Bludgeoning)`}
-                      />
-                    ) : (
-                      <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{damageStr}</span>
-                    )
-                  ) : (
-                    <span className="text-text-muted dark:text-text-secondary">-</span>
-                  )}
-                </td>
-                <td className="text-center py-2">
-                  {hasDamage && onRollAttack ? (
-                    <RollButton
-                      value={attackBonus}
-                      onClick={() => onRollAttack(shield.name || 'Shield bash', attackBonus)}
-                      size="sm"
-                      title={`Roll attack with ${shield.name}`}
-                    />
-                  ) : (
-                    <span className="text-text-muted dark:text-text-secondary">-</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <QuickShieldsTable
+        items={equippedShields as unknown as import('@/components/shared').QuickArmamentItem[]}
+        abilities={abilities}
+        martialProf={martialProf}
+        filterEquipped={false}
+      />
+      {equippedShields.length === 0 && (
+        <div className="bg-surface-alt rounded-lg p-3 mb-4">
+          <SectionHeader title="Shields" className="mb-2" />
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-2">No shield equipped</p>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -488,8 +308,6 @@ function ArmorSection({
   enrichedArmor?: EnrichedItem[];
 }) {
   const abilities = character.abilities || {};
-  const agility = abilities.agility ?? 0;
-  const baseEvasion = 10 + agility;
   
   // Use enriched armor if available, fallback to raw character equipment
   const armor = enrichedArmor || (character.equipment?.armor || character.armor || []) as Item[];
@@ -497,79 +315,19 @@ function ArmorSection({
   const equippedArmor = armorArray.filter((a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true);
 
   return (
-    <div className="bg-surface-alt rounded-lg p-3 mb-4">
-      <SectionHeader title="Armor" className="mb-2" />
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-xs text-text-muted dark:text-text-secondary">
-            <th className="text-left py-1">Name</th>
-            <th className="text-center py-1">DMG Red.</th>
-            <th className="text-center py-1">Crit Rng</th>
-            <th className="text-center py-1">Abl Req.</th>
-          </tr>
-        </thead>
-        <tbody>
-          {equippedArmor.length > 0 ? (
-            equippedArmor.map((armorItem, idx) => {
-              // Extract properties
-              const properties = armorItem.properties || [];
-              // DR = 1 (base) + 1 per op_1_lvl. Prefer enriched armorValue, else derive from properties.
-              const armorWithVal = armorItem as { armorValue?: number; armor?: number };
-              let damageReduction = armorWithVal.armorValue ?? armorWithVal.armor ?? 0;
-              let critRangeBonus = 0;
-              const abilityReqs: string[] = [];
-
-              properties.forEach(prop => {
-                if (!prop) return;
-                const propName = typeof prop === 'string' ? prop : prop.name || '';
-                const propValue = typeof prop === 'object' && 'value' in prop ? Number(prop.value) : 0;
-                const op1Lvl = Number((typeof prop === 'object' && 'op_1_lvl' in prop ? (prop as any).op_1_lvl : propValue) || 0);
-
-                if (propName === 'Damage Reduction' && damageReduction === 0) {
-                  damageReduction = 1 + op1Lvl;
-                }
-                if (propName === 'Critical Range +1') critRangeBonus = 1 + op1Lvl;
-                if (propName.includes('Strength Requirement')) abilityReqs.push(`STR ${1 + op1Lvl}`);
-                if (propName.includes('Agility Requirement')) abilityReqs.push(`AGI ${1 + op1Lvl}`);
-                if (propName.includes('Vitality Requirement')) abilityReqs.push(`VIT ${1 + op1Lvl}`);
-              });
-              
-              // Critical Range is just baseEvasion + critRangeBonus (display the actual crit threshold)
-              const critRange = baseEvasion + 10 + critRangeBonus;
-              
-              // Properties to exclude from display
-              const excludedProps = [
-                'Damage Reduction', 'Split Damage Dice', 'Range', 'Shield Base', 
-                'Armor Base', 'Weapon Damage', 'Critical Range +1',
-                'Armor Strength Requirement', 'Armor Agility Requirement', 'Armor Vitality Requirement'
-              ];
-              const propNames = properties.map(p => typeof p === 'string' ? p : p.name || '');
-              const displayProps = propNames.filter(n => n && !excludedProps.includes(n));
-              
-              return (
-                <tr key={armorItem.id || idx} className="border-b border-border-subtle last:border-0">
-                  <td className="py-1 font-medium text-text-secondary">
-                    {armorItem.name}
-                    {displayProps.length > 0 && (
-                      <div className="text-xs text-text-muted dark:text-text-secondary font-normal">
-                        {displayProps.map(p => `• ${p}`).join(' ')}
-                      </div>
-                    )}
-                  </td>
-                  <td className="text-center py-1 font-mono">{damageReduction}</td>
-                  <td className="text-center py-1 font-mono">{critRange}</td>
-                  <td className="text-center py-1 text-xs">{abilityReqs.join(', ') || 'None'}</td>
-                </tr>
-              );
-            })
-          ) : (
-            <tr>
-              <td colSpan={4} className="py-2 text-center text-text-muted dark:text-text-secondary italic">No armor equipped</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <QuickArmorTable
+        items={equippedArmor as unknown as import('@/components/shared').QuickArmamentItem[]}
+        abilities={abilities}
+        filterEquipped={false}
+      />
+      {equippedArmor.length === 0 && (
+        <div className="bg-surface-alt rounded-lg p-3 mb-4">
+          <SectionHeader title="Armor" className="mb-2" />
+          <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-2">No armor equipped</p>
+        </div>
+      )}
+    </>
   );
 }
 

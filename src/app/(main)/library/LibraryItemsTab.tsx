@@ -32,13 +32,13 @@ import type { DisplayItem } from '@/types';
 
 const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
 const ARMAMENT_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'type', label: 'TYPE' },
-  { key: 'rarity', label: 'RARITY' },
-  { key: 'currency', label: 'CURRENCY' },
-  { key: 'tp', label: 'TP' },
-  { key: 'range', label: 'RANGE' },
-  { key: 'damage', label: 'DAMAGE' },
+  { key: 'name', label: 'NAME', align: 'left' as const },
+  { key: 'type', label: 'TYPE', align: 'center' as const },
+  { key: 'rarity', label: 'RARITY', align: 'center' as const },
+  { key: 'currency', label: 'CURRENCY', align: 'center' as const },
+  { key: 'tp', label: 'TP', align: 'center' as const },
+  { key: 'range', label: 'RANGE', align: 'center' as const },
+  { key: 'damage', label: 'DAMAGE', align: 'center' as const },
   { key: '_actions', label: '', sortable: false as const },
 ];
 
@@ -204,12 +204,12 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
               description={item.description}
               gridColumns={ARMAMENT_GRID_COLUMNS}
               columns={[
-                { key: 'Type', value: item.type },
-                { key: 'Rarity', value: item.rarity },
-                { key: 'Currency', value: item.currency },
-                { key: 'TP', value: item.tp, highlight: true },
-                { key: 'Range', value: item.range },
-                { key: 'Damage', value: item.damage },
+                { key: 'Type', value: item.type, align: 'center' },
+                { key: 'Rarity', value: item.rarity, align: 'center' },
+                { key: 'Currency', value: item.currency, align: 'center' },
+                { key: 'TP', value: item.tp, highlight: true, align: 'center' },
+                { key: 'Range', value: item.range, align: 'center' },
+                { key: 'Damage', value: item.damage, align: 'center' },
               ]}
               chips={item.parts}
               chipsLabel="Properties & Proficiencies"

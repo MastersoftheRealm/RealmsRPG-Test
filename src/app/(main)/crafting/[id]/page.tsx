@@ -69,6 +69,7 @@ import type {
   CraftingPowerRef,
 } from '@/types/crafting';
 import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
+import type { CraftingRules } from '@/types/core-rules';
 
 function toCraftingItemRef(c: CraftingSelectedItem): CraftingItemRef {
   return {
@@ -85,6 +86,57 @@ type PowerOption = {
   name: string;
   energyCost: number;
 };
+
+type UsesType = 'full' | 'partial' | 'permanent';
+
+function getUsesConfigFromIndex(
+  index: number | undefined,
+  rules: CraftingRules | undefined
+): { usesType: UsesType; usesCount?: number } {
+  if (!rules || index == null || index < 0 || index >= (rules.multipleUseTable?.length ?? 0)) {
+    return { usesType: 'full', usesCount: 1 };
+  }
+  const row = rules.multipleUseTable[index];
+  if (!row) {
+    return { usesType: 'full', usesCount: 1 };
+  }
+  if (row.partialRecovery === 'permanent' && row.fullRecovery === 'permanent') {
+    return { usesType: 'permanent' };
+  }
+  if (typeof row.fullRecovery === 'number') {
+    return { usesType: 'full', usesCount: row.fullRecovery };
+  }
+  if (typeof row.partialRecovery === 'number') {
+    return { usesType: 'partial', usesCount: row.partialRecovery };
+  }
+  return { usesType: 'full', usesCount: 1 };
+}
+
+function findMultipleUseIndexForConfig(
+  rules: CraftingRules | undefined,
+  usesType: UsesType | undefined,
+  usesCount: number | undefined
+): number {
+  if (!rules || !usesType) return -1;
+  const table = rules.multipleUseTable ?? [];
+  if (usesType === 'permanent') {
+    return table.findIndex(
+      (row) => row.partialRecovery === 'permanent' && row.fullRecovery === 'permanent'
+    );
+  }
+  if (!usesCount) return -1;
+  if (usesType === 'full') {
+    return table.findIndex(
+      (row) => typeof row.fullRecovery === 'number' && row.fullRecovery === usesCount
+    );
+  }
+  if (usesType === 'partial') {
+    return table.findIndex(
+      (row) => typeof row.partialRecovery === 'number' && row.partialRecovery === usesCount
+    );
+  }
+  return -1;
+}
 
 export default function CraftingToolPage() {
   const params = useParams();
@@ -116,6 +168,18 @@ export default function CraftingToolPage() {
       setInitialized(true);
     }
   }, [sessionData, initialized]);
+
+  // Initialize enhanced uses config for older sessions that only have multipleUseTableIndex
+  useEffect(() => {
+    if (!session || !rulesData) return;
+    if (session.data.usesType) return;
+    const { usesType, usesCount } = getUsesConfigFromIndex(
+      session.data.multipleUseTableIndex ?? -1,
+      rulesData
+    );
+    updateData({ usesType, usesCount });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.data.multipleUseTableIndex, rulesData]);
 
   const updateData = useCallback(
     (updates: Partial<CraftingSessionType['data']>) => {
@@ -153,6 +217,8 @@ export default function CraftingToolPage() {
   const isEnhanced = session?.data.isEnhanced ?? false;
   const isUpgrade = session?.data.isUpgrade ?? false;
   const isCompleted = session?.data.status === 'completed';
+  const usesType = (session?.data.usesType ?? 'full') as UsesType;
+  const usesCount = session?.data.usesCount ?? 1;
 
   const CRAFT_BASE_SKILL_ID = 13;
   const craftSubSkills = useMemo(() => {
@@ -237,7 +303,7 @@ export default function CraftingToolPage() {
 
   // Compute requirements from current session config + rules
   const requirements = useMemo((): CraftingRequirements | null => {
-    if (!rulesData || (!item && !customBaseItem)) return null;
+    if (!rulesData || (!item && !customBaseItem) || !session) return null;
     let base: CraftingRequirements | null = null;
 
     if (isUpgrade && (item || customBaseItem) && upgradeOriginalItem) {
@@ -248,17 +314,24 @@ export default function CraftingToolPage() {
       if (!req) return null;
       base = req;
     } else if (isEnhanced && session?.data.powerRef) {
-      const multiIdx = session?.data.multipleUseTableIndex ?? -1;
-      const energyCost = session?.data.powerRef?.energyCost ?? 10;
-      const effectiveEnergy = multiIdx >= 0
-        ? getMultipleUseAdjustedEnergy(energyCost, multiIdx, rulesData)
-        : energyCost;
+      const multiIdxFromConfig = findMultipleUseIndexForConfig(
+        rulesData,
+        usesType,
+        usesCount
+      );
+      const multiIdxExplicit = session.data.multipleUseTableIndex ?? -1;
+      const multiIdx = multiIdxFromConfig >= 0 ? multiIdxFromConfig : multiIdxExplicit;
+      const energyCost = session.data.powerRef.energyCost ?? 10;
+      const effectiveEnergy =
+        multiIdx >= 0
+          ? getMultipleUseAdjustedEnergy(energyCost, multiIdx, rulesData)
+          : energyCost;
       const enhancementReq = isConsumable
         ? getConsumableEnhancedRequirements(effectiveEnergy, rulesData)
         : getEnhancedCraftingRequirements(effectiveEnergy, rulesData);
       if (!enhancementReq) return null;
 
-      if (session?.data.craftBaseItemAlso) {
+      if (session.data.craftBaseItemAlso) {
         const baseItemMarketPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
         const baseItemReq = getCraftingRequirements(baseItemMarketPrice, false, rulesData);
         if (baseItemReq) {
@@ -313,9 +386,13 @@ export default function CraftingToolPage() {
 
     // Apply optional modifiers
     let r = base;
-    const mods = session?.data.optionalModifiers;
+    const mods = session.data.optionalModifiers;
     const isCommonOrConsumableCommonToRare = r.rarity === 'Common' || (isConsumable && ['Common', 'Uncommon', 'Rare'].includes(r.rarity));
-    if (mods?.reduceDifficultyByTime && typeof mods.reduceDifficultyByTime === 'number' && mods.reduceDifficultyByTime > 0) {
+    if (
+      mods?.reduceDifficultyByTime &&
+      typeof mods.reduceDifficultyByTime === 'number' &&
+      mods.reduceDifficultyByTime > 0
+    ) {
       for (let i = 0; i < mods.reduceDifficultyByTime; i++) {
         r = applyReduceDifficultyByTime(r, isCommonOrConsumableCommonToRare, rulesData);
       }
@@ -348,7 +425,12 @@ export default function CraftingToolPage() {
     }
     const baseItemMarketPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
     const baseItemReq = getCraftingRequirements(baseItemMarketPrice, false, rulesData);
-    const multiIdx = session.data.multipleUseTableIndex ?? -1;
+    const multiIdxConfig = findMultipleUseIndexForConfig(
+      rulesData,
+      usesType,
+      usesCount
+    );
+    const multiIdx = multiIdxConfig >= 0 ? multiIdxConfig : (session.data.multipleUseTableIndex ?? -1);
     const energyCost = session.data.powerRef.energyCost ?? 10;
     const effectiveEnergy =
       multiIdx >= 0 ? getMultipleUseAdjustedEnergy(energyCost, multiIdx, rulesData) : energyCost;
@@ -379,7 +461,30 @@ export default function CraftingToolPage() {
       session.data.sessionCount !== requirements.sessionCount;
     if (!needsSync) return;
 
-    const labels = getCraftingSessionLabels(requirements.timeValue, requirements.timeUnit, requirements.sessionCount);
+    let labels: string[];
+    if (
+      isEnhanced &&
+      session.data.craftBaseItemAlso &&
+      requirementsBreakdown
+    ) {
+      const baseLabels = getCraftingSessionLabels(
+        requirementsBreakdown.baseItemReq.timeValue,
+        requirementsBreakdown.baseItemReq.timeUnit,
+        requirementsBreakdown.baseItemReq.sessionCount
+      );
+      const enhancementLabels = getCraftingSessionLabels(
+        requirementsBreakdown.enhancementReq.timeValue,
+        requirementsBreakdown.enhancementReq.timeUnit,
+        requirementsBreakdown.enhancementReq.sessionCount
+      );
+      labels = [...baseLabels, ...enhancementLabels];
+    } else {
+      labels = getCraftingSessionLabels(
+        requirements.timeValue,
+        requirements.timeUnit,
+        requirements.sessionCount
+      );
+    }
     const existingSessions = session.data.sessions ?? [];
     const newSessions: CraftingRollSession[] = labels.map((label, i) => {
       if (i < existingSessions.length) {
@@ -395,27 +500,26 @@ export default function CraftingToolPage() {
       materialCost: requirements.materialCost,
       enhancementMaterialCost: isEnhanced
         ? (session.data.powerRef?.energyCost != null && rulesData
-            ? (isConsumable
-                ? getConsumableEnhancedRequirements(
-                    (session.data.multipleUseTableIndex ?? -1) >= 0
-                      ? getMultipleUseAdjustedEnergy(
-                          session.data.powerRef.energyCost,
-                          session.data.multipleUseTableIndex ?? -1,
-                          rulesData
-                        )
-                      : session.data.powerRef.energyCost,
-                    rulesData
-                  )?.materialCost
-                : getEnhancedCraftingRequirements(
-                    (session.data.multipleUseTableIndex ?? -1) >= 0
-                      ? getMultipleUseAdjustedEnergy(
-                          session.data.powerRef.energyCost,
-                          session.data.multipleUseTableIndex ?? -1,
-                          rulesData
-                        )
-                      : session.data.powerRef.energyCost,
-                    rulesData
-                  )?.materialCost)
+            ? (() => {
+                const idxFromConfig = findMultipleUseIndexForConfig(
+                  rulesData,
+                  usesType,
+                  usesCount
+                );
+                const idx =
+                  idxFromConfig >= 0
+                    ? idxFromConfig
+                    : (session.data.multipleUseTableIndex ?? -1);
+                const baseEnergy = session.data.powerRef.energyCost;
+                const effEnergy =
+                  idx >= 0
+                    ? getMultipleUseAdjustedEnergy(baseEnergy, idx, rulesData)
+                    : baseEnergy;
+                const req = isConsumable
+                  ? getConsumableEnhancedRequirements(effEnergy, rulesData)
+                  : getEnhancedCraftingRequirements(effEnergy, rulesData);
+                return req?.materialCost;
+              })()
             : undefined)
         : undefined,
       timeValue: requirements.timeValue,
@@ -425,7 +529,19 @@ export default function CraftingToolPage() {
       isBulk: quantity === (rulesData?.bulkCraftCount ?? 4),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requirements, customBaseItem, item, isEnhanced, isConsumable, quantity, rulesData, session?.data.powerRef, session?.data.multipleUseTableIndex]);
+  }, [
+    requirements,
+    customBaseItem,
+    item,
+    isEnhanced,
+    isConsumable,
+    quantity,
+    rulesData,
+    session?.data.powerRef,
+    session?.data.multipleUseTableIndex,
+    session?.data.craftBaseItemAlso,
+    requirementsBreakdown,
+  ]);
 
   const effectiveDS = (session?.data.difficultyScore ?? 0) + (session?.data.dsModifier ?? 0);
 
@@ -435,14 +551,26 @@ export default function CraftingToolPage() {
       const sessions = [...session.data.sessions];
       if (index < 0 || index >= sessions.length) return;
       const label = sessions[index].label;
+      let dsForSession = effectiveDS;
+      if (
+        isEnhanced &&
+        session.data.craftBaseItemAlso &&
+        requirementsBreakdown
+      ) {
+        const baseCount = requirementsBreakdown.baseItemReq.requiredSuccesses;
+        const baseDs = requirementsBreakdown.baseItemReq.difficultyScore;
+        const enhDs = requirementsBreakdown.enhancementReq.difficultyScore;
+        const baseOrEnhDs = index < baseCount ? baseDs : enhDs;
+        dsForSession = baseOrEnhDs + (session.data.dsModifier ?? 0);
+      }
       const { successes, failures } =
         roll != null
-          ? computeSkillRollResult(roll, effectiveDS)
+          ? computeSkillRollResult(roll, dsForSession)
           : { successes: 0, failures: 0 };
       sessions[index] = { label, roll, successes, failures };
       updateData({ sessions });
     },
-    [session, effectiveDS, updateData]
+    [session, effectiveDS, updateData, isEnhanced, requirementsBreakdown]
   );
 
   // Recompute all roll results when DS changes
@@ -453,22 +581,81 @@ export default function CraftingToolPage() {
     let changed = false;
     const updated = sessions.map((s) => {
       if (s.roll == null) return s;
-      const { successes, failures } = computeSkillRollResult(s.roll, effectiveDS);
+      let dsForSession = effectiveDS;
+      if (
+        isEnhanced &&
+        session.data.craftBaseItemAlso &&
+        requirementsBreakdown
+      ) {
+        const index = sessions.indexOf(s);
+        const baseCount = requirementsBreakdown.baseItemReq.requiredSuccesses;
+        const baseDs = requirementsBreakdown.baseItemReq.difficultyScore;
+        const enhDs = requirementsBreakdown.enhancementReq.difficultyScore;
+        const baseOrEnhDs = index < baseCount ? baseDs : enhDs;
+        dsForSession = baseOrEnhDs + (session.data.dsModifier ?? 0);
+      }
+      const { successes, failures } = computeSkillRollResult(s.roll, dsForSession);
       if (successes !== s.successes || failures !== s.failures) changed = true;
       return { ...s, successes, failures };
     });
     if (changed) updateData({ sessions: updated });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effectiveDS]);
+  }, [effectiveDS, isEnhanced, requirementsBreakdown]);
 
-  const totalSuccesses =
-    (session?.data.sessions?.reduce((a, s) => a + s.successes, 0) ?? 0) +
-    (session?.data.additionalSuccesses ?? 0);
-  const totalFailures =
-    (session?.data.sessions?.reduce((a, s) => a + s.failures, 0) ?? 0) +
-    (session?.data.additionalFailures ?? 0);
-  const required = session?.data.requiredSuccesses ?? 0;
-  const netDelta = totalSuccesses - totalFailures - required;
+  // Split successes/failures between base item and enhancement when crafting both
+  let baseSessionSuccesses = 0;
+  let baseSessionFailures = 0;
+  let enhSessionSuccesses = 0;
+  let enhSessionFailures = 0;
+
+  if (
+    session?.data.sessions?.length &&
+    requirementsBreakdown &&
+    isEnhanced &&
+    session.data.craftBaseItemAlso
+  ) {
+    const baseCount = requirementsBreakdown.baseItemReq.requiredSuccesses;
+    session.data.sessions.forEach((s, index) => {
+      if (index < baseCount) {
+        baseSessionSuccesses += s.successes;
+        baseSessionFailures += s.failures;
+      } else {
+        enhSessionSuccesses += s.successes;
+        enhSessionFailures += s.failures;
+      }
+    });
+  } else {
+    const totals =
+      session?.data.sessions?.reduce(
+        (acc, s) => {
+          acc.s += s.successes;
+          acc.f += s.failures;
+          return acc;
+        },
+        { s: 0, f: 0 }
+      ) ?? { s: 0, f: 0 };
+    enhSessionSuccesses = totals.s;
+    enhSessionFailures = totals.f;
+  }
+
+  const additionalSuccesses = session?.data.additionalSuccesses ?? 0;
+  const additionalFailures = session?.data.additionalFailures ?? 0;
+
+  const enhancementRequired =
+    isEnhanced && requirementsBreakdown && session?.data.craftBaseItemAlso
+      ? requirementsBreakdown.enhancementReq.requiredSuccesses
+      : session?.data.requiredSuccesses ?? 0;
+
+  const baseRequired =
+    isEnhanced && requirementsBreakdown && session?.data.craftBaseItemAlso
+      ? requirementsBreakdown.baseItemReq.requiredSuccesses
+      : 0;
+
+  const required = enhancementRequired;
+
+  const totalEnhSuccesses = enhSessionSuccesses + additionalSuccesses;
+  const totalEnhFailures = enhSessionFailures + additionalFailures;
+  const netDelta = totalEnhSuccesses - totalEnhFailures - enhancementRequired;
 
   const liveOutcome = useMemo(() => {
     if (!rulesData) return null;
@@ -482,7 +669,46 @@ export default function CraftingToolPage() {
       baseMarketPrice,
       rulesData.successesTable
     );
-  }, [rulesData, isEnhanced, item?.marketPrice, customBaseItem?.marketPrice, netDelta, session?.data.materialCost]);
+  }, [
+    rulesData,
+    isEnhanced,
+    item?.marketPrice,
+    customBaseItem?.marketPrice,
+    netDelta,
+    session?.data.materialCost,
+  ]);
+
+  const baseOutcomeForDisplay = useMemo(() => {
+    if (
+      !rulesData ||
+      !requirementsBreakdown ||
+      !isEnhanced ||
+      !session?.data.craftBaseItemAlso
+    ) {
+      return null;
+    }
+    const baseMarketPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
+    if (!baseMarketPrice) return null;
+    const baseMaterialCost = requirementsBreakdown.baseItemReq.materialCost;
+    const baseNetDelta =
+      baseRequired > 0 ? baseSessionSuccesses - baseSessionFailures - baseRequired : 0;
+    return calculateCraftingOutcome(
+      baseNetDelta,
+      baseMaterialCost,
+      baseMarketPrice,
+      rulesData.successesTable
+    );
+  }, [
+    rulesData,
+    requirementsBreakdown,
+    isEnhanced,
+    session?.data.craftBaseItemAlso,
+    item?.marketPrice,
+    customBaseItem?.marketPrice,
+    baseRequired,
+    baseSessionSuccesses,
+    baseSessionFailures,
+  ]);
 
   const handleComplete = useCallback(async () => {
     if (!session || !id || !rulesData || (!item && !customBaseItem)) return;
@@ -613,11 +839,12 @@ export default function CraftingToolPage() {
         </Link>
       }
       sidebar={
-        <CreatorSummaryPanel
-          title="Crafting Summary"
-          costStats={
-            requirements
-              ? [
+        <div className="lg:sticky lg:top-4">
+          <CreatorSummaryPanel
+            title="Crafting Summary"
+            costStats={
+              requirements
+                ? [
                   {
                     label: 'Difficulty Score',
                     value: effectiveDS,
@@ -637,9 +864,9 @@ export default function CraftingToolPage() {
                     icon: <Clock className="w-5 h-5" />,
                   },
                 ]
-              : undefined
-          }
-          statRows={[
+                : undefined
+            }
+            statRows={[
             ...(requirements
               ? [
                   { label: 'Rarity', value: requirements.rarity },
@@ -654,13 +881,25 @@ export default function CraftingToolPage() {
                         },
                         {
                           label: 'Effective Energy',
-                          value: `${Math.ceil(
-                            getMultipleUseAdjustedEnergy(
-                              session.data.powerRef.energyCost,
-                              session.data.multipleUseTableIndex ?? -1,
-                              rulesData!
-                            )
-                          )} EN`,
+                          value: `${Math.ceil((() => {
+                            if (!rulesData) return session.data.powerRef!.energyCost;
+                            const idxFromConfig = findMultipleUseIndexForConfig(
+                              rulesData,
+                              usesType,
+                              usesCount
+                            );
+                            const idx =
+                              idxFromConfig >= 0
+                                ? idxFromConfig
+                                : (session.data.multipleUseTableIndex ?? -1);
+                            return idx >= 0
+                              ? getMultipleUseAdjustedEnergy(
+                                  session.data.powerRef!.energyCost,
+                                  idx,
+                                  rulesData
+                                )
+                              : session.data.powerRef!.energyCost;
+                          })())} EN`,
                         },
                         {
                           label: 'Base Craft Included',
@@ -678,20 +917,20 @@ export default function CraftingToolPage() {
                   },
                 ]
               : []),
-            ...(liveOutcome
-              ? [
-                  {
-                    label: 'Current Value',
-                    value: `${Math.ceil(liveOutcome.itemWorth)} C`,
-                    valueColor:
-                      netDelta >= 0
-                        ? 'text-success-700 dark:text-success-400'
-                        : 'text-danger-700 dark:text-danger-400',
-                  },
-                ]
-              : []),
-          ]}
-        >
+              ...(liveOutcome
+                ? [
+                    {
+                      label: 'Current Value',
+                      value: `${Math.ceil(liveOutcome.itemWorth)} C`,
+                      valueColor:
+                        netDelta >= 0
+                          ? 'text-success-700 dark:text-success-400'
+                          : 'text-danger-700 dark:text-danger-400',
+                    },
+                  ]
+                : []),
+            ]}
+          >
           {requirementsBreakdown && (
             <div className="mb-4 pb-4 border-b border-border-light">
               <h3 className="text-sm font-semibold text-text-primary mb-2">Requirements breakdown</h3>
@@ -729,17 +968,27 @@ export default function CraftingToolPage() {
           {!isCompleted && sessions.length > 0 && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Successes</span>
+                <span className="text-text-secondary">Successes (enhancement)</span>
                 <span className="font-medium text-success-700 dark:text-success-400">
-                  {totalSuccesses}
+                  {totalEnhSuccesses}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Failures</span>
+                <span className="text-text-secondary">Failures (enhancement)</span>
                 <span className="font-medium text-danger-700 dark:text-danger-400">
-                  {totalFailures}
+                  {totalEnhFailures}
                 </span>
               </div>
+              {isEnhanced && session.data.craftBaseItemAlso && (
+                <div className="space-y-1 text-xs text-text-muted dark:text-text-secondary">
+                  <div>
+                    Base item: {baseSessionSuccesses} S / {baseSessionFailures} F
+                  </div>
+                  <div>
+                    Enhancement (sessions only): {enhSessionSuccesses} S / {enhSessionFailures} F
+                  </div>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-text-secondary">Net</span>
                 <span
@@ -782,18 +1031,28 @@ export default function CraftingToolPage() {
           {isCompleted && outcome && (
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-text-secondary">Final Value</span>
+                <span className="text-text-secondary">Final Value (enhancement)</span>
                 <span className="font-medium text-text-primary">
                   {Math.ceil(outcome.itemWorth)} C
                 </span>
               </div>
               {outcome.extraItemCount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Extra Items</span>
+                  <span className="text-text-secondary">Extra Items (enhancement)</span>
                   <span className="font-medium text-text-primary">
                     {outcome.extraItemCount}
                   </span>
                 </div>
+              )}
+              {isEnhanced && session.data.craftBaseItemAlso && baseOutcomeForDisplay && (
+                <>
+                  <div className="mt-3 pt-3 border-t border-border-light flex justify-between">
+                    <span className="text-text-secondary">Base item value</span>
+                    <span className="font-medium text-text-primary">
+                      {Math.ceil(baseOutcomeForDisplay.itemWorth)} C
+                    </span>
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -807,12 +1066,13 @@ export default function CraftingToolPage() {
               </Button>
             </div>
           )}
-          {saveMutation.isPending && (
-            <p className="text-xs text-text-muted dark:text-text-secondary mt-2 text-center">
-              Saving...
-            </p>
-          )}
-        </CreatorSummaryPanel>
+            {saveMutation.isPending && (
+              <p className="text-xs text-text-muted dark:text-text-secondary mt-2 text-center">
+                Saving...
+              </p>
+            )}
+          </CreatorSummaryPanel>
+        </div>
       }
       modals={
         <>
@@ -846,24 +1106,32 @@ export default function CraftingToolPage() {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 {item || customBaseItem ? (
-                  <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt">
-                    <span className="font-medium text-text-primary">
-                      {item?.name ?? customBaseItem?.name}
-                    </span>
-                    {(item?.marketPrice ?? customBaseItem?.marketPrice) != null && (
-                      <span className="text-sm text-text-muted dark:text-text-secondary">
-                        {item?.marketPrice ?? customBaseItem?.marketPrice} currency
+                  <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[260px]">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-text-primary">
+                        {item?.name ?? customBaseItem?.name}
                       </span>
-                    )}
+                      {(item?.marketPrice ?? customBaseItem?.marketPrice) != null && (
+                        <span className="text-sm text-text-muted dark:text-text-secondary">
+                          {(item?.marketPrice ?? customBaseItem?.marketPrice) ?? 0} currency
+                        </span>
+                      )}
+                    </div>
                     {!isCompleted && (
-                      <>
+                      <div className="flex flex-wrap gap-2 ml-auto">
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => setItemSelectOpen(true)}
-                          aria-label="Change item"
+                          onClick={() => {
+                            if (!item && customBaseItem) {
+                              updateData({ isEditingCustomBaseItem: true });
+                            } else {
+                              setItemSelectOpen(true);
+                            }
+                          }}
+                          aria-label={item ? 'Change item' : 'Edit custom item'}
                         >
-                          Change
+                          {item ? 'Change' : 'Edit'}
                         </Button>
                         <Button
                           variant="ghost"
@@ -879,74 +1147,102 @@ export default function CraftingToolPage() {
                               materialCost: 0,
                               timeValue: 0,
                               sessionCount: 0,
+                              isEditingCustomBaseItem: false,
                             })
                           }
                           aria-label="Remove item"
                         >
                           Remove
                         </Button>
-                      </>
+                      </div>
                     )}
                   </div>
                 ) : (
                   !isCompleted && (
-                    <Button
-                      onClick={() => setItemSelectOpen(true)}
-                      aria-label="Select item to craft"
-                    >
-                      Select item to craft
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() => setItemSelectOpen(true)}
+                        aria-label="Select item to craft"
+                      >
+                        Select item to craft
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() =>
+                          updateData({
+                            customBaseItem: { name: '', marketPrice: 0 },
+                            item: null,
+                            isUpgrade: false,
+                            upgradeOriginalItem: null,
+                            isEditingCustomBaseItem: true,
+                          })
+                        }
+                        aria-label="Create custom item"
+                      >
+                        Create custom item
+                      </Button>
+                    </div>
                   )
                 )}
               </div>
 
-              {/* Custom item entry */}
-              {!isCompleted && (
-                <div className="rounded-lg border border-border-light bg-surface-alt/60 p-3 space-y-2">
+              {/* Custom item entry (only visible when creating/editing a custom base item) */}
+              {!isCompleted && customBaseItem && !item && session.data.isEditingCustomBaseItem && (
+                <div className="mt-3 rounded-lg border border-border-light bg-surface-alt/60 p-3 space-y-3">
                   <p className="text-xs font-medium text-text-secondary">
-                    Or define a custom base item (name + currency); rarity and crafting
-                    requirements will be computed from its cost.
+                    Define a custom base item. Rarity and crafting requirements are computed from its cost.
                   </p>
-                  <div className="flex flex-wrap gap-3 items-center">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Input
                       type="text"
                       placeholder="Custom item name"
-                      value={customBaseItem?.name ?? ''}
+                      value={customBaseItem.name}
                       onChange={(e) =>
                         updateData({
                           customBaseItem: {
+                            ...customBaseItem,
                             name: e.target.value,
-                            marketPrice: customBaseItem?.marketPrice ?? 0,
                           },
-                          item: null,
-                          isUpgrade: false,
-                          upgradeOriginalItem: null,
                         })
                       }
-                      className="min-w-[200px] max-w-xs"
+                      className="min-w-[160px] max-w-xs"
+                      aria-label="Custom item name"
                     />
                     <Input
                       type="number"
                       min={0}
                       placeholder="Currency cost"
-                      value={
-                        customBaseItem?.marketPrice !== undefined
-                          ? customBaseItem.marketPrice
-                          : ''
-                      }
+                      value={Number.isFinite(customBaseItem.marketPrice) ? customBaseItem.marketPrice : ''}
                       onChange={(e) =>
                         updateData({
                           customBaseItem: {
-                            name: customBaseItem?.name ?? '',
+                            ...customBaseItem,
                             marketPrice: Number(e.target.value) || 0,
                           },
-                          item: null,
-                          isUpgrade: false,
-                          upgradeOriginalItem: null,
                         })
                       }
                       className="w-32"
+                      aria-label="Custom item currency cost"
                     />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => updateData({ isEditingCustomBaseItem: false })}
+                    >
+                      Confirm
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        updateData({
+                          customBaseItem: null,
+                          isEditingCustomBaseItem: false,
+                        })
+                      }
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 </div>
               )}
@@ -1044,9 +1340,29 @@ export default function CraftingToolPage() {
                         checked={isEnhanced}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            updateData({ isEnhanced: true, multipleUseTableIndex: -1, craftBaseItemAlso: false });
+                            const defaultUsesType: UsesType = 'full';
+                            const defaultUsesCount = 1;
+                            const idxFromConfig = findMultipleUseIndexForConfig(
+                              rulesData,
+                              defaultUsesType,
+                              defaultUsesCount
+                            );
+                            updateData({
+                              isEnhanced: true,
+                              multipleUseTableIndex: idxFromConfig,
+                              craftBaseItemAlso: false,
+                              usesType: defaultUsesType,
+                              usesCount: defaultUsesCount,
+                            });
                           } else {
-                            updateData({ isEnhanced: false, powerRef: null, multipleUseTableIndex: -1, craftBaseItemAlso: false });
+                            updateData({
+                              isEnhanced: false,
+                              powerRef: null,
+                              multipleUseTableIndex: -1,
+                              craftBaseItemAlso: false,
+                              usesType: undefined,
+                              usesCount: undefined,
+                            });
                           }
                         }}
                         className="rounded border-border"
@@ -1104,61 +1420,164 @@ export default function CraftingToolPage() {
                             ))}
                           </select>
                         </div>
-                        {session.data.powerRef && (
-                          <div className="space-y-2">
-                            <p className="text-xs text-text-muted dark:text-text-secondary">
-                              Base power energy is calculated from power parts and cannot be manually overridden.
-                            </p>
-                            <div className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-primary inline-block">
-                              Calculated Energy: <span className="font-semibold">{session.data.powerRef.energyCost} EN</span>
-                            </div>
-                          </div>
-                        )}
+                        {/* Energy cost helper is omitted here because the power picker already shows energy in parentheses */}
                         {session.data.powerRef && rulesData?.multipleUseTable?.length ? (
-                          <div>
-                            <label
-                              htmlFor="enhanced-uses"
-                              className="block text-sm font-medium text-text-secondary mb-1"
-                            >
-                              Item uses / recovery
-                            </label>
-                            <select
-                              id="enhanced-uses"
-                              value={session.data.multipleUseTableIndex ?? -1}
-                              onChange={(e) =>
-                                updateData({
-                                  multipleUseTableIndex: Number(e.target.value),
-                                })
-                              }
-                              className="w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
-                            >
-                              <option value={-1}>1 use per Full Recovery (100%)</option>
-                              {rulesData.multipleUseTable.map((row, index) => {
-                                const partial =
-                                  row.partialRecovery === 'permanent'
-                                    ? 'Permanent/Passive'
-                                    : `${row.partialRecovery} Partial`;
-                                const full =
-                                  row.fullRecovery === 'permanent'
-                                    ? 'Permanent/Passive'
-                                    : `${row.fullRecovery} Full`;
-                                return (
-                                  <option key={`${partial}-${full}-${index}`} value={index}>
-                                    {partial} / {full} ({row.adjustedEnergyPercent}%)
-                                  </option>
-                                );
-                              })}
-                            </select>
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap gap-3 items-end">
+                              <div>
+                                <label
+                                  htmlFor="enhanced-uses-recovery"
+                                  className="block text-sm font-medium text-text-secondary mb-1"
+                                >
+                                  Recovery type
+                                </label>
+                                <select
+                                  id="enhanced-uses-recovery"
+                                  value={usesType}
+                                  onChange={(e) => {
+                                    const nextType = e.target.value as UsesType;
+                                    if (nextType === 'permanent') {
+                                      const idx = findMultipleUseIndexForConfig(
+                                        rulesData,
+                                        'permanent',
+                                        undefined
+                                      );
+                                      updateData({
+                                        usesType: 'permanent',
+                                        usesCount: undefined,
+                                        multipleUseTableIndex: idx >= 0 ? idx : session.data.multipleUseTableIndex ?? -1,
+                                      });
+                                      return;
+                                    }
+                                    const table = rulesData.multipleUseTable ?? [];
+                                    const counts =
+                                      nextType === 'full'
+                                        ? Array.from(
+                                            new Set(
+                                              table
+                                                .map((row) =>
+                                                  typeof row.fullRecovery === 'number'
+                                                    ? row.fullRecovery
+                                                    : null
+                                                )
+                                                .filter((n): n is number => n != null)
+                                            )
+                                          ).sort((a, b) => a - b)
+                                        : Array.from(
+                                            new Set(
+                                              table
+                                                .map((row) =>
+                                                  typeof row.partialRecovery === 'number'
+                                                    ? row.partialRecovery
+                                                    : null
+                                                )
+                                                .filter((n): n is number => n != null)
+                                            )
+                                          ).sort((a, b) => a - b);
+                                    const defaultCount = counts[0] ?? 1;
+                                    const idx = findMultipleUseIndexForConfig(
+                                      rulesData,
+                                      nextType,
+                                      defaultCount
+                                    );
+                                    updateData({
+                                      usesType: nextType,
+                                      usesCount: defaultCount,
+                                      multipleUseTableIndex:
+                                        idx >= 0 ? idx : session.data.multipleUseTableIndex ?? -1,
+                                    });
+                                  }}
+                                  className="w-full max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                                >
+                                  <option value="full">Full Recovery</option>
+                                  <option value="partial">Partial Recovery</option>
+                                  <option value="permanent">Permanent / Passive</option>
+                                </select>
+                              </div>
+                              {usesType !== 'permanent' && (
+                                <div>
+                                  <label
+                                    htmlFor="enhanced-uses-count"
+                                    className="block text-sm font-medium text-text-secondary mb-1"
+                                  >
+                                    Uses per {usesType === 'full' ? 'Full' : 'Partial'} Recovery
+                                  </label>
+                                  <select
+                                    id="enhanced-uses-count"
+                                    value={usesCount}
+                                    onChange={(e) => {
+                                      const nextCount = Number(e.target.value) || 1;
+                                      const idx = findMultipleUseIndexForConfig(
+                                        rulesData,
+                                        usesType,
+                                        nextCount
+                                      );
+                                      updateData({
+                                        usesCount: nextCount,
+                                        multipleUseTableIndex:
+                                          idx >= 0
+                                            ? idx
+                                            : session.data.multipleUseTableIndex ?? -1,
+                                      });
+                                    }}
+                                    className="w-full max-w-[120px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                                  >
+                                    {((): number[] => {
+                                      const table = rulesData.multipleUseTable ?? [];
+                                      const values =
+                                        usesType === 'full'
+                                          ? table
+                                              .map((row) =>
+                                                typeof row.fullRecovery === 'number'
+                                                  ? row.fullRecovery
+                                                  : null
+                                              )
+                                              .filter((n): n is number => n != null)
+                                          : table
+                                              .map((row) =>
+                                                typeof row.partialRecovery === 'number'
+                                                  ? row.partialRecovery
+                                                  : null
+                                              )
+                                              .filter((n): n is number => n != null);
+                                      const unique = Array.from(new Set(values)).sort(
+                                        (a, b) => a - b
+                                      );
+                                      return unique.length ? unique : usesType === 'full' ? [1] : [1];
+                                    })().map((count) => (
+                                      <option key={count} value={count}>
+                                        {count}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                            </div>
                             <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
                               Effective crafting energy:{' '}
-                              {Math.ceil(
-                                getMultipleUseAdjustedEnergy(
-                                  session.data.powerRef.energyCost,
-                                  session.data.multipleUseTableIndex ?? -1,
-                                  rulesData
-                                )
-                              )}{' '}
-                              EN
+                              {(() => {
+                                if (!rulesData) {
+                                  return `${session.data.powerRef!.energyCost} EN`;
+                                }
+                                const idxFromConfig = findMultipleUseIndexForConfig(
+                                  rulesData,
+                                  usesType,
+                                  usesCount
+                                );
+                                const idx =
+                                  idxFromConfig >= 0
+                                    ? idxFromConfig
+                                    : (session.data.multipleUseTableIndex ?? -1);
+                                const effective =
+                                  idx >= 0
+                                    ? getMultipleUseAdjustedEnergy(
+                                        session.data.powerRef!.energyCost,
+                                        idx,
+                                        rulesData
+                                      )
+                                    : session.data.powerRef!.energyCost;
+                                return `${Math.ceil(effective)} EN`;
+                              })()}
                             </p>
                           </div>
                         ) : null}
@@ -1238,7 +1657,7 @@ export default function CraftingToolPage() {
             <CollapsibleSection
               title="Crafting Rolls"
               defaultExpanded
-              collapsedSummary={`Net ${netDelta >= 0 ? `+${netDelta}` : netDelta}, ${totalSuccesses} S / ${totalFailures} F`}
+              collapsedSummary={`Net ${netDelta >= 0 ? `+${netDelta}` : netDelta}, enhancement ${totalEnhSuccesses} S / ${totalEnhFailures} F`}
             >
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <p className="text-sm text-text-muted dark:text-text-secondary">
@@ -1280,6 +1699,18 @@ export default function CraftingToolPage() {
                   const hasRoll = s.roll != null;
                   const isSuccess = hasRoll && s.successes > 0;
                   const isFailure = hasRoll && s.failures > 0;
+                  let dsForSession = effectiveDS;
+                  if (
+                    isEnhanced &&
+                    session.data.craftBaseItemAlso &&
+                    requirementsBreakdown
+                  ) {
+                    const baseCount = requirementsBreakdown.baseItemReq.requiredSuccesses;
+                    const baseDs = requirementsBreakdown.baseItemReq.difficultyScore;
+                    const enhDs = requirementsBreakdown.enhancementReq.difficultyScore;
+                    const baseOrEnhDs = i < baseCount ? baseDs : enhDs;
+                    dsForSession = baseOrEnhDs + (session.data.dsModifier ?? 0);
+                  }
                   return (
                     <div
                       key={s.label}
@@ -1296,6 +1727,9 @@ export default function CraftingToolPage() {
                     >
                       <span className="font-medium text-text-primary w-28 shrink-0">
                         {s.label}
+                      </span>
+                      <span className="text-xs text-text-muted dark:text-text-secondary w-20">
+                        DS {dsForSession}
                       </span>
                       <div className="flex items-center gap-2">
                         <label className="sr-only" htmlFor={`roll-${id}-${i}`}>
@@ -1516,27 +1950,31 @@ export default function CraftingToolPage() {
                         if (!baseItem || !session.data.powerRef) return;
                         const name = `${'name' in baseItem ? baseItem.name : 'Item'} (${session.data.powerRef.name})`;
                         const selectedUses =
-                          (session.data.multipleUseTableIndex ?? -1) >= 0 && rulesData?.multipleUseTable
-                            ? rulesData.multipleUseTable[session.data.multipleUseTableIndex ?? -1]
-                            : null;
-                        const usesType =
-                          selectedUses?.fullRecovery === 'permanent' ||
-                          selectedUses?.partialRecovery === 'permanent'
-                            ? 'permanent'
-                            : selectedUses
-                              ? 'full'
-                              : 'full';
-                        const usesCount =
-                          selectedUses?.fullRecovery === 'permanent'
+                          null;
+                        const usesTypeToSave =
+                          session.data.usesType ?? 'full';
+                        const usesCountToSave =
+                          usesTypeToSave === 'permanent'
                             ? undefined
-                            : selectedUses?.fullRecovery ?? 1;
+                            : session.data.usesCount ?? 1;
+                        const materialCost = session.data.materialCost ?? 0;
+                        const currencyCost =
+                          rulesData && isEnhanced
+                            ? getEnhancedMarketPrice(materialCost, rulesData)
+                            : materialCost;
+                        const rarityToSave =
+                          requirements?.rarity ??
+                          (requirementsBreakdown?.enhancementReq.rarity ??
+                            undefined);
                         await createEnhanced.mutateAsync({
                           name,
                           baseItem,
                           powerRef: session.data.powerRef,
                           potency: typeof session.data.potency === 'number' ? session.data.potency : undefined,
-                          usesType,
-                          usesCount,
+                          currencyCost: currencyCost || undefined,
+                          rarity: rarityToSave,
+                          usesType: usesTypeToSave,
+                          usesCount: usesCountToSave,
                         });
                         showToast('Saved to Enhanced Equipment in Library', 'success');
                       } catch (e) {

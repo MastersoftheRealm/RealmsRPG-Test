@@ -184,6 +184,41 @@ CREATE POLICY user_enhanced_items_update ON public.user_enhanced_items FOR UPDAT
 CREATE POLICY user_enhanced_items_delete ON public.user_enhanced_items FOR DELETE USING (auth.uid() = user_id);
 ```
 
+### 2.11 Official Enhanced Items (Realms Enhanced Equipment Library)
+
+| Table | Shape | Key columns |
+|-------|--------|-------------|
+| `official_enhanced_items` | Columnar + payload | id (PK), name, description, currency_cost, rarity, base_item_source, base_item_id, base_item_name, base_item_description, power_source, power_id, power_name, uses_type, uses_count, payload (JSONB), created_at, updated_at |
+
+Stores **official** enhanced equipment for the Realms library (base item + imbued power). Unlike `user_enhanced_items`, `currency_cost` and `rarity` are derived from the **ideal enhanced crafting rules** (assuming proper successes) rather than a specific crafting outcome.
+
+**Migration (run in Supabase SQL Editor):**
+
+```sql
+CREATE TABLE IF NOT EXISTS public.official_enhanced_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  currency_cost NUMERIC NOT NULL,
+  rarity TEXT NOT NULL,
+  base_item_source TEXT NOT NULL, -- 'codex' | 'public' | 'custom'
+  base_item_id TEXT,              -- nullable for custom
+  base_item_name TEXT NOT NULL,
+  base_item_description TEXT,
+  power_source TEXT NOT NULL,     -- 'official' | 'public' | 'library'
+  power_id TEXT NOT NULL,
+  power_name TEXT NOT NULL,
+  uses_type TEXT NOT NULL,        -- 'full' | 'partial' | 'permanent'
+  uses_count INTEGER,             -- null when permanent
+  payload JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_official_enhanced_items_rarity ON public.official_enhanced_items(rarity);
+CREATE INDEX IF NOT EXISTS idx_official_enhanced_items_updated_at ON public.official_enhanced_items(updated_at DESC);
+```
+
 ---
 
 ## 3. Enums

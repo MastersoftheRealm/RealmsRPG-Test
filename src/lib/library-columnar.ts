@@ -123,6 +123,18 @@ export function bodyToColumnar(
     if (k === 'id' || k === 'docId' || k === '_source') continue;
     const camel = BODY_TO_CAMEL[k] ?? k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     if (scalarKeys.has(camel) || scalarKeys.has(k)) {
+      // user_creatures.level is an INTEGER column in DB, but creature creator allows
+      // sub-level values (0.25/0.5/0.75). Keep fractional levels in payload and
+      // only write scalar level when the value is an integer.
+      if (type === 'creatures' && camel === 'level') {
+        const parsed = typeof v === 'number' ? v : Number(v);
+        if (Number.isFinite(parsed) && Number.isInteger(parsed)) {
+          scalars[camel] = parsed;
+        } else {
+          payload[k] = Number.isFinite(parsed) ? parsed : v;
+        }
+        continue;
+      }
       scalars[camel] = v;
     } else {
       payload[k] = v;

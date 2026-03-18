@@ -18,7 +18,9 @@ import {
   ListHeader,
   LoadingState,
   ErrorDisplay as ErrorState,
+  GridListRow,
 } from '@/components/shared';
+import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 
 const SPECIES_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr';
@@ -26,7 +28,8 @@ const SPECIES_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'type', label: 'TYPE' },
   { key: 'sizes', label: 'SIZES' },
-  { key: '_desc', label: 'DESCRIPTION', sortable: false as const },
+  // Description column should be left-aligned while other non-name columns are centered
+  { key: '_desc', label: 'DESCRIPTION', sortable: false as const, align: 'left' as const },
 ];
 import { useSpecies, useUserSpecies, userSpeciesToSpecies, useTraits, useCodexSkills, resolveTraitIds, type Species, type Trait, type Skill } from '@/hooks';
 
@@ -37,8 +40,6 @@ interface SpeciesFilters {
 }
 
 function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; allTraits: Trait[]; skillIdToName: Map<string, string> }) {
-  const [expanded, setExpanded] = useState(false);
-
   const speciesTraits = useMemo(() =>
     resolveTraitIds(species.species_traits || [], allTraits),
     [species.species_traits, allTraits]
@@ -61,23 +62,25 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
     return species.skills.map(skillId => skillIdToName.get(String(skillId)) || String(skillId));
   }, [species.skills, skillIdToName]);
 
-  return (
-    <div className="bg-surface">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 px-4 py-3 text-left hover:bg-surface-alt transition-colors"
-      >
-        <div className="font-medium text-text-primary">{species.name}</div>
-        <div className="text-text-secondary">{species.type || '-'}</div>
-        <div className="text-text-secondary hidden lg:block">{species.sizes?.join(', ') || '-'}</div>
-        <div className="hidden lg:flex items-center justify-between">
-          <span className="text-text-secondary truncate">{species.description?.substring(0, 50)}...</span>
-          <ChevronDown className={cn('w-4 h-4 text-text-muted dark:text-text-secondary transition-transform flex-shrink-0', expanded && 'rotate-180')} />
-        </div>
-      </button>
+  const columns: ColumnValue[] = [
+    { key: 'type', value: species.type || '-' },
+    { key: 'sizes', value: species.sizes?.join(', ') || '-' },
+    {
+      key: '_desc',
+      value: species.description ? `${species.description.substring(0, 60)}...` : '-',
+      align: 'left',
+    },
+  ];
 
-      {expanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-border bg-surface-alt space-y-4">
+  return (
+    <GridListRow
+      id={String(species.id ?? '')}
+      name={species.name}
+      description={species.description}
+      gridColumns={SPECIES_GRID_COLUMNS}
+      columns={columns}
+      expandedContent={
+        <div className="space-y-4">
           {species.description && (
             <p className="text-text-secondary">{species.description}</p>
           )}
@@ -167,8 +170,8 @@ function SpeciesCard({ species, allTraits, skillIdToName }: { species: Species; 
             </div>
           )}
         </div>
-      )}
-    </div>
+      }
+    />
   );
 }
 

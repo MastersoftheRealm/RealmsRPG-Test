@@ -64,6 +64,12 @@ const alignStyles = {
   right: 'text-right',
 };
 
+const justifyStyles = {
+  left: 'justify-start',
+  center: 'justify-center',
+  right: 'justify-end',
+};
+
 export function ListHeader({
   columns,
   gridColumns,
@@ -119,18 +125,22 @@ export function ListHeader({
 
   const headerContent = (
     <>
-      {columns.map((column) => {
+      {columns.map((column, index) => {
         const isSortable = column.sortable !== false && onSort;
         const isActive = sortState?.col === column.key;
+        // Name column is always left-aligned; others default to center unless explicitly set
+        const align =
+          typeof column.align !== 'undefined'
+            ? column.align
+            : index === 0
+            ? 'left'
+            : 'center';
         
         if (!isSortable) {
           return (
             <span
               key={column.key}
-              className={cn(
-                alignStyles[column.align || 'left'],
-                column.className
-              )}
+              className={cn('block w-full', column.className, alignStyles[align])}
             >
               {column.label.toUpperCase()}
             </span>
@@ -142,10 +152,11 @@ export function ListHeader({
             key={column.key}
             onClick={() => handleColumnClick(column)}
             className={cn(
-              'flex items-center gap-1 transition-colors hover:text-primary-800 dark:hover:text-text-primary',
-              alignStyles[column.align || 'left'],
-              isActive && 'text-primary-800 dark:text-text-primary',
-              column.className
+              'w-full inline-flex items-center gap-1 transition-colors hover:text-primary-800 dark:hover:text-text-primary',
+              column.className,
+              justifyStyles[align],
+              alignStyles[align],
+              isActive && 'text-primary-800 dark:text-text-primary'
             )}
           >
             {column.label.toUpperCase()}

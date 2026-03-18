@@ -299,11 +299,9 @@ export const GridListRow = memo(function GridListRow({
     className
   );
 
-  // Build grid style
-  const gridStyle = gridColumns 
-    ? { display: 'grid', gridTemplateColumns: gridColumns, gap: '0.5rem', alignItems: 'center' }
-    : {};
-    
+  // When gridColumns is provided, use a CSS grid so columns align with ListHeader.
+  // Keep gridTemplateColumns in style (must match headers), but move layout concerns to classes
+  // so spacing/alignment are controlled by shared Tailwind utilities instead of inline styles.
   const useFlex = !gridColumns;
 
   return (
@@ -334,15 +332,18 @@ export const GridListRow = memo(function GridListRow({
             (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
             compact ? 'px-3 py-2' : 'px-4 py-3',
             disabled && 'cursor-default',
-            isRowClickable && 'cursor-pointer'
+            isRowClickable && 'cursor-pointer',
+            gridColumns && 'grid gap-2 items-center'
           )}
-          style={gridStyle}
+          style={gridColumns ? { gridTemplateColumns: gridColumns } : undefined}
         >
           {/* Name column: full name visible on mobile (wrap), truncate on desktop */}
-          <div className={cn(
-            'font-medium text-text-primary flex items-center gap-2 min-w-0',
-            useFlex && 'flex-1'
-          )}>
+          <div
+            className={cn(
+              'font-medium text-text-primary flex items-center gap-2 min-w-0',
+              useFlex && 'flex-1'
+            )}
+          >
             <span className="break-words lg:truncate">{name}</span>
             {/* Innate indicator (hidden when already in innate section) */}
             {innate && !hideInnateBadge && (
@@ -385,18 +386,19 @@ export const GridListRow = memo(function GridListRow({
             )}
           </div>
           
-          {/* Data columns */}
+          {/* Data columns (non-name) */}
           {columns.map((col, colIndex) => (
             <div
               key={col.key}
               style={columnSpans?.[colIndex] ? { gridColumn: `span ${columnSpans[colIndex]}` } : undefined}
               className={cn(
-                'text-sm truncate text-left min-w-0',
+                'text-sm truncate min-w-0',
                 col.hideOnMobile !== false && 'hidden lg:block',
+                col.className,
                 col.highlight ? 'text-primary-600 font-medium' : 'text-text-primary',
-                col.align === 'center' && 'text-center',
+                col.align === 'left' && 'text-left',
                 col.align === 'right' && 'text-right',
-                col.className
+                (!col.align || col.align === 'center') && 'text-center'
               )}
             >
               {col.value ?? '-'}
