@@ -67,6 +67,8 @@ export interface SortHeaderProps {
   col: string;
   sortState: SortState;
   onSort: (col: string) => void;
+  /** Text alignment. Defaults to name-left, others centered. */
+  align?: 'left' | 'center' | 'right';
   className?: string;
 }
 
@@ -75,17 +77,25 @@ export function SortHeader({
   col, 
   sortState, 
   onSort,
+  align,
   className,
 }: SortHeaderProps) {
   const isActive = sortState.col === col;
+  const normalizedLabel = label.trim().toLowerCase();
+  const normalizedCol = col.trim().toLowerCase();
+  const resolvedAlign =
+    align ?? (normalizedCol === 'name' || normalizedLabel === 'name' ? 'left' : 'center');
   
   return (
     <button
       onClick={() => onSort(col)}
       className={cn(
-        'flex items-center gap-1 text-left text-text-secondary hover:text-primary-800 dark:hover:text-primary-200 transition-colors',
+        'flex items-center gap-1 text-text-secondary hover:text-primary-800 dark:hover:text-primary-200 transition-colors',
+        className,
+        resolvedAlign === 'left' && 'justify-start text-left',
+        resolvedAlign === 'right' && 'justify-end text-right',
+        resolvedAlign === 'center' && 'justify-center text-center',
         isActive && 'text-primary-800 dark:text-primary-200',
-        className
       )}
     >
       {label.toUpperCase()}
