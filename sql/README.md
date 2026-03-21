@@ -27,6 +27,7 @@
 | **supabase-official-library-columnar-expansion.sql** | Official powers: add range_steps, duration_*, area_*, damage columns; backfill from payload | Run after official-library-public-schema; see [OFFICIAL_LIBRARY_COLUMNAR_PLAN.md](../src/docs/OFFICIAL_LIBRARY_COLUMNAR_PLAN.md). |
 | **supabase-user-species-columnar.sql** | user_species columnar (codex_species columns + user_id + payload) | Run once; backfill from data, then drop data. |
 | **supabase-user-species-grants-rls.sql** | `GRANT` + RLS on `user_species` for `authenticated` | Run if logs show **permission denied for table user_species** (missing table privileges after manual SQL). |
+| **supabase-campaign-members-grants.sql** | `GRANT` on `public.campaign_members` for `authenticated` (+ service_role) | Run if logs show **permission denied for table campaign_members** (join/upsert/member list fails). |
 | **supabase-encounters-list-columns.sql** | Encounters: add name, type, status columns; backfill from data | Optional; list/filter by columns. |
 | **supabase-characters-list-columns.sql** | Characters: add name, level, archetype_name, ancestry_name, status, visibility; backfill from data | Hybrid list columns (TASK-282). |
 | **supabase-campaign-rolls-list-columns.sql** | Campaign rolls: add character_id, user_id, type, title; backfill from data | Hybrid list columns (TASK-283). |

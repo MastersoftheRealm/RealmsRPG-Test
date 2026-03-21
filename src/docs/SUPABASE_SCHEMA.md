@@ -114,6 +114,8 @@ Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
 
+If logs show **`permission denied for table campaign_members`**, run **`sql/supabase-campaign-members-grants.sql`** — the `authenticated` role needs explicit `GRANT` on the table (RLS does not replace table privileges).
+
 ---
 
 ### 2.8 Encounters
