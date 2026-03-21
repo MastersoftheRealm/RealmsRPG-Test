@@ -95,7 +95,14 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
   // Normalize to string so query key matches campaign page (params.id) and realtime subscription is consistent
   const rawCampaignId = campaignContext?.campaignId ?? viewOnlyCampaignId;
   const campaignId = rawCampaignId != null ? String(rawCampaignId) : undefined;
-  const { rolls: campaignRolls, refetch: refetchCampaignRolls, dataUpdatedAt = 0 } = useCampaignRolls(campaignId);
+  const {
+    rolls: campaignRolls,
+    refetch: refetchCampaignRolls,
+    dataUpdatedAt = 0,
+    loading: campaignRollsLoading,
+    isError: campaignRollsFailed,
+    error: campaignRollsError,
+  } = useCampaignRolls(campaignId);
   const [mode, setMode] = React.useState<RollLogMode>('personal');
   const [isOpen, setIsOpen] = React.useState(false);
   const listRef = React.useRef<HTMLDivElement>(null);
@@ -276,7 +283,26 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 
         {/* Roll History */}
         <div ref={listRef} className="flex-1 overflow-y-auto p-2 bg-surface-alt">
-          {displayRolls.length === 0 ? (
+          {isCampaignMode && campaignRollsLoading && campaignRolls.length === 0 && !campaignRollsFailed ? (
+            <p className="text-center text-text-muted dark:text-text-secondary italic py-10">Loading campaign rolls…</p>
+          ) : isCampaignMode && campaignRollsFailed ? (
+            <div className="py-6 px-3 text-center space-y-3">
+              <p className="text-sm text-danger-700 dark:text-danger-400">
+                Couldn&apos;t load campaign rolls.
+                {campaignRollsError?.message ? (
+                  <span className="block mt-1 text-text-secondary dark:text-text-secondary">{campaignRollsError.message}</span>
+                ) : null}
+              </p>
+              <button
+                type="button"
+                onClick={() => void refetchCampaignRolls()}
+                className="min-h-[44px] min-w-[44px] px-4 py-2 rounded-lg bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700"
+                aria-label="Retry loading campaign rolls"
+              >
+                Retry
+              </button>
+            </div>
+          ) : displayRolls.length === 0 ? (
             <p className="text-center text-text-muted dark:text-text-secondary italic py-10">
               {isCampaignMode ? 'No campaign rolls yet. Rolls from any character sheet will appear here.' : 'No rolls yet. Build your dice pool below!'}
             </p>

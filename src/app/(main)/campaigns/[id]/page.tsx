@@ -60,7 +60,13 @@ function CampaignDetailContent() {
 
   const { data: campaign, isLoading, error } = useCampaign(campaignId);
   const { data: characters = [] } = useCharacters();
-  const { rolls: campaignRolls = [] } = useCampaignRolls(campaignId);
+  const {
+    rolls: campaignRolls = [],
+    loading: campaignRollsLoading,
+    isError: campaignRollsQueryError,
+    error: campaignRollsQueryErr,
+    refetch: refetchCampaignRolls,
+  } = useCampaignRolls(campaignId);
   const invalidateCampaigns = useInvalidateCampaigns();
   const rollLogScrollRef = useRef<HTMLDivElement>(null);
 
@@ -469,12 +475,29 @@ function CampaignDetailContent() {
         <p className="text-sm text-text-secondary mb-4">
           Rolls from all characters in this campaign. Updates in real time.
         </p>
+        {campaignRollsQueryError && (
+          <Alert variant="danger" title="Couldn’t load campaign rolls" className="mb-4">
+            <p className="mb-3 text-sm">
+              {campaignRollsQueryErr?.message ?? 'Check your connection or try again.'}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void refetchCampaignRolls()}
+              aria-label="Retry loading campaign rolls"
+            >
+              Retry
+            </Button>
+          </Alert>
+        )}
         <div ref={rollLogScrollRef} className="max-h-[400px] overflow-y-auto p-2 bg-surface-alt rounded-lg">
-          {campaignRolls.length === 0 ? (
+          {campaignRollsLoading && campaignRolls.length === 0 && !campaignRollsQueryError ? (
+            <LoadingState message="Loading campaign rolls…" />
+          ) : campaignRolls.length === 0 && !campaignRollsQueryError ? (
             <p className="text-center text-text-muted dark:text-text-secondary italic py-10">
               No campaign rolls yet. Rolls from character sheets will appear here.
             </p>
-          ) : (
+          ) : !campaignRollsQueryError ? (
             // Oldest at top, newest at bottom (API returns newest-first; reverse to match roll log elsewhere)
             [...campaignRolls].reverse().map((roll) => (
               <RollEntryCard
@@ -483,6 +506,10 @@ function CampaignDetailContent() {
                 characterName={'characterName' in roll ? roll.characterName : undefined}
               />
             ))
+          ) : (
+            <p className="text-center text-text-secondary text-sm py-8">
+              Fix the error above or tap Retry.
+            </p>
           )}
         </div>
       </div>

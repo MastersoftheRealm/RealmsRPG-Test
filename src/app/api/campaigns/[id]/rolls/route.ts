@@ -61,28 +61,51 @@ export async function GET(
     const { id: campaignId } = await params;
     const supabase = await createClient();
 
-    const { data: campaign } = await supabase.from('campaigns').select('id, owner_id').eq('id', campaignId).maybeSingle();
+    const { data: campaign, error: campaignError } = await supabase
+      .from('campaigns')
+      .select('id, owner_id')
+      .eq('id', campaignId)
+      .maybeSingle();
+    if (campaignError) {
+      console.error('[API Error] GET /api/campaigns/[id]/rolls campaigns:', campaignError);
+      return NextResponse.json({ error: 'Failed to load campaign' }, { status: 500 });
+    }
     if (!campaign) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const { data: memberRow } = await supabase
-      .from('campaign_members')
-      .select('user_id')
-      .eq('campaign_id', campaignId)
-      .eq('user_id', user.uid)
-      .maybeSingle();
-    const isMember = campaign.owner_id === user.uid || !!memberRow;
+    const isOwner = campaign.owner_id === user.uid;
+    let isMember = isOwner;
+    if (!isOwner) {
+      const { data: memberRow, error: memberError } = await supabase
+        .from('campaign_members')
+        .select('user_id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', user.uid)
+        .maybeSingle();
+      if (memberError) {
+        console.error('[API Error] GET /api/campaigns/[id]/rolls campaign_members:', memberError);
+        return NextResponse.json({ error: 'Failed to verify campaign access' }, { status: 500 });
+      }
+      isMember = !!memberRow;
+    }
     if (!isMember) {
       return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
     }
 
-    const { data: rows } = await supabase
+    // Only id + data + created_at: works on DBs that have not run campaign_rolls list-column migration;
+    // toEntry() already reads characterId, type, etc. from JSONB `data` when list columns are absent.
+    const { data: rows, error: rollsError } = await supabase
       .from('campaign_rolls')
-      .select('id, data, character_id, user_id, type, title, created_at')
+      .select('id, data, created_at')
       .eq('campaign_id', campaignId)
       .order('created_at', { ascending: false })
       .limit(MAX_CAMPAIGN_ROLLS);
+
+    if (rollsError) {
+      console.error('[API Error] GET /api/campaigns/[id]/rolls campaign_rolls:', rollsError);
+      return NextResponse.json({ error: 'Failed to load rolls' }, { status: 500 });
+    }
 
     const rolls = (rows ?? []).map((r) => toEntry(r as RollRow));
     return NextResponse.json(rolls);
@@ -105,18 +128,34 @@ export async function POST(
     const { id: campaignId } = await params;
     const supabase = await createClient();
 
-    const { data: campaign } = await supabase.from('campaigns').select('id, owner_id').eq('id', campaignId).maybeSingle();
+    const { data: campaign, error: campaignError } = await supabase
+      .from('campaigns')
+      .select('id, owner_id')
+      .eq('id', campaignId)
+      .maybeSingle();
+    if (campaignError) {
+      console.error('[API Error] POST /api/campaigns/[id]/rolls campaigns:', campaignError);
+      return NextResponse.json({ error: 'Failed to load campaign' }, { status: 500 });
+    }
     if (!campaign) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const { data: memberRow } = await supabase
-      .from('campaign_members')
-      .select('user_id')
-      .eq('campaign_id', campaignId)
-      .eq('user_id', user.uid)
-      .maybeSingle();
-    const isMember = campaign.owner_id === user.uid || !!memberRow;
+    const isOwner = campaign.owner_id === user.uid;
+    let isMember = isOwner;
+    if (!isOwner) {
+      const { data: memberRow, error: memberError } = await supabase
+        .from('campaign_members')
+        .select('user_id')
+        .eq('campaign_id', campaignId)
+        .eq('user_id', user.uid)
+        .maybeSingle();
+      if (memberError) {
+        console.error('[API Error] POST /api/campaigns/[id]/rolls campaign_members:', memberError);
+        return NextResponse.json({ error: 'Failed to verify campaign access' }, { status: 500 });
+      }
+      isMember = !!memberRow;
+    }
     if (!isMember) {
       return NextResponse.json({ error: 'Not a campaign member' }, { status: 403 });
     }

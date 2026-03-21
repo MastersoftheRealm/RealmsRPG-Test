@@ -25,6 +25,7 @@ export async function addCampaignRoll({
 }: AddCampaignRollParams): Promise<void> {
   const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       characterId,
@@ -43,7 +44,9 @@ export async function addCampaignRoll({
  * Get campaign rolls (for polling).
  */
 export async function getCampaignRolls(campaignId: string): Promise<CampaignRollEntry[]> {
-  const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`);
+  const res = await fetch(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
+    credentials: 'same-origin',
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error ?? 'Failed to fetch rolls');
