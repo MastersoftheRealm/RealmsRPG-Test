@@ -140,7 +140,9 @@ export async function POST(
       timestamp: new Date().toISOString(),
     };
 
-    await supabase.from('campaign_rolls').insert({
+    const rollId = crypto.randomUUID();
+    const { error: insertError } = await supabase.from('campaign_rolls').insert({
+      id: rollId,
       campaign_id: campaignId,
       data: rollData,
       character_id: characterId,
@@ -148,6 +150,11 @@ export async function POST(
       type: roll.type,
       title: roll.title ?? '',
     });
+
+    if (insertError) {
+      console.error('[API Error] POST /api/campaigns/[id]/rolls insert:', insertError);
+      return NextResponse.json({ error: 'Failed to save roll' }, { status: 500 });
+    }
 
     const { count } = await supabase
       .from('campaign_rolls')

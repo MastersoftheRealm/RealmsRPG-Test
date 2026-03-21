@@ -100,6 +100,8 @@ If Supabase logs show **`permission denied for table user_species`**, the `authe
 
 Single document in `data`; list columns for list/filter. Realtime: `public.characters`.
 
+**Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **`sql/supabase-characters-rls-cross-read.sql`** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
+
 ---
 
 ### 2.7 Campaigns
@@ -108,7 +110,7 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 |-------|--------|-------------|
 | `campaigns` | Scalar + JSONB | id (PK), owner_id, name, description, invite_code, characters (JSONB), memberIds (JSONB), owner_username, created_at, updated_at |
 | `campaign_members` | Columnar | campaign_id (PK), user_id (PK); FK campaign_id → campaigns(id) |
-| `campaign_rolls` | Hybrid | id (PK), campaign_id (FK), data (JSONB), created_at; list columns: character_id, user_id, type, title |
+| `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), created_at; list columns: character_id, user_id, type, title |
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
 

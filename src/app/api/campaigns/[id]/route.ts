@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import type { Campaign } from '@/types/campaign';
+import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
 
 type CampaignRow = {
   id: string;
@@ -22,9 +23,7 @@ type CampaignRow = {
 };
 
 function rowToCampaign(row: CampaignRow, memberIds: string[]): Campaign {
-  const characters = Array.isArray(row.characters)
-    ? row.characters
-    : (typeof row.characters === 'string' ? JSON.parse(row.characters as string) : []) as Campaign['characters'];
+  const characters = normalizeCampaignRosterCharacters(row.characters);
   return {
     id: row.id,
     name: row.name,
