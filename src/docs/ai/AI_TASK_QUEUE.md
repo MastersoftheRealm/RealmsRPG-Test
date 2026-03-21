@@ -6990,3 +6990,25 @@ Prioritized tasks for AI agents. **Stack: Supabase only (no Prisma).** Task text
       (allowed) with explicit spent/limit message.
     - finalize-step.tsx: added Proficiency TP summary (limit/required/remaining) and explicit over-limit notice.
     - Verification: npm run build passes; ReadLints reports no issues in modified files.
+
+- id: TASK-300
+  title: Pin Node and Next versions for stable Vercel deploys
+  priority: low
+  status: done
+  created_at: 2026-03-18
+  created_by: agent
+  description: |
+    Address Vercel deployment warning about engines.node using an open-ended major range and Next.js using a
+    caret version, which can lead to surprise breakages when new major/minor versions are released.
+    Pin Node to the current major (20) with an upper cap below 21, and pin Next.js to the exact version used
+    in production so local and deploy environments stay aligned.
+  related_files:
+    - package.json
+  acceptance_criteria:
+    - engines.node no longer uses an unbounded ">=..." range across major versions.
+    - Next.js dependency is pinned to the specific version currently deployed.
+    - npm run build passes locally and on Vercel without Node engines warnings.
+  notes: |
+    Implemented 2026-03-18:
+    - Updated package.json engines.node to ">=20.9.0 <21".
+    - Pinned next dependency from "^16.1.6" to "16.1.6" to avoid automatic minor upgrades changing runtime behavior.

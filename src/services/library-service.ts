@@ -55,7 +55,7 @@ export async function findLibraryItemByName(
 export async function fetchOfficialLibrary(
   type: 'powers' | 'techniques' | 'items' | 'creatures'
 ): Promise<Array<Record<string, unknown>>> {
-  const res = await fetch(`/api/official/${type}`);
+  const res = await fetch(`/api/official/${type}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch official library');
   return (await res.json()) as Array<Record<string, unknown>>;
 }

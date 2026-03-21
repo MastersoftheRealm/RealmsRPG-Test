@@ -157,7 +157,8 @@ export async function GET(
       return na.localeCompare(nb);
     });
 
-    const cacheControl = 'public, max-age=300, s-maxage=600, stale-while-revalidate=300';
+    // Admin-edited content: avoid long-lived public cache so publishes appear after refetch
+    const cacheControl = 'private, max-age=0, must-revalidate';
     return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     console.error('[API Error] GET /api/official/[type]:', err);
@@ -194,7 +195,11 @@ export async function POST(
     const table = TABLE_MAP[type as OfficialType];
 
     if (existingId) {
-      const { error: updateError } = await supabase.from(table).update(dbRow).eq('id', existingId).select('id').single();
+      const { data: updatedRows, error: updateError } = await supabase
+        .from(table)
+        .update(dbRow)
+        .eq('id', existingId)
+        .select('id');
       if (updateError) {
         console.error('[API] Official library update failed:', updateError);
         return NextResponse.json(
@@ -202,7 +207,10 @@ export async function POST(
           { status: 500 }
         );
       }
-      return NextResponse.json({ id: existingId });
+      if (updatedRows && updatedRows.length > 0) {
+        return NextResponse.json({ id: existingId });
+      }
+      // No row matched (e.g. stale user-library id on body) — insert as new official item
     }
 
     const id = crypto.randomUUID();
